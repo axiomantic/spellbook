@@ -637,7 +637,7 @@ class ServiceManager:
         except FileNotFoundError:
             return True, "Service manager not available, service assumed stopped"
         if plat == Platform.WINDOWS:
-            pids = self._find_process_windows("spellbook_mcp")
+            pids = self._find_process_windows("spellbook")
             for pid in pids:
                 self._kill_process(pid)
             return True, f"Stopped {len(pids)} process(es)"

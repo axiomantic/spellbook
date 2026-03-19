@@ -6,7 +6,7 @@ import json
 
 def test_extract_soul_full_integration(tmp_path):
     """Test extracting complete soul from session transcript."""
-    from spellbook_mcp.soul_extractor import extract_soul
+    from spellbook.sessions.soul_extractor import extract_soul
 
     # Create test transcript
     transcript = tmp_path / "session.jsonl"
@@ -84,7 +84,7 @@ def test_extract_soul_full_integration(tmp_path):
 
 def test_extract_soul_bounded_scan(tmp_path):
     """Test that extraction only scans last 200 messages."""
-    from spellbook_mcp.soul_extractor import extract_soul
+    from spellbook.sessions.soul_extractor import extract_soul
 
     transcript = tmp_path / "session.jsonl"
 
@@ -121,7 +121,7 @@ def test_extract_soul_bounded_scan(tmp_path):
 
 def test_extract_soul_empty_transcript(tmp_path):
     """Test extraction from empty transcript returns valid empty soul."""
-    from spellbook_mcp.soul_extractor import extract_soul
+    from spellbook.sessions.soul_extractor import extract_soul
 
     transcript = tmp_path / "session.jsonl"
     transcript.write_text("")
@@ -138,7 +138,7 @@ def test_extract_soul_empty_transcript(tmp_path):
 
 def test_extract_soul_returns_soul_typed_dict(tmp_path):
     """Test that extract_soul returns all expected keys."""
-    from spellbook_mcp.soul_extractor import extract_soul
+    from spellbook.sessions.soul_extractor import extract_soul
 
     transcript = tmp_path / "session.jsonl"
     transcript.write_text(json.dumps({"role": "assistant", "content": "test"}) + "\n")
@@ -160,7 +160,7 @@ def test_extract_soul_returns_soul_typed_dict(tmp_path):
 
 def test_extract_soul_includes_skill_phase(tmp_path):
     """Test that extract_soul includes skill_phase from transcript."""
-    from spellbook_mcp.soul_extractor import extract_soul
+    from spellbook.sessions.soul_extractor import extract_soul
 
     # Create test transcript with develop invocation and phase
     transcript_path = tmp_path / "session.jsonl"

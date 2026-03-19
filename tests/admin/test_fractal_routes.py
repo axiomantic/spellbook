@@ -8,7 +8,7 @@ import pytest
 class TestFractalGraphList:
     def test_list_graphs_returns_paginated(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -35,7 +35,7 @@ class TestFractalGraphList:
 
     def test_list_graphs_with_status_filter(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -54,7 +54,7 @@ class TestFractalGraphList:
 class TestFractalGraphDetail:
     def test_graph_detail_returns_full(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -77,7 +77,7 @@ class TestFractalGraphDetail:
 
     def test_graph_detail_404(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -89,7 +89,7 @@ class TestFractalGraphDetail:
 class TestFractalNodes:
     def test_get_nodes(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -120,7 +120,7 @@ class TestFractalNodes:
 
     def test_get_nodes_with_depth_filter(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -148,7 +148,7 @@ class TestFractalNodes:
 
     def test_get_nodes_graph_not_found(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -159,7 +159,7 @@ class TestFractalNodes:
 class TestFractalEdges:
     def test_get_edges(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -185,7 +185,7 @@ class TestFractalEdges:
 class TestFractalCytoscape:
     def test_cytoscape_returns_elements(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -255,7 +255,7 @@ class TestFractalCytoscape:
 
     def test_cytoscape_graph_not_found(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -266,7 +266,7 @@ class TestFractalCytoscape:
     def test_cytoscape_filters_edges_by_visible_nodes(self, client):
         """Edges to nodes outside depth filter should be excluded."""
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -307,7 +307,7 @@ class TestFractalCytoscape:
 class TestFractalConvergence:
     def test_convergence(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -334,7 +334,7 @@ class TestFractalConvergence:
 class TestFractalContradictions:
     def test_contradictions(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -361,11 +361,11 @@ class TestFractalGraphDelete:
         """DELETE /fractal/graphs/{graph_id} returns 200 with deleted confirmation."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.delete_graph",
+                "spellbook.admin.routes.fractal.delete_graph",
                 return_value={"deleted": True, "graph_id": "g-1"},
             ) as mock_delete,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()
@@ -387,11 +387,11 @@ class TestFractalGraphDelete:
         """DELETE /fractal/graphs/{graph_id} returns 404 when graph doesn't exist."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.delete_graph",
+                "spellbook.admin.routes.fractal.delete_graph",
                 return_value={"error": "Graph 'g-missing' not found."},
             ) as mock_delete,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()
@@ -417,7 +417,7 @@ class TestFractalGraphStatusUpdate:
         """PATCH /fractal/graphs/{graph_id}/status returns 200 with updated status."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                "spellbook.admin.routes.fractal.update_graph_status",
                 return_value={
                     "graph_id": "g-1",
                     "status": "completed",
@@ -425,7 +425,7 @@ class TestFractalGraphStatusUpdate:
                 },
             ) as mock_update,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()
@@ -456,7 +456,7 @@ class TestFractalGraphStatusUpdate:
         """PATCH /fractal/graphs/{graph_id}/status passes reason to graph_ops."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                "spellbook.admin.routes.fractal.update_graph_status",
                 return_value={
                     "graph_id": "g-1",
                     "status": "paused",
@@ -464,7 +464,7 @@ class TestFractalGraphStatusUpdate:
                 },
             ) as mock_update,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()
@@ -485,14 +485,14 @@ class TestFractalGraphStatusUpdate:
         """PATCH /fractal/graphs/{graph_id}/status returns 400 for invalid transition."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                "spellbook.admin.routes.fractal.update_graph_status",
                 return_value={
                     "error": "Invalid transition from 'completed' to 'active'. "
                     "Allowed transitions from 'completed': []"
                 },
             ) as mock_update,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()
@@ -518,11 +518,11 @@ class TestFractalGraphStatusUpdate:
         """PATCH /fractal/graphs/{graph_id}/status returns 404 when graph missing."""
         with (
             patch(
-                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                "spellbook.admin.routes.fractal.update_graph_status",
                 return_value={"error": "Graph 'g-missing' not found."},
             ) as mock_update,
             patch(
-                "spellbook_mcp.admin.routes.fractal.event_bus",
+                "spellbook.admin.routes.fractal.event_bus",
             ) as mock_bus,
         ):
             mock_bus.publish = AsyncMock()

@@ -8,8 +8,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Import the MCP server module to access the tools
-from spellbook_mcp import server
-from spellbook_mcp.pr_distill import config as pr_config
+from spellbook import server
+from spellbook.pr_distill import config as pr_config
 
 
 @pytest.fixture
@@ -277,8 +277,8 @@ class TestPrListPatterns:
 class TestPrFetch:
     """Tests for pr_fetch MCP tool."""
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetches_pr_by_number(self, mock_run_command, mock_check_version):
         """pr_fetch fetches PR by number (mocked)."""
         mock_check_version.return_value = True
@@ -297,8 +297,8 @@ class TestPrFetch:
         mock_check_version.assert_called_once()
         assert mock_run_command.call_count == 3  # remote, pr view, pr diff
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetches_pr_by_url(self, mock_run_command, mock_check_version):
         """pr_fetch fetches PR by URL (mocked)."""
         mock_check_version.return_value = True

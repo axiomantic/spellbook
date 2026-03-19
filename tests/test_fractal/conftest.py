@@ -10,7 +10,7 @@ def fractal_db(tmp_path):
     Initializes the schema, yields the db_path, and cleans up connections
     on teardown.
     """
-    from spellbook_mcp.fractal.schema import (
+    from spellbook.fractal.schema import (
         close_all_fractal_connections,
         init_fractal_schema,
     )

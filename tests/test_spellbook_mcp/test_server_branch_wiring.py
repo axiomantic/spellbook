@@ -5,7 +5,7 @@ import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from spellbook_mcp.db import init_db
+from spellbook.core.db import init_db
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ class TestApiMemoryEventBranch:
     @pytest.mark.asyncio
     async def test_passes_branch_to_do_log_event(self, db_path):
         """REST /api/memory/event should extract branch from body and pass to do_log_event."""
-        from spellbook_mcp import server
+        from spellbook.mcp import routes
 
         captured = {}
 
@@ -39,16 +39,16 @@ class TestApiMemoryEventBranch:
             }
         )
 
-        with patch.object(server, "do_log_event", side_effect=mock_do_log_event), \
-             patch.object(server, "get_db_path", return_value=db_path):
-            response = await server.api_memory_event(request)
+        with patch("spellbook.mcp.routes.do_log_event", side_effect=mock_do_log_event), \
+             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+            response = await routes.api_memory_event(request)
 
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
     async def test_branch_defaults_to_empty_when_absent(self, db_path):
         """REST /api/memory/event should default branch to empty when not in body."""
-        from spellbook_mcp import server
+        from spellbook.mcp import routes
 
         captured = {}
 
@@ -67,9 +67,9 @@ class TestApiMemoryEventBranch:
             }
         )
 
-        with patch.object(server, "do_log_event", side_effect=mock_do_log_event), \
-             patch.object(server, "get_db_path", return_value=db_path):
-            response = await server.api_memory_event(request)
+        with patch("spellbook.mcp.routes.do_log_event", side_effect=mock_do_log_event), \
+             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+            response = await routes.api_memory_event(request)
 
         assert captured["branch"] == ""
 
@@ -78,7 +78,7 @@ class TestApiMemoryRecallBranch:
     @pytest.mark.asyncio
     async def test_passes_branch_to_do_memory_recall(self, db_path):
         """REST /api/memory/recall should extract branch from body and pass to do_memory_recall."""
-        from spellbook_mcp import server
+        from spellbook.mcp import routes
 
         captured = {}
 
@@ -95,17 +95,16 @@ class TestApiMemoryRecallBranch:
             }
         )
 
-        with patch.object(
-            server, "do_memory_recall", side_effect=mock_do_memory_recall
-        ), patch.object(server, "get_db_path", return_value=db_path):
-            response = await server.api_memory_recall(request)
+        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
+             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+            response = await routes.api_memory_recall(request)
 
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
     async def test_passes_repo_path_to_do_memory_recall(self, db_path):
         """REST /api/memory/recall should extract repo_path from body and pass to do_memory_recall."""
-        from spellbook_mcp import server
+        from spellbook.mcp import routes
 
         captured = {}
 
@@ -123,10 +122,9 @@ class TestApiMemoryRecallBranch:
             }
         )
 
-        with patch.object(
-            server, "do_memory_recall", side_effect=mock_do_memory_recall
-        ), patch.object(server, "get_db_path", return_value=db_path):
-            response = await server.api_memory_recall(request)
+        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
+             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+            response = await routes.api_memory_recall(request)
 
         assert captured["branch"] == "main"
         assert captured["repo_path"] == "/Users/test/repo"
@@ -134,7 +132,7 @@ class TestApiMemoryRecallBranch:
     @pytest.mark.asyncio
     async def test_branch_defaults_to_empty_when_absent(self, db_path):
         """REST /api/memory/recall should default branch to empty when not in body."""
-        from spellbook_mcp import server
+        from spellbook.mcp import routes
 
         captured = {}
 
@@ -150,10 +148,9 @@ class TestApiMemoryRecallBranch:
             }
         )
 
-        with patch.object(
-            server, "do_memory_recall", side_effect=mock_do_memory_recall
-        ), patch.object(server, "get_db_path", return_value=db_path):
-            response = await server.api_memory_recall(request)
+        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
+             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+            response = await routes.api_memory_recall(request)
 
         assert captured["branch"] == ""
         assert captured["repo_path"] == ""
@@ -163,7 +160,7 @@ class TestMcpMemoryRecallBranch:
     @pytest.mark.asyncio
     async def test_detects_branch_from_context(self, db_path):
         """MCP memory_recall should detect branch from context and pass to do_memory_recall."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         captured = {}
 
@@ -174,14 +171,14 @@ class TestMcpMemoryRecallBranch:
         mock_ctx = MagicMock()
         fake_project_path = "/Users/test/myproject"
 
-        with patch.object(server, "get_db_path", return_value=db_path), \
-             patch.object(
-                 server, "get_project_path_from_context",
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db_path), \
+             patch(
+                 "spellbook.mcp.tools.memory.get_project_path_from_context",
                  new_callable=AsyncMock, return_value=fake_project_path,
              ), \
-             patch.object(server, "do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook_mcp.server.get_current_branch", return_value="feature-branch"), \
-             patch("spellbook_mcp.server.resolve_repo_root", return_value="/Users/test/myproject"):
+             patch("spellbook.mcp.tools.memory.do_memory_recall", side_effect=mock_do_memory_recall), \
+             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="feature-branch"), \
+             patch("spellbook.mcp.tools.memory.resolve_repo_root", return_value="/Users/test/myproject"):
             await server.memory_recall.fn(
                 ctx=mock_ctx,
                 query="test query",
@@ -198,7 +195,7 @@ class TestMcpMemoryStoreMemoriesBranch:
     @pytest.mark.asyncio
     async def test_detects_branch_from_context(self, db_path):
         """MCP memory_store_memories should detect branch from context and pass to do_store_memories."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         captured = {}
 
@@ -214,13 +211,13 @@ class TestMcpMemoryStoreMemoriesBranch:
         mock_ctx = MagicMock()
         fake_project_path = "/Users/test/myproject"
 
-        with patch.object(server, "get_db_path", return_value=db_path), \
-             patch.object(
-                 server, "get_project_path_from_context",
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db_path), \
+             patch(
+                 "spellbook.mcp.tools.memory.get_project_path_from_context",
                  new_callable=AsyncMock, return_value=fake_project_path,
              ), \
-             patch.object(server, "do_store_memories", side_effect=mock_do_store_memories), \
-             patch("spellbook_mcp.server.get_current_branch", return_value="dev-branch"):
+             patch("spellbook.mcp.tools.memory.do_store_memories", side_effect=mock_do_store_memories), \
+             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="dev-branch"):
             await server.memory_store_memories.fn(
                 ctx=mock_ctx,
                 memories='{"memories": []}',

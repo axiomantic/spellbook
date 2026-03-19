@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from spellbook_mcp.admin.events import Event, EventBus, Subsystem, event_bus
+from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
 
 
 @pytest.mark.asyncio
@@ -132,7 +132,7 @@ async def test_singleton_event_bus_exists():
 @pytest.mark.asyncio
 async def test_publish_sync_from_thread():
     """Test publish_sync() thread-safe wrapper for sync MCP handlers."""
-    from spellbook_mcp.admin.events import publish_sync
+    from spellbook.admin.events import publish_sync
 
     bus = EventBus()
     queue = await bus.subscribe("test-sub")

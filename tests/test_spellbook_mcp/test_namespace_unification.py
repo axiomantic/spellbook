@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-from spellbook_mcp.path_utils import encode_cwd, resolve_repo_root
+from spellbook.core.path_utils import encode_cwd, resolve_repo_root
 
 
 @pytest.fixture

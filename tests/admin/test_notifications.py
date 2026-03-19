@@ -2,8 +2,8 @@
 
 import pytest
 
-from spellbook_mcp.admin.events import Event, Subsystem
-from spellbook_mcp.admin.notifications import (
+from spellbook.admin.events import Event, Subsystem
+from spellbook.admin.notifications import (
     NotificationQueue,
     NotificationScope,
     classify_event_scope,

@@ -4,8 +4,8 @@ import json
 import pytest
 from unittest.mock import patch
 
-from spellbook_mcp.db import init_db, get_connection, close_all_connections
-from spellbook_mcp.memory_store import (
+from spellbook.core.db import init_db, get_connection, close_all_connections
+from spellbook.memory.store import (
     log_raw_event,
     get_unconsolidated_events,
     get_memory,
@@ -14,7 +14,7 @@ from spellbook_mcp.memory_store import (
     soft_delete_memory,
     purge_deleted,
 )
-from spellbook_mcp.memory_consolidation import (
+from spellbook.memory.consolidation import (
     consolidate_batch,
     build_consolidation_prompt,
     parse_llm_response,
@@ -434,7 +434,7 @@ class TestConsolidateBatch:
 
         # Force an error in the heuristic pipeline by making a strategy raise
         with patch(
-            "spellbook_mcp.memory_consolidation._strategy_content_hash_dedup",
+            "spellbook.memory.consolidation._strategy_content_hash_dedup",
             side_effect=RuntimeError("hash computation failed"),
         ):
             result = consolidate_batch(
@@ -489,7 +489,7 @@ class TestConsolidateBatch:
 
         # Fail jaccard_similarity (second strategy, after content_hash succeeds)
         with patch(
-            "spellbook_mcp.memory_consolidation._strategy_jaccard_similarity",
+            "spellbook.memory.consolidation._strategy_jaccard_similarity",
             side_effect=ValueError("jaccard computation exploded"),
         ):
             result = consolidate_batch(db_path=db, namespace="ns")
@@ -573,7 +573,7 @@ class TestConsolidateBatch:
         _seed_duplicate_events(db)
 
         with patch(
-            "spellbook_mcp.memory_consolidation.purge_deleted",
+            "spellbook.memory.consolidation.purge_deleted",
             return_value=2,
         ) as mock_purge:
             result = consolidate_batch(

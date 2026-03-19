@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=2.9.0,<4",
     "fastapi>=0.100.0",
+    "websockets>=12.0",
 ]
 
 [project.optional-dependencies]
@@ -28,6 +29,9 @@ tts = [
     "sounddevice>=0.4.6",
 ]
 
+[project.scripts]
+spellbook = "spellbook.cli.main:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -37,7 +41,7 @@ path = ".version"
 pattern = "(?P<version>.+)"
 
 [tool.hatch.build.targets.wheel]
-packages = ["spellbook_mcp"]
+packages = ["spellbook", "spellbook_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

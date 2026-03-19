@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, get_connection, init_db
+from spellbook.core.db import close_all_connections, get_connection, init_db
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ class TestDoLogEventBasic:
     """Tests for do_log_event happy path."""
 
     def test_returns_success_true(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         result = do_log_event(
             event_type="injection_detected",
@@ -49,7 +49,7 @@ class TestDoLogEventBasic:
         assert result["success"] is True
 
     def test_returns_event_id(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         result = do_log_event(
             event_type="injection_detected",
@@ -61,7 +61,7 @@ class TestDoLogEventBasic:
         assert result["event_id"] > 0
 
     def test_creates_row_in_db(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="injection_detected",
@@ -75,7 +75,7 @@ class TestDoLogEventBasic:
         assert cur.fetchone()[0] == 1
 
     def test_stores_event_type(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="injection_detected",
@@ -89,7 +89,7 @@ class TestDoLogEventBasic:
         assert cur.fetchone()[0] == "injection_detected"
 
     def test_stores_severity(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="injection_detected",
@@ -103,7 +103,7 @@ class TestDoLogEventBasic:
         assert cur.fetchone()[0] == "HIGH"
 
     def test_stores_all_optional_fields(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="exfiltration_attempt",
@@ -130,7 +130,7 @@ class TestDoLogEventBasic:
         assert row[4] == "blocked"
 
     def test_optional_fields_default_to_none(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="test_event",
@@ -152,7 +152,7 @@ class TestDoLogEventBasic:
         assert row[4] is None
 
     def test_timestamp_is_set(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         do_log_event(
             event_type="test_event",
@@ -171,7 +171,7 @@ class TestDoLogEventDetailLimit:
     """Tests for the 10KB detail field cap."""
 
     def test_detail_under_limit_stored_as_is(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         detail = "x" * 5000  # 5KB, well under limit
         do_log_event(
@@ -187,7 +187,7 @@ class TestDoLogEventDetailLimit:
         assert cur.fetchone()[0] == detail
 
     def test_detail_at_limit_stored_as_is(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         detail = "x" * 10240  # Exactly 10KB
         do_log_event(
@@ -203,7 +203,7 @@ class TestDoLogEventDetailLimit:
         assert cur.fetchone()[0] == detail
 
     def test_detail_over_limit_is_truncated(self, db_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         detail = "x" * 15000  # Over 10KB
         do_log_event(
@@ -221,7 +221,7 @@ class TestDoLogEventDetailLimit:
 
     def test_detail_over_limit_not_rejected(self, db_path):
         """Oversized detail is truncated, not rejected."""
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         detail = "x" * 15000
         result = do_log_event(
@@ -234,7 +234,7 @@ class TestDoLogEventDetailLimit:
 
     def test_truncated_detail_has_marker(self, db_path):
         """Truncated detail ends with a truncation marker."""
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         detail = "x" * 15000
         do_log_event(
@@ -255,13 +255,13 @@ class TestDoLogEventDegradedMode:
     """Tests for fail-open behavior when DB is unavailable."""
 
     def test_returns_success_true_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         # Use a path that won't have an initialized DB and mock the
         # connection to raise
         bad_path = str(tmp_path / "nonexistent_dir" / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -272,11 +272,11 @@ class TestDoLogEventDegradedMode:
         assert result["success"] is True
 
     def test_returns_degraded_true_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -287,11 +287,11 @@ class TestDoLogEventDegradedMode:
         assert result["degraded"] is True
 
     def test_returns_warning_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_log_event
+        from spellbook.security.tools import do_log_event
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -332,26 +332,26 @@ class TestDoQueryEventsBasic:
     """Tests for do_query_events happy path."""
 
     def test_returns_success_true(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         result = do_query_events(db_path=db_path)
         assert result["success"] is True
 
     def test_returns_events_key(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         result = do_query_events(db_path=db_path)
         assert "events" in result
         assert isinstance(result["events"], list)
 
     def test_empty_table_returns_empty_list(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         result = do_query_events(db_path=db_path)
         assert result["events"] == []
 
     def test_returns_inserted_event(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "injection_detected", "severity": "HIGH"},
@@ -363,7 +363,7 @@ class TestDoQueryEventsBasic:
         assert result["events"][0]["severity"] == "HIGH"
 
     def test_returns_all_event_fields(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {
@@ -386,7 +386,7 @@ class TestDoQueryEventsBasic:
         assert set(event.keys()) == expected_keys
 
     def test_returns_count(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "a", "severity": "LOW"},
@@ -398,7 +398,7 @@ class TestDoQueryEventsBasic:
 
     def test_events_ordered_by_newest_first(self, db_path):
         """Events are returned newest first (descending created_at)."""
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         # Insert events with explicit timestamps to guarantee order
         conn = get_connection(db_path)
@@ -421,7 +421,7 @@ class TestDoQueryEventsFilterByType:
     """Tests for filtering by event_type."""
 
     def test_filter_returns_only_matching_type(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "injection_detected", "severity": "HIGH"},
@@ -435,7 +435,7 @@ class TestDoQueryEventsFilterByType:
             assert event["event_type"] == "injection_detected"
 
     def test_filter_no_match_returns_empty(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "injection_detected", "severity": "HIGH"},
@@ -450,7 +450,7 @@ class TestDoQueryEventsFilterBySeverity:
     """Tests for filtering by severity."""
 
     def test_filter_returns_only_matching_severity(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "a", "severity": "HIGH"},
@@ -468,7 +468,7 @@ class TestDoQueryEventsFilterBySinceHours:
     """Tests for filtering by time window."""
 
     def test_since_hours_filters_old_events(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         conn = get_connection(db_path)
         # Insert event from 48 hours ago
@@ -492,7 +492,7 @@ class TestDoQueryEventsFilterByLimit:
     """Tests for limiting the number of results."""
 
     def test_limit_caps_results(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": f"event_{i}", "severity": "LOW"} for i in range(10)
@@ -503,7 +503,7 @@ class TestDoQueryEventsFilterByLimit:
 
     def test_default_limit_is_100(self, db_path):
         """Default limit is 100 when not specified."""
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         # Just verify we can call without limit and get results
         _insert_events(db_path, [
@@ -518,7 +518,7 @@ class TestDoQueryEventsCombinedFilters:
     """Tests for combining multiple filters."""
 
     def test_type_and_severity_combined(self, db_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         _insert_events(db_path, [
             {"event_type": "injection_detected", "severity": "HIGH"},
@@ -540,44 +540,44 @@ class TestDoQueryEventsDegradedMode:
     """Tests for fail-open behavior when DB is unavailable."""
 
     def test_returns_success_true_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
         assert result["success"] is True
 
     def test_returns_degraded_true_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
         assert result["degraded"] is True
 
     def test_returns_warning_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
         assert result["warning"] == "Security database unavailable"
 
     def test_returns_empty_events_when_db_unavailable(self, tmp_path):
-        from spellbook_mcp.security.tools import do_query_events
+        from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook_mcp.security.tools.get_connection",
+            "spellbook.security.tools.get_connection",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)

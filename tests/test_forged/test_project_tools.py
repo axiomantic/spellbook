@@ -18,7 +18,7 @@ class TestFeatureNode:
 
     def test_feature_node_creation_with_all_fields(self):
         """FeatureNode must be creatable with all fields."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         node = FeatureNode(
             id="feat-001",
@@ -42,7 +42,7 @@ class TestFeatureNode:
 
     def test_feature_node_with_no_dependencies(self):
         """FeatureNode must work with empty dependencies list."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         node = FeatureNode(
             id="feat-root",
@@ -60,7 +60,7 @@ class TestFeatureNode:
 
     def test_feature_node_valid_statuses(self):
         """FeatureNode status must accept valid values."""
-        from spellbook_mcp.forged.project_graph import FeatureNode, VALID_FEATURE_STATUSES
+        from spellbook.forged.project_graph import FeatureNode, VALID_FEATURE_STATUSES
 
         for status in VALID_FEATURE_STATUSES:
             node = FeatureNode(
@@ -77,7 +77,7 @@ class TestFeatureNode:
 
     def test_feature_node_valid_complexities(self):
         """FeatureNode complexity must accept valid values."""
-        from spellbook_mcp.forged.project_graph import FeatureNode, VALID_COMPLEXITIES
+        from spellbook.forged.project_graph import FeatureNode, VALID_COMPLEXITIES
 
         for complexity in VALID_COMPLEXITIES:
             node = FeatureNode(
@@ -94,7 +94,7 @@ class TestFeatureNode:
 
     def test_feature_node_to_dict(self):
         """FeatureNode.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         node = FeatureNode(
             id="feat-001",
@@ -125,7 +125,7 @@ class TestFeatureNode:
 
     def test_feature_node_from_dict(self):
         """FeatureNode.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         data = {
             "id": "feat-002",
@@ -149,7 +149,7 @@ class TestFeatureNode:
 
     def test_feature_node_from_dict_with_none_skill(self):
         """FeatureNode.from_dict() must handle None assigned_skill."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         data = {
             "id": "feat-003",
@@ -168,7 +168,7 @@ class TestFeatureNode:
 
     def test_feature_node_roundtrip(self):
         """FeatureNode must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.project_graph import FeatureNode
+        from spellbook.forged.project_graph import FeatureNode
 
         original = FeatureNode(
             id="roundtrip-feat",
@@ -198,7 +198,7 @@ class TestProjectGraph:
 
     def test_project_graph_creation(self):
         """ProjectGraph must be creatable with required fields."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode
+        from spellbook.forged.project_graph import ProjectGraph, FeatureNode
 
         node1 = FeatureNode(
             id="feat-1",
@@ -237,7 +237,7 @@ class TestProjectGraph:
 
     def test_project_graph_empty_features(self):
         """ProjectGraph must work with no features."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph
+        from spellbook.forged.project_graph import ProjectGraph
 
         graph = ProjectGraph(
             project_name="Empty Project",
@@ -252,7 +252,7 @@ class TestProjectGraph:
 
     def test_project_graph_with_current_feature(self):
         """ProjectGraph must track current feature."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode
+        from spellbook.forged.project_graph import ProjectGraph, FeatureNode
 
         node = FeatureNode(
             id="current-feat",
@@ -277,7 +277,7 @@ class TestProjectGraph:
 
     def test_project_graph_with_completed_features(self):
         """ProjectGraph must track completed features."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode
+        from spellbook.forged.project_graph import ProjectGraph, FeatureNode
 
         node1 = FeatureNode(
             id="done-1",
@@ -324,7 +324,7 @@ class TestProjectGraph:
 
     def test_project_graph_to_dict(self):
         """ProjectGraph.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode
+        from spellbook.forged.project_graph import ProjectGraph, FeatureNode
 
         node = FeatureNode(
             id="feat-a",
@@ -361,7 +361,7 @@ class TestProjectGraph:
 
     def test_project_graph_from_dict(self):
         """ProjectGraph.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph
+        from spellbook.forged.project_graph import ProjectGraph
 
         data = {
             "project_name": "From Dict Project",
@@ -404,7 +404,7 @@ class TestProjectGraph:
 
     def test_project_graph_roundtrip(self):
         """ProjectGraph must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode
+        from spellbook.forged.project_graph import ProjectGraph, FeatureNode
 
         node1 = FeatureNode(
             id="rt-1",
@@ -451,7 +451,7 @@ class TestTopologicalSort:
 
     def test_topological_sort_single_feature(self):
         """Single feature should return that feature."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode
 
         features = {
             "solo": FeatureNode(
@@ -471,7 +471,7 @@ class TestTopologicalSort:
 
     def test_topological_sort_linear_chain(self):
         """Linear dependency chain should be sorted correctly."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode
 
         features = {
             "a": FeatureNode(
@@ -496,7 +496,7 @@ class TestTopologicalSort:
 
     def test_topological_sort_diamond_dependency(self):
         """Diamond dependency pattern should be sorted correctly."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode
 
         #     a
         #    / \
@@ -533,7 +533,7 @@ class TestTopologicalSort:
 
     def test_topological_sort_multiple_roots(self):
         """Multiple independent roots should all be included."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode
 
         features = {
             "root1": FeatureNode(
@@ -558,7 +558,7 @@ class TestTopologicalSort:
 
     def test_topological_sort_detects_cycle(self):
         """Cycle in dependencies should raise error."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode, CyclicDependencyError
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode, CyclicDependencyError
 
         features = {
             "a": FeatureNode(
@@ -580,14 +580,14 @@ class TestTopologicalSort:
 
     def test_topological_sort_empty_features(self):
         """Empty features dict should return empty list."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order
+        from spellbook.forged.project_graph import compute_dependency_order
 
         order = compute_dependency_order({})
         assert order == []
 
     def test_topological_sort_missing_dependency(self):
         """Missing dependency should raise error."""
-        from spellbook_mcp.forged.project_graph import compute_dependency_order, FeatureNode, MissingDependencyError
+        from spellbook.forged.project_graph import compute_dependency_order, FeatureNode, MissingDependencyError
 
         features = {
             "a": FeatureNode(
@@ -605,14 +605,14 @@ class TestFeatureNodeConstants:
 
     def test_valid_feature_statuses_defined(self):
         """VALID_FEATURE_STATUSES must contain all valid statuses."""
-        from spellbook_mcp.forged.project_graph import VALID_FEATURE_STATUSES
+        from spellbook.forged.project_graph import VALID_FEATURE_STATUSES
 
         expected = ["pending", "in_progress", "complete", "blocked"]
         assert VALID_FEATURE_STATUSES == expected
 
     def test_valid_complexities_defined(self):
         """VALID_COMPLEXITIES must contain all complexity levels."""
-        from spellbook_mcp.forged.project_graph import VALID_COMPLEXITIES
+        from spellbook.forged.project_graph import VALID_COMPLEXITIES
 
         expected = ["trivial", "small", "medium", "large", "epic"]
         assert VALID_COMPLEXITIES == expected
@@ -628,8 +628,8 @@ class TestSkillSelection:
 
     def test_select_skill_for_discover_stage(self):
         """DISCOVER stage should default to gathering-requirements skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState
 
         context = IterationState(
             iteration_number=1,
@@ -642,8 +642,8 @@ class TestSkillSelection:
 
     def test_select_skill_for_design_stage(self):
         """DESIGN stage should default to brainstorming skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState
 
         context = IterationState(
             iteration_number=1,
@@ -656,8 +656,8 @@ class TestSkillSelection:
 
     def test_select_skill_for_plan_stage(self):
         """PLAN stage should default to writing-plans skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState
 
         context = IterationState(
             iteration_number=1,
@@ -670,8 +670,8 @@ class TestSkillSelection:
 
     def test_select_skill_for_implement_stage(self):
         """IMPLEMENT stage should default to develop skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState
 
         context = IterationState(
             iteration_number=1,
@@ -684,8 +684,8 @@ class TestSkillSelection:
 
     def test_select_skill_with_test_error_feedback(self):
         """Test errors should trigger fixing-tests skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="test-validator",
@@ -709,8 +709,8 @@ class TestSkillSelection:
 
     def test_select_skill_with_merge_error_feedback(self):
         """Merge conflicts should trigger resolving-merge-conflicts skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="git-validator",
@@ -734,8 +734,8 @@ class TestSkillSelection:
 
     def test_select_skill_with_code_quality_feedback(self):
         """Code quality feedback should trigger code-review --feedback skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="lint-validator",
@@ -759,8 +759,8 @@ class TestSkillSelection:
 
     def test_select_skill_with_factual_accuracy_feedback(self):
         """Factual accuracy feedback should trigger fact-checking skill."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="accuracy-validator",
@@ -784,8 +784,8 @@ class TestSkillSelection:
 
     def test_select_skill_prioritizes_errors_over_stage_default(self):
         """Error feedback should take priority over stage default."""
-        from spellbook_mcp.forged.skill_selection import select_skill
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.skill_selection import select_skill
+        from spellbook.forged.models import IterationState, Feedback
 
         # Even in DESIGN stage, test errors should trigger fixing-tests
         feedback = Feedback(
@@ -814,8 +814,8 @@ class TestClassifyFeedback:
 
     def test_classify_test_failure_feedback(self):
         """Test failure feedback should be classified as test_failure."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.skill_selection import classify_feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="test-validator",
@@ -833,8 +833,8 @@ class TestClassifyFeedback:
 
     def test_classify_merge_conflict_feedback(self):
         """Merge conflict feedback should be classified as merge_conflict."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.skill_selection import classify_feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="git-validator",
@@ -852,8 +852,8 @@ class TestClassifyFeedback:
 
     def test_classify_code_quality_feedback(self):
         """Lint/style feedback should be classified as code_quality."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.skill_selection import classify_feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="lint-validator",
@@ -871,8 +871,8 @@ class TestClassifyFeedback:
 
     def test_classify_factual_accuracy_feedback(self):
         """Factual accuracy feedback should be classified as factual_accuracy."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.skill_selection import classify_feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="accuracy-validator",
@@ -890,15 +890,15 @@ class TestClassifyFeedback:
 
     def test_classify_empty_feedback_list(self):
         """Empty feedback list should return None."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
+        from spellbook.forged.skill_selection import classify_feedback
 
         classification = classify_feedback([])
         assert classification is None
 
     def test_classify_prioritizes_blocking_feedback(self):
         """Blocking feedback should take priority over minor."""
-        from spellbook_mcp.forged.skill_selection import classify_feedback
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.skill_selection import classify_feedback
+        from spellbook.forged.models import Feedback
 
         minor_feedback = Feedback(
             source="lint-validator",
@@ -936,7 +936,7 @@ class TestSkillInvocation:
 
     def test_skill_invocation_creation(self):
         """SkillInvocation must be creatable with required fields."""
-        from spellbook_mcp.forged.project_graph import SkillInvocation
+        from spellbook.forged.project_graph import SkillInvocation
 
         invocation = SkillInvocation(
             id="inv-001",
@@ -961,7 +961,7 @@ class TestSkillInvocation:
 
     def test_skill_invocation_with_completed_state(self):
         """SkillInvocation must handle completed state."""
-        from spellbook_mcp.forged.project_graph import SkillInvocation
+        from spellbook.forged.project_graph import SkillInvocation
 
         invocation = SkillInvocation(
             id="inv-002",
@@ -982,7 +982,7 @@ class TestSkillInvocation:
 
     def test_skill_invocation_to_dict(self):
         """SkillInvocation.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.project_graph import SkillInvocation
+        from spellbook.forged.project_graph import SkillInvocation
 
         invocation = SkillInvocation(
             id="inv-003",
@@ -1009,7 +1009,7 @@ class TestSkillInvocation:
 
     def test_skill_invocation_from_dict(self):
         """SkillInvocation.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.project_graph import SkillInvocation
+        from spellbook.forged.project_graph import SkillInvocation
 
         data = {
             "id": "inv-004",
@@ -1032,7 +1032,7 @@ class TestSkillInvocation:
 
     def test_skill_invocation_roundtrip(self):
         """SkillInvocation must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.project_graph import SkillInvocation
+        from spellbook.forged.project_graph import SkillInvocation
 
         original = SkillInvocation(
             id="inv-rt",
@@ -1071,7 +1071,7 @@ class TestForgeProjectInit:
 
     def test_forge_project_init_creates_graph(self, tmp_path, monkeypatch):
         """forge_project_init must create a project graph."""
-        from spellbook_mcp.forged.project_tools import forge_project_init
+        from spellbook.forged.project_tools import forge_project_init
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1111,7 +1111,7 @@ class TestForgeProjectInit:
 
     def test_forge_project_init_validates_dependencies(self, tmp_path, monkeypatch):
         """forge_project_init must validate feature dependencies exist."""
-        from spellbook_mcp.forged.project_tools import forge_project_init
+        from spellbook.forged.project_tools import forge_project_init
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1142,7 +1142,7 @@ class TestForgeProjectInit:
 
     def test_forge_project_init_detects_cycles(self, tmp_path, monkeypatch):
         """forge_project_init must detect cyclic dependencies."""
-        from spellbook_mcp.forged.project_tools import forge_project_init
+        from spellbook.forged.project_tools import forge_project_init
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1191,7 +1191,7 @@ class TestForgeProjectStatus:
 
     def test_forge_project_status_returns_graph(self, tmp_path, monkeypatch):
         """forge_project_status must return current project graph."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_project_status
+        from spellbook.forged.project_tools import forge_project_init, forge_project_status
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1217,7 +1217,7 @@ class TestForgeProjectStatus:
 
     def test_forge_project_status_shows_progress(self, tmp_path, monkeypatch):
         """forge_project_status must show completion progress."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_project_status, forge_feature_update
+        from spellbook.forged.project_tools import forge_project_init, forge_project_status, forge_feature_update
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1251,7 +1251,7 @@ class TestForgeProjectStatus:
 
     def test_forge_project_status_nonexistent_project(self, tmp_path, monkeypatch):
         """forge_project_status must handle nonexistent project."""
-        from spellbook_mcp.forged.project_tools import forge_project_status
+        from spellbook.forged.project_tools import forge_project_status
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1268,7 +1268,7 @@ class TestForgeFeatureUpdate:
 
     def test_forge_feature_update_status(self, tmp_path, monkeypatch):
         """forge_feature_update must update feature status."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
+        from spellbook.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1300,7 +1300,7 @@ class TestForgeFeatureUpdate:
 
     def test_forge_feature_update_adds_artifact(self, tmp_path, monkeypatch):
         """forge_feature_update must add artifacts to feature."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
+        from spellbook.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1331,7 +1331,7 @@ class TestForgeFeatureUpdate:
 
     def test_forge_feature_update_marks_complete(self, tmp_path, monkeypatch):
         """forge_feature_update must update completed_features when marking complete."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
+        from spellbook.forged.project_tools import forge_project_init, forge_feature_update, forge_project_status
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1361,7 +1361,7 @@ class TestForgeFeatureUpdate:
 
     def test_forge_feature_update_nonexistent_feature(self, tmp_path, monkeypatch):
         """forge_feature_update must handle nonexistent feature."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_feature_update
+        from spellbook.forged.project_tools import forge_project_init, forge_feature_update
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1393,8 +1393,8 @@ class TestForgeSelectSkill:
 
     def test_forge_select_skill_returns_appropriate_skill(self, tmp_path, monkeypatch):
         """forge_select_skill must return appropriate skill for context."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_select_skill
-        from spellbook_mcp.forged.schema import init_forged_schema
+        from spellbook.forged.project_tools import forge_project_init, forge_select_skill
+        from spellbook.forged.schema import init_forged_schema
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1431,8 +1431,8 @@ class TestForgeSkillComplete:
 
     def test_forge_skill_complete_records_invocation(self, tmp_path, monkeypatch):
         """forge_skill_complete must record skill invocation."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_skill_complete
-        from spellbook_mcp.forged.schema import init_forged_schema
+        from spellbook.forged.project_tools import forge_project_init, forge_skill_complete
+        from spellbook.forged.schema import init_forged_schema
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()
@@ -1466,12 +1466,12 @@ class TestForgeSkillComplete:
 
     def test_forge_skill_complete_updates_feature_state(self, tmp_path, monkeypatch):
         """forge_skill_complete must update feature with skill result."""
-        from spellbook_mcp.forged.project_tools import (
+        from spellbook.forged.project_tools import (
             forge_project_init,
             forge_skill_complete,
             forge_project_status,
         )
-        from spellbook_mcp.forged.schema import init_forged_schema
+        from spellbook.forged.schema import init_forged_schema
 
         fake_home = tmp_path / "home"
         fake_home.mkdir()

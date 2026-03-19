@@ -1,8 +1,8 @@
 """Tests for pr_distill unified diff parsing."""
 
 import pytest
-from spellbook_mcp.pr_distill.parse import parse_diff, parse_file_chunk
-from spellbook_mcp.pr_distill.errors import PRDistillError, ErrorCode
+from spellbook.pr_distill.parse import parse_diff, parse_file_chunk
+from spellbook.pr_distill.errors import PRDistillError, ErrorCode
 
 
 class TestParseFileChunkAddedFile:

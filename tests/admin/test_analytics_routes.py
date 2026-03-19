@@ -8,7 +8,7 @@ import pytest
 class TestToolFrequency:
     def test_returns_tool_counts(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -27,7 +27,7 @@ class TestToolFrequency:
 
     def test_filters_by_period_24h(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -40,7 +40,7 @@ class TestToolFrequency:
 
     def test_filters_by_period_7d(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -51,7 +51,7 @@ class TestToolFrequency:
 
     def test_filters_by_period_30d(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -62,7 +62,7 @@ class TestToolFrequency:
 
     def test_period_all_no_date_filter(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -80,7 +80,7 @@ class TestToolFrequency:
 
     def test_empty_results(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -92,7 +92,7 @@ class TestToolFrequency:
 class TestErrorRates:
     def test_returns_error_rates(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -112,7 +112,7 @@ class TestErrorRates:
 
     def test_empty_results(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -124,7 +124,7 @@ class TestErrorRates:
 class TestTimeline:
     def test_returns_bucketed_data(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -143,7 +143,7 @@ class TestTimeline:
     def test_24h_uses_hour_buckets(self, client):
         """24h period should use hour-level bucketing in the SQL."""
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -155,7 +155,7 @@ class TestTimeline:
     def test_7d_uses_day_buckets(self, client):
         """Non-24h periods should use day-level bucketing."""
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -174,7 +174,7 @@ class TestTimeline:
 class TestAnalyticsSummary:
     def test_returns_aggregate_stats(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -196,7 +196,7 @@ class TestAnalyticsSummary:
 
     def test_empty_db_returns_zeros(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -219,7 +219,7 @@ class TestAnalyticsSummary:
     def test_no_rows_returns_zeros(self, client):
         """When query returns empty list, should return zero defaults."""
         with patch(
-            "spellbook_mcp.admin.routes.analytics.query_spellbook_db",
+            "spellbook.admin.routes.analytics.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []

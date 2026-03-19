@@ -31,8 +31,8 @@ def spellbook_config_dir(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_find_session_integration(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test find_session tool end-to-end."""
-    from spellbook_mcp import server
-    from spellbook_mcp.path_utils import encode_cwd
+    from spellbook import server
+    from spellbook.core.path_utils import encode_cwd
 
     # Simulate a project at /Users/test/myproject
     fake_project_path = "/Users/test/myproject"
@@ -90,7 +90,7 @@ async def test_find_session_integration(tmp_path, mock_context_for_path, spellbo
 
 def test_split_session_integration(tmp_path):
     """Test split_session tool end-to-end."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     session_file = tmp_path / "test.jsonl"
     messages = [
@@ -130,8 +130,8 @@ def test_split_session_integration(tmp_path):
 @pytest.mark.asyncio
 async def test_list_sessions_integration(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test list_sessions tool end-to-end."""
-    from spellbook_mcp import server
-    from spellbook_mcp.path_utils import encode_cwd
+    from spellbook import server
+    from spellbook.core.path_utils import encode_cwd
 
     # Simulate a project at /Users/test/myproject
     fake_project_path = "/Users/test/myproject"
@@ -179,7 +179,7 @@ async def test_list_sessions_integration(tmp_path, mock_context_for_path, spellb
 @pytest.mark.asyncio
 async def test_find_session_empty_project(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test find_session with non-existent project directory."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Use a path that won't have any session storage created
     non_existent = "/nonexistent/project"
@@ -192,7 +192,7 @@ async def test_find_session_empty_project(tmp_path, mock_context_for_path, spell
 @pytest.mark.asyncio
 async def test_list_sessions_empty_project(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test list_sessions with non-existent project directory."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Use a path that won't have any session storage created
     non_existent = "/nonexistent/project"
@@ -204,7 +204,7 @@ async def test_list_sessions_empty_project(tmp_path, mock_context_for_path, spel
 
 def test_split_session_file_not_found():
     """Test split_session with non-existent file."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     with pytest.raises(FileNotFoundError):
         server.split_session.fn(
@@ -219,7 +219,7 @@ def test_split_session_file_not_found():
 
 def test_shutdown_cleanup_stops_watchers_and_closes_connections():
     """Test that _shutdown_cleanup calls stop() on watchers and close functions."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     mock_watcher = MagicMock()
     mock_update_watcher = MagicMock()
@@ -231,9 +231,9 @@ def test_shutdown_cleanup_stops_watchers_and_closes_connections():
         server._watcher = mock_watcher
         server._update_watcher = mock_update_watcher
 
-        with patch("spellbook_mcp.db.close_all_connections") as mock_close_db, \
-             patch("spellbook_mcp.forged.schema.close_forged_connections") as mock_close_forged, \
-             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections") as mock_close_fractal:
+        with patch("spellbook.core.db.close_all_connections") as mock_close_db, \
+             patch("spellbook.forged.schema.close_forged_connections") as mock_close_forged, \
+             patch("spellbook.fractal.schema.close_all_fractal_connections") as mock_close_fractal:
             server._shutdown_cleanup()
 
         mock_watcher.stop.assert_called_once()
@@ -248,7 +248,7 @@ def test_shutdown_cleanup_stops_watchers_and_closes_connections():
 
 def test_shutdown_cleanup_handles_none_watchers():
     """Test that _shutdown_cleanup handles None watchers gracefully."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     original_watcher = server._watcher
     original_update_watcher = server._update_watcher
@@ -257,9 +257,9 @@ def test_shutdown_cleanup_handles_none_watchers():
         server._watcher = None
         server._update_watcher = None
 
-        with patch("spellbook_mcp.db.close_all_connections"), \
-             patch("spellbook_mcp.forged.schema.close_forged_connections"), \
-             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections"):
+        with patch("spellbook.core.db.close_all_connections"), \
+             patch("spellbook.forged.schema.close_forged_connections"), \
+             patch("spellbook.fractal.schema.close_all_fractal_connections"):
             # Should not raise
             server._shutdown_cleanup()
     finally:
@@ -269,7 +269,7 @@ def test_shutdown_cleanup_handles_none_watchers():
 
 def test_shutdown_cleanup_resilient_to_close_failures():
     """Test that _shutdown_cleanup doesn't raise even if close functions fail."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     original_watcher = server._watcher
     original_update_watcher = server._update_watcher
@@ -278,9 +278,9 @@ def test_shutdown_cleanup_resilient_to_close_failures():
         server._watcher = None
         server._update_watcher = None
 
-        with patch("spellbook_mcp.db.close_all_connections", side_effect=RuntimeError("db error")), \
-             patch("spellbook_mcp.forged.schema.close_forged_connections", side_effect=RuntimeError("forged error")), \
-             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections", side_effect=RuntimeError("fractal error")):
+        with patch("spellbook.core.db.close_all_connections", side_effect=RuntimeError("db error")), \
+             patch("spellbook.forged.schema.close_forged_connections", side_effect=RuntimeError("forged error")), \
+             patch("spellbook.fractal.schema.close_all_fractal_connections", side_effect=RuntimeError("fractal error")):
             # Should not raise despite all close functions failing
             server._shutdown_cleanup()
     finally:
@@ -290,7 +290,7 @@ def test_shutdown_cleanup_resilient_to_close_failures():
 
 def test_shutdown_cleanup_watcher_stop_not_guarded():
     """Test that watcher.stop() failures propagate (not wrapped in try/except)."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     mock_watcher = MagicMock()
     mock_watcher.stop.side_effect = RuntimeError("watcher stop error")

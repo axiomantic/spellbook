@@ -25,7 +25,7 @@ from unittest.mock import patch
 import pytest
 
 from installer.compat import CrossPlatformLock
-from spellbook_mcp.update_tools import (
+from spellbook.updates.tools import (
     LOCK_STALE_SECONDS,
     apply_update,
     check_for_updates,
@@ -191,7 +191,7 @@ class TestApplyUpdate:
         latest_sha = _get_latest_sha(committed_repo)
 
         with patch(
-            "spellbook_mcp.update_tools.subprocess.run",
+            "spellbook.updates.tools.subprocess.run",
             side_effect=_make_installer_interceptor(installer_returncode=0),
         ):
             result = apply_update(committed_repo, lock_path=lock_file)
@@ -211,7 +211,7 @@ class TestApplyUpdate:
         sha_before = _get_head_sha(committed_repo)
 
         with patch(
-            "spellbook_mcp.update_tools.subprocess.run",
+            "spellbook.updates.tools.subprocess.run",
             side_effect=_make_installer_interceptor(
                 installer_returncode=1, installer_stderr="Installer crashed"
             ),
@@ -239,7 +239,7 @@ class TestRollbackUpdate:
 
         # Apply update first (with mocked installer)
         with patch(
-            "spellbook_mcp.update_tools.subprocess.run",
+            "spellbook.updates.tools.subprocess.run",
             side_effect=interceptor,
         ):
             apply_result = apply_update(committed_repo, lock_path=lock_file)
@@ -250,7 +250,7 @@ class TestRollbackUpdate:
 
         # Now rollback (also with mocked installer)
         with patch(
-            "spellbook_mcp.update_tools.subprocess.run",
+            "spellbook.updates.tools.subprocess.run",
             side_effect=interceptor,
         ):
             rollback_result = rollback_update(committed_repo, lock_path=lock_file)
@@ -357,7 +357,7 @@ class TestSHAValidation:
         self, committed_repo: Path, config_dir: Path, lock_file: Path
     ) -> None:
         """Passing an invalid SHA (not 40 hex chars) to rollback is rejected."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         # Store an invalid SHA in config
         config_set("pre_update_sha", "not-a-valid-sha")
@@ -372,7 +372,7 @@ class TestSHAValidation:
         self, committed_repo: Path, config_dir: Path, lock_file: Path
     ) -> None:
         """A SHA shorter than 40 characters is rejected."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         # Store a short (7-char abbreviated) SHA
         config_set("pre_update_sha", "abc1234")
@@ -406,10 +406,10 @@ class TestUpdateConfigPersistence:
         self, committed_repo: Path, config_dir: Path, lock_file: Path
     ) -> None:
         """After a successful apply_update, update state is persisted in config."""
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         with patch(
-            "spellbook_mcp.update_tools.subprocess.run",
+            "spellbook.updates.tools.subprocess.run",
             side_effect=_make_installer_interceptor(installer_returncode=0),
         ):
             result = apply_update(committed_repo, lock_path=lock_file)

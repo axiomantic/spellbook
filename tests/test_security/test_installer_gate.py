@@ -2,7 +2,7 @@
 
 Validates that `validate_skill_security()` in installer/core.py correctly
 screens skills for security issues before installation, using shared rules
-from spellbook_mcp.security.rules.
+from spellbook.security.rules.
 """
 
 import pytest

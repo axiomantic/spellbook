@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-from spellbook_mcp.branch_ancestry import (
+from spellbook.core.branch_ancestry import (
     BRANCH_MULTIPLIERS,
     BranchRelationship,
     clear_ancestry_cache,

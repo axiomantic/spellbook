@@ -31,7 +31,7 @@ def spellbook_dir(tmp_path):
     (sb / ".version").write_text("0.10.0")
 
     # MCP server stub
-    mcp_dir = sb / "spellbook_mcp"
+    mcp_dir = sb / "spellbook"
     mcp_dir.mkdir()
     (mcp_dir / "server.py").write_text("# server stub")
 
@@ -485,15 +485,9 @@ class TestGetDaemonPython:
 
         monkeypatch.setenv("SPELLBOOK_DAEMON_PYTHON", str(symlink_python))
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
 
         assert result is not None
         # The result must contain the symlink path, not the resolved real_python path
@@ -504,30 +498,18 @@ class TestGetDaemonPython:
         """Returns None when SPELLBOOK_DAEMON_PYTHON is not set."""
         monkeypatch.delenv("SPELLBOOK_DAEMON_PYTHON", raising=False)
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
         assert result is None
 
     def test_nonexistent_file_returns_none(self, tmp_path, monkeypatch):
         """Returns None when SPELLBOOK_DAEMON_PYTHON points to a file that doesn't exist."""
         monkeypatch.setenv("SPELLBOOK_DAEMON_PYTHON", str(tmp_path / "nonexistent" / "python"))
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
         assert result is None
 
 
@@ -540,9 +522,9 @@ class TestGetRepairs:
 
     def test_tts_enabled_kokoro_missing(self):
         """Returns tts-deps-missing repair when TTS enabled but kokoro not installed."""
-        from spellbook_mcp.config_tools import _get_repairs
+        from spellbook.core.config import _get_repairs
 
-        with patch("spellbook_mcp.config_tools.config_get", return_value=True) as mock_cg, \
+        with patch("spellbook.core.config.config_get", return_value=True) as mock_cg, \
              patch("importlib.util.find_spec", return_value=None):
             repairs = _get_repairs()
 
@@ -553,9 +535,9 @@ class TestGetRepairs:
 
     def test_tts_not_enabled_no_repair(self):
         """Returns no TTS repair when TTS is not enabled."""
-        from spellbook_mcp.config_tools import _get_repairs
+        from spellbook.core.config import _get_repairs
 
-        with patch("spellbook_mcp.config_tools.config_get", return_value=False):
+        with patch("spellbook.core.config.config_get", return_value=False):
             repairs = _get_repairs()
 
         tts_repairs = [r for r in repairs if "tts" in r.get("id", "")]
@@ -563,7 +545,7 @@ class TestGetRepairs:
 
     def test_tts_enabled_kokoro_installed(self):
         """No tts-deps-missing repair when both kokoro and soundfile are present."""
-        from spellbook_mcp.config_tools import _get_repairs
+        from spellbook.core.config import _get_repairs
 
         def mock_find_spec(name):
             if name in ("kokoro", "soundfile", "pip"):
@@ -572,7 +554,7 @@ class TestGetRepairs:
                 return mock
             return None
 
-        with patch("spellbook_mcp.config_tools.config_get", return_value=True), \
+        with patch("spellbook.core.config.config_get", return_value=True), \
              patch("importlib.util.find_spec", side_effect=mock_find_spec):
             repairs = _get_repairs()
 
@@ -581,9 +563,9 @@ class TestGetRepairs:
 
     def test_find_spec_used_not_import(self):
         """Verify find_spec is called, not direct import of kokoro."""
-        from spellbook_mcp.config_tools import _get_repairs
+        from spellbook.core.config import _get_repairs
 
-        with patch("spellbook_mcp.config_tools.config_get", return_value=True), \
+        with patch("spellbook.core.config.config_get", return_value=True), \
              patch("importlib.util.find_spec") as mock_fs:
             mock_fs.return_value = None
             _get_repairs()
@@ -870,7 +852,7 @@ class TestInstallDaemonTtsInclusion:
              patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
              patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
-             patch("spellbook_mcp.config_tools.config_get", return_value=True):
+             patch("spellbook.core.config.config_get", return_value=True):
             install_daemon(sb_dir, dry_run=False)
 
         # Verify include_tts=True was passed
@@ -893,7 +875,7 @@ class TestInstallDaemonTtsInclusion:
              patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
              patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
-             patch("spellbook_mcp.config_tools.config_get", return_value=False):
+             patch("spellbook.core.config.config_get", return_value=False):
             install_daemon(sb_dir, dry_run=False)
 
         mock_venv.assert_called_once()
@@ -916,7 +898,7 @@ class TestInstallDaemonTtsInclusion:
              patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
              patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
-             patch.dict("sys.modules", {"spellbook_mcp.config_tools": None}):
+             patch.dict("sys.modules", {"spellbook.core.config": None}):
             install_daemon(sb_dir, dry_run=False)
 
         mock_venv.assert_called_once()
@@ -938,7 +920,7 @@ class TestSetupTtsReinstall:
         with patch.object(install_mod, "check_tts_available", return_value=False), \
              patch.object(install_mod, "_install_tts_deps", return_value=True) as mock_install, \
              patch.object(install_mod, "_preload_tts_model") as mock_preload, \
-             patch("spellbook_mcp.config_tools.config_get", return_value=True):
+             patch("spellbook.core.config.config_get", return_value=True):
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
         mock_install.assert_called_once_with(tmp_path)
@@ -950,7 +932,7 @@ class TestSetupTtsReinstall:
 
         with patch.object(install_mod, "check_tts_available", return_value=True), \
              patch.object(install_mod, "_install_tts_deps") as mock_install, \
-             patch("spellbook_mcp.config_tools.config_get", return_value=True):
+             patch("spellbook.core.config.config_get", return_value=True):
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
         mock_install.assert_not_called()
@@ -961,7 +943,7 @@ class TestSetupTtsReinstall:
 
         with patch.object(install_mod, "check_tts_available", return_value=False), \
              patch.object(install_mod, "_install_tts_deps") as mock_install, \
-             patch("spellbook_mcp.config_tools.config_get", return_value=False):
+             patch("spellbook.core.config.config_get", return_value=False):
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
         mock_install.assert_not_called()
@@ -972,7 +954,7 @@ class TestSetupTtsReinstall:
 
         with patch.object(install_mod, "check_tts_available", return_value=False), \
              patch.object(install_mod, "_install_tts_deps", return_value=False), \
-             patch("spellbook_mcp.config_tools.config_get", return_value=True):
+             patch("spellbook.core.config.config_get", return_value=True):
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
         captured = capsys.readouterr()

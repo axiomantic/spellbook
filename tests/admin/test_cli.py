@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spellbook_mcp.admin.cli import admin_open, main
+from spellbook.admin.cli import admin_open, main
 
 
 class TestAdminOpen:
     def test_no_token_returns_error(self):
         with patch(
-            "spellbook_mcp.admin.cli._find_mcp_token", return_value=None
+            "spellbook.admin.cli._find_mcp_token", return_value=None
         ):
             assert admin_open() == 1
 
@@ -20,11 +20,11 @@ class TestAdminOpen:
 
         with (
             patch(
-                "spellbook_mcp.admin.cli._find_mcp_token",
+                "spellbook.admin.cli._find_mcp_token",
                 return_value="test-token",
             ),
             patch(
-                "spellbook_mcp.admin.cli.urllib.request.urlopen",
+                "spellbook.admin.cli.urllib.request.urlopen",
                 side_effect=urllib.error.URLError("Connection refused"),
             ),
         ):
@@ -40,14 +40,14 @@ class TestAdminOpen:
 
         with (
             patch(
-                "spellbook_mcp.admin.cli._find_mcp_token",
+                "spellbook.admin.cli._find_mcp_token",
                 return_value="test-token",
             ),
             patch(
-                "spellbook_mcp.admin.cli.urllib.request.urlopen",
+                "spellbook.admin.cli.urllib.request.urlopen",
                 return_value=mock_response,
             ),
-            patch("spellbook_mcp.admin.cli.webbrowser.open") as mock_browser,
+            patch("spellbook.admin.cli.webbrowser.open") as mock_browser,
         ):
             result = admin_open(port=8765)
             assert result == 0
@@ -66,15 +66,15 @@ class TestAdminOpen:
 
         with (
             patch(
-                "spellbook_mcp.admin.cli._find_mcp_token",
+                "spellbook.admin.cli._find_mcp_token",
                 return_value="test-token",
             ),
             patch(
-                "spellbook_mcp.admin.cli.urllib.request.urlopen",
+                "spellbook.admin.cli.urllib.request.urlopen",
                 return_value=mock_response,
             ),
             patch(
-                "spellbook_mcp.admin.cli.webbrowser.open",
+                "spellbook.admin.cli.webbrowser.open",
                 side_effect=Exception("No browser"),
             ),
         ):
@@ -91,7 +91,7 @@ class TestMain:
         assert result == 0
 
     def test_open_command(self):
-        with patch("spellbook_mcp.admin.cli.admin_open", return_value=0) as mock:
+        with patch("spellbook.admin.cli.admin_open", return_value=0) as mock:
             result = main(["open", "--port", "9999"])
             assert result == 0
             mock.assert_called_once_with(port=9999)

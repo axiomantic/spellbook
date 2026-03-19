@@ -14,7 +14,7 @@ def graph_with_root(fractal_db):
 
     Returns a dict with graph_id, root_node_id, and db_path.
     """
-    from spellbook_mcp.fractal.graph_ops import create_graph
+    from spellbook.fractal.graph_ops import create_graph
 
     result = create_graph(
         seed="Why is the sky blue?",
@@ -34,7 +34,7 @@ class TestAddNode:
 
     def test_add_question_node_returns_correct_shape(self, graph_with_root):
         """add_node must return dict with node_id, graph_id, parent_id, depth, node_type, status."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -52,7 +52,7 @@ class TestAddNode:
 
     def test_add_question_node_depth_calculation(self, graph_with_root):
         """add_node must calculate depth = parent.depth + 1."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         # Root node is depth 0, so child should be depth 1
         result = add_node(
@@ -67,8 +67,8 @@ class TestAddNode:
 
     def test_add_node_depth_cascades(self, fractal_db):
         """add_node at depth 1 parent must produce depth 2 child."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node
 
         # Use explore intensity (max_depth=4) to allow deeper nesting
         result = create_graph(
@@ -102,7 +102,7 @@ class TestAddNode:
 
     def test_add_answer_node(self, graph_with_root):
         """add_node must accept answer node type."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -117,8 +117,8 @@ class TestAddNode:
 
     def test_add_answer_auto_transitions_parent_question(self, graph_with_root):
         """Adding answer to open question must transition parent to answered."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         add_node(
             graph_id=graph_with_root["graph_id"],
@@ -140,9 +140,9 @@ class TestAddNode:
 
     def test_add_answer_does_not_transition_non_question_parent(self, fractal_db):
         """Adding answer to answer parent must NOT transition parent status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Use explore intensity (max_depth=4) since this test needs depth 2
         graph = create_graph(
@@ -180,8 +180,8 @@ class TestAddNode:
 
     def test_add_node_creates_parent_child_edge(self, graph_with_root):
         """add_node with parent_id must create parent_child edge."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -208,8 +208,8 @@ class TestAddNode:
 
     def test_add_node_with_owner(self, graph_with_root):
         """add_node must store owner when provided."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -230,8 +230,8 @@ class TestAddNode:
 
     def test_add_node_with_metadata(self, graph_with_root):
         """add_node must store metadata_json when provided."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         metadata = json.dumps({"priority": "high", "source": "decomposition"})
 
@@ -256,7 +256,7 @@ class TestAddNode:
 
     def test_add_node_invalid_graph_rejected(self, fractal_db):
         """add_node with nonexistent graph_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         with pytest.raises(ValueError, match="[Gg]raph"):
             add_node(
@@ -269,7 +269,7 @@ class TestAddNode:
 
     def test_add_node_invalid_node_type_rejected(self, graph_with_root):
         """add_node with invalid node_type must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         with pytest.raises(ValueError, match="[Nn]ode.type"):
             add_node(
@@ -282,7 +282,7 @@ class TestAddNode:
 
     def test_add_node_parent_not_found_rejected(self, graph_with_root):
         """add_node with nonexistent parent_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         with pytest.raises(ValueError, match="[Pp]arent"):
             add_node(
@@ -295,7 +295,7 @@ class TestAddNode:
 
     def test_add_node_no_parent_depth_zero(self, graph_with_root):
         """add_node without parent_id must have depth 0."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -311,7 +311,7 @@ class TestAddNode:
         """add_node must generate a valid UUID for node_id."""
         import uuid
 
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -326,8 +326,8 @@ class TestAddNode:
 
     def test_add_node_persisted_to_db(self, graph_with_root):
         """add_node must persist the node to the database."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -354,7 +354,7 @@ class TestAddNode:
 
     def test_add_node_exceeds_depth_budget(self, graph_with_root):
         """add_node should reject nodes that would exceed the intensity's max_depth."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         # graph_with_root creates a pulse-intensity graph (max_depth=2)
         # Root is depth 0. Add child at depth 1 (allowed).
@@ -378,7 +378,7 @@ class TestAddNode:
 
     def test_add_node_at_max_allowed_depth(self, graph_with_root):
         """Nodes at depth max_depth-1 should be allowed."""
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.node_ops import add_node
 
         # pulse max_depth=2, so depth 1 should work
         result = add_node(
@@ -394,8 +394,8 @@ class TestAddNode:
 
     def test_add_node_to_non_active_graph(self, fractal_db):
         """add_node should reject adding nodes to non-active graphs."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook.fractal.node_ops import add_node
 
         result = create_graph(
             seed="Test",
@@ -421,8 +421,8 @@ class TestAddNode:
 
     def test_add_node_to_paused_graph(self, fractal_db):
         """add_node should reject adding nodes to paused graphs."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook.fractal.node_ops import add_node
 
         result = create_graph(
             seed="Test",
@@ -450,8 +450,8 @@ class TestUpdateNode:
 
     def test_update_node_merges_metadata(self, graph_with_root):
         """update_node must merge new metadata into existing, not replace."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Create node with initial metadata
         initial_meta = json.dumps({"priority": "high"})
@@ -480,7 +480,7 @@ class TestUpdateNode:
 
     def test_update_node_metadata_overwrite_key(self, graph_with_root):
         """update_node must overwrite existing key when same key provided."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         initial_meta = json.dumps({"priority": "high"})
         node = add_node(
@@ -504,7 +504,7 @@ class TestUpdateNode:
 
     def test_update_node_returns_correct_shape(self, graph_with_root):
         """update_node must return dict with node_id, metadata, edges_created."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -528,8 +528,8 @@ class TestUpdateNode:
 
     def test_update_node_convergence_edge_creation(self, graph_with_root):
         """update_node with convergence_with must create convergence edges."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Create two sibling nodes
         node_a = add_node(
@@ -572,8 +572,8 @@ class TestUpdateNode:
 
     def test_update_node_contradiction_edge_creation(self, graph_with_root):
         """update_node with contradiction_with must create contradiction edges."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         node_a = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -613,7 +613,7 @@ class TestUpdateNode:
 
     def test_update_node_multiple_convergence_targets(self, graph_with_root):
         """update_node with multiple convergence_with targets must create multiple edges."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node_a = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -651,7 +651,7 @@ class TestUpdateNode:
 
     def test_update_node_invalid_convergence_target_rejected(self, graph_with_root):
         """update_node with nonexistent convergence target must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node_a = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -673,7 +673,7 @@ class TestUpdateNode:
 
     def test_update_node_invalid_contradiction_target_rejected(self, graph_with_root):
         """update_node with nonexistent contradiction target must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node_a = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -695,7 +695,7 @@ class TestUpdateNode:
 
     def test_update_node_no_edges_returns_zero(self, graph_with_root):
         """update_node without edge-creating metadata must return edges_created=0."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -716,7 +716,7 @@ class TestUpdateNode:
 
     def test_update_node_invalid_graph_rejected(self, graph_with_root):
         """update_node with nonexistent graph_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.node_ops import add_node, update_node
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -736,7 +736,7 @@ class TestUpdateNode:
 
     def test_update_node_invalid_node_rejected(self, graph_with_root):
         """update_node with nonexistent node_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import update_node
+        from spellbook.fractal.node_ops import update_node
 
         with pytest.raises(ValueError, match="[Nn]ode"):
             update_node(
@@ -748,8 +748,8 @@ class TestUpdateNode:
 
     def test_update_node_metadata_persisted(self, graph_with_root):
         """update_node must persist merged metadata to the database."""
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -783,7 +783,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_from_open(self, graph_with_root):
         """mark_saturated must transition open node to saturated."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -806,8 +806,8 @@ class TestMarkSaturated:
 
     def test_mark_saturated_from_answered(self, graph_with_root):
         """mark_saturated must transition answered node to saturated."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Add answer to root to transition root to "answered"
         # Root is at depth 0, answer will be at depth 1 (within pulse max_depth=2)
@@ -841,7 +841,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_invalid_reason_rejected(self, graph_with_root):
         """mark_saturated with invalid reason must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -861,7 +861,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_already_saturated_rejected(self, graph_with_root):
         """mark_saturated on already-saturated node must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -890,7 +890,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_node_not_found(self, graph_with_root):
         """mark_saturated with nonexistent node_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
+        from spellbook.fractal.node_ops import mark_saturated
 
         with pytest.raises(ValueError, match="[Nn]ode"):
             mark_saturated(
@@ -902,8 +902,8 @@ class TestMarkSaturated:
 
     def test_mark_saturated_stores_reason_in_metadata(self, graph_with_root):
         """mark_saturated must store reason in metadata_json under saturation_reason."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.schema import get_fractal_connection
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -934,8 +934,8 @@ class TestMarkSaturated:
 
     def test_mark_saturated_persisted_to_db(self, graph_with_root):
         """mark_saturated must persist status change to the database."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.schema import get_fractal_connection
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -962,8 +962,8 @@ class TestMarkSaturated:
 
     def test_mark_saturated_all_valid_reasons(self, graph_with_root):
         """mark_saturated must accept all valid saturation reasons."""
-        from spellbook_mcp.fractal.models import VALID_SATURATION_REASONS
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.models import VALID_SATURATION_REASONS
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         for reason in VALID_SATURATION_REASONS:
             node = add_node(
@@ -983,7 +983,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_invalid_graph_rejected(self, graph_with_root):
         """mark_saturated with nonexistent graph_id must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -1003,7 +1003,7 @@ class TestMarkSaturated:
 
     def test_mark_saturated_from_claimed(self, graph_with_root):
         """mark_saturated must transition claimed node to saturated."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work, mark_saturated
+        from spellbook.fractal.node_ops import add_node, claim_work, mark_saturated
 
         # Add a question node under root
         node = add_node(
@@ -1044,7 +1044,7 @@ class TestClaimWork:
 
     def test_claim_work_basic(self, graph_with_root):
         """claim_work must claim an open question node and return its data."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.node_ops import add_node, claim_work
 
         # Add a question node
         node = add_node(
@@ -1070,8 +1070,8 @@ class TestClaimWork:
 
     def test_claim_work_sets_owner_and_status(self, graph_with_root):
         """claim_work must set owner and status='claimed' in the database."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.schema import get_fractal_connection
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -1099,7 +1099,7 @@ class TestClaimWork:
 
     def test_claim_work_atomicity(self, graph_with_root):
         """claim_work must not double-claim; each call claims a different node."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.node_ops import add_node, claim_work
 
         node1 = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -1133,9 +1133,9 @@ class TestClaimWork:
 
     def test_claim_work_branch_affinity(self, fractal_db):
         """claim_work must prefer sibling nodes of previously claimed/owned nodes."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Use explore intensity for deeper nesting
         graph = create_graph(
@@ -1198,7 +1198,7 @@ class TestClaimWork:
 
     def test_claim_work_no_work_available_with_claimed(self, graph_with_root):
         """claim_work with no open nodes but claimed nodes returns graph_done=False."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.node_ops import add_node, claim_work
 
         # Add one question and claim it
         add_node(
@@ -1233,7 +1233,7 @@ class TestClaimWork:
 
     def test_claim_work_graph_done(self, graph_with_root):
         """claim_work with no open and no claimed nodes returns graph_done=True."""
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         # The root node is the only question. Saturate it so no open/claimed remain.
         mark_saturated(
@@ -1243,7 +1243,7 @@ class TestClaimWork:
             db_path=graph_with_root["db_path"],
         )
 
-        from spellbook_mcp.fractal.node_ops import claim_work
+        from spellbook.fractal.node_ops import claim_work
 
         result = claim_work(
             graph_id=graph_with_root["graph_id"],
@@ -1256,9 +1256,9 @@ class TestClaimWork:
 
     def test_claim_work_prefers_shallow(self, fractal_db):
         """claim_work must prefer shallower nodes over deeper ones."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph = create_graph(
             seed="Depth preference test",
@@ -1316,8 +1316,8 @@ class TestClaimWork:
 
     def test_claim_work_inactive_graph(self, fractal_db):
         """claim_work on non-active graph must raise ValueError."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
-        from spellbook_mcp.fractal.node_ops import claim_work
+        from spellbook.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook.fractal.node_ops import claim_work
 
         graph = create_graph(
             seed="Inactive test",
@@ -1342,7 +1342,7 @@ class TestSynthesizeNode:
 
     def test_synthesize_leaf_node(self, graph_with_root):
         """synthesize_node on a leaf node (no children) with claimed status must succeed."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work, synthesize_node
+        from spellbook.fractal.node_ops import add_node, claim_work, synthesize_node
 
         # Add a question and claim it (simulating a worker picking it up)
         node = add_node(
@@ -1380,13 +1380,13 @@ class TestSynthesizeNode:
 
     def test_synthesize_node_with_children(self, fractal_db):
         """synthesize_node on parent must succeed when all children are synthesized/saturated."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import (
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import (
             add_node,
             mark_saturated,
             synthesize_node,
         )
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph = create_graph(
             seed="Synthesis parent test",
@@ -1448,8 +1448,8 @@ class TestSynthesizeNode:
 
     def test_synthesize_node_children_not_done(self, fractal_db):
         """synthesize_node must raise ValueError when children are still open."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, synthesize_node
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, synthesize_node
 
         graph = create_graph(
             seed="Incomplete children test",
@@ -1484,8 +1484,8 @@ class TestSynthesizeNode:
 
     def test_synthesize_stores_synthesis_text(self, graph_with_root):
         """synthesize_node must store synthesis text in metadata under 'synthesis' key."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work, synthesize_node
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.node_ops import add_node, claim_work, synthesize_node
+        from spellbook.fractal.schema import get_fractal_connection
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -1528,7 +1528,7 @@ class TestSynthesizeNode:
 
     def test_synthesize_node_wrong_status(self, graph_with_root):
         """synthesize_node on an open node (not answered/claimed) must raise ValueError."""
-        from spellbook_mcp.fractal.node_ops import add_node, synthesize_node
+        from spellbook.fractal.node_ops import add_node, synthesize_node
 
         node = add_node(
             graph_id=graph_with_root["graph_id"],
@@ -1552,9 +1552,9 @@ class TestAddNodeClaimedTransition:
 
     def test_add_node_answer_transitions_claimed_parent(self, fractal_db):
         """Adding answer to claimed question must transition parent to answered."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.schema import get_fractal_connection
 
         # Use explore intensity (max_depth=4) to allow depth-2 nodes
         graph = create_graph(

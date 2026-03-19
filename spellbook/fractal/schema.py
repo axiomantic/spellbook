@@ -1,0 +1,239 @@
+"""Database schema and connection management for fractal thinking.
+
+This module provides SQLite database initialization and connection management
+for the fractal thinking system, including schema versioning and WAL mode.
+"""
+
+import sqlite3
+import threading
+from pathlib import Path
+from typing import Optional
+
+from spellbook.fractal.models import SCHEMA_VERSION
+
+
+def get_fractal_db_path() -> Path:
+    """Get path to fractal database file.
+
+    Returns:
+        Path to ~/.local/spellbook/fractal.db
+    """
+    db_dir = Path.home() / ".local" / "spellbook"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    return db_dir / "fractal.db"
+
+
+_connections: dict = {}
+_connections_lock: threading.Lock = threading.Lock()
+
+
+def get_fractal_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
+    """Get database connection with WAL mode enabled.
+
+    Maintains a connection cache to reuse connections efficiently.
+    All connections are configured with WAL mode for concurrent access.
+
+    Args:
+        db_path: Path to database file (defaults to standard location)
+
+    Returns:
+        SQLite connection with WAL mode enabled
+    """
+    if db_path is None:
+        db_path = str(get_fractal_db_path())
+
+    with _connections_lock:
+        if db_path in _connections:
+            return _connections[db_path]
+
+        conn = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+
+        _connections[db_path] = conn
+        return conn
+
+
+def close_all_fractal_connections() -> None:
+    """Close all cached fractal database connections.
+
+    Used primarily for cleanup in tests.
+    """
+    global _connections
+    with _connections_lock:
+        for conn in _connections.values():
+            conn.close()
+        _connections = {}
+
+
+def init_fractal_schema(db_path: Optional[str] = None) -> None:
+    """Initialize fractal database schema.
+
+    Creates all required tables with indices. Idempotent - safe to call
+    multiple times. Records schema version on first initialization.
+
+    Args:
+        db_path: Path to database file (defaults to standard location)
+    """
+    conn = get_fractal_connection(db_path)
+    cursor = conn.cursor()
+
+    # Schema version tracking
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS schema_version (
+            version INTEGER NOT NULL,
+            applied_at TEXT NOT NULL
+        )
+    """)
+
+    # Graphs - top-level fractal exploration sessions
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS graphs (
+            id TEXT PRIMARY KEY,
+            seed TEXT NOT NULL,
+            intensity TEXT NOT NULL CHECK(intensity IN ('pulse', 'explore', 'deep')),
+            checkpoint_mode TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active'
+                CHECK(status IN ('active', 'paused', 'completed', 'error', 'budget_exhausted')),
+            metadata_json TEXT DEFAULT '{}',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
+
+    # Nodes - questions and answers in the fractal graph
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS nodes (
+            id TEXT PRIMARY KEY,
+            graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+            parent_id TEXT REFERENCES nodes(id) ON DELETE CASCADE,
+            node_type TEXT NOT NULL CHECK(node_type IN ('question', 'answer')),
+            text TEXT NOT NULL,
+            owner TEXT,
+            depth INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'open'
+                CHECK(status IN ('open', 'claimed', 'answered', 'synthesized', 'saturated', 'error', 'budget_exhausted')),
+            metadata_json TEXT DEFAULT '{}',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            claimed_at TEXT,
+            answered_at TEXT,
+            synthesized_at TEXT,
+            session_id TEXT
+        )
+    """)
+
+    # Edges - relationships between nodes
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS edges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+            from_node TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+            to_node TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+            edge_type TEXT NOT NULL
+                CHECK(edge_type IN ('parent_child', 'convergence', 'contradiction')),
+            metadata_json TEXT DEFAULT '{}',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(graph_id, from_node, to_node, edge_type)
+        )
+    """)
+
+    # Check current schema version and apply migrations
+    cursor.execute("SELECT MAX(version) FROM schema_version")
+    row = cursor.fetchone()
+    current_version = row[0] if row[0] is not None else 0
+
+    if current_version < 2:
+        # v1 -> v2 migration: add 'claimed' and 'synthesized' node statuses
+        # Check if the nodes table already has data (existing v1 install)
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='nodes'"
+        )
+        if cursor.fetchone() is not None and current_version >= 1:
+            # Migrate existing nodes table within a transaction
+            cursor.execute("BEGIN")
+            try:
+                cursor.execute("""
+                    CREATE TABLE nodes_new (
+                        id TEXT PRIMARY KEY,
+                        graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+                        parent_id TEXT REFERENCES nodes(id) ON DELETE CASCADE,
+                        node_type TEXT NOT NULL CHECK(node_type IN ('question', 'answer')),
+                        text TEXT NOT NULL,
+                        owner TEXT,
+                        depth INTEGER NOT NULL DEFAULT 0,
+                        status TEXT NOT NULL DEFAULT 'open'
+                            CHECK(status IN ('open', 'claimed', 'answered', 'synthesized', 'saturated', 'error', 'budget_exhausted')),
+                        metadata_json TEXT DEFAULT '{}',
+                        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                    )
+                """)
+                cursor.execute("INSERT INTO nodes_new SELECT * FROM nodes")
+                cursor.execute("DROP TABLE nodes")
+                cursor.execute("ALTER TABLE nodes_new RENAME TO nodes")
+
+                # Recreate all indexes on nodes (with new index replacing old)
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_graph_id ON nodes(graph_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_parent_id ON nodes(parent_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_graph_type_status ON nodes(graph_id, node_type, status)"
+                )
+
+                cursor.execute("COMMIT")
+            except Exception:
+                cursor.execute("ROLLBACK")
+                raise
+
+        # Record schema version 2
+        cursor.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (2, datetime('now'))"
+        )
+    if current_version < 3:
+        # v2 -> v3 migration: add timestamp columns and session_id for chat log linking
+        existing_cols = {
+            row[1] for row in cursor.execute("PRAGMA table_info(nodes)").fetchall()
+        }
+        for col, default in [
+            ("claimed_at", "NULL"),
+            ("answered_at", "NULL"),
+            ("synthesized_at", "NULL"),
+            ("session_id", "NULL"),
+        ]:
+            if col not in existing_cols:
+                cursor.execute(f"ALTER TABLE nodes ADD COLUMN {col} TEXT DEFAULT {default}")
+
+        cursor.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (3, datetime('now'))"
+        )
+
+    if current_version >= SCHEMA_VERSION:
+        # Already at current version, nothing to do
+        pass
+
+    # Indexes on nodes (IF NOT EXISTS for fresh installs)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_nodes_graph_id ON nodes(graph_id)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_nodes_parent_id ON nodes(parent_id)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_nodes_graph_type_status ON nodes(graph_id, node_type, status)
+    """)
+
+    # Indexes on edges
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_edges_graph_id ON edges(graph_id)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_edges_from_node ON edges(from_node)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_edges_to_node ON edges(to_node)
+    """)
+
+    conn.commit()

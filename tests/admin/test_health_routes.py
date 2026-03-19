@@ -8,19 +8,19 @@ import pytest
 class TestHealthMatrix:
     def test_returns_all_databases(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.health.query_spellbook_db",
+            "spellbook.admin.routes.health.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock_spellbook, patch(
-            "spellbook_mcp.admin.routes.health.query_fractal_db",
+            "spellbook.admin.routes.health.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock_fractal, patch(
-            "spellbook_mcp.admin.routes.health.query_forged_db",
+            "spellbook.admin.routes.health.query_forged_db",
             new_callable=AsyncMock,
         ) as mock_forged, patch(
-            "spellbook_mcp.admin.routes.health.query_coordination_db",
+            "spellbook.admin.routes.health.query_coordination_db",
             new_callable=AsyncMock,
         ) as mock_coord, patch(
-            "spellbook_mcp.admin.routes.health._get_db_paths",
+            "spellbook.admin.routes.health._get_db_paths",
         ) as mock_paths:
             mock_paths.return_value = {
                 "spellbook.db": "/tmp/spellbook.db",
@@ -78,9 +78,9 @@ class TestHealthMatrix:
 
     def test_missing_db_returns_missing_status(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.health._get_db_paths",
+            "spellbook.admin.routes.health._get_db_paths",
         ) as mock_paths, patch(
-            "spellbook_mcp.admin.routes.health._probe_database",
+            "spellbook.admin.routes.health._probe_database",
             new_callable=AsyncMock,
         ) as mock_probe:
             mock_paths.return_value = {
@@ -109,9 +109,9 @@ class TestHealthMatrix:
 
     def test_db_query_error_returns_error_status(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.health._get_db_paths",
+            "spellbook.admin.routes.health._get_db_paths",
         ) as mock_paths, patch(
-            "spellbook_mcp.admin.routes.health._probe_database",
+            "spellbook.admin.routes.health._probe_database",
             new_callable=AsyncMock,
         ) as mock_probe:
             mock_paths.return_value = {
@@ -137,7 +137,7 @@ class TestHealthMatrix:
     def test_probe_missing_file(self, client):
         """_probe_database returns missing status when file does not exist."""
         with patch("os.path.exists", return_value=False):
-            from spellbook_mcp.admin.routes.health import _probe_database
+            from spellbook.admin.routes.health import _probe_database
 
             import asyncio
             result = asyncio.run(
@@ -155,7 +155,7 @@ class TestHealthMatrix:
         mock_query = AsyncMock(side_effect=Exception("db locked"))
         with patch("os.path.exists", return_value=True), \
              patch("os.path.getsize", return_value=999):
-            from spellbook_mcp.admin.routes.health import _probe_database
+            from spellbook.admin.routes.health import _probe_database
 
             import asyncio
             result = asyncio.run(

@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import asyncio
-from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+from spellbook.core.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
 
 
 @pytest.fixture
@@ -52,10 +52,10 @@ class TestSwarmCreate:
 
     def test_creates_swarm_successfully(self, mock_backend, coordination_config):
         """Test successful swarm creation."""
-        from spellbook_mcp.swarm_tools import swarm_create
+        from spellbook.coordination.swarm import swarm_create
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_create(
                     feature="user-authentication",
                     manifest_path="/path/to/manifest.json",
@@ -72,10 +72,10 @@ class TestSwarmCreate:
 
     def test_auto_merge_defaults_to_false(self, mock_backend, coordination_config):
         """Test auto_merge defaults to False."""
-        from spellbook_mcp.swarm_tools import swarm_create
+        from spellbook.coordination.swarm import swarm_create
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 swarm_create(
                     feature="test-feature",
                     manifest_path="/path/to/manifest.json"
@@ -89,10 +89,10 @@ class TestSwarmCreate:
 
     def test_raises_when_backend_none(self):
         """Test error when backend is NONE."""
-        from spellbook_mcp.swarm_tools import swarm_create
+        from spellbook.coordination.swarm import swarm_create
 
         config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=config):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
             with pytest.raises(ValueError, match="No coordination backend configured"):
                 swarm_create(
                     feature="test",
@@ -105,10 +105,10 @@ class TestSwarmRegister:
 
     def test_registers_worker_successfully(self, mock_backend, coordination_config):
         """Test successful worker registration."""
-        from spellbook_mcp.swarm_tools import swarm_register
+        from spellbook.coordination.swarm import swarm_register
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_register(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -133,10 +133,10 @@ class TestSwarmProgress:
 
     def test_reports_progress_successfully(self, mock_backend, coordination_config):
         """Test successful progress reporting."""
-        from spellbook_mcp.swarm_tools import swarm_progress
+        from spellbook.coordination.swarm import swarm_progress
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_progress(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -164,10 +164,10 @@ class TestSwarmProgress:
 
     def test_commit_optional(self, mock_backend, coordination_config):
         """Test commit parameter is optional."""
-        from spellbook_mcp.swarm_tools import swarm_progress
+        from spellbook.coordination.swarm import swarm_progress
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 swarm_progress(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -195,10 +195,10 @@ class TestSwarmComplete:
 
     def test_reports_completion_successfully(self, mock_backend, coordination_config):
         """Test successful completion reporting."""
-        from spellbook_mcp.swarm_tools import swarm_complete
+        from spellbook.coordination.swarm import swarm_complete
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_complete(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -223,10 +223,10 @@ class TestSwarmError:
 
     def test_reports_error_successfully(self, mock_backend, coordination_config):
         """Test successful error reporting."""
-        from spellbook_mcp.swarm_tools import swarm_error
+        from spellbook.coordination.swarm import swarm_error
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_error(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -253,10 +253,10 @@ class TestSwarmMonitor:
 
     def test_gets_status_successfully(self, mock_backend, coordination_config):
         """Test successful status retrieval."""
-        from spellbook_mcp.swarm_tools import swarm_monitor
+        from spellbook.coordination.swarm import swarm_monitor
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_monitor(swarm_id="swarm-123")
 
                 assert result["swarm_id"] == "swarm-123"
@@ -273,8 +273,8 @@ class TestBackendInitialization:
 
     def test_gets_mcp_http_backend(self):
         """Test getting MCP HTTP backend."""
-        from spellbook_mcp.swarm_tools import _get_backend
-        from spellbook_mcp.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
+        from spellbook.coordination.swarm import _get_backend
+        from spellbook.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -288,7 +288,7 @@ class TestBackendInitialization:
 
     def test_raises_for_unsupported_backend(self):
         """Test error for unsupported backend types."""
-        from spellbook_mcp.swarm_tools import _get_backend
+        from spellbook.coordination.swarm import _get_backend
 
         config = CoordinationConfig(
             backend=CoordinationBackend.N8N
@@ -299,7 +299,7 @@ class TestBackendInitialization:
 
     def test_raises_for_none_backend(self):
         """Test error when backend is NONE."""
-        from spellbook_mcp.swarm_tools import _get_backend
+        from spellbook.coordination.swarm import _get_backend
 
         config = CoordinationConfig(backend=CoordinationBackend.NONE)
 
@@ -312,13 +312,13 @@ class TestAsyncToSyncConversion:
 
     def test_swarm_create_handles_async_backend(self, coordination_config):
         """Test that swarm_create properly handles async backend methods."""
-        from spellbook_mcp.swarm_tools import swarm_create
+        from spellbook.coordination.swarm import swarm_create
 
         async_backend = AsyncMock()
         async_backend.create_swarm.return_value = "swarm-456"
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=async_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=async_backend):
                 result = swarm_create(
                     feature="test-feature",
                     manifest_path="/path/to/manifest.json"
@@ -330,7 +330,7 @@ class TestAsyncToSyncConversion:
 
     def test_swarm_monitor_handles_async_backend(self, coordination_config):
         """Test that swarm_monitor properly handles async backend methods."""
-        from spellbook_mcp.swarm_tools import swarm_monitor
+        from spellbook.coordination.swarm import swarm_monitor
 
         async_backend = AsyncMock()
         async_backend.get_status.return_value = {
@@ -342,8 +342,8 @@ class TestAsyncToSyncConversion:
             "ready_for_merge": True
         }
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=coordination_config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=async_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=coordination_config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=async_backend):
                 result = swarm_monitor(swarm_id="swarm-789")
 
                 # Should successfully convert async to sync

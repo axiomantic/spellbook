@@ -9,7 +9,7 @@ spellbook/
 ├── skills/           # Reusable workflow definitions
 ├── commands/         # Slash commands
 ├── agents/           # Specialized agent definitions
-├── spellbook_mcp/    # MCP server for skill discovery
+├── spellbook/    # MCP server for skill discovery
 ├── lib/              # Shared JavaScript utilities
 ├── installer/        # Installation components
 └── extensions/       # Platform-specific extensions
@@ -65,7 +65,7 @@ Native extension system:
 
 ## MCP Server
 
-The `spellbook_mcp/` directory contains a FastMCP server providing 100+ tools across these categories:
+The `spellbook/` directory contains a FastMCP server providing 100+ tools across these categories:
 
 - **Session management** - initialization, mode switching, context ping, compaction checks
 - **Security** - injection detection, trust levels, canary tokens, output sanitization

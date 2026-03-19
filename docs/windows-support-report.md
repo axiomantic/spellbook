@@ -184,11 +184,11 @@ Also consider a `bootstrap.bat` one-liner that invokes PowerShell for users who 
 
 ---
 
-## 5. MCP Server Changes (`spellbook_mcp/`)
+## 5. MCP Server Changes (`spellbook/`)
 
 ### 5.1 HTTP Daemon
 
-The MCP server (`spellbook_mcp/server.py`) uses FastMCP/FastAPI on `127.0.0.1:8765`. This is already cross-platform — no changes needed for the server itself.
+The MCP server (`spellbook/server.py`) uses FastMCP/FastAPI on `127.0.0.1:8765`. This is already cross-platform — no changes needed for the server itself.
 
 ### 5.2 Daemon Management (`installer/components/mcp.py`)
 
@@ -244,13 +244,13 @@ if sys.platform == "win32":
     # Kill process
     subprocess.run(["taskkill", "/F", "/PID", str(pid)])
 else:
-    subprocess.run(["pgrep", "-f", "spellbook_mcp/server.py"])
-    subprocess.run(["pkill", "-9", "-f", "spellbook_mcp/server.py"])
+    subprocess.run(["pgrep", "-f", "spellbook/server.py"])
+    subprocess.run(["pkill", "-9", "-f", "spellbook/server.py"])
 ```
 
 ### 5.4 Terminal Spawning
 
-`spellbook_mcp/terminal_utils.py` detects Unix terminals (xterm, gnome-terminal, etc.) and spawns sessions. Windows needs:
+`spellbook/terminal_utils.py` detects Unix terminals (xterm, gnome-terminal, etc.) and spawns sessions. Windows needs:
 
 - `cmd.exe /K` for Command Prompt
 - `powershell.exe -NoExit -Command` for PowerShell
@@ -485,7 +485,7 @@ Windows Defender or other AV may flag the MCP server or hook scripts. May need t
 | `installer/platforms/gemini.py` | 2 | Use link abstraction |
 | `installer/platforms/crush.py` | 2 | Use link abstraction |
 | `installer/core.py` | 3 | Windows uninstall logic |
-| `spellbook_mcp/terminal_utils.py` | 3 | Windows terminal detection |
+| `spellbook/terminal_utils.py` | 3 | Windows terminal detection |
 | `.github/workflows/test.yml` | 1 | Add windows-latest to matrix |
 | `README.md` | 5 | Windows installation instructions |
 | `AGENTS.spellbook.md` | 5 | Note Windows support |

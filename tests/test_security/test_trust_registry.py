@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spellbook_mcp.db import get_connection, init_db
+from spellbook.core.db import get_connection, init_db
 
 
 def _setup_db(tmp_path):
@@ -34,7 +34,7 @@ class TestDoSetTrustBasicRegistration:
     """Tests for do_set_trust() registering trust entries."""
 
     def test_returns_registered_true(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -46,7 +46,7 @@ class TestDoSetTrustBasicRegistration:
         assert result["registered"] is True
 
     def test_returns_content_hash(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -58,7 +58,7 @@ class TestDoSetTrustBasicRegistration:
         assert result["content_hash"] == "abc123def456"
 
     def test_returns_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -70,7 +70,7 @@ class TestDoSetTrustBasicRegistration:
         assert result["trust_level"] == "verified"
 
     def test_returns_expires_at_null_when_no_ttl(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -82,7 +82,7 @@ class TestDoSetTrustBasicRegistration:
         assert result["expires_at"] is None
 
     def test_stores_entry_in_database(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -104,7 +104,7 @@ class TestDoSetTrustBasicRegistration:
         assert row[2] == "system"
 
     def test_all_trust_levels_accepted(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         for level in ("system", "verified", "user", "untrusted", "hostile"):
@@ -122,7 +122,7 @@ class TestDoSetTrustWithTTL:
     """Tests for do_set_trust() with TTL (time-to-live)."""
 
     def test_returns_expires_at_when_ttl_set(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -135,7 +135,7 @@ class TestDoSetTrustWithTTL:
         assert result["expires_at"] is not None
 
     def test_expires_at_is_in_the_future(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         result = do_set_trust(
@@ -150,7 +150,7 @@ class TestDoSetTrustWithTTL:
         assert expires > now
 
     def test_expires_at_approximately_correct(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         before = datetime.now(timezone.utc)
@@ -173,7 +173,7 @@ class TestDoSetTrustReRegistration:
     """Tests for do_set_trust() overwriting existing entries."""
 
     def test_reregistration_overwrites_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -191,7 +191,7 @@ class TestDoSetTrustReRegistration:
         assert result["trust_level"] == "verified"
 
     def test_reregistration_leaves_single_entry(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -216,7 +216,7 @@ class TestDoSetTrustReRegistration:
         assert count == 1
 
     def test_reregistration_updates_source(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -244,7 +244,7 @@ class TestDoSetTrustValidation:
     """Tests for do_set_trust() input validation."""
 
     def test_rejects_invalid_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_trust
+        from spellbook.security.tools import do_set_trust
 
         db_path = _setup_db(tmp_path)
         with pytest.raises(ValueError, match="Invalid trust_level"):
@@ -265,7 +265,7 @@ class TestDoCheckTrustRegisteredContent:
     """Tests for do_check_trust() with registered content."""
 
     def test_returns_stored_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -282,7 +282,7 @@ class TestDoCheckTrustRegisteredContent:
         assert result["trust_level"] == "verified"
 
     def test_returns_content_hash(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -299,7 +299,7 @@ class TestDoCheckTrustRegisteredContent:
         assert result["content_hash"] == "abc123"
 
     def test_returns_required_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -316,7 +316,7 @@ class TestDoCheckTrustRegisteredContent:
         assert result["required_level"] == "verified"
 
     def test_returns_expired_false_for_non_expired(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -333,7 +333,7 @@ class TestDoCheckTrustRegisteredContent:
         assert result["expired"] is False
 
     def test_all_required_keys_present(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -361,7 +361,7 @@ class TestDoCheckTrustUnregisteredContent:
     """Tests for do_check_trust() with unregistered content."""
 
     def test_returns_null_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust
+        from spellbook.security.tools import do_check_trust
 
         db_path = _setup_db(tmp_path)
         result = do_check_trust(
@@ -372,7 +372,7 @@ class TestDoCheckTrustUnregisteredContent:
         assert result["trust_level"] is None
 
     def test_returns_meets_requirement_false(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust
+        from spellbook.security.tools import do_check_trust
 
         db_path = _setup_db(tmp_path)
         result = do_check_trust(
@@ -383,7 +383,7 @@ class TestDoCheckTrustUnregisteredContent:
         assert result["meets_requirement"] is False
 
     def test_returns_expired_false(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust
+        from spellbook.security.tools import do_check_trust
 
         db_path = _setup_db(tmp_path)
         result = do_check_trust(
@@ -435,7 +435,7 @@ class TestDoCheckTrustHierarchy:
         ],
     )
     def test_hierarchy_enforcement(self, tmp_path, stored, required, expected):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -459,7 +459,7 @@ class TestDoCheckTrustExpiration:
     """Tests for TTL expiration behavior."""
 
     def test_expired_entry_returns_null_trust_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         # Register with TTL
@@ -487,7 +487,7 @@ class TestDoCheckTrustExpiration:
         assert result["trust_level"] is None
 
     def test_expired_entry_returns_meets_requirement_false(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -513,7 +513,7 @@ class TestDoCheckTrustExpiration:
         assert result["meets_requirement"] is False
 
     def test_expired_entry_returns_expired_true(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -539,7 +539,7 @@ class TestDoCheckTrustExpiration:
         assert result["expired"] is True
 
     def test_non_expired_entry_returns_stored_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -558,7 +558,7 @@ class TestDoCheckTrustExpiration:
         assert result["expired"] is False
 
     def test_no_ttl_entry_never_expires(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust, do_set_trust
+        from spellbook.security.tools import do_check_trust, do_set_trust
 
         db_path = _setup_db(tmp_path)
         do_set_trust(
@@ -581,7 +581,7 @@ class TestDoCheckTrustValidation:
     """Tests for do_check_trust() input validation."""
 
     def test_rejects_invalid_required_level(self, tmp_path):
-        from spellbook_mcp.security.tools import do_check_trust
+        from spellbook.security.tools import do_check_trust
 
         db_path = _setup_db(tmp_path)
         with pytest.raises(ValueError, match="Invalid required_level"):

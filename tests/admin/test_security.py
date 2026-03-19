@@ -8,7 +8,7 @@ import pytest
 class TestSecurityEvents:
     def test_list_events_returns_paginated(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -42,7 +42,7 @@ class TestSecurityEvents:
 
     def test_list_events_filters_by_severity(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [[{"cnt": 0}], []]
@@ -56,7 +56,7 @@ class TestSecurityEvents:
 
     def test_list_events_filters_by_event_type(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [[{"cnt": 0}], []]
@@ -69,7 +69,7 @@ class TestSecurityEvents:
 
     def test_list_events_filters_by_date_range(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [[{"cnt": 0}], []]
@@ -86,7 +86,7 @@ class TestSecurityEvents:
 
     def test_list_events_pagination(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [[{"cnt": 75}], []]
@@ -112,7 +112,7 @@ class TestSecurityEvents:
 
     def test_list_events_empty(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [[{"cnt": 0}], []]
@@ -127,7 +127,7 @@ class TestSecurityEvents:
 class TestSecurityEventDetail:
     def test_event_detail_returns_event(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -152,7 +152,7 @@ class TestSecurityEventDetail:
 
     def test_event_detail_404_not_found(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -169,7 +169,7 @@ class TestSecurityEventDetail:
 class TestSecuritySummary:
     def test_summary_returns_counts(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = [
@@ -186,7 +186,7 @@ class TestSecuritySummary:
 
     def test_summary_empty_db(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.return_value = []
@@ -203,7 +203,7 @@ class TestSecuritySummary:
 class TestSecurityDashboard:
     def test_dashboard_returns_full_aggregation(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.security.query_spellbook_db",
+            "spellbook.admin.routes.security.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [

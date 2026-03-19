@@ -11,40 +11,40 @@ class TestConfigGet:
 
     def test_returns_none_when_file_missing(self, tmp_path, monkeypatch):
         """Test that missing config file returns None."""
-        from spellbook_mcp.config_tools import config_get, get_config_path
+        from spellbook.core.config import config_get, get_config_path
 
         # Point to a non-existent config
         fake_config = tmp_path / "nonexistent" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: fake_config)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: fake_config)
 
         result = config_get("any_key")
         assert result is None
 
     def test_returns_none_when_key_missing(self, tmp_path, monkeypatch):
         """Test that missing key returns None."""
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"other_key": "value"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_get("missing_key")
         assert result is None
 
     def test_returns_value_when_key_exists(self, tmp_path, monkeypatch):
         """Test that existing key returns its value."""
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"fun_mode": true, "theme": "dark"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         assert config_get("fun_mode") is True
         assert config_get("theme") == "dark"
 
     def test_handles_various_value_types(self, tmp_path, monkeypatch):
         """Test that various JSON types are handled correctly."""
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text(json.dumps({
@@ -57,7 +57,7 @@ class TestConfigGet:
             "object": {"nested": "value"},
             "null": None
         }))
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         assert config_get("bool_true") is True
         assert config_get("bool_false") is False
@@ -70,11 +70,11 @@ class TestConfigGet:
 
     def test_handles_invalid_json(self, tmp_path, monkeypatch):
         """Test that invalid JSON file returns None gracefully."""
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("not valid json {{{")
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_get("any_key")
         assert result is None
@@ -85,10 +85,10 @@ class TestConfigSet:
 
     def test_creates_file_when_missing(self, tmp_path, monkeypatch):
         """Test that config file is created if it doesn't exist."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "config" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_set("fun_mode", True)
 
@@ -99,11 +99,11 @@ class TestConfigSet:
 
     def test_preserves_existing_values(self, tmp_path, monkeypatch):
         """Test that other config values are preserved."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"existing": "value", "other": 123}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_set("new_key", "new_value")
 
@@ -114,11 +114,11 @@ class TestConfigSet:
 
     def test_overwrites_existing_key(self, tmp_path, monkeypatch):
         """Test that existing key is overwritten."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"fun_mode": false}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_set("fun_mode", True)
 
@@ -128,10 +128,10 @@ class TestConfigSet:
 
     def test_handles_complex_values(self, tmp_path, monkeypatch):
         """Test that complex JSON values can be stored."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         complex_value = {
             "nested": {"deep": {"value": 42}},
@@ -145,11 +145,11 @@ class TestConfigSet:
 
     def test_handles_corrupt_existing_file(self, tmp_path, monkeypatch):
         """Test that corrupt config file is replaced."""
-        from spellbook_mcp.config_tools import config_set
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("corrupt json {{{")
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = config_set("key", "value")
 
@@ -162,10 +162,10 @@ class TestSessionInit:
 
     def test_returns_unset_when_no_config(self, tmp_path, monkeypatch):
         """Test that missing config returns mode.type=unset."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "unset"
@@ -173,11 +173,11 @@ class TestSessionInit:
 
     def test_returns_unset_when_no_mode_keys_set(self, tmp_path, monkeypatch):
         """Test that config without session_mode or fun_mode returns unset."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"other_key": "value"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "unset"
@@ -185,11 +185,11 @@ class TestSessionInit:
 
     def test_returns_none_when_session_mode_none(self, tmp_path, monkeypatch):
         """Test that session_mode='none' returns mode.type=none."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "none"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "none"
@@ -197,11 +197,11 @@ class TestSessionInit:
 
     def test_returns_tarot_mode(self, tmp_path, monkeypatch):
         """Test that session_mode='tarot' returns tarot mode."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "tarot"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "tarot"
@@ -209,23 +209,23 @@ class TestSessionInit:
 
     def test_session_mode_takes_precedence_over_legacy(self, tmp_path, monkeypatch):
         """Test that session_mode takes precedence over legacy fun_mode."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         # Both set, session_mode should win
         config_path.write_text('{"session_mode": "tarot", "fun_mode": true}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "tarot"
 
     def test_legacy_fun_mode_false_returns_none(self, tmp_path, monkeypatch):
         """Test that legacy fun_mode=false returns mode.type=none."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"fun_mode": false}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         result = session_init()
         assert result["mode"]["type"] == "none"
@@ -233,12 +233,12 @@ class TestSessionInit:
 
     def test_returns_fun_mode_with_selections(self, tmp_path, monkeypatch):
         """Test that session_mode='fun' returns fun mode with persona/context/undertow."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         # Set up config
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Set up fun-mode assets
         spellbook_dir = tmp_path / "spellbook"
@@ -261,12 +261,12 @@ class TestSessionInit:
 
     def test_legacy_fun_mode_true_works(self, tmp_path, monkeypatch):
         """Test that legacy fun_mode=true still works when session_mode not set."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         # Set up config with legacy key only
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"fun_mode": true}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Set up fun-mode assets
         spellbook_dir = tmp_path / "spellbook"
@@ -284,16 +284,16 @@ class TestSessionInit:
 
     def test_handles_missing_assets_dir(self, tmp_path, monkeypatch):
         """Test error when fun-mode assets directory doesn't exist."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Point to a directory that exists but doesn't have fun-mode assets
         fake_spellbook = tmp_path / "fake_spellbook"
         fake_spellbook.mkdir()
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_spellbook_dir", lambda: fake_spellbook)
+        monkeypatch.setattr("spellbook.core.config.get_spellbook_dir", lambda: fake_spellbook)
 
         result = session_init()
 
@@ -306,11 +306,11 @@ class TestSessionInit:
 
     def test_handles_empty_asset_files(self, tmp_path, monkeypatch):
         """Test handling of empty persona/context/undertow files."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         spellbook_dir = tmp_path / "spellbook"
         fun_assets = spellbook_dir / "skills" / "fun-mode"
@@ -329,11 +329,11 @@ class TestSessionInit:
 
     def test_handles_missing_asset_files(self, tmp_path, monkeypatch):
         """Test handling of missing persona/context/undertow files."""
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         spellbook_dir = tmp_path / "spellbook"
         fun_assets = spellbook_dir / "skills" / "fun-mode"
@@ -354,7 +354,7 @@ class TestSessionModeSet:
 
     def test_session_only_mode_set(self, tmp_path, monkeypatch):
         """Test setting session-only mode (not permanent)."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, _get_session_state, _session_states, DEFAULT_SESSION_ID
         )
 
@@ -373,12 +373,12 @@ class TestSessionModeSet:
 
     def test_permanent_mode_set(self, tmp_path, monkeypatch):
         """Test setting permanent mode (saved to config)."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, _get_session_state, _session_states, DEFAULT_SESSION_ID, config_get
         )
 
         config_path = tmp_path / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset session state
         _session_states.clear()
@@ -398,7 +398,7 @@ class TestSessionModeSet:
 
     def test_invalid_mode_rejected(self):
         """Test that invalid modes are rejected."""
-        from spellbook_mcp.config_tools import session_mode_set
+        from spellbook.core.config import session_mode_set
 
         result = session_mode_set("invalid_mode", permanent=False)
 
@@ -411,7 +411,7 @@ class TestSessionModeGet:
 
     def test_returns_session_override(self, tmp_path, monkeypatch):
         """Test that session override is returned when set."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_get, _get_session_state, _session_states, DEFAULT_SESSION_ID
         )
 
@@ -430,11 +430,11 @@ class TestSessionModeGet:
 
     def test_returns_config_when_no_session(self, tmp_path, monkeypatch):
         """Test that config is returned when no session override."""
-        from spellbook_mcp.config_tools import session_mode_get, _session_states
+        from spellbook.core.config import session_mode_get, _session_states
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset session state (no override)
         _session_states.clear()
@@ -450,10 +450,10 @@ class TestSessionModeGet:
 
     def test_returns_unset_when_nothing_configured(self, tmp_path, monkeypatch):
         """Test that unset is returned when nothing configured."""
-        from spellbook_mcp.config_tools import session_mode_get, _session_states
+        from spellbook.core.config import session_mode_get, _session_states
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset session state (no override)
         _session_states.clear()
@@ -472,14 +472,14 @@ class TestSessionInitWithSessionState:
 
     def test_session_state_takes_priority(self, tmp_path, monkeypatch):
         """Test that session state overrides config."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_init, _get_session_state, _session_states, DEFAULT_SESSION_ID
         )
 
         # Config says fun, but session says tarot
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset and set session state
         _session_states.clear()
@@ -498,7 +498,7 @@ class TestRandomLine:
 
     def test_selects_from_non_empty_lines(self, tmp_path):
         """Test that only non-empty lines are selected."""
-        from spellbook_mcp.config_tools import random_line
+        from spellbook.core.config import random_line
 
         file_path = tmp_path / "lines.txt"
         file_path.write_text("Line 1\n\nLine 2\n   \nLine 3\n")
@@ -510,7 +510,7 @@ class TestRandomLine:
 
     def test_returns_empty_for_empty_file(self, tmp_path):
         """Test that empty file returns empty string."""
-        from spellbook_mcp.config_tools import random_line
+        from spellbook.core.config import random_line
 
         file_path = tmp_path / "empty.txt"
         file_path.write_text("")
@@ -520,7 +520,7 @@ class TestRandomLine:
 
     def test_returns_empty_for_missing_file(self, tmp_path):
         """Test that missing file returns empty string."""
-        from spellbook_mcp.config_tools import random_line
+        from spellbook.core.config import random_line
 
         file_path = tmp_path / "nonexistent.txt"
 
@@ -529,7 +529,7 @@ class TestRandomLine:
 
     def test_strips_whitespace(self, tmp_path):
         """Test that leading/trailing whitespace is stripped."""
-        from spellbook_mcp.config_tools import random_line
+        from spellbook.core.config import random_line
 
         file_path = tmp_path / "whitespace.txt"
         file_path.write_text("  Line with spaces  \n")
@@ -543,7 +543,7 @@ class TestGetSpellbookDir:
 
     def test_returns_env_var_when_set(self, tmp_path, monkeypatch):
         """Test that SPELLBOOK_DIR env var is respected."""
-        from spellbook_mcp.config_tools import get_spellbook_dir
+        from spellbook.core.config import get_spellbook_dir
 
         expected = str(tmp_path / "my-spellbook")
         monkeypatch.setenv("SPELLBOOK_DIR", expected)
@@ -553,7 +553,7 @@ class TestGetSpellbookDir:
 
     def test_falls_back_when_env_var_not_set(self, monkeypatch):
         """Test fallback when SPELLBOOK_DIR not set - finds via __file__ or defaults."""
-        from spellbook_mcp.config_tools import get_spellbook_dir
+        from spellbook.core.config import get_spellbook_dir
 
         monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
 
@@ -570,7 +570,7 @@ class TestSessionIsolation:
 
     def test_different_sessions_have_isolated_state(self, tmp_path, monkeypatch):
         """Test that different session IDs have isolated mode state."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states
         )
 
@@ -597,13 +597,13 @@ class TestSessionIsolation:
 
     def test_session_init_respects_session_id(self, tmp_path, monkeypatch):
         """Test that session_init uses session-specific state."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_init, session_mode_set, _session_states
         )
 
         # No config file
         config_path = tmp_path / "nonexistent" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset global state
         _session_states.clear()
@@ -629,12 +629,12 @@ class TestSessionIsolation:
         Also verifies that session A's local override is cleared when
         setting permanent mode (production line 208: session_state["mode"] = None).
         """
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states
         )
 
         config_path = tmp_path / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset global state
         _session_states.clear()
@@ -660,14 +660,14 @@ class TestSessionIsolation:
 
     def test_session_override_takes_precedence_over_config(self, tmp_path, monkeypatch):
         """Test that session-only mode overrides config-based mode."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states
         )
 
         # Set up config with fun mode
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset global state
         _session_states.clear()
@@ -689,7 +689,7 @@ class TestSessionIsolation:
 
     def test_default_session_id_for_backward_compatibility(self, tmp_path, monkeypatch):
         """Test that None session_id uses default for backward compatibility."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states, DEFAULT_SESSION_ID
         )
 
@@ -706,7 +706,7 @@ class TestSessionIsolation:
         assert result["source"] == "session"
 
         # Verify it's in the default session
-        from spellbook_mcp.config_tools import _get_session_state
+        from spellbook.core.config import _get_session_state
         assert _get_session_state(DEFAULT_SESSION_ID)["mode"] == "fun"
 
         # Clean up
@@ -723,7 +723,7 @@ class TestSessionCleanup:
         _get_session_state(), because the stale session would persist.
         """
         from datetime import datetime, timedelta
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states,
             _session_activity, SESSION_TTL_DAYS
         )
@@ -762,7 +762,7 @@ class TestSessionCleanup:
         Uses session_mode_get (public API) instead of _get_session_state (internal).
         """
         from datetime import datetime
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_get, _session_states, _session_activity
         )
 
@@ -791,12 +791,12 @@ class TestSessionCleanup:
         Uses session_mode_get (public API) instead of _get_session_state (internal).
         Verifies public API returns expected default state.
         """
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_get, _session_states, _session_activity
         )
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
 
         # Reset global state
         _session_states.clear()
@@ -831,7 +831,7 @@ class TestSessionCleanup:
         cleanup is integrated into the access path, not just working in isolation.
         """
         from datetime import datetime, timedelta
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             session_mode_set, session_mode_get, _session_states,
             _session_activity, SESSION_TTL_DAYS
         )
@@ -868,8 +868,8 @@ class TestTelemetryConfig:
 
     def test_telemetry_enable_creates_config(self, tmp_path, monkeypatch):
         """Test that telemetry_enable creates config record."""
-        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
-        from spellbook_mcp.db import init_db
+        from spellbook.core.config import telemetry_enable, telemetry_status
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -885,8 +885,8 @@ class TestTelemetryConfig:
 
     def test_telemetry_enable_with_custom_endpoint(self, tmp_path, monkeypatch):
         """Test telemetry_enable with custom endpoint URL."""
-        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
-        from spellbook_mcp.db import init_db
+        from spellbook.core.config import telemetry_enable, telemetry_status
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -901,10 +901,10 @@ class TestTelemetryConfig:
 
     def test_telemetry_disable(self, tmp_path, monkeypatch):
         """Test that telemetry_disable sets enabled to False."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             telemetry_enable, telemetry_disable, telemetry_status
         )
-        from spellbook_mcp.db import init_db
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -922,8 +922,8 @@ class TestTelemetryConfig:
 
     def test_telemetry_status_when_not_configured(self, tmp_path, monkeypatch):
         """Test telemetry_status when no config exists."""
-        from spellbook_mcp.config_tools import telemetry_status
-        from spellbook_mcp.db import init_db
+        from spellbook.core.config import telemetry_status
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -936,10 +936,10 @@ class TestTelemetryConfig:
 
     def test_telemetry_preserves_endpoint_on_disable(self, tmp_path, monkeypatch):
         """Test that disabling telemetry preserves the endpoint URL."""
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             telemetry_enable, telemetry_disable, telemetry_status
         )
-        from spellbook_mcp.db import init_db
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)

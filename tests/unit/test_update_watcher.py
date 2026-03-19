@@ -11,9 +11,9 @@ class TestUpdateWatcherInit:
     """Tests for UpdateWatcher initialization."""
 
     def test_default_values(self, tmp_path):
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             watcher = UpdateWatcher(str(tmp_path))
 
@@ -26,9 +26,9 @@ class TestUpdateWatcherInit:
 
     def test_lazy_branch_detection(self, tmp_path):
         """Branch detection happens in run(), not __init__."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             watcher = UpdateWatcher(str(tmp_path))
 
@@ -43,9 +43,9 @@ class TestUpdateWatcherInit:
         assert watcher.branch == "main"  # Now resolved
 
     def test_custom_values(self, tmp_path):
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.side_effect = lambda key: {
                 "auto_update_remote": "upstream",
                 "auto_update_branch": "develop",
@@ -66,9 +66,9 @@ class TestUpdateWatcherShutdown:
 
     def test_shutdown_responsive(self, tmp_path):
         """Event.wait() allows quick shutdown."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(
@@ -89,9 +89,9 @@ class TestUpdateWatcherBackoff:
     """Tests for circuit breaker and backoff."""
 
     def test_backoff_calculation(self, tmp_path):
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(str(tmp_path))
@@ -114,9 +114,9 @@ class TestUpdateWatcherBackoff:
 
     def test_backoff_cap(self, tmp_path):
         """Backoff never exceeds 24h cap."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(str(tmp_path))
@@ -126,9 +126,9 @@ class TestUpdateWatcherBackoff:
 
     def test_failure_increments_failure_counter(self, tmp_path):
         """First check failure increments _consecutive_failures."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(str(tmp_path))
@@ -153,9 +153,9 @@ class TestUpdateWatcherBackoff:
 
     def test_circuit_breaker_http_backoff_values(self, tmp_path):
         """Simulate 5+ failures via _check_for_update and verify backoff values."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
+        from spellbook.updates.watcher import UpdateWatcher
 
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
+        with patch("spellbook.updates.watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(str(tmp_path))

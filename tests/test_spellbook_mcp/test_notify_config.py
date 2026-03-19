@@ -13,7 +13,7 @@ class TestSessionStateNotifyKey:
     """_get_session_state() includes 'notify' key for notification overrides."""
 
     def test_new_session_has_notify_key(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -28,7 +28,7 @@ class TestSessionStateNotifyKey:
         _session_activity.clear()
 
     def test_existing_session_gets_notify_key_backfilled(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -50,7 +50,7 @@ class TestNotifySessionSet:
     """notify_session_set() updates notification overrides in session state."""
 
     def test_sets_all_fields(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_set,
@@ -69,7 +69,7 @@ class TestNotifySessionSet:
         _session_activity.clear()
 
     def test_partial_update_preserves_other_keys(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -93,7 +93,7 @@ class TestNotifySessionSet:
         _session_activity.clear()
 
     def test_sets_only_enabled(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_set,
@@ -111,7 +111,7 @@ class TestNotifySessionSet:
         _session_activity.clear()
 
     def test_sets_only_title(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_set,
@@ -129,7 +129,7 @@ class TestNotifySessionSet:
         _session_activity.clear()
 
     def test_uses_session_id(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -152,7 +152,7 @@ class TestNotifySessionSet:
         _session_activity.clear()
 
     def test_omitted_fields_not_added(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_set,
@@ -175,7 +175,7 @@ class TestNotifySessionGet:
     """notify_session_get() resolves notification settings: session > config > defaults."""
 
     def test_returns_defaults_when_nothing_set(self, tmp_path, monkeypatch):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_get,
@@ -184,7 +184,7 @@ class TestNotifySessionGet:
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("{}")
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -203,7 +203,7 @@ class TestNotifySessionGet:
     def test_config_overrides_defaults(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_get,
@@ -216,7 +216,7 @@ class TestNotifySessionGet:
             )
         )
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -235,7 +235,7 @@ class TestNotifySessionGet:
     def test_session_overrides_config(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -249,7 +249,7 @@ class TestNotifySessionGet:
             )
         )
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -272,7 +272,7 @@ class TestNotifySessionGet:
     def test_partial_config_falls_through_to_defaults(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_get,
@@ -282,7 +282,7 @@ class TestNotifySessionGet:
         # Only title is set in config
         config_path.write_text(json.dumps({"notify_title": "From Config"}))
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -299,7 +299,7 @@ class TestNotifySessionGet:
         _session_activity.clear()
 
     def test_session_id_isolation(self, tmp_path, monkeypatch):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             notify_session_get,
@@ -309,7 +309,7 @@ class TestNotifySessionGet:
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("{}")
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()

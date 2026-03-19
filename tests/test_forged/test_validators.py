@@ -13,7 +13,7 @@ class TestValidatorDataclass:
 
     def test_validator_creation_with_all_fields(self):
         """Validator must be creatable with all required fields."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         validator = Validator(
             id="code_review",
@@ -39,7 +39,7 @@ class TestValidatorDataclass:
 
     def test_validator_creation_with_transform_level(self):
         """Validator can have transform_level specified."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         validator = Validator(
             id="formatter",
@@ -58,7 +58,7 @@ class TestValidatorDataclass:
 
     def test_validator_creation_with_dependencies(self):
         """Validator can specify dependencies on other validators."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         validator = Validator(
             id="integration_test",
@@ -77,7 +77,7 @@ class TestValidatorDataclass:
 
     def test_validator_to_dict(self):
         """Validator.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         validator = Validator(
             id="test_validator",
@@ -111,7 +111,7 @@ class TestValidatorDataclass:
 
     def test_validator_from_dict(self):
         """Validator.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         data = {
             "id": "reconstructed",
@@ -137,7 +137,7 @@ class TestValidatorDataclass:
 
     def test_validator_roundtrip(self):
         """Validator must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.validators import Validator
+        from spellbook.forged.validators import Validator
 
         original = Validator(
             id="roundtrip_test",
@@ -171,14 +171,14 @@ class TestValidatorCatalog:
 
     def test_validator_catalog_exists(self):
         """VALIDATOR_CATALOG must be defined."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert isinstance(VALIDATOR_CATALOG, dict)
         assert len(VALIDATOR_CATALOG) > 0
 
     def test_catalog_contains_code_review(self):
         """VALIDATOR_CATALOG must contain code_review validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "code_review" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["code_review"]
@@ -188,7 +188,7 @@ class TestValidatorCatalog:
 
     def test_catalog_contains_test_quality(self):
         """VALIDATOR_CATALOG must contain test_quality validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "test_quality" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["test_quality"]
@@ -198,7 +198,7 @@ class TestValidatorCatalog:
 
     def test_catalog_contains_fact_check(self):
         """VALIDATOR_CATALOG must contain fact_check validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "fact_check" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["fact_check"]
@@ -208,7 +208,7 @@ class TestValidatorCatalog:
 
     def test_catalog_contains_dead_code(self):
         """VALIDATOR_CATALOG must contain dead_code validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "dead_code" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["dead_code"]
@@ -218,7 +218,7 @@ class TestValidatorCatalog:
 
     def test_catalog_contains_requirements_clarity(self):
         """VALIDATOR_CATALOG must contain requirements_clarity validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "requirements_clarity" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["requirements_clarity"]
@@ -228,7 +228,7 @@ class TestValidatorCatalog:
 
     def test_catalog_contains_design_coherence(self):
         """VALIDATOR_CATALOG must contain design_coherence validator."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         assert "design_coherence" in VALIDATOR_CATALOG
         validator = VALIDATOR_CATALOG["design_coherence"]
@@ -238,7 +238,7 @@ class TestValidatorCatalog:
 
     def test_all_catalog_values_are_validators(self):
         """All VALIDATOR_CATALOG values must be Validator instances."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG, Validator
+        from spellbook.forged.validators import VALIDATOR_CATALOG, Validator
 
         for key, value in VALIDATOR_CATALOG.items():
             assert isinstance(value, Validator), f"{key} is not a Validator"
@@ -250,7 +250,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_returns_list(self):
         """validators_for_stage must return a list."""
-        from spellbook_mcp.forged.validators import validators_for_stage
+        from spellbook.forged.validators import validators_for_stage
 
         result = validators_for_stage("IMPLEMENT")
 
@@ -258,7 +258,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_implement(self):
         """validators_for_stage('IMPLEMENT') must include code-quality validators."""
-        from spellbook_mcp.forged.validators import validators_for_stage
+        from spellbook.forged.validators import validators_for_stage
 
         result = validators_for_stage("IMPLEMENT")
         validator_ids = [v.id for v in result]
@@ -269,7 +269,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_discover(self):
         """validators_for_stage('DISCOVER') must return appropriate validators."""
-        from spellbook_mcp.forged.validators import validators_for_stage
+        from spellbook.forged.validators import validators_for_stage
 
         result = validators_for_stage("DISCOVER")
 
@@ -280,7 +280,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_design(self):
         """validators_for_stage('DESIGN') must include design validators."""
-        from spellbook_mcp.forged.validators import validators_for_stage
+        from spellbook.forged.validators import validators_for_stage
 
         result = validators_for_stage("DESIGN")
         validator_ids = [v.id for v in result]
@@ -290,7 +290,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_invalid_stage(self):
         """validators_for_stage with invalid stage must raise ValueError."""
-        from spellbook_mcp.forged.validators import validators_for_stage
+        from spellbook.forged.validators import validators_for_stage
 
         with pytest.raises(ValueError) as exc_info:
             validators_for_stage("INVALID_STAGE")
@@ -299,7 +299,7 @@ class TestValidatorsForStage:
 
     def test_validators_for_stage_returns_validator_instances(self):
         """validators_for_stage must return Validator instances."""
-        from spellbook_mcp.forged.validators import validators_for_stage, Validator
+        from spellbook.forged.validators import validators_for_stage, Validator
 
         result = validators_for_stage("IMPLEMENT")
 
@@ -312,7 +312,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_empty_list(self):
         """resolve_validator_order with empty list returns empty list."""
-        from spellbook_mcp.forged.validators import resolve_validator_order
+        from spellbook.forged.validators import resolve_validator_order
 
         result = resolve_validator_order([])
 
@@ -320,7 +320,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_single_validator(self):
         """resolve_validator_order with single validator returns that validator."""
-        from spellbook_mcp.forged.validators import resolve_validator_order
+        from spellbook.forged.validators import resolve_validator_order
 
         result = resolve_validator_order(["code_review"])
 
@@ -328,7 +328,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_no_dependencies(self):
         """resolve_validator_order with independent validators preserves order."""
-        from spellbook_mcp.forged.validators import resolve_validator_order
+        from spellbook.forged.validators import resolve_validator_order
 
         result = resolve_validator_order(["code_review", "fact_check"])
 
@@ -337,7 +337,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_respects_dependencies(self):
         """resolve_validator_order must put dependencies before dependents."""
-        from spellbook_mcp.forged.validators import resolve_validator_order, VALIDATOR_CATALOG
+        from spellbook.forged.validators import resolve_validator_order, VALIDATOR_CATALOG
 
         # Create a scenario where we have dependencies
         # First, check if any validators have dependencies
@@ -360,7 +360,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_unknown_validator(self):
         """resolve_validator_order with unknown validator raises ValueError."""
-        from spellbook_mcp.forged.validators import resolve_validator_order
+        from spellbook.forged.validators import resolve_validator_order
 
         with pytest.raises(ValueError) as exc_info:
             resolve_validator_order(["nonexistent_validator"])
@@ -369,7 +369,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_cycle_detection(self):
         """resolve_validator_order must detect circular dependencies."""
-        from spellbook_mcp.forged.validators import resolve_validator_order, VALIDATOR_CATALOG, Validator
+        from spellbook.forged.validators import resolve_validator_order, VALIDATOR_CATALOG, Validator
 
         # This test verifies the function would detect cycles if they existed
         # Since VALIDATOR_CATALOG shouldn't have cycles, we test that valid input works
@@ -384,8 +384,8 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_returns_validator_result(self, tmp_path):
         """validator_invoke must return a ValidatorResult."""
-        from spellbook_mcp.forged.validators import validator_invoke
-        from spellbook_mcp.forged.models import ValidatorResult
+        from spellbook.forged.validators import validator_invoke
+        from spellbook.forged.models import ValidatorResult
 
         # Create a test artifact
         artifact = tmp_path / "test.py"
@@ -403,7 +403,7 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_unknown_validator(self, tmp_path):
         """validator_invoke with unknown validator returns ERROR verdict."""
-        from spellbook_mcp.forged.validators import validator_invoke
+        from spellbook.forged.validators import validator_invoke
 
         artifact = tmp_path / "test.py"
         artifact.write_text("print('hello')")
@@ -419,7 +419,7 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_nonexistent_artifact(self):
         """validator_invoke with nonexistent artifact returns ERROR verdict."""
-        from spellbook_mcp.forged.validators import validator_invoke
+        from spellbook.forged.validators import validator_invoke
 
         result = validator_invoke(
             validator_id="code_review",
@@ -432,7 +432,7 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_planned_validator(self, tmp_path):
         """validator_invoke with PLANNED validator returns ABSTAIN verdict."""
-        from spellbook_mcp.forged.validators import validator_invoke
+        from spellbook.forged.validators import validator_invoke
 
         artifact = tmp_path / "test.md"
         artifact.write_text("# Requirements")
@@ -447,7 +447,7 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_with_context(self, tmp_path):
         """validator_invoke must accept context parameter."""
-        from spellbook_mcp.forged.validators import validator_invoke
+        from spellbook.forged.validators import validator_invoke
 
         artifact = tmp_path / "test.py"
         artifact.write_text("def example(): pass")
@@ -463,7 +463,7 @@ class TestValidatorInvoke:
 
     def test_validator_invoke_computes_artifact_hash(self, tmp_path):
         """validator_invoke must compute and return artifact hash."""
-        from spellbook_mcp.forged.validators import validator_invoke
+        from spellbook.forged.validators import validator_invoke
 
         artifact = tmp_path / "test.py"
         content = "# Test content"
@@ -484,7 +484,7 @@ class TestTransformLevelHandling:
 
     def test_transform_level_none_is_read_only(self, tmp_path):
         """Validators with transform_level=None must not modify artifact."""
-        from spellbook_mcp.forged.validators import validator_invoke, VALIDATOR_CATALOG
+        from spellbook.forged.validators import validator_invoke, VALIDATOR_CATALOG
 
         # Find a validator with transform_level=None
         read_only_validators = [
@@ -509,7 +509,7 @@ class TestTransformLevelHandling:
 
     def test_transform_level_mechanical_can_auto_apply(self, tmp_path):
         """Validators with transform_level='mechanical' can auto-apply fixes."""
-        from spellbook_mcp.forged.validators import (
+        from spellbook.forged.validators import (
             validator_invoke,
             VALIDATOR_CATALOG,
             get_transform_level,
@@ -527,7 +527,7 @@ class TestTransformLevelHandling:
 
     def test_transform_level_semantic_requires_approval(self):
         """Validators with transform_level='semantic' require approval."""
-        from spellbook_mcp.forged.validators import get_transform_level
+        from spellbook.forged.validators import get_transform_level
 
         # This is a contract test - semantic transforms need approval workflow
         # The actual approval logic would be in a higher-level function
@@ -537,7 +537,7 @@ class TestTransformLevelHandling:
 
     def test_get_transform_level_unknown_validator(self):
         """get_transform_level with unknown validator raises ValueError."""
-        from spellbook_mcp.forged.validators import get_transform_level
+        from spellbook.forged.validators import get_transform_level
 
         with pytest.raises(ValueError) as exc_info:
             get_transform_level("nonexistent")
@@ -550,7 +550,7 @@ class TestValidatorArchetypes:
 
     def test_code_quality_archetype_validators(self):
         """Validators with code-quality archetype must exist."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         code_quality = [
             v for v in VALIDATOR_CATALOG.values()
@@ -561,7 +561,7 @@ class TestValidatorArchetypes:
 
     def test_accuracy_archetype_validators(self):
         """Validators with accuracy archetype must exist."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         accuracy = [
             v for v in VALIDATOR_CATALOG.values()
@@ -572,7 +572,7 @@ class TestValidatorArchetypes:
 
     def test_design_archetype_validators(self):
         """Validators with design archetype must exist."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         design = [
             v for v in VALIDATOR_CATALOG.values()
@@ -587,7 +587,7 @@ class TestValidatorStatus:
 
     def test_exists_status_means_implemented(self):
         """Validators with EXISTS status must have a skill reference."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         exists_validators = [
             v for v in VALIDATOR_CATALOG.values()
@@ -599,7 +599,7 @@ class TestValidatorStatus:
 
     def test_planned_status_means_not_implemented(self):
         """Validators with PLANNED status must not have a skill reference."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         planned_validators = [
             v for v in VALIDATOR_CATALOG.values()
@@ -611,7 +611,7 @@ class TestValidatorStatus:
 
     def test_valid_statuses_only(self):
         """All validators must have valid status values."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         valid_statuses = {"EXISTS", "PLANNED", "PLACEHOLDER"}
 
@@ -624,8 +624,8 @@ class TestValidatorApplicableStages:
 
     def test_applicable_stages_are_valid(self):
         """All applicable_stages must be valid VALID_STAGES."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
-        from spellbook_mcp.forged.models import VALID_STAGES
+        from spellbook.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.models import VALID_STAGES
 
         for vid, v in VALIDATOR_CATALOG.items():
             for stage in v.applicable_stages:
@@ -635,7 +635,7 @@ class TestValidatorApplicableStages:
 
     def test_every_validator_has_at_least_one_stage(self):
         """Every validator must apply to at least one stage."""
-        from spellbook_mcp.forged.validators import VALIDATOR_CATALOG
+        from spellbook.forged.validators import VALIDATOR_CATALOG
 
         for vid, v in VALIDATOR_CATALOG.items():
             assert len(v.applicable_stages) >= 1, (

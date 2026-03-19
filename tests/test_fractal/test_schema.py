@@ -10,7 +10,7 @@ class TestSchemaInit:
 
     def test_init_creates_schema_version_table(self, fractal_db):
         """schema_version table must exist after initialization."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -21,7 +21,7 @@ class TestSchemaInit:
 
     def test_init_creates_graphs_table(self, fractal_db):
         """graphs table must exist after initialization."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -32,7 +32,7 @@ class TestSchemaInit:
 
     def test_init_creates_nodes_table(self, fractal_db):
         """nodes table must exist after initialization."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -43,7 +43,7 @@ class TestSchemaInit:
 
     def test_init_creates_edges_table(self, fractal_db):
         """edges table must exist after initialization."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -58,7 +58,7 @@ class TestSchemaVersionTable:
 
     def test_schema_version_has_correct_columns(self, fractal_db):
         """schema_version table must have version and applied_at columns."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -72,8 +72,8 @@ class TestSchemaVersionTable:
 
     def test_schema_version_recorded(self, fractal_db):
         """Schema version must be recorded during initialization."""
-        from spellbook_mcp.fractal.models import SCHEMA_VERSION
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.models import SCHEMA_VERSION
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -89,7 +89,7 @@ class TestGraphsTable:
 
     def test_graphs_has_required_columns(self, fractal_db):
         """graphs table must have all required columns."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -110,7 +110,7 @@ class TestGraphsTable:
 
     def test_graphs_id_is_primary_key(self, fractal_db):
         """graphs.id must be the primary key."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -121,7 +121,7 @@ class TestGraphsTable:
 
     def test_graphs_status_default_is_active(self, fractal_db):
         """graphs.status must default to 'active'."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -134,7 +134,7 @@ class TestGraphsTable:
 
     def test_graphs_intensity_check_constraint(self, fractal_db):
         """graphs.intensity must only accept valid intensities."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -146,7 +146,7 @@ class TestGraphsTable:
 
     def test_graphs_status_check_constraint(self, fractal_db):
         """graphs.status must only accept valid statuses."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -158,7 +158,7 @@ class TestGraphsTable:
 
     def test_graphs_metadata_json_default(self, fractal_db):
         """graphs.metadata_json must default to '{}'."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -175,7 +175,7 @@ class TestNodesTable:
 
     def test_nodes_has_required_columns(self, fractal_db):
         """nodes table must have all required columns."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -198,7 +198,7 @@ class TestNodesTable:
 
     def test_nodes_id_is_primary_key(self, fractal_db):
         """nodes.id must be the primary key."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -209,7 +209,7 @@ class TestNodesTable:
 
     def test_nodes_graph_id_foreign_key(self, fractal_db):
         """nodes.graph_id must reference graphs(id)."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -220,7 +220,7 @@ class TestNodesTable:
 
     def test_nodes_node_type_check_constraint(self, fractal_db):
         """nodes.node_type must only accept valid types."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -237,7 +237,7 @@ class TestNodesTable:
 
     def test_nodes_status_check_constraint(self, fractal_db):
         """nodes.status must only accept valid statuses."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -253,7 +253,7 @@ class TestNodesTable:
 
     def test_nodes_depth_default_is_zero(self, fractal_db):
         """nodes.depth must default to 0."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -270,7 +270,7 @@ class TestNodesTable:
 
     def test_nodes_status_default_is_open(self, fractal_db):
         """nodes.status must default to 'open'."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -291,7 +291,7 @@ class TestEdgesTable:
 
     def test_edges_has_required_columns(self, fractal_db):
         """edges table must have all required columns."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -311,7 +311,7 @@ class TestEdgesTable:
 
     def test_edges_id_autoincrement(self, fractal_db):
         """edges.id must autoincrement."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -347,7 +347,7 @@ class TestEdgesTable:
 
     def test_edges_edge_type_check_constraint(self, fractal_db):
         """edges.edge_type must only accept valid types."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -371,7 +371,7 @@ class TestEdgesTable:
 
     def test_edges_unique_constraint(self, fractal_db):
         """edges must enforce unique (graph_id, from_node, to_node, edge_type)."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -399,7 +399,7 @@ class TestEdgesTable:
 
     def test_edges_foreign_keys_to_graphs(self, fractal_db):
         """edges.graph_id must reference graphs(id)."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -410,7 +410,7 @@ class TestEdgesTable:
 
     def test_edges_foreign_keys_to_nodes(self, fractal_db):
         """edges.from_node and to_node must reference nodes(id)."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -427,7 +427,7 @@ class TestIndexes:
 
     def test_index_nodes_graph_id(self, fractal_db):
         """Index on nodes(graph_id) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -438,7 +438,7 @@ class TestIndexes:
 
     def test_index_nodes_parent_id(self, fractal_db):
         """Index on nodes(parent_id) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -449,7 +449,7 @@ class TestIndexes:
 
     def test_index_nodes_graph_type_status(self, fractal_db):
         """Index on nodes(graph_id, node_type, status) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -460,7 +460,7 @@ class TestIndexes:
 
     def test_index_edges_graph_id(self, fractal_db):
         """Index on edges(graph_id) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -471,7 +471,7 @@ class TestIndexes:
 
     def test_index_edges_from_node(self, fractal_db):
         """Index on edges(from_node) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -482,7 +482,7 @@ class TestIndexes:
 
     def test_index_edges_to_node(self, fractal_db):
         """Index on edges(to_node) must exist."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -497,7 +497,7 @@ class TestWALMode:
 
     def test_wal_mode_enabled(self, fractal_db):
         """WAL mode must be enabled for concurrent access."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -508,7 +508,7 @@ class TestWALMode:
 
     def test_foreign_keys_enabled(self, fractal_db):
         """Foreign keys must be enabled."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -523,7 +523,7 @@ class TestIdempotency:
 
     def test_init_fractal_schema_idempotent(self, tmp_path):
         """Calling init_fractal_schema multiple times should not error."""
-        from spellbook_mcp.fractal.schema import (
+        from spellbook.fractal.schema import (
             close_all_fractal_connections,
             get_fractal_connection,
             init_fractal_schema,
@@ -549,7 +549,7 @@ class TestForeignKeyCascade:
 
     def test_delete_graph_cascades_to_nodes(self, fractal_db):
         """Deleting a graph must cascade delete its nodes."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -582,7 +582,7 @@ class TestForeignKeyCascade:
 
     def test_delete_graph_cascades_to_edges(self, fractal_db):
         """Deleting a graph must cascade delete its edges."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -623,7 +623,7 @@ class TestConnectionCache:
 
     def test_get_connection_returns_same_connection(self, tmp_path):
         """get_fractal_connection must return cached connection."""
-        from spellbook_mcp.fractal.schema import (
+        from spellbook.fractal.schema import (
             close_all_fractal_connections,
             get_fractal_connection,
             init_fractal_schema,
@@ -640,7 +640,7 @@ class TestConnectionCache:
 
     def test_close_all_clears_cache(self, tmp_path):
         """close_all_fractal_connections must clear connection cache."""
-        from spellbook_mcp.fractal.schema import (
+        from spellbook.fractal.schema import (
             close_all_fractal_connections,
             get_fractal_connection,
             init_fractal_schema,
@@ -665,7 +665,7 @@ class TestGetFractalDbPath:
         """get_fractal_db_path must return a Path object."""
         from pathlib import Path
 
-        from spellbook_mcp.fractal.schema import get_fractal_db_path
+        from spellbook.fractal.schema import get_fractal_db_path
 
         db_path = get_fractal_db_path()
 
@@ -674,7 +674,7 @@ class TestGetFractalDbPath:
 
     def test_path_in_spellbook_dir(self):
         """get_fractal_db_path must be in ~/.local/spellbook/."""
-        from spellbook_mcp.fractal.schema import get_fractal_db_path
+        from spellbook.fractal.schema import get_fractal_db_path
 
         db_path = get_fractal_db_path()
 
@@ -687,7 +687,7 @@ class TestNewNodeStatuses:
 
     def test_nodes_accept_claimed_status(self, fractal_db):
         """nodes.status must accept 'claimed' as a valid status."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -704,7 +704,7 @@ class TestNewNodeStatuses:
 
     def test_nodes_accept_synthesized_status(self, fractal_db):
         """nodes.status must accept 'synthesized' as a valid status."""
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
@@ -725,7 +725,7 @@ class TestV1ToV2Migration:
 
     def test_migration_from_v1_to_v2(self, tmp_path):
         """Running init_fractal_schema on a v1 database must migrate to v2."""
-        from spellbook_mcp.fractal.schema import (
+        from spellbook.fractal.schema import (
             close_all_fractal_connections,
             get_fractal_connection,
             init_fractal_schema,

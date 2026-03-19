@@ -19,9 +19,9 @@ False Positive Findings:
 
 import pytest
 
-from spellbook_mcp.security.check import check_tool_input, check_tool_output
-from spellbook_mcp.security.rules import INJECTION_RULES, check_patterns
-from spellbook_mcp.security.tools import do_detect_injection, do_sanitize_input
+from spellbook.security.check import check_tool_input, check_tool_output
+from spellbook.security.rules import INJECTION_RULES, check_patterns
+from spellbook.security.tools import do_detect_injection, do_sanitize_input
 
 
 # =============================================================================
@@ -397,7 +397,7 @@ class TestInvisibleCharStripping:
 
     def test_all_defined_invisible_chars_are_stripped(self):
         """Every character in INVISIBLE_CHARS is actually stripped."""
-        from spellbook_mcp.security.rules import INVISIBLE_CHARS
+        from spellbook.security.rules import INVISIBLE_CHARS
 
         for char in INVISIBLE_CHARS:
             text = f"a{char}b"

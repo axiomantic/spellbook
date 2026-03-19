@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spellbook_mcp.pr_distill.bless import (
+from spellbook.pr_distill.bless import (
     validate_pattern_id,
     bless_pattern,
     list_blessed_patterns,
@@ -101,7 +101,7 @@ class TestBlessPattern:
         """Bless a valid pattern succeeds."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "my-pattern")
 
         assert result["success"] is True
@@ -111,7 +111,7 @@ class TestBlessPattern:
         """Bless an invalid pattern fails with error."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "a")  # Too short
 
         assert result["success"] is False
@@ -135,7 +135,7 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "my-pattern")
 
         assert result["success"] is True
@@ -150,7 +150,7 @@ class TestListBlessedPatterns:
         """Returns empty list when no config exists."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = list_blessed_patterns(project_root)
 
         assert result == []
@@ -172,7 +172,7 @@ class TestListBlessedPatterns:
         }
         config_file.write_text(json.dumps(config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = list_blessed_patterns(project_root)
 
         assert result == ["pattern-1", "pattern-2"]
@@ -181,7 +181,7 @@ class TestListBlessedPatterns:
         """List shows newly blessed patterns."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             bless_pattern(project_root, "new-pattern")
             result = list_blessed_patterns(project_root)
 

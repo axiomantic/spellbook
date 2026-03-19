@@ -2,7 +2,7 @@
 
 The plugin is a TypeScript file (hooks/opencode-plugin.ts) that:
 - Registers tool.execute.before and tool.execute.after hooks
-- Shells out to python3 -m spellbook_mcp.security.check for security scanning
+- Shells out to python3 -m spellbook.security.check for security scanning
 - Reads SPELLBOOK_DIR from environment
 
 The installer (OpenCodeInstaller) should:
@@ -110,9 +110,9 @@ class TestPluginSourceStructure:
         assert "tool.execute.after" in content
 
     def test_shells_out_to_check_module(self):
-        """Plugin must shell out to python3 -m spellbook_mcp.security.check."""
+        """Plugin must shell out to python3 -m spellbook.security.check."""
         content = _read_plugin_source()
-        assert "spellbook_mcp.security.check" in content
+        assert "spellbook.security.check" in content
         assert "python3" in content
 
     def test_uses_check_output_flag(self):

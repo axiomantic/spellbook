@@ -1,7 +1,7 @@
 """Tests for TTS MCP tool functions in server.py.
 
 Uses .fn to access the underlying function from the FunctionTool wrapper.
-All spellbook_mcp.tts functions are mocked. Tests verify tool behavior,
+All spellbook.notifications.tts functions are mocked. Tests verify tool behavior,
 argument handling, and return contracts.
 """
 
@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from spellbook_mcp import server
+from spellbook import server
 
 
 class TestKokoroSpeak:
@@ -18,7 +18,7 @@ class TestKokoroSpeak:
     @pytest.mark.asyncio
     async def test_success_returns_ok(self):
         mock_result = {"ok": True, "elapsed": 1.23, "wav_path": "/tmp/test.wav"}
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock, return_value=mock_result):
             result = await server.kokoro_speak.fn(text="hello world")
         assert result["ok"] is True
         assert result["elapsed"] == 1.23
@@ -26,21 +26,21 @@ class TestKokoroSpeak:
     @pytest.mark.asyncio
     async def test_not_available_returns_error(self):
         mock_result = {"error": "TTS not available. Missing kokoro"}
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock, return_value=mock_result):
             result = await server.kokoro_speak.fn(text="hello")
         assert "error" in result
         assert "not available" in result["error"].lower()
 
     @pytest.mark.asyncio
     async def test_passes_voice_and_volume(self):
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock) as mock_speak:
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock) as mock_speak:
             mock_speak.return_value = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
             await server.kokoro_speak.fn(text="hi", voice="bf_emma", volume=0.5)
             mock_speak.assert_called_once_with("hi", voice="bf_emma", volume=0.5, session_id=None)
 
     @pytest.mark.asyncio
     async def test_passes_session_id(self):
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock) as mock_speak:
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock) as mock_speak:
             mock_speak.return_value = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
             await server.kokoro_speak.fn(text="hi", session_id="sess-123")
             mock_speak.assert_called_once_with("hi", voice=None, volume=None, session_id="sess-123")
@@ -58,7 +58,7 @@ class TestKokoroStatus:
             "volume": 0.3,
             "error": None,
         }
-        with patch("spellbook_mcp.tts.get_status", return_value=mock_status):
+        with patch("spellbook.notifications.tts.get_status", return_value=mock_status):
             result = server.kokoro_status.fn()
         assert result == mock_status
 
@@ -71,7 +71,7 @@ class TestKokoroStatus:
             "volume": 0.3,
             "error": None,
         }
-        with patch("spellbook_mcp.tts.get_status", return_value=mock_status) as mock_get:
+        with patch("spellbook.notifications.tts.get_status", return_value=mock_status) as mock_get:
             server.kokoro_status.fn(session_id="sess-456")
             mock_get.assert_called_once_with(session_id="sess-456")
 
@@ -80,7 +80,7 @@ class TestTtsSessionSet:
     """tts_session_set() MCP tool."""
 
     def test_updates_session_state(self):
-        from spellbook_mcp.config_tools import _session_states, _session_activity
+        from spellbook.core.config import _session_states, _session_activity
 
         _session_states.clear()
         _session_activity.clear()
@@ -96,7 +96,7 @@ class TestTtsSessionSet:
         _session_activity.clear()
 
     def test_partial_update_preserves_other_keys(self):
-        from spellbook_mcp.config_tools import _session_states, _session_activity, _get_session_state
+        from spellbook.core.config import _session_states, _session_activity, _get_session_state
 
         _session_states.clear()
         _session_activity.clear()
@@ -121,8 +121,8 @@ class TestTtsConfigSet:
     def test_sets_all_config_keys(self, tmp_path):
         config_file = tmp_path / "spellbook.json"
         config_file.write_text("{}")
-        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file):
-            with patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+        with patch("spellbook.core.config.get_config_path", return_value=config_file):
+            with patch("spellbook.core.config.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
                 result = server.tts_config_set.fn(enabled=True, voice="bf_emma", volume=0.5)
 
         assert result["status"] == "ok"
@@ -133,8 +133,8 @@ class TestTtsConfigSet:
     def test_partial_update_only_sets_provided(self, tmp_path):
         config_file = tmp_path / "spellbook.json"
         config_file.write_text('{"tts_enabled": true}')
-        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file):
-            with patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+        with patch("spellbook.core.config.get_config_path", return_value=config_file):
+            with patch("spellbook.core.config.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
                 result = server.tts_config_set.fn(voice="am_adam")
 
         assert result["config"]["tts_voice"] == "am_adam"
@@ -152,7 +152,7 @@ class TestApiSpeakEndpoint:
         from starlette.testclient import TestClient
 
         mock_result = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/test.wav"}
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock, return_value=mock_result):
             app = server.mcp.http_app(transport="http")
             client = TestClient(app)
             response = client.post("/api/speak", json={"text": "hello"})
@@ -185,7 +185,7 @@ class TestApiSpeakEndpoint:
         from starlette.testclient import TestClient
 
         mock_result = {"ok": True, "elapsed": 0.5, "wav_path": "/tmp/x.wav"}
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result) as mock_speak:
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock, return_value=mock_result) as mock_speak:
             app = server.mcp.http_app(transport="http")
             client = TestClient(app)
             response = client.post(
@@ -199,7 +199,7 @@ class TestApiSpeakEndpoint:
         from starlette.testclient import TestClient
 
         mock_result = {"error": "TTS not available"}
-        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+        with patch("spellbook.notifications.tts.speak", new_callable=AsyncMock, return_value=mock_result):
             app = server.mcp.http_app(transport="http")
             client = TestClient(app)
             response = client.post("/api/speak", json={"text": "hello"})

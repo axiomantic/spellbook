@@ -18,7 +18,7 @@ class TestConfigGet:
             "admin_enabled": True,
         }
         with patch(
-            "spellbook_mcp.admin.routes.config.get_all_config",
+            "spellbook.admin.routes.config.get_all_config",
             return_value=mock_config,
         ):
             response = client.get("/api/config")
@@ -34,7 +34,7 @@ class TestConfigGet:
 
     def test_get_config_returns_defaults_when_no_file(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.get_all_config",
+            "spellbook.admin.routes.config.get_all_config",
             return_value={},
         ):
             response = client.get("/api/config")
@@ -85,7 +85,7 @@ class TestConfigUpdate:
 
     def test_update_known_key(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.set_config_value"
+            "spellbook.admin.routes.config.set_config_value"
         ) as mock_set:
             mock_set.return_value = {"status": "ok", "config": {"tts_enabled": False}}
             response = client.put(
@@ -96,7 +96,7 @@ class TestConfigUpdate:
 
     def test_update_string_key(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.set_config_value"
+            "spellbook.admin.routes.config.set_config_value"
         ) as mock_set:
             mock_set.return_value = {
                 "status": "ok",
@@ -110,7 +110,7 @@ class TestConfigUpdate:
 
     def test_update_number_key(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.set_config_value"
+            "spellbook.admin.routes.config.set_config_value"
         ) as mock_set:
             mock_set.return_value = {
                 "status": "ok",
@@ -142,9 +142,9 @@ class TestConfigUpdateEvent:
 
     def test_event_published_on_update(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.set_config_value"
+            "spellbook.admin.routes.config.set_config_value"
         ) as mock_set, patch(
-            "spellbook_mcp.admin.routes.config.event_bus"
+            "spellbook.admin.routes.config.event_bus"
         ) as mock_bus:
             mock_set.return_value = {"status": "ok", "config": {"tts_enabled": False}}
             # Make publish a coroutine
@@ -171,7 +171,7 @@ class TestConfigBatchUpdate:
 
     def test_batch_update_known_keys(self, client):
         with patch(
-            "spellbook_mcp.admin.routes.config.batch_set_config"
+            "spellbook.admin.routes.config.batch_set_config"
         ) as mock_batch:
             mock_batch.return_value = {
                 "status": "ok",

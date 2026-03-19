@@ -48,7 +48,7 @@ Spellbook employs a three-layer defense model:
 
 Bearer token authentication for HTTP transport, implemented as ASGI middleware. The server generates a cryptographic token on startup, writes it atomically to `~/.local/spellbook/.mcp-token` with 0600 permissions (no TOCTOU race), and requires all HTTP requests to include it as an `Authorization: Bearer <token>` header. Token comparison uses `secrets.compare_digest` to prevent timing attacks.
 
-Relevant source: `spellbook_mcp/auth.py`
+Relevant source: `spellbook/auth.py`
 
 ### Layer 2: Input Validation Pipeline
 
@@ -61,7 +61,7 @@ Every tool invocation passes through pattern-based security scanning:
 
 The security mode (standard/paranoid) controls the severity threshold for blocking.
 
-Relevant sources: `spellbook_mcp/security/rules.py`, `spellbook_mcp/security/tools.py`, `spellbook_mcp/security/check.py`
+Relevant sources: `spellbook/security/rules.py`, `spellbook/security/tools.py`, `spellbook/security/check.py`
 
 ### Layer 3: State Management
 
@@ -74,7 +74,7 @@ Persisted workflow state undergoes schema validation on both save and load:
 - All string fields scanned for injection patterns
 - Invalid state marked as hostile in the trust registry with full audit trail
 
-Relevant source: `spellbook_mcp/resume.py`
+Relevant source: `spellbook/resume.py`
 
 ## Auth Flow
 

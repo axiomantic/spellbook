@@ -13,37 +13,37 @@ class TestClassifyVersionBump:
     """Tests for classify_version_bump()."""
 
     def test_major_bump(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.9.9", "1.0.0") == "major"
 
     def test_minor_bump(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.9.9", "0.10.0") == "minor"
 
     def test_patch_bump(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.9.9", "0.9.10") == "patch"
 
     def test_same_version_returns_none(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.9.9", "0.9.9") is None
 
     def test_downgrade_returns_none(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("1.0.0", "0.9.9") is None
 
     def test_major_bump_with_higher_minor(self):
         """Major bump takes precedence even if minor is lower."""
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.99.99", "1.0.0") == "major"
 
     def test_handles_whitespace(self):
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump(" 0.9.9 ", " 0.9.10\n") == "patch"
 
     def test_handles_extra_components(self):
         """Only first 3 components are compared."""
-        from spellbook_mcp.update_tools import classify_version_bump
+        from spellbook.updates.tools import classify_version_bump
         assert classify_version_bump("0.9.9.1", "0.9.10.0") == "patch"
 
 
@@ -139,7 +139,7 @@ class TestGetChangelogBetween:
     """Tests for get_changelog_between()."""
 
     def test_extracts_entries_between_versions(self, tmp_path):
-        from spellbook_mcp.update_tools import get_changelog_between
+        from spellbook.updates.tools import get_changelog_between
 
         changelog = tmp_path / "CHANGELOG.md"
         changelog.write_text(SAMPLE_CHANGELOG)
@@ -153,7 +153,7 @@ class TestGetChangelogBetween:
         assert "Minor improvements" not in result
 
     def test_same_version_returns_empty(self, tmp_path):
-        from spellbook_mcp.update_tools import get_changelog_between
+        from spellbook.updates.tools import get_changelog_between
 
         changelog = tmp_path / "CHANGELOG.md"
         changelog.write_text(SAMPLE_CHANGELOG)
@@ -162,13 +162,13 @@ class TestGetChangelogBetween:
         assert result == ""
 
     def test_missing_changelog_returns_empty(self, tmp_path):
-        from spellbook_mcp.update_tools import get_changelog_between
+        from spellbook.updates.tools import get_changelog_between
 
         result = get_changelog_between(tmp_path, "0.9.8", "0.9.10")
         assert result == ""
 
     def test_single_version_between(self, tmp_path):
-        from spellbook_mcp.update_tools import get_changelog_between
+        from spellbook.updates.tools import get_changelog_between
 
         changelog = tmp_path / "CHANGELOG.md"
         changelog.write_text(SAMPLE_CHANGELOG)
@@ -184,16 +184,16 @@ class TestCheckForUpdates:
 
     def test_update_available_via_github_api(self, tmp_path):
         """Returns correct state when update is available via GitHub API."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
         (spellbook_dir / "CHANGELOG.md").write_text(SAMPLE_CHANGELOG)
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.shutil.which", return_value="/usr/local/bin/gh"):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -230,16 +230,16 @@ class TestCheckForUpdates:
 
     def test_update_available_fallback_to_git_show(self, tmp_path):
         """Falls back to git show when gh CLI is not available."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
         (spellbook_dir / "CHANGELOG.md").write_text(SAMPLE_CHANGELOG)
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.shutil.which", return_value=None):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -271,15 +271,15 @@ class TestCheckForUpdates:
 
     def test_no_update_available(self, tmp_path):
         """Returns correctly when versions match."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.10\n")
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.shutil.which", return_value=None):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -309,14 +309,14 @@ class TestCheckForUpdates:
 
     def test_fetch_failure(self, tmp_path):
         """Returns error when git fetch fails."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: None
 
             # git remote (validation) - returns "origin" as default
@@ -338,15 +338,15 @@ class TestCheckForUpdates:
 
     def test_major_bump_detected(self, tmp_path):
         """Detects major version bump."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.shutil.which", return_value=None):
             mock_config_get.side_effect = lambda key: None
 
             # git remote (validation) - returns "origin" as default
@@ -371,15 +371,15 @@ class TestCheckForUpdates:
 
     def test_github_api_failure_falls_back_to_git_show(self, tmp_path):
         """Falls back to git show when GitHub API call fails."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.shutil.which", return_value="/usr/local/bin/gh"):
             mock_config_get.side_effect = lambda key: None
 
             # git remote (validation)
@@ -416,13 +416,13 @@ class TestCheckForUpdates:
 
     def test_missing_local_version(self, tmp_path):
         """Returns error when local .version file is missing."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         # No .version file
 
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: None
 
             result = check_for_updates(spellbook_dir)
@@ -436,10 +436,10 @@ class TestGetOwnerRepo:
     """Tests for _get_owner_repo()."""
 
     def test_ssh_url(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_owner_repo
+        from spellbook.updates.tools import _get_owner_repo
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             result = MagicMock()
             result.returncode = 0
             result.stdout = "git@github.com:axiomantic/spellbook.git\n"
@@ -448,10 +448,10 @@ class TestGetOwnerRepo:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
     def test_https_url(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_owner_repo
+        from spellbook.updates.tools import _get_owner_repo
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             result = MagicMock()
             result.returncode = 0
             result.stdout = "https://github.com/axiomantic/spellbook.git\n"
@@ -460,10 +460,10 @@ class TestGetOwnerRepo:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
     def test_https_url_no_dot_git(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_owner_repo
+        from spellbook.updates.tools import _get_owner_repo
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             result = MagicMock()
             result.returncode = 0
             result.stdout = "https://github.com/axiomantic/spellbook\n"
@@ -472,10 +472,10 @@ class TestGetOwnerRepo:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
     def test_returns_none_on_failure(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_owner_repo
+        from spellbook.updates.tools import _get_owner_repo
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             result = MagicMock()
             result.returncode = 1
             mock_run.return_value = result
@@ -487,11 +487,11 @@ class TestGetLatestReleaseVersion:
     """Tests for _get_latest_release_version()."""
 
     def test_returns_version_without_v_prefix(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_latest_release_version
+        from spellbook.updates.tools import _get_latest_release_version
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"), \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.shutil.which", return_value="/usr/local/bin/gh"), \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             # git remote get-url
             url_result = MagicMock()
             url_result.returncode = 0
@@ -507,17 +507,17 @@ class TestGetLatestReleaseVersion:
             assert _get_latest_release_version(tmp_path) == "0.25.0"
 
     def test_returns_none_when_gh_not_installed(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_latest_release_version
+        from spellbook.updates.tools import _get_latest_release_version
 
-        with patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+        with patch("spellbook.updates.tools.shutil.which", return_value=None):
             assert _get_latest_release_version(tmp_path) is None
 
     def test_returns_none_on_api_failure(self, tmp_path):
-        from spellbook_mcp.update_tools import _get_latest_release_version
+        from spellbook.updates.tools import _get_latest_release_version
 
-        with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"), \
-             patch("spellbook_mcp.update_tools.config_get", return_value=None):
+        with patch("spellbook.updates.tools.subprocess.run") as mock_run, \
+             patch("spellbook.updates.tools.shutil.which", return_value="/usr/local/bin/gh"), \
+             patch("spellbook.updates.tools.config_get", return_value=None):
             # git remote get-url
             url_result = MagicMock()
             url_result.returncode = 0
@@ -538,7 +538,7 @@ class TestApplyUpdate:
 
     def test_apply_success(self, tmp_path):
         """Full apply flow: check clean, lock, pull, install, unlock."""
-        from spellbook_mcp.update_tools import apply_update
+        from spellbook.updates.tools import apply_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -567,9 +567,9 @@ class TestApplyUpdate:
                 (spellbook_dir / ".version").write_text("0.9.10\n")
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.config_set") as mock_config_set:
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.config_set") as mock_config_set:
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -585,7 +585,7 @@ class TestApplyUpdate:
 
     def test_apply_dirty_tree_aborts(self, tmp_path):
         """Aborts when working tree has uncommitted changes."""
-        from spellbook_mcp.update_tools import apply_update
+        from spellbook.updates.tools import apply_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -599,8 +599,8 @@ class TestApplyUpdate:
                 result.stdout = " M some_file.py\n"  # Dirty tree
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: None
 
             result = apply_update(spellbook_dir, lock_path=lock_path)
@@ -610,7 +610,7 @@ class TestApplyUpdate:
 
     def test_apply_pull_fails(self, tmp_path):
         """Handles pull failure, releases lock."""
-        from spellbook_mcp.update_tools import apply_update
+        from spellbook.updates.tools import apply_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -632,9 +632,9 @@ class TestApplyUpdate:
                 result.returncode = 0
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.config_set"):
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.config_set"):
             mock_config_get.side_effect = lambda key: None
 
             result = apply_update(spellbook_dir, lock_path=lock_path)
@@ -646,7 +646,7 @@ class TestApplyUpdate:
 
     def test_apply_installer_fails(self, tmp_path):
         """Handles installer failure, releases lock."""
-        from spellbook_mcp.update_tools import apply_update
+        from spellbook.updates.tools import apply_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -670,9 +670,9 @@ class TestApplyUpdate:
                 result.returncode = 0
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.config_set"):
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.config_set"):
             mock_config_get.side_effect = lambda key: None
 
             result = apply_update(spellbook_dir, lock_path=lock_path)
@@ -687,7 +687,7 @@ class TestRollbackUpdate:
 
     def test_rollback_success(self, tmp_path):
         """Full rollback flow."""
-        from spellbook_mcp.update_tools import rollback_update
+        from spellbook.updates.tools import rollback_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -705,9 +705,9 @@ class TestRollbackUpdate:
                 pass
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.config_set") as mock_config_set:
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get, \
+             patch("spellbook.updates.tools.config_set") as mock_config_set:
             mock_config_get.side_effect = lambda key: {
                 "pre_update_sha": "abc123def456" + "0" * 28,
                 "auto_update_branch": "main",
@@ -722,13 +722,13 @@ class TestRollbackUpdate:
 
     def test_rollback_no_sha(self, tmp_path):
         """Returns error when no pre_update_sha stored."""
-        from spellbook_mcp.update_tools import rollback_update
+        from spellbook.updates.tools import rollback_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         lock_path = tmp_path / "install.lock"
 
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: None
 
             result = rollback_update(spellbook_dir, lock_path=lock_path)
@@ -738,7 +738,7 @@ class TestRollbackUpdate:
 
     def test_rollback_wrong_branch(self, tmp_path):
         """Returns error when on wrong branch."""
-        from spellbook_mcp.update_tools import rollback_update
+        from spellbook.updates.tools import rollback_update
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -751,8 +751,8 @@ class TestRollbackUpdate:
                 result.stdout = "feature-branch"
             return result
 
-        with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
-             patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.subprocess.run", side_effect=mock_subprocess_run), \
+             patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: {
                 "pre_update_sha": "abc123" + "0" * 34,
                 "auto_update_branch": "main",
@@ -769,7 +769,7 @@ class TestGetUpdateStatus:
 
     def test_returns_aggregated_status(self, tmp_path):
         """Returns all update-related config keys in one response."""
-        from spellbook_mcp.update_tools import get_update_status
+        from spellbook.updates.tools import get_update_status
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
@@ -786,7 +786,7 @@ class TestGetUpdateStatus:
             "update_check_failures": 0,
         }
 
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with patch("spellbook.updates.tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: config_state.get(key)
 
             result = get_update_status(spellbook_dir)
@@ -862,7 +862,7 @@ class TestCheckForUpdatesMCPTool:
 
     def test_tool_function_importable(self):
         """Verify spellbook_check_for_updates can be imported from server module."""
-        from spellbook_mcp.server import spellbook_check_for_updates, _FASTMCP_MAJOR
+        from spellbook.server import spellbook_check_for_updates, _FASTMCP_MAJOR
         if _FASTMCP_MAJOR >= 3:
             # In v3, @mcp.tool() returns the original function (with .fn compat shim)
             assert callable(spellbook_check_for_updates)
@@ -873,7 +873,7 @@ class TestCheckForUpdatesMCPTool:
 
     def test_status_tool_function_importable(self):
         """Verify spellbook_get_update_status can be imported from server module."""
-        from spellbook_mcp.server import spellbook_get_update_status, _FASTMCP_MAJOR
+        from spellbook.server import spellbook_get_update_status, _FASTMCP_MAJOR
         if _FASTMCP_MAJOR >= 3:
             assert callable(spellbook_get_update_status)
         else:

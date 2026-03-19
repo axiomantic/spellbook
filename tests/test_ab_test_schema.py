@@ -2,7 +2,7 @@
 
 import sqlite3
 import pytest
-from spellbook_mcp.db import init_db, get_connection
+from spellbook.core.db import init_db, get_connection
 
 
 class TestABTestSchema:

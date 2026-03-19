@@ -5,7 +5,7 @@ import pytest
 
 def test_extract_workflow_default_sequential():
     """Test that default workflow is sequential."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -23,7 +23,7 @@ def test_extract_workflow_default_sequential():
 
 def test_extract_workflow_empty_messages():
     """Test extraction with empty message list."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     result = extract_workflow_pattern([])
     assert result == "sequential"
@@ -31,7 +31,7 @@ def test_extract_workflow_empty_messages():
 
 def test_extract_workflow_tdd_pattern():
     """Test detecting TDD pattern: pytest interleaved with Edit calls."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -70,7 +70,7 @@ def test_extract_workflow_tdd_pattern():
 
 def test_extract_workflow_tdd_needs_interleaving():
     """Test that TDD requires actual interleaving, not just presence of both."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     # All edits first, then all tests - not interleaved
     messages = [
@@ -98,7 +98,7 @@ def test_extract_workflow_tdd_needs_interleaving():
 
 def test_extract_workflow_parallel_agents():
     """Test detecting parallel agents pattern: multiple Task with run_in_background."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -129,7 +129,7 @@ def test_extract_workflow_parallel_agents():
 
 def test_extract_workflow_parallel_agents_across_messages():
     """Test detecting parallel agents across multiple messages."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -160,7 +160,7 @@ def test_extract_workflow_parallel_agents_across_messages():
 
 def test_extract_workflow_single_background_task_not_parallel():
     """Test that a single background task is not parallel pattern."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -181,7 +181,7 @@ def test_extract_workflow_single_background_task_not_parallel():
 
 def test_extract_workflow_foreground_tasks_not_parallel():
     """Test that foreground Task calls are not parallel pattern."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -200,7 +200,7 @@ def test_extract_workflow_foreground_tasks_not_parallel():
 
 def test_extract_workflow_tdd_priority_over_parallel():
     """Test that TDD pattern takes priority over parallel agents."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     # Both patterns present - TDD should win
     messages = [
@@ -254,7 +254,7 @@ def test_extract_workflow_tdd_priority_over_parallel():
 
 def test_extract_workflow_handles_missing_args():
     """Test extraction handles tool calls with missing args."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -273,7 +273,7 @@ def test_extract_workflow_handles_missing_args():
 
 def test_extract_workflow_handles_none_tool_calls():
     """Test extraction handles messages with None tool_calls."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {"role": "assistant", "timestamp": "2026-01-16T10:00:00Z", "tool_calls": None}
@@ -285,7 +285,7 @@ def test_extract_workflow_handles_none_tool_calls():
 
 def test_extract_workflow_pytest_variants():
     """Test that various pytest command variants are detected."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     messages = [
         {
@@ -324,7 +324,7 @@ def test_extract_workflow_pytest_variants():
 
 def test_extract_workflow_tdd_minimum_iterations():
     """Test that TDD needs at least 2 test-edit cycles."""
-    from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+    from spellbook.extractors.workflow import extract_workflow_pattern
 
     # Only one cycle - not enough to be TDD
     messages = [

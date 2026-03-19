@@ -775,7 +775,7 @@ class TestClaudeCodeInstallerHookIntegration:
         spellbook = tmp_path / "spellbook"
         spellbook.mkdir()
         (spellbook / ".version").write_text("1.0.0")
-        mcp_dir = spellbook / "spellbook_mcp"
+        mcp_dir = spellbook / "spellbook"
         mcp_dir.mkdir()
         (mcp_dir / "server.py").write_text("# stub")
         (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")

@@ -2,8 +2,8 @@
 
 import pytest
 from datetime import datetime
-from spellbook_mcp.db import init_db, get_connection
-from spellbook_mcp.skill_analyzer import (
+from spellbook.core.db import init_db, get_connection
+from spellbook.sessions.skill_analyzer import (
     SkillOutcome,
     persist_outcome,
     OUTCOME_COMPLETED,
@@ -16,7 +16,7 @@ class TestABTestIntegrationWorkflow:
 
     def test_full_experiment_lifecycle(self, tmp_path):
         """Test complete flow: create -> start -> assign -> record -> pause -> complete -> results."""
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             experiment_pause,
@@ -105,7 +105,7 @@ class TestABTestIntegrationWorkflow:
 
     def test_concurrent_experiment_prevention(self, tmp_path):
         """Test that concurrent experiments for same skill are blocked."""
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             ConcurrentExperimentError,
@@ -143,7 +143,7 @@ class TestABTestIntegrationWorkflow:
 
     def test_sticky_variant_assignment(self, tmp_path):
         """Test that sessions always get the same variant."""
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             get_skill_version_for_session,

@@ -5,14 +5,14 @@ Tests the complete flow from argument parsing through routing and edge case hand
 
 import pytest
 
-from spellbook_mcp.code_review.arg_parser import parse_args
-from spellbook_mcp.code_review.router import route_to_handler, TargetType
-from spellbook_mcp.code_review.edge_cases import (
+from spellbook.code_review.arg_parser import parse_args
+from spellbook.code_review.router import route_to_handler, TargetType
+from spellbook.code_review.edge_cases import (
     check_empty_diff,
     check_no_comments,
     check_diff_too_large,
 )
-from spellbook_mcp.code_review.models import FileDiff
+from spellbook.code_review.models import FileDiff
 
 
 class TestSelfModeWorkflow:

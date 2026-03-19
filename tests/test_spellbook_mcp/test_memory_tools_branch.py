@@ -5,8 +5,8 @@ import subprocess
 
 import pytest
 
-from spellbook_mcp.db import get_connection, init_db, close_all_connections
-from spellbook_mcp.memory_tools import (
+from spellbook.core.db import get_connection, init_db, close_all_connections
+from spellbook.memory.tools import (
     do_log_event,
     do_memory_recall,
     do_store_memories,
@@ -75,8 +75,8 @@ class TestDoLogEventBranch:
 class TestDoMemoryRecallBranch:
     def test_branch_and_repo_path_forwarded(self, db_path, git_repo):
         """do_memory_recall should forward branch/repo_path so scoring activates."""
-        from spellbook_mcp.branch_ancestry import clear_ancestry_cache
-        from spellbook_mcp.memory_store import insert_memory
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
+        from spellbook.memory.store import insert_memory
 
         clear_ancestry_cache()
         insert_memory(

@@ -13,7 +13,7 @@ import sqlite3
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, init_db
+from spellbook.core.db import close_all_connections, init_db
 
 
 @pytest.fixture(autouse=True)
@@ -39,70 +39,70 @@ class TestDashboardEmpty:
     """Empty database returns sensible defaults for all dashboard fields."""
 
     def test_returns_security_mode(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["security_mode"] == "standard"
 
     def test_returns_period_hours(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path, since_hours=12)
         assert result["period_hours"] == 12
 
     def test_returns_zero_total_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["total_events"] == 0
 
     def test_returns_zero_injections_detected(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["injections_detected"] == 0
 
     def test_returns_canary_status_zeroed(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["canary_status"] == {"total": 0, "triggered": 0}
 
     def test_returns_empty_trust_distribution(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["trust_distribution"] == {}
 
     def test_returns_empty_top_blocked_rules(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["top_blocked_rules"] == []
 
     def test_returns_zero_honeypot_triggers(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["honeypot_triggers"] == 0
 
     def test_returns_empty_recent_alerts(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
         assert result["recent_alerts"] == []
 
     def test_returns_all_required_keys(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         result = do_dashboard(db_path=db_path)
@@ -171,7 +171,7 @@ class TestDashboardPopulated:
         conn.close()
 
     def test_total_events_counts_all(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_events(db_path, [
@@ -183,7 +183,7 @@ class TestDashboardPopulated:
         assert result["total_events"] == 3
 
     def test_injections_detected_counts_injection_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_events(db_path, [
@@ -196,7 +196,7 @@ class TestDashboardPopulated:
         assert result["injections_detected"] == 3
 
     def test_canary_status_counts(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_canaries(db_path, [
@@ -209,7 +209,7 @@ class TestDashboardPopulated:
         assert result["canary_status"]["triggered"] == 1
 
     def test_trust_distribution(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_trust(db_path, [
@@ -226,7 +226,7 @@ class TestDashboardPopulated:
         }
 
     def test_honeypot_triggers_counts_honeypot_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_events(db_path, [
@@ -247,7 +247,7 @@ class TestDashboardTimeWindow:
     """Events outside the time window are excluded."""
 
     def test_excludes_old_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -272,7 +272,7 @@ class TestDashboardTimeWindow:
         assert result["total_events"] == 1
 
     def test_includes_events_within_window(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -299,7 +299,7 @@ class TestDashboardTimeWindow:
         assert result["total_events"] == 3
 
     def test_time_window_affects_injections_count(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -324,7 +324,7 @@ class TestDashboardTimeWindow:
         assert result["injections_detected"] == 1
 
     def test_time_window_affects_honeypot_count(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -375,7 +375,7 @@ class TestDashboardTopBlocked:
         conn.close()
 
     def test_returns_rules_ordered_by_count_desc(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         self._insert_blocked_events(db_path, [
@@ -391,7 +391,7 @@ class TestDashboardTopBlocked:
         assert rules[2] == ["EXFIL-001", 3]
 
     def test_limits_to_10_rules(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         # Insert 12 different rules
@@ -401,7 +401,7 @@ class TestDashboardTopBlocked:
         assert len(result["top_blocked_rules"]) == 10
 
     def test_empty_when_no_blocked_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         # Insert non-blocked events
@@ -428,7 +428,7 @@ class TestDashboardRecentAlerts:
     """Recent alerts returns only CRITICAL/HIGH events, limited to 5."""
 
     def test_returns_only_critical_and_high(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -466,7 +466,7 @@ class TestDashboardRecentAlerts:
         assert severities == {"CRITICAL", "HIGH"}
 
     def test_limits_to_5_alerts(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -484,7 +484,7 @@ class TestDashboardRecentAlerts:
         assert len(result["recent_alerts"]) == 5
 
     def test_alert_contains_required_fields(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -505,7 +505,7 @@ class TestDashboardRecentAlerts:
         assert "detail" in alert
 
     def test_alert_detail_is_truncated_if_long(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         long_detail = "x" * 500
@@ -524,7 +524,7 @@ class TestDashboardRecentAlerts:
         assert len(alert["detail"]) <= 200
 
     def test_alerts_ordered_newest_first(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = _setup_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -558,7 +558,7 @@ class TestDashboardGraceful:
     """Missing or corrupt database returns clean empty response, never errors."""
 
     def test_empty_db_no_tables(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         # Create a database WITHOUT running init_db (no tables)
         db_path = str(tmp_path / "empty.db")
@@ -575,7 +575,7 @@ class TestDashboardGraceful:
         assert result["recent_alerts"] == []
 
     def test_nonexistent_db_path(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = str(tmp_path / "does_not_exist.db")
         # SQLite will create the file but without tables
@@ -584,7 +584,7 @@ class TestDashboardGraceful:
         assert result["recent_alerts"] == []
 
     def test_graceful_returns_security_mode_standard(self, tmp_path):
-        from spellbook_mcp.security.tools import do_dashboard
+        from spellbook.security.tools import do_dashboard
 
         db_path = str(tmp_path / "empty.db")
         conn = sqlite3.connect(db_path)

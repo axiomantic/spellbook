@@ -224,7 +224,7 @@ def _gate_bash(data: dict) -> None:
     Error messages never include blocked content (anti-reflection).
     """
     try:
-        from spellbook_mcp.security.check import check_tool_input
+        from spellbook.security.check import check_tool_input
     except ImportError:
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
@@ -247,7 +247,7 @@ def _gate_spawn(data: dict) -> None:
     Normalizes tool_name from MCP prefix to bare name before checking.
     """
     try:
-        from spellbook_mcp.security.check import check_tool_input
+        from spellbook.security.check import check_tool_input
     except ImportError:
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
@@ -270,7 +270,7 @@ def _gate_state_sanitize(data: dict) -> None:
     Normalizes tool_name from MCP prefix to bare name before checking.
     """
     try:
-        from spellbook_mcp.security.check import check_tool_input
+        from spellbook.security.check import check_tool_input
     except ImportError:
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
@@ -316,7 +316,7 @@ def _audit_log(tool_name: str, data: dict) -> None:
     Logs tool call to security_events table via the security check module.
     """
     try:
-        from spellbook_mcp.security.check import log_audit_event
+        from spellbook.security.check import log_audit_event
         tool_input = data.get("tool_input", {})
         log_audit_event(tool_name, tool_input)
     except Exception:
@@ -334,7 +334,7 @@ def _canary_check(tool_name: str, data: dict) -> str | None:
         if not output_content:
             return None
 
-        from spellbook_mcp.security.tools import do_canary_check
+        from spellbook.security.tools import do_canary_check
         db_path = os.environ.get("SPELLBOOK_DB_PATH")
         result = do_canary_check(output_content, db_path=db_path)
         if not result.get("clean", True):

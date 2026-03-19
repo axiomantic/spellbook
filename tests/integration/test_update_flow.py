@@ -74,14 +74,14 @@ class TestFullUpdateDetection:
 
     def test_detects_new_version(self, mock_git_repo):
         """Detect update when GitHub releases API reports a newer version."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         repo = mock_git_repo["repo"]
 
         # Mock _get_latest_release_version to simulate a new release on GitHub
         with (
-            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="0.9.10"),
+            patch("spellbook.updates.tools.config_get") as mock_config_get,
+            patch("spellbook.updates.tools._get_latest_release_version", return_value="0.9.10"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
@@ -98,14 +98,14 @@ class TestFullUpdateDetection:
 
     def test_no_update_when_up_to_date(self, mock_git_repo):
         """No update detected when versions match."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         repo = mock_git_repo["repo"]
 
         # Mock _get_latest_release_version to return the same version as local
         with (
-            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="0.9.9"),
+            patch("spellbook.updates.tools.config_get") as mock_config_get,
+            patch("spellbook.updates.tools._get_latest_release_version", return_value="0.9.9"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
@@ -119,14 +119,14 @@ class TestFullUpdateDetection:
 
     def test_version_classification_integration(self, mock_git_repo):
         """Major version bump is correctly detected."""
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         repo = mock_git_repo["repo"]
 
         # Mock _get_latest_release_version to simulate a major version bump
         with (
-            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="1.0.0"),
+            patch("spellbook.updates.tools.config_get") as mock_config_get,
+            patch("spellbook.updates.tools._get_latest_release_version", return_value="1.0.0"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",

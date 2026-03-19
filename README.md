@@ -985,7 +985,7 @@ Then open http://127.0.0.1:8000
 
 ```bash
 # Install as a daemon that starts on boot
-python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
+spellbook server install
 
 # Then configure your assistant to use HTTP transport
 claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp

@@ -18,7 +18,7 @@ def _run_hook(stdin_data: dict | str, env_overrides: dict | None = None, timeout
     env = os.environ.copy()
     env["SPELLBOOK_MCP_PORT"] = "19999"  # dead port
     env["SPELLBOOK_MCP_HOST"] = "127.0.0.1"
-    # Ensure spellbook_mcp is importable by the subprocess
+    # Ensure spellbook is importable by the subprocess
     existing_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = PROJECT_ROOT + (":" + existing_pythonpath if existing_pythonpath else "")
     if env_overrides:

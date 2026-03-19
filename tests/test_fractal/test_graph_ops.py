@@ -11,7 +11,7 @@ class TestCreateGraph:
 
     def test_create_graph_returns_expected_keys(self, fractal_db):
         """create_graph must return dict with graph_id, root_node_id, intensity, checkpoint_mode, budget, status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Why is the sky blue?",
@@ -30,7 +30,7 @@ class TestCreateGraph:
 
     def test_create_graph_values(self, fractal_db):
         """create_graph must return correct values for intensity, checkpoint_mode, budget, and status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Why is the sky blue?",
@@ -48,7 +48,7 @@ class TestCreateGraph:
         """create_graph must generate a valid UUID for graph_id."""
         import uuid
 
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Test question",
@@ -65,7 +65,7 @@ class TestCreateGraph:
         """create_graph must generate a valid UUID for root_node_id."""
         import uuid
 
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Test question",
@@ -79,8 +79,8 @@ class TestCreateGraph:
 
     def test_create_graph_inserts_into_graphs_table(self, fractal_db):
         """create_graph must insert a row into the graphs table."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Why is the sky blue?",
@@ -106,8 +106,8 @@ class TestCreateGraph:
 
     def test_create_graph_creates_root_node(self, fractal_db):
         """create_graph must create a root node with type=question, depth=0, status=open."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Why is the sky blue?",
@@ -135,8 +135,8 @@ class TestCreateGraph:
 
     def test_create_graph_invalid_intensity(self, fractal_db):
         """create_graph must return error dict for invalid intensity and create no graph."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test",
@@ -155,8 +155,8 @@ class TestCreateGraph:
 
     def test_create_graph_invalid_checkpoint_mode(self, fractal_db):
         """create_graph must return error dict for invalid checkpoint mode and create no graph."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test",
@@ -175,8 +175,8 @@ class TestCreateGraph:
 
     def test_create_graph_with_metadata(self, fractal_db):
         """create_graph must store metadata_json in graphs table."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         metadata = '{"source": "test", "priority": "high"}'
         result = create_graph(
@@ -200,8 +200,8 @@ class TestCreateGraph:
 
     def test_create_graph_default_metadata(self, fractal_db):
         """create_graph without metadata_json must default to '{}'."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test",
@@ -223,7 +223,7 @@ class TestCreateGraph:
 
     def test_create_graph_with_depth_checkpoint_mode(self, fractal_db):
         """create_graph must accept depth:N checkpoint modes."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Test",
@@ -240,7 +240,7 @@ class TestCreateGraph:
 
     def test_create_graph_explore_budget(self, fractal_db):
         """create_graph with explore intensity must return explore budget."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Test",
@@ -253,7 +253,7 @@ class TestCreateGraph:
 
     def test_create_graph_deep_budget(self, fractal_db):
         """create_graph with deep intensity must return deep budget."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="Test",
@@ -270,8 +270,8 @@ class TestResumeGraph:
 
     def _create_test_graph(self, fractal_db, status="active"):
         """Helper to create a graph in a specific status for testing resume."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test seed",
@@ -291,8 +291,8 @@ class TestResumeGraph:
 
     def test_resume_paused_graph(self, fractal_db):
         """resume_graph must resume a paused graph and set status to active."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import resume_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
@@ -310,7 +310,7 @@ class TestResumeGraph:
 
     def test_resume_active_graph_is_noop(self, fractal_db):
         """resume_graph on an already active graph must succeed without error."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook.fractal.graph_ops import resume_graph
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -322,8 +322,8 @@ class TestResumeGraph:
 
     def test_resume_completed_graph_rejected(self, fractal_db):
         """resume_graph must reject a completed graph and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import resume_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="completed")
 
@@ -339,8 +339,8 @@ class TestResumeGraph:
 
     def test_resume_error_graph_rejected(self, fractal_db):
         """resume_graph must reject a graph in error status and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import resume_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="error")
 
@@ -356,8 +356,8 @@ class TestResumeGraph:
 
     def test_resume_budget_exhausted_graph_rejected(self, fractal_db):
         """resume_graph must reject a budget_exhausted graph and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import resume_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
 
@@ -373,7 +373,7 @@ class TestResumeGraph:
 
     def test_resume_nonexistent_graph(self, fractal_db):
         """resume_graph must return error for non-existent graph_id."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook.fractal.graph_ops import resume_graph
 
         result = resume_graph("nonexistent-id", db_path=fractal_db)
 
@@ -381,7 +381,7 @@ class TestResumeGraph:
 
     def test_resume_returns_graph_snapshot(self, fractal_db):
         """resume_graph must return full graph snapshot with seed, intensity, nodes, edges."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook.fractal.graph_ops import resume_graph
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
@@ -399,7 +399,7 @@ class TestResumeGraph:
 
     def test_resume_includes_existing_nodes(self, fractal_db):
         """resume_graph must include all existing nodes in the snapshot."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook.fractal.graph_ops import resume_graph
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
@@ -414,8 +414,8 @@ class TestDeleteGraph:
 
     def test_delete_existing_graph(self, fractal_db):
         """delete_graph must delete an existing graph and return success."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, delete_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph, delete_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         created = create_graph(
             seed="To be deleted",
@@ -438,8 +438,8 @@ class TestDeleteGraph:
 
     def test_delete_graph_cascades_nodes(self, fractal_db):
         """delete_graph must cascade delete all nodes belonging to the graph."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, delete_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph, delete_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         created = create_graph(
             seed="To be deleted",
@@ -463,7 +463,7 @@ class TestDeleteGraph:
 
     def test_delete_nonexistent_graph(self, fractal_db):
         """delete_graph must return error for non-existent graph_id."""
-        from spellbook_mcp.fractal.graph_ops import delete_graph
+        from spellbook.fractal.graph_ops import delete_graph
 
         result = delete_graph("nonexistent-id", db_path=fractal_db)
 
@@ -475,8 +475,8 @@ class TestUpdateGraphStatus:
 
     def _create_test_graph(self, fractal_db, status="active"):
         """Helper to create a graph in a specific status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test seed",
@@ -496,7 +496,7 @@ class TestUpdateGraphStatus:
 
     def test_active_to_completed(self, fractal_db):
         """update_graph_status must allow active -> completed transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -509,7 +509,7 @@ class TestUpdateGraphStatus:
 
     def test_active_to_paused(self, fractal_db):
         """update_graph_status must allow active -> paused transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -521,7 +521,7 @@ class TestUpdateGraphStatus:
 
     def test_active_to_error(self, fractal_db):
         """update_graph_status must allow active -> error transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -533,7 +533,7 @@ class TestUpdateGraphStatus:
 
     def test_active_to_budget_exhausted(self, fractal_db):
         """update_graph_status must allow active -> budget_exhausted transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -547,7 +547,7 @@ class TestUpdateGraphStatus:
 
     def test_paused_to_active(self, fractal_db):
         """update_graph_status must allow paused -> active transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
@@ -559,8 +559,8 @@ class TestUpdateGraphStatus:
 
     def test_completed_to_active_rejected(self, fractal_db):
         """update_graph_status must reject completed -> active transition and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="completed")
 
@@ -576,8 +576,8 @@ class TestUpdateGraphStatus:
 
     def test_error_to_active_rejected(self, fractal_db):
         """update_graph_status must reject error -> active transition and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="error")
 
@@ -593,8 +593,8 @@ class TestUpdateGraphStatus:
 
     def test_budget_exhausted_to_active(self, fractal_db):
         """update_graph_status must allow budget_exhausted -> active transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
 
@@ -612,8 +612,8 @@ class TestUpdateGraphStatus:
 
     def test_budget_exhausted_to_completed(self, fractal_db):
         """update_graph_status must allow budget_exhausted -> completed transition."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
 
@@ -631,8 +631,8 @@ class TestUpdateGraphStatus:
 
     def test_paused_to_completed_rejected(self, fractal_db):
         """update_graph_status must reject paused -> completed and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
@@ -648,7 +648,7 @@ class TestUpdateGraphStatus:
 
     def test_nonexistent_graph(self, fractal_db):
         """update_graph_status must return error for non-existent graph_id."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.graph_ops import update_graph_status
 
         result = update_graph_status("nonexistent-id", "completed", db_path=fractal_db)
 
@@ -656,8 +656,8 @@ class TestUpdateGraphStatus:
 
     def test_reason_stored(self, fractal_db):
         """update_graph_status with reason must update the status and store the reason."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -681,8 +681,8 @@ class TestUpdateGraphStatus:
 
     def test_updates_updated_at(self, fractal_db):
         """update_graph_status must update the updated_at timestamp."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -705,8 +705,8 @@ class TestUpdateGraphStatus:
 
     def test_active_to_active_rejected(self, fractal_db):
         """update_graph_status must reject active -> active and leave status unchanged."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
@@ -726,7 +726,7 @@ class TestBudgetExhaustedTransitions:
 
     def _create_budget_exhausted_graph(self, fractal_db):
         """Helper to create a graph in budget_exhausted status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook.fractal.graph_ops import create_graph, update_graph_status
 
         result = create_graph(
             seed="Budget test seed",
@@ -742,8 +742,8 @@ class TestBudgetExhaustedTransitions:
 
     def test_budget_exhausted_to_completed_via_function(self, fractal_db):
         """budget_exhausted -> completed must succeed through update_graph_status."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_budget_exhausted_graph(fractal_db)
 
@@ -762,8 +762,8 @@ class TestBudgetExhaustedTransitions:
 
     def test_budget_exhausted_to_active_via_function(self, fractal_db):
         """budget_exhausted -> active must succeed through update_graph_status."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_budget_exhausted_graph(fractal_db)
 
@@ -782,8 +782,8 @@ class TestBudgetExhaustedTransitions:
 
     def test_budget_exhausted_to_paused_rejected(self, fractal_db):
         """budget_exhausted -> paused must be rejected (not a valid transition)."""
-        from spellbook_mcp.fractal.graph_ops import update_graph_status
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.graph_ops import update_graph_status
+        from spellbook.fractal.schema import get_fractal_connection
 
         graph_id = self._create_budget_exhausted_graph(fractal_db)
 

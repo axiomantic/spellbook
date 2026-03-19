@@ -11,12 +11,12 @@ class TestSessionGreetingNotifications:
 
     def test_notification_after_auto_update(self, tmp_path, monkeypatch):
         """session_init includes notification after recent auto-update."""
-        from spellbook_mcp.config_tools import session_init, config_get, config_set, get_config_path
+        from spellbook.core.config import session_init, config_get, config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         # Set up config with recent auto-update
         from datetime import datetime
@@ -28,7 +28,7 @@ class TestSessionGreetingNotifications:
         config_set("session_mode", "none")
 
         # Mock resume context
-        with patch("spellbook_mcp.config_tools._get_resume_context", return_value={"resume_available": False}):
+        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
             result = session_init()
 
         assert "update_notification" in result
@@ -37,12 +37,12 @@ class TestSessionGreetingNotifications:
 
     def test_notification_major_pending(self, tmp_path, monkeypatch):
         """session_init includes major update notification."""
-        from spellbook_mcp.config_tools import session_init, config_set, get_config_path
+        from spellbook.core.config import session_init, config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         config_set("pending_major_update", {
             "version": "1.0.0",
@@ -50,7 +50,7 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        with patch("spellbook_mcp.config_tools._get_resume_context", return_value={"resume_available": False}):
+        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
             result = session_init()
 
         assert "update_notification" in result
@@ -59,12 +59,12 @@ class TestSessionGreetingNotifications:
 
     def test_notification_cleared_after_showing(self, tmp_path, monkeypatch):
         """last_auto_update is cleared after session_init returns it."""
-        from spellbook_mcp.config_tools import session_init, config_get, config_set, get_config_path
+        from spellbook.core.config import session_init, config_get, config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         from datetime import datetime
         config_set("last_auto_update", {
@@ -74,7 +74,7 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        with patch("spellbook_mcp.config_tools._get_resume_context", return_value={"resume_available": False}):
+        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
             session_init()
 
         # last_auto_update should be cleared
@@ -82,17 +82,17 @@ class TestSessionGreetingNotifications:
 
     def test_paused_notification(self, tmp_path, monkeypatch):
         """session_init includes paused notification when auto_update_paused."""
-        from spellbook_mcp.config_tools import session_init, config_set, get_config_path
+        from spellbook.core.config import session_init, config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         config_set("auto_update_paused", True)
         config_set("session_mode", "none")
 
-        with patch("spellbook_mcp.config_tools._get_resume_context", return_value={"resume_available": False}):
+        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
             result = session_init()
 
         assert "update_notification" in result

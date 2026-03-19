@@ -19,8 +19,8 @@ def get_server_cmd() -> list[str]:
     """Build the command to start the MCP server."""
     uv = shutil.which("uv")
     if uv:
-        return [uv, "run", "python", "-m", "spellbook_mcp.server"]
-    return [sys.executable, "-m", "spellbook_mcp.server"]
+        return [uv, "run", "python", "-m", "spellbook.mcp.server"]
+    return [sys.executable, "-m", "spellbook.mcp.server"]
 
 
 def main() -> None:

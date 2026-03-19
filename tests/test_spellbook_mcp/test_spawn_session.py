@@ -9,7 +9,7 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from spellbook_mcp.terminal_utils import (
+from spellbook.daemon.terminal import (
     detect_terminal,
     detect_macos_terminal,
     detect_linux_terminal,
@@ -138,7 +138,7 @@ class TestDetectWindowsTerminal(unittest.TestCase):
 class TestDetectTerminal(unittest.TestCase):
     """Test main detect_terminal function."""
 
-    @patch('spellbook_mcp.terminal_utils.detect_macos_terminal')
+    @patch('spellbook.daemon.terminal.detect_macos_terminal')
     @patch('sys.platform', 'darwin')
     def test_delegates_to_macos(self, mock_macos):
         """Test delegation to macOS detection."""
@@ -149,7 +149,7 @@ class TestDetectTerminal(unittest.TestCase):
         self.assertEqual(result, 'iTerm2')
         mock_macos.assert_called_once()
 
-    @patch('spellbook_mcp.terminal_utils.detect_linux_terminal')
+    @patch('spellbook.daemon.terminal.detect_linux_terminal')
     @patch('sys.platform', 'linux')
     def test_delegates_to_linux(self, mock_linux):
         """Test delegation to Linux detection."""
@@ -160,7 +160,7 @@ class TestDetectTerminal(unittest.TestCase):
         self.assertEqual(result, 'gnome-terminal')
         mock_linux.assert_called_once()
 
-    @patch('spellbook_mcp.terminal_utils.detect_windows_terminal')
+    @patch('spellbook.daemon.terminal.detect_windows_terminal')
     @patch('sys.platform', 'win32')
     def test_delegates_to_windows(self, mock_windows):
         """Test delegation to Windows detection."""
@@ -249,7 +249,7 @@ class TestSpawnLinuxTerminal(unittest.TestCase):
 class TestSpawnTerminalWindow(unittest.TestCase):
     """Test main spawn_terminal_window function."""
 
-    @patch('spellbook_mcp.terminal_utils.spawn_macos_terminal')
+    @patch('spellbook.daemon.terminal.spawn_macos_terminal')
     @patch('sys.platform', 'darwin')
     def test_delegates_to_macos(self, mock_macos_spawn):
         """Test delegation to macOS spawning."""
@@ -264,7 +264,7 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         self.assertEqual(result['status'], 'spawned')
         mock_macos_spawn.assert_called_once_with('iTerm2', 'test', '/tmp', 'claude')
 
-    @patch('spellbook_mcp.terminal_utils.spawn_linux_terminal')
+    @patch('spellbook.daemon.terminal.spawn_linux_terminal')
     @patch('sys.platform', 'linux')
     def test_delegates_to_linux(self, mock_linux_spawn):
         """Test delegation to Linux spawning."""
@@ -279,7 +279,7 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         self.assertEqual(result['status'], 'spawned')
         mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var', 'claude')
 
-    @patch('spellbook_mcp.terminal_utils.spawn_windows_terminal')
+    @patch('spellbook.daemon.terminal.spawn_windows_terminal')
     @patch('sys.platform', 'win32')
     def test_delegates_to_windows(self, mock_windows_spawn):
         """Test delegation to Windows spawning."""
@@ -301,7 +301,7 @@ class TestSpawnWindowsTerminal(unittest.TestCase):
     @patch('subprocess.Popen')
     def test_spawn_windows_terminal_wt(self, mock_popen):
         """Test spawning Windows Terminal (wt)."""
-        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         mock_process = MagicMock()
         mock_process.pid = 44444
@@ -320,7 +320,7 @@ class TestSpawnWindowsTerminal(unittest.TestCase):
     @patch('subprocess.Popen')
     def test_spawn_windows_terminal_pwsh(self, mock_popen):
         """Test spawning PowerShell Core."""
-        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         mock_process = MagicMock()
         mock_process.pid = 55555
@@ -338,7 +338,7 @@ class TestSpawnWindowsTerminal(unittest.TestCase):
     @patch('subprocess.Popen')
     def test_spawn_windows_terminal_cmd(self, mock_popen):
         """Test spawning cmd.exe (default fallback)."""
-        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         mock_process = MagicMock()
         mock_process.pid = 66666
@@ -356,7 +356,7 @@ class TestSpawnWindowsTerminal(unittest.TestCase):
     @patch('subprocess.Popen')
     def test_spawn_windows_terminal_custom_cli_command(self, mock_popen):
         """Test spawning with a custom CLI command (e.g., 'codex')."""
-        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         mock_process = MagicMock()
         mock_process.pid = 77777
@@ -374,8 +374,8 @@ class TestSpawnWindowsTerminal(unittest.TestCase):
 class TestSpawnClaudeSessionMCPTool(unittest.TestCase):
     """Test the spawn_claude_session MCP tool logic."""
 
-    @patch('spellbook_mcp.terminal_utils.detect_terminal')
-    @patch('spellbook_mcp.terminal_utils.spawn_terminal_window')
+    @patch('spellbook.daemon.terminal.detect_terminal')
+    @patch('spellbook.daemon.terminal.spawn_terminal_window')
     def test_spawn_with_auto_detect(self, mock_spawn, mock_detect):
         """Test spawning with auto-detected terminal."""
         # This tests the function logic that the MCP tool wraps
@@ -398,7 +398,7 @@ class TestSpawnClaudeSessionMCPTool(unittest.TestCase):
         mock_detect.assert_called_once()
         mock_spawn.assert_called_once_with('iTerm2', 'test prompt', '/tmp')
 
-    @patch('spellbook_mcp.terminal_utils.spawn_terminal_window')
+    @patch('spellbook.daemon.terminal.spawn_terminal_window')
     def test_spawn_with_specified_terminal(self, mock_spawn):
         """Test spawning with user-specified terminal."""
         mock_spawn.return_value = {

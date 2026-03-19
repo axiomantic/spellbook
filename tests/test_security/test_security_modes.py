@@ -22,7 +22,7 @@ import pytest
 
 def _init_test_db(tmp_path):
     """Create a test DB with schema initialized, return db_path string."""
-    from spellbook_mcp.db import close_all_connections, init_db
+    from spellbook.core.db import close_all_connections, init_db
 
     close_all_connections()
     db_path = str(tmp_path / "test.db")
@@ -63,13 +63,13 @@ class TestShouldAutoElevatePrReview:
     """Auto-elevate to paranoid for PR review contexts."""
 
     def test_pr_review_context_returns_paranoid(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"pr_review": True})
         assert result == "paranoid"
 
     def test_pr_review_false_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"pr_review": False})
         assert result is None
@@ -79,13 +79,13 @@ class TestShouldAutoElevateWebFetch:
     """Auto-elevate to paranoid when WebFetch tool is invoked."""
 
     def test_webfetch_tool_returns_paranoid(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"tool_name": "WebFetch"})
         assert result == "paranoid"
 
     def test_other_tool_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"tool_name": "Read"})
         assert result is None
@@ -95,13 +95,13 @@ class TestShouldAutoElevateUntrustedRepo:
     """Auto-elevate to paranoid for untrusted repositories."""
 
     def test_untrusted_repo_returns_paranoid(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"untrusted_repo": True})
         assert result == "paranoid"
 
     def test_trusted_repo_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"untrusted_repo": False})
         assert result is None
@@ -111,13 +111,13 @@ class TestShouldAutoElevateThirdPartySkill:
     """Auto-elevate to paranoid for third-party skills."""
 
     def test_third_party_skill_returns_paranoid(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"third_party_skill": True})
         assert result == "paranoid"
 
     def test_first_party_skill_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"third_party_skill": False})
         assert result is None
@@ -127,13 +127,13 @@ class TestShouldAutoElevateNoTrigger:
     """Returns None when no elevation trigger is present."""
 
     def test_empty_context_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({})
         assert result is None
 
     def test_unrelated_context_returns_none(self):
-        from spellbook_mcp.security.check import should_auto_elevate
+        from spellbook.security.check import should_auto_elevate
 
         result = should_auto_elevate({"user": "alice", "action": "read"})
         assert result is None
@@ -148,14 +148,14 @@ class TestDoSetSecurityModeBasic:
     """Basic mode setting and DB persistence."""
 
     def test_sets_paranoid_mode(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("paranoid", db_path=db_path)
         assert result["mode"] == "paranoid"
 
     def test_permissive_mode_rejected(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("permissive", db_path=db_path)
@@ -164,7 +164,7 @@ class TestDoSetSecurityModeBasic:
         }
 
     def test_sets_standard_mode(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -172,7 +172,7 @@ class TestDoSetSecurityModeBasic:
         assert result["mode"] == "standard"
 
     def test_persists_to_db(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -180,7 +180,7 @@ class TestDoSetSecurityModeBasic:
         assert row["mode"] == "paranoid"
 
     def test_returns_auto_restore_at(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("paranoid", db_path=db_path)
@@ -188,7 +188,7 @@ class TestDoSetSecurityModeBasic:
         assert result["auto_restore_at"] is not None
 
     def test_auto_restore_at_is_30_minutes_ahead(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         now = datetime.now(timezone.utc)
@@ -201,7 +201,7 @@ class TestDoSetSecurityModeBasic:
         assert delta < 5, f"auto_restore_at off by {delta}s"
 
     def test_invalid_mode_raises(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         with pytest.raises(ValueError, match="invalid.*mode"):
@@ -212,7 +212,7 @@ class TestDoSetSecurityModeReason:
     """Mode setting with optional reason and updated_by."""
 
     def test_reason_stored_as_updated_by(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode(
@@ -222,7 +222,7 @@ class TestDoSetSecurityModeReason:
         assert row["updated_by"] == "PR review detected"
 
     def test_no_reason_leaves_updated_by_none(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -235,7 +235,7 @@ class TestDoSetSecurityModeEventLogging:
     """Mode transitions are logged as security events."""
 
     def test_logs_security_event(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -243,7 +243,7 @@ class TestDoSetSecurityModeEventLogging:
         assert len(events) == 1
 
     def test_event_contains_new_mode(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -251,7 +251,7 @@ class TestDoSetSecurityModeEventLogging:
         assert "paranoid" in events[0]["detail"]
 
     def test_event_severity_is_info(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -259,7 +259,7 @@ class TestDoSetSecurityModeEventLogging:
         assert events[0]["severity"] == "INFO"
 
     def test_multiple_transitions_log_multiple_events(self, tmp_path):
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -277,15 +277,15 @@ class TestGetCurrentModeFromDb:
     """get_current_mode reads from DB."""
 
     def test_reads_default_standard(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         mode = get_current_mode(db_path=db_path)
         assert mode == "standard"
 
     def test_reads_set_mode(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.check import get_current_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -297,7 +297,7 @@ class TestGetCurrentModeLazyRestore:
     """Lazy restore: expired auto_restore_at resets to standard."""
 
     def test_expired_mode_restores_to_standard(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         # Set mode to paranoid with auto_restore_at in the past
@@ -314,7 +314,7 @@ class TestGetCurrentModeLazyRestore:
         assert mode == "standard"
 
     def test_lazy_restore_updates_db(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -331,7 +331,7 @@ class TestGetCurrentModeLazyRestore:
         assert row["mode"] == "standard"
 
     def test_non_expired_mode_not_restored(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -348,7 +348,7 @@ class TestGetCurrentModeLazyRestore:
 
     def test_standard_mode_with_expired_restore_stays_standard(self, tmp_path):
         """If mode is already standard and auto_restore_at is expired, no-op."""
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -365,7 +365,7 @@ class TestGetCurrentModeLazyRestore:
 
     def test_null_auto_restore_at_does_not_trigger_restore(self, tmp_path):
         """Mode with no auto_restore_at should persist indefinitely."""
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -384,14 +384,14 @@ class TestGetCurrentModeDbUnavailable:
     """Falls back to 'standard' when DB is unavailable."""
 
     def test_nonexistent_db_returns_standard(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = str(tmp_path / "nonexistent" / "missing.db")
         mode = get_current_mode(db_path=db_path)
         assert mode == "standard"
 
     def test_corrupted_db_returns_standard(self, tmp_path):
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = str(tmp_path / "corrupt.db")
         with open(db_path, "w") as f:
@@ -410,8 +410,8 @@ class TestCliGetModeReadsFromDb:
 
     def test_get_mode_returns_db_value(self, tmp_path):
         """--get-mode should read from DB when available."""
-        from spellbook_mcp.security.check import get_current_mode
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.check import get_current_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("paranoid", db_path=db_path)
@@ -420,7 +420,7 @@ class TestCliGetModeReadsFromDb:
 
     def test_get_mode_lazy_restores(self, tmp_path):
         """--get-mode should perform lazy restore on expired modes."""
-        from spellbook_mcp.security.check import get_current_mode
+        from spellbook.security.check import get_current_mode
 
         db_path = _init_test_db(tmp_path)
         conn = sqlite3.connect(db_path)
@@ -446,7 +446,7 @@ class TestDoSetSecurityModeDbUnavailable:
 
     def test_invalid_db_path_raises_or_returns_error(self, tmp_path):
         """When DB path is invalid, raise or return error."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = str(tmp_path / "nonexistent" / "subdir" / "missing.db")
         # Should raise an error since we cannot write to a nonexistent dir

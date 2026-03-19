@@ -2,8 +2,8 @@
 
 import pytest
 
-from spellbook_mcp.code_review.deduplication import deduplicate_findings
-from spellbook_mcp.code_review.models import Finding, Severity
+from spellbook.code_review.deduplication import deduplicate_findings
+from spellbook.code_review.models import Finding, Severity
 
 
 class TestDeduplicateFindings:

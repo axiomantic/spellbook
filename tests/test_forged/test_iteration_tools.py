@@ -17,15 +17,15 @@ class TestForgeIterationStart:
 
     def test_start_creates_new_iteration_state(self, tmp_path):
         """Starting iteration for new feature creates initial state."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="my-feature")
@@ -39,15 +39,15 @@ class TestForgeIterationStart:
 
     def test_start_with_custom_starting_stage(self, tmp_path):
         """Starting iteration can specify custom starting stage."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(
@@ -59,15 +59,15 @@ class TestForgeIterationStart:
 
     def test_start_with_preferences(self, tmp_path):
         """Starting iteration stores preferences."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(
@@ -80,8 +80,8 @@ class TestForgeIterationStart:
 
     def test_start_resumes_existing_feature(self, tmp_path):
         """Starting iteration for existing feature resumes state."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -96,9 +96,9 @@ class TestForgeIterationStart:
         """, ("/test/project", "existing-feature", 3, "IMPLEMENT", "{}", "[]"))
         conn.commit()
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="existing-feature")
@@ -109,15 +109,15 @@ class TestForgeIterationStart:
 
     def test_start_rejects_invalid_stage(self, tmp_path):
         """Starting with invalid stage returns error."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(
@@ -130,16 +130,16 @@ class TestForgeIterationStart:
 
     def test_start_creates_token_in_database(self, tmp_path):
         """Token is persisted in forge_tokens table."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="my-feature")
@@ -155,16 +155,16 @@ class TestForgeIterationStart:
 
     def test_start_invalidates_old_token(self, tmp_path):
         """Starting new iteration invalidates previous token for feature."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # First start
@@ -192,16 +192,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_moves_to_next_stage(self, tmp_path):
         """Advancing with valid token moves to next stage."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -220,16 +220,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_with_evidence(self, tmp_path):
         """Advancing stores evidence/knowledge."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -246,16 +246,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_rejects_invalid_token(self, tmp_path):
         """Advancing with invalid token is rejected."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 forge_iteration_start(feature_name="my-feature")
@@ -270,16 +270,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_rejects_expired_token(self, tmp_path):
         """Advancing with already-invalidated token is rejected."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -303,16 +303,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_rejects_wrong_feature(self, tmp_path):
         """Advancing with token from different feature is rejected."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result_a = forge_iteration_start(feature_name="feature-a")
@@ -331,8 +331,8 @@ class TestForgeIterationAdvance:
 
     def test_advance_from_complete_is_error(self, tmp_path):
         """Advancing from COMPLETE stage is an error."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -354,9 +354,9 @@ class TestForgeIterationAdvance:
         """, (token_id, "done-feature", "COMPLETE"))
         conn.commit()
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_advance(
@@ -369,16 +369,16 @@ class TestForgeIterationAdvance:
 
     def test_advance_follows_stage_order(self, tmp_path):
         """Stages advance in correct order: DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="my-feature")
@@ -400,18 +400,18 @@ class TestForgeIterationReturn:
 
     def test_return_to_earlier_stage(self, tmp_path):
         """Returning moves to specified earlier stage with feedback."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # Start and advance to DESIGN
@@ -445,18 +445,18 @@ class TestForgeIterationReturn:
 
     def test_return_increments_iteration(self, tmp_path):
         """Returning increments the iteration counter."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -476,18 +476,18 @@ class TestForgeIterationReturn:
 
     def test_return_stores_feedback_history(self, tmp_path):
         """Feedback is stored in iteration state."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -518,18 +518,18 @@ class TestForgeIterationReturn:
 
     def test_return_with_reflection(self, tmp_path):
         """Returning with reflection creates reflection record."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -561,16 +561,16 @@ class TestForgeIterationReturn:
 
     def test_return_rejects_invalid_token(self, tmp_path):
         """Returning with invalid token is rejected."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_return
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_return
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 forge_iteration_start(feature_name="my-feature")
@@ -587,16 +587,16 @@ class TestForgeIterationReturn:
 
     def test_return_rejects_invalid_stage(self, tmp_path):
         """Returning to invalid stage is rejected."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_return
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_return
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -614,18 +614,18 @@ class TestForgeIterationReturn:
 
     def test_return_cannot_return_to_complete_or_escalated(self, tmp_path):
         """Cannot return to COMPLETE or ESCALATED stages."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -645,18 +645,18 @@ class TestForgeIterationReturn:
 
     def test_return_requires_feedback(self, tmp_path):
         """Returning requires at least one feedback item."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start, forge_iteration_advance, forge_iteration_return
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 start_result = forge_iteration_start(feature_name="my-feature")
@@ -680,16 +680,16 @@ class TestTokenSystem:
 
     def test_token_prevents_skipping_stages(self, tmp_path):
         """Tokens prevent skipping stages in workflow."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # Start at DISCOVER
@@ -706,17 +706,17 @@ class TestTokenSystem:
 
     def test_token_is_unique_per_transition(self, tmp_path):
         """Each stage transition generates unique token."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
         tokens = []
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="my-feature")
@@ -734,16 +734,16 @@ class TestTokenSystem:
 
     def test_concurrent_features_have_independent_tokens(self, tmp_path):
         """Multiple features can be worked on with independent tokens."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # Start two features

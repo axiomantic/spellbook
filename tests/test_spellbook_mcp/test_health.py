@@ -11,43 +11,43 @@ class TestHealthStatusEnum:
 
     def test_healthy_status_exists(self):
         """HealthStatus.HEALTHY should exist with value 'healthy'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.HEALTHY.value == "healthy"
 
     def test_degraded_status_exists(self):
         """HealthStatus.DEGRADED should exist with value 'degraded'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.DEGRADED.value == "degraded"
 
     def test_unhealthy_status_exists(self):
         """HealthStatus.UNHEALTHY should exist with value 'unhealthy'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.UNHEALTHY.value == "unhealthy"
 
     def test_unavailable_status_exists(self):
         """HealthStatus.UNAVAILABLE should exist with value 'unavailable'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.UNAVAILABLE.value == "unavailable"
 
     def test_not_configured_status_exists(self):
         """HealthStatus.NOT_CONFIGURED should exist with value 'not_configured'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.NOT_CONFIGURED.value == "not_configured"
 
     def test_starting_status_exists(self):
         """HealthStatus.STARTING should exist with value 'starting'."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         assert HealthStatus.STARTING.value == "starting"
 
     def test_status_is_str_enum(self):
         """HealthStatus should be a string enum for JSON serialization."""
-        from spellbook_mcp.health import HealthStatus
+        from spellbook.health.checker import HealthStatus
 
         # Should be usable as string directly
         assert str(HealthStatus.HEALTHY) == "HealthStatus.HEALTHY"
@@ -59,7 +59,7 @@ class TestDomainCheckDataclass:
 
     def test_domain_check_creation(self):
         """DomainCheck should be creatable with required fields."""
-        from spellbook_mcp.health import DomainCheck, HealthStatus
+        from spellbook.health.checker import DomainCheck, HealthStatus
 
         check = DomainCheck(
             domain="database",
@@ -75,7 +75,7 @@ class TestDomainCheckDataclass:
 
     def test_domain_check_with_optional_fields(self):
         """DomainCheck should accept optional latency_ms and details."""
-        from spellbook_mcp.health import DomainCheck, HealthStatus
+        from spellbook.health.checker import DomainCheck, HealthStatus
 
         check = DomainCheck(
             domain="database",
@@ -94,7 +94,7 @@ class TestHealthCheckResultDataclass:
 
     def test_health_check_result_creation(self):
         """HealthCheckResult should be creatable with required fields."""
-        from spellbook_mcp.health import HealthCheckResult, HealthStatus
+        from spellbook.health.checker import HealthCheckResult, HealthStatus
 
         result = HealthCheckResult(
             status=HealthStatus.HEALTHY,
@@ -112,7 +112,7 @@ class TestHealthCheckResultDataclass:
 
     def test_health_check_result_with_domains(self):
         """HealthCheckResult should accept optional domains dict."""
-        from spellbook_mcp.health import HealthCheckResult, HealthStatus, DomainCheck
+        from spellbook.health.checker import HealthCheckResult, HealthStatus, DomainCheck
 
         db_check = DomainCheck(
             domain="database",
@@ -139,7 +139,7 @@ class TestHelperFunctions:
 
     def test_parse_version_part_simple_number(self):
         """_parse_version_part should extract integer from simple number."""
-        from spellbook_mcp.health import _parse_version_part
+        from spellbook.health.checker import _parse_version_part
 
         assert _parse_version_part("0") == 0
         assert _parse_version_part("30") == 30
@@ -147,7 +147,7 @@ class TestHelperFunctions:
 
     def test_parse_version_part_with_suffix(self):
         """_parse_version_part should strip non-numeric suffixes."""
-        from spellbook_mcp.health import _parse_version_part
+        from spellbook.health.checker import _parse_version_part
 
         assert _parse_version_part("0-beta") == 0
         assert _parse_version_part("30-rc1") == 30
@@ -156,47 +156,47 @@ class TestHelperFunctions:
 
     def test_parse_version_part_empty_string(self):
         """_parse_version_part should return 0 for empty string."""
-        from spellbook_mcp.health import _parse_version_part
+        from spellbook.health.checker import _parse_version_part
 
         assert _parse_version_part("") == 0
 
     def test_parse_version_part_non_numeric(self):
         """_parse_version_part should return 0 for non-numeric input."""
-        from spellbook_mcp.health import _parse_version_part
+        from spellbook.health.checker import _parse_version_part
 
         assert _parse_version_part("beta") == 0
         assert _parse_version_part("abc") == 0
 
     def test_parse_gh_version_valid(self):
         """_parse_gh_version should extract version from gh --version output."""
-        from spellbook_mcp.health import _parse_gh_version
+        from spellbook.health.checker import _parse_gh_version
 
         output = "gh version 2.45.0 (2024-01-15)\nhttps://github.com/cli/cli/releases/tag/v2.45.0"
         assert _parse_gh_version(output) == "2.45.0"
 
     def test_parse_gh_version_minimal(self):
         """_parse_gh_version should work with minimal output."""
-        from spellbook_mcp.health import _parse_gh_version
+        from spellbook.health.checker import _parse_gh_version
 
         output = "gh version 2.30.0"
         assert _parse_gh_version(output) == "2.30.0"
 
     def test_parse_gh_version_invalid(self):
         """_parse_gh_version should return None for invalid output."""
-        from spellbook_mcp.health import _parse_gh_version
+        from spellbook.health.checker import _parse_gh_version
 
         assert _parse_gh_version("not a version") is None
         assert _parse_gh_version("") is None
 
     def test_compare_versions_equal(self):
         """_compare_versions should return 0 for equal versions."""
-        from spellbook_mcp.health import _compare_versions
+        from spellbook.health.checker import _compare_versions
 
         assert _compare_versions("2.30.0", "2.30.0") == 0
 
     def test_compare_versions_less(self):
         """_compare_versions should return -1 when v1 < v2."""
-        from spellbook_mcp.health import _compare_versions
+        from spellbook.health.checker import _compare_versions
 
         assert _compare_versions("2.29.0", "2.30.0") == -1
         assert _compare_versions("2.30.0", "2.30.1") == -1
@@ -204,7 +204,7 @@ class TestHelperFunctions:
 
     def test_compare_versions_greater(self):
         """_compare_versions should return 1 when v1 > v2."""
-        from spellbook_mcp.health import _compare_versions
+        from spellbook.health.checker import _compare_versions
 
         assert _compare_versions("2.31.0", "2.30.0") == 1
         assert _compare_versions("2.30.1", "2.30.0") == 1
@@ -212,7 +212,7 @@ class TestHelperFunctions:
 
     def test_compare_versions_different_lengths(self):
         """_compare_versions should handle different-length version strings."""
-        from spellbook_mcp.health import _compare_versions
+        from spellbook.health.checker import _compare_versions
 
         # Trailing zero segments are equivalent
         assert _compare_versions("2.30", "2.30.0") == 0
@@ -222,8 +222,8 @@ class TestHelperFunctions:
 
     def test_get_heartbeat_age_no_heartbeat(self, tmp_path):
         """_get_heartbeat_age should return None when no heartbeat exists."""
-        from spellbook_mcp.health import _get_heartbeat_age
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _get_heartbeat_age
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -233,8 +233,8 @@ class TestHelperFunctions:
 
     def test_get_heartbeat_age_with_heartbeat(self, tmp_path):
         """_get_heartbeat_age should return seconds since heartbeat."""
-        from spellbook_mcp.health import _get_heartbeat_age
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.health.checker import _get_heartbeat_age
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
@@ -259,8 +259,8 @@ class TestDatabaseCheck:
 
     def test_healthy_database(self, tmp_path):
         """Database with valid schema returns HEALTHY."""
-        from spellbook_mcp.health import _check_database, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_database, HealthStatus
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -278,7 +278,7 @@ class TestDatabaseCheck:
 
     def test_missing_database(self, tmp_path):
         """Missing database file returns UNHEALTHY."""
-        from spellbook_mcp.health import _check_database, HealthStatus
+        from spellbook.health.checker import _check_database, HealthStatus
 
         db_path = tmp_path / "nonexistent.db"
 
@@ -289,8 +289,8 @@ class TestDatabaseCheck:
 
     def test_database_query_execution(self, tmp_path):
         """Database check executes SELECT 1 successfully."""
-        from spellbook_mcp.health import _check_database, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_database, HealthStatus
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -306,7 +306,7 @@ class TestDatabaseCheck:
 
     def test_database_query_fails_on_corrupt_db(self, tmp_path):
         """Database check returns UNHEALTHY when query fails on corrupt db."""
-        from spellbook_mcp.health import _check_database, HealthStatus
+        from spellbook.health.checker import _check_database, HealthStatus
 
         db_path = tmp_path / "corrupt.db"
         # Create a file that's not a valid SQLite database
@@ -320,7 +320,7 @@ class TestDatabaseCheck:
     def test_missing_critical_tables(self, tmp_path):
         """Database without critical tables returns UNHEALTHY."""
         import sqlite3
-        from spellbook_mcp.health import _check_database, HealthStatus
+        from spellbook.health.checker import _check_database, HealthStatus
 
         db_path = tmp_path / "empty_schema.db"
         # Create a valid SQLite database but without the critical tables
@@ -340,8 +340,8 @@ class TestDatabaseCheck:
 
     def test_database_wal_mode_detection(self, tmp_path):
         """Database check detects WAL mode."""
-        from spellbook_mcp.health import _check_database
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_database
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -353,8 +353,8 @@ class TestDatabaseCheck:
 
     def test_database_size_bytes(self, tmp_path):
         """Database check reports file size."""
-        from spellbook_mcp.health import _check_database
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_database
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -370,8 +370,8 @@ class TestWatcherCheck:
 
     def test_fresh_heartbeat(self, tmp_path):
         """Fresh heartbeat returns HEALTHY."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime, timezone
 
         db_path = tmp_path / "test.db"
@@ -396,8 +396,8 @@ class TestWatcherCheck:
 
     def test_stale_heartbeat(self, tmp_path):
         """Stale heartbeat (>30s) returns DEGRADED."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
@@ -422,8 +422,8 @@ class TestWatcherCheck:
 
     def test_startup_grace_period(self, tmp_path):
         """Within grace period, missing heartbeat returns STARTING."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -440,8 +440,8 @@ class TestWatcherCheck:
 
     def test_grace_period_exception_escalates_to_degraded(self, tmp_path, monkeypatch):
         """Heartbeat query error during grace period escalates to DEGRADED."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        import spellbook_mcp.health as health_module
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        import spellbook.health.checker as health_module
 
         # Mock _get_heartbeat_age to raise an exception
         def mock_get_heartbeat_age(db_path):
@@ -462,8 +462,8 @@ class TestWatcherCheck:
 
     def test_no_heartbeat_row_after_grace(self, tmp_path):
         """Missing heartbeat row after grace period returns DEGRADED."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -480,8 +480,8 @@ class TestWatcherCheck:
 
     def test_heartbeat_age_in_details(self, tmp_path):
         """Heartbeat age should be in details."""
-        from spellbook_mcp.health import _check_watcher
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.health.checker import _check_watcher
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
@@ -503,8 +503,8 @@ class TestWatcherCheck:
 
     def test_watcher_exception_returns_degraded(self, tmp_path, monkeypatch):
         """Catch-all exception in watcher check returns DEGRADED."""
-        from spellbook_mcp.health import _check_watcher, HealthStatus
-        import spellbook_mcp.health as health_module
+        from spellbook.health.checker import _check_watcher, HealthStatus
+        import spellbook.health.checker as health_module
 
         # Mock _get_heartbeat_age to succeed but make details construction fail
         # We need an exception in the second try block (after heartbeat_age is fetched)
@@ -539,7 +539,7 @@ class TestFilesystemCheck:
 
     def test_all_directories_exist(self, tmp_path):
         """All directories accessible returns HEALTHY."""
-        from spellbook_mcp.health import _check_filesystem, HealthStatus
+        from spellbook.health.checker import _check_filesystem, HealthStatus
 
         # Create all required directories
         config_dir = tmp_path / "config"
@@ -563,7 +563,7 @@ class TestFilesystemCheck:
 
     def test_missing_config_dir(self, tmp_path):
         """Missing config directory returns UNHEALTHY."""
-        from spellbook_mcp.health import _check_filesystem, HealthStatus
+        from spellbook.health.checker import _check_filesystem, HealthStatus
 
         data_dir = tmp_path / "data"
         skills_dir = tmp_path / "skills"
@@ -581,7 +581,7 @@ class TestFilesystemCheck:
 
     def test_missing_data_dir(self, tmp_path):
         """Missing data directory returns UNHEALTHY."""
-        from spellbook_mcp.health import _check_filesystem, HealthStatus
+        from spellbook.health.checker import _check_filesystem, HealthStatus
 
         config_dir = tmp_path / "config"
         skills_dir = tmp_path / "skills"
@@ -599,7 +599,7 @@ class TestFilesystemCheck:
 
     def test_missing_skills_dir(self, tmp_path):
         """Missing skills directory returns DEGRADED (optional)."""
-        from spellbook_mcp.health import _check_filesystem, HealthStatus
+        from spellbook.health.checker import _check_filesystem, HealthStatus
 
         config_dir = tmp_path / "config"
         data_dir = tmp_path / "data"
@@ -618,7 +618,7 @@ class TestFilesystemCheck:
 
     def test_readable_check(self, tmp_path):
         """Directories should be checked for readability."""
-        from spellbook_mcp.health import _check_filesystem
+        from spellbook.health.checker import _check_filesystem
 
         config_dir = tmp_path / "config"
         data_dir = tmp_path / "data"
@@ -643,7 +643,7 @@ class TestGitHubCLICheck:
 
     def test_gh_not_installed(self, monkeypatch):
         """Missing gh binary returns UNAVAILABLE."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(*args, **kwargs):
             raise FileNotFoundError("gh not found")
@@ -658,7 +658,7 @@ class TestGitHubCLICheck:
 
     def test_gh_timeout(self, monkeypatch):
         """Subprocess timeout returns DEGRADED."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(*args, **kwargs):
             raise subprocess.TimeoutExpired(cmd="gh", timeout=2.0)
@@ -672,7 +672,7 @@ class TestGitHubCLICheck:
 
     def test_gh_version_too_old(self, monkeypatch):
         """Old gh version returns DEGRADED."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(cmd, *args, **kwargs):
             if cmd[0] == "gh" and "--version" in cmd:
@@ -692,7 +692,7 @@ class TestGitHubCLICheck:
 
     def test_gh_not_authenticated(self, monkeypatch):
         """Unauthenticated gh returns DEGRADED."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(cmd, *args, **kwargs):
             if "--version" in cmd:
@@ -715,7 +715,7 @@ class TestGitHubCLICheck:
 
     def test_gh_healthy(self, monkeypatch):
         """Installed, versioned, and authenticated gh returns HEALTHY."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(cmd, *args, **kwargs):
             if "--version" in cmd:
@@ -739,7 +739,7 @@ class TestGitHubCLICheck:
 
     def test_gh_unparseable_version(self, monkeypatch):
         """Unparseable gh version string returns UNAVAILABLE."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(cmd, *args, **kwargs):
             if "--version" in cmd:
@@ -757,7 +757,7 @@ class TestGitHubCLICheck:
 
     def test_gh_auth_timeout(self, monkeypatch):
         """Timeout during gh auth status returns DEGRADED."""
-        from spellbook_mcp.health import _check_github_cli, HealthStatus
+        from spellbook.health.checker import _check_github_cli, HealthStatus
 
         def mock_run(cmd, *args, **kwargs):
             if "--version" in cmd:
@@ -781,14 +781,14 @@ class TestCoordinationCheck:
 
     def test_coordination_not_configured(self, monkeypatch):
         """Backend == NONE returns NOT_CONFIGURED."""
-        from spellbook_mcp.health import _check_coordination, HealthStatus
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.health.checker import _check_coordination, HealthStatus
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
 
         def mock_load():
             return CoordinationConfig(backend=CoordinationBackend.NONE)
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         result = _check_coordination()
@@ -800,8 +800,8 @@ class TestCoordinationCheck:
 
     def test_coordination_configured_mcp(self, monkeypatch):
         """MCP backend configured returns HEALTHY."""
-        from spellbook_mcp.health import _check_coordination, HealthStatus
-        from spellbook_mcp.preferences import (
+        from spellbook.health.checker import _check_coordination, HealthStatus
+        from spellbook.core.preferences import (
             CoordinationConfig,
             CoordinationBackend,
             MCPSSEConfig,
@@ -814,7 +814,7 @@ class TestCoordinationCheck:
             )
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         result = _check_coordination()
@@ -825,13 +825,13 @@ class TestCoordinationCheck:
 
     def test_coordination_config_error(self, monkeypatch):
         """Config load error returns DEGRADED."""
-        from spellbook_mcp.health import _check_coordination, HealthStatus
+        from spellbook.health.checker import _check_coordination, HealthStatus
 
         def mock_load():
             raise ValueError("Invalid config")
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         result = _check_coordination()
@@ -847,7 +847,7 @@ class TestSkillsCheck:
 
     def test_skills_dir_missing(self, tmp_path):
         """Missing skills directory returns UNAVAILABLE."""
-        from spellbook_mcp.health import _check_skills, HealthStatus
+        from spellbook.health.checker import _check_skills, HealthStatus
 
         result = _check_skills(str(tmp_path / "nonexistent"))
 
@@ -856,7 +856,7 @@ class TestSkillsCheck:
 
     def test_no_valid_skills(self, tmp_path):
         """Empty skills directory returns DEGRADED."""
-        from spellbook_mcp.health import _check_skills, HealthStatus
+        from spellbook.health.checker import _check_skills, HealthStatus
 
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
@@ -868,7 +868,7 @@ class TestSkillsCheck:
 
     def test_valid_skills_found(self, tmp_path):
         """Directory with valid skills returns HEALTHY."""
-        from spellbook_mcp.health import _check_skills, HealthStatus
+        from spellbook.health.checker import _check_skills, HealthStatus
 
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
@@ -886,7 +886,7 @@ class TestSkillsCheck:
 
     def test_invalid_skill_detected(self, tmp_path):
         """Directory without SKILL.md is detected as invalid."""
-        from spellbook_mcp.health import _check_skills, HealthStatus
+        from spellbook.health.checker import _check_skills, HealthStatus
 
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
@@ -910,7 +910,7 @@ class TestSkillsCheck:
 
     def test_skills_count(self, tmp_path):
         """Multiple valid skills are counted correctly."""
-        from spellbook_mcp.health import _check_skills
+        from spellbook.health.checker import _check_skills
 
         skills_dir = tmp_path / "skills"
         skills_dir.mkdir()
@@ -933,7 +933,7 @@ class TestStatusAggregation:
 
     def test_all_healthy(self):
         """All HEALTHY domains -> overall HEALTHY."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -945,7 +945,7 @@ class TestStatusAggregation:
 
     def test_critical_unhealthy(self):
         """Database UNHEALTHY -> overall UNHEALTHY."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.UNHEALTHY, "Error"),
@@ -957,7 +957,7 @@ class TestStatusAggregation:
 
     def test_filesystem_unhealthy(self):
         """Filesystem UNHEALTHY -> overall UNHEALTHY."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -969,7 +969,7 @@ class TestStatusAggregation:
 
     def test_optional_unhealthy(self):
         """Watcher UNHEALTHY -> overall DEGRADED (not UNHEALTHY)."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -981,7 +981,7 @@ class TestStatusAggregation:
 
     def test_any_degraded(self):
         """Any DEGRADED domain -> overall DEGRADED."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -993,7 +993,7 @@ class TestStatusAggregation:
 
     def test_unavailable_ignored(self):
         """UNAVAILABLE domains don't affect status."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -1005,7 +1005,7 @@ class TestStatusAggregation:
 
     def test_not_configured_ignored(self):
         """NOT_CONFIGURED domains don't affect status."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.HEALTHY, "OK"),
@@ -1017,7 +1017,7 @@ class TestStatusAggregation:
 
     def test_critical_takes_precedence(self):
         """Critical UNHEALTHY takes precedence over optional DEGRADED."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.UNHEALTHY, "Error"),
@@ -1029,7 +1029,7 @@ class TestStatusAggregation:
 
     def test_critical_unavailable_triggers_unhealthy(self):
         """UNAVAILABLE on critical domain (e.g., database) -> overall UNHEALTHY."""
-        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+        from spellbook.health.checker import _aggregate_status, HealthStatus, DomainCheck
 
         domains = {
             "database": DomainCheck("database", HealthStatus.UNAVAILABLE, "DB gone"),
@@ -1045,8 +1045,8 @@ class TestRunHealthCheck:
 
     def test_run_health_check_quick_mode(self, tmp_path, monkeypatch):
         """Quick mode only checks database and filesystem (critical domains)."""
-        from spellbook_mcp.health import run_health_check, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import run_health_check, HealthStatus
+        from spellbook.core.db import init_db
 
         # Setup directories
         config_dir = tmp_path / "config"
@@ -1084,9 +1084,9 @@ class TestRunHealthCheck:
 
     def test_run_health_check_full_mode(self, tmp_path, monkeypatch):
         """Full mode checks all 6 domains."""
-        from spellbook_mcp.health import run_health_check, HealthStatus
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.health.checker import run_health_check, HealthStatus
+        from spellbook.core.db import init_db
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -1125,7 +1125,7 @@ class TestRunHealthCheck:
             return CoordinationConfig(backend=CoordinationBackend.NONE)
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         result = run_health_check(
@@ -1150,8 +1150,8 @@ class TestRunHealthCheck:
 
     def test_run_health_check_returns_health_check_result(self, tmp_path):
         """run_health_check returns HealthCheckResult dataclass."""
-        from spellbook_mcp.health import run_health_check, HealthCheckResult
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import run_health_check, HealthCheckResult
+        from spellbook.core.db import init_db
 
         # Setup directories
         config_dir = tmp_path / "config"
@@ -1184,8 +1184,8 @@ class TestRunHealthCheck:
 
     def test_run_health_check_aggregates_status(self, tmp_path):
         """run_health_check uses _aggregate_status for overall status."""
-        from spellbook_mcp.health import run_health_check, HealthStatus
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import run_health_check, HealthStatus
+        from spellbook.core.db import init_db
 
         # Setup directories - missing config_dir to trigger UNHEALTHY
         data_dir = tmp_path / "data"
@@ -1213,8 +1213,8 @@ class TestRunHealthCheck:
 
     def test_run_health_check_checked_at_is_iso_format(self, tmp_path):
         """checked_at should be ISO 8601 format."""
-        from spellbook_mcp.health import run_health_check
-        from spellbook_mcp.db import init_db
+        from spellbook.health.checker import run_health_check
+        from spellbook.core.db import init_db
         from datetime import datetime
 
         # Setup directories
@@ -1246,9 +1246,9 @@ class TestRunHealthCheck:
 
     def test_run_health_check_default_is_full(self, tmp_path, monkeypatch):
         """quick parameter defaults to False (full check)."""
-        from spellbook_mcp.health import run_health_check
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.health.checker import run_health_check
+        from spellbook.core.db import init_db
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -1283,7 +1283,7 @@ class TestRunHealthCheck:
             return CoordinationConfig(backend=CoordinationBackend.NONE)
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         # Call without quick parameter - should default to False (full mode)

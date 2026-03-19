@@ -2,12 +2,12 @@
 
 import pytest
 
-from spellbook_mcp.code_review.router import (
+from spellbook.code_review.router import (
     ModeHandler,
     TargetType,
     route_to_handler,
 )
-from spellbook_mcp.code_review.arg_parser import CodeReviewArgs
+from spellbook.code_review.arg_parser import CodeReviewArgs
 
 
 class TestModeHandler:

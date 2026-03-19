@@ -14,8 +14,8 @@ pytestmark = pytest.mark.slow
 
 def test_watcher_starts_and_stops(tmp_path):
     """Test watcher thread lifecycle."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -35,8 +35,8 @@ def test_watcher_starts_and_stops(tmp_path):
 
 def test_watcher_writes_heartbeat(tmp_path):
     """Test that watcher updates heartbeat periodically."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -66,8 +66,8 @@ def test_watcher_writes_heartbeat(tmp_path):
 
 def test_watcher_heartbeat_freshness_check(tmp_path):
     """Test heartbeat freshness validation."""
-    from spellbook_mcp.watcher import is_heartbeat_fresh
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.sessions.watcher import is_heartbeat_fresh
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -98,10 +98,10 @@ def test_watcher_heartbeat_freshness_check(tmp_path):
 
 def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
     """Test that _poll_sessions detects compaction and saves soul to DB."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.compaction_detector import CompactionEvent
-    from spellbook_mcp import injection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.compaction import CompactionEvent
+    from spellbook.sessions import injection
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
@@ -157,14 +157,14 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
 
     # Use patch.dict to patch the modules that get lazy imported
     with patch(
-        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=mock_event
+        "spellbook.sessions.compaction.check_for_compaction", return_value=mock_event
     ) as mock_check:
         with patch(
-            "spellbook_mcp.compaction_detector._get_current_session_file",
+            "spellbook.sessions.compaction._get_current_session_file",
             return_value=session_file,
         ):
             with patch(
-                "spellbook_mcp.soul_extractor.extract_soul", return_value=mock_soul
+                "spellbook.sessions.soul_extractor.extract_soul", return_value=mock_soul
             ) as mock_extract:
                 monkeypatch.setattr(injection, "_set_pending_compaction", mock_set_pending)
 
@@ -203,9 +203,9 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
 
 def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     """Test that _poll_sessions skips already processed compaction events."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.compaction_detector import CompactionEvent
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.compaction import CompactionEvent
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
@@ -227,9 +227,9 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     watcher._processed_compactions[("test-session", "leaf-123")] = time.time()
 
     with patch(
-        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=mock_event
+        "spellbook.sessions.compaction.check_for_compaction", return_value=mock_event
     ):
-        with patch("spellbook_mcp.soul_extractor.extract_soul") as mock_extract:
+        with patch("spellbook.sessions.soul_extractor.extract_soul") as mock_extract:
             watcher._poll_sessions()
 
             # extract_soul should NOT be called since event was already processed
@@ -245,8 +245,8 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
 
 def test_poll_sessions_no_compaction_event(tmp_path):
     """Test that _poll_sessions does nothing when no compaction detected."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
@@ -256,9 +256,9 @@ def test_poll_sessions_no_compaction_event(tmp_path):
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
     with patch(
-        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=None
+        "spellbook.sessions.compaction.check_for_compaction", return_value=None
     ):
-        with patch("spellbook_mcp.soul_extractor.extract_soul") as mock_extract:
+        with patch("spellbook.sessions.soul_extractor.extract_soul") as mock_extract:
             watcher._poll_sessions()
 
             # extract_soul should NOT be called
@@ -274,8 +274,8 @@ def test_poll_sessions_no_compaction_event(tmp_path):
 
 def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
     """Test that _analyze_skills extracts and persists skill outcomes."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
@@ -317,7 +317,7 @@ def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
 
     # Mock the session file lookup
     with patch(
-        "spellbook_mcp.compaction_detector._get_current_session_file",
+        "spellbook.sessions.compaction._get_current_session_file",
         return_value=session_file,
     ):
         watcher._analyze_skills()
@@ -335,9 +335,9 @@ def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
 
 def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
     """Test that _analyze_skills finalizes outcomes on session inactivity."""
-    from spellbook_mcp.watcher import SessionWatcher, SESSION_INACTIVE_THRESHOLD_SECONDS
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.skill_analyzer import OUTCOME_SESSION_ENDED
+    from spellbook.sessions.watcher import SessionWatcher, SESSION_INACTIVE_THRESHOLD_SECONDS
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.skill_analyzer import OUTCOME_SESSION_ENDED
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
@@ -365,7 +365,7 @@ def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
 
     # First call to set up tracking
     with patch(
-        "spellbook_mcp.compaction_detector._get_current_session_file",
+        "spellbook.sessions.compaction._get_current_session_file",
         return_value=session_file,
     ):
         watcher._analyze_skills()
@@ -388,7 +388,7 @@ def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
 
     # Second call should detect inactivity and finalize
     with patch(
-        "spellbook_mcp.compaction_detector._get_current_session_file",
+        "spellbook.sessions.compaction._get_current_session_file",
         return_value=session_file,
     ):
         watcher._analyze_skills()
@@ -405,8 +405,8 @@ def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
 
 def test_session_skill_state_tracking(tmp_path):
     """Test SessionSkillState tracks invocations correctly."""
-    from spellbook_mcp.watcher import SessionSkillState
-    from spellbook_mcp.skill_analyzer import SkillInvocation
+    from spellbook.sessions.watcher import SessionSkillState
+    from spellbook.sessions.skill_analyzer import SkillInvocation
 
     state = SessionSkillState(session_id="test-session")
 
@@ -425,8 +425,8 @@ def test_session_skill_state_tracking(tmp_path):
 
 def test_prune_expired_compactions_removes_old_entries(tmp_path):
     """Test that entries older than 3600s are pruned."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -447,8 +447,8 @@ def test_prune_expired_compactions_removes_old_entries(tmp_path):
 
 def test_prune_expired_compactions_preserves_recent_entries(tmp_path):
     """Test that entries newer than 3600s are preserved."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -469,8 +469,8 @@ def test_prune_expired_compactions_preserves_recent_entries(tmp_path):
 
 def test_prune_expired_compactions_mixed_entries(tmp_path):
     """Test pruning with a mix of old and recent entries."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -490,8 +490,8 @@ def test_prune_expired_compactions_mixed_entries(tmp_path):
 
 def test_prune_expired_compactions_called_in_run_loop(tmp_path):
     """Test that _prune_expired_compactions is called during the run loop."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -523,7 +523,7 @@ def test_prune_expired_compactions_called_in_run_loop(tmp_path):
 
 def test_cleanup_stale_data_no_tables(tmp_path):
     """Test _cleanup_stale_data runs without error when tables don't exist."""
-    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook.sessions.watcher import SessionWatcher
 
     # Create a bare database with no tables
     db_path = tmp_path / "bare.db"
@@ -540,8 +540,8 @@ def test_cleanup_stale_data_no_tables(tmp_path):
 
 def test_cleanup_stale_data_deletes_old_rows(tmp_path):
     """Test that old rows are deleted and recent rows preserved."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -595,9 +595,9 @@ def test_cleanup_stale_data_deletes_old_rows(tmp_path):
     watcher = SessionWatcher(str(db_path))
 
     # Mock swarm and forged cleanup to isolate the test
-    with patch("spellbook_mcp.watcher.SessionWatcher._cleanup_stale_data", wraps=watcher._cleanup_stale_data):
-        with patch("spellbook_mcp.coordination.state.StateManager.cleanup_old_swarms", side_effect=Exception("skip")):
-            with patch("spellbook_mcp.forged.schema.get_forged_connection", side_effect=Exception("skip")):
+    with patch("spellbook.sessions.watcher.SessionWatcher._cleanup_stale_data", wraps=watcher._cleanup_stale_data):
+        with patch("spellbook.coordination.state.StateManager.cleanup_old_swarms", side_effect=Exception("skip")):
+            with patch("spellbook.forged.schema.get_forged_connection", side_effect=Exception("skip")):
                 watcher._cleanup_stale_data()
 
     # Verify old rows deleted, recent rows preserved
@@ -621,8 +621,8 @@ def test_cleanup_stale_data_deletes_old_rows(tmp_path):
 
 def test_cleanup_stale_data_respects_interval(tmp_path):
     """Test that cleanup only runs every CLEANUP_INTERVAL seconds."""
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.core.db import init_db
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))

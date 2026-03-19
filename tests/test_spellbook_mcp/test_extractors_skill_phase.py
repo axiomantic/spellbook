@@ -5,7 +5,7 @@ import pytest
 
 def test_extract_skill_phase_no_skill_invocation():
     """Test extraction returns None when no develop invocation exists."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
 
     messages = [
         {"role": "user", "content": "Hello"},
@@ -18,7 +18,7 @@ def test_extract_skill_phase_no_skill_invocation():
 
 def test_extract_skill_phase_detects_phase_2():
     """Test extraction detects Phase 2 from assistant messages after skill invocation."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
 
     messages = [
         {
@@ -37,14 +37,14 @@ def test_extract_skill_phase_detects_phase_2():
 
 def test_extract_skill_phase_empty_messages():
     """Test extraction with empty message list."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     result = extract_skill_phase([])
     assert result is None
 
 
 def test_extract_skill_phase_highest_wins():
     """Test that highest phase is returned when multiple phases mentioned."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "Starting Phase 1: Research..."},
@@ -61,7 +61,7 @@ def test_extract_skill_phase_highest_wins_not_last():
     This ensures the extractor tracks HIGHEST phase reached, not LAST phase mentioned.
     Sessions may reference earlier phases in retrospect without regressing progress.
     """
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "## Phase 3: Implementation Planning\n\nStarting planning..."},
@@ -73,7 +73,7 @@ def test_extract_skill_phase_highest_wins_not_last():
 
 def test_extract_skill_phase_ignores_other_skills():
     """Test that phases are only tracked after develop invocation."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "debugging"}}]},
         {"role": "assistant", "content": "Phase 4: Implementation"},
@@ -84,7 +84,7 @@ def test_extract_skill_phase_ignores_other_skills():
 
 def test_extract_skill_phase_phase_0():
     """Test detection of Phase 0 (Configuration Wizard)."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "## Phase 0: Configuration Wizard\n\nLet me collect your preferences..."},
@@ -95,7 +95,7 @@ def test_extract_skill_phase_phase_0():
 
 def test_extract_skill_phase_phase_1_5():
     """Test detection of Phase 1.5 (Informed Discovery)."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "## Phase 1.5: Informed Discovery\n\nNow that research is complete..."},
@@ -106,7 +106,7 @@ def test_extract_skill_phase_phase_1_5():
 
 def test_extract_skill_phase_phase_4():
     """Test detection of Phase 4 (Implementation)."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "## Phase 4: Implementation\n\nExecuting the implementation plan..."},
@@ -117,7 +117,7 @@ def test_extract_skill_phase_phase_4():
 
 def test_extract_skill_phase_handles_content_blocks():
     """Test extraction handles content as list of blocks."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": [{"type": "text", "text": "## Phase 2: Design\n\nCreating design..."}]},
@@ -128,7 +128,7 @@ def test_extract_skill_phase_handles_content_blocks():
 
 def test_extract_skill_phase_subphase_detection():
     """Test that subphases (e.g., 2.1, 2.2) map to parent phase."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "### Phase 2.3: Review Design\n\nReviewing the design document..."},
@@ -139,7 +139,7 @@ def test_extract_skill_phase_subphase_detection():
 
 def test_extract_skill_phase_only_tracks_after_most_recent_invocation():
     """Test that only phases after the MOST RECENT skill invocation are tracked."""
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "Phase 4: Implementation complete!"},
@@ -158,7 +158,7 @@ def test_extract_skill_phase_1_5_not_1():
     which prevents matching if a decimal point follows "1".
     Without it, "Phase 1.5" would incorrectly match "Phase 1".
     """
-    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    from spellbook.extractors.skill_phase import extract_skill_phase
     messages = [
         {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}]},
         {"role": "assistant", "content": "## Phase 1.5: Informed Discovery\n\n..."},

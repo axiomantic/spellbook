@@ -5,7 +5,7 @@ import pytest
 
 def test_extract_recent_files_from_tool_calls():
     """Test extracting file paths from Read/Edit/Write tools."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {
@@ -38,7 +38,7 @@ def test_extract_recent_files_from_tool_calls():
 
 def test_extract_recent_files_deduplicates():
     """Test that duplicate paths are removed."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {
@@ -63,7 +63,7 @@ def test_extract_recent_files_deduplicates():
 
 def test_extract_recent_files_bounded():
     """Test that result is bounded to last 50 calls."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = []
     for i in range(100):
@@ -85,7 +85,7 @@ def test_extract_recent_files_bounded():
 
 def test_extract_recent_files_empty():
     """Test extraction with no file operations."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {"role": "user", "timestamp": "2026-01-16T10:00:00Z"},
@@ -98,7 +98,7 @@ def test_extract_recent_files_empty():
 
 def test_extract_recent_files_ignores_other_tools():
     """Test that non-file tools are ignored."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {
@@ -129,7 +129,7 @@ def test_extract_recent_files_ignores_other_tools():
 
 def test_extract_recent_files_handles_missing_args():
     """Test graceful handling of missing args or file_path."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {
@@ -160,7 +160,7 @@ def test_extract_recent_files_handles_missing_args():
 
 def test_extract_recent_files_handles_none_tool_calls():
     """Test graceful handling of None or invalid tool_calls."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {
@@ -187,7 +187,7 @@ def test_extract_recent_files_handles_none_tool_calls():
 
 def test_extract_recent_files_preserves_order():
     """Test that files are returned in chronological order."""
-    from spellbook_mcp.extractors.files import extract_recent_files
+    from spellbook.extractors.files import extract_recent_files
 
     messages = [
         {

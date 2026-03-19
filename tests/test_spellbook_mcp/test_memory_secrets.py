@@ -1,7 +1,7 @@
 """Tests for secret detection in memory content."""
 
 import pytest
-from spellbook_mcp.memory_secrets import scan_for_secrets
+from spellbook.memory.secrets import scan_for_secrets
 
 
 # --- AWS ---
