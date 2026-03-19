@@ -1,5 +1,16 @@
 """MCP tools for TTS and notification management."""
 
+__all__ = [
+    "kokoro_speak",
+    "kokoro_status",
+    "tts_session_set",
+    "tts_config_set",
+    "notify_send",
+    "notify_status",
+    "notify_session_set",
+    "notify_config_set",
+]
+
 import json
 
 from spellbook.mcp.server import mcp

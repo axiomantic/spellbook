@@ -1,5 +1,13 @@
 """MCP tools for memory operations."""
 
+__all__ = [
+    "memory_recall",
+    "memory_forget",
+    "memory_consolidate",
+    "memory_get_unconsolidated",
+    "memory_store_memories",
+]
+
 import asyncio
 
 from fastmcp import Context

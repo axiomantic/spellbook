@@ -117,7 +117,7 @@ class CoordinationConfig:
 
 def get_preferences_path() -> Path:
     """Get path to preferences file."""
-    from installer.compat import get_config_dir
+    from spellbook.core.compat import get_config_dir
     config_dir = get_config_dir()
     config_dir.mkdir(parents=True, exist_ok=True)
     return config_dir / "preferences.json"

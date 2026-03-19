@@ -52,7 +52,9 @@ def load_token() -> str | None:
 
 def auth_is_disabled() -> bool:
     """Check if auth is disabled via SPELLBOOK_MCP_AUTH=disabled env var."""
-    return os.environ.get("SPELLBOOK_MCP_AUTH", "").lower() == "disabled"
+    from spellbook.core.config import get_env
+
+    return (get_env("AUTH") or "").lower() == "disabled"
 
 
 class BearerAuthMiddleware:

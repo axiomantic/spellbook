@@ -26,9 +26,9 @@ def _find_mcp_token() -> str | None:
 
 def _get_server_port() -> int:
     """Get the MCP server port from environment or default."""
-    import os
+    from spellbook.core.config import get_env
 
-    return int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
+    return int(get_env("PORT", "8765"))
 
 
 def admin_open(port: int | None = None) -> int:

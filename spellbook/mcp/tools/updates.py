@@ -1,5 +1,10 @@
 """MCP tools for update checking."""
 
+__all__ = [
+    "spellbook_check_for_updates",
+    "spellbook_get_update_status",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.core.config import get_spellbook_dir
 from spellbook.sessions.injection import inject_recovery_context

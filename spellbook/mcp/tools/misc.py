@@ -4,6 +4,15 @@ Includes: workflow state, credential export, skill analysis, test reminder,
 system prompt dump, analytics summary.
 """
 
+__all__ = [
+    "workflow_state_save",
+    "workflow_state_load",
+    "workflow_state_update",
+    "analyze_skill_usage",
+    "spellbook_analytics_summary",
+    "spellbook_inject_test_reminder",
+]
+
 import json
 from datetime import datetime, timezone
 from typing import List, Optional

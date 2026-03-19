@@ -53,7 +53,7 @@ class TestEventsRun:
             raise ConnectionError("Cannot connect")
 
         monkeypatch.setattr(
-            "spellbook.cli.commands.events.stream_events",
+            "spellbook.cli.daemon_client.stream_events",
             fake_stream_events,
         )
 

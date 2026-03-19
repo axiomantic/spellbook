@@ -98,8 +98,10 @@ def check_daemon_running() -> CheckResult:
     """Check if the daemon is reachable."""
     import socket
 
-    host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
-    port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
+    from spellbook.core.config import get_env
+
+    host = get_env("HOST", "127.0.0.1")
+    port = int(get_env("PORT", "8765"))
     try:
         with socket.create_connection((host, port), timeout=2.0):
             return CheckResult("daemon", "pass", f"Reachable at {host}:{port}")

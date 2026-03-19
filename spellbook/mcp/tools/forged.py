@@ -1,5 +1,19 @@
 """MCP tools for Forge workflow (autonomous development)."""
 
+__all__ = [
+    "forge_iteration_start",
+    "forge_iteration_advance",
+    "forge_iteration_return",
+    "forge_project_init",
+    "forge_project_status",
+    "forge_feature_update",
+    "forge_select_skill",
+    "forge_roundtable_convene",
+    "forge_roundtable_debate",
+    "forge_process_roundtable_response",
+    "skill_instructions_get",
+]
+
 import re
 from pathlib import Path
 

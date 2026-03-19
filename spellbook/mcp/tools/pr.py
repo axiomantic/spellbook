@@ -1,5 +1,14 @@
 """MCP tools for PR distillation."""
 
+__all__ = [
+    "pr_fetch",
+    "pr_diff",
+    "pr_files",
+    "pr_match_patterns",
+    "pr_bless_pattern",
+    "pr_list_patterns",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.pr_distill.bless import (

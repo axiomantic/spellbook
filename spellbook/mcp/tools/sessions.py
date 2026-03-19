@@ -1,5 +1,12 @@
 """MCP tools for session management."""
 
+__all__ = [
+    "find_session",
+    "split_session",
+    "list_sessions",
+    "spawn_claude_session",
+]
+
 import os
 import time
 from pathlib import Path

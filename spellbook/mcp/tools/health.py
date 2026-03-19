@@ -1,5 +1,11 @@
 """MCP tools for health checks."""
 
+__all__ = [
+    "spellbook_check_compaction",
+    "spellbook_context_ping",
+    "spellbook_health_check",
+]
+
 import os
 import time
 from dataclasses import asdict

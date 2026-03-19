@@ -1,5 +1,19 @@
 """MCP tools for swarm coordination, curator, and stint tracking."""
 
+__all__ = [
+    "mcp_swarm_create",
+    "mcp_swarm_register",
+    "mcp_swarm_progress",
+    "mcp_swarm_complete",
+    "mcp_swarm_error",
+    "mcp_swarm_monitor",
+    "mcp_curator_track_prune",
+    "stint_push",
+    "stint_pop",
+    "stint_check",
+    "stint_replace",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.coordination.curator import curator_track_prune
 from spellbook.sessions.injection import inject_recovery_context

@@ -10,7 +10,6 @@ import asyncio
 import json
 import sys
 
-from spellbook.cli.daemon_client import stream_events
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
@@ -34,6 +33,8 @@ def _run_events(args: argparse.Namespace) -> None:
 
     try:
         async def _stream():
+            from spellbook.cli.daemon_client import stream_events  # lazy import
+
             try:
                 async for event in stream_events():
                     if json_mode:

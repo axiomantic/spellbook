@@ -1,5 +1,25 @@
 """MCP tools for fractal thinking."""
 
+__all__ = [
+    "fractal_create_graph",
+    "fractal_resume_graph",
+    "fractal_delete_graph",
+    "fractal_update_graph_status",
+    "fractal_add_node",
+    "fractal_update_node",
+    "fractal_mark_saturated",
+    "fractal_get_snapshot",
+    "fractal_get_branch",
+    "fractal_get_open_questions",
+    "fractal_query_convergence",
+    "fractal_query_contradictions",
+    "fractal_get_saturation_status",
+    "fractal_claim_work",
+    "fractal_synthesize_node",
+    "fractal_get_claimable_work",
+    "fractal_get_ready_to_synthesize",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.fractal.graph_ops import (
     create_graph as do_fractal_create_graph,

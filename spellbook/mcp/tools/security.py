@@ -1,5 +1,21 @@
 """MCP tools for security operations."""
 
+__all__ = [
+    "security_log_event",
+    "security_query_events",
+    "security_set_mode",
+    "security_check_tool_input",
+    "security_canary_create",
+    "security_canary_check",
+    "security_set_trust",
+    "security_check_trust",
+    "security_check_output",
+    "security_dashboard",
+    "security_disable_all_checks",
+    "system_prompt_dump",
+    "credential_export",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.core.db import get_db_path
 from spellbook.sessions.injection import inject_recovery_context

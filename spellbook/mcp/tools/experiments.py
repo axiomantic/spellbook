@@ -1,5 +1,15 @@
 """MCP tools for A/B testing experiments."""
 
+__all__ = [
+    "experiment_create",
+    "experiment_start",
+    "experiment_pause",
+    "experiment_complete",
+    "experiment_status",
+    "experiment_list",
+    "experiment_results",
+]
+
 from spellbook.mcp.server import mcp
 from spellbook.experiments.ab_test import (
     ABTestError,

@@ -1,5 +1,16 @@
 """MCP tools for configuration management."""
 
+__all__ = [
+    "spellbook_config_get",
+    "spellbook_config_set",
+    "spellbook_session_init",
+    "spellbook_session_mode_set",
+    "spellbook_session_mode_get",
+    "spellbook_telemetry_enable",
+    "spellbook_telemetry_disable",
+    "spellbook_telemetry_status",
+]
+
 from typing import Optional
 
 from fastmcp import Context

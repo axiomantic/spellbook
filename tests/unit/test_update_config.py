@@ -26,7 +26,7 @@ class TestConfigFileLocking:
         monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         # Patch CrossPlatformLock to verify it's used as a context manager
-        from installer.compat import CrossPlatformLock
+        from spellbook.core.compat import CrossPlatformLock
 
         original_enter = CrossPlatformLock.__enter__
         lock_entered = {"value": False}

@@ -1148,20 +1148,20 @@ class TestMemoryToolsServerRegistration:
             "memory_store_memories.fn is not callable"
         )
 
-    def test_server_imports_do_get_unconsolidated(self):
-        """do_get_unconsolidated is imported in server module."""
+    def test_server_does_not_leak_do_get_unconsolidated(self):
+        """Internal do_get_unconsolidated is not leaked via wildcard import."""
         from spellbook import server
 
-        assert hasattr(server, "do_get_unconsolidated"), (
-            "do_get_unconsolidated not imported in server"
+        assert not hasattr(server, "do_get_unconsolidated"), (
+            "do_get_unconsolidated should not be exposed via __all__"
         )
 
-    def test_server_imports_do_store_memories(self):
-        """do_store_memories is imported in server module."""
+    def test_server_does_not_leak_do_store_memories(self):
+        """Internal do_store_memories is not leaked via wildcard import."""
         from spellbook import server
 
-        assert hasattr(server, "do_store_memories"), (
-            "do_store_memories not imported in server"
+        assert not hasattr(server, "do_store_memories"), (
+            "do_store_memories should not be exposed via __all__"
         )
 
     @pytest.mark.asyncio

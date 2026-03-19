@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-from installer.compat import CrossPlatformLock, LockHeldError, get_config_dir
+from spellbook.core.compat import CrossPlatformLock, LockHeldError, get_config_dir
 
 logger = logging.getLogger(__name__)
 

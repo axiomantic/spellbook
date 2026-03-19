@@ -25,7 +25,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from installer.compat import CrossPlatformLock, get_config_dir
+from spellbook.core.compat import CrossPlatformLock, get_config_dir
 
 from spellbook.core.config import config_get, config_set
 

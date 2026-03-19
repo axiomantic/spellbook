@@ -59,12 +59,16 @@ def get_err_log_file() -> Path:
 
 def get_port() -> int:
     """Get the configured MCP port (default 8765)."""
-    return int(os.environ.get("SPELLBOOK_MCP_PORT", DEFAULT_PORT))
+    from spellbook.core.config import get_env
+
+    return int(get_env("PORT", str(DEFAULT_PORT)))
 
 
 def get_host() -> str:
     """Get the configured MCP host (default 127.0.0.1)."""
-    return os.environ.get("SPELLBOOK_MCP_HOST", DEFAULT_HOST)
+    from spellbook.core.config import get_env
+
+    return get_env("HOST", DEFAULT_HOST)
 
 
 def get_server_url() -> str:
