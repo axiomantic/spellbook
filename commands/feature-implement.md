@@ -163,7 +163,7 @@ else: delegated (single session, subagent execution)
 
 Each work item prompt file follows this structure:
 
-~~~markdown
+````markdown
 # <Feature Name> - Chunk <N>/<Total>: <Chunk Title>
 
 ## Context
@@ -204,7 +204,7 @@ When complete, run the next chunk:
 ```
 Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
 ```
-~~~
+````
 
 The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch`.
 
