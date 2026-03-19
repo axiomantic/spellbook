@@ -45,13 +45,13 @@ repos:
 
       - id: security-scan-changeset
         name: Scan changeset for security issues
-        entry: uv run python -m spellbook_mcp.security.scanner --staged
+        entry: uv run python -m spellbook.security.scanner --staged
         language: system
         types: [markdown]
 
       - id: security-scan-skills
         name: Scan skills for security issues
-        entry: uv run python -m spellbook_mcp.security.scanner --skills
+        entry: uv run python -m spellbook.security.scanner --skills
         language: system
         stages: [manual]
         files: ^skills/.*SKILL\.md$
@@ -61,7 +61,7 @@ repos:
         entry: python3 scripts/check_admin_build.py
         language: system
         pass_filenames: false
-        files: ^spellbook_mcp/admin/frontend/(src/|index\.html|package\.json|package-lock\.json|vite\.config\.ts|tsconfig\.json|tailwind\.config\.js|postcss\.config\.js)
+        files: ^spellbook/admin/frontend/(src/|index\.html|package\.json|package-lock\.json|vite\.config\.ts|tsconfig\.json|tailwind\.config\.js|postcss\.config\.js)
 
       - id: check-dependabot-coverage
         name: Check Dependabot covers all package manifests
