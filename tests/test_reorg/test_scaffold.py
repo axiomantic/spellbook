@@ -79,12 +79,12 @@ class TestCLIEntryPoint:
 
         assert callable(main)
 
-    def test_cli_main_prints_placeholder(self, capsys):
+    def test_cli_main_no_args_exits_with_help(self, capsys):
         from spellbook.cli.main import main
 
-        main()
-        captured = capsys.readouterr()
-        assert "not yet implemented" in captured.out.lower()
+        with pytest.raises(SystemExit) as exc_info:
+            main([])
+        assert exc_info.value.code == 2
 
 
 class TestMainModule:
