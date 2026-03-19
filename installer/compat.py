@@ -693,8 +693,11 @@ class ServiceManager:
     def _install_macos(self) -> tuple[bool, str]:
         """Install launchd service via spellbook.daemon.manager."""
         try:
+            import contextlib
+            import io
             from spellbook.daemon.manager import install_service
-            install_service()
+            with contextlib.redirect_stdout(io.StringIO()):
+                install_service()
             return True, "Installed launchd service"
         except SystemExit:
             return False, "Failed to install launchd service"
@@ -704,8 +707,11 @@ class ServiceManager:
     def _install_linux(self) -> tuple[bool, str]:
         """Install systemd service via spellbook.daemon.manager."""
         try:
+            import contextlib
+            import io
             from spellbook.daemon.manager import install_service
-            install_service()
+            with contextlib.redirect_stdout(io.StringIO()):
+                install_service()
             return True, "Installed systemd service"
         except SystemExit:
             return False, "Failed to install systemd service"

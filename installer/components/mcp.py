@@ -870,7 +870,13 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
 
     try:
         from spellbook.daemon.manager import install_service
-        install_service()
+
+        # Suppress install_service's own print output -- the installer
+        # controls formatting via its own print_step/print_success helpers.
+        import io
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()):
+            install_service()
 
         # Wait for daemon to start
         for _ in range(10):
