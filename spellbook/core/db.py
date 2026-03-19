@@ -11,25 +11,6 @@ import threading
 from pathlib import Path
 
 
-def _get_spellbook_dir() -> Path:
-    """Get spellbook config directory for database storage.
-
-    Temporary shim: tries spellbook.core.config first, falls back to
-    spellbook_mcp.config_tools until the config module migration is complete.
-    """
-    try:
-        from spellbook.core.config import get_spellbook_dir
-        return get_spellbook_dir()
-    except ImportError:
-        pass
-    try:
-        from spellbook_mcp.config_tools import get_spellbook_dir
-        return get_spellbook_dir()
-    except ImportError:
-        pass
-    # Ultimate fallback
-    return Path.home() / ".local" / "spellbook"
-
 
 def get_db_path() -> Path:
     """Get path to spellbook database file.
