@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `spellbook` CLI with 10 command groups: doctor, server, install, update, admin, config, memory, session, security, events
+- Three-layer package architecture: core -> domains -> interfaces
+- `websockets` dependency for CLI streaming
+
+### Changed
+- Package renamed from `spellbook_mcp` to `spellbook`
+- server.py (3,945 lines) decomposed into mcp/server.py + 13 tool files + routes
+- Daemon management moved from scripts/spellbook-server.py to spellbook.daemon module
+
+### Deprecated
+- `spellbook_mcp` package name (backward compat shim provided, will be removed next release)
+- `SPELLBOOK_MCP_*` environment variables (use `SPELLBOOK_*` instead)
+- `scripts/spellbook-server.py` (use `spellbook server <command>` instead)
+
 ## [0.32.1] - 2026-03-18
 
 ### Fixed

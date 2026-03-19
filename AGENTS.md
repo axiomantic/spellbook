@@ -39,7 +39,7 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 - **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
 - **Commands** go in `commands/<name>.md` with YAML frontmatter
 - **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
-- **MCP tools** are defined in `spellbook/server.py` or domain-specific modules
+- **MCP tools** are defined in `spellbook/mcp/server.py` and `spellbook/mcp/tools/` modules
 
 ## Pre-commit Hooks
 
@@ -109,7 +109,16 @@ spellbook/
 ├── installer/           # Multi-platform installer
 │   ├── platforms/       # claude_code, opencode, codex, gemini, crush
 │   └── components/      # context_files, symlinks, mcp
-├── spellbook/       # MCP server
+├── spellbook/           # Python package (three-layer architecture)
+│   ├── core/            # Config, DB, auth, models, compat
+│   ├── memory/          # Memory storage and consolidation
+│   ├── sessions/        # Session parsing, resume, compaction
+│   ├── security/        # Security scanning, canary, trust
+│   ├── notifications/   # TTS and OS notifications
+│   ├── daemon/          # Server daemon management
+│   ├── mcp/             # MCP server and tool definitions
+│   │   └── tools/       # 13 tool modules (memory, security, etc.)
+│   └── cli/             # CLI entry point and command groups
 ├── scripts/             # Build/maintenance
 ├── tests/               # Unit, integration
 ├── docs/                # Generated (skills/commands/agents) + manual
@@ -124,7 +133,7 @@ spellbook/
 | `AGENTS.spellbook.md` | User-facing installable template |
 | `extensions/gemini/` | Gemini extension (linked via `gemini extensions link`) |
 | `install.py` | Installer entry |
-| `spellbook/server.py` | MCP server |
+| `spellbook/mcp/server.py` | MCP server entry point |
 
 ## Commands
 
