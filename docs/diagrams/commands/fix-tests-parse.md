@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/fix-tests-parse.md", "source_hash": "sha256:9bca2eb75562b35491ae82c1a856397943923d240dc7288297a4b67061ab581e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fix-tests-parse.md","source_hash": "sha256:d3e99dd39f49c610e2a6433f80a60cf1e8c42d83b48d69a685b77cfe801822dc","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: fix-tests-parse
 
 Parse audit reports or test failure output into structured work items, honor dependency ordering from remediation plans, and select a commit strategy before execution begins.

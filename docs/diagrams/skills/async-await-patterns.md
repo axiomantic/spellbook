@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/async-await-patterns/SKILL.md", "source_hash": "sha256:bb3649f53ee9464bc187ce8be3229be332ccae95378d729bd80253495d7ec698", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/async-await-patterns/SKILL.md","source_hash": "sha256:f48a1b672f6e9ae18844efa5a565280bd68b5ac37ce9633008db00b6a238ab57","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: async-await-patterns
 
 Decision and verification workflow for writing production-grade async/await code in JavaScript and TypeScript. Enforces disciplined async patterns over raw promises.

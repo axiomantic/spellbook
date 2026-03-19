@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/simplify.md", "source_hash": "sha256:7b6df440f06f9c0c64e18ccc3b4a589fddc357292c39050a8ac8893efc82ff3a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify.md","source_hash": "sha256:dcc02f5ba49050b7284c9ea3b5a2f80054388eb68df42bdbe53ec0d5231b84a0","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: simplify
 
 Orchestrates systematic code simplification targeting cognitive complexity reduction. Delegates to three sequential sub-commands (simplify-analyze, simplify-verify, simplify-transform) with multi-gate verification and user approval gates.

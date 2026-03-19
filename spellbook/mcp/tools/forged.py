@@ -11,6 +11,7 @@ __all__ = [
     "forge_roundtable_convene",
     "forge_roundtable_debate",
     "forge_process_roundtable_response",
+    "forge_record_gate_completion",
     "skill_instructions_get",
 ]
 
@@ -317,6 +318,7 @@ def forge_roundtable_convene(
     feature_name: str,
     stage: str,
     artifact_path: str,
+    gate: str,
     archetypes: list = None,
 ) -> dict:
     """
@@ -339,6 +341,7 @@ def forge_roundtable_convene(
         feature_name: Name of the feature being developed
         stage: Current workflow stage (DISCOVER, DESIGN, PLAN, IMPLEMENT, etc.)
         artifact_path: Path to the artifact file to validate
+        gate: Quality gate being validated (e.g., "code_review"). Required.
         archetypes: List of archetype names to include (uses stage defaults if omitted)
 
     Returns:
@@ -349,12 +352,14 @@ def forge_roundtable_convene(
         - return_to: None (set if ITERATE verdict)
         - dialogue: Generated prompt for LLM
         - archetypes: List of participating archetypes
+        - gate: The gate being validated
         - error: Error message if artifact not found
     """
     return do_roundtable_convene(
         feature_name=feature_name,
         stage=stage,
         artifact_path=artifact_path,
+        gate=gate,
         archetypes=archetypes,
     )
 
@@ -397,17 +402,21 @@ def forge_roundtable_debate(
 def forge_process_roundtable_response(
     response: str,
     stage: str,
+    gate: str,
+    feature_name: str,
     iteration: int = 1,
 ) -> dict:
     """
     Process an LLM response from roundtable convene.
 
     Parses the LLM response to extract verdicts, determine consensus,
-    and generate feedback items.
+    and generate feedback items. Auto-records gate completion on consensus.
 
     Args:
         response: Raw LLM response text from roundtable convene
         stage: The workflow stage being validated
+        gate: Quality gate being validated. Required. Auto-records gate completion on consensus.
+        feature_name: Feature name for gate completion recording.
         iteration: Current iteration number (default: 1)
 
     Returns:
@@ -417,11 +426,56 @@ def forge_process_roundtable_response(
         - feedback: List of Feedback dicts from ITERATE verdicts
         - return_to: Stage to return to if ITERATE, else None
         - parsed_verdicts: List of parsed verdict details
+        - gate: The gate being validated
     """
     return do_process_roundtable_response(
         response=response,
         stage=stage,
+        gate=gate,
+        feature_name=feature_name,
         iteration=iteration,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def forge_record_gate_completion(
+    feature_name: str,
+    gate: str,
+    stage: str,
+    consensus: bool,
+    iteration: int = 1,
+    verdict_summary: str = None,
+) -> dict:
+    """
+    Record a quality gate completion result.
+
+    Called after a gate passes (or fails). For gates with roundtables,
+    process_roundtable_response auto-records on consensus. For gates
+    without roundtables (e.g., test_suite), call this directly.
+
+    Args:
+        feature_name: Feature being developed
+        gate: Gate identifier (must be one of VALID_GATES)
+        stage: Current workflow stage
+        consensus: Whether the gate passed
+        iteration: Iteration number (default: 1)
+        verdict_summary: Optional JSON summary of verdicts
+
+    Returns:
+        Dict with status and gate_id
+    """
+    from spellbook.forged.project_tools import (
+        forge_record_gate_completion as do_record_gate,
+    )
+
+    return do_record_gate(
+        feature_name=feature_name,
+        gate=gate,
+        stage=stage,
+        consensus=consensus,
+        iteration=iteration,
+        verdict_summary=verdict_summary,
     )
 
 

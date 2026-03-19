@@ -1,4 +1,4 @@
-"""Verdict parsing for Forged roundtable responses.
+"""Verdict parsing for roundtable responses.
 
 This module provides parsing logic to extract structured verdicts
 from LLM-generated roundtable dialogue. It handles the tarot archetype

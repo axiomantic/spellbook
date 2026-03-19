@@ -1,4 +1,4 @@
-"""Iteration MCP tools for Forged autonomous development workflow.
+"""Iteration MCP tools for workflow enforcement and orchestration.
 
 This module provides tools for managing the iteration cycle of autonomous
 feature development, including stage transitions with token-based workflow
@@ -23,7 +23,8 @@ import os
 from typing import Optional
 from uuid import uuid4
 
-from spellbook.forged.models import VALID_STAGES, Feedback, IterationState
+from spellbook.forged.models import VALID_STAGES
+from spellbook.forged.project_tools import _load_project_graph
 from spellbook.forged.schema import get_forged_connection, init_forged_schema
 
 
@@ -260,6 +261,76 @@ def _get_next_stage(current_stage: str) -> Optional[str]:
     return _STAGE_ORDER[idx + 1]
 
 
+def _check_dependencies(project_path: str, feature_name: str) -> dict:
+    """Check if all dependencies for a feature are COMPLETE.
+
+    Reads the project graph JSON to find the feature's depends_on list,
+    then checks each dependency's status.
+
+    Args:
+        project_path: Project path
+        feature_name: Feature to check dependencies for
+
+    Returns:
+        Dict with:
+        - blocked: bool (True if any dependency is not COMPLETE)
+        - details: list of {name, status, blocking} per dependency
+    """
+    project_graph = _load_project_graph(project_path)
+    if project_graph is None:
+        return {"blocked": False, "details": []}
+
+    # Find this feature's node in the project graph
+    feature_node = None
+    for node_id, node in project_graph.features.items():
+        if node.id == feature_name or node.name == feature_name:
+            feature_node = node
+            break
+
+    if feature_node is None:
+        return {"blocked": False, "details": []}
+
+    depends_on = feature_node.depends_on
+    if not depends_on:
+        return {"blocked": False, "details": []}
+
+    details = []
+    blocked = False
+
+    for dep_name in depends_on:
+        # Look up each dependency's status in the project graph
+        dep_node = None
+        for node_id, node in project_graph.features.items():
+            if node.id == dep_name or node.name == dep_name:
+                dep_node = node
+                break
+
+        if dep_node is None:
+            details.append({
+                "name": dep_name,
+                "status": "NOT_FOUND",
+                "blocking": True,
+            })
+            blocked = True
+        else:
+            dep_status = dep_node.status
+            if dep_status != "complete":
+                details.append({
+                    "name": dep_name,
+                    "status": dep_status,
+                    "blocking": True,
+                })
+                blocked = True
+            else:
+                details.append({
+                    "name": dep_name,
+                    "status": "complete",
+                    "blocking": False,
+                })
+
+    return {"blocked": blocked, "details": details}
+
+
 def forge_iteration_start(
     feature_name: str,
     starting_stage: str = "DISCOVER",
@@ -297,6 +368,16 @@ def forge_iteration_start(
 
     # Ensure schema is initialized
     init_forged_schema()
+
+    # Check dependencies before allowing start
+    dep_status = _check_dependencies(project_path, feature_name)
+    if dep_status["blocked"]:
+        return {
+            "status": "blocked",
+            "error": "Dependencies not yet complete",
+            "feature_name": feature_name,
+            "dependencies": dep_status["details"],
+        }
 
     # Invalidate any existing tokens for this feature
     _invalidate_feature_tokens(conn, feature_name)

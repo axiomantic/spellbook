@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/test-bar-remove.md", "source_hash": "sha256:4d499119d1a58030e6a6ef83c4eb90e8e2b43fa4abe379dd9e57adcf57583185", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/test-bar-remove.md","source_hash": "sha256:f70715286f86dfb630db53893e430d1cf9161d0a469add88912727ffe080dc87","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: test-bar-remove
 
 Cleanly remove all test apparatus code injected by /test-bar. Reads the manifest, checks for user modifications, reverts modified files, deletes created files, verifies clean state, and removes the manifest.

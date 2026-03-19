@@ -53,11 +53,11 @@ flowchart TD
 
 | Node in Overview | Detail Diagram | Source Lines |
 |-----------------|----------------|--------------|
-| `P1` Phase 1 | Diagram 2: Analysis | SKILL.md:47-99 |
-| `P2` Phase 2 | Diagram 3: Content Extraction | SKILL.md:101-156 |
-| `P3` Phase 3 | Diagram 4: Diagram Generation | SKILL.md:158-203 |
-| `P4` Phase 4 | Diagram 5: Verification | SKILL.md:205-237 |
-| `UM` Update Mode | Diagram 6: Update Mode | SKILL.md:346-378 |
+| `P1` Phase 1 | Diagram 2: Analysis | SKILL.md:49-101 |
+| `P2` Phase 2 | Diagram 3: Content Extraction | SKILL.md:103-158 |
+| `P3` Phase 3 | Diagram 4: Diagram Generation | SKILL.md:160-206 |
+| `P4` Phase 4 | Diagram 5: Verification | SKILL.md:207-241 |
+| `UM` Update Mode | Diagram 6: Update Mode | SKILL.md:348-379 |
 
 ---
 

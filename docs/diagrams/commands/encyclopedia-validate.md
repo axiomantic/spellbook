@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/encyclopedia-validate.md","source_hash": "sha256:91cca0526cc12d8cb6224512f38480513f050c9a50f6671b6855972e0241bd09","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/encyclopedia-validate.md","source_hash": "sha256:6f6405f9b2ebeb548343ab8a3fa9d9ff5f35a0ec94256ac893648680efc3bbce","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: encyclopedia-validate
 
 Assemble and validate encyclopedia content, then write to the output path (Phase 6).

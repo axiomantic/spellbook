@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/reflexion-analyze.md", "source_hash": "sha256:cb06eddecb05d3bed79b5da253e546c7fe9a7f6a638d53a8563bb7523e5085d9", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/reflexion-analyze.md","source_hash": "sha256:41f1c05c3cb000640865968f256ccde319466cd4c93c17b7da084fad13ed6f99","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: reflexion-analyze
 
 Analyzes ITERATE feedback from roundtable validation: parses feedback items, categorizes root causes, stores reflections in forged.db, detects failure patterns, and generates retry guidance.

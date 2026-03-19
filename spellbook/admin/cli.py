@@ -43,7 +43,7 @@ def admin_open(port: int | None = None) -> int:
             file=sys.stderr,
         )
         print(
-            "The MCP server must be running. Start it with: spellbook-server start",
+            "The MCP server must be running. Start it with: spellbook server start",
             file=sys.stderr,
         )
         return 1
@@ -68,7 +68,7 @@ def admin_open(port: int | None = None) -> int:
         print(f"Error: Cannot connect to server at {base_url}", file=sys.stderr)
         print(f"  {e}", file=sys.stderr)
         print(
-            "Ensure the MCP server is running: spellbook-server start",
+            "Ensure the MCP server is running: spellbook server start",
             file=sys.stderr,
         )
         return 1

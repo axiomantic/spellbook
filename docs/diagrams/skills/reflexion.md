@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/reflexion/SKILL.md", "source_hash": "sha256:b775b3b124cc4d17310230cb6e8029ade4aa4a41bce2e031ccdf747272433b73", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/reflexion/SKILL.md","source_hash": "sha256:c6277f87a2e567dfb5c0e2a259da29c5f5dc10de5542540b4ba4ac1ca86779f7","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: reflexion
 
 Analyze roundtable ITERATE feedback to extract root causes, store reflections, detect failure patterns, and generate retry guidance for the Forge workflow.

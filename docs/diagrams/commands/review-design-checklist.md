@@ -1,80 +1,143 @@
-<!-- diagram-meta: {"source": "commands/review-design-checklist.md", "source_hash": "sha256:654599c10c195fd463716dab2090bf4559c61a9cc69a7c943c682d3b3d6a2bdb", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-design-checklist.md","source_hash": "sha256:ffdc1b5555da90dacb03bb2229813c80d812c54b644cff457df4757af3f5f307","generator": "stamp"} -->
 # Diagram: review-design-checklist
 
-Phases 2-3 of reviewing-design-docs: runs a completeness checklist across eight architecture categories, applies REST API design checks, then detects hand-waving language and unjustified magic numbers.
+Phases 2-3 of reviewing-design-docs: Completeness Checklist + Hand-Waving Detection. Evaluates design documents across eight architecture categories, applies REST API design checks when applicable, then detects vague language, assumed knowledge, and unjustified magic numbers.
+
+## Overview
 
 ```mermaid
 flowchart TD
-    Start([Start Phase 2-3]) --> Checklist[Completeness Checklist]
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+    end
 
-    Checklist --> Arch[Evaluate Architecture]
-    Checklist --> Data[Evaluate Data Models]
-    Checklist --> API[Evaluate API/Protocol]
-    Checklist --> FS[Evaluate Filesystem]
-    Checklist --> Err[Evaluate Errors]
-    Checklist --> Edge[Evaluate Edge Cases]
-    Checklist --> Deps[Evaluate Dependencies]
-    Checklist --> Mig[Evaluate Migration]
+    Start([Receive design document]) --> P2[Phase 2:<br>Completeness Checklist]
+    P2 --> API_CHECK{API/Protocol<br>category is<br>SPECIFIED or VAGUE?}
+    API_CHECK -->|Yes| REST[REST API<br>Design Checklist]
+    API_CHECK -->|No| P3
+    REST --> P3[Phase 3:<br>Hand-Waving Detection]
+    P3 --> GATE[All gaps surfaced?<br>No unjustified N/A?]:::gate
+    GATE -->|Pass| Done([Findings delivered<br>to review-design-verify]):::success
+    GATE -->|Fail| REVISIT[Revisit missed items]
+    REVISIT --> P2
 
-    Arch --> MarkItems[Mark SPECIFIED/VAGUE/MISSING/NA]
-    Data --> MarkItems
-    API --> MarkItems
-    FS --> MarkItems
-    Err --> MarkItems
-    Edge --> MarkItems
-    Deps --> MarkItems
-    Mig --> MarkItems
-
-    MarkItems --> APICheck{API Specified or Vague?}
-    APICheck -->|Yes| REST[REST API Checklist]
-    APICheck -->|No| HandWave[Hand-Waving Detection]
-
-    REST --> Richardson[Richardson Maturity Check]
-    Richardson --> Postel[Postel Law Compliance]
-    Postel --> Hyrum[Hyrum Law Awareness]
-    Hyrum --> APISpec[API Specification Checklist]
-    APISpec --> ErrStd[Error Response Standard]
-    ErrStd --> HandWave
-
-    HandWave --> VagueLang[Flag Vague Language]
-    VagueLang --> AssumedK[Flag Assumed Knowledge]
-    AssumedK --> MagicNum[Flag Magic Numbers]
-    MagicNum --> Gate{All Items Marked?}
-
-    Gate -->|Yes| Done([Phase 2-3 Complete])
-    Gate -->|No| Checklist
-
-    style Start fill:#2196F3,color:#fff
-    style Done fill:#2196F3,color:#fff
-    style Checklist fill:#2196F3,color:#fff
-    style Arch fill:#2196F3,color:#fff
-    style Data fill:#2196F3,color:#fff
-    style API fill:#2196F3,color:#fff
-    style FS fill:#2196F3,color:#fff
-    style Err fill:#2196F3,color:#fff
-    style Edge fill:#2196F3,color:#fff
-    style Deps fill:#2196F3,color:#fff
-    style Mig fill:#2196F3,color:#fff
-    style MarkItems fill:#2196F3,color:#fff
-    style REST fill:#4CAF50,color:#fff
-    style Richardson fill:#2196F3,color:#fff
-    style Postel fill:#2196F3,color:#fff
-    style Hyrum fill:#2196F3,color:#fff
-    style APISpec fill:#2196F3,color:#fff
-    style ErrStd fill:#2196F3,color:#fff
-    style HandWave fill:#2196F3,color:#fff
-    style VagueLang fill:#2196F3,color:#fff
-    style AssumedK fill:#2196F3,color:#fff
-    style MagicNum fill:#2196F3,color:#fff
-    style APICheck fill:#FF9800,color:#fff
-    style Gate fill:#f44336,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 ```
+
+## Phase 2: Completeness Checklist - Detail
+
+```mermaid
+flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L4[Quality Gate]:::gate
+        L5([Terminal]):::success
+    end
+
+    Start([Begin Phase 2]) --> PRINCIPLES[Load Invariant Principles:<br>1. VAGUE worse than MISSING<br>2. N/A requires justification<br>3. Checklists exhaustive]
+
+    PRINCIPLES --> CAT_ARCH[Evaluate: Architecture<br>system diagram, boundaries,<br>data/control flow, state, async]
+    CAT_ARCH --> CAT_DATA[Evaluate: Data<br>models, fields, schema,<br>validation, transforms, storage]
+    CAT_DATA --> CAT_API[Evaluate: API/Protocol<br>endpoints, schemas, errors,<br>auth, rate limits, versioning]
+    CAT_API --> CAT_FS[Evaluate: Filesystem<br>dir structure, modules,<br>naming, classes, imports]
+    CAT_FS --> CAT_ERR[Evaluate: Errors<br>categories, propagation,<br>recovery, retry, failure modes]
+    CAT_ERR --> CAT_EDGE[Evaluate: Edge Cases<br>boundary conditions, null,<br>max limits, concurrency]
+    CAT_EDGE --> CAT_DEPS[Evaluate: Dependencies<br>versions, fallbacks,<br>API contracts]
+    CAT_DEPS --> CAT_MIG[Evaluate: Migration<br>steps, rollback, data migration,<br>backwards compat]
+
+    CAT_MIG --> MARK[Mark each item:<br>SPECIFIED / VAGUE /<br>MISSING / N/A + justification]
+
+    MARK --> NA_CHECK{Any N/A<br>without<br>justification?}
+    NA_CHECK -->|Yes| NA_BLOCK[BLOCKED: justify<br>or reclassify as MISSING]:::gate
+    NA_BLOCK --> MARK
+    NA_CHECK -->|No| API_GATE{API/Protocol<br>SPECIFIED or VAGUE?}
+
+    API_GATE -->|No| DONE([Phase 2 complete]):::success
+    API_GATE -->|Yes| REST_SUB[REST API Design Checklist]
+
+    REST_SUB --> RICH[Richardson Maturity Model<br>L0: flag as VAGUE<br>L1: resource URIs<br>L2: correct HTTP verbs<br>L3: HATEOAS noted if claimed]
+    RICH --> POSTEL[Postel's Law checks:<br>request validation,<br>response structure,<br>versioning, deprecation]
+    POSTEL --> HYRUM[Hyrum's Law flags:<br>field ordering, error text,<br>timing/perf, defaults]
+    HYRUM --> API_SPEC[API Spec Checklist - 12 items:<br>CRUD semantics, noun URIs,<br>versioning, auth, rate limits,<br>error schema, pagination,<br>filtering, size limits,<br>timeouts, idempotency, CORS]
+    API_SPEC --> ERR_RESP{Error response<br>schema consistent<br>across endpoints?}
+    ERR_RESP -->|Yes| DONE
+    ERR_RESP -->|Varies or unspecified| VAGUE_MARK[Mark API errors as VAGUE]:::gate
+    VAGUE_MARK --> DONE
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
+```
+
+## Phase 3: Hand-Waving Detection - Detail
+
+```mermaid
+flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L4[Quality Gate]:::gate
+        L5([Terminal]):::success
+    end
+
+    Start([Begin Phase 3]) --> SCAN_VAGUE[Scan for vague language:<br>'etc.', 'as needed', 'TBD',<br>'implementation detail',<br>'standard approach',<br>'straightforward',<br>'details omitted']
+
+    SCAN_VAGUE --> FOUND_VAGUE{Vague language<br>found?}
+    FOUND_VAGUE -->|Yes| FORMAT_VAGUE[Format each finding:<br>Vague #N / Loc / Text / Missing]
+    FOUND_VAGUE -->|No| ASSUMED
+    FORMAT_VAGUE --> ASSUMED
+
+    ASSUMED[Scan for assumed knowledge:<br>unspecified algorithms,<br>data structures, config values,<br>naming conventions]
+    ASSUMED --> FOUND_ASSUMED{Assumed knowledge<br>found?}
+    FOUND_ASSUMED -->|Yes| FLAG_ASSUMED[Flag each assumption]
+    FOUND_ASSUMED -->|No| MAGIC
+    FLAG_ASSUMED --> MAGIC
+
+    MAGIC[Scan for magic numbers:<br>unjustified buffer sizes,<br>timeouts, retry counts,<br>rate limits, thresholds]
+    MAGIC --> FOUND_MAGIC{Magic numbers<br>found?}
+    FOUND_MAGIC -->|Yes| FLAG_MAGIC[Flag each unjustified value]
+    FOUND_MAGIC -->|No| VALIDATE
+    FLAG_MAGIC --> VALIDATE
+
+    VALIDATE[Validate against FORBIDDEN rules]:::gate
+    VALIDATE --> F1{Any N/A<br>without<br>justification?}
+    F1 -->|Yes| BLOCK1[BLOCKED: violation]:::gate
+    F1 -->|No| F2{REST checklist<br>skipped when<br>API present?}
+    F2 -->|Yes| BLOCK2[BLOCKED: violation]:::gate
+    F2 -->|No| F3{'straightforward' or<br>'standard approach'<br>accepted as spec?}
+    F3 -->|Yes| BLOCK3[BLOCKED: violation]:::gate
+    F3 -->|No| F4{Vague spec accepted<br>that forces<br>implementer guessing?}
+    F4 -->|Yes| BLOCK4[BLOCKED: violation]:::gate
+    F4 -->|No| DONE([Phase 3 complete:<br>all findings compiled]):::success
+
+    BLOCK1 --> REVISIT([Return to fix])
+    BLOCK2 --> REVISIT
+    BLOCK3 --> REVISIT
+    BLOCK4 --> REVISIT
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
+```
+
+## Cross-Reference
+
+| Overview Node | Detail Diagram |
+|---|---|
+| Phase 2: Completeness Checklist | Phase 2 Detail (PRINCIPLES through MARK, NA_CHECK loop) |
+| REST API Design Checklist | Phase 2 Detail (REST_SUB through ERR_RESP) |
+| Phase 3: Hand-Waving Detection | Phase 3 Detail (SCAN_VAGUE through DONE) |
+| All gaps surfaced? No unjustified N/A? | Phase 3 Detail (VALIDATE through F4 FORBIDDEN checks) |
 
 ## Legend
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Symbol | Meaning |
+|--------|---------|
+| Rectangle | Process step |
+| Diamond | Decision point |
+| Stadium (rounded) | Terminal (start/end) |
+| Red (#ff6b6b) | Quality gate or BLOCKED violation |
+| Green (#51cf66) | Success terminal |

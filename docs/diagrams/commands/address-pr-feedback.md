@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/address-pr-feedback.md", "source_hash": "sha256:e102c6ca84f320b5c7a9f5839dfaace9f46a04f61135a687e77dcb29078c7928", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/address-pr-feedback.md","source_hash": "sha256:d81ff20cb5879aed40163e26fc258199ba7abb112b256b9d24967ccfb048b48f","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: address-pr-feedback
 
 Systematically address PR review comments by fetching threads, categorizing by status, and guiding fixes with explicit user approval.

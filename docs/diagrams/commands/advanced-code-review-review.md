@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/advanced-code-review-review.md", "source_hash": "sha256:0664215394000897cbb69d532d06433ebfeaad96df198fdbf06abb2a1046f1db", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/advanced-code-review-review.md","source_hash": "sha256:28dc11262c06dc748c1923eab470c9bf7145272ef5b9949e0677b4062b670684","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: advanced-code-review-review
 
 Phase 3 of advanced-code-review: Deep multi-pass code review that analyzes each file through security, correctness, quality, and polish passes, integrates previous item context, and generates structured findings.

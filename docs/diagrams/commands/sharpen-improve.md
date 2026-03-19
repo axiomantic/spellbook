@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/sharpen-improve.md", "source_hash": "sha256:a56b71ba1e28c090a6951a0b45cd5b93d65d13ca68242ae1a486cee9f2363a03", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/sharpen-improve.md","source_hash": "sha256:0cded3be42db7dfd10d70bd658de2c047c6b2c699648d6032d0870e1c4600600","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: sharpen-improve
 
 Rewrites ambiguous LLM prompts to eliminate guesswork. Runs an internal audit first, triages findings, asks clarifying questions when needed, applies sharpening patterns, and produces the improved prompt with a change log.

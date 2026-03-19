@@ -15,13 +15,14 @@ Optional items that are stale or missing produce warnings only.
 
 Usage:
     python3 scripts/check_diagram_freshness.py
+    python3 scripts/check_diagram_freshness.py --staged
     python3 scripts/check_diagram_freshness.py --json
     python3 scripts/check_diagram_freshness.py --include-optional
 """
 
 import argparse
-import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -38,6 +39,7 @@ from diagram_config import (
     MANDATORY_SKILLS,
     REPO_ROOT,
     SKILLS_DIR,
+    compute_structure_hash,
 )
 
 # ---------------------------------------------------------------------------
@@ -186,9 +188,13 @@ def discover_agents() -> list[SourceItem]:
 
 
 def compute_hash(filepath: Path) -> str:
-    """Compute SHA256 hex digest of a file's content."""
-    content = filepath.read_bytes()
-    return hashlib.sha256(content).hexdigest()
+    """Compute SHA256 hex digest of a file's heading structure.
+
+    Only markdown headings (after stripping YAML frontmatter) contribute
+    to the hash, so cosmetic edits like wording tweaks or frontmatter
+    changes do not trigger unnecessary diagram regeneration.
+    """
+    return compute_structure_hash(filepath)
 
 
 # ---------------------------------------------------------------------------
@@ -377,6 +383,73 @@ def format_json(results: list[CheckResult], include_optional: bool) -> str:
 # ---------------------------------------------------------------------------
 
 
+def get_staged_names() -> set[tuple[str, str]]:
+    """Get (kind, name) pairs for skills/commands/agents with staged changes.
+
+    Parses ``git diff --cached --name-only`` and maps each staged file path to
+    its corresponding skill, command, or agent name.
+
+    Returns a set of ``(kind, name)`` tuples where *kind* is one of
+    ``"skill"``, ``"command"``, or ``"agent"``.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=str(REPO_ROOT),
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return set()
+
+    names: set[tuple[str, str]] = set()
+    for line in result.stdout.strip().splitlines():
+        path = Path(line)
+        parts = path.parts
+
+        if not parts:
+            continue
+
+        # skills/<skill-name>/... -> ("skill", "<skill-name>")
+        if parts[0] == "skills" and len(parts) >= 2:
+            names.add(("skill", parts[1]))
+
+        # commands/<name>.md -> ("command", "<name>")
+        # commands/<name>/... -> ("command", "<name>")
+        elif parts[0] == "commands" and len(parts) >= 2:
+            if len(parts) == 2 and parts[1].endswith(".md"):
+                names.add(("command", Path(parts[1]).stem))
+            elif len(parts) >= 2:
+                names.add(("command", parts[1]))
+
+        # agents/<name>.md -> ("agent", "<name>")
+        elif parts[0] == "agents" and len(parts) >= 2:
+            if parts[1].endswith(".md"):
+                names.add(("agent", Path(parts[1]).stem))
+
+        # docs/diagrams/... -> also check corresponding source
+        # (if a diagram itself is staged, check its freshness too)
+        elif parts[0] == "docs" and len(parts) >= 4 and parts[1] == "diagrams":
+            kind_dir = parts[2]  # "skills", "commands", or "agents"
+            if kind_dir == "skills":
+                names.add(("skill", Path(parts[3]).stem))
+            elif kind_dir == "commands":
+                names.add(("command", Path(parts[3]).stem))
+            elif kind_dir == "agents":
+                names.add(("agent", Path(parts[3]).stem))
+
+    return names
+
+
+def filter_items_to_staged(items: list[SourceItem]) -> list[SourceItem]:
+    """Filter items to only those with staged changes."""
+    staged = get_staged_names()
+    if not staged:
+        return []
+    return [item for item in items if (item.kind, item.name) in staged]
+
+
 def stamp_stale(results: list[CheckResult], include_optional: bool) -> int:
     """Update source_hash metadata in stale diagram files without regenerating content.
 
@@ -397,23 +470,33 @@ def stamp_stale(results: list[CheckResult], include_optional: bool) -> int:
 
         prefix = "<!-- diagram-meta: "
         suffix = " -->"
-        if not first_line.startswith(prefix) or not first_line.endswith(suffix):
-            print(f"  SKIP {result.item.name}: no parseable metadata line")
-            continue
+        if first_line.startswith(prefix) and first_line.endswith(suffix):
+            # Update existing metadata line
+            json_str = first_line[len(prefix):-len(suffix)]
+            try:
+                meta = json.loads(json_str)
+            except (json.JSONDecodeError, ValueError):
+                print(f"  SKIP {result.item.name}: malformed metadata JSON")
+                continue
 
-        json_str = first_line[len(prefix):-len(suffix)]
-        try:
-            meta = json.loads(json_str)
-        except (json.JSONDecodeError, ValueError):
-            print(f"  SKIP {result.item.name}: malformed metadata JSON")
-            continue
-
-        meta["source_hash"] = f"sha256:{result.current_hash}"
-        new_first_line = f"{prefix}{json.dumps(meta, separators=(',', ': '))}{suffix}"
-        rest = lines[1] if len(lines) > 1 else ""
-        result.item.diagram_path.write_text(
-            new_first_line + "\n" + rest, encoding="utf-8"
-        )
+            meta["source_hash"] = f"sha256:{result.current_hash}"
+            new_first_line = f"{prefix}{json.dumps(meta, separators=(',', ': '))}{suffix}"
+            rest = lines[1] if len(lines) > 1 else ""
+            result.item.diagram_path.write_text(
+                new_first_line + "\n" + rest, encoding="utf-8"
+            )
+        else:
+            # No metadata line exists; prepend one
+            source_rel = str(result.item.source_path.relative_to(REPO_ROOT))
+            meta = {
+                "source": source_rel,
+                "source_hash": f"sha256:{result.current_hash}",
+                "generator": "stamp",
+            }
+            meta_line = f"{prefix}{json.dumps(meta, separators=(',', ': '))}{suffix}"
+            result.item.diagram_path.write_text(
+                meta_line + "\n" + content, encoding="utf-8"
+            )
         stamped += 1
         print(f"  \u2713 {result.item.name} stamped")
 
@@ -439,10 +522,19 @@ def main() -> int:
         action="store_true",
         help="Update source_hash in stale diagram files without regenerating content",
     )
+    parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="Only check diagrams for skills/commands/agents with staged changes",
+    )
     args = parser.parse_args()
 
     # Discover all source items
     items = discover_skills() + discover_commands() + discover_agents()
+
+    # When --staged, limit to items with staged changes
+    if args.staged:
+        items = filter_items_to_staged(items)
 
     if not items:
         if args.json:

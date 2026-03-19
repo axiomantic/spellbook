@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/sharpening-prompts/SKILL.md", "source_hash": "sha256:e75d293702c9deddb8d7bb97f410d2266bf1395f6e683485d263d1944d740236", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/sharpening-prompts/SKILL.md","source_hash": "sha256:8150e3b6eec1bfbf0ef7ec486bbc43989dd8f64529474886c4f3cb3193306c75","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: sharpening-prompts
 
 Audit or improve LLM prompts by systematically finding ambiguities that executors would fill with hallucinated assumptions.

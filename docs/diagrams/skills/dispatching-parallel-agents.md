@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/dispatching-parallel-agents/SKILL.md","source_hash": "sha256:74b000c012dccac3d8f599b8c199349e6e75994a8b37618f962220616edf027c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/dispatching-parallel-agents/SKILL.md","source_hash": "sha256:3c2dacdc17b5bd24f4b6a5f59616aafd28d86697a8555bfcf650d1594dc4f62a","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: dispatching-parallel-agents
 
 Decision and execution workflow for parallel subagent dispatch. Covers the independence gate, dispatch pattern, and merge verification protocol.

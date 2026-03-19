@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/test-bar.md", "source_hash": "sha256:99d00a4fe9c207aa02ea2c01eec265fe1b83d90cded10cf31b29f425f8bfc735", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/test-bar.md","source_hash": "sha256:1c84b3736826ba02e4845fc769000f31cdfb6726e83d96ed798d810cbd062f0e","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: test-bar
 
 Generate a floating QA test overlay for the current branch's UI changes. Analyzes branch diffs, builds a scenario matrix, creates a self-contained React overlay component with one-click scenario buttons, writes a manifest, and verifies compilation.

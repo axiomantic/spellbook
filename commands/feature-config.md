@@ -260,6 +260,7 @@ Store in `SESSION_CONTEXT.feature_essence`.
 <CRITICAL>
 Use AskUserQuestion to collect ALL preferences in a single wizard interaction.
 These preferences govern behavior for the ENTIRE session.
+Questions 5-7 are shown conditionally (Q6 only if Q5 != "none").
 </CRITICAL>
 
 ```markdown
@@ -300,6 +301,33 @@ Options:
 - Offer options (Recommended): Use finishing-a-development-branch skill
 - Create PR automatically: Push and create PR without asking
 - Just stop: Stop after implementation; you handle PR manually
+
+### Question 5: Dialectic Mode
+Header: "Validation style"
+Question: "How should design decisions and quality gates be validated?"
+
+Options:
+- None (Recommended): Standard review skills only
+- Roundtable: Multi-perspective archetype consensus (10 archetypes at design, 3 at gates)
+
+### Question 6: Dialectic Level
+Header: "Validation depth"
+Question: "Where should the dialectic be applied?"
+(Only shown if dialectic_mode != "none")
+
+Options:
+- Planning only: During design and planning phases
+- Planning + gates (Recommended): Also at quality gates after implementation
+- Full: Everywhere including discovery
+
+### Question 7: Token Enforcement
+Header: "Enforcement rigor"
+Question: "How strictly should workflow transitions be enforced?"
+
+Options:
+- Work-item level: Tokens gate work item start/complete only
+- Gate level (Recommended): Each quality gate requires a token
+- Every step: Every phase transition requires a token
 ```
 
 Store all preferences in `SESSION_PREFERENCES`.
@@ -400,7 +428,7 @@ Store confirmed tier in `SESSION_PREFERENCES.complexity_tier`.
 **Lightweight Research (SIMPLE path):** Inline research without Phase 1 subagent dispatch. Grep for relevant files, read key modules, confirm scope, then write a brief inline plan before jumping to `/feature-implement`.
 
 <FORBIDDEN>
-- Proceeding past 0.4 without all 4 preferences collected
+- Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
 - Running wizard questions before checking 0.5 continuation signals
 - Trusting session summary without artifact verification
 - Classifying complexity tier without running the bash heuristics
@@ -421,6 +449,8 @@ Before proceeding, verify:
 - [ ] Motivation clarified (WHY)
 - [ ] Feature essence clarified (WHAT)
 - [ ] All 4 workflow preferences collected and stored in SESSION_PREFERENCES
+- [ ] Dialectic mode and level selected (if dialectic != none)
+- [ ] Token enforcement level selected
 - [ ] Refactoring mode detected if applicable
 - [ ] Complexity tier classified via mechanical heuristics and confirmed by user
 - [ ] Tier routing determined

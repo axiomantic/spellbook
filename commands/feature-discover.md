@@ -35,7 +35,7 @@ Required: Research was done by subagent (not in main context)
 ## Invariant Principles
 
 1. **Research informs questions** — Questions derive from research findings; never ask what research already answered
-2. **100% completeness required** — Proceed to design only when all 11 validation functions pass; no exceptions without explicit bypass
+2. **100% completeness required** — Proceed to design only when all 12 validation functions pass; no exceptions without explicit bypass
 3. **Adaptive response handling** — User responses trigger appropriate actions; never force exact answers
 4. **Understanding document is the gate** — Devil's advocate reviews the understanding document; approval unlocks design
 
@@ -53,8 +53,76 @@ Use research findings to generate informed questions. Apply ARH pattern to all d
 | CLARIFICATION    | "what do you mean", "can you explain", "?"     | Rephrase question with more context, examples, re-ask           |
 | SKIP             | "skip", "not relevant", "doesn't apply"        | Mark as out-of-scope, add to explicit_exclusions, continue      |
 | USER_ABORT       | "stop", "cancel", "exit"                       | Save current state, exit cleanly with resume instructions       |
+| SCOPE_EXPANSION | "include X in scope", "let's also", "and while we're at it", "we should also", user adds new workstream | Defer to end of current category, then run Scope Drift Check |
 
 Apply to ALL discovery questions in Phase 1.5.
+
+### Scope Drift Check
+
+<CRITICAL>
+This mechanic detects when discovery answers have expanded scope beyond the classified tier.
+Referenced from: Phase 1.5.2.5, Post-1.6, and inline via ARH during wizard.
+</CRITICAL>
+
+**Drift Signals:**
+
+| Signal | Detection | Example |
+|--------|-----------|---------|
+| Scope expansion answer | User adds new functionality not in original request | "We should also handle X" |
+| New workstream implied | Answer implies a parallel track of work | "And while we're at it, let's refactor Y" |
+| Structural change escalation | Answers reveal new modules/schemas needed | "We'll need a new database table for this" |
+| File count escalation | Integration points exceed STANDARD threshold | Discovery reveals 10+ files affected |
+
+**Evaluation:**
+
+```typescript
+function evaluate_scope_drift(): boolean {
+  const tier = SESSION_PREFERENCES.complexity_tier;
+  const signals = detect_drift_signals(discovery_answers);
+
+  if (signals.length === 0) return true;
+
+  // Check if drift was already handled (upgrade or override)
+  if (SESSION_PREFERENCES.scope_drift_handled) return true;
+
+  // Check if signals push beyond current tier
+  if (tier === "STANDARD") {
+    const complex_indicators = signals.filter(s =>
+      s.type === "new_workstream" ||
+      s.type === "structural_escalation" ||
+      (s.type === "file_count_escalation" && s.estimated_files > 15)
+    );
+    if (complex_indicators.length >= 2) return false;
+  }
+
+  return true;
+}
+```
+
+**When drift detected:**
+
+1. STOP discovery wizard
+2. Present drift analysis to user:
+   ```
+   Scope Drift Detected
+
+   Original tier: STANDARD
+   Drift signals:
+   - [signal 1 description]
+   - [signal 2 description]
+
+   OPTIONS:
+   A) Upgrade to COMPLEX (triggers work item decomposition)
+   B) Trim scope to stay within STANDARD
+   C) Override: proceed as STANDARD (accept risk)
+
+   Your choice: ___
+   ```
+3. If upgrade to COMPLEX:
+   - Run `forge_project_init` to initialize work item tracking
+   - Rewrite understanding document to reflect expanded scope
+   - Continue discovery with COMPLEX tier constraints
+4. If user overrides: document override in understanding doc, proceed with risk notation
 
 ### 1.5.0 Disambiguation Session
 
@@ -215,6 +283,15 @@ Based on research findings and disambiguation, I have questions in 7 categories.
 
 Progress tracking: "[Category N/7]: X/Y questions answered"
 
+### 1.5.2.5 Post-Discovery Scope Drift Check
+
+<CRITICAL>
+After completing the discovery wizard, run the Scope Drift Check with all accumulated answers.
+This catches scope expansion that occurred gradually across multiple questions.
+</CRITICAL>
+
+Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol from the Scope Drift Check section above.
+
 ### 1.5.3 Build Glossary
 
 **Process:**
@@ -292,7 +369,7 @@ Build complete `DesignContext` object from all prior phases.
 - No "TBD" or "unknown" strings
 - All arrays with content or explicit "N/A"
 
-### 1.5.5 Completeness Checklist (11 Validation Functions)
+### 1.5.5 Completeness Checklist (12 Validation Functions)
 
 ```typescript
 // FUNCTION 1: Research quality validated
@@ -370,6 +447,21 @@ function no_tbd_items(): boolean {
   const filtered = contextJSON.replace(/"confidence":\s*"[^"]*"/g, "");
   return !forbiddenTerms.some((regex) => regex.test(filtered));
 }
+
+// FUNCTION 12: Scope consistent with tier
+function scope_consistent_with_tier(): boolean {
+  const tier = SESSION_PREFERENCES.complexity_tier;
+  const drift_signals = detect_drift_signals(discovery_answers);
+
+  // No signals = consistent
+  if (drift_signals.length === 0) return true;
+
+  // Check if drift was already handled (upgrade or override)
+  if (SESSION_PREFERENCES.scope_drift_handled) return true;
+
+  // Unhandled drift = inconsistent
+  return false;
+}
 ```
 
 **SCORE CALCULATION:**
@@ -378,7 +470,7 @@ function no_tbd_items(): boolean {
 const checked_count = Object.values(validation_results).filter(
   (v) => v === true,
 ).length;
-const completeness_score = (checked_count / 11) * 100;
+const completeness_score = (checked_count / 12) * 100;
 ```
 
 **DISPLAY FORMAT:**
@@ -397,8 +489,9 @@ Completeness Checklist:
 [✓/✗] Glossary complete for all domain terms
 [✓/✗] All assumptions validated with user
 [✓/✗] No "we'll figure it out later" items remain
+[✓/✗] Scope consistent with classified tier
 
-Completeness Score: [X]% ([N]/11 items complete)
+Completeness Score: [X]% ([N]/12 items complete)
 ```
 
 **GATE BEHAVIOR:**
@@ -560,6 +653,12 @@ D) Proceed to design (accept identified risks)
 Your choice: ___
 ```
 
+### Post-1.6 Scope Drift Recheck
+
+After devil's advocate review, re-run the Scope Drift Check. The devil's advocate may have surfaced scope expansions not visible during initial discovery.
+
+Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol.
+
 <FORBIDDEN>
 - Asking questions that Phase 1 research already answered
 - Proceeding to design with completeness_score < 100% without explicit user bypass
@@ -584,7 +683,7 @@ Before proceeding to Phase 2, verify:
 - [ ] 7-category discovery questions generated and answered
 - [ ] Glossary built
 - [ ] design_context synthesized (no null values, no TBD)
-- [ ] Completeness Score = 100% (11/11 validation functions)
+- [ ] Completeness Score = 100% (12/12 validation functions)
 - [ ] Understanding Document created and saved
 - [ ] Devil's advocate subagent DISPATCHED (not done in main context)
 - [ ] User approved Understanding Document

@@ -301,6 +301,7 @@ class TestRoundtableEndToEnd:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
         )
 
         assert "dialogue" in result
@@ -323,6 +324,7 @@ class TestRoundtableEndToEnd:
             feature_name="test",
             stage="DISCOVER",
             artifact_path=str(artifact_path),
+            gate="code_review",
         )
 
         # IMPLEMENT stage
@@ -330,6 +332,7 @@ class TestRoundtableEndToEnd:
             feature_name="test",
             stage="IMPLEMENT",
             artifact_path=str(artifact_path),
+            gate="code_review",
         )
 
         # Archetypes should differ
@@ -368,7 +371,9 @@ class TestRoundtableEndToEnd:
         result = process_roundtable_response(
             response=response,
             stage="IMPLEMENT",
-            iteration=1
+            gate="test_suite",
+            feature_name="test-feature",
+            iteration=1,
         )
 
         assert result["consensus"] is True
@@ -408,7 +413,9 @@ class TestRoundtableEndToEnd:
         result = process_roundtable_response(
             response=response,
             stage="IMPLEMENT",
-            iteration=2
+            gate="code_review",
+            feature_name="test-feature",
+            iteration=2,
         )
 
         assert result["consensus"] is False

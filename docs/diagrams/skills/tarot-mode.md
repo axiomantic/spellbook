@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/tarot-mode/SKILL.md", "source_hash": "sha256:1bfa23effbfa5e246753e18803622e0d4811105bbddf7c2e966244c03aa4a1e6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/tarot-mode/SKILL.md","source_hash": "sha256:db661c982b20828479d99a12c22e3268eee9b43455ecd503ac1c0802653072f1","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: tarot-mode
 
 Roundtable dialogue mode where ten tarot archetypes collaborate on tasks with embedded instruction-engineering, emotional stakes, and NegativePrompt patterns.

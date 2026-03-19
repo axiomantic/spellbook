@@ -6,140 +6,117 @@ Wisdom extraction agent that distills enduring lessons from completed projects. 
 
 ```mermaid
 flowchart TD
-    Start([Start: Project\nComplete])
-    Invoke[/Honor-Bound Invocation/]
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+        L5[Subagent Dispatch]:::subagent
+    end
 
-    ReadStory["Read Entire Story:\nStart to Finish"]
-    IdentifyGoal["Identify Initial Goal"]
-    IdentifyObstacles["Identify Obstacles\nEncountered"]
-    FindTurning["Find Turning Points"]
-    NoteFinalOutcome["Note Final Outcome"]
+    Start([Project Complete]) --> Honor[/"Honor-Bound Invocation:<br>Commit to finding ONE lesson"/]
+    Honor --> Ingest[/"Receive Inputs:<br>project_history, critiques,<br>resolutions, outcomes"/]
 
-    SearchRecurring["Search Recurring\nThemes"]
-    WhatWorked["What Worked\nConsistently?"]
-    WhatFailed["What Failed\nConsistently?"]
-    WhatSurprised["What Surprised\nEveryone?"]
+    Ingest --> A1
 
-    DistillOne["Distill: ONE\nKey Lesson"]
-    PreventQuestion{"Would This Prevent\nHardest Problems?"}
-    RefineLesson["Refine to\nNon-Obvious Truth"]
+    subgraph Analysis ["Phase 1: Analysis"]
+        A1["Read entire story<br>start to finish"]
+        A2["Identify initial goal"]
+        A3["Identify obstacles"]
+        A4["Identify turning points"]
+        A5["Identify final outcome"]
+        A1 --> A2 --> A3 --> A4 --> A5
+    end
 
-    SpecificGate{"Specific Enough\nto Act On?"}
-    MakeSpecific["Add Concrete\nGuidance"]
+    A5 --> P1
 
-    EssenceGate{"Captures Essence,\nNot Surface?"}
-    DeepDig["Dig Deeper Into\nRoot Pattern"]
+    subgraph PatternSearch ["Phase 2: Pattern Search"]
+        P1["Search recurring themes"]
+        P2["What worked/failed<br>consistently?"]
+        P3["What surprised everyone?"]
+        P1 --> P2 --> P3
+    end
 
-    ContextFreeGate{"Understandable\nWithout Context?"}
-    Simplify["Simplify for\nExternal Reader"]
+    P3 --> FractalDecision{Use fractal<br>exploration?}
+    FractalDecision -- "Yes (optional)" --> Fractal["Invoke fractal-thinking<br>intensity: pulse<br>seed: deepest lesson"]:::subagent
+    FractalDecision -- "No" --> D1
+    Fractal --> D1
 
-    MemorableGate{"Is It\nMemorable?"}
-    Sharpen["Sharpen the\nPhrasing"]
+    subgraph Distillation ["Phase 3: Distillation"]
+        D1["ONE thing to tell<br>future developers?"]
+        D2["What would have prevented<br>the hardest problems?"]
+        D3["What non-obvious truth<br>did this project reveal?"]
+        D1 --> D2 --> D3
+    end
 
-    GenDoctrine["Generate Doctrine\nEntry"]
-    GenTurningPoint["Generate Turning\nPoint Narrative"]
-    GenEncyclopedia["Generate Encyclopedia\nEntry"]
+    D3 --> PreventGate{Prevents<br>hardest problems?}
+    PreventGate -- "No" --> RefineLesson["Refine to<br>non-obvious truth"]
+    RefineLesson --> D1
+    PreventGate -- "Yes" --> MultiCheck{Multiple insights<br>remaining?}
+    MultiCheck -- "Yes: not distilled enough" --> D1
+    MultiCheck -- "No: single insight" --> R1
 
-    Done([End: Wisdom\nPreserved])
+    subgraph Reflection ["Phase 4: Reflection Quality Gates"]
+        R1{"Specific enough<br>to act on?"}:::gate
+        MakeSpecific["Add concrete guidance"]
+        R1 -- "No" --> MakeSpecific --> R1
 
-    Start --> Invoke
-    Invoke --> ReadStory
-    ReadStory --> IdentifyGoal
-    IdentifyGoal --> IdentifyObstacles
-    IdentifyObstacles --> FindTurning
-    FindTurning --> NoteFinalOutcome
+        R2{"Captures essence,<br>not surface?"}:::gate
+        DeepDig["Dig deeper into<br>root pattern"]
+        R1 -- "Yes" --> R2
+        R2 -- "No" --> DeepDig --> R2
 
-    NoteFinalOutcome --> SearchRecurring
-    SearchRecurring --> WhatWorked
-    WhatWorked --> WhatFailed
-    WhatFailed --> WhatSurprised
+        R3{"Understandable<br>without context?"}:::gate
+        Simplify["Simplify for<br>external reader"]
+        R2 -- "Yes" --> R3
+        R3 -- "No" --> Simplify --> R3
 
-    WhatSurprised --> DistillOne
-    DistillOne --> PreventQuestion
-    PreventQuestion -->|No| RefineLesson
-    RefineLesson --> DistillOne
-    PreventQuestion -->|Yes| SpecificGate
+        R4{"Memorable?"}:::gate
+        Sharpen["Sharpen phrasing"]
+        R3 -- "Yes" --> R4
+        R4 -- "No" --> Sharpen --> R4
+    end
 
-    SpecificGate -->|No| MakeSpecific
-    MakeSpecific --> SpecificGate
-    SpecificGate -->|Yes| EssenceGate
+    R4 -- "Yes" --> O1
 
-    EssenceGate -->|No| DeepDig
-    DeepDig --> EssenceGate
-    EssenceGate -->|Yes| ContextFreeGate
+    subgraph Output ["Phase 5: Output Generation"]
+        O1["Generate Doctrine entry:<br>Wisdom + Turning Point +<br>Applied Guidance + Origin"]
+        O2["Generate Encyclopedia entry:<br>Pattern Name + Doctrine +<br>When + What to do + Origin"]
+        O1 --> O2
+    end
 
-    ContextFreeGate -->|No| Simplify
-    Simplify --> ContextFreeGate
-    ContextFreeGate -->|Yes| MemorableGate
+    O2 --> Done([Wisdom Preserved]):::success
 
-    MemorableGate -->|No| Sharpen
-    Sharpen --> MemorableGate
-    MemorableGate -->|Yes| GenDoctrine
-
-    GenDoctrine --> GenTurningPoint
-    GenTurningPoint --> GenEncyclopedia
-    GenEncyclopedia --> Done
-
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Invoke fill:#4CAF50,color:#fff
-    style ReadStory fill:#2196F3,color:#fff
-    style IdentifyGoal fill:#2196F3,color:#fff
-    style IdentifyObstacles fill:#2196F3,color:#fff
-    style FindTurning fill:#2196F3,color:#fff
-    style NoteFinalOutcome fill:#2196F3,color:#fff
-    style SearchRecurring fill:#2196F3,color:#fff
-    style WhatWorked fill:#2196F3,color:#fff
-    style WhatFailed fill:#2196F3,color:#fff
-    style WhatSurprised fill:#2196F3,color:#fff
-    style DistillOne fill:#2196F3,color:#fff
-    style RefineLesson fill:#2196F3,color:#fff
-    style MakeSpecific fill:#2196F3,color:#fff
-    style DeepDig fill:#2196F3,color:#fff
-    style Simplify fill:#2196F3,color:#fff
-    style Sharpen fill:#2196F3,color:#fff
-    style GenDoctrine fill:#2196F3,color:#fff
-    style GenTurningPoint fill:#2196F3,color:#fff
-    style GenEncyclopedia fill:#2196F3,color:#fff
-    style PreventQuestion fill:#FF9800,color:#fff
-    style SpecificGate fill:#f44336,color:#fff
-    style EssenceGate fill:#f44336,color:#fff
-    style ContextFreeGate fill:#f44336,color:#fff
-    style MemorableGate fill:#f44336,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 ```
 
 ## Legend
 
 | Color | Meaning |
 |-------|---------|
-| Green (#4CAF50) | Skill invocation / start-end |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Blue (`#4a9eff`) | Subagent dispatch |
+| Red (`#ff6b6b`) | Quality gate |
+| Green (`#51cf66`) | Success terminal |
+| Default | Process / action |
 
 ## Cross-Reference
 
 | Node | Source Reference |
-|------|----------------|
-| Honor-Bound Invocation | Lines 14-15: Honor pledge before distillation |
-| Read Entire Story | Lines 54: Analysis - read start to finish |
-| Identify Initial Goal | Lines 55: Analysis step 1 |
-| Identify Obstacles | Lines 56: Analysis step 2 |
-| Find Turning Points | Lines 57: Analysis step 3 |
-| Note Final Outcome | Lines 58: Analysis step 4 |
-| Search Recurring Themes | Lines 62: Pattern search phase |
-| What Worked Consistently? | Lines 64: Pattern search question |
-| What Failed Consistently? | Lines 65: Pattern search question |
-| What Surprised Everyone? | Lines 66: Pattern search question |
-| Distill: ONE Key Lesson | Lines 70-71: Distillation - one thing to tell future devs |
-| Would This Prevent Hardest Problems? | Lines 72: Distillation question |
-| Specific Enough to Act On? | Lines 78: Reflection check 1 |
-| Captures Essence, Not Surface? | Lines 79: Reflection check 2 |
-| Understandable Without Context? | Lines 80: Reflection check 3 |
-| Is It Memorable? | Lines 81: Reflection check 4 |
-| Generate Doctrine Entry | Lines 87-109: Doctrine format output |
-| Generate Turning Point Narrative | Lines 94-98: Turning point section |
-| Generate Encyclopedia Entry | Lines 113-123: Encyclopedia entry format |
+|------|-----------------|
+| Honor-Bound Invocation | Lines 14-15: pledge before distillation |
+| Receive Inputs | Lines 33-38: project_history, critiques, resolutions, outcomes |
+| Phase 1: Analysis | Lines 55-61: 4-question story read |
+| Phase 2: Pattern Search | Lines 63-68: recurring themes, worked/failed, surprises |
+| Fractal exploration | Line 70: optional fractal-thinking, intensity pulse |
+| Phase 3: Distillation | Lines 72-76: three distillation questions |
+| Prevents hardest problems? | Line 74: key distillation filter |
+| Multiple insights remaining? | Lines 50-51, 131: ONE key lesson invariant |
+| Phase 4: Reflection gates | Lines 78-83: specific, essential, context-free, memorable |
+| Doctrine output | Lines 90-112: Doctrine format |
+| Encyclopedia output | Lines 116-126: Encyclopedia entry format |
 
 ## Agent Content
 

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-research.md","source_hash": "sha256:3766bf90ad3d2728d3ebfdbe920141b815021ec58cd881ae93e44ffcc1e55db1","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-research.md","source_hash": "sha256:26b944ed9044b4500b7aa4af6b3b60d9604582fc7f4ad9ec22227dc97c189f4f","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: feature-research
 
 Phase 1 of develop: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.

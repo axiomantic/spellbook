@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/fact-check-verify.md", "source_hash": "sha256:69bd9dd391d25f57505a8cd405285372bb3c3b0ae01d9bc1e09bff99c8a6c49e", "generated_at": "2026-03-09T10:30:36Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-verify.md","source_hash": "sha256:4e23e42b8b6053bc8e6563d4429da8f2a9971584d11efc3a5b129878167f01e9","generated_at": "2026-03-09T10:30:36Z","generator": "generate_diagrams.py"} -->
 # Diagram: fact-check-verify
 
 Now I have the full picture. Here are the diagrams:

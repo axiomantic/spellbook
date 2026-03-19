@@ -203,9 +203,9 @@ async function onSessionIdle(context: PluginContext): Promise<void> {
     token?: string;
   }>(client, 'forge_roundtable_convene', {
     feature_name: currentForgeState.feature_name,
-    current_token: currentForgeState.token,
     stage: currentForgeState.stage,
-    artifacts: stageArtifacts.paths,
+    artifact_path: stageArtifacts.paths[0],
+    gate: 'stage_validation',
   });
 
   if (!roundtableResult) {

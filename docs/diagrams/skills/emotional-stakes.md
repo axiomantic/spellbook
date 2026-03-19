@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/emotional-stakes/SKILL.md", "source_hash": "sha256:5fa4ce5781eb58d34bd38ded7ed48eb6e62d9242b2f2dfc9ea397b8253ccb196", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/emotional-stakes/SKILL.md","source_hash": "sha256:6ecd30cc0b23d96a20f57d345b5ac66cf100b3f3b8565de4e73bdac41f19d66f","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: emotional-stakes
 
 Workflow for applying emotional stakes framing to substantive tasks. Selects a professional persona based on task type, calibrates stakes to risk level, and optionally integrates a soul persona from fun-mode.

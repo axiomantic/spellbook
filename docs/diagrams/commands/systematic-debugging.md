@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/systematic-debugging/systematic-debugging.md", "source_hash": "sha256:bbba218b60e4cd57d0a8a26d61ce08fe793c047f8fb3c0219bdcdb373c51c65d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/systematic-debugging/systematic-debugging.md","source_hash": "sha256:77e3103388f511af8dde5e39e5798767ede466b4da3c4b1ce600fd897d8fc786","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: systematic-debugging
 
 4-phase root cause debugging methodology. Enforces the iron law: no fixes without root cause investigation first. Phases: root cause investigation, pattern analysis, hypothesis and testing (with isolated-testing and verifying-hunches sub-skills), and implementation with a 3-fix circuit breaker that escalates to architectural review.

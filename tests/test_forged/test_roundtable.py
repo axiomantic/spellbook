@@ -18,6 +18,7 @@ The roundtable system uses tarot archetypes to validate stage completion:
 import pytest
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 
 # =============================================================================
@@ -531,6 +532,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -548,6 +550,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -567,6 +570,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -584,6 +588,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician", "Hermit"],
         )
 
@@ -601,6 +606,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -619,6 +625,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -637,6 +644,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -650,6 +658,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path="/nonexistent/path/design.md",
+            gate="code_review",
             archetypes=["Magician"],
         )
 
@@ -670,6 +679,7 @@ class TestRoundtableConvene:
                 feature_name="test-feature",
                 stage="INVALID_STAGE",
                 artifact_path=str(artifact_path),
+                gate="code_review",
                 archetypes=["Magician"],
             )
 
@@ -687,6 +697,7 @@ class TestRoundtableConvene:
             feature_name="test-feature",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=None,
         )
 
@@ -1047,6 +1058,7 @@ Use established libraries and follow OWASP guidelines.
             feature_name="user-auth",
             stage="DESIGN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician", "Hierophant", "Justice"],
         )
 
@@ -1072,6 +1084,7 @@ Use established libraries and follow OWASP guidelines.
             feature_name="test-feature",
             stage="PLAN",
             artifact_path=str(artifact_path),
+            gate="code_review",
             archetypes=["Magician", "Hermit", "Fool"],
         )
 
@@ -1085,3 +1098,233 @@ Use established libraries and follow OWASP guidelines.
 
             assert "binding_decision" in debate_result
             assert debate_result["moderator"] == "Justice"
+
+
+class TestValidGates:
+    """Tests for VALID_GATES constant."""
+
+    def test_valid_gates_contains_expected_gates(self):
+        """VALID_GATES must contain exactly the 5 quality gates."""
+        from spellbook.forged.models import VALID_GATES
+
+        expected = [
+            "implementation_completion",
+            "code_review",
+            "fact_checking",
+            "green_mirage_audit",
+            "test_suite",
+            "stage_validation",
+        ]
+        assert VALID_GATES == expected
+
+    def test_valid_gates_is_list(self):
+        """VALID_GATES must be a list (not a set or tuple)."""
+        from spellbook.forged.models import VALID_GATES
+
+        assert isinstance(VALID_GATES, list)
+
+
+class TestRoundtableGateParameter:
+    """Tests for required gate parameter on roundtable functions."""
+
+    def test_roundtable_convene_includes_gate_in_result(self, tmp_path):
+        """roundtable_convene must include gate in its result dict."""
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
+
+        artifact_path = tmp_path / "design.md"
+        write_artifact(str(artifact_path), "# Design Document")
+
+        result = roundtable_convene(
+            feature_name="test-feature",
+            stage="IMPLEMENT",
+            artifact_path=str(artifact_path),
+            gate="code_review",
+        )
+
+        assert "gate" in result
+        assert result["gate"] == "code_review"
+
+    def test_process_roundtable_response_includes_gate_in_result(self):
+        """process_roundtable_response must include gate in its result dict."""
+        from spellbook.forged.roundtable import process_roundtable_response
+
+        response = """
+        **Justice**: All looks good.
+
+        Verdict: APPROVE
+        """
+
+        result = process_roundtable_response(
+            response=response,
+            stage="IMPLEMENT",
+            iteration=1,
+            gate="test_suite",
+            feature_name="test-feature",
+        )
+
+        assert "gate" in result
+        assert result["gate"] == "test_suite"
+
+    def test_process_roundtable_response_records_gate_on_consensus(self, tmp_path):
+        """process_roundtable_response auto-records gate completion on consensus."""
+        from spellbook.forged.roundtable import process_roundtable_response
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        response = """
+        **Justice**: All looks good.
+
+        Verdict: APPROVE
+        """
+
+        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = get_forged_connection(str(db_path))
+            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
+                mock_pp.return_value = "/test/project"
+
+                result = process_roundtable_response(
+                    response=response,
+                    stage="IMPLEMENT",
+                    iteration=1,
+                    gate="code_review",
+                    feature_name="test-feature",
+                )
+
+        assert result["consensus"] is True
+
+        # Verify gate was recorded in DB
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT feature_name, gate, consensus FROM gate_completions WHERE feature_name = ?",
+            ("test-feature",),
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row == ("test-feature", "code_review", 1)
+
+
+# =============================================================================
+# Track 1: Archetype Subset Mode Tests
+# =============================================================================
+
+
+class TestArchetypeSubsetMode:
+    """Tests for 3-archetype fast mode at quality gates."""
+
+    def test_convene_with_explicit_3_archetypes(self, tmp_path):
+        """roundtable_convene accepts explicit 3-archetype list."""
+        from spellbook.forged.roundtable import roundtable_convene
+
+        artifact = tmp_path / "artifact.md"
+        artifact.write_text("# Test artifact\nSome content")
+
+        result = roundtable_convene(
+            feature_name="test-feature",
+            stage="IMPLEMENT",
+            artifact_path=str(artifact),
+            gate="code_review",
+            archetypes=["Magician", "Hierophant", "Justice"],
+        )
+
+        assert result["archetypes"] == ["Magician", "Hierophant", "Justice"]
+        assert "Magician" in result["dialogue"]
+        assert "Hierophant" in result["dialogue"]
+        assert "Justice" in result["dialogue"]
+        # Should NOT include other archetypes
+        assert "Priestess" not in result["dialogue"]
+        assert "Fool" not in result["dialogue"]
+
+    def test_convene_with_invalid_archetype_name(self, tmp_path):
+        """roundtable_convene silently ignores invalid archetype names."""
+        from spellbook.forged.roundtable import roundtable_convene
+
+        artifact = tmp_path / "artifact.md"
+        artifact.write_text("# Test artifact\nSome content")
+
+        result = roundtable_convene(
+            feature_name="test-feature",
+            stage="IMPLEMENT",
+            artifact_path=str(artifact),
+            gate="code_review",
+            archetypes=["Magician", "InvalidName", "Justice"],
+        )
+
+        # Invalid names are silently filtered in prompt building
+        assert result["archetypes"] == ["Magician", "InvalidName", "Justice"]
+        assert "Magician" in result["dialogue"]
+        assert "Justice" in result["dialogue"]
+
+    def test_convene_defaults_to_stage_archetypes_when_none(self, tmp_path):
+        """roundtable_convene uses stage defaults when archetypes=None."""
+        from spellbook.forged.roundtable import roundtable_convene
+
+        artifact = tmp_path / "artifact.md"
+        artifact.write_text("# Test artifact\nSome content")
+
+        result = roundtable_convene(
+            feature_name="test-feature",
+            stage="IMPLEMENT",
+            artifact_path=str(artifact),
+            gate="code_review",
+            archetypes=None,
+        )
+
+        # IMPLEMENT defaults: Magician, Hermit, Hierophant, Justice
+        assert result["archetypes"] == ["Magician", "Hermit", "Hierophant", "Justice"]
+
+    def test_gate_subset_constant_exists(self):
+        """GATE_ARCHETYPES constant defines 3-archetype subsets for gates."""
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
+
+        assert isinstance(GATE_ARCHETYPES, dict)
+        # Each gate should have exactly 3 archetypes
+        for gate_name, archetype_list in GATE_ARCHETYPES.items():
+            assert len(archetype_list) == 3, (
+                f"Gate '{gate_name}' has {len(archetype_list)} archetypes, expected 3"
+            )
+            # All archetypes must be valid
+            from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
+            for arch in archetype_list:
+                assert arch in ROUNDTABLE_ARCHETYPES, (
+                    f"Gate '{gate_name}' references unknown archetype '{arch}'"
+                )
+
+    def test_get_gate_archetypes_returns_subset(self):
+        """get_gate_archetypes returns 3-archetype subset for known gates."""
+        from spellbook.forged.roundtable import get_gate_archetypes
+
+        result = get_gate_archetypes("code_review")
+        assert len(result) == 3
+        assert all(isinstance(a, str) for a in result)
+
+    def test_get_gate_archetypes_unknown_gate_returns_default(self):
+        """get_gate_archetypes returns default subset for unknown gates."""
+        from spellbook.forged.roundtable import get_gate_archetypes
+
+        result = get_gate_archetypes("unknown_gate")
+        assert len(result) == 3
+        # Default should include Justice (arbiter)
+        assert "Justice" in result
+
+    def test_gate_archetypes_all_include_justice(self):
+        """Every gate archetype subset must include Justice as arbiter."""
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
+
+        for gate_name, archetype_list in GATE_ARCHETYPES.items():
+            assert "Justice" in archetype_list, (
+                f"Gate '{gate_name}' missing Justice (required arbiter)"
+            )
+
+    def test_gate_archetypes_covers_all_valid_gates(self):
+        """GATE_ARCHETYPES must have an entry for every VALID_GATE."""
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
+        from spellbook.forged.models import VALID_GATES
+
+        for gate in VALID_GATES:
+            assert gate in GATE_ARCHETYPES, (
+                f"VALID_GATE '{gate}' missing from GATE_ARCHETYPES"
+            )

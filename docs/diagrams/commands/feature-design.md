@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-design.md","source_hash": "sha256:0b533cefb43e92ca67a9629ff71f1148b9a44f638f3563b7b102664d4869b1ec","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-design.md","source_hash": "sha256:3cbbaf74694aac56ddffa226d48ef3123b67d7518ee6d7cbb369b9d1ef09837c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: feature-design
 
 Phase 2 of develop: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.

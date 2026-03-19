@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/using-lsp-tools/SKILL.md", "source_hash": "sha256:761e585ed244000f52b4a794a7b8330ee36c45418327906680ae1fb89f8b0bdd", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/using-lsp-tools/SKILL.md","source_hash": "sha256:d57ef124a1ee32fd62f91e6491a86e2803aed5c67ab22ca30ca6b62369d38ebe","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: using-lsp-tools
 
 Decision protocol for choosing LSP semantic tools versus text-based search, with fallback handling and workflow patterns for exploration, refactoring, and type debugging.

@@ -8,8 +8,6 @@ Detects tests that pass but do not actually verify behavior: tautological assert
 
 ## Workflow Diagram
 
-Now I have all the source material. Let me construct the diagrams.
-
 ## Overview: Auditing Green Mirage Workflow
 
 ```mermaid
@@ -54,12 +52,15 @@ flowchart TD
 
     VERDICT{All assertions<br>PASS?}:::gate
     VERDICT -->|PASS: All KILLED +<br>Level 4+ + no Pattern 10| DONE
-    VERDICT -->|FAIL: SURVIVED or<br>Level 2 or Pattern 10| REWORK[Return to fix phase<br>with required changes]
+    VERDICT -->|FAIL: SURVIVED or<br>Level 2 or Pattern 10| RETRY_Q{3 consecutive FAILs<br>on same assertion?}
+    RETRY_Q -->|No| REWORK[List required changes,<br>return to fix author]
+    RETRY_Q -->|Yes| HALT([HALT: Report to user<br>Circuit breaker tripped]):::fail
     REWORK --> P7
 
     classDef subagent fill:#4a9eff,color:#fff
     classDef gate fill:#ff6b6b,color:#fff
     classDef success fill:#51cf66,color:#fff
+    classDef fail fill:#ff6b6b,color:#fff
 ```
 
 ---
@@ -389,7 +390,10 @@ flowchart TD
         ALL_Q -->|All KILLED +<br>Level 4+ +<br>no Pattern 10| PASS_OUT
     end
 
-    FAIL_OUT([FAIL: List required changes<br>Return to fix phase]):::fail
+    FAIL_OUT{3 consecutive FAILs<br>on same assertion?}
+    FAIL_OUT -->|No| REWORK([FAIL: List required changes,<br>return to fix author]):::fail
+    FAIL_OUT -->|Yes| HALT([HALT: Report to user<br>Circuit breaker tripped]):::fail
+    REWORK --> START
     PASS_OUT([PASS: Fixes verified<br>Audit complete]):::success
 
     classDef subagent fill:#4a9eff,color:#fff

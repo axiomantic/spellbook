@@ -8,86 +8,155 @@ Designs systems with explicit states, transitions, and multi-step processes usin
 
 ## Workflow Diagram
 
-Designs systems with explicit states, transitions, and multi-step flows. Follows a structured process from state identification through validation, producing Mermaid state diagrams and transition tables. Enforces invariants like named triggers, mutually exclusive guards, and first-class error states.
+This skill is relatively compact — a single-phase workflow design process without subagent dispatches or complex branching. One diagram will suffice.
+
+## Overview: Designing Workflows Skill
 
 ```mermaid
 flowchart TD
-    Start([Start: Process Description]) --> Analysis
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal]):::success
+        L4[/Quality Gate/]:::gate
+    end
 
-    Analysis["Analyze Business Context"]:::command --> P1
-    P1["Phase 1: State Identification"]:::command --> P2
-    P2["Phase 2: Transition Mapping"]:::command --> P3
-    P3["Phase 3: Guard Design"]:::command --> GuardCheck{Guards Exclusive & Exhaustive?}:::decision
-    GuardCheck -->|No| P3
-    GuardCheck -->|Yes| P4
+    Start([Receive process_description<br>+ optional domain_context]) --> Analysis
 
-    P4["Phase 4: Error Handling"]:::command --> ErrorCheck{Every State Has Error Path?}:::decision
-    ErrorCheck -->|No| P4
-    ErrorCheck -->|Yes| P5
+    subgraph Analysis ["Phase: Pre-Design Analysis"]
+        A1[Identify business states]
+        A2[Identify triggering events]
+        A3[Identify invariants]
+        A4[Identify failure modes]
+        A1 --> A2 --> A3 --> A4
+    end
 
-    P5["Phase 5: Validation"]:::command --> Reachable{All States Reachable?}:::gate
-    Reachable -->|No| FixStates[Fix Unreachable States]:::command
-    FixStates --> P5
-    Reachable -->|Yes| DeadEnd{No Dead-End States?}:::gate
-    DeadEnd -->|No| FixDeadEnds[Add Exit Transitions]:::command
-    FixDeadEnds --> P5
-    DeadEnd -->|Yes| Deterministic{Deterministic Transitions?}:::gate
-    Deterministic -->|No| FixGuards[Resolve Overlapping Guards]:::command
-    FixGuards --> P3
-    Deterministic -->|Yes| Patterns
+    Analysis --> Design
 
-    Patterns{Workflow Pattern Needed?}:::decision
-    Patterns -->|Saga| Saga["Define Compensating Actions"]:::command
-    Patterns -->|Token| Token["Design Token Enforcement"]:::command
-    Patterns -->|Checkpoint| Checkpoint["Design Checkpoint/Resume"]:::command
-    Patterns -->|None| Viz
+    subgraph Design ["Phase: Design Process"]
+        D1["1. State Identification<br>List status nouns, classify types,<br>name with domain vocabulary"]
+        D2["2. Transition Mapping<br>For each state: what events cause exit?"]
+        D3["3. Guard Design<br>Ensure mutual exclusivity,<br>explicit exhaustiveness"]
+        D4["4. Error Handling<br>Every state needs failure path:<br>retry / escalate / terminate"]
+        D5["5. Validation<br>Reachable, no dead ends, deterministic"]
+        D1 --> D2 --> D3 --> D4 --> D5
+    end
 
-    Saga --> Viz
-    Token --> Viz
-    Checkpoint --> Viz
+    Design --> PatternSelect
 
-    Viz["Generate Mermaid Diagram"]:::command --> Table["Generate Transition Table"]:::command
-    Table --> SelfCheck{Self-Check Passes?}:::gate
-    SelfCheck -->|No| ReviseDesign[Revise Design]:::command
-    ReviseDesign --> P1
-    SelfCheck -->|Yes| Final([Spec + Diagram Delivered])
+    PatternSelect{Workflow pattern<br>needed?}
+    PatternSelect -->|Saga| Saga["Saga Pattern<br>Side effects + compensating<br>actions in reverse on failure"]
+    PatternSelect -->|Token| Token["Token-Based Enforcement<br>Tokens validate allowed transitions,<br>prevent stage skipping"]
+    PatternSelect -->|Checkpoint| Checkpoint["Checkpoint/Resume<br>Load checkpoint, restore state,<br>re-enter at saved stage"]
+    PatternSelect -->|None| Generate
 
-    classDef skill fill:#4CAF50,color:#fff
-    classDef command fill:#2196F3,color:#fff
-    classDef decision fill:#FF9800,color:#fff
-    classDef gate fill:#f44336,color:#fff
+    Saga --> Generate
+    Token --> Generate
+    Checkpoint --> Generate
+
+    subgraph Generate ["Phase: Output Generation"]
+        G1["Generate state_machine_spec<br>Save to ~/.local/spellbook/docs/&lt;project&gt;/plans/"]
+        G2["Generate Mermaid stateDiagram-v2"]
+        G3["Generate transition table"]
+        G1 --> G2 --> G3
+    end
+
+    Generate --> SelfCheck
+
+    subgraph SelfCheck ["Phase: Self-Check"]
+        SC[/"Self-Check Quality Gate<br>8 criteria"/]:::gate
+        SC --> CheckPass{All checks<br>pass?}
+        CheckPass -->|No| Revise["Revise design"]
+        Revise --> Design
+        CheckPass -->|Yes| Done
+    end
+
+    Done([Deliver spec + diagram<br>+ transition table]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#d63031,color:#fff
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
 ```
 
-## Legend
+## Self-Check Quality Gate Detail
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+The quality gate at the end of the design process enforces all 8 criteria before completion. Failure on any criterion loops back to the Design phase.
 
-## Cross-Reference
+```mermaid
+flowchart TD
+    subgraph Legend
+        direction LR
+        L1[Check Item]
+        L2{Decision}
+        L3([Terminal]):::success
+        L4[/Quality Gate/]:::gate
+    end
 
-| Node | Source Reference |
-|------|----------------|
-| Analyze Business Context | Reasoning Schema analysis tag (line 15) |
-| Phase 1: State Identification | Design Process step 1 (line 61) |
-| Phase 2: Transition Mapping | Design Process step 2 (line 62) |
-| Phase 3: Guard Design | Design Process step 3 (line 63) |
-| Guards Exclusive & Exhaustive? | Invariant 3 and Guard rules (lines 23, 55) |
-| Phase 4: Error Handling | Design Process step 4 (line 64) |
-| Every State Has Error Path? | Invariant 4 (line 24) |
-| Phase 5: Validation | Design Process step 5 (line 65) |
-| All States Reachable? | Validation: Reachable (line 65) |
-| No Dead-End States? | Validation: no dead ends (line 65) |
-| Deterministic Transitions? | Validation: deterministic (line 65) |
-| Define Compensating Actions | Saga Pattern (lines 87-91) |
-| Design Token Enforcement | Token-Based Enforcement (line 93) |
-| Design Checkpoint/Resume | Checkpoint/Resume (line 95) |
-| Generate Mermaid Diagram | Visualization section (lines 69-80) |
-| Generate Transition Table | Outputs: transition_table (line 41) |
-| Self-Check Passes? | Self-Check checklist (lines 132-141) |
+    Entry[/Enter Self-Check Gate/]:::gate --> C1
+
+    C1{States use business<br>domain vocabulary?}
+    C1 -->|No| Fail
+    C1 -->|Yes| C2
+
+    C2{Every transition has<br>named trigger?}
+    C2 -->|No| Fail
+    C2 -->|Yes| C3
+
+    C3{Guards mutually exclusive<br>and exhaustive?}
+    C3 -->|No| Fail
+    C3 -->|Yes| C4
+
+    C4{Every non-terminal<br>state has exit?}
+    C4 -->|No| Fail
+    C4 -->|Yes| C5
+
+    C5{Error states with<br>retry/escalate paths?}
+    C5 -->|No| Fail
+    C5 -->|Yes| C6
+
+    C6{Side effects have<br>compensating actions?}
+    C6 -->|No| Fail
+    C6 -->|Yes| C7
+
+    C7{Mermaid diagram<br>renders correctly?}
+    C7 -->|No| Fail
+    C7 -->|Yes| C8
+
+    C8{Completeness<br>validated?}
+    C8 -->|No| Fail
+    C8 -->|Yes| Pass
+
+    Fail["Revise: return to Design Process"]:::gate
+    Pass([All 8 checks passed]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#d63031,color:#fff
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
+```
+
+## Forbidden Actions (Anti-Pattern Guard Rails)
+
+These are checked implicitly throughout the design process and enforced by the self-check gate:
+
+| Anti-Pattern | Prevented By |
+|---|---|
+| States named after implementation ("step1") | Self-check: domain vocabulary |
+| Transitions without named triggers | Self-check: named triggers |
+| Overlapping guards (ambiguous transitions) | Self-check: mutual exclusivity |
+| Missing error handling (happy path only) | Self-check: error state paths |
+| Side effects without compensating actions | Self-check: compensating actions |
+| Dead-end states not marked terminal | Self-check: non-terminal exits |
+| Implicit guards ("else" without condition) | Self-check: exhaustive guards |
+| Skipping completeness validation | Self-check: completeness validated |
+
+## Cross-Reference: Overview Nodes to Detail
+
+| Overview Node | Detail Section |
+|---|---|
+| Analysis phase | Pre-Design Analysis: 4 questions (states, events, invariants, failures) |
+| Design Process | 5-step sequential process (State ID, Transitions, Guards, Errors, Validation) |
+| Pattern Select | Optional: Saga, Token-Based, or Checkpoint/Resume patterns |
+| Output Generation | 3 artifacts: spec file, Mermaid diagram, transition table |
+| Self-Check | 8-criterion quality gate with loop-back on failure |
 
 ## Skill Content
 

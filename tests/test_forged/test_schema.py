@@ -821,6 +821,83 @@ class TestConstants:
         assert VALID_VERDICTS == expected
 
 
+class TestGateCompletionsSchema:
+    """Tests for gate_completions table schema."""
+
+    def test_gate_completions_table_created(self, tmp_path):
+        """init_forged_schema creates gate_completions table."""
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='gate_completions'"
+        )
+        assert cursor.fetchone() is not None, "gate_completions table must exist"
+
+    def test_gate_completions_has_required_columns(self, tmp_path):
+        """gate_completions table must have all required columns."""
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(gate_completions)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        expected_columns = {
+            "id", "project_path", "feature_name", "gate", "stage",
+            "consensus", "iteration", "verdict_summary", "completed_at",
+        }
+        assert expected_columns == columns
+
+    def test_gate_completions_feature_index_exists(self, tmp_path):
+        """gate_completions must have index on (project_path, feature_name)."""
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_gate_completions_feature'"
+        )
+        assert cursor.fetchone() is not None
+
+    def test_gate_completions_gate_index_exists(self, tmp_path):
+        """gate_completions must have index on (project_path, feature_name, gate)."""
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_gate_completions_gate'"
+        )
+        assert cursor.fetchone() is not None
+
+    def test_schema_version_is_2(self, tmp_path):
+        """Schema version must be 2 after init."""
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        conn = get_forged_connection(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT MAX(version) FROM schema_version")
+        version = cursor.fetchone()[0]
+        assert version == 2
+
+
 class TestGetForgedDbPath:
     """Tests for get_forged_db_path function."""
 

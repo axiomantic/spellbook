@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md","source_hash": "sha256:3daa551984375dcf4ae53c97e8692c92b58b97d768a87230aed0959b7a2ff821","generated_at": "2026-03-15T08:56:29Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md","source_hash": "sha256:4c8d2e30444f9da311dfed76dfc8affb9b4f1265a18fbc3e8153bc0389e3556d","generated_at": "2026-03-15T08:56:29Z","generator": "generate_diagrams.py"} -->
 # Diagram: generating-diagrams
 
 # Generating Diagrams - Skill Workflow Diagrams
@@ -46,11 +46,11 @@ flowchart TD
 
 | Node in Overview | Detail Diagram | Source Lines |
 |-----------------|----------------|--------------|
-| `P1` Phase 1 | Diagram 2: Analysis | SKILL.md:47-99 |
-| `P2` Phase 2 | Diagram 3: Content Extraction | SKILL.md:101-156 |
-| `P3` Phase 3 | Diagram 4: Diagram Generation | SKILL.md:158-203 |
-| `P4` Phase 4 | Diagram 5: Verification | SKILL.md:205-237 |
-| `UM` Update Mode | Diagram 6: Update Mode | SKILL.md:346-378 |
+| `P1` Phase 1 | Diagram 2: Analysis | SKILL.md:49-101 |
+| `P2` Phase 2 | Diagram 3: Content Extraction | SKILL.md:103-158 |
+| `P3` Phase 3 | Diagram 4: Diagram Generation | SKILL.md:160-206 |
+| `P4` Phase 4 | Diagram 5: Verification | SKILL.md:207-241 |
+| `UM` Update Mode | Diagram 6: Update Mode | SKILL.md:348-379 |
 
 ---
 

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/finish-branch-execute.md", "source_hash": "sha256:1ea58cc0857763932089f7f7724c2b8826ae084c69023372279358cf0a650dcf", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/finish-branch-execute.md","source_hash": "sha256:eee2cbb71914d1bbd84075946bfafa73e09fa819b93f2272d0406546be269e61","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: finish-branch-execute
 
 Execute the user's chosen integration option: local merge, PR creation, keep as-is, or discard with explicit confirmation.

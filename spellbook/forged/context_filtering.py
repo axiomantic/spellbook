@@ -1,4 +1,4 @@
-"""Context filtering algorithms for the Forged autonomous development system.
+"""Context filtering algorithms for the workflow system.
 
 These functions select and prioritize content for inclusion in constrained
 context windows, ensuring the most relevant information fits within token budgets.

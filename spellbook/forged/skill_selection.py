@@ -1,8 +1,8 @@
-"""Skill selection algorithm for Forged autonomous development.
+"""Skill selection algorithm for workflow orchestration.
 
 This module provides intelligent skill selection based on current context,
 feedback history, and workflow stage to ensure appropriate skills are
-invoked at each step of the autonomous development process.
+invoked at each step of the development process.
 
 Selection Priority Order:
 1. Handle errors/failures (test errors -> fixing-tests, merge errors -> resolving-merge-conflicts)

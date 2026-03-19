@@ -1,4 +1,4 @@
-"""Project graph models for Forged autonomous development.
+"""Project graph models for workflow enforcement and orchestration.
 
 This module provides data structures for managing project features and their
 dependencies, including topological sorting for dependency ordering and

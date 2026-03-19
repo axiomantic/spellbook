@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/ie-template.md", "source_hash": "sha256:b36d7151cfea07543821b8a9576ae86bd5a7c7c9ba7b48074230848d98066e7f", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/ie-template.md","source_hash": "sha256:648487a9c1a2f26a18564e481d482c17c00a2b7b8ebad21fc7d0cff8377a889c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: ie-template
 
 Template and example for engineered instructions. Provides a standard structure (ROLE, CRITICAL_INSTRUCTION, BEFORE_RESPONDING, RULES, EXAMPLE, FORBIDDEN, SELF_CHECK, FINAL_EMPHASIS) with a complete security code review example.

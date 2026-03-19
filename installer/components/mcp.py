@@ -836,8 +836,8 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
     Install and start the spellbook daemon service.
 
     Creates a dedicated venv for the daemon (if lockfiles exist), then
-    delegates to spellbook-server.py to generate and load the platform
-    service definition.
+    delegates to spellbook.daemon.manager.install_service() to generate
+    and load the platform service definition.
 
     Args:
         spellbook_dir: Path to spellbook installation
@@ -868,28 +868,15 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
     # First, stop and uninstall any existing daemon
     uninstall_daemon(dry_run=False)
 
-    # Use the spellbook-server.py script to install
-    server_script = spellbook_dir / "scripts" / "spellbook-server.py"
-
-    if not server_script.exists():
-        return (False, f"Server script not found: {server_script}")
-
     try:
-        result = subprocess.run(
-            [get_python_executable(), str(server_script), "install"],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            env={
-                **os.environ,
-                "SPELLBOOK_DIR": str(spellbook_dir),
-                "SPELLBOOK_DAEMON_PYTHON": str(get_daemon_python()),
-            }
-        )
+        from spellbook.daemon.manager import install_service
 
-        if result.returncode != 0:
-            error = result.stderr.strip() or result.stdout.strip()
-            return (False, f"Install failed: {error}")
+        # Suppress install_service's own print output -- the installer
+        # controls formatting via its own print_step/print_success helpers.
+        import io
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()):
+            install_service()
 
         # Wait for daemon to start
         for _ in range(10):
@@ -899,9 +886,9 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
 
         return (False, "Daemon installed but not responding")
 
-    except subprocess.TimeoutExpired:
-        return (False, "Install timed out")
-    except OSError as e:
+    except SystemExit:
+        return (False, "Install failed (service install exited with error)")
+    except Exception as e:
         return (False, str(e))
 
 

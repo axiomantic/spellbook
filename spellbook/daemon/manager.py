@@ -59,7 +59,7 @@ def start_daemon(foreground: bool = False) -> None:
     if is_service_installed() and is_service_running():
         print("Server is running via system service.")
         print(f"URL: {get_server_url()}")
-        print("\nUse 'spellbook-server stop' to stop, or manage via system service.")
+        print("\nUse 'spellbook server stop' to stop, or manage via system service.")
         return
 
     if check_server_health():
@@ -159,21 +159,21 @@ def stop_daemon() -> None:
                     capture_output=True,
                 )
                 print("Service stopped (will restart due to KeepAlive)")
-                print("To permanently stop, run: spellbook-server uninstall")
+                print("To permanently stop, run: spellbook server uninstall")
             elif plat == "linux":
                 subprocess.run(
                     ["systemctl", "--user", "stop", SERVICE_NAME],
                     capture_output=True,
                 )
                 print("Service stopped (will restart on next boot)")
-                print("To permanently stop, run: spellbook-server uninstall")
+                print("To permanently stop, run: spellbook server uninstall")
             elif plat == "windows":
                 subprocess.run(
                     ["schtasks", "/End", "/TN", "SpellbookMCP"],
                     capture_output=True,
                 )
                 print("Service stopped (will restart on next logon)")
-                print("To permanently stop, run: spellbook-server uninstall")
+                print("To permanently stop, run: spellbook server uninstall")
         except FileNotFoundError:
             print("Service manager command not found", file=sys.stderr)
             sys.exit(1)

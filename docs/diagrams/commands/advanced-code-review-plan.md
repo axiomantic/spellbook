@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/advanced-code-review-plan.md", "source_hash": "sha256:bae4e46252e6d88dc0a7606d0986b319a5d1a40c940ec8b27b7c8305a92edfac", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/advanced-code-review-plan.md","source_hash": "sha256:3724c559e6ae017049418f651c24ce0391fdfadd9046f656f2074fdc74a0b6da","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: advanced-code-review-plan
 
 Phase 1 of advanced-code-review: Strategic planning that resolves the review target, acquires the diff, categorizes files by risk, estimates complexity, and produces a prioritized review manifest and plan.

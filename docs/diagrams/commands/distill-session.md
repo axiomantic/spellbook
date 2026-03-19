@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/distill-session.md","source_hash": "sha256:2979c0d07107f812324285f65e382693a8f7d99bbac02734b90b0b64bdf87c03","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/distill-session.md","source_hash": "sha256:855d88e0d61d124368fdbbf52c164e9f772dc130932b500e3dd8345ebcee94d0","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: distill-session
 
 Extract context from an oversized session through chunked parallel summarization, artifact verification, planning document discovery, and synthesis into a resumable boot prompt.

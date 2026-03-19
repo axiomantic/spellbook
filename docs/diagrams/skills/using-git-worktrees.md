@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/using-git-worktrees/SKILL.md", "source_hash": "sha256:aaa503e4384ed5d25ada9bbad1cfb607c8a5f04558112a169d80165aadbbd86c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/using-git-worktrees/SKILL.md","source_hash": "sha256:a6dada974eb526ceeea8f1b2235990536b9dc9c627de2d2e34395dbdc9afab6b","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: using-git-worktrees
 
 Workspace isolation via git worktrees with safety verification, dependency setup, and clean test baseline enforcement.

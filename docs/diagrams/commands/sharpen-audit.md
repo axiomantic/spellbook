@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/sharpen-audit.md", "source_hash": "sha256:5c017bfec9c809a3dab32e7e2818189771cd423186f8fb93b606116fd63e7b60", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/sharpen-audit.md","source_hash": "sha256:cfa588adf6fd967668b6564284736fecf3eb2944feb8eeceef8735be34c5694e","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: sharpen-audit
 
 Audits LLM prompts and instructions for ambiguity through a 6-phase protocol: inventory, line-by-line scan, categorize findings, generate executor predictions, draft clarification questions, and compile a structured report with severity ratings and verdict.

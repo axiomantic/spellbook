@@ -1,97 +1,160 @@
-<!-- diagram-meta: {"source": "skills/analyzing-domains/SKILL.md","source_hash": "sha256:425e7695c5ad27ec8ed2fd1c81fff6a771561d8af3d28bbfb27955f70c79f101","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/analyzing-domains/SKILL.md","source_hash": "sha256:8bf888c0367fd426efc27cccc20b39e23ec6410b41e25ebab304a81c6d7cf8f2","generated_at": "2026-03-19T05:56:53Z","generator": "generate_diagrams.py"} -->
 # Diagram: analyzing-domains
 
-Performs Domain-Driven Design analysis: mining ubiquitous language, classifying entities and value objects, detecting aggregate boundaries, identifying domain events, mapping bounded contexts, and producing agent/skill recommendations based on domain characteristics.
+# Analyzing Domains - Workflow Diagram
+
+## Overview
 
 ```mermaid
 flowchart TD
-    Start([Start: Problem Description]) --> P1
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/Input/Output/]
+        L5[Subagent Dispatch]:::subagent
+        L6[Quality Gate]:::gate
+        L7([Success]):::success
+    end
 
-    P1["Phase 1: Language Mining"]:::command --> Conflicts{Synonym/Homonym Conflicts?}:::decision
-    Conflicts -->|Yes| FlagConflicts["Flag SYNONYM/HOMONYM"]:::command
-    FlagConflicts --> P2
-    Conflicts -->|No| P2
+    START([Start:<br>problem_description +<br>stakeholder_vocabulary]) --> P1
 
-    P2["Phase 2: Ubiquitous Language"]:::command --> Resolved{All Conflicts Resolved?}:::gate
-    Resolved -->|No| ResolveConflicts["Choose Canonical / Add Qualifiers"]:::command
-    ResolveConflicts --> Resolved
-    Resolved -->|Yes| P3
+    subgraph P1 ["Phase 1: Language Mining"]
+        P1_extract["Extract from user request,<br>codebase, docs, conversations"]
+        P1_categorize["Categorize:<br>Nouns → entities/VOs<br>Verbs → commands/events<br>Compound → aggregates/contexts"]
+        P1_minimal{Problem<br>description<br>minimal?}
+        P1_clarify["Request clarification<br>before proceeding"]
+        P1_flag["Flag conflicts:<br>SYNONYM CONFLICT<br>HOMONYM CONFLICT"]
 
-    P3["Phase 3: Entity vs Value Object"]:::command --> Classified{Every Noun Categorized?}:::gate
-    Classified -->|No| P3
-    Classified -->|Yes| P4
+        P1_extract --> P1_minimal
+        P1_minimal -- Yes --> P1_clarify --> P1_extract
+        P1_minimal -- No --> P1_categorize --> P1_flag
+    end
 
-    P4["Phase 4: Aggregate Boundaries"]:::command --> InvariantCheck{Every Aggregate Has Invariant?}:::gate
-    InvariantCheck -->|No| AddInvariants["Justify or Restructure"]:::command
-    AddInvariants --> P4
-    InvariantCheck -->|Yes| P5
+    P1 --> P2
 
-    P5["Phase 5: Domain Events"]:::command --> PastTense{Events in Past Tense?}:::gate
-    PastTense -->|No| FixTense["Rename to Past Tense"]:::command
-    FixTense --> P5
-    PastTense -->|Yes| P6
+    subgraph P2 ["Phase 2: Ubiquitous Language"]
+        P2_define["For each term define:<br>Definition, Examples,<br>Non-examples, Context"]
+        P2_resolve_syn["Resolve synonyms:<br>choose canonical term"]
+        P2_resolve_hom["Resolve homonyms:<br>add context qualifiers"]
 
-    P6["Phase 6: Context Mapping"]:::command --> MapComplete{Context Map Complete?}:::gate
-    MapComplete -->|No| AddRelationships["Define Context Relationships"]:::command
-    AddRelationships --> P6
-    MapComplete -->|Yes| P7
+        P2_define --> P2_resolve_syn --> P2_resolve_hom
+    end
 
-    P7["Phase 7: Agent Recommendations"]:::command --> RecCheck{Recs Cite Characteristics?}:::gate
-    RecCheck -->|No| JustifyRecs["Add Domain Justification"]:::command
-    JustifyRecs --> P7
-    RecCheck -->|Yes| Recommend
+    P2 --> P3
 
-    Recommend{Domain Complexity?}:::decision
-    Recommend -->|State machines| WF["designing-workflows"]:::skill
-    Recommend -->|Multiple contexts| BS["brainstorming"]:::skill
-    Recommend -->|Security-sensitive| GR["gathering-requirements"]:::skill
-    Recommend -->|Complex aggregates| TDD["test-driven-development"]:::skill
+    subgraph P3 ["Phase 3: Entity vs Value Object"]
+        P3_classify{"Has lifecycle?<br>Identity matters?"}
+        P3_entity["Classify as Entity"]
+        P3_vo["Classify as Value Object<br>(immutable)"]
 
-    WF --> SelfCheck
-    BS --> SelfCheck
-    GR --> SelfCheck
-    TDD --> SelfCheck
+        P3_classify -- Yes/Yes --> P3_entity
+        P3_classify -- No/No --> P3_vo
+    end
 
-    SelfCheck{Self-Check Passes?}:::gate
-    SelfCheck -->|No| Revise["Revise Domain Model"]:::command
-    Revise --> P1
-    SelfCheck -->|Yes| Final([Domain Model Delivered])
+    P3 --> P4
 
-    classDef skill fill:#4CAF50,color:#fff
-    classDef command fill:#2196F3,color:#fff
-    classDef decision fill:#FF9800,color:#fff
-    classDef gate fill:#f44336,color:#fff
+    subgraph P4 ["Phase 4: Aggregate Boundary Detection"]
+        P4_invariants["Identify invariants:<br>rules always true,<br>span entities,<br>require atomic enforcement"]
+        P4_form["Form aggregates:<br>Root entity + contained<br>entities/VOs + invariants"]
+        P4_span{Invariants<br>span 3+<br>entities?}
+        P4_fractal["Invoke fractal-thinking<br>intensity: pulse<br>seed: aggregate boundaries"]:::subagent
+        P4_boundary["Reference by ID<br>across aggregates"]
+
+        P4_invariants --> P4_span
+        P4_span -- Yes --> P4_fractal --> P4_form
+        P4_span -- No --> P4_form
+        P4_form --> P4_boundary
+    end
+
+    P4 --> P5
+
+    subgraph P5 ["Phase 5: Domain Event Identification"]
+        P5_events["For each state change:<br>What happened? (past tense)<br>Who cares? (handlers)<br>What data?"]
+    end
+
+    P5 --> P6
+
+    subgraph P6 ["Phase 6: Bounded Context Mapping"]
+        P6_signals["Detect signals:<br>Different meanings for same term<br>Different stakeholders<br>Different change rates<br>Different consistency needs"]
+        P6_relationships["Map relationships:<br>Shared Kernel,<br>Customer-Supplier,<br>Conformist, ACL,<br>Open Host, Published Language"]
+
+        P6_signals --> P6_relationships
+    end
+
+    P6 --> P7
+
+    subgraph P7 ["Phase 7: Agent Recommendations"]
+        P7_match["Match domain characteristics<br>to skill recommendations"]
+        P7_table[/"Output recommendation table:<br>Characteristic → Signal → Skill"/]
+
+        P7_match --> P7_table
+    end
+
+    P7 --> QG
+
+    subgraph QG ["Quality Gates"]
+        QG_lang["Language complete:<br>all terms defined"]:::gate
+        QG_conflicts["Conflicts resolved:<br>no unresolved synonyms/homonyms"]:::gate
+        QG_entities["Entities classified:<br>every noun categorized"]:::gate
+        QG_aggregates["Aggregates bounded:<br>every entity in one aggregate"]:::gate
+        QG_events["Events identified:<br>state changes have past-tense events"]:::gate
+        QG_context["Context map complete:<br>all contexts with relationships"]:::gate
+
+        QG_lang --> QG_conflicts --> QG_entities --> QG_aggregates --> QG_events --> QG_context
+    end
+
+    QG --> QG_pass{All gates<br>pass?}
+    QG_pass -- No --> REVISE["Revise: return to<br>failing phase"] --> P1
+    QG_pass -- Yes --> SELFCHECK
+
+    subgraph SELFCHECK ["Self-Check"]
+        SC1{"All terms<br>in glossary?"}
+        SC2{"Conflicts<br>resolved?"}
+        SC3{"Every entity has<br>identity justification?"}
+        SC4{"Every aggregate<br>has invariant?"}
+        SC5{"Events<br>past tense?"}
+        SC6{"Context map<br>complete?"}
+        SC7{"Recommendations cite<br>characteristics?"}
+
+        SC1 --> SC2 --> SC3 --> SC4 --> SC5 --> SC6 --> SC7
+    end
+
+    SELFCHECK --> SC_pass{All checks<br>pass?}
+    SC_pass -- No --> REVISE
+    SC_pass -- Yes --> OUTPUT
+
+    subgraph OUTPUT ["Outputs"]
+        OUT_glossary[/"domain_glossary<br>(inline definitions)"/]
+        OUT_context[/"context_map<br>(Mermaid diagram)"/]
+        OUT_entity[/"entity_sketch<br>(Mermaid diagram)"/]
+        OUT_recs[/"agent_recommendations<br>(table)"/]
+    end
+
+    OUTPUT --> DONE([Analysis Complete]):::success
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
 ```
 
-## Legend
+## Key Decision Points
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Node | Phase | Condition | Branches |
+|------|-------|-----------|----------|
+| Problem minimal? | Phase 1 | Insufficient problem description | Yes → request clarification (loop), No → proceed |
+| Has lifecycle/identity? | Phase 3 | Entity classification criteria | Yes → Entity, No → Value Object |
+| Invariants span 3+ entities? | Phase 4 | Aggregate complexity threshold | Yes → dispatch fractal-thinking, No → form directly |
+| All gates pass? | Quality Gates | 6 mandatory criteria | No → revise (loop to failing phase), Yes → self-check |
+| All checks pass? | Self-Check | 7-point checklist | No → revise (loop), Yes → emit outputs |
 
-## Cross-Reference
+## External Skill References
 
-| Node | Source Reference |
-|------|----------------|
-| Phase 1: Language Mining | Phase 1 (lines 47-52) |
-| Flag SYNONYM/HOMONYM | Conflict detection (line 52) |
-| Phase 2: Ubiquitous Language | Phase 2 (lines 54-58) |
-| All Conflicts Resolved? | Quality Gate: Conflicts resolved (line 116) |
-| Phase 3: Entity vs Value Object | Phase 3 (lines 60-65) |
-| Every Noun Categorized? | Quality Gate: Entities classified (line 117) |
-| Phase 4: Aggregate Boundaries | Phase 4 (lines 67-71) |
-| Every Aggregate Has Invariant? | Quality Gate: Aggregates bounded (line 118) |
-| Phase 5: Domain Events | Phase 5 (lines 73-75) |
-| Events in Past Tense? | Forbidden: present tense events (line 128) |
-| Phase 6: Context Mapping | Phase 6 (lines 77-81) |
-| Context Map Complete? | Quality Gate: Context map complete (line 120) |
-| Phase 7: Agent Recommendations | Phase 7 (lines 83-91) |
-| Recs Cite Characteristics? | Forbidden: recommending without citing (line 129) |
-| designing-workflows | Recommendation: complex state machines (line 87) |
-| brainstorming | Recommendation: multiple bounded contexts (line 88) |
-| gathering-requirements | Recommendation: security-sensitive (line 89) |
-| test-driven-development | Recommendation: complex aggregates (line 90) |
-| Self-Check Passes? | Self-Check checklist (lines 134-143) |
+| Skill | Invocation Point | Trigger |
+|-------|-----------------|---------|
+| `fractal-thinking` | Phase 4 (Aggregate Boundary Detection) | Invariants span 3+ entities; intensity `pulse` |
+| `designing-workflows` | Phase 7 recommendation | Domain has complex state machines |
+| `brainstorming` | Phase 7 recommendation | Multiple bounded contexts detected |
+| `gathering-requirements` | Phase 7 recommendation | Security-sensitive domain (PII, auth) |
+| `test-driven-development` | Phase 7 recommendation | Complex aggregates with many invariants |

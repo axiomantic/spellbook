@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/design-assessment.md", "source_hash": "sha256:76b6f9e727bc7ecaee7c1fa8cb25d4c5ce9ef143f5772a371d82def7428905b7", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/design-assessment.md","source_hash": "sha256:496f1b11d1f431c0e5c3b39b6ea8c575fbb709c58025acb3833680892f1ad97d","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: design-assessment
 
 Generate assessment frameworks (dimensions, severity levels, verdicts, finding schemas) for evaluative skills and commands.

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source":"commands/audit-mirage-analyze.md","source_hash":"sha256:89d90923718877342167ed613ac598be5ab21d4a635b8a7cef426e9cb015970e","generated_at":"2026-02-19T00:00:00Z","generator":"generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/audit-mirage-analyze.md","source_hash": "sha256:5ccfd83fd7e34ded6b9f81210a1e4044b55b8790ca59d8d47501c17885674d37","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: audit-mirage-analyze
 
 Systematic line-by-line audit of test functions against 8 Green Mirage Patterns.

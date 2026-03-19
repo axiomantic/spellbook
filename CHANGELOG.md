@@ -7,20 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-03-19
+
 ### Added
+- **Develop skill execution model redesign**: dialectic validation (none/roundtable) and token enforcement (work-item/gate/every-step) are now independent user preferences, configurable in Phase 0.4
+- **Scope drift detection**: re-evaluation checkpoints in Phase 1.5 discovery catch when user answers expand scope beyond the classified complexity tier. New `SCOPE_EXPANSION` ARH response type, `evaluate_scope_drift()` detection function, and 12th completeness validation function (`scope_consistent_with_tier`)
+- **Dispatch enforcement**: CRITICAL blocks and post-gate verification on all 8 Phase 4 subagent dispatch points. Three new anti-rationalization patterns: Gate Elision, Self-Review Substitution, Momentum Preservation
+- **Roundtable 3-archetype fast mode**: `GATE_ARCHETYPES` constant maps each quality gate to a 3-archetype subset (Justice always included as arbiter). `get_gate_archetypes()` function for quality gate validation
+- **Gate completion tracking**: `gate_completions` table in forged.db, `forge_record_gate_completion` MCP tool, auto-recording on roundtable consensus
+- **Dependency enforcement**: `forge_iteration_start` checks project graph for incomplete `depends_on` features before issuing tokens, returns per-dependency status on block
+- **Required `gate` and `feature_name` parameters** on `roundtable_convene` and `process_roundtable_response` for explicit gate identification
 - `spellbook` CLI with 10 command groups: doctor, server, install, update, admin, config, memory, session, security, events
 - Three-layer package architecture: core -> domains -> interfaces
 - `websockets` dependency for CLI streaming
+- `spellbook/mcp/__main__.py` entry point for `python -m spellbook.mcp` daemon execution
 
 ### Changed
+- **Work decomposition is now transparent**: orchestrator decides based on plan structure and context budget, replacing the rigid COMPLEX/swarmed execution model. Work-item prompt files replace work packets
 - Package renamed from `spellbook_mcp` to `spellbook`
 - server.py (3,945 lines) decomposed into mcp/server.py + 13 tool files + routes
-- Daemon management moved from scripts/spellbook-server.py to spellbook.daemon module
+- Daemon installer calls `install_service()` directly instead of spawning `scripts/spellbook-server.py` subprocess
+- Diagram freshness checking hashes heading structure instead of full content (ignores frontmatter changes), pre-commit hook scoped to staged files only
+- All roundtable callers updated for required `gate` parameter, including OpenCode extension (pre-existing broken caller fixed)
 
 ### Deprecated
+- `autonomous-roundtable` skill (absorbed into develop; migration guide provided)
+- "Forge" as a user-facing workflow concept (forge_* MCP tool namespace preserved for backward compatibility)
 - `spellbook_mcp` package name (backward compat shim provided, will be removed next release)
 - `SPELLBOOK_MCP_*` environment variables (use `SPELLBOOK_*` instead)
-- `scripts/spellbook-server.py` (use `spellbook server <command>` instead)
+
+### Removed
+- `scripts/spellbook-server.py` deprecated wrapper (daemon management via `spellbook server <command>` or direct `install_service()` call)
+- Swarmed execution mode and work packet generation (replaced by work-item prompt files)
+- Token estimation math in Phase 3.4.5 (replaced by plan-structure-based decomposition)
+
+### Fixed
+- Installer crash when `spellbook` package not yet pip-installed (handle missing metadata in `__init__.py`)
+- Daemon not starting after package reorg (missing `__main__.py`, wrong module path in launchd/systemd service files)
+- Daemon installer output leaking raw `print()` into formatted installer output
+- `spellbook doctor` test monkeypatching wrong module (command module vs source module)
+- Windows test failures: `HOME` vs `USERPROFILE`, hardcoded Unix paths, hardcoded `/tmp`
 
 ## [0.32.1] - 2026-03-18
 

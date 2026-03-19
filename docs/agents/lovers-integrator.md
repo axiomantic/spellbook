@@ -2,164 +2,151 @@
 
 ## Workflow Diagram
 
-Integration harmony agent that reviews connections between modules. Ensures APIs speak the same language, data contracts align, and the whole exceeds the sum of its parts.
+Integration harmony agent. Reviews connections between modules, ensures API contracts align, flags anti-patterns at boundaries, and produces a harmony report with concrete proposals.
+
+## Overview: Integration Review Workflow
 
 ```mermaid
 flowchart TD
-    Start([Start: Integration\nReview Requested])
-    Invoke[/Honor-Bound Invocation/]
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal]):::success
+        L4[Quality Gate]:::gate
+        L5[Anti-Pattern Flag]:::antipattern
+    end
 
-    InterfaceLoop["For Each Interface"]
-    IdentifyCaller["Identify Caller\nand Callee"]
-    MapData["Map Data Crossing\nBoundary"]
+    Start([Agent Invoked]) --> ValidateInputs{Required inputs<br>provided?}
+    ValidateInputs -->|"No: missing modules<br>or interfaces"| Reject([Reject: missing<br>required inputs])
+    ValidateInputs -->|Yes| Honor[Honor-Bound<br>Invocation]
 
-    TypeMatch{"Types Match\nExactly?"}
-    FlagTypeMismatch["Flag: Type\nMismatch"]
+    Honor --> EnumInterfaces[Enumerate all<br>interfaces between<br>provided modules]
 
-    ErrorConsistent{"Error Handling\nConsistent Both Sides?"}
-    FlagErrorAmnesia["Flag: Error\nAmnesia"]
+    EnumInterfaces --> ForEach{More interfaces<br>to review?}
 
-    ComplexityCheck{"Interface Simple\nor Complex?"}
-    FlagChatty["Flag: Chatty\nInterface"]
+    ForEach -->|Yes| Identify[Step 1: Identify<br>caller and callee]
+    Identify --> MapData[Step 2: Map data<br>crossing boundary]
+    MapData --> CheckTypes{Step 3: Do types<br>match exactly?}
 
-    MetaphorAnalysis[/"Metaphor Analysis:\nModules as Conversation"/]
-    NeedTranslator{"Need Adapters\n(Translators)?"}
-    FlagAdapter["Flag: Missing\nAdapter Layer"]
+    CheckTypes -->|No| TypeMismatch[Flag: Type Mismatch<br>CRITICAL]:::antipattern
+    CheckTypes -->|Yes| VerifyErrors
 
-    MismatchedVolume{"API Complexity\nMatches Needs?"}
-    FlagOverEngineered["Flag: Over-Engineered\nInterface"]
+    TypeMismatch --> VerifyErrors{Step 4: Error handling<br>consistent both sides?}
 
-    TalkingPast{"Misaligned\nAssumptions?"}
-    FlagAssumptions["Flag: Assumption\nDrift"]
+    VerifyErrors -->|No| ErrorAmnesia[Flag: Error Amnesia<br>CRITICAL]:::antipattern
+    VerifyErrors -->|Yes| AssessComplexity
 
-    MoreInterfaces{"More Interfaces\nto Review?"}
+    ErrorAmnesia --> AssessComplexity{Step 5: Simple<br>or Complex?}
 
-    ClassifyFindings["Classify Findings:\nCritical/Important/Suggestion"]
+    AssessComplexity -->|"Simple: 1-3 params,<br>no shared state"| Metaphor
+    AssessComplexity -->|"Complex: 4+ params,<br>shared state"| AntiPatterns
 
-    SeverityGate{"All Findings Have\nSeverity + Evidence?"}
-    AddEvidence["Add Missing\nEvidence"]
+    subgraph AntiPatterns[Anti-Pattern Detection]
+        AP_Chatty{Chatty<br>Interface?}
+        AP_God{God Object<br>coupling?}
+        AP_Leaky{Leaky<br>Abstraction?}
+        AP_Drift{Version<br>Drift?}
 
-    FunctionalityGate{"Proposals Preserve\nExisting Behavior?"}
-    ReviseProposal["Revise Proposals\nto Preserve"]
+        AP_Chatty -->|Yes| Flag_Chatty[Flag: Chatty]:::antipattern
+        AP_Chatty -->|No| AP_God
+        Flag_Chatty --> AP_God
+        AP_God -->|Yes| Flag_God[Flag: God Object]:::antipattern
+        AP_God -->|No| AP_Leaky
+        Flag_God --> AP_Leaky
+        AP_Leaky -->|Yes| Flag_Leaky[Flag: Leaky Abstraction]:::antipattern
+        AP_Leaky -->|No| AP_Drift
+        Flag_Leaky --> AP_Drift
+        AP_Drift -->|Yes| Flag_Drift[Flag: Version Drift]:::antipattern
+        AP_Drift -->|No| AP_Done([Done])
+        Flag_Drift --> AP_Done
+    end
 
-    GenHarmonyReport["Generate Harmony\nReport"]
-    GenFrictionPoints["Generate Friction\nPoints List"]
-    GenProposals["Generate PROPOSE\nSpeech Acts"]
-    CoherenceAssessment["System Coherence\nAssessment"]
+    AntiPatterns --> Metaphor
 
-    Done([End: Integration\nReview Complete])
+    subgraph Metaphor[Metaphor Analysis: Modules as Conversation]
+        M_Translate{Need adapters<br>/ translators?}
+        M_Volume{API complexity<br>matches needs?}
+        M_Assumptions{Misaligned<br>assumptions?}
 
-    Start --> Invoke
-    Invoke --> InterfaceLoop
-    InterfaceLoop --> IdentifyCaller
-    IdentifyCaller --> MapData
+        M_Translate -->|Yes| Flag_Adapter[Flag: Missing<br>Adapter]:::antipattern
+        M_Translate -->|No| M_Volume
+        Flag_Adapter --> M_Volume
+        M_Volume -->|Mismatched| Flag_Over[Flag: Over-Engineered<br>Interface]:::antipattern
+        M_Volume -->|Matched| M_Assumptions
+        Flag_Over --> M_Assumptions
+        M_Assumptions -->|Yes| Flag_Assume[Flag: Assumption<br>Drift]:::antipattern
+        M_Assumptions -->|No| M_Done([Done])
+        Flag_Assume --> M_Done
+    end
 
-    MapData --> TypeMatch
-    TypeMatch -->|No| FlagTypeMismatch
-    FlagTypeMismatch --> ErrorConsistent
-    TypeMatch -->|Yes| ErrorConsistent
+    Metaphor --> ScoreInterface[Score interface:<br>Good / Friction / Critical]
+    ScoreInterface --> RecordInterface[Record in<br>report table]
+    RecordInterface --> ForEach
 
-    ErrorConsistent -->|No| FlagErrorAmnesia
-    FlagErrorAmnesia --> ComplexityCheck
-    ErrorConsistent -->|Yes| ComplexityCheck
+    ForEach -->|"No: all interfaces<br>reviewed"| ReflectionGate
 
-    ComplexityCheck -->|Complex| FlagChatty
-    FlagChatty --> MetaphorAnalysis
-    ComplexityCheck -->|Simple| MetaphorAnalysis
+    subgraph ReflectionGate[Reflection Quality Gate]
+        R1{Every interface<br>reviewed?}:::gate
+        R2{All friction points<br>have severity?}:::gate
+        R3{Proposals concrete<br>with evidence?}:::gate
+        R4{Improvements preserve<br>existing functionality?}:::gate
 
-    MetaphorAnalysis --> NeedTranslator
-    NeedTranslator -->|Yes| FlagAdapter
-    FlagAdapter --> MismatchedVolume
-    NeedTranslator -->|No| MismatchedVolume
+        R1 -->|Yes| R2
+        R2 -->|No| FixSeverity[Assign severity:<br>Critical / Important /<br>Suggestion]
+        FixSeverity --> R2
+        R2 -->|Yes| R3
+        R3 -->|No| GatherEvidence[Gather code evidence<br>for both sides]
+        GatherEvidence --> R3
+        R3 -->|Yes| R4
+        R4 -->|No| ReviseProposals[Revise proposals<br>to preserve behavior]
+        ReviseProposals --> R4
+        R4 -->|Yes| GatePass([Gate Passed]):::success
+    end
 
-    MismatchedVolume -->|Mismatched| FlagOverEngineered
-    FlagOverEngineered --> TalkingPast
-    MismatchedVolume -->|Matched| TalkingPast
+    ReflectionGate --> GenerateReport
 
-    TalkingPast -->|Yes| FlagAssumptions
-    FlagAssumptions --> MoreInterfaces
-    TalkingPast -->|No| MoreInterfaces
+    subgraph GenerateReport[Generate Outputs]
+        Report[harmony_report:<br>Integration quality<br>assessment]
+        Friction[friction_points:<br>Issues with severity]
+        Proposals[proposals:<br>PROPOSE speech acts<br>with evidence]
+        Coherence[System Coherence<br>Assessment]
 
-    MoreInterfaces -->|Yes| InterfaceLoop
-    MoreInterfaces -->|No| ClassifyFindings
+        Report --> Friction --> Proposals --> Coherence
+    end
 
-    ClassifyFindings --> SeverityGate
-    SeverityGate -->|Missing| AddEvidence
-    AddEvidence --> SeverityGate
-    SeverityGate -->|Complete| FunctionalityGate
+    GenerateReport --> Done([Integration Review<br>Complete]):::success
 
-    FunctionalityGate -->|Breaks Existing| ReviseProposal
-    ReviseProposal --> FunctionalityGate
-    FunctionalityGate -->|Preserves| GenHarmonyReport
-
-    GenHarmonyReport --> GenFrictionPoints
-    GenFrictionPoints --> GenProposals
-    GenProposals --> CoherenceAssessment
-    CoherenceAssessment --> Done
-
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Invoke fill:#4CAF50,color:#fff
-    style MetaphorAnalysis fill:#4CAF50,color:#fff
-    style InterfaceLoop fill:#2196F3,color:#fff
-    style IdentifyCaller fill:#2196F3,color:#fff
-    style MapData fill:#2196F3,color:#fff
-    style FlagTypeMismatch fill:#2196F3,color:#fff
-    style FlagErrorAmnesia fill:#2196F3,color:#fff
-    style FlagChatty fill:#2196F3,color:#fff
-    style FlagAdapter fill:#2196F3,color:#fff
-    style FlagOverEngineered fill:#2196F3,color:#fff
-    style FlagAssumptions fill:#2196F3,color:#fff
-    style ClassifyFindings fill:#2196F3,color:#fff
-    style AddEvidence fill:#2196F3,color:#fff
-    style ReviseProposal fill:#2196F3,color:#fff
-    style GenHarmonyReport fill:#2196F3,color:#fff
-    style GenFrictionPoints fill:#2196F3,color:#fff
-    style GenProposals fill:#2196F3,color:#fff
-    style CoherenceAssessment fill:#2196F3,color:#fff
-    style TypeMatch fill:#FF9800,color:#fff
-    style ErrorConsistent fill:#FF9800,color:#fff
-    style ComplexityCheck fill:#FF9800,color:#fff
-    style NeedTranslator fill:#FF9800,color:#fff
-    style MismatchedVolume fill:#FF9800,color:#fff
-    style TalkingPast fill:#FF9800,color:#fff
-    style MoreInterfaces fill:#FF9800,color:#fff
-    style SeverityGate fill:#f44336,color:#fff
-    style FunctionalityGate fill:#f44336,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef antipattern fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
 ```
-
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation / start-end |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
 
 ## Cross-Reference
 
-| Node | Source Reference |
-|------|----------------|
-| Honor-Bound Invocation | Lines 14-15: Honor pledge before review |
-| Identify Caller and Callee | Lines 53: Analysis step 1 |
-| Map Data Crossing Boundary | Lines 54: Analysis step 2 |
-| Types Match Exactly? | Lines 55: Analysis step 3 - not "close enough" |
-| Error Handling Consistent? | Lines 56: Analysis step 4 |
-| Interface Simple or Complex? | Lines 57: Analysis step 5 |
-| Metaphor Analysis | Lines 61-66: Modules as people in conversation |
-| Need Adapters? | Lines 63: Do they need translators? |
-| API Complexity Matches Needs? | Lines 64: Shouting vs whispering check |
-| Misaligned Assumptions? | Lines 65: Talking past each other? |
-| All Findings Have Severity? | Lines 72: Reflection - severity assigned |
-| Proposals Preserve Existing? | Lines 74: Reflection - improvements preserve functionality |
-| Generate Harmony Report | Lines 80-98: Harmony report format |
-| Generate Friction Points | Lines 91-95: Friction point format |
-| Generate PROPOSE Speech Acts | Lines 97-98: PROPOSE improvement |
-| System Coherence Assessment | Lines 100-101: Overall integration health |
-| Flag: Type Mismatch | Lines 106: Anti-pattern - caller sends X, callee expects Y |
-| Flag: Error Amnesia | Lines 107: Anti-pattern - inconsistent error handling |
-| Flag: Chatty Interface | Lines 108: Anti-pattern - too many calls |
+| Node | Source Lines | Description |
+|------|-------------|-------------|
+| Honor-Bound Invocation | 13-15 | Agent recites commitment to rigor and boundary advocacy |
+| Step 1: Identify caller/callee | 53 | Analysis protocol step 1 |
+| Step 2: Map data crossing boundary | 54 | Analysis protocol step 2 |
+| Step 3: Types match exactly? | 55 | Analysis protocol step 3, explicitly "not close enough" |
+| Step 4: Error handling consistent? | 56 | Analysis protocol step 4, check both sides |
+| Step 5: Simple or Complex? | 57-58 | 1-3 params = simple; 4+ params or shared state = complex |
+| Metaphor Analysis | 61-66 | Modules as people in conversation: translators, volume, assumptions |
+| Anti-Pattern Detection | 106-118 | 6 FORBIDDEN patterns: Type Mismatch, Error Amnesia, Chatty, God Object, Leaky Abstraction, Version Drift |
+| Reflection Quality Gate | 69-75 | 4 checks before proposals: completeness, severity, concreteness, preservation |
+| harmony_report | 80-88 | Interfaces Reviewed table with Harmony Scores |
+| friction_points | 91-97 | Per-finding: boundary, issue, evidence, proposal |
+| proposals | 97-100 | PROPOSE speech acts for key improvements |
+| System Coherence Assessment | 100-101 | 2-3 sentences on overall integration health |
+
+## Key Design Notes
+
+- **No subagent dispatches**: Agent uses read-only tools (Read, Grep, Glob) and produces a report directly.
+- **Strict ordering**: All interfaces must be reviewed before any proposals (FORBIDDEN: "Proposing improvements before reviewing all interfaces").
+- **Evidence requirement**: Every friction point requires code from both sides of the boundary (FORBIDDEN: "Abstract proposals without evidence").
+- **Harmony scoring**: Three levels -- Good (aligned types, consistent errors, simple), Friction (minor misalignment or complexity), Critical (type mismatch or missing error handling).
+- **Six anti-patterns**: Type Mismatch, Error Amnesia, Chatty Interface, God Object, Leaky Abstraction, Version Drift.
 
 ## Agent Content
 

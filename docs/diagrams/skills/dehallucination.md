@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/dehallucination/SKILL.md","source_hash": "sha256:9acad3598e025397b9aa015dfa6f8f099ddd648a4b29ead02ae8586763363cd8","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/dehallucination/SKILL.md","source_hash": "sha256:2a83ecc3496175198db6e7c9b6fddeb0bfe5266128a3c47410bbf78d3e0eb730","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: dehallucination
 
 Workflow for verifying claims, detecting hallucinations, and enforcing recovery protocols. Used as a quality gate by the Forge pipeline and roundtable feedback.

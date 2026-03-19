@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/ie-techniques.md", "source_hash": "sha256:54969fd36555323bf1592d8056189aa7a6dd6cc16a467419d05cb80ac5a9cb77", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/ie-techniques.md","source_hash": "sha256:ff5ae197b417e50314b95c1014c249fd19482660f8847a5cb6c84cef4b990cdc","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: ie-techniques
 
 Reference command providing 16 research-backed instruction engineering techniques for effective prompt crafting. Covers emotional stimuli, XML tags, repetition, personas, chain-of-thought, and subagent design.

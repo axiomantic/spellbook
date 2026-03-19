@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/dead-code-analyze.md", "source_hash": "sha256:626f451a7db07c49e96a602d70befd2299faf4304f58b2fb55deeafade978d33", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/dead-code-analyze.md","source_hash": "sha256:b979fd78503ee7695c09b5b2acc37a333a63da5e6a5582d6a0c22abc2056f6be","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: dead-code-analyze
 
 Extract, triage, and verify code items for dead code with iterative re-scanning to fixed-point.

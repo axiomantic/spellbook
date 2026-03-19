@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/merge-work-packets.md", "source_hash": "sha256:2339a0fa8d23ec1ae667d08e3562b2feb589b94a803b18073d65da047e569250", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/merge-work-packets.md","source_hash": "sha256:005f14302e52216f5277c6969610597c34f43cd3e05f9ee30e9c925652fa52d3","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: merge-work-packets
 
 Integrates completed work packets by verifying all tracks, invoking the merging-worktrees skill, handling conflicts, running QA gates, and reporting final integration status.
