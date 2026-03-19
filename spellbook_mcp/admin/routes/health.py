@@ -13,8 +13,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.db import (
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.db import (
     query_coordination_db,
     query_forged_db,
     query_fractal_db,
@@ -28,9 +28,9 @@ router = APIRouter(prefix="/health", tags=["health"])
 
 def _get_db_paths() -> dict[str, str]:
     """Return mapping of database name to file path."""
-    from spellbook_mcp.db import get_db_path
-    from spellbook_mcp.fractal.schema import get_fractal_db_path
-    from spellbook_mcp.forged.schema import get_forged_db_path
+    from spellbook.core.db import get_db_path
+    from spellbook.fractal.schema import get_fractal_db_path
+    from spellbook.forged.schema import get_forged_db_path
 
     base_dir = Path.home() / ".local" / "spellbook"
     return {

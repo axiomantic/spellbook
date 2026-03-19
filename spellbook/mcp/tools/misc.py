@@ -11,10 +11,10 @@ from typing import List, Optional
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.config_tools import get_spellbook_dir
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.path_utils import encode_cwd, get_project_path_from_context
-from spellbook_mcp.skill_analyzer import (
+from spellbook.core.config import get_spellbook_dir
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.core.path_utils import encode_cwd, get_project_path_from_context
+from spellbook.sessions.skill_analyzer import (
     analyze_sessions as do_analyze_skill_usage,
     get_analytics_summary as do_get_analytics_summary,
 )
@@ -60,8 +60,8 @@ def workflow_state_save(
     Returns:
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
-    from spellbook_mcp.db import get_connection
-    from spellbook_mcp.resume import validate_workflow_state
+    from spellbook.core.db import get_connection
+    from spellbook.sessions.resume import validate_workflow_state
 
     validation = validate_workflow_state(state)
     if not validation["valid"]:
@@ -131,7 +131,7 @@ def workflow_state_load(
             "error": str?
         }
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection()
@@ -186,7 +186,7 @@ def workflow_state_load(
 
         import logging as _logging
         _logger = _logging.getLogger(__name__)
-        from spellbook_mcp.resume import validate_workflow_state
+        from spellbook.sessions.resume import validate_workflow_state
         validation = validate_workflow_state(state)
         if not validation["valid"]:
             _logger.warning(
@@ -244,7 +244,7 @@ def workflow_state_update(
     Returns:
         {"success": True/False, "project_path": str, "error": str?}
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection()
@@ -268,7 +268,7 @@ def workflow_state_update(
             base_state = json.loads(row[0])
 
         # Validate incoming updates before merging
-        from spellbook_mcp.resume import validate_workflow_state
+        from spellbook.sessions.resume import validate_workflow_state
 
         pre_validation = validate_workflow_state(updates)
         if not pre_validation["valid"]:

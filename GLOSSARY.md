@@ -9,7 +9,7 @@ Canonical definitions for spellbook-specific terms. Reference by name instead of
 | **Skill** | A deferred-load instruction set with YAML frontmatter. Description always loaded; body loaded only when triggered. |
 | **Command** | A slash-invoked action (`/foo`). Loaded on explicit invocation. |
 | **Pattern** | A reusable prompt pattern referenced by skills. Lives in `patterns/`. |
-| **MCP Tool** | A Model Context Protocol function callable by the LLM. Lives in `spellbook_mcp/`. |
+| **MCP Tool** | A Model Context Protocol function callable by the LLM. Lives in `spellbook/`. |
 | **Orchestrator** | The main LLM context managing subagents and skill invocation. |
 | **Subagent** | A spawned LLM instance handling a delegated task. Returns results to orchestrator. |
 

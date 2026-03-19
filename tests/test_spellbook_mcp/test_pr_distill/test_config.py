@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from spellbook_mcp.pr_distill.config import (
+from spellbook.pr_distill.config import (
     CONFIG_DIR,
     DEFAULT_CONFIG,
     encode_project_path,
@@ -95,7 +95,7 @@ class TestLoadConfig:
         """Return DEFAULT_CONFIG when config file doesn't exist."""
         project_root = str(tmp_path / "nonexistent_project")
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = load_config(project_root)
 
         assert result == DEFAULT_CONFIG
@@ -119,7 +119,7 @@ class TestLoadConfig:
         }
         config_file.write_text(json.dumps(custom_config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = load_config(project_root)
 
         assert result["blessed_patterns"] == ["pattern-1", "pattern-2"]
@@ -139,7 +139,7 @@ class TestLoadConfig:
         }
         config_file.write_text(json.dumps(partial_config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = load_config(project_root)
 
         assert result["blessed_patterns"] == ["pattern-1"]
@@ -155,7 +155,7 @@ class TestLoadConfig:
 
         config_file.write_text("{ invalid json }")
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = load_config(project_root)
 
         assert result == DEFAULT_CONFIG
@@ -177,7 +177,7 @@ class TestSaveConfig:
             },
         }
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             save_config(project_root, config)
 
         config_path = tmp_path / "Users-alice-project" / "pr-distill-config.json"
@@ -196,7 +196,7 @@ class TestSaveConfig:
             },
         }
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             save_config(project_root, config)
 
         config_path = tmp_path / "Users-alice-project" / "pr-distill-config.json"
@@ -222,7 +222,7 @@ class TestSaveConfig:
             "query_count_thresholds": DEFAULT_CONFIG["query_count_thresholds"],
         }
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             save_config(project_root, new_config)
 
         loaded = json.loads(config_file.read_text())
@@ -236,7 +236,7 @@ class TestBlessPattern:
         """Bless a pattern when no config exists."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "new-pattern")
 
         assert "new-pattern" in result["blessed_patterns"]
@@ -260,7 +260,7 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "new-pattern")
 
         assert result["blessed_patterns"] == ["existing-pattern", "new-pattern"]
@@ -279,7 +279,7 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             # Bless same pattern twice
             bless_pattern(project_root, "pattern-1")
             result = bless_pattern(project_root, "pattern-1")
@@ -291,7 +291,7 @@ class TestBlessPattern:
         """bless_pattern returns the full updated config."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook_mcp.pr_distill.config.CONFIG_DIR", str(tmp_path)):
+        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
             result = bless_pattern(project_root, "test-pattern")
 
         assert "blessed_patterns" in result

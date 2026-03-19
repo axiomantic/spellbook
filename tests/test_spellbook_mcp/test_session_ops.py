@@ -7,7 +7,7 @@ from pathlib import Path
 
 def test_load_jsonl_basic(tmp_path):
     """Test loading basic JSONL file."""
-    from spellbook_mcp.session_ops import load_jsonl
+    from spellbook.sessions.parser import load_jsonl
 
     session_file = tmp_path / "test.jsonl"
     messages = [
@@ -27,7 +27,7 @@ def test_load_jsonl_basic(tmp_path):
 
 def test_load_jsonl_with_empty_lines(tmp_path):
     """Test that empty lines are skipped."""
-    from spellbook_mcp.session_ops import load_jsonl
+    from spellbook.sessions.parser import load_jsonl
 
     session_file = tmp_path / "test.jsonl"
 
@@ -42,7 +42,7 @@ def test_load_jsonl_with_empty_lines(tmp_path):
 
 def test_load_jsonl_file_not_found():
     """Test error handling for missing file."""
-    from spellbook_mcp.session_ops import load_jsonl
+    from spellbook.sessions.parser import load_jsonl
 
     with pytest.raises(FileNotFoundError) as exc_info:
         load_jsonl('/nonexistent/file.jsonl')
@@ -52,7 +52,7 @@ def test_load_jsonl_file_not_found():
 
 def test_load_jsonl_invalid_json(tmp_path):
     """Test error handling for malformed JSON."""
-    from spellbook_mcp.session_ops import load_jsonl
+    from spellbook.sessions.parser import load_jsonl
 
     session_file = tmp_path / "bad.jsonl"
 
@@ -68,7 +68,7 @@ def test_load_jsonl_invalid_json(tmp_path):
 
 def test_find_last_compact_boundary():
     """Test finding last compact boundary in messages."""
-    from spellbook_mcp.session_ops import find_last_compact_boundary
+    from spellbook.sessions.parser import find_last_compact_boundary
 
     messages = [
         {"uuid": "msg-1", "type": "user"},
@@ -84,7 +84,7 @@ def test_find_last_compact_boundary():
 
 def test_find_last_compact_boundary_none():
     """Test when no compact boundary exists."""
-    from spellbook_mcp.session_ops import find_last_compact_boundary
+    from spellbook.sessions.parser import find_last_compact_boundary
 
     messages = [
         {"uuid": "msg-1", "type": "user"},
@@ -97,7 +97,7 @@ def test_find_last_compact_boundary_none():
 
 def test_find_last_compact_boundary_empty():
     """Test finding compact boundary in empty list."""
-    from spellbook_mcp.session_ops import find_last_compact_boundary
+    from spellbook.sessions.parser import find_last_compact_boundary
 
     result = find_last_compact_boundary([])
     assert result is None
@@ -105,7 +105,7 @@ def test_find_last_compact_boundary_empty():
 
 def test_extract_custom_title_found():
     """Test extracting custom title from messages."""
-    from spellbook_mcp.session_ops import extract_custom_title
+    from spellbook.sessions.parser import extract_custom_title
 
     messages = [
         {"type": "user", "message": {"content": "Hello"}},
@@ -119,7 +119,7 @@ def test_extract_custom_title_found():
 
 def test_extract_custom_title_last_wins():
     """Test that last custom title wins when multiple exist."""
-    from spellbook_mcp.session_ops import extract_custom_title
+    from spellbook.sessions.parser import extract_custom_title
 
     messages = [
         {"type": "custom-title", "customTitle": "first-title", "sessionId": "abc123"},
@@ -133,7 +133,7 @@ def test_extract_custom_title_last_wins():
 
 def test_extract_custom_title_none():
     """Test when no custom title exists."""
-    from spellbook_mcp.session_ops import extract_custom_title
+    from spellbook.sessions.parser import extract_custom_title
 
     messages = [
         {"type": "user", "message": {"content": "Hello"}},
@@ -146,7 +146,7 @@ def test_extract_custom_title_none():
 
 def test_extract_custom_title_missing_field():
     """Test custom title extraction when customTitle field is missing."""
-    from spellbook_mcp.session_ops import extract_custom_title
+    from spellbook.sessions.parser import extract_custom_title
 
     messages = [
         {"type": "custom-title", "sessionId": "abc123"}  # Missing customTitle
@@ -158,7 +158,7 @@ def test_extract_custom_title_missing_field():
 
 def test_split_by_char_limit_single_chunk(tmp_path):
     """Test splitting when entire session fits in one chunk."""
-    from spellbook_mcp.session_ops import split_by_char_limit
+    from spellbook.sessions.parser import split_by_char_limit
 
     session_file = tmp_path / "session.jsonl"
     messages = [
@@ -179,7 +179,7 @@ def test_split_by_char_limit_single_chunk(tmp_path):
 
 def test_split_by_char_limit_multiple_chunks(tmp_path):
     """Test splitting into multiple chunks."""
-    from spellbook_mcp.session_ops import split_by_char_limit
+    from spellbook.sessions.parser import split_by_char_limit
 
     session_file = tmp_path / "session.jsonl"
 
@@ -202,7 +202,7 @@ def test_split_by_char_limit_multiple_chunks(tmp_path):
 
 def test_split_by_char_limit_invalid_start_line(tmp_path):
     """Test error handling for invalid start_line."""
-    from spellbook_mcp.session_ops import split_by_char_limit
+    from spellbook.sessions.parser import split_by_char_limit
 
     session_file = tmp_path / "session.jsonl"
     with open(session_file, 'w') as f:
@@ -216,7 +216,7 @@ def test_split_by_char_limit_invalid_start_line(tmp_path):
 
 def test_split_by_char_limit_invalid_char_limit(tmp_path):
     """Test error handling for invalid char_limit."""
-    from spellbook_mcp.session_ops import split_by_char_limit
+    from spellbook.sessions.parser import split_by_char_limit
 
     session_file = tmp_path / "session.jsonl"
     with open(session_file, 'w') as f:
@@ -230,7 +230,7 @@ def test_split_by_char_limit_invalid_char_limit(tmp_path):
 
 def test_split_by_char_limit_single_message_exceeds_limit(tmp_path):
     """Test that at least one message per chunk even if it exceeds limit."""
-    from spellbook_mcp.session_ops import split_by_char_limit
+    from spellbook.sessions.parser import split_by_char_limit
 
     session_file = tmp_path / "session.jsonl"
     large_message = {"uuid": "msg-1", "type": "user", "message": {"content": "x" * 1000}}
@@ -246,7 +246,7 @@ def test_split_by_char_limit_single_message_exceeds_limit(tmp_path):
 
 def test_list_sessions_with_samples(tmp_path):
     """Test listing sessions with metadata and content samples."""
-    from spellbook_mcp.session_ops import list_sessions_with_samples
+    from spellbook.sessions.parser import list_sessions_with_samples
 
     session1 = tmp_path / "session-1.jsonl"
     messages1 = [
@@ -277,7 +277,7 @@ def test_list_sessions_with_samples(tmp_path):
 
 def test_list_sessions_with_samples_limit(tmp_path):
     """Test that limit parameter works correctly."""
-    from spellbook_mcp.session_ops import list_sessions_with_samples
+    from spellbook.sessions.parser import list_sessions_with_samples
 
     for i in range(5):
         session = tmp_path / f"session-{i}.jsonl"
@@ -298,7 +298,7 @@ def test_list_sessions_with_samples_limit(tmp_path):
 
 def test_list_sessions_with_samples_empty_dir(tmp_path):
     """Test listing sessions in empty directory."""
-    from spellbook_mcp.session_ops import list_sessions_with_samples
+    from spellbook.sessions.parser import list_sessions_with_samples
 
     empty_dir = tmp_path / "empty"
     empty_dir.mkdir()
@@ -309,7 +309,7 @@ def test_list_sessions_with_samples_empty_dir(tmp_path):
 
 def test_list_sessions_sorted_by_activity(tmp_path):
     """Test that sessions are sorted by last_activity descending."""
-    from spellbook_mcp.session_ops import list_sessions_with_samples
+    from spellbook.sessions.parser import list_sessions_with_samples
 
     for i in range(3):
         session = tmp_path / f"session-{i}.jsonl"

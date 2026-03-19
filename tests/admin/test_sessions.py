@@ -33,7 +33,7 @@ class TestSessionList:
             ])
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 # Create the .claude/projects structure
@@ -79,7 +79,7 @@ class TestSessionList:
             ])
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions?project=projA")
@@ -103,7 +103,7 @@ class TestSessionList:
                 ])
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions?page=2&per_page=2")
@@ -125,7 +125,7 @@ class TestSessionList:
             claude_projects.mkdir(parents=True)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions")
@@ -150,7 +150,7 @@ class TestSessionList:
             ])
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions")
@@ -176,7 +176,7 @@ class TestSessionList:
             ])
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions")

@@ -26,7 +26,7 @@ from install import check_tts_available, setup_tts, _set_tts_config
 # This context manager provides the common mock setup.
 def _mock_no_prior_config():
     """Mock config_get to return None (no prior TTS preference)."""
-    return patch("spellbook_mcp.config_tools.config_get", return_value=None)
+    return patch("spellbook.core.config.config_get", return_value=None)
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ class TestSetupTtsSkipCases:
 
     def test_existing_config_skips_prompt(self):
         """When tts_enabled is already set in config, skip prompting."""
-        with patch("spellbook_mcp.config_tools.config_get", return_value=True), \
+        with patch("spellbook.core.config.config_get", return_value=True), \
              patch("install.check_tts_available", return_value=True), \
              patch("builtins.input") as mock_input, \
              patch("install._set_tts_config") as mock_config, \
@@ -240,7 +240,7 @@ class TestSetupTtsSkipCases:
 
     def test_existing_disabled_config_skips_prompt(self):
         """When tts_enabled=False in config, skip prompting."""
-        with patch("spellbook_mcp.config_tools.config_get", return_value=False), \
+        with patch("spellbook.core.config.config_get", return_value=False), \
              patch("install.check_tts_available") as mock_check, \
              patch("builtins.input") as mock_input, \
              patch("install._set_tts_config") as mock_config:
@@ -337,8 +337,8 @@ class TestSetTtsConfig:
         """Calling _set_tts_config writes tts_enabled to the config file."""
         config_file = tmp_path / "spellbook.json"
         config_file.write_text("{}")
-        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file), \
-             patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+        with patch("spellbook.core.config.get_config_path", return_value=config_file), \
+             patch("spellbook.core.config.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
             _set_tts_config(True)
         data = json.loads(config_file.read_text())
         assert data["tts_enabled"] is True
@@ -347,8 +347,8 @@ class TestSetTtsConfig:
         """Calling _set_tts_config(False) writes tts_enabled=False."""
         config_file = tmp_path / "spellbook.json"
         config_file.write_text("{}")
-        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file), \
-             patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+        with patch("spellbook.core.config.get_config_path", return_value=config_file), \
+             patch("spellbook.core.config.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
             _set_tts_config(False)
         data = json.loads(config_file.read_text())
         assert data["tts_enabled"] is False

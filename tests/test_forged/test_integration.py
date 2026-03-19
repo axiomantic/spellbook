@@ -19,7 +19,7 @@ class TestSchemaIntegration:
 
     def test_schema_initializes_all_tables(self, tmp_path):
         """Schema initialization creates all required tables."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -46,7 +46,7 @@ class TestSchemaIntegration:
 
     def test_schema_is_idempotent(self, tmp_path):
         """Calling init_forged_schema multiple times is safe."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
 
@@ -66,8 +66,8 @@ class TestSchemaIntegration:
 
     def test_schema_records_version(self, tmp_path):
         """Schema version is recorded in the database."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
-        from spellbook_mcp.forged.models import SCHEMA_VERSION
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.models import SCHEMA_VERSION
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -85,19 +85,19 @@ class TestCompleteFeatureLifecycle:
 
     def test_feature_flows_through_all_stages(self, tmp_path):
         """A feature can flow through DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start,
             forge_iteration_advance,
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # Start at DISCOVER
@@ -125,16 +125,16 @@ class TestCompleteFeatureLifecycle:
 
     def test_feature_with_evidence_accumulation(self, tmp_path):
         """Evidence is accumulated as feature progresses through stages."""
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 result = forge_iteration_start(feature_name="evidence-test")
@@ -172,20 +172,20 @@ class TestIterateVerdictFlow:
 
     def test_iterate_returns_to_earlier_stage(self, tmp_path):
         """ITERATE verdict causes return to specified stage with incremented iteration."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start,
             forge_iteration_advance,
             forge_iteration_return,
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # Start and advance to PLAN
@@ -224,20 +224,20 @@ class TestIterateVerdictFlow:
 
     def test_multiple_iterations_track_history(self, tmp_path):
         """Multiple iterate cycles accumulate feedback history."""
-        from spellbook_mcp.forged.iteration_tools import (
+        from spellbook.forged.iteration_tools import (
             forge_iteration_start,
             forge_iteration_advance,
             forge_iteration_return,
         )
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
         conn = get_forged_connection(str(db_path))
 
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = "/test/project"
 
                 # First iteration
@@ -290,8 +290,8 @@ class TestRoundtableEndToEnd:
 
     def test_roundtable_convene_generates_prompt(self, tmp_path):
         """roundtable_convene generates a valid prompt with archetypes."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         # Create a test artifact
         artifact_path = tmp_path / "test-artifact.md"
@@ -313,7 +313,7 @@ class TestRoundtableEndToEnd:
 
     def test_roundtable_convene_uses_stage_defaults(self, tmp_path):
         """Default archetypes vary by stage."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene, get_default_archetypes
+        from spellbook.forged.roundtable import roundtable_convene, get_default_archetypes
 
         artifact_path = tmp_path / "artifact.md"
         artifact_path.write_text("Test content")
@@ -337,7 +337,7 @@ class TestRoundtableEndToEnd:
 
     def test_process_roundtable_response_all_approve(self, tmp_path):
         """Processing response with all APPROVE verdicts returns consensus True."""
-        from spellbook_mcp.forged.roundtable import process_roundtable_response
+        from spellbook.forged.roundtable import process_roundtable_response
 
         response = """
         **Magician**: The implementation looks solid. Types are correct.
@@ -377,7 +377,7 @@ class TestRoundtableEndToEnd:
 
     def test_process_roundtable_response_with_iterate(self, tmp_path):
         """Processing response with ITERATE verdict returns consensus False with feedback."""
-        from spellbook_mcp.forged.roundtable import process_roundtable_response
+        from spellbook.forged.roundtable import process_roundtable_response
 
         response = """
         **Magician**: Code has technical issues.
@@ -421,7 +421,7 @@ class TestRoundtableEndToEnd:
 
     def test_roundtable_debate_generates_prompt(self, tmp_path):
         """roundtable_debate generates a debate prompt for Justice."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
+        from spellbook.forged.roundtable import roundtable_debate
 
         artifact_path = tmp_path / "artifact.md"
         artifact_path.write_text("Test content for debate")
@@ -450,8 +450,8 @@ class TestProjectGraphIntegration:
 
     def test_project_init_creates_graph(self, tmp_path):
         """forge_project_init creates a valid project graph."""
-        from spellbook_mcp.forged.project_tools import forge_project_init
-        from spellbook_mcp.forged.artifacts import get_project_encoded
+        from spellbook.forged.project_tools import forge_project_init
+        from spellbook.forged.artifacts import get_project_encoded
 
         project_path = str(tmp_path / "my-project")
         Path(project_path).mkdir(parents=True, exist_ok=True)
@@ -476,7 +476,7 @@ class TestProjectGraphIntegration:
 
     def test_project_status_shows_progress(self, tmp_path):
         """forge_project_status returns progress information."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_project_status
+        from spellbook.forged.project_tools import forge_project_init, forge_project_status
 
         project_path = str(tmp_path / "progress-project")
         Path(project_path).mkdir(parents=True, exist_ok=True)
@@ -501,7 +501,7 @@ class TestProjectGraphIntegration:
 
     def test_feature_update_changes_status(self, tmp_path):
         """forge_feature_update modifies feature status."""
-        from spellbook_mcp.forged.project_tools import (
+        from spellbook.forged.project_tools import (
             forge_project_init,
             forge_feature_update,
             forge_project_status,
@@ -542,9 +542,9 @@ class TestCrossModuleIntegration:
 
     def test_full_workflow_with_project_and_iterations(self, tmp_path):
         """Project graph, iterations, and artifacts work together."""
-        from spellbook_mcp.forged.project_tools import forge_project_init, forge_feature_update
-        from spellbook_mcp.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.project_tools import forge_project_init, forge_feature_update
+        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         # Setup
         db_path = tmp_path / "forged.db"
@@ -566,9 +566,9 @@ class TestCrossModuleIntegration:
         assert init_result["success"]
 
         # Start iteration for feature
-        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = conn
-            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
                 mock_project.return_value = project_path
 
                 # Mark feature as in progress
@@ -600,6 +600,6 @@ class TestCrossModuleIntegration:
                 )
 
         # Verify final state
-        from spellbook_mcp.forged.project_tools import forge_project_status
+        from spellbook.forged.project_tools import forge_project_status
         status = forge_project_status(project_path=project_path)
         assert status["progress"]["completion_percentage"] == 100.0

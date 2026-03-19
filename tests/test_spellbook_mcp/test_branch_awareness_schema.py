@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, get_connection, init_db
+from spellbook.core.db import close_all_connections, get_connection, init_db
 
 
 @pytest.fixture

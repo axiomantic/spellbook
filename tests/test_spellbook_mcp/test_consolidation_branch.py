@@ -2,8 +2,8 @@
 
 import pytest
 
-from spellbook_mcp.db import get_connection, init_db, close_all_connections
-from spellbook_mcp.memory_consolidation import (
+from spellbook.core.db import get_connection, init_db, close_all_connections
+from spellbook.memory.consolidation import (
     _merge_event_metadata,
     _strategy_content_hash_dedup,
     _strategy_jaccard_similarity,
@@ -12,7 +12,7 @@ from spellbook_mcp.memory_consolidation import (
     build_consolidation_prompt,
     consolidate_batch,
 )
-from spellbook_mcp.memory_store import log_raw_event
+from spellbook.memory.store import log_raw_event
 
 
 @pytest.fixture

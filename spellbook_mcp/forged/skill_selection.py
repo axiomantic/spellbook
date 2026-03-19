@@ -12,7 +12,7 @@ Selection Priority Order:
 
 from typing import Optional
 
-from spellbook_mcp.forged.models import IterationState, Feedback
+from spellbook.forged.models import IterationState, Feedback
 
 
 # Stage to default skill mapping

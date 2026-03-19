@@ -5,17 +5,17 @@ import asyncio
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.branch_ancestry import get_current_branch
-from spellbook_mcp.db import get_db_path
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.memory_consolidation import consolidate_batch, should_consolidate
-from spellbook_mcp.memory_tools import (
+from spellbook.branch_ancestry import get_current_branch
+from spellbook.core.db import get_db_path
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.memory.consolidation import consolidate_batch, should_consolidate
+from spellbook.memory.tools import (
     do_get_unconsolidated,
     do_memory_forget,
     do_memory_recall,
     do_store_memories,
 )
-from spellbook_mcp.path_utils import (
+from spellbook.core.path_utils import (
     encode_cwd,
     get_project_path_from_context,
     resolve_repo_root,
@@ -82,7 +82,7 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
     db_path = str(get_db_path())
     result = do_memory_forget(db_path=db_path, memory_id=memory_id)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+        from spellbook.admin.events import Event, Subsystem, event_bus
 
         await event_bus.publish(
             Event(
@@ -210,7 +210,7 @@ async def memory_store_memories(
         branch=branch,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+        from spellbook.admin.events import Event, Subsystem, event_bus
 
         await event_bus.publish(
             Event(

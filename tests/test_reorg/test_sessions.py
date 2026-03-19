@@ -1,6 +1,6 @@
 """Tests for spellbook.sessions domain modules.
 
-Verifies that all public exports from spellbook_mcp session modules
+Verifies that all public exports from spellbook session modules
 exist in the corresponding spellbook.sessions modules.
 """
 
@@ -37,8 +37,8 @@ class TestSessionsParserImports:
         assert callable(list_sessions_with_samples)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.session_ops must exist."""
-        import spellbook_mcp.session_ops as old_mod
+        """Every public callable in spellbook.sessions.parser must exist."""
+        import spellbook.sessions.parser as old_mod
         import spellbook.sessions.parser as new_mod
 
         old_public = {
@@ -95,8 +95,8 @@ class TestSessionsResumeImports:
         assert callable(load_workflow_state)
 
     def test_all_public_exports_match(self):
-        """Every public callable/class in spellbook_mcp.resume must exist."""
-        import spellbook_mcp.resume as old_mod
+        """Every public callable/class in spellbook.sessions.resume must exist."""
+        import spellbook.sessions.resume as old_mod
         import spellbook.sessions.resume as new_mod
 
         old_public = {
@@ -138,8 +138,8 @@ class TestSessionsCompactionImports:
         assert CompactionWatcher is not None
 
     def test_all_public_exports_match(self):
-        """Every public callable/class in spellbook_mcp.compaction_detector must exist."""
-        import spellbook_mcp.compaction_detector as old_mod
+        """Every public callable/class in spellbook.sessions.compaction must exist."""
+        import spellbook.sessions.compaction as old_mod
         import spellbook.sessions.compaction as new_mod
 
         old_public = {
@@ -201,8 +201,8 @@ class TestSessionsWatcherImports:
         )
 
     def test_all_public_exports_match(self):
-        """Every public callable/class in spellbook_mcp.watcher must exist."""
-        import spellbook_mcp.watcher as old_mod
+        """Every public callable/class in spellbook.sessions.watcher must exist."""
+        import spellbook.sessions.watcher as old_mod
         import spellbook.sessions.watcher as new_mod
 
         old_public = {
@@ -249,8 +249,8 @@ class TestSessionsSkillAnalyzerImports:
         assert callable(get_analytics_summary)
 
     def test_all_public_exports_match(self):
-        """Every public callable/class in spellbook_mcp.skill_analyzer must exist."""
-        import spellbook_mcp.skill_analyzer as old_mod
+        """Every public callable/class in spellbook.sessions.skill_analyzer must exist."""
+        import spellbook.sessions.skill_analyzer as old_mod
         import spellbook.sessions.skill_analyzer as new_mod
 
         old_public = {
@@ -297,8 +297,8 @@ class TestSessionsInjectionImports:
         assert callable(inject_recovery_context)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.injection must exist."""
-        import spellbook_mcp.injection as old_mod
+        """Every public callable in spellbook.sessions.injection must exist."""
+        import spellbook.sessions.injection as old_mod
         import spellbook.sessions.injection as new_mod
 
         old_public = {
@@ -330,8 +330,8 @@ class TestSessionsSoulExtractorImports:
         assert callable(extract_soul)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.soul_extractor must exist."""
-        import spellbook_mcp.soul_extractor as old_mod
+        """Every public callable in spellbook.sessions.soul_extractor must exist."""
+        import spellbook.sessions.soul_extractor as old_mod
         import spellbook.sessions.soul_extractor as new_mod
 
         old_public = {

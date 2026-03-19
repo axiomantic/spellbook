@@ -493,7 +493,7 @@ def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
     Returns:
         ResumeFields dict with resume_available and optional resume context
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection(db_path)
@@ -918,7 +918,7 @@ def _check_state_injection(state: dict) -> list[dict]:
     findings: list[dict] = []
 
     try:
-        from spellbook_mcp.security.check import check_tool_input
+        from spellbook.security.check import check_tool_input
     except ImportError:
         logger.warning("Security check module not available, skipping injection check")
         return findings
@@ -955,7 +955,7 @@ def _mark_hostile_and_log(
         db_path: Path to the database.
     """
     try:
-        from spellbook_mcp.security.tools import do_log_event, do_set_trust
+        from spellbook.security.tools import do_log_event, do_set_trust
     except ImportError:
         logger.warning("Security tools not available, skipping hostile marking")
         return
@@ -1024,7 +1024,7 @@ def load_workflow_state(
             trigger: The trigger that saved the state, or None.
             rejected: True if state existed but failed validation.
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection(db_path)

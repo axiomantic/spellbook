@@ -12,9 +12,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.events import Event, Subsystem, event_bus
-from spellbook_mcp.admin.routes.schemas import (
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.events import Event, Subsystem, event_bus
+from spellbook.admin.routes.schemas import (
     ConfigBatchRequest,
     ConfigResponse,
     ConfigSetRequest,
@@ -91,7 +91,7 @@ KNOWN_KEYS = {entry["key"] for entry in CONFIG_SCHEMA}
 
 def get_all_config() -> dict[str, Any]:
     """Read all config from spellbook.json."""
-    from spellbook_mcp.config_tools import get_config_path
+    from spellbook.core.config import get_config_path
 
     config_path = get_config_path()
     if not config_path.exists():
@@ -104,14 +104,14 @@ def get_all_config() -> dict[str, Any]:
 
 def set_config_value(key: str, value: Any) -> dict:
     """Set a single config value via config_set."""
-    from spellbook_mcp.config_tools import config_set
+    from spellbook.core.config import config_set
 
     return config_set(key, value)
 
 
 def batch_set_config(updates: dict[str, Any]) -> dict:
     """Set multiple config values in one atomic write."""
-    from spellbook_mcp.config_tools import config_set_many
+    from spellbook.core.config import config_set_many
 
     return config_set_many(updates)
 

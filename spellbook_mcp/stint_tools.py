@@ -21,7 +21,7 @@ import time
 from datetime import datetime, timezone
 from typing import Optional
 
-from spellbook_mcp.db import get_connection
+from spellbook.core.db import get_connection
 
 
 def _is_ordered_subsequence(shorter: list[str], longer: list[str]) -> bool:
@@ -81,7 +81,7 @@ def _validate_stint_entry(entry: dict) -> tuple[bool, str]:
     """Validate a stint entry for injection patterns.
 
     Checks name, purpose, success_criteria, and behavioral_mode fields
-    against injection detection rules from spellbook_mcp.injection.
+    against injection detection rules from spellbook.sessions.injection.
 
     Side effect: truncated values from _sanitize_field are persisted
     back into the entry dict, so the stored entry respects length limits.
@@ -89,7 +89,7 @@ def _validate_stint_entry(entry: dict) -> tuple[bool, str]:
     Returns:
         (True, "") if valid, (False, error_message) if invalid.
     """
-    from spellbook_mcp.injection import _sanitize_field
+    from spellbook.sessions.injection import _sanitize_field
 
     for field in ("name", "purpose", "success_criteria", "behavioral_mode"):
         value = entry.get(field, "")
@@ -158,7 +158,7 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
             the new stack to persist. If new_stack is None, no write.
         db_path: Optional database path (for testing).
     """
-    from spellbook_mcp.db import get_db_path
+    from spellbook.core.db import get_db_path
 
     actual_path = db_path if db_path else str(get_db_path())
     max_retries = 10

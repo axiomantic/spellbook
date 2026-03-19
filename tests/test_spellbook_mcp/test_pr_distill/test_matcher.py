@@ -3,13 +3,13 @@
 import re
 import pytest
 
-from spellbook_mcp.pr_distill.matcher import (
+from spellbook.pr_distill.matcher import (
     check_pattern_match,
     match_patterns,
     sort_patterns_by_precedence,
 )
-from spellbook_mcp.pr_distill.patterns import Pattern
-from spellbook_mcp.pr_distill.types import FileDiff, Hunk, DiffLine
+from spellbook.pr_distill.patterns import Pattern
+from spellbook.pr_distill.types import FileDiff, Hunk, DiffLine
 
 
 def make_file_diff(

@@ -66,6 +66,7 @@ _ENTROPY_THRESHOLD = 4.5
 # in documentation context where the scanner cannot distinguish mention from use.
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
     "commands/feature-config.md",
+    "docs/security.md",
 ]
 
 # Known spellbook instruction tags that are legitimate content, not injection.
@@ -789,7 +790,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --base requires a BRANCH argument.\n"
-                "Usage: python -m spellbook_mcp.security.scanner --base BRANCH",
+                "Usage: python -m spellbook.security.scanner --base BRANCH",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -804,7 +805,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --commit requires a RANGE argument.\n"
-                "Usage: python -m spellbook_mcp.security.scanner --commit RANGE",
+                "Usage: python -m spellbook.security.scanner --commit RANGE",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -824,7 +825,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --mode requires a MODE argument.\n"
-                "Usage: python -m spellbook_mcp.security.scanner --mode mcp DIR",
+                "Usage: python -m spellbook.security.scanner --mode mcp DIR",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -850,7 +851,7 @@ def main(argv: list[str] | None = None) -> None:
 
     else:
         print(
-            "Usage: python -m spellbook_mcp.security.scanner "
+            "Usage: python -m spellbook.security.scanner "
             "[--changeset | --staged | --base BRANCH | --commit RANGE "
             "| --skills | --mode (mcp|skill) DIR]",
             file=sys.stderr,

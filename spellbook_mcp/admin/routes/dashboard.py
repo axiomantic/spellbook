@@ -7,14 +7,14 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.db import (
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.db import (
     query_spellbook_db,
     query_fractal_db,
     query_coordination_db,
 )
-from spellbook_mcp.admin.events import event_bus
-from spellbook_mcp.admin.routes.schemas import DashboardResponse
+from spellbook.admin.events import event_bus
+from spellbook.admin.routes.schemas import DashboardResponse
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -23,7 +23,7 @@ _start_time = time.time()
 
 def _get_db_size() -> int:
     """Get the spellbook database file size in bytes."""
-    from spellbook_mcp.db import get_db_path
+    from spellbook.core.db import get_db_path
 
     db_path = get_db_path()
     return db_path.stat().st_size if db_path.exists() else 0

@@ -7,7 +7,7 @@ import pytest
 
 
 WK = "/Users/elijahrutschman/Development/spellbook/.worktrees/web-admin-interface"
-ROUTE_MODULE = "spellbook_mcp.admin.routes.memory"
+ROUTE_MODULE = "spellbook.admin.routes.memory"
 
 
 def _memory_row(

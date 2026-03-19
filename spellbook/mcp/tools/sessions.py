@@ -8,13 +8,13 @@ from typing import Any, Dict, List
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.path_utils import (
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.core.path_utils import (
     get_project_dir_from_context,
     get_project_path_from_context,
 )
-from spellbook_mcp.session_ops import list_sessions_with_samples, split_by_char_limit
-from spellbook_mcp.terminal_utils import detect_terminal, spawn_terminal_window
+from spellbook.sessions.parser import list_sessions_with_samples, split_by_char_limit
+from spellbook.terminal_utils import detect_terminal, spawn_terminal_window
 
 
 @mcp.tool()
@@ -176,9 +176,9 @@ async def spawn_claude_session(
     # --- MCP-level security guard ---
     import sqlite3 as _sqlite3
 
-    from spellbook_mcp.security.check import check_tool_input as _check_tool_input
-    from spellbook_mcp.security.tools import do_log_event as _do_log_event
-    from spellbook_mcp.db import get_db_path
+    from spellbook.security.check import check_tool_input as _check_tool_input
+    from spellbook.security.tools import do_log_event as _do_log_event
+    from spellbook.core.db import get_db_path
 
     _db_path = str(get_db_path())
     _session_id = _get_session_id(ctx)

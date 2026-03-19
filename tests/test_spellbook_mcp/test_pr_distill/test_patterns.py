@@ -1,7 +1,7 @@
 """Tests for pr_distill pattern definitions."""
 
 import re
-from spellbook_mcp.pr_distill.patterns import (
+from spellbook.pr_distill.patterns import (
     BUILTIN_PATTERNS,
     ALWAYS_REVIEW_PATTERNS,
     HIGH_CONFIDENCE_PATTERNS,

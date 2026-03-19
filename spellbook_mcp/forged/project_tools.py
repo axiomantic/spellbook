@@ -10,14 +10,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from spellbook_mcp.forged.artifacts import (
+from spellbook.forged.artifacts import (
     artifact_base_path,
     get_project_encoded,
     read_artifact,
     write_artifact,
 )
-from spellbook_mcp.forged.models import IterationState
-from spellbook_mcp.forged.project_graph import (
+from spellbook.forged.models import IterationState
+from spellbook.forged.project_graph import (
     CyclicDependencyError,
     FeatureNode,
     MissingDependencyError,
@@ -25,7 +25,7 @@ from spellbook_mcp.forged.project_graph import (
     SkillInvocation,
     compute_dependency_order,
 )
-from spellbook_mcp.forged.skill_selection import select_skill
+from spellbook.forged.skill_selection import select_skill
 
 
 def _get_project_graph_path(project_path: str) -> str:
@@ -329,7 +329,7 @@ def forge_select_skill(
         }
 
     # Build iteration state for skill selection
-    from spellbook_mcp.forged.models import Feedback
+    from spellbook.forged.models import Feedback
 
     feedback_objects = []
     if feedback_history:

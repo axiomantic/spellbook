@@ -6,7 +6,7 @@ from pathlib import Path
 
 def test_skill_tools_removed_from_server():
     """Verify find_spellbook_skills and use_spellbook_skill tools are removed."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Get all attributes that have .fn method (FastMCP tools)
     tool_names = [name for name in dir(server)
@@ -19,7 +19,7 @@ def test_skill_tools_removed_from_server():
 
 def test_session_tools_still_present():
     """Verify session management tools are still present after cleanup."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Get all attributes that have .fn method (FastMCP tools)
     tool_names = [name for name in dir(server)
@@ -34,7 +34,7 @@ def test_session_tools_still_present():
 
 def test_swarm_tools_still_present():
     """Verify swarm coordination tools are still present after cleanup."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Get all attributes that have .fn method (FastMCP tools)
     tool_names = [name for name in dir(server)
@@ -53,12 +53,12 @@ def test_skill_ops_module_does_not_exist():
     """Verify skill_ops.py has been deleted."""
     # Try to import skill_ops - should fail
     with pytest.raises(ImportError):
-        from spellbook_mcp import skill_ops
+        from spellbook import skill_ops
 
 
 def test_no_skill_ops_imports_in_server():
     """Verify server.py does not import from skill_ops."""
-    from spellbook_mcp import server
+    from spellbook import server
     import inspect
 
     # Read the server.py source code
@@ -71,7 +71,7 @@ def test_no_skill_ops_imports_in_server():
 
 def test_no_get_skill_dirs_helper():
     """Verify get_skill_dirs helper function has been removed."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Verify get_skill_dirs does not exist on server module
     assert not hasattr(server, 'get_skill_dirs'), "get_skill_dirs helper should be removed"
@@ -79,7 +79,7 @@ def test_no_get_skill_dirs_helper():
 
 def test_server_docstring_updated():
     """Verify server docstring no longer references skill tools."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     docstring = server.__doc__
 

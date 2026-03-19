@@ -18,7 +18,7 @@ def test_admin_mount_accepts_starlette_mount():
     """Verify Mount object can be appended to _additional_http_routes."""
     from fastmcp import FastMCP
     from starlette.routing import Mount
-    from spellbook_mcp.admin.app import create_admin_app
+    from spellbook.admin.app import create_admin_app
 
     mcp_instance = FastMCP("test")
     admin_app = create_admin_app()

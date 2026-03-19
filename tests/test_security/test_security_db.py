@@ -50,7 +50,7 @@ class TestTrustRegistryTable:
 
     def test_table_created(self, tmp_path):
         """trust_registry table exists after init_db()."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -60,7 +60,7 @@ class TestTrustRegistryTable:
 
     def test_columns(self, tmp_path):
         """trust_registry has the expected columns."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -79,7 +79,7 @@ class TestTrustRegistryTable:
 
     def test_index_on_content_hash(self, tmp_path):
         """idx_trust_content_hash index exists."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -97,7 +97,7 @@ class TestSecurityEventsTable:
 
     def test_table_created(self, tmp_path):
         """security_events table exists after init_db()."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -105,7 +105,7 @@ class TestSecurityEventsTable:
 
     def test_columns(self, tmp_path):
         """security_events has the expected columns."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -128,7 +128,7 @@ class TestSecurityEventsTable:
 
     def test_index_on_event_type(self, tmp_path):
         """idx_security_events_type index exists."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -138,7 +138,7 @@ class TestSecurityEventsTable:
 
     def test_index_on_severity(self, tmp_path):
         """idx_security_events_severity index exists."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -157,7 +157,7 @@ class TestCanaryTokensTable:
 
     def test_table_created(self, tmp_path):
         """canary_tokens table exists after init_db()."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -165,7 +165,7 @@ class TestCanaryTokensTable:
 
     def test_columns(self, tmp_path):
         """canary_tokens has the expected columns."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -186,7 +186,7 @@ class TestCanaryTokensTable:
 
     def test_index_on_token(self, tmp_path):
         """idx_canary_token index exists."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -203,7 +203,7 @@ class TestSecurityModeTable:
 
     def test_table_created(self, tmp_path):
         """security_mode table exists after init_db()."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -211,7 +211,7 @@ class TestSecurityModeTable:
 
     def test_columns(self, tmp_path):
         """security_mode has the expected columns."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -224,7 +224,7 @@ class TestSecurityModeTable:
 
     def test_default_row_seeded(self, tmp_path):
         """security_mode is seeded with id=1, mode='standard'."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -237,7 +237,7 @@ class TestSecurityModeTable:
 
     def test_singleton_constraint(self, tmp_path):
         """Cannot insert a second row into security_mode."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -258,7 +258,7 @@ class TestIdempotentCreation:
 
     def test_double_init_no_error(self, tmp_path):
         """init_db() is safe to call twice."""
-        from spellbook_mcp.db import init_db
+        from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -266,7 +266,7 @@ class TestIdempotentCreation:
 
     def test_double_init_preserves_security_mode_default(self, tmp_path):
         """Second init_db() does not duplicate or overwrite the default row."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -289,7 +289,7 @@ class TestIdempotentCreation:
 
     def test_double_init_preserves_all_tables(self, tmp_path):
         """All 4 security tables still exist after a second init_db()."""
-        from spellbook_mcp.db import get_connection, init_db
+        from spellbook.core.db import get_connection, init_db
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)

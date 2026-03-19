@@ -5,7 +5,7 @@ import pytest
 
 def test_extract_position_last_10_actions():
     """Test extracting last 10 tool invocations."""
-    from spellbook_mcp.extractors.position import extract_position
+    from spellbook.extractors.position import extract_position
 
     messages = []
     for i in range(20):
@@ -30,7 +30,7 @@ def test_extract_position_last_10_actions():
 
 def test_extract_position_primary_args():
     """Test correct primary argument extraction per tool."""
-    from spellbook_mcp.extractors.position import extract_position
+    from spellbook.extractors.position import extract_position
 
     messages = [
         {
@@ -62,7 +62,7 @@ def test_extract_position_primary_args():
 
 def test_extract_position_truncates_long_args():
     """Test that long arguments are truncated."""
-    from spellbook_mcp.extractors.position import extract_position
+    from spellbook.extractors.position import extract_position
 
     long_command = "x" * 200
     messages = [
@@ -82,7 +82,7 @@ def test_extract_position_truncates_long_args():
 
 def test_extract_position_empty_messages():
     """Test extraction with no tool calls."""
-    from spellbook_mcp.extractors.position import extract_position
+    from spellbook.extractors.position import extract_position
 
     messages = [
         {"role": "user", "timestamp": "2026-01-16T10:00:00Z"},
@@ -95,7 +95,7 @@ def test_extract_position_empty_messages():
 
 def test_extract_position_includes_success_flag():
     """Test that success flag is included when present."""
-    from spellbook_mcp.extractors.position import extract_position
+    from spellbook.extractors.position import extract_position
 
     messages = [
         {
@@ -117,8 +117,8 @@ def test_extract_position_includes_success_flag():
 
 def test_extract_position_returns_typed_actions():
     """Test that results conform to ToolAction type."""
-    from spellbook_mcp.extractors.position import extract_position
-    from spellbook_mcp.extractors.types import ToolAction
+    from spellbook.extractors.position import extract_position
+    from spellbook.extractors.types import ToolAction
 
     messages = [
         {

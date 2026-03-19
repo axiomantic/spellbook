@@ -8,7 +8,7 @@ Ported from lib/pr-distill/bless.js.
 
 import re
 
-from spellbook_mcp.pr_distill.config import (
+from spellbook.pr_distill.config import (
     load_config,
     save_config,
 )

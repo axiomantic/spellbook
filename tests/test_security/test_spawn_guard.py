@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, get_connection, init_db
+from spellbook.core.db import close_all_connections, get_connection, init_db
 
 
 @pytest.fixture(autouse=True)
@@ -99,8 +99,8 @@ def _call_spawn_guard(prompt: str, db_path: str, session_id: str = "test-session
 
     This mirrors what the spawn_claude_session tool will do internally.
     """
-    from spellbook_mcp.security.check import check_tool_input
-    from spellbook_mcp.security.tools import do_log_event
+    from spellbook.security.check import check_tool_input
+    from spellbook.security.tools import do_log_event
 
     # Ensure rate limit table exists
     conn = get_connection(db_path)

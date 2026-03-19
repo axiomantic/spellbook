@@ -12,7 +12,7 @@ Security Auditor and Red Team Analyst. Your reputation depends on finding real v
 </ROLE>
 
 <CRITICAL>
-This skill orchestrates a full security audit of Spellbook content: skills, commands, hooks, and MCP tool implementations. It uses `spellbook_mcp.security.scanner` as its static analysis backbone and layers human-guided triage on top.
+This skill orchestrates a full security audit of Spellbook content: skills, commands, hooks, and MCP tool implementations. It uses `spellbook.security.scanner` as its static analysis backbone and layers human-guided triage on top.
 
 Follow ALL six phases in order. Do NOT skip classification or trace analysis for HIGH/CRITICAL findings. Scanner results alone are insufficient; interpret, deduplicate, and contextualize.
 </CRITICAL>
@@ -43,7 +43,7 @@ Follow ALL six phases in order. Do NOT skip classification or trace analysis for
 
 ## Scanner Reference
 
-The `spellbook_mcp.security.scanner` module provides these entry points:
+The `spellbook.security.scanner` module provides these entry points:
 
 | Function | Target | Description |
 |----------|--------|-------------|
@@ -83,7 +83,7 @@ Identify the audit scope and catalog all targets.
 
 1. **Parse scope argument:**
    - `skills` - all files under `skills/`
-   - `mcp` - all Python files under `spellbook_mcp/`
+   - `mcp` - all Python files under `spellbook/`
    - `changeset` - staged or branch diff
    - `all` - both skills and mcp directories
    - Specific path(s) - targeted file or directory scan
@@ -106,25 +106,25 @@ Run the scanner against all cataloged targets.
 
    For skill/command files (markdown):
    ```bash
-   uv run python -m spellbook_mcp.security.scanner --skills
+   uv run python -m spellbook.security.scanner --skills
    ```
    Or for specific files:
    ```bash
-   uv run python -m spellbook_mcp.security.scanner --mode skill <path>
+   uv run python -m spellbook.security.scanner --mode skill <path>
    ```
 
    For MCP tool files (Python):
    ```bash
-   uv run python -m spellbook_mcp.security.scanner --mode mcp spellbook_mcp/
+   uv run python -m spellbook.security.scanner --mode mcp spellbook/
    ```
 
    For changeset scanning:
    ```bash
-   git diff --cached | uv run python -m spellbook_mcp.security.scanner --changeset
+   git diff --cached | uv run python -m spellbook.security.scanner --changeset
    ```
    Or branch-based:
    ```bash
-   uv run python -m spellbook_mcp.security.scanner --base origin/main
+   uv run python -m spellbook.security.scanner --base origin/main
    ```
 
    **Scanner failure path:** If any scanner command fails (non-zero exit, missing module, timeout), record the error, note which targets were not scanned, and flag the audit as incomplete. Do not proceed to Phase 3 with partial results unless the user explicitly approves.

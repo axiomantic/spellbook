@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # Directories are copied recursively; files are copied individually.
 ESSENTIAL_DIRS = [
     "installer",
-    "spellbook_mcp",
+    "spellbook",
     "skills",
     "commands",
     "agents",

@@ -1,7 +1,7 @@
 """Tests for notification MCP tool functions in server.py.
 
 Uses .fn to access the underlying function from the FunctionTool wrapper.
-All spellbook_mcp.notify functions are mocked. Tests verify tool behavior,
+All spellbook.notifications.notify functions are mocked. Tests verify tool behavior,
 argument handling, and return contracts.
 """
 
@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from spellbook_mcp import server
+from spellbook import server
 
 
 class TestNotifySend:
@@ -20,7 +20,7 @@ class TestNotifySend:
     async def test_success_returns_ok_json(self):
         mock_result = {"ok": True}
         with patch(
-            "spellbook_mcp.notify.send_notification",
+            "spellbook.notifications.notify.send_notification",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):
@@ -32,7 +32,7 @@ class TestNotifySend:
     async def test_not_available_returns_error_json(self):
         mock_result = {"error": "Notifications not available. Missing tools"}
         with patch(
-            "spellbook_mcp.notify.send_notification",
+            "spellbook.notifications.notify.send_notification",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):
@@ -44,7 +44,7 @@ class TestNotifySend:
     @pytest.mark.asyncio
     async def test_passes_title_and_body(self):
         with patch(
-            "spellbook_mcp.notify.send_notification",
+            "spellbook.notifications.notify.send_notification",
             new_callable=AsyncMock,
         ) as mock_send:
             mock_send.return_value = {"ok": True}
@@ -56,7 +56,7 @@ class TestNotifySend:
     @pytest.mark.asyncio
     async def test_title_defaults_to_none(self):
         with patch(
-            "spellbook_mcp.notify.send_notification",
+            "spellbook.notifications.notify.send_notification",
             new_callable=AsyncMock,
         ) as mock_send:
             mock_send.return_value = {"ok": True}
@@ -76,7 +76,7 @@ class TestNotifyStatus:
             "title": "Spellbook",
             "error": None,
         }
-        with patch("spellbook_mcp.notify.get_status", return_value=mock_status):
+        with patch("spellbook.notifications.notify.get_status", return_value=mock_status):
             result_str = await server.notify_status.fn()
         result = json.loads(result_str)
         assert result == mock_status
@@ -90,7 +90,7 @@ class TestNotifyStatus:
             "title": "Spellbook",
             "error": "Missing tools",
         }
-        with patch("spellbook_mcp.notify.get_status", return_value=mock_status):
+        with patch("spellbook.notifications.notify.get_status", return_value=mock_status):
             result_str = await server.notify_status.fn()
         result = json.loads(result_str)
         assert result["available"] is False
@@ -102,7 +102,7 @@ class TestNotifySessionSetTool:
 
     @pytest.mark.asyncio
     async def test_updates_session_state(self):
-        from spellbook_mcp.config_tools import _session_states, _session_activity
+        from spellbook.core.config import _session_states, _session_activity
 
         _session_states.clear()
         _session_activity.clear()
@@ -121,7 +121,7 @@ class TestNotifySessionSetTool:
 
     @pytest.mark.asyncio
     async def test_partial_update(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_states,
             _session_activity,
             _get_session_state,
@@ -152,11 +152,11 @@ class TestNotifyConfigSetTool:
         config_file = tmp_path / "spellbook.json"
         config_file.write_text("{}")
         with patch(
-            "spellbook_mcp.config_tools.get_config_path",
+            "spellbook.core.config.get_config_path",
             return_value=config_file,
         ):
             with patch(
-                "spellbook_mcp.config_tools.CONFIG_LOCK_PATH",
+                "spellbook.core.config.CONFIG_LOCK_PATH",
                 tmp_path / "config.lock",
             ):
                 result_str = await server.notify_config_set.fn(
@@ -173,11 +173,11 @@ class TestNotifyConfigSetTool:
         config_file = tmp_path / "spellbook.json"
         config_file.write_text('{"notify_enabled": true}')
         with patch(
-            "spellbook_mcp.config_tools.get_config_path",
+            "spellbook.core.config.get_config_path",
             return_value=config_file,
         ):
             with patch(
-                "spellbook_mcp.config_tools.CONFIG_LOCK_PATH",
+                "spellbook.core.config.CONFIG_LOCK_PATH",
                 tmp_path / "config.lock",
             ):
                 result_str = await server.notify_config_set.fn(

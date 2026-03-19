@@ -1,7 +1,7 @@
 """Integration tests for MCP server with swarm tools."""
 import pytest
 from unittest.mock import patch, AsyncMock
-from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+from spellbook.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
 
 
 class TestMCPServerSwarmToolsIntegration:
@@ -9,7 +9,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_tools_are_importable(self):
         """Test that swarm tools can be imported from server module."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         assert hasattr(server, 'mcp_swarm_create')
         assert hasattr(server, 'mcp_swarm_register')
@@ -20,7 +20,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_create_tool_is_callable(self):
         """Test that mcp_swarm_create tool is callable."""
-        from spellbook_mcp.swarm_tools import swarm_create
+        from spellbook.swarm_tools import swarm_create
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -30,8 +30,8 @@ class TestMCPServerSwarmToolsIntegration:
         mock_backend = AsyncMock()
         mock_backend.create_swarm.return_value = "swarm-test-123"
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
+            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
                 result = swarm_create(
                     feature="test-feature",
                     manifest_path="/path/to/manifest.json"
@@ -42,7 +42,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_register_tool_is_callable(self):
         """Test that mcp_swarm_register tool is callable."""
-        from spellbook_mcp.swarm_tools import swarm_register
+        from spellbook.swarm_tools import swarm_register
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -55,8 +55,8 @@ class TestMCPServerSwarmToolsIntegration:
             "packet_id": 1
         }
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
+            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
                 result = swarm_register(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -70,7 +70,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_monitor_tool_is_callable(self):
         """Test that mcp_swarm_monitor tool is callable."""
-        from spellbook_mcp.swarm_tools import swarm_monitor
+        from spellbook.swarm_tools import swarm_monitor
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -87,8 +87,8 @@ class TestMCPServerSwarmToolsIntegration:
             "ready_for_merge": False
         }
 
-        with patch("spellbook_mcp.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook_mcp.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
+            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
                 result = swarm_monitor(swarm_id="swarm-123")
 
                 assert result["swarm_id"] == "swarm-123"
@@ -98,21 +98,21 @@ class TestMCPServerSwarmToolsIntegration:
     def test_server_module_loads_without_errors(self):
         """Test that the server module loads without errors."""
         try:
-            import spellbook_mcp.server
+            import spellbook.mcp.server
             assert True
         except Exception as e:
             pytest.fail(f"Server module failed to load: {e}")
 
     def test_mcp_instance_exists(self):
         """Test that mcp FastMCP instance exists."""
-        from spellbook_mcp.server import mcp
+        from spellbook.mcp.server import mcp
 
         assert mcp is not None
         assert hasattr(mcp, 'tool')
 
     def test_all_swarm_tools_have_docstrings(self):
         """Test that all swarm MCP tools have proper docstrings."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         tools = [
             'mcp_swarm_create',
@@ -136,14 +136,14 @@ class TestAnalyticsSummaryTool:
 
     def test_analytics_summary_returns_metrics(self, tmp_path, monkeypatch):
         """Test that analytics summary returns skill metrics from database."""
-        from spellbook_mcp.db import init_db, get_connection, get_db_path
-        from spellbook_mcp.skill_analyzer import OUTCOME_COMPLETED
+        from spellbook.core.db import init_db, get_connection, get_db_path
+        from spellbook.sessions.skill_analyzer import OUTCOME_COMPLETED
 
         # Set up test database
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
         monkeypatch.setattr(
-            "spellbook_mcp.db.get_db_path",
+            "spellbook.core.db.get_db_path",
             lambda: db_path
         )
 
@@ -160,7 +160,7 @@ class TestAnalyticsSummaryTool:
         conn.commit()
 
         # Import the function (not the tool decorator version)
-        from spellbook_mcp.skill_analyzer import get_analytics_summary
+        from spellbook.sessions.skill_analyzer import get_analytics_summary
 
         result = get_analytics_summary(
             project_encoded="test-project",
@@ -177,8 +177,8 @@ class TestTelemetryTools:
 
     def test_telemetry_enable_via_server(self, tmp_path, monkeypatch):
         """Test telemetry enable through server function."""
-        from spellbook_mcp.db import init_db, get_db_path
-        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
+        from spellbook.core.db import init_db, get_db_path
+        from spellbook.core.config import telemetry_enable, telemetry_status
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -191,8 +191,8 @@ class TestTelemetryTools:
 
     def test_telemetry_disable(self, tmp_path):
         """Test telemetry disable through server function."""
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.config_tools import telemetry_enable, telemetry_disable, telemetry_status
+        from spellbook.core.db import init_db
+        from spellbook.core.config import telemetry_enable, telemetry_disable, telemetry_status
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -210,8 +210,8 @@ class TestTelemetryTools:
 
     def test_telemetry_status_when_not_configured(self, tmp_path):
         """Test telemetry_status when no config exists."""
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.config_tools import telemetry_status
+        from spellbook.core.db import init_db
+        from spellbook.core.config import telemetry_status
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))

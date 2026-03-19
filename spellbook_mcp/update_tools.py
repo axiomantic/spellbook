@@ -9,7 +9,7 @@ This module provides:
 - Update status aggregation from config
 
 Architecture: Detection is read-only (git fetch + git show). Application
-runs as a subprocess to avoid self-modifying code. spellbook_mcp/ imports
+runs as a subprocess to avoid self-modifying code. spellbook/ imports
 only the OS abstraction layer (installer.compat) from installer/; higher-level
 installer logic is accessed by shelling out to install.py.
 """
@@ -27,7 +27,7 @@ from typing import Any, Optional
 
 from installer.compat import CrossPlatformLock, get_config_dir
 
-from spellbook_mcp.config_tools import config_get, config_set
+from spellbook.core.config import config_get, config_set
 
 logger = logging.getLogger(__name__)
 

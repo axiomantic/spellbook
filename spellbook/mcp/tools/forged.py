@@ -4,24 +4,24 @@ import re
 from pathlib import Path
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.config_tools import get_spellbook_dir
-from spellbook_mcp.forged.iteration_tools import (
+from spellbook.core.config import get_spellbook_dir
+from spellbook.forged.iteration_tools import (
     forge_iteration_advance as do_forge_iteration_advance,
     forge_iteration_return as do_forge_iteration_return,
     forge_iteration_start as do_forge_iteration_start,
 )
-from spellbook_mcp.forged.project_tools import (
+from spellbook.forged.project_tools import (
     forge_feature_update as do_forge_feature_update,
     forge_project_init as do_forge_project_init,
     forge_project_status as do_forge_project_status,
     forge_select_skill as do_forge_select_skill,
 )
-from spellbook_mcp.forged.roundtable import (
+from spellbook.forged.roundtable import (
     process_roundtable_response as do_process_roundtable_response,
     roundtable_convene as do_roundtable_convene,
     roundtable_debate as do_roundtable_debate,
 )
-from spellbook_mcp.injection import inject_recovery_context
+from spellbook.sessions.injection import inject_recovery_context
 
 
 def _extract_section(content: str, section_name: str) -> str | None:

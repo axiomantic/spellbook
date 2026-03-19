@@ -1,7 +1,7 @@
 """Tests for memory system schema tables."""
 
 import pytest
-from spellbook_mcp.db import init_db, get_connection, close_all_connections
+from spellbook.core.db import init_db, get_connection, close_all_connections
 
 
 @pytest.fixture

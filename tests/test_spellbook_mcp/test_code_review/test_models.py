@@ -3,7 +3,7 @@
 import pytest
 from enum import Enum
 
-from spellbook_mcp.code_review.models import (
+from spellbook.code_review.models import (
     Severity,
     FileDiff,
     PRData,

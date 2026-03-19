@@ -20,7 +20,7 @@ async def query_spellbook_db(
     sql: str, params: tuple = ()
 ) -> list[dict[str, Any]]:
     """Run a query against spellbook.db in a thread pool."""
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     def _run():
         conn = get_connection()
@@ -33,7 +33,7 @@ async def query_spellbook_db(
 
 async def execute_spellbook_db(sql: str, params: tuple = ()) -> int:
     """Execute a write query against spellbook.db, return rows affected."""
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     def _run():
         conn = get_connection()
@@ -48,7 +48,7 @@ async def query_fractal_db(
     sql: str, params: tuple = ()
 ) -> list[dict[str, Any]]:
     """Run a query against fractal.db in a thread pool."""
-    from spellbook_mcp.fractal.schema import get_fractal_connection
+    from spellbook.fractal.schema import get_fractal_connection
 
     def _run():
         conn = get_fractal_connection()
@@ -63,7 +63,7 @@ async def query_forged_db(
     sql: str, params: tuple = ()
 ) -> list[dict[str, Any]]:
     """Run a query against forged.db in a thread pool."""
-    from spellbook_mcp.forged.schema import get_forged_connection
+    from spellbook.forged.schema import get_forged_connection
 
     def _run():
         conn = get_forged_connection()

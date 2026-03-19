@@ -5,7 +5,7 @@ import pytest
 
 def test_extract_todos_from_tool_calls():
     """Test extracting active todos from TodoWrite tool calls."""
-    from spellbook_mcp.extractors.todos import extract_todos
+    from spellbook.extractors.todos import extract_todos
 
     messages = [
         {
@@ -38,7 +38,7 @@ def test_extract_todos_from_tool_calls():
 
 def test_extract_todos_takes_latest():
     """Test that latest TodoWrite call wins."""
-    from spellbook_mcp.extractors.todos import extract_todos
+    from spellbook.extractors.todos import extract_todos
 
     messages = [
         {
@@ -80,7 +80,7 @@ def test_extract_todos_takes_latest():
 
 def test_extract_todos_empty():
     """Test extraction with no TodoWrite calls."""
-    from spellbook_mcp.extractors.todos import extract_todos
+    from spellbook.extractors.todos import extract_todos
 
     messages = [
         {"role": "user", "timestamp": "2026-01-16T10:00:00Z"},

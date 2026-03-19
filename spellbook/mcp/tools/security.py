@@ -1,9 +1,9 @@
 """MCP tools for security operations."""
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.db import get_db_path
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.security.tools import (
+from spellbook.core.db import get_db_path
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.security.tools import (
     do_canary_check,
     do_canary_create,
     do_check_output,
@@ -59,7 +59,7 @@ def security_log_event(
         action_taken=action_taken,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -160,7 +160,7 @@ def security_check_tool_input(
     Returns:
         {"safe": bool, "findings": [...], "tool_name": str}
     """
-    from spellbook_mcp.security.check import check_tool_input
+    from spellbook.security.check import check_tool_input
 
     return check_tool_input(tool_name=tool_name, tool_input=tool_input)
 
@@ -335,7 +335,7 @@ def security_dashboard(
          "recent_alerts": [{"event_type": str, "severity": str,
          "timestamp": str, "detail": str}, ...]}
     """
-    from spellbook_mcp.security.tools import do_dashboard
+    from spellbook.security.tools import do_dashboard
 
     return do_dashboard(since_hours=since_hours)
 

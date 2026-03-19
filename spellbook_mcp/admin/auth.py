@@ -15,7 +15,7 @@ from typing import Optional
 
 from fastapi import Request, HTTPException
 
-from spellbook_mcp.auth import load_token
+from spellbook.core.auth import load_token
 
 
 def _get_signing_key() -> bytes:

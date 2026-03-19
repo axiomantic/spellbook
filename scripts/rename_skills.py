@@ -261,7 +261,7 @@ def discover_file_renames(old_kebab: str, new_kebab: str) -> list[RenameOp]:
       - docs/diagrams/commands/<old>-*.md
       - commands/<old>-*.md
       - tests/ files with snake_case in the name
-      - spellbook_mcp/ directories with snake_case name
+      - spellbook/ directories with snake_case name
     """
     ops: list[RenameOp] = []
     old_snake = kebab_to_snake(old_kebab)
@@ -365,7 +365,7 @@ def discover_file_renames(old_kebab: str, new_kebab: str) -> list[RenameOp]:
                     ops.append(RenameOp(old_path, new_path))
 
     # --- Python source directories/files with snake_case names ---
-    for src_dir in ["spellbook_mcp"]:
+    for src_dir in ["spellbook"]:
         src_root = REPO_ROOT / src_dir
         if not src_root.is_dir():
             continue

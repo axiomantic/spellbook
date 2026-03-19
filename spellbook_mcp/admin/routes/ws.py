@@ -12,8 +12,8 @@ import uuid
 
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from spellbook_mcp.admin.auth import validate_ws_ticket
-from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+from spellbook.admin.auth import validate_ws_ticket
+from spellbook.admin.events import Event, Subsystem, event_bus
 
 logger = logging.getLogger(__name__)
 

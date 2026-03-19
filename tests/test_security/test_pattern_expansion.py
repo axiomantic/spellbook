@@ -5,7 +5,7 @@ import string
 
 import pytest
 
-from spellbook_mcp.security.rules import (
+from spellbook.security.rules import (
     check_patterns,
     INJECTION_RULES,
     shannon_entropy,

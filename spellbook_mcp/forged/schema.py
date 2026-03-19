@@ -9,7 +9,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-from spellbook_mcp.forged.models import SCHEMA_VERSION
+from spellbook.forged.models import SCHEMA_VERSION
 
 
 def get_forged_db_path() -> Path:

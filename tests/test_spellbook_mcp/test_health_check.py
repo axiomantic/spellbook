@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 @pytest.fixture
 def reset_health_check_state():
     """Reset health check global state before each test."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Save original state
     original_first_done = server._first_health_check_done
@@ -31,7 +31,7 @@ def reset_health_check_state():
 @pytest.fixture
 def simulate_not_first_call():
     """Simulate that first health check has already been done."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Save original state
     original_first_done = server._first_health_check_done
@@ -53,7 +53,7 @@ class TestHealthCheckMCPTool:
 
     def test_returns_valid_status(self):
         """Test that health check returns a valid status."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         result = server.spellbook_health_check.fn()
 
@@ -65,11 +65,11 @@ class TestHealthCheckMCPTool:
 
     def test_returns_unhealthy_when_database_missing(self, tmp_path, monkeypatch):
         """MCP tool returns unhealthy when database is missing."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         # Point to nonexistent database
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path",
+            "spellbook.mcp.server.get_db_path",
             lambda: str(tmp_path / "nonexistent.db")
         )
         # Setup valid directories to isolate database failure
@@ -92,7 +92,7 @@ class TestHealthCheckMCPTool:
 
     def test_returns_version(self, tmp_path, monkeypatch):
         """Test that health check returns version from .version file."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         # Create a mock version file
         version_file = tmp_path / ".version"
@@ -112,7 +112,7 @@ class TestHealthCheckMCPTool:
 
     def test_returns_tools_list(self):
         """Test that health check returns list of available tools."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         result = server.spellbook_health_check.fn()
 
@@ -126,7 +126,7 @@ class TestHealthCheckMCPTool:
 
     def test_returns_uptime_seconds(self):
         """Test that health check returns uptime in seconds."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         result = server.spellbook_health_check.fn()
 
@@ -145,8 +145,8 @@ class TestHealthCheckFullMode:
 
         Note: Uses simulate_not_first_call fixture because first call is always full.
         """
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
+        from spellbook import server
+        from spellbook.core.db import init_db
 
         # Setup directories
         config_dir = tmp_path / "config"
@@ -162,7 +162,7 @@ class TestHealthCheckFullMode:
 
         # Patch get_db_path and directory paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -182,9 +182,9 @@ class TestHealthCheckFullMode:
 
     def test_full_mode_returns_all_domains(self, tmp_path, monkeypatch):
         """Full mode (full=True) checks all 6 domains."""
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook import server
+        from spellbook.core.db import init_db
+        from spellbook.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -206,7 +206,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -223,7 +223,7 @@ class TestHealthCheckFullMode:
             return CoordinationConfig(backend=CoordinationBackend.NONE)
 
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         result = server.spellbook_health_check.fn(full=True)
@@ -240,9 +240,9 @@ class TestHealthCheckFullMode:
 
     def test_first_call_is_full_mode(self, tmp_path, monkeypatch, reset_health_check_state):
         """First call after server start is automatically full mode."""
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook import server
+        from spellbook.core.db import init_db
+        from spellbook.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -264,7 +264,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -280,7 +280,7 @@ class TestHealthCheckFullMode:
         mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
         mock_load = MagicMock(return_value=mock_config)
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         # Call without full parameter - first call should be full
@@ -299,8 +299,8 @@ class TestHealthCheckFullMode:
         self, tmp_path, monkeypatch, simulate_not_first_call
     ):
         """Subsequent calls (after first) default to quick mode."""
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
+        from spellbook import server
+        from spellbook.core.db import init_db
 
         # Setup directories
         config_dir = tmp_path / "config"
@@ -316,7 +316,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -335,9 +335,9 @@ class TestHealthCheckFullMode:
 
     def test_periodic_full_check_after_interval(self, tmp_path, monkeypatch):
         """Full check triggers automatically after interval expires."""
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
-        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook import server
+        from spellbook.core.db import init_db
+        from spellbook.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -359,7 +359,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -375,7 +375,7 @@ class TestHealthCheckFullMode:
         mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
         mock_load = MagicMock(return_value=mock_config)
         monkeypatch.setattr(
-            "spellbook_mcp.health.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config", mock_load
         )
 
         # Simulate first call already done, but interval has expired
@@ -403,8 +403,8 @@ class TestHealthCheckFullMode:
 
     def test_returns_checked_at_timestamp(self, tmp_path, monkeypatch):
         """Health check returns ISO timestamp in checked_at field."""
-        from spellbook_mcp import server
-        from spellbook_mcp.db import init_db
+        from spellbook import server
+        from spellbook.core.db import init_db
         from datetime import datetime
 
         # Setup directories
@@ -421,7 +421,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -440,10 +440,10 @@ class TestGetVersion:
 
     def test_reads_version_from_file(self, tmp_path, monkeypatch):
         """Test reading version from .version file."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         # Monkeypatch __file__ to use tmp_path
-        fake_server_file = tmp_path / "spellbook_mcp" / "server.py"
+        fake_server_file = tmp_path / "spellbook" / "server.py"
         fake_server_file.parent.mkdir(parents=True)
         fake_server_file.touch()
 
@@ -462,9 +462,9 @@ class TestGetVersion:
 
     def test_returns_unknown_when_file_missing(self, tmp_path, monkeypatch):
         """Test that missing .version file returns unknown."""
-        from spellbook_mcp import server
+        from spellbook import server
 
-        fake_server_file = tmp_path / "spellbook_mcp" / "server.py"
+        fake_server_file = tmp_path / "spellbook" / "server.py"
         fake_server_file.parent.mkdir(parents=True)
         fake_server_file.touch()
         # Don't create .version file
@@ -481,7 +481,7 @@ class TestGetVersion:
 
     def test_uses_spellbook_dir_env_fallback(self, tmp_path, monkeypatch):
         """Test that SPELLBOOK_DIR env var is used as fallback."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         # Set up a temp dir with .version
         spellbook_dir = tmp_path / "spellbook"
@@ -489,7 +489,7 @@ class TestGetVersion:
         (spellbook_dir / ".version").write_text("3.0.0\n")
 
         # Point __file__ to a location without .version
-        fake_server_file = tmp_path / "other" / "spellbook_mcp" / "server.py"
+        fake_server_file = tmp_path / "other" / "spellbook" / "server.py"
         fake_server_file.parent.mkdir(parents=True)
         fake_server_file.touch()
 
@@ -509,7 +509,7 @@ class TestGetToolNames:
 
     def test_returns_list_of_strings(self):
         """Test that tool names are returned as a list of strings."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         result = server._get_tool_names()
 
@@ -518,7 +518,7 @@ class TestGetToolNames:
 
     def test_includes_registered_tools(self):
         """Test that all registered tools are included."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         result = server._get_tool_names()
 

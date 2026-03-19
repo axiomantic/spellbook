@@ -124,8 +124,8 @@ flowchart TD
 ### 1. Load Sessions
 
 ```python
-from spellbook_mcp.session_ops import load_jsonl, list_sessions_with_samples
-from spellbook_mcp.extractors.message_utils import get_tool_calls, get_content, get_role
+from spellbook.sessions.parser import load_jsonl, list_sessions_with_samples
+from spellbook.extractors.message_utils import get_tool_calls, get_content, get_role
 ```
 
 Sessions at: `~/.claude/projects/<project-encoded>/*.jsonl`

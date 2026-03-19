@@ -13,7 +13,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Optional
 
-from spellbook_mcp.admin.events import Event, Subsystem
+from spellbook.admin.events import Event, Subsystem
 
 logger = logging.getLogger(__name__)
 

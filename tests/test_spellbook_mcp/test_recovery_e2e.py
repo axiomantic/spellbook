@@ -11,10 +11,10 @@ pytestmark = pytest.mark.slow
 
 def test_recovery_e2e_flow(tmp_path):
     """Test complete recovery flow from compaction to injection."""
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.soul_extractor import extract_soul
-    from spellbook_mcp.injection import build_recovery_context, _reset_state
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.sessions.soul_extractor import extract_soul
+    from spellbook.sessions.injection import build_recovery_context, _reset_state
 
     # Setup
     db_path = str(tmp_path / "test.db")
@@ -98,9 +98,9 @@ def test_recovery_e2e_flow(tmp_path):
 
 def test_recovery_e2e_injection_decorator(tmp_path):
     """Test that injection decorator properly wraps MCP tool responses."""
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.injection import (
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.sessions.injection import (
         inject_recovery_context,
         _reset_state,
         _set_pending_compaction
@@ -150,7 +150,7 @@ def test_recovery_e2e_injection_decorator(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook_mcp import injection
+        from spellbook import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 
@@ -172,8 +172,8 @@ def test_recovery_e2e_injection_decorator(tmp_path):
 
 def test_recovery_e2e_no_injection_without_heartbeat(tmp_path):
     """Test that injection doesn't occur without watcher heartbeat."""
-    from spellbook_mcp.db import init_db, get_connection
-    from spellbook_mcp.injection import (
+    from spellbook.core.db import init_db, get_connection
+    from spellbook.sessions.injection import (
         inject_recovery_context,
         _reset_state,
         _set_pending_compaction
@@ -217,7 +217,7 @@ def test_recovery_e2e_no_injection_without_heartbeat(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook_mcp import injection
+        from spellbook import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 
@@ -234,8 +234,8 @@ def test_recovery_e2e_no_injection_without_heartbeat(tmp_path):
 
 def test_recovery_e2e_watcher_lifecycle(tmp_path):
     """Test watcher starts, writes heartbeats, and stops cleanly."""
-    from spellbook_mcp.db import init_db
-    from spellbook_mcp.watcher import SessionWatcher, is_heartbeat_fresh
+    from spellbook.core.db import init_db
+    from spellbook.sessions.watcher import SessionWatcher, is_heartbeat_fresh
 
     db_path = str(tmp_path / "test.db")
     init_db(db_path)
@@ -268,10 +268,10 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
     5. System-reminder injected into next MCP tool response
     6. Reminder contains parseable recovery context
     """
-    from spellbook_mcp.db import init_db, get_connection, close_all_connections
-    from spellbook_mcp.watcher import SessionWatcher
-    from spellbook_mcp.soul_extractor import extract_soul
-    from spellbook_mcp.injection import (
+    from spellbook.core.db import init_db, get_connection, close_all_connections
+    from spellbook.sessions.watcher import SessionWatcher
+    from spellbook.sessions.soul_extractor import extract_soul
+    from spellbook.sessions.injection import (
         build_recovery_context,
         inject_recovery_context,
         _reset_state,
@@ -435,7 +435,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook_mcp import injection
+        from spellbook import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-# Ensure spellbook_mcp is importable
+# Ensure spellbook is importable
 import sys
 from pathlib import Path
 
@@ -16,7 +16,7 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from spellbook_mcp.db import init_db, get_connection, close_all_connections
+from spellbook.core.db import init_db, get_connection, close_all_connections
 
 
 @pytest.fixture(autouse=True)
@@ -100,7 +100,7 @@ class TestStintDatabaseSchema:
             assert cursor.fetchone() is not None, f"{index_name} index not created"
 
 
-from spellbook_mcp.stint_tools import (
+from spellbook.stint_tools import (
     push_stint,
     pop_stint,
     check_stint,

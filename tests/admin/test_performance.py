@@ -15,7 +15,7 @@ import time
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from spellbook_mcp.admin.events import Event, EventBus, Subsystem
+from spellbook.admin.events import Event, EventBus, Subsystem
 
 
 @pytest.mark.slow
@@ -23,7 +23,7 @@ class TestMemorySearchPerformance:
     def test_memory_fts_response_time(self, client):
         """Memory FTS search should respond within 200ms."""
         with patch(
-            "spellbook_mcp.admin.routes.memory.query_spellbook_db",
+            "spellbook.admin.routes.memory.query_spellbook_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [
@@ -59,7 +59,7 @@ class TestDashboardPerformance:
     def test_dashboard_load_time(self, client):
         """Dashboard endpoint should respond within 1 second."""
         with patch(
-            "spellbook_mcp.admin.routes.dashboard.get_dashboard_data",
+            "spellbook.admin.routes.dashboard.get_dashboard_data",
             new_callable=AsyncMock,
         ) as mock_data:
             mock_data.return_value = {
@@ -124,7 +124,7 @@ class TestFractalCytoscapePerformance:
         ]
 
         with patch(
-            "spellbook_mcp.admin.routes.fractal.query_fractal_db",
+            "spellbook.admin.routes.fractal.query_fractal_db",
             new_callable=AsyncMock,
         ) as mock:
             mock.side_effect = [

@@ -462,12 +462,12 @@ def _check_running_processes(result: HealthCheckResult) -> None:
         returncode, stdout, stderr = run_command([
             "powershell", "-NoProfile", "-Command",
             "Get-CimInstance Win32_Process | "
-            "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+            "Where-Object {$_.CommandLine -like '*spellbook*server*'} | "
             "Select-Object -ExpandProperty ProcessId",
         ])
     else:
         returncode, stdout, stderr = run_command(
-            ["pgrep", "-f", "spellbook_mcp/server.py"]
+            ["pgrep", "-f", "spellbook/server.py"]
         )
 
     if returncode == 0 and stdout.strip():
@@ -495,7 +495,7 @@ def _check_server_startup(result: HealthCheckResult) -> None:
         "SPELLBOOK_DIR",
         str(Path(__file__).parent.parent)
     )
-    server_path = Path(spellbook_dir) / "spellbook_mcp" / "server.py"
+    server_path = Path(spellbook_dir) / "spellbook" / "server.py"
 
     if not server_path.exists():
         result.diagnostics.append(DiagnosticResult(
@@ -507,7 +507,7 @@ def _check_server_startup(result: HealthCheckResult) -> None:
 
     # Try to import the server module and check for errors
     returncode, stdout, stderr = run_command(
-        [sys.executable, "-c", f"import sys; sys.path.insert(0, '{spellbook_dir}'); from spellbook_mcp import server; print('Import OK')"],
+        [sys.executable, "-c", f"import sys; sys.path.insert(0, '{spellbook_dir}'); from spellbook import server; print('Import OK')"],
         timeout=10.0,
     )
 
@@ -633,7 +633,7 @@ def check_gemini_mcp(verbose: bool = False) -> HealthCheckResult:
         ))
 
     # Check server script exists
-    server_path = spellbook_dir / "spellbook_mcp" / "server.py"
+    server_path = spellbook_dir / "spellbook" / "server.py"
     if server_path.exists():
         result.diagnostics.append(DiagnosticResult(
             check="server_script_exists",

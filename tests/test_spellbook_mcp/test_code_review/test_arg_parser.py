@@ -2,7 +2,7 @@
 
 import pytest
 
-from spellbook_mcp.code_review.arg_parser import CodeReviewArgs, parse_args
+from spellbook.code_review.arg_parser import CodeReviewArgs, parse_args
 
 
 class TestCodeReviewArgs:

@@ -21,7 +21,7 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-from spellbook_mcp.security.scanner import main as scanner_main
+from spellbook.security.scanner import main as scanner_main
 
 
 # ---------------------------------------------------------------------------
@@ -87,9 +87,9 @@ class TestGetGitDiff:
     """_get_git_diff runs git commands and returns diff text."""
 
     def test_staged_runs_git_diff_cached(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook_mcp.security.scanner.subprocess.run") as mock_run:
+        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
             mock_run.return_value.stdout = CLEAN_DIFF
             mock_run.return_value.returncode = 0
             result = _get_git_diff(staged=True)
@@ -100,9 +100,9 @@ class TestGetGitDiff:
             assert result == CLEAN_DIFF
 
     def test_base_runs_git_diff_triple_dot(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook_mcp.security.scanner.subprocess.run") as mock_run:
+        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
             mock_run.return_value.stdout = CLEAN_DIFF
             mock_run.return_value.returncode = 0
             result = _get_git_diff(base="main")
@@ -113,9 +113,9 @@ class TestGetGitDiff:
             assert result == CLEAN_DIFF
 
     def test_commit_runs_git_diff_range(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook_mcp.security.scanner.subprocess.run") as mock_run:
+        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
             mock_run.return_value.stdout = CLEAN_DIFF
             mock_run.return_value.returncode = 0
             result = _get_git_diff(commit="HEAD~3..HEAD")
@@ -126,9 +126,9 @@ class TestGetGitDiff:
             assert result == CLEAN_DIFF
 
     def test_git_failure_raises_system_exit(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook_mcp.security.scanner.subprocess.run") as mock_run:
+        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
             mock_run.return_value.returncode = 128
             mock_run.return_value.stderr = "fatal: not a git repository"
             with pytest.raises(SystemExit) as exc_info:
@@ -136,13 +136,13 @@ class TestGetGitDiff:
             assert exc_info.value.code != 0
 
     def test_no_args_raises_value_error(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
         with pytest.raises(ValueError, match="Exactly one"):
             _get_git_diff()
 
     def test_multiple_args_raises_value_error(self):
-        from spellbook_mcp.security.scanner import _get_git_diff
+        from spellbook.security.scanner import _get_git_diff
 
         with pytest.raises(ValueError, match="Exactly one"):
             _get_git_diff(staged=True, base="main")
@@ -157,31 +157,31 @@ class TestCLIStaged:
     """CLI --staged flag runs git diff --cached and scans the result."""
 
     def test_staged_clean_diff_exits_zero(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
             assert exc_info.value.code == 0
 
     def test_staged_malicious_diff_exits_one(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
             assert exc_info.value.code == 1
 
     def test_staged_removal_only_exits_zero(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=REMOVAL_ONLY_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=REMOVAL_ONLY_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
             assert exc_info.value.code == 0
 
     def test_staged_empty_diff_exits_zero(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=""):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=""):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
             assert exc_info.value.code == 0
 
     def test_staged_passes_staged_flag_to_get_git_diff(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value="") as mock:
+        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
             with pytest.raises(SystemExit):
                 scanner_main(["--staged"])
             mock.assert_called_once_with(staged=True)
@@ -196,19 +196,19 @@ class TestCLIBase:
     """CLI --base BRANCH flag runs git diff BRANCH...HEAD and scans the result."""
 
     def test_base_clean_diff_exits_zero(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
             assert exc_info.value.code == 0
 
     def test_base_malicious_diff_exits_one(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
             assert exc_info.value.code == 1
 
     def test_base_passes_branch_to_get_git_diff(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value="") as mock:
+        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
             with pytest.raises(SystemExit):
                 scanner_main(["--base", "develop"])
             mock.assert_called_once_with(base="develop")
@@ -229,19 +229,19 @@ class TestCLICommit:
     """CLI --commit RANGE flag runs git diff RANGE and scans the result."""
 
     def test_commit_clean_diff_exits_zero(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
             assert exc_info.value.code == 0
 
     def test_commit_malicious_diff_exits_one(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
             assert exc_info.value.code == 1
 
     def test_commit_passes_range_to_get_git_diff(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value="") as mock:
+        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
             with pytest.raises(SystemExit):
                 scanner_main(["--commit", "abc123..def456"])
             mock.assert_called_once_with(commit="abc123..def456")
@@ -262,13 +262,13 @@ class TestMultiFileChangeset:
     """Multiple files in a changeset are all scanned."""
 
     def test_staged_multi_file_detects_both(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
             assert exc_info.value.code == 1
 
     def test_base_multi_file_detects_both(self):
-        with patch("spellbook_mcp.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
+        with patch("spellbook.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
             assert exc_info.value.code == 1
@@ -284,7 +284,7 @@ class TestGitErrorHandling:
 
     def test_staged_git_failure_exits_nonzero(self):
         with patch(
-            "spellbook_mcp.security.scanner._get_git_diff",
+            "spellbook.security.scanner._get_git_diff",
             side_effect=SystemExit(1),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -293,7 +293,7 @@ class TestGitErrorHandling:
 
     def test_base_git_failure_exits_nonzero(self):
         with patch(
-            "spellbook_mcp.security.scanner._get_git_diff",
+            "spellbook.security.scanner._get_git_diff",
             side_effect=SystemExit(1),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -302,7 +302,7 @@ class TestGitErrorHandling:
 
     def test_commit_git_failure_exits_nonzero(self):
         with patch(
-            "spellbook_mcp.security.scanner._get_git_diff",
+            "spellbook.security.scanner._get_git_diff",
             side_effect=SystemExit(1),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -350,7 +350,7 @@ class TestBackwardCompatibility:
 
     def test_changeset_flag_still_reads_stdin(self):
         result = subprocess.run(
-            [sys.executable, "-m", "spellbook_mcp.security.scanner", "--changeset"],
+            [sys.executable, "-m", "spellbook.security.scanner", "--changeset"],
             input=CLEAN_DIFF,
             capture_output=True,
             text=True,
@@ -360,7 +360,7 @@ class TestBackwardCompatibility:
 
     def test_changeset_flag_with_malicious_stdin_exits_one(self):
         result = subprocess.run(
-            [sys.executable, "-m", "spellbook_mcp.security.scanner", "--changeset"],
+            [sys.executable, "-m", "spellbook.security.scanner", "--changeset"],
             input=MALICIOUS_DIFF,
             capture_output=True,
             text=True,

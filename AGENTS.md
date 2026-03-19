@@ -39,7 +39,7 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 - **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
 - **Commands** go in `commands/<name>.md` with YAML frontmatter
 - **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
-- **MCP tools** are defined in `spellbook_mcp/server.py` or domain-specific modules
+- **MCP tools** are defined in `spellbook/server.py` or domain-specific modules
 
 ## Pre-commit Hooks
 
@@ -55,7 +55,7 @@ When a pre-commit hook fails, it often generates or modifies files. Stage those 
 
 ## Architecture Notes
 
-- The MCP server (`spellbook_mcp/`) runs as a persistent daemon, not inline with the CLI
+- The MCP server (`spellbook/`) runs as a persistent daemon, not inline with the CLI
 - The installer (`installer/`) handles multi-platform installation (Claude Code, OpenCode, Codex, Gemini CLI, Crush)
 - Skills and commands are markdown files with YAML frontmatter, loaded dynamically by the AI assistant
 - Hooks are bash/python scripts installed into the AI assistant's hook system
@@ -109,7 +109,7 @@ spellbook/
 ├── installer/           # Multi-platform installer
 │   ├── platforms/       # claude_code, opencode, codex, gemini, crush
 │   └── components/      # context_files, symlinks, mcp
-├── spellbook_mcp/       # MCP server
+├── spellbook/       # MCP server
 ├── scripts/             # Build/maintenance
 ├── tests/               # Unit, integration
 ├── docs/                # Generated (skills/commands/agents) + manual
@@ -124,14 +124,14 @@ spellbook/
 | `AGENTS.spellbook.md` | User-facing installable template |
 | `extensions/gemini/` | Gemini extension (linked via `gemini extensions link`) |
 | `install.py` | Installer entry |
-| `spellbook_mcp/server.py` | MCP server |
+| `spellbook/server.py` | MCP server |
 
 ## Commands
 
 ```bash
 uv run pytest tests/                              # Fast tests (heavy markers auto-skipped)
 uv run pytest tests/unit/test_installer.py        # Specific file
-uv run pytest --cov=installer --cov=spellbook_mcp tests/  # Coverage
+uv run pytest --cov=installer --cov=spellbook tests/  # Coverage
 ./scripts/install-hooks.sh                        # Install hooks
 python3 scripts/generate_docs.py                  # Gen docs
 uv run install.py --dry-run                       # Test installer

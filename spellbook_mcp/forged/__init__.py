@@ -5,7 +5,7 @@ development workflows with validator-based feedback loops.
 """
 
 # Artifacts module exports
-from spellbook_mcp.forged.artifacts import (
+from spellbook.forged.artifacts import (
     VALID_ARTIFACT_TYPES,
     artifact_base_path,
     artifact_path,
@@ -17,7 +17,7 @@ from spellbook_mcp.forged.artifacts import (
 )
 
 # Iteration tools exports
-from spellbook_mcp.forged.iteration_tools import (
+from spellbook.forged.iteration_tools import (
     forge_iteration_advance,
     forge_iteration_return,
     forge_iteration_start,

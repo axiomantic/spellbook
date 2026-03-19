@@ -15,7 +15,7 @@ class TestSchemaVersion:
 
     def test_init_forged_schema_creates_schema_version_table(self, tmp_path):
         """schema_version table must exist after initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -30,7 +30,7 @@ class TestSchemaVersion:
 
     def test_schema_version_has_correct_columns(self, tmp_path):
         """schema_version table must have version and applied_at columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -48,8 +48,8 @@ class TestSchemaVersion:
 
     def test_schema_version_recorded_on_init(self, tmp_path):
         """Schema version must be recorded during initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
-        from spellbook_mcp.forged.models import SCHEMA_VERSION
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.models import SCHEMA_VERSION
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -69,7 +69,7 @@ class TestForgeTokensTable:
 
     def test_forge_tokens_table_exists(self, tmp_path):
         """forge_tokens table must exist after initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -84,7 +84,7 @@ class TestForgeTokensTable:
 
     def test_forge_tokens_has_required_columns(self, tmp_path):
         """forge_tokens table must have all required columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -103,7 +103,7 @@ class TestForgeTokensTable:
 
     def test_forge_tokens_id_is_primary_key(self, tmp_path):
         """forge_tokens.id must be the primary key."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -122,7 +122,7 @@ class TestIterationStateTable:
 
     def test_iteration_state_table_exists(self, tmp_path):
         """iteration_state table must exist after initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -137,7 +137,7 @@ class TestIterationStateTable:
 
     def test_iteration_state_has_required_columns(self, tmp_path):
         """iteration_state table must have all required columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -164,7 +164,7 @@ class TestIterationStateTable:
 
     def test_iteration_state_composite_primary_key(self, tmp_path):
         """iteration_state must have composite primary key on (project_path, feature_name)."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -192,7 +192,7 @@ class TestReflectionsTable:
 
     def test_reflections_table_exists(self, tmp_path):
         """reflections table must exist after initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -207,7 +207,7 @@ class TestReflectionsTable:
 
     def test_reflections_has_required_columns(self, tmp_path):
         """reflections table must have all required columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -234,7 +234,7 @@ class TestReflectionsTable:
 
     def test_reflections_id_autoincrement(self, tmp_path):
         """reflections.id must autoincrement."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -263,7 +263,7 @@ class TestToolAnalyticsTable:
 
     def test_tool_analytics_table_exists(self, tmp_path):
         """tool_analytics table must exist after initialization."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -278,7 +278,7 @@ class TestToolAnalyticsTable:
 
     def test_tool_analytics_has_required_columns(self, tmp_path):
         """tool_analytics table must have all required columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -310,7 +310,7 @@ class TestWALMode:
 
     def test_wal_mode_enabled(self, tmp_path):
         """WAL mode must be enabled for concurrent access."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -329,7 +329,7 @@ class TestIdempotency:
 
     def test_init_forged_schema_idempotent(self, tmp_path):
         """Calling init_forged_schema multiple times should not error."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
 
@@ -354,7 +354,7 @@ class TestFeedbackModel:
 
     def test_feedback_creation(self):
         """Feedback must be creatable with all required fields."""
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="lint-validator",
@@ -373,7 +373,7 @@ class TestFeedbackModel:
 
     def test_feedback_to_dict(self):
         """Feedback.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.models import Feedback
 
         feedback = Feedback(
             source="test-validator",
@@ -399,7 +399,7 @@ class TestFeedbackModel:
 
     def test_feedback_from_dict(self):
         """Feedback.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.models import Feedback
 
         data = {
             "source": "review-validator",
@@ -421,7 +421,7 @@ class TestFeedbackModel:
 
     def test_feedback_roundtrip(self):
         """Feedback must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.models import Feedback
+        from spellbook.forged.models import Feedback
 
         original = Feedback(
             source="roundtrip-test",
@@ -451,7 +451,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_approved(self):
         """ValidatorResult with APPROVED verdict must work."""
-        from spellbook_mcp.forged.models import ValidatorResult
+        from spellbook.forged.models import ValidatorResult
 
         result = ValidatorResult(
             verdict="APPROVED",
@@ -468,7 +468,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_with_feedback(self):
         """ValidatorResult with FEEDBACK verdict must include feedback."""
-        from spellbook_mcp.forged.models import ValidatorResult, Feedback
+        from spellbook.forged.models import ValidatorResult, Feedback
 
         feedback = Feedback(
             source="test",
@@ -497,7 +497,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_to_dict(self):
         """ValidatorResult.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.models import ValidatorResult, Feedback
+        from spellbook.forged.models import ValidatorResult, Feedback
 
         feedback = Feedback(
             source="test",
@@ -532,7 +532,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_from_dict(self):
         """ValidatorResult.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.models import ValidatorResult
+        from spellbook.forged.models import ValidatorResult
 
         data = {
             "verdict": "APPROVED",
@@ -552,7 +552,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_from_dict_with_feedback(self):
         """ValidatorResult.from_dict() must reconstruct nested feedback."""
-        from spellbook_mcp.forged.models import ValidatorResult
+        from spellbook.forged.models import ValidatorResult
 
         data = {
             "verdict": "FEEDBACK",
@@ -582,7 +582,7 @@ class TestValidatorResultModel:
 
     def test_validator_result_roundtrip(self):
         """ValidatorResult must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.models import ValidatorResult, Feedback
+        from spellbook.forged.models import ValidatorResult, Feedback
 
         feedback = Feedback(
             source="roundtrip",
@@ -618,7 +618,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_creation(self):
         """IterationState must be creatable with required fields."""
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.models import IterationState
 
         state = IterationState(
             iteration_number=1,
@@ -634,7 +634,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_with_feedback_history(self):
         """IterationState must handle feedback_history correctly."""
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback1 = Feedback(
             source="v1",
@@ -669,7 +669,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_to_dict(self):
         """IterationState.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="test",
@@ -705,7 +705,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_from_dict(self):
         """IterationState.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.models import IterationState
 
         data = {
             "iteration_number": 5,
@@ -726,7 +726,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_from_dict_with_feedback(self):
         """IterationState.from_dict() must reconstruct nested feedback."""
-        from spellbook_mcp.forged.models import IterationState
+        from spellbook.forged.models import IterationState
 
         data = {
             "iteration_number": 2,
@@ -757,7 +757,7 @@ class TestIterationStateModel:
 
     def test_iteration_state_roundtrip(self):
         """IterationState must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.models import IterationState, Feedback
+        from spellbook.forged.models import IterationState, Feedback
 
         feedback = Feedback(
             source="roundtrip",
@@ -794,28 +794,28 @@ class TestConstants:
 
     def test_schema_version_defined(self):
         """SCHEMA_VERSION must be defined as integer."""
-        from spellbook_mcp.forged.models import SCHEMA_VERSION
+        from spellbook.forged.models import SCHEMA_VERSION
 
         assert isinstance(SCHEMA_VERSION, int)
         assert SCHEMA_VERSION >= 1
 
     def test_valid_stages_defined(self):
         """VALID_STAGES must contain all workflow stages."""
-        from spellbook_mcp.forged.models import VALID_STAGES
+        from spellbook.forged.models import VALID_STAGES
 
         expected = ["DISCOVER", "DESIGN", "PLAN", "IMPLEMENT", "COMPLETE", "ESCALATED"]
         assert VALID_STAGES == expected
 
     def test_valid_severities_defined(self):
         """VALID_SEVERITIES must contain all severity levels."""
-        from spellbook_mcp.forged.models import VALID_SEVERITIES
+        from spellbook.forged.models import VALID_SEVERITIES
 
         expected = ["blocking", "significant", "minor"]
         assert VALID_SEVERITIES == expected
 
     def test_valid_verdicts_defined(self):
         """VALID_VERDICTS must contain all verdict types."""
-        from spellbook_mcp.forged.models import VALID_VERDICTS
+        from spellbook.forged.models import VALID_VERDICTS
 
         expected = ["APPROVED", "FEEDBACK", "ABSTAIN", "ERROR"]
         assert VALID_VERDICTS == expected
@@ -826,7 +826,7 @@ class TestGetForgedDbPath:
 
     def test_get_forged_db_path_returns_path(self):
         """get_forged_db_path must return a Path object."""
-        from spellbook_mcp.forged.schema import get_forged_db_path
+        from spellbook.forged.schema import get_forged_db_path
 
         db_path = get_forged_db_path()
 
@@ -835,7 +835,7 @@ class TestGetForgedDbPath:
 
     def test_get_forged_db_path_in_spellbook_dir(self):
         """get_forged_db_path must be in ~/.local/spellbook/."""
-        from spellbook_mcp.forged.schema import get_forged_db_path
+        from spellbook.forged.schema import get_forged_db_path
 
         db_path = get_forged_db_path()
 

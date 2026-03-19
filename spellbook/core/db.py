@@ -1,7 +1,7 @@
 """Database schema and connection management for session recovery.
 
 Canonical location for database utilities. This module was migrated from
-spellbook_mcp.db as part of the three-layer architecture reorganization.
+spellbook.core.db as part of the three-layer architecture reorganization.
 """
 
 import os

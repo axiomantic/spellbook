@@ -50,8 +50,8 @@ from typing import List, Dict, Any, Optional
 _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
 
 # All imports use full package paths - no sys.path manipulation needed
-from spellbook_mcp.branch_ancestry import get_current_branch
-from spellbook_mcp.path_utils import (
+from spellbook.branch_ancestry import get_current_branch
+from spellbook.core.path_utils import (
     encode_cwd,
     get_project_dir,
     get_project_dir_from_context,
@@ -60,23 +60,23 @@ from spellbook_mcp.path_utils import (
     get_spellbook_config_dir,
     resolve_repo_root,
 )
-from spellbook_mcp.memory_tools import (
+from spellbook.memory.tools import (
     do_memory_recall,
     do_memory_forget,
     do_log_event,
     do_get_unconsolidated,
     do_store_memories,
 )
-from spellbook_mcp.memory_consolidation import (
+from spellbook.memory.consolidation import (
     should_consolidate,
     consolidate_batch,
 )
-from spellbook_mcp.session_ops import (
+from spellbook.sessions.parser import (
     split_by_char_limit,
     list_sessions_with_samples,
 )
-from spellbook_mcp.terminal_utils import detect_terminal, spawn_terminal_window
-from spellbook_mcp.swarm_tools import (
+from spellbook.terminal_utils import detect_terminal, spawn_terminal_window
+from spellbook.swarm_tools import (
     swarm_create,
     swarm_register,
     swarm_progress,
@@ -84,7 +84,7 @@ from spellbook_mcp.swarm_tools import (
     swarm_error,
     swarm_monitor
 )
-from spellbook_mcp.config_tools import (
+from spellbook.core.config import (
     config_get,
     config_set,
     config_set_many,
@@ -98,52 +98,52 @@ from spellbook_mcp.config_tools import (
     telemetry_status as do_telemetry_status,
     get_spellbook_dir,
 )
-from spellbook_mcp.compaction_detector import (
+from spellbook.sessions.compaction import (
     check_for_compaction,
     get_pending_context,
     mark_context_injected,
     get_recovery_reminder,
 )
-from spellbook_mcp.db import init_db, get_db_path
-from spellbook_mcp.health import run_health_check
-from spellbook_mcp.watcher import SessionWatcher
-from spellbook_mcp.injection import inject_recovery_context
+from spellbook.core.db import init_db, get_db_path
+from spellbook.health.checker import run_health_check
+from spellbook.sessions.watcher import SessionWatcher
+from spellbook.sessions.injection import inject_recovery_context
 
 # Forged imports
-from spellbook_mcp.forged.schema import init_forged_schema
-from spellbook_mcp.forged.iteration_tools import (
+from spellbook.forged.schema import init_forged_schema
+from spellbook.forged.iteration_tools import (
     forge_iteration_start as do_forge_iteration_start,
     forge_iteration_advance as do_forge_iteration_advance,
     forge_iteration_return as do_forge_iteration_return,
 )
-from spellbook_mcp.forged.project_tools import (
+from spellbook.forged.project_tools import (
     forge_project_init as do_forge_project_init,
     forge_project_status as do_forge_project_status,
     forge_feature_update as do_forge_feature_update,
     forge_select_skill as do_forge_select_skill,
 )
-from spellbook_mcp.forged.roundtable import (
+from spellbook.forged.roundtable import (
     roundtable_convene as do_roundtable_convene,
     roundtable_debate as do_roundtable_debate,
     process_roundtable_response as do_process_roundtable_response,
 )
 
 # PR distill imports
-from spellbook_mcp.pr_distill.parse import parse_diff
-from spellbook_mcp.pr_distill.matcher import match_patterns
-from spellbook_mcp.pr_distill.patterns import BUILTIN_PATTERNS, get_all_pattern_ids, Pattern
-from spellbook_mcp.pr_distill.bless import bless_pattern as do_bless_pattern, list_blessed_patterns
-from spellbook_mcp.pr_distill.config import load_config as load_pr_config
-from spellbook_mcp.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_fetch_pr
+from spellbook.pr_distill.parse import parse_diff
+from spellbook.pr_distill.matcher import match_patterns
+from spellbook.pr_distill.patterns import BUILTIN_PATTERNS, get_all_pattern_ids, Pattern
+from spellbook.pr_distill.bless import bless_pattern as do_bless_pattern, list_blessed_patterns
+from spellbook.pr_distill.config import load_config as load_pr_config
+from spellbook.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_fetch_pr
 
 # Skill analyzer import
-from spellbook_mcp.skill_analyzer import (
+from spellbook.sessions.skill_analyzer import (
     analyze_sessions as do_analyze_skill_usage,
     get_analytics_summary as do_get_analytics_summary,
 )
 
 # A/B test imports
-from spellbook_mcp.ab_test import (
+from spellbook.experiments.ab_test import (
     experiment_create as do_experiment_create,
     experiment_start as do_experiment_start,
     experiment_pause as do_experiment_pause,
@@ -155,14 +155,14 @@ from spellbook_mcp.ab_test import (
 )
 
 # Curator tools import
-from spellbook_mcp.curator_tools import (
+from spellbook.curator_tools import (
     init_curator_tables,
     curator_track_prune,
     curator_get_stats,
 )
 
 # Security tools imports
-from spellbook_mcp.security.tools import (
+from spellbook.security.tools import (
     do_canary_check,
     do_canary_create,
     do_check_output,
@@ -175,37 +175,37 @@ from spellbook_mcp.security.tools import (
 )
 
 # Auto-update imports
-from spellbook_mcp.update_tools import (
+from spellbook.updates.tools import (
     check_for_updates as do_check_for_updates,
     apply_update as do_apply_update,
     get_update_status as do_get_update_status,
 )
-from spellbook_mcp.update_watcher import UpdateWatcher
+from spellbook.updates.watcher import UpdateWatcher
 
 # TTS imports
-from spellbook_mcp import tts as tts_module
+from spellbook import tts as tts_module
 
 # Notification imports
-from spellbook_mcp import notify as notify_module
+from spellbook import notify as notify_module
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 # Fractal thinking imports
-from spellbook_mcp.fractal.schema import init_fractal_schema
-from spellbook_mcp.fractal.graph_ops import (
+from spellbook.fractal.schema import init_fractal_schema
+from spellbook.fractal.graph_ops import (
     create_graph as do_fractal_create_graph,
     resume_graph as do_fractal_resume_graph,
     delete_graph as do_fractal_delete_graph,
     update_graph_status as do_fractal_update_graph_status,
 )
-from spellbook_mcp.fractal.node_ops import (
+from spellbook.fractal.node_ops import (
     add_node as do_fractal_add_node,
     update_node as do_fractal_update_node,
     mark_saturated as do_fractal_mark_saturated,
     claim_work as do_fractal_claim_work,
     synthesize_node as do_fractal_synthesize_node,
 )
-from spellbook_mcp.fractal.query_ops import (
+from spellbook.fractal.query_ops import (
     get_snapshot as do_fractal_get_snapshot,
     get_branch as do_fractal_get_branch,
     get_open_questions as do_fractal_get_open_questions,
@@ -238,17 +238,17 @@ def _shutdown_cleanup():
     if _update_watcher is not None:
         _update_watcher.stop()
     try:
-        from spellbook_mcp.db import close_all_connections
+        from spellbook.core.db import close_all_connections
         close_all_connections()
     except Exception:
         pass
     try:
-        from spellbook_mcp.forged.schema import close_forged_connections
+        from spellbook.forged.schema import close_forged_connections
         close_forged_connections()
     except Exception:
         pass
     try:
-        from spellbook_mcp.fractal.schema import close_all_fractal_connections
+        from spellbook.fractal.schema import close_all_fractal_connections
         close_all_fractal_connections()
     except Exception:
         pass
@@ -444,8 +444,8 @@ async def spawn_claude_session(
     # and logs every invocation to the audit trail.
     import sqlite3 as _sqlite3
 
-    from spellbook_mcp.security.check import check_tool_input as _check_tool_input
-    from spellbook_mcp.security.tools import do_log_event as _do_log_event
+    from spellbook.security.check import check_tool_input as _check_tool_input
+    from spellbook.security.tools import do_log_event as _do_log_event
 
     _db_path = str(get_db_path())
     _session_id = _get_session_id(ctx)
@@ -757,7 +757,7 @@ def spellbook_config_set(key: str, value) -> dict:
     """
     result = config_set(key, value)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -843,7 +843,7 @@ def _get_version() -> str:
     Returns version string or "unknown" if file not found.
     """
     try:
-        # Try relative to this file (spellbook_mcp/)
+        # Try relative to this file (spellbook/)
         version_path = Path(__file__).parent.parent / ".version"
         if version_path.exists():
             return version_path.read_text(encoding="utf-8").strip()
@@ -1801,8 +1801,8 @@ def workflow_state_save(
     Returns:
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
-    from spellbook_mcp.db import get_connection
-    from spellbook_mcp.resume import validate_workflow_state
+    from spellbook.core.db import get_connection
+    from spellbook.sessions.resume import validate_workflow_state
 
     validation = validate_workflow_state(state)
     if not validation["valid"]:
@@ -1872,7 +1872,7 @@ def workflow_state_load(
             "error": str?
         }
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection()
@@ -1927,7 +1927,7 @@ def workflow_state_load(
 
         import logging as _logging
         _logger = _logging.getLogger(__name__)
-        from spellbook_mcp.resume import validate_workflow_state
+        from spellbook.sessions.resume import validate_workflow_state
         validation = validate_workflow_state(state)
         if not validation["valid"]:
             _logger.warning(
@@ -1985,7 +1985,7 @@ def workflow_state_update(
     Returns:
         {"success": True/False, "project_path": str, "error": str?}
     """
-    from spellbook_mcp.db import get_connection
+    from spellbook.core.db import get_connection
 
     try:
         conn = get_connection()
@@ -2009,7 +2009,7 @@ def workflow_state_update(
             base_state = json.loads(row[0])
 
         # Validate incoming updates before merging
-        from spellbook_mcp.resume import validate_workflow_state
+        from spellbook.sessions.resume import validate_workflow_state
 
         pre_validation = validate_workflow_state(updates)
         if not pre_validation["valid"]:
@@ -2103,7 +2103,7 @@ def stint_push(
     Returns:
         {"success": True, "depth": int, "stack": list}
     """
-    from spellbook_mcp.stint_tools import push_stint
+    from spellbook.stint_tools import push_stint
     result = push_stint(
         project_path=project_path,
         name=name,
@@ -2114,7 +2114,7 @@ def stint_push(
         metadata=metadata,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -2152,10 +2152,10 @@ def stint_pop(
     Returns:
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
     """
-    from spellbook_mcp.stint_tools import pop_stint
+    from spellbook.stint_tools import pop_stint
     result = pop_stint(project_path=project_path, name=name)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         popped = result.get("popped", {})
         publish_sync(
@@ -2191,7 +2191,7 @@ def stint_check(
     Returns:
         {"success": True, "depth": int, "stack": list}
     """
-    from spellbook_mcp.stint_tools import check_stint
+    from spellbook.stint_tools import check_stint
     return check_stint(project_path=project_path)
 
 
@@ -2216,14 +2216,14 @@ def stint_replace(
     Returns:
         {"success": True, "depth": int, "correction_logged": True}
     """
-    from spellbook_mcp.stint_tools import replace_stint
+    from spellbook.stint_tools import replace_stint
     result = replace_stint(
         project_path=project_path,
         stack=stack,
         reason=reason,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -2313,7 +2313,7 @@ async def spellbook_analytics_summary(
             "period_days": int
         }
     """
-    from spellbook_mcp.path_utils import encode_cwd
+    from spellbook.core.path_utils import encode_cwd
 
     project_encoded = None
     if project_path:
@@ -2660,7 +2660,7 @@ def security_log_event(
         action_taken=action_taken,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -2766,7 +2766,7 @@ def security_check_tool_input(
     Returns:
         {"safe": bool, "findings": [...], "tool_name": str}
     """
-    from spellbook_mcp.security.check import check_tool_input
+    from spellbook.security.check import check_tool_input
 
     return check_tool_input(tool_name=tool_name, tool_input=tool_input)
 
@@ -2956,7 +2956,7 @@ def security_dashboard(
          "recent_alerts": [{"event_type": str, "severity": str,
          "timestamp": str, "detail": str}, ...]}
     """
-    from spellbook_mcp.security.tools import do_dashboard
+    from spellbook.security.tools import do_dashboard
 
     return do_dashboard(since_hours=since_hours)
 
@@ -3317,7 +3317,7 @@ def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metada
     """Create a new fractal thinking graph with a seed question."""
     result = do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -3348,7 +3348,7 @@ def fractal_delete_graph(graph_id: str):
     """Delete a fractal thinking graph and all its nodes/edges."""
     result = do_fractal_delete_graph(graph_id=graph_id)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -3378,7 +3378,7 @@ def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, o
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -3416,7 +3416,7 @@ def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -3498,7 +3498,7 @@ def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -3541,7 +3541,7 @@ def build_http_run_kwargs() -> dict:
         Dict of kwargs to pass to mcp.run() for streamable-http transport.
     """
     from starlette.middleware import Middleware
-    from spellbook_mcp.auth import (
+    from spellbook.core.auth import (
         BearerAuthMiddleware,
         auth_is_disabled,
         generate_and_store_token,
@@ -3629,7 +3629,7 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
     db_path = str(get_db_path())
     result = do_memory_forget(db_path=db_path, memory_id=memory_id)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+        from spellbook.admin.events import Event, Subsystem, event_bus
 
         await event_bus.publish(
             Event(
@@ -3759,7 +3759,7 @@ async def memory_store_memories(
         branch=branch,
     )
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+        from spellbook.admin.events import Event, Subsystem, event_bus
 
         await event_bus.publish(
             Event(
@@ -3873,14 +3873,14 @@ def _mount_admin_app():
 
     _admin_logger = _admin_logging.getLogger(__name__)
     try:
-        from spellbook_mcp.config_tools import config_get
+        from spellbook.core.config import config_get
 
         admin_enabled = config_get("admin_enabled")
         if admin_enabled is not None and not admin_enabled:
             _admin_logger.debug("Admin interface disabled via admin_enabled config")
             return
 
-        from spellbook_mcp.admin.app import create_admin_app
+        from spellbook.admin.app import create_admin_app
         from starlette.routing import Mount
 
         admin_app = create_admin_app()

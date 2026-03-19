@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spellbook_mcp.compaction_detector import check_for_compaction, CompactionEvent
+from spellbook.sessions.compaction import check_for_compaction, CompactionEvent
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +19,7 @@ def clean_state(tmp_path):
     """Use a temporary state file for each test."""
     state_file = tmp_path / "compaction_state.json"
     with patch(
-        "spellbook_mcp.compaction_detector._get_state_file",
+        "spellbook.sessions.compaction._get_state_file",
         return_value=state_file,
     ):
         yield
@@ -70,7 +70,7 @@ class TestCompactionDetection:
         _write_session_file(session_base, messages)
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_claude_session_dir",
+            "spellbook.sessions.compaction._get_claude_session_dir",
             return_value=session_base,
         ):
             event = check_for_compaction(project_path)
@@ -92,7 +92,7 @@ class TestCompactionDetection:
         _write_session_file(session_base, messages)
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_claude_session_dir",
+            "spellbook.sessions.compaction._get_claude_session_dir",
             return_value=session_base,
         ):
             event = check_for_compaction(project_path)
@@ -108,7 +108,7 @@ class TestCompactionDetection:
         _write_session_file(session_base, messages)
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_claude_session_dir",
+            "spellbook.sessions.compaction._get_claude_session_dir",
             return_value=session_base,
         ):
             event = check_for_compaction(project_path)
@@ -125,7 +125,7 @@ class TestCompactionDetection:
         _write_session_file(session_base, messages)
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_claude_session_dir",
+            "spellbook.sessions.compaction._get_claude_session_dir",
             return_value=session_base,
         ):
             event = check_for_compaction(project_path)
@@ -148,7 +148,7 @@ class TestCompactionDetection:
         _write_session_file(session_base, messages)
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_claude_session_dir",
+            "spellbook.sessions.compaction._get_claude_session_dir",
             return_value=session_base,
         ):
             event = check_for_compaction(project_path)

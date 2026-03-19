@@ -5,7 +5,7 @@ and MCP tools for defense-in-depth against prompt injection,
 privilege escalation, and exfiltration attacks.
 """
 
-from spellbook_mcp.security.rules import (
+from spellbook.security.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
     EXFILTRATION_PATTERNS,

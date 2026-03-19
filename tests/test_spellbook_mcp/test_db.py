@@ -7,7 +7,7 @@ from pathlib import Path
 
 def test_init_db_creates_schema(tmp_path):
     """Test database initialization creates all required tables."""
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -40,7 +40,7 @@ def test_init_db_creates_schema(tmp_path):
 
 def test_wal_mode_enabled(tmp_path):
     """Test that WAL mode is enabled for concurrent access."""
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -56,7 +56,7 @@ def test_wal_mode_enabled(tmp_path):
 
 def test_get_db_path_creates_directory():
     """Test that get_db_path creates parent directory if needed."""
-    from spellbook_mcp.db import get_db_path
+    from spellbook.core.db import get_db_path
 
     db_path = get_db_path()
 
@@ -68,7 +68,7 @@ def test_get_db_path_creates_directory():
 
 def test_init_db_creates_skill_outcomes_table(tmp_path):
     """Test database initialization creates skill_outcomes table with correct schema."""
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -103,7 +103,7 @@ def test_init_db_creates_skill_outcomes_table(tmp_path):
 
 def test_init_db_creates_telemetry_config_table(tmp_path):
     """Test database initialization creates telemetry_config table."""
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))
@@ -130,7 +130,7 @@ def test_init_db_creates_telemetry_config_table(tmp_path):
 
 def test_init_db_creates_skill_outcomes_indices(tmp_path):
     """Test skill_outcomes table has required indices."""
-    from spellbook_mcp.db import init_db, get_connection
+    from spellbook.core.db import init_db, get_connection
 
     db_path = tmp_path / "test.db"
     init_db(str(db_path))

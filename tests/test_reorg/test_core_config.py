@@ -1,7 +1,7 @@
 """Tests for spellbook.core.config module.
 
 Verifies that core config functions are importable from spellbook.core.config
-and that all public exports from spellbook_mcp.config_tools exist in the new module.
+and that all public exports from spellbook.core.config exist in the new module.
 """
 
 import inspect
@@ -45,8 +45,8 @@ class TestCoreConfigImports:
         assert callable(get_env)
 
     def test_all_public_exports_match(self):
-        """Every public function in spellbook_mcp.config_tools must exist in spellbook.core.config."""
-        import spellbook_mcp.config_tools as old_mod
+        """Every public function in spellbook.core.config must exist in spellbook.core.config."""
+        import spellbook.core.config as old_mod
         import spellbook.core.config as new_mod
 
         old_public = {

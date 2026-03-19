@@ -2,8 +2,8 @@
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, get_connection, init_db
-from spellbook_mcp.memory_store import (
+from spellbook.core.db import close_all_connections, get_connection, init_db
+from spellbook.memory.store import (
     get_recently_consolidated_events,
     get_unconsolidated_events,
     insert_memory,

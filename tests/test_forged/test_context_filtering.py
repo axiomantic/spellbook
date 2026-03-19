@@ -6,21 +6,21 @@ content for inclusion in constrained context windows.
 
 import pytest
 
-from spellbook_mcp.forged.models import Feedback, IterationState
+from spellbook.forged.models import Feedback, IterationState
 
 
 class TestTruncateSmart:
     """Tests for smart truncation that preserves structure."""
 
     def test_content_under_budget_returns_unchanged(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = "Short content"
         result = truncate_smart(content, max_tokens=100)
         assert result == content
 
     def test_exact_budget_returns_unchanged(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         # 40 chars ~ 10 tokens at 4 chars/token
         content = "x" * 40
@@ -28,7 +28,7 @@ class TestTruncateSmart:
         assert result == content
 
     def test_over_budget_gets_truncated(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         # 400 chars ~ 100 tokens, budget is 50
         content = "x" * 400
@@ -36,7 +36,7 @@ class TestTruncateSmart:
         assert len(result) < len(content)
 
     def test_truncation_preserves_intro_lines(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         lines = [f"Line {i}" for i in range(100)]
         content = "\n".join(lines)
@@ -46,7 +46,7 @@ class TestTruncateSmart:
         assert "Line 1" in result
 
     def test_truncation_preserves_conclusion(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         lines = [f"Line {i}" for i in range(100)]
         content = "\n".join(lines)
@@ -55,7 +55,7 @@ class TestTruncateSmart:
         assert "Line 99" in result
 
     def test_truncation_includes_marker(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = "x\n" * 200
         result = truncate_smart(content, max_tokens=50, preserve_structure=True)
@@ -63,7 +63,7 @@ class TestTruncateSmart:
         assert "[...]" in result or "..." in result
 
     def test_markdown_preserves_headers(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = """# Header 1
 Some content here.
@@ -84,7 +84,7 @@ Final section with content.
         assert "# Header 1" in result
 
     def test_prose_truncates_at_sentence_boundary(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = "First sentence. Second sentence. Third sentence. " * 50
         result = truncate_smart(content, max_tokens=30, preserve_structure=False)
@@ -93,7 +93,7 @@ Final section with content.
         assert stripped.endswith(".") or stripped.endswith("[...]")
 
     def test_zero_budget_returns_empty_or_marker(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = "Some content"
         result = truncate_smart(content, max_tokens=0)
@@ -101,7 +101,7 @@ Final section with content.
         assert len(result) <= 10  # Allow for truncation marker
 
     def test_code_block_preservation(self):
-        from spellbook_mcp.forged.context_filtering import truncate_smart
+        from spellbook.forged.context_filtering import truncate_smart
 
         content = """# Introduction
 
@@ -124,13 +124,13 @@ class TestSelectRelevantKnowledge:
     """Tests for knowledge selection with priority ordering."""
 
     def test_empty_knowledge_returns_empty(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         result = select_relevant_knowledge({}, max_tokens=1000)
         assert result == {}
 
     def test_under_budget_returns_all(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         knowledge = {
             "user_decisions": ["Use pytest", "Prefer explicit imports"],
@@ -141,7 +141,7 @@ class TestSelectRelevantKnowledge:
         assert "learnings" in result
 
     def test_user_decisions_always_included(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         knowledge = {
             "user_decisions": ["Critical decision 1", "Critical decision 2"],
@@ -153,7 +153,7 @@ class TestSelectRelevantKnowledge:
         assert len(result["user_decisions"]) > 0
 
     def test_stage_specific_prioritized(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         knowledge = {
             "user_decisions": ["Decision"],
@@ -171,7 +171,7 @@ class TestSelectRelevantKnowledge:
             assert "DESIGN" in result["stage_learnings"]
 
     def test_recent_learnings_included(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         knowledge = {
             "iteration_learnings": {
@@ -188,7 +188,7 @@ class TestSelectRelevantKnowledge:
             assert "3" in result["iteration_learnings"]
 
     def test_keyword_matching(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         knowledge = {
             "learnings": [
@@ -209,7 +209,7 @@ class TestSelectRelevantKnowledge:
             assert len(auth_related) > 0
 
     def test_budget_respected(self):
-        from spellbook_mcp.forged.context_filtering import select_relevant_knowledge
+        from spellbook.forged.context_filtering import select_relevant_knowledge
 
         # Create knowledge that exceeds budget
         knowledge = {
@@ -229,14 +229,14 @@ class TestSimilarity:
     """Tests for text similarity computation."""
 
     def test_identical_texts_return_one(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         text = "The quick brown fox"
         result = similarity(text, text)
         assert result == 1.0
 
     def test_completely_different_texts_return_zero(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         text1 = "alpha beta gamma"
         text2 = "one two three"
@@ -244,7 +244,7 @@ class TestSimilarity:
         assert result == 0.0
 
     def test_partial_overlap_returns_intermediate(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         text1 = "the quick brown fox jumps"
         text2 = "the quick brown dog runs"
@@ -253,7 +253,7 @@ class TestSimilarity:
         assert 0 < result < 1
 
     def test_case_insensitive(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         text1 = "THE QUICK BROWN"
         text2 = "the quick brown"
@@ -261,7 +261,7 @@ class TestSimilarity:
         assert result == 1.0
 
     def test_stop_words_filtered(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         # These differ only in stop words
         text1 = "error in the authentication"
@@ -271,20 +271,20 @@ class TestSimilarity:
         assert result > 0.8
 
     def test_empty_texts(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         result = similarity("", "")
         # Empty texts should either return 1.0 (both same) or 0.0 (no content)
         assert result in [0.0, 1.0]
 
     def test_one_empty_text(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         result = similarity("some content", "")
         assert result == 0.0
 
     def test_threshold_parameter(self):
-        from spellbook_mcp.forged.context_filtering import similarity
+        from spellbook.forged.context_filtering import similarity
 
         text1 = "quick brown fox"
         text2 = "quick brown dog"
@@ -297,13 +297,13 @@ class TestFilterFeedback:
     """Tests for feedback history filtering."""
 
     def test_empty_history_returns_empty(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         result = filter_feedback([], stage="DESIGN", limit=5)
         assert result == []
 
     def test_respects_limit(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         history = [
             Feedback(
@@ -322,7 +322,7 @@ class TestFilterFeedback:
         assert len(result) == 3
 
     def test_prioritizes_same_stage(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         history = [
             Feedback(
@@ -350,7 +350,7 @@ class TestFilterFeedback:
         assert result[0].stage == "DESIGN"
 
     def test_prioritizes_blocking_severity(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         history = [
             Feedback(
@@ -378,7 +378,7 @@ class TestFilterFeedback:
         assert result[0].severity == "blocking"
 
     def test_prioritizes_recent(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         history = [
             Feedback(
@@ -407,7 +407,7 @@ class TestFilterFeedback:
         assert result[0].iteration == 5
 
     def test_deduplication_removes_similar(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         # Use texts that will be similar after stop word filtering
         # Jaccard similarity = intersection / union
@@ -453,7 +453,7 @@ class TestFilterFeedback:
         assert len(result) <= 2
 
     def test_dedup_threshold_respected(self):
-        from spellbook_mcp.forged.context_filtering import filter_feedback
+        from spellbook.forged.context_filtering import filter_feedback
 
         history = [
             Feedback(
@@ -489,7 +489,7 @@ class TestContextBudget:
     """Tests for ContextBudget dataclass."""
 
     def test_default_values(self):
-        from spellbook_mcp.forged.context_filtering import ContextBudget
+        from spellbook.forged.context_filtering import ContextBudget
 
         budget = ContextBudget()
         assert budget.total_tokens == 8000
@@ -499,7 +499,7 @@ class TestContextBudget:
         assert budget.feedback_budget == 1500
 
     def test_custom_values(self):
-        from spellbook_mcp.forged.context_filtering import ContextBudget
+        from spellbook.forged.context_filtering import ContextBudget
 
         budget = ContextBudget(
             total_tokens=5000,
@@ -516,7 +516,7 @@ class TestContextWindow:
     """Tests for ContextWindow dataclass."""
 
     def test_fields_present(self):
-        from spellbook_mcp.forged.context_filtering import ContextWindow
+        from spellbook.forged.context_filtering import ContextWindow
 
         window = ContextWindow(
             artifact_content="code here",
@@ -536,7 +536,7 @@ class TestPrioritizeForContext:
     """Tests for context window building within budget."""
 
     def test_returns_context_window(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             ContextWindow,
             prioritize_for_context,
@@ -555,7 +555,7 @@ class TestPrioritizeForContext:
         assert isinstance(result, ContextWindow)
 
     def test_respects_artifact_budget(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             prioritize_for_context,
         )
@@ -574,7 +574,7 @@ class TestPrioritizeForContext:
         assert len(result.artifact_content) <= 500  # Some slack for truncation marker
 
     def test_respects_knowledge_budget(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             prioritize_for_context,
         )
@@ -597,7 +597,7 @@ class TestPrioritizeForContext:
         assert total_chars < 500  # 50 tokens * 4 chars + slack
 
     def test_respects_feedback_budget(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             prioritize_for_context,
         )
@@ -629,7 +629,7 @@ class TestPrioritizeForContext:
         assert len(result.feedback_items) < 20
 
     def test_includes_reflections(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             prioritize_for_context,
         )
@@ -654,7 +654,7 @@ class TestPrioritizeForContext:
         assert len(result.reflections) > 0
 
     def test_total_tokens_estimated(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             prioritize_for_context,
         )
@@ -673,7 +673,7 @@ class TestPrioritizeForContext:
         assert result.total_tokens >= 0
 
     def test_empty_state_produces_valid_window(self):
-        from spellbook_mcp.forged.context_filtering import (
+        from spellbook.forged.context_filtering import (
             ContextBudget,
             ContextWindow,
             prioritize_for_context,
@@ -700,20 +700,20 @@ class TestTokenEstimation:
     """Tests for token estimation utility."""
 
     def test_estimate_tokens_basic(self):
-        from spellbook_mcp.forged.context_filtering import estimate_tokens
+        from spellbook.forged.context_filtering import estimate_tokens
 
         # 40 chars / 4 chars per token = 10 tokens
         result = estimate_tokens("x" * 40)
         assert result == 10
 
     def test_estimate_tokens_empty(self):
-        from spellbook_mcp.forged.context_filtering import estimate_tokens
+        from spellbook.forged.context_filtering import estimate_tokens
 
         result = estimate_tokens("")
         assert result == 0
 
     def test_estimate_tokens_rounds_up(self):
-        from spellbook_mcp.forged.context_filtering import estimate_tokens
+        from spellbook.forged.context_filtering import estimate_tokens
 
         # 5 chars / 4 = 1.25, should round up to 2
         result = estimate_tokens("hello")

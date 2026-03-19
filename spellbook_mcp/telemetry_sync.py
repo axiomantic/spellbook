@@ -35,7 +35,7 @@ def sync_outcomes_to_experiments(db_path: Optional[str] = None) -> dict:
     Returns:
         Dict with count of outcomes synced
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())

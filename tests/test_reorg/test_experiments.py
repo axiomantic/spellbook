@@ -1,6 +1,6 @@
 """Tests for the spellbook.experiments domain module.
 
-Verifies that key exports from spellbook_mcp.ab_test exist in
+Verifies that key exports from spellbook.experiments.ab_test exist in
 spellbook.experiments.ab_test.
 """
 
@@ -8,7 +8,7 @@ import pytest
 
 
 class TestExperimentsABTest:
-    """Verify spellbook.experiments.ab_test has key exports from spellbook_mcp.ab_test."""
+    """Verify spellbook.experiments.ab_test has key exports from spellbook.experiments.ab_test."""
 
     def test_ab_test_module_importable(self):
         import spellbook.experiments.ab_test
@@ -49,7 +49,7 @@ class TestExperimentsABTest:
         assert hasattr(ab_test, name), f"spellbook.experiments.ab_test missing {name}"
 
     def test_ab_test_no_spellbook_mcp_imports(self):
-        """Verify ab_test.py does not import from spellbook_mcp."""
+        """Verify ab_test.py does not import from spellbook."""
         import ast
         import inspect
 
@@ -60,7 +60,7 @@ class TestExperimentsABTest:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook_mcp"), (
+                assert not node.module.startswith("spellbook"), (
                     f"spellbook.experiments.ab_test imports from "
-                    f"spellbook_mcp: {node.module}"
+                    f"spellbook: {node.module}"
                 )

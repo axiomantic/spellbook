@@ -2,8 +2,8 @@
 
 from typing import List, Dict, Any, Optional
 
-from spellbook_mcp.extractors.message_utils import get_tool_calls
-from spellbook_mcp.extractors.types import Position, ToolAction
+from spellbook.extractors.message_utils import get_tool_calls
+from spellbook.extractors.types import Position, ToolAction
 
 
 def _extract_primary_arg(tool: str, args: dict) -> str:

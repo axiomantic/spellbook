@@ -8,7 +8,7 @@ class TestExperimentStatus:
     """Test ExperimentStatus enum."""
 
     def test_status_values(self):
-        from spellbook_mcp.ab_test import ExperimentStatus
+        from spellbook.experiments.ab_test import ExperimentStatus
 
         assert ExperimentStatus.CREATED.value == "created"
         assert ExperimentStatus.ACTIVE.value == "active"
@@ -20,7 +20,7 @@ class TestOutcomeType:
     """Test OutcomeType enum."""
 
     def test_outcome_values(self):
-        from spellbook_mcp.ab_test import OutcomeType
+        from spellbook.experiments.ab_test import OutcomeType
 
         assert OutcomeType.COMPLETED.value == "completed"
         assert OutcomeType.ABANDONED.value == "abandoned"
@@ -32,7 +32,7 @@ class TestVariant:
     """Test Variant dataclass."""
 
     def test_variant_creation(self):
-        from spellbook_mcp.ab_test import Variant
+        from spellbook.experiments.ab_test import Variant
 
         v = Variant(
             id="variant-123",
@@ -49,7 +49,7 @@ class TestVariant:
         assert v.weight == 50
 
     def test_variant_weight_validation_too_high(self):
-        from spellbook_mcp.ab_test import Variant
+        from spellbook.experiments.ab_test import Variant
 
         with pytest.raises(ValueError, match="weight must be 0-100"):
             Variant(
@@ -61,7 +61,7 @@ class TestVariant:
             )
 
     def test_variant_weight_validation_negative(self):
-        from spellbook_mcp.ab_test import Variant
+        from spellbook.experiments.ab_test import Variant
 
         with pytest.raises(ValueError, match="weight must be 0-100"):
             Variant(
@@ -73,7 +73,7 @@ class TestVariant:
             )
 
     def test_variant_name_required(self):
-        from spellbook_mcp.ab_test import Variant
+        from spellbook.experiments.ab_test import Variant
 
         with pytest.raises(ValueError, match="variant_name cannot be empty"):
             Variant(
@@ -89,7 +89,7 @@ class TestExperiment:
     """Test Experiment dataclass."""
 
     def test_experiment_creation(self):
-        from spellbook_mcp.ab_test import Experiment, ExperimentStatus
+        from spellbook.experiments.ab_test import Experiment, ExperimentStatus
 
         exp = Experiment(
             id="exp-123",
@@ -106,19 +106,19 @@ class TestExperiment:
         assert exp.variants == []
 
     def test_experiment_name_required(self):
-        from spellbook_mcp.ab_test import Experiment
+        from spellbook.experiments.ab_test import Experiment
 
         with pytest.raises(ValueError, match="name cannot be empty"):
             Experiment(id="e1", name="", skill_name="debugging")
 
     def test_experiment_skill_name_required(self):
-        from spellbook_mcp.ab_test import Experiment
+        from spellbook.experiments.ab_test import Experiment
 
         with pytest.raises(ValueError, match="skill_name cannot be empty"):
             Experiment(id="e1", name="test", skill_name="")
 
     def test_validate_variants_requires_two(self):
-        from spellbook_mcp.ab_test import Experiment, Variant, InvalidVariantsError
+        from spellbook.experiments.ab_test import Experiment, Variant, InvalidVariantsError
 
         exp = Experiment(id="e1", name="test", skill_name="debugging")
         exp.variants = [
@@ -129,7 +129,7 @@ class TestExperiment:
             exp.validate_variants()
 
     def test_validate_variants_requires_weight_sum_100(self):
-        from spellbook_mcp.ab_test import Experiment, Variant, InvalidVariantsError
+        from spellbook.experiments.ab_test import Experiment, Variant, InvalidVariantsError
 
         exp = Experiment(id="e1", name="test", skill_name="debugging")
         exp.variants = [
@@ -141,7 +141,7 @@ class TestExperiment:
             exp.validate_variants()
 
     def test_validate_variants_requires_control(self):
-        from spellbook_mcp.ab_test import Experiment, Variant, InvalidVariantsError
+        from spellbook.experiments.ab_test import Experiment, Variant, InvalidVariantsError
 
         exp = Experiment(id="e1", name="test", skill_name="debugging")
         exp.variants = [
@@ -153,7 +153,7 @@ class TestExperiment:
             exp.validate_variants()
 
     def test_validate_variants_success(self):
-        from spellbook_mcp.ab_test import Experiment, Variant
+        from spellbook.experiments.ab_test import Experiment, Variant
 
         exp = Experiment(id="e1", name="test", skill_name="debugging")
         exp.variants = [
@@ -169,7 +169,7 @@ class TestAssignment:
     """Test Assignment dataclass."""
 
     def test_assignment_creation(self):
-        from spellbook_mcp.ab_test import Assignment
+        from spellbook.experiments.ab_test import Assignment
 
         a = Assignment(
             id=1,

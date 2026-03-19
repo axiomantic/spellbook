@@ -80,7 +80,7 @@ def register_all_tools() -> None:
 def _cleanup_coordination(db_path: str) -> None:
     """Clean up old swarm coordination data (>7 days)."""
     try:
-        from spellbook_mcp.coordination.state import StateManager
+        from spellbook.coordination.state import StateManager
 
         sm = StateManager(db_path)
         sm.cleanup_old_swarms(days=7)
@@ -94,7 +94,7 @@ def _cleanup_forged() -> None:
         import sqlite3
         from datetime import datetime, timedelta, timezone
 
-        from spellbook_mcp.forged.schema import get_forged_connection
+        from spellbook.forged.schema import get_forged_connection
 
         cutoff_90d = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
         conn = get_forged_connection()
@@ -123,9 +123,9 @@ def startup() -> None:
     from spellbook.core.db import get_db_path, init_db
     from spellbook.sessions.watcher import SessionWatcher
     from spellbook.updates.watcher import UpdateWatcher
-    from spellbook_mcp.forged.schema import init_forged_schema
-    from spellbook_mcp.fractal.schema import init_fractal_schema
-    from spellbook_mcp.curator_tools import init_curator_tables
+    from spellbook.forged.schema import init_forged_schema
+    from spellbook.fractal.schema import init_fractal_schema
+    from spellbook.curator_tools import init_curator_tables
 
     # Initialize databases
     db_path = str(get_db_path())
@@ -153,7 +153,7 @@ def startup() -> None:
 
     # Preload TTS model in background (non-blocking)
     try:
-        from spellbook_mcp import tts_module
+        from spellbook import tts_module
 
         tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
         tts_preload.start()
@@ -178,13 +178,13 @@ def shutdown() -> None:
     except Exception:
         pass
     try:
-        from spellbook_mcp.forged.schema import close_forged_connections
+        from spellbook.forged.schema import close_forged_connections
 
         close_forged_connections()
     except Exception:
         pass
     try:
-        from spellbook_mcp.fractal.schema import close_all_fractal_connections
+        from spellbook.fractal.schema import close_all_fractal_connections
 
         close_all_fractal_connections()
     except Exception:
@@ -204,7 +204,7 @@ def _mount_admin_app() -> None:
             logger.debug("Admin interface disabled via admin_enabled config")
             return
 
-        from spellbook_mcp.admin.app import create_admin_app
+        from spellbook.admin.app import create_admin_app
         from starlette.routing import Mount
 
         admin_app = create_admin_app()

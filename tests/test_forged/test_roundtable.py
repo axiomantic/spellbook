@@ -30,7 +30,7 @@ class TestParsedVerdictDataclass:
 
     def test_parsed_verdict_creation(self):
         """ParsedVerdict must be creatable with required fields."""
-        from spellbook_mcp.forged.verdict_parsing import ParsedVerdict
+        from spellbook.forged.verdict_parsing import ParsedVerdict
 
         verdict = ParsedVerdict(
             archetype="Magician",
@@ -48,7 +48,7 @@ class TestParsedVerdictDataclass:
 
     def test_parsed_verdict_with_concerns(self):
         """ParsedVerdict can have concerns."""
-        from spellbook_mcp.forged.verdict_parsing import ParsedVerdict
+        from spellbook.forged.verdict_parsing import ParsedVerdict
 
         verdict = ParsedVerdict(
             archetype="Hermit",
@@ -66,7 +66,7 @@ class TestParsedVerdictDataclass:
 
     def test_parsed_verdict_to_dict(self):
         """ParsedVerdict.to_dict() must produce JSON-serializable dict."""
-        from spellbook_mcp.forged.verdict_parsing import ParsedVerdict
+        from spellbook.forged.verdict_parsing import ParsedVerdict
 
         verdict = ParsedVerdict(
             archetype="Justice",
@@ -88,7 +88,7 @@ class TestParsedVerdictDataclass:
 
     def test_parsed_verdict_from_dict(self):
         """ParsedVerdict.from_dict() must reconstruct from dict."""
-        from spellbook_mcp.forged.verdict_parsing import ParsedVerdict
+        from spellbook.forged.verdict_parsing import ParsedVerdict
 
         data = {
             "archetype": "Fool",
@@ -107,7 +107,7 @@ class TestParsedVerdictDataclass:
 
     def test_parsed_verdict_roundtrip(self):
         """ParsedVerdict must survive to_dict() -> from_dict() roundtrip."""
-        from spellbook_mcp.forged.verdict_parsing import ParsedVerdict
+        from spellbook.forged.verdict_parsing import ParsedVerdict
 
         original = ParsedVerdict(
             archetype="Emperor",
@@ -136,14 +136,14 @@ class TestVerdictParsingConstants:
 
     def test_persona_block_pattern_exists(self):
         """PERSONA_BLOCK_PATTERN must be defined."""
-        from spellbook_mcp.forged.verdict_parsing import PERSONA_BLOCK_PATTERN
+        from spellbook.forged.verdict_parsing import PERSONA_BLOCK_PATTERN
 
         assert PERSONA_BLOCK_PATTERN is not None
         assert isinstance(PERSONA_BLOCK_PATTERN, str)
 
     def test_valid_verdicts_constant_exists(self):
         """VALID_ROUNDTABLE_VERDICTS must be defined."""
-        from spellbook_mcp.forged.verdict_parsing import VALID_ROUNDTABLE_VERDICTS
+        from spellbook.forged.verdict_parsing import VALID_ROUNDTABLE_VERDICTS
 
         assert "APPROVE" in VALID_ROUNDTABLE_VERDICTS
         assert "ITERATE" in VALID_ROUNDTABLE_VERDICTS
@@ -155,7 +155,7 @@ class TestParseRoundtableResponse:
 
     def test_parse_single_archetype_approve(self):
         """parse_roundtable_response handles single archetype APPROVE."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Magician**: I have reviewed the technical implementation.
@@ -172,7 +172,7 @@ Verdict: APPROVE
 
     def test_parse_single_archetype_iterate(self):
         """parse_roundtable_response handles single archetype ITERATE."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Hermit**: Upon deep reflection, I find issues.
@@ -194,7 +194,7 @@ Severity: blocking
 
     def test_parse_multiple_archetypes(self):
         """parse_roundtable_response handles multiple archetypes."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Magician**: Technical implementation is solid.
@@ -218,7 +218,7 @@ Verdict: APPROVE
 
     def test_parse_abstain_verdict(self):
         """parse_roundtable_response handles ABSTAIN verdict."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Priestess**: This matter is not within my domain of hidden knowledge.
@@ -232,7 +232,7 @@ Verdict: ABSTAIN
 
     def test_parse_extracts_concerns(self):
         """parse_roundtable_response extracts concerns list."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Emperor**: The constraints are violated.
@@ -253,7 +253,7 @@ Severity: blocking
 
     def test_parse_extracts_suggestions(self):
         """parse_roundtable_response extracts suggestions list."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Chariot**: Moving forward requires action.
@@ -273,7 +273,7 @@ Verdict: APPROVE
 
     def test_parse_extracts_severity(self):
         """parse_roundtable_response extracts severity level."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         response = """
 **Hierophant**: The standards are not met.
@@ -289,14 +289,14 @@ Severity: significant
 
     def test_parse_empty_response_returns_empty_list(self):
         """parse_roundtable_response returns empty list for empty input."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         verdicts = parse_roundtable_response("")
         assert verdicts == []
 
     def test_parse_malformed_response_uses_fallback(self):
         """parse_roundtable_response uses fallback for malformed input."""
-        from spellbook_mcp.forged.verdict_parsing import parse_roundtable_response
+        from spellbook.forged.verdict_parsing import parse_roundtable_response
 
         # No clear verdict markers
         response = "This is just some text without structure."
@@ -311,7 +311,7 @@ class TestHandleParseFailure:
 
     def test_handle_parse_failure_returns_list(self):
         """handle_parse_failure must return a list of ParsedVerdict."""
-        from spellbook_mcp.forged.verdict_parsing import (
+        from spellbook.forged.verdict_parsing import (
             handle_parse_failure,
             ParsedVerdict,
         )
@@ -324,7 +324,7 @@ class TestHandleParseFailure:
 
     def test_handle_parse_failure_extracts_any_verdicts(self):
         """handle_parse_failure tries to extract any verdict-like content."""
-        from spellbook_mcp.forged.verdict_parsing import handle_parse_failure
+        from spellbook.forged.verdict_parsing import handle_parse_failure
 
         # Text that mentions a verdict but not in standard format
         response = "I think we should APPROVE this because it looks good."
@@ -335,7 +335,7 @@ class TestHandleParseFailure:
 
     def test_handle_parse_failure_empty_input(self):
         """handle_parse_failure handles empty input gracefully."""
-        from spellbook_mcp.forged.verdict_parsing import handle_parse_failure
+        from spellbook.forged.verdict_parsing import handle_parse_failure
 
         result = handle_parse_failure("")
         assert isinstance(result, list)
@@ -351,14 +351,14 @@ class TestRoundtableArchetypes:
 
     def test_archetypes_constant_exists(self):
         """ROUNDTABLE_ARCHETYPES must be defined."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         assert isinstance(ROUNDTABLE_ARCHETYPES, dict)
         assert len(ROUNDTABLE_ARCHETYPES) == 10
 
     def test_all_archetypes_present(self):
         """All 10 tarot archetypes must be present."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         required_archetypes = [
             "Magician",
@@ -378,7 +378,7 @@ class TestRoundtableArchetypes:
 
     def test_archetype_has_description(self):
         """Each archetype must have a description."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         for name, info in ROUNDTABLE_ARCHETYPES.items():
             assert "description" in info, f"{name} missing description"
@@ -386,7 +386,7 @@ class TestRoundtableArchetypes:
 
     def test_archetype_has_focus(self):
         """Each archetype must have a focus area."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         for name, info in ROUNDTABLE_ARCHETYPES.items():
             assert "focus" in info, f"{name} missing focus"
@@ -394,14 +394,14 @@ class TestRoundtableArchetypes:
 
     def test_magician_is_technical_precision(self):
         """Magician archetype must focus on technical precision."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         magician = ROUNDTABLE_ARCHETYPES["Magician"]
         assert "technical" in magician["focus"].lower()
 
     def test_justice_is_synthesis(self):
         """Justice archetype must focus on synthesis/resolution."""
-        from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+        from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
 
         justice = ROUNDTABLE_ARCHETYPES["Justice"]
         assert (
@@ -420,13 +420,13 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_exists(self):
         """build_roundtable_prompt function must exist."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         assert callable(build_roundtable_prompt)
 
     def test_build_roundtable_prompt_includes_stage(self):
         """build_roundtable_prompt must include stage in prompt."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         prompt = build_roundtable_prompt(
             feature_name="test-feature",
@@ -439,7 +439,7 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_includes_feature_name(self):
         """build_roundtable_prompt must include feature name in prompt."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         prompt = build_roundtable_prompt(
             feature_name="my-awesome-feature",
@@ -452,7 +452,7 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_includes_artifact_content(self):
         """build_roundtable_prompt must include artifact content."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         artifact_content = "This is unique artifact content for testing."
         prompt = build_roundtable_prompt(
@@ -466,7 +466,7 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_includes_selected_archetypes(self):
         """build_roundtable_prompt must include selected archetype instructions."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         prompt = build_roundtable_prompt(
             feature_name="test-feature",
@@ -482,7 +482,7 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_default_archetypes(self):
         """build_roundtable_prompt uses default archetypes when none specified."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         prompt = build_roundtable_prompt(
             feature_name="test-feature",
@@ -496,7 +496,7 @@ class TestRoundtablePromptTemplate:
 
     def test_build_roundtable_prompt_verdict_instructions(self):
         """build_roundtable_prompt must include verdict format instructions."""
-        from spellbook_mcp.forged.roundtable import build_roundtable_prompt
+        from spellbook.forged.roundtable import build_roundtable_prompt
 
         prompt = build_roundtable_prompt(
             feature_name="test-feature",
@@ -520,8 +520,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_returns_dict(self, tmp_path):
         """roundtable_convene must return a dict."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         # Create test artifact
         artifact_path = tmp_path / "design.md"
@@ -538,8 +538,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_has_required_keys(self, tmp_path):
         """roundtable_convene result must have required keys."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -557,8 +557,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_consensus_is_bool(self, tmp_path):
         """roundtable_convene consensus must be boolean."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -574,8 +574,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_verdicts_is_dict(self, tmp_path):
         """roundtable_convene verdicts must be dict[archetype, verdict]."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -591,8 +591,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_feedback_is_list(self, tmp_path):
         """roundtable_convene feedback must be a list."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -608,9 +608,9 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_return_to_is_stage_or_none(self, tmp_path):
         """roundtable_convene return_to must be valid stage or None."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
-        from spellbook_mcp.forged.models import VALID_STAGES
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
+        from spellbook.forged.models import VALID_STAGES
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -627,8 +627,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_dialogue_is_string(self, tmp_path):
         """roundtable_convene dialogue must be a string."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -644,7 +644,7 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_nonexistent_artifact_error(self):
         """roundtable_convene with nonexistent artifact must error."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
+        from spellbook.forged.roundtable import roundtable_convene
 
         result = roundtable_convene(
             feature_name="test-feature",
@@ -659,8 +659,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_invalid_stage_error(self, tmp_path):
         """roundtable_convene with invalid stage must error."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -677,8 +677,8 @@ class TestRoundtableConvene:
 
     def test_roundtable_convene_uses_default_archetypes(self, tmp_path):
         """roundtable_convene uses defaults when archetypes is None."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -704,8 +704,8 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_returns_dict(self, tmp_path):
         """roundtable_debate must return a dict."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_debate
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -726,8 +726,8 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_has_required_keys(self, tmp_path):
         """roundtable_debate result must have required keys."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_debate
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -749,9 +749,9 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_binding_decision_is_verdict(self, tmp_path):
         """roundtable_debate binding_decision must be valid verdict."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
-        from spellbook_mcp.forged.verdict_parsing import VALID_ROUNDTABLE_VERDICTS
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_debate
+        from spellbook.forged.verdict_parsing import VALID_ROUNDTABLE_VERDICTS
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -771,8 +771,8 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_moderator_is_justice(self, tmp_path):
         """roundtable_debate must use Justice as moderator."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_debate
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -792,8 +792,8 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_reasoning_is_string(self, tmp_path):
         """roundtable_debate reasoning must be a string (initially empty, filled after LLM)."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_debate
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -816,7 +816,7 @@ class TestRoundtableDebate:
 
     def test_roundtable_debate_nonexistent_artifact_error(self):
         """roundtable_debate with nonexistent artifact must error."""
-        from spellbook_mcp.forged.roundtable import roundtable_debate
+        from spellbook.forged.roundtable import roundtable_debate
 
         conflicting_verdicts = {
             "Magician": "APPROVE",
@@ -843,7 +843,7 @@ class TestConflictResolution:
 
     def test_determine_consensus_all_approve(self):
         """determine_consensus returns True when all APPROVE."""
-        from spellbook_mcp.forged.roundtable import determine_consensus
+        from spellbook.forged.roundtable import determine_consensus
 
         verdicts = {
             "Magician": "APPROVE",
@@ -858,7 +858,7 @@ class TestConflictResolution:
 
     def test_determine_consensus_any_iterate(self):
         """determine_consensus returns False when any ITERATE."""
-        from spellbook_mcp.forged.roundtable import determine_consensus
+        from spellbook.forged.roundtable import determine_consensus
 
         verdicts = {
             "Magician": "APPROVE",
@@ -872,7 +872,7 @@ class TestConflictResolution:
 
     def test_determine_consensus_abstain_ignored(self):
         """determine_consensus ignores ABSTAIN verdicts."""
-        from spellbook_mcp.forged.roundtable import determine_consensus
+        from spellbook.forged.roundtable import determine_consensus
 
         verdicts = {
             "Magician": "APPROVE",
@@ -887,8 +887,8 @@ class TestConflictResolution:
 
     def test_determine_consensus_returns_stage_on_iterate(self):
         """determine_consensus returns return_to stage on ITERATE."""
-        from spellbook_mcp.forged.roundtable import determine_consensus
-        from spellbook_mcp.forged.models import VALID_STAGES
+        from spellbook.forged.roundtable import determine_consensus
+        from spellbook.forged.models import VALID_STAGES
 
         verdicts = {
             "Magician": "ITERATE",
@@ -903,7 +903,7 @@ class TestConflictResolution:
 
     def test_determine_consensus_empty_verdicts(self):
         """determine_consensus handles empty verdicts."""
-        from spellbook_mcp.forged.roundtable import determine_consensus
+        from spellbook.forged.roundtable import determine_consensus
 
         consensus, return_to = determine_consensus({}, "DESIGN")
 
@@ -913,7 +913,7 @@ class TestConflictResolution:
 
     def test_has_conflict_detects_disagreement(self):
         """has_conflict returns True when archetypes disagree."""
-        from spellbook_mcp.forged.roundtable import has_conflict
+        from spellbook.forged.roundtable import has_conflict
 
         verdicts = {
             "Magician": "APPROVE",
@@ -925,7 +925,7 @@ class TestConflictResolution:
 
     def test_has_conflict_no_disagreement(self):
         """has_conflict returns False when all agree."""
-        from spellbook_mcp.forged.roundtable import has_conflict
+        from spellbook.forged.roundtable import has_conflict
 
         verdicts = {
             "Magician": "APPROVE",
@@ -937,7 +937,7 @@ class TestConflictResolution:
 
     def test_has_conflict_abstain_not_conflict(self):
         """has_conflict does not count ABSTAIN as conflict."""
-        from spellbook_mcp.forged.roundtable import has_conflict
+        from spellbook.forged.roundtable import has_conflict
 
         verdicts = {
             "Magician": "APPROVE",
@@ -958,13 +958,13 @@ class TestDefaultArchetypesByStage:
 
     def test_get_default_archetypes_exists(self):
         """get_default_archetypes function must exist."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
+        from spellbook.forged.roundtable import get_default_archetypes
 
         assert callable(get_default_archetypes)
 
     def test_get_default_archetypes_discover(self):
         """DISCOVER stage should use discovery-focused archetypes."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
+        from spellbook.forged.roundtable import get_default_archetypes
 
         archetypes = get_default_archetypes("DISCOVER")
 
@@ -975,7 +975,7 @@ class TestDefaultArchetypesByStage:
 
     def test_get_default_archetypes_design(self):
         """DESIGN stage should use design-focused archetypes."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
+        from spellbook.forged.roundtable import get_default_archetypes
 
         archetypes = get_default_archetypes("DESIGN")
 
@@ -986,7 +986,7 @@ class TestDefaultArchetypesByStage:
 
     def test_get_default_archetypes_implement(self):
         """IMPLEMENT stage should use implementation-focused archetypes."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
+        from spellbook.forged.roundtable import get_default_archetypes
 
         archetypes = get_default_archetypes("IMPLEMENT")
 
@@ -997,8 +997,8 @@ class TestDefaultArchetypesByStage:
 
     def test_get_default_archetypes_always_includes_justice(self):
         """All stages should include Justice for synthesis."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
-        from spellbook_mcp.forged.models import VALID_STAGES
+        from spellbook.forged.roundtable import get_default_archetypes
+        from spellbook.forged.models import VALID_STAGES
 
         for stage in VALID_STAGES:
             if stage not in ["COMPLETE", "ESCALATED"]:
@@ -1007,7 +1007,7 @@ class TestDefaultArchetypesByStage:
 
     def test_get_default_archetypes_invalid_stage(self):
         """get_default_archetypes with invalid stage raises ValueError."""
-        from spellbook_mcp.forged.roundtable import get_default_archetypes
+        from spellbook.forged.roundtable import get_default_archetypes
 
         with pytest.raises(ValueError):
             get_default_archetypes("INVALID_STAGE")
@@ -1023,8 +1023,8 @@ class TestRoundtableIntegration:
 
     def test_full_approval_workflow(self, tmp_path):
         """Test complete workflow with unanimous approval."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         # Create a high-quality artifact
         artifact_path = tmp_path / "design.md"
@@ -1058,12 +1058,12 @@ Use established libraries and follow OWASP guidelines.
 
     def test_convene_then_debate_workflow(self, tmp_path):
         """Test workflow where convene leads to debate."""
-        from spellbook_mcp.forged.roundtable import (
+        from spellbook.forged.roundtable import (
             roundtable_convene,
             roundtable_debate,
             has_conflict,
         )
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "plan.md"
         write_artifact(str(artifact_path), "# Implementation Plan")

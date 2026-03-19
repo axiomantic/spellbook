@@ -3,8 +3,8 @@
 import json
 
 import pytest
-from spellbook_mcp.db import init_db, get_connection, close_all_connections
-from spellbook_mcp.memory_store import (
+from spellbook.core.db import init_db, get_connection, close_all_connections
+from spellbook.memory.store import (
     insert_memory,
     get_memory,
     soft_delete_memory,
@@ -724,7 +724,7 @@ class TestGetRecentlyConsolidatedEvents:
         eid2 = log_raw_event(db, "s1", "proj", "tool_use", "Edit", "b.py", "edit b", "python")
         mark_events_consolidated(db, [eid1, eid2], "batch-1")
 
-        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        from spellbook.memory.store import get_recently_consolidated_events
         events = get_recently_consolidated_events(db, limit=50)
         assert len(events) == 2
         assert events[0]["id"] == eid1
@@ -734,7 +734,7 @@ class TestGetRecentlyConsolidatedEvents:
         """Unconsolidated events are not returned."""
         log_raw_event(db, "s1", "proj", "tool_use", "Read", "a.py", "read a", "")
 
-        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        from spellbook.memory.store import get_recently_consolidated_events
         events = get_recently_consolidated_events(db, limit=50)
         assert len(events) == 0
 
@@ -744,7 +744,7 @@ class TestGetRecentlyConsolidatedEvents:
         eid2 = log_raw_event(db, "s1", "proj-b", "tool_use", "Read", "b.py", "read b", "")
         mark_events_consolidated(db, [eid1, eid2], "batch-1")
 
-        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        from spellbook.memory.store import get_recently_consolidated_events
         events = get_recently_consolidated_events(db, limit=50, namespace="proj-a")
         assert len(events) == 1
         assert events[0]["project"] == "proj-a"
@@ -757,7 +757,7 @@ class TestGetRecentlyConsolidatedEvents:
             eids.append(eid)
         mark_events_consolidated(db, eids, "batch-1")
 
-        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        from spellbook.memory.store import get_recently_consolidated_events
         events = get_recently_consolidated_events(db, limit=2)
         assert len(events) == 2
 

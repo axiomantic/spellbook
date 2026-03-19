@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, init_db
+from spellbook.core.db import close_all_connections, init_db
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ class TestHoneypotDisableChecks:
     """security_disable_all_checks honeypot returns fake disabled status."""
 
     def test_returns_fake_disabled_status(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger
+        from spellbook.security.tools import do_honeypot_trigger
 
         result = do_honeypot_trigger(
             tool_name="security_disable_all_checks",
@@ -50,7 +50,7 @@ class TestHoneypotDisableChecks:
         assert result["message"] == "All security checks disabled"
 
     def test_logs_critical_event(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="security_disable_all_checks",
@@ -74,7 +74,7 @@ class TestHoneypotSystemPrompt:
     """system_prompt_dump honeypot returns safe message."""
 
     def test_returns_safe_prompt_message(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger
+        from spellbook.security.tools import do_honeypot_trigger
 
         result = do_honeypot_trigger(
             tool_name="system_prompt_dump",
@@ -84,7 +84,7 @@ class TestHoneypotSystemPrompt:
         assert result["prompt"] == "System prompt export not available"
 
     def test_logs_critical_event(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="system_prompt_dump",
@@ -108,7 +108,7 @@ class TestHoneypotCredentialExport:
     """credential_export honeypot returns empty credentials."""
 
     def test_returns_empty_credentials(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger
+        from spellbook.security.tools import do_honeypot_trigger
 
         result = do_honeypot_trigger(
             tool_name="credential_export",
@@ -118,7 +118,7 @@ class TestHoneypotCredentialExport:
         assert result["credentials"] == []
 
     def test_logs_critical_event(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="credential_export",
@@ -142,7 +142,7 @@ class TestHoneypotEventLogging:
     """Verify event_type, severity, and detail content for honeypot events."""
 
     def test_event_type_is_honeypot_triggered(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="security_disable_all_checks",
@@ -155,7 +155,7 @@ class TestHoneypotEventLogging:
         assert event["event_type"] == "honeypot_triggered"
 
     def test_severity_is_critical(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="system_prompt_dump",
@@ -169,7 +169,7 @@ class TestHoneypotEventLogging:
         assert events["events"][0]["severity"] == "CRITICAL"
 
     def test_detail_contains_tool_name(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="credential_export",
@@ -193,7 +193,7 @@ class TestHoneypotContext:
     """Verify invocation context is captured in event detail."""
 
     def test_context_captured_in_detail(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         ctx = {"session_id": "test-session-123", "source": "mcp_tool_call"}
         do_honeypot_trigger(
@@ -209,7 +209,7 @@ class TestHoneypotContext:
         assert detail["invocation_context"] == ctx
 
     def test_empty_context_captured(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="system_prompt_dump",
@@ -233,7 +233,7 @@ class TestHoneypotGenericFallback:
     """Unknown tool_name returns generic {"status": "ok"}."""
 
     def test_unknown_tool_returns_generic_ok(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger
+        from spellbook.security.tools import do_honeypot_trigger
 
         result = do_honeypot_trigger(
             tool_name="some_unknown_honeypot",
@@ -243,7 +243,7 @@ class TestHoneypotGenericFallback:
         assert result == {"status": "ok"}
 
     def test_unknown_tool_still_logs_event(self, db_path):
-        from spellbook_mcp.security.tools import do_honeypot_trigger, do_query_events
+        from spellbook.security.tools import do_honeypot_trigger, do_query_events
 
         do_honeypot_trigger(
             tool_name="some_unknown_honeypot",

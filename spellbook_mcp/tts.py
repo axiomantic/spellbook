@@ -13,8 +13,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
-from spellbook_mcp import config_tools
-from spellbook_mcp.config_tools import TTS_DEFAULT_ENABLED, TTS_DEFAULT_VOICE, TTS_DEFAULT_VOLUME
+from spellbook import config_tools
+from spellbook.core.config import TTS_DEFAULT_ENABLED, TTS_DEFAULT_VOICE, TTS_DEFAULT_VOLUME
 
 logger = logging.getLogger(__name__)
 

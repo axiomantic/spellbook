@@ -13,11 +13,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.db import query_fractal_db
-from spellbook_mcp.admin.events import Event, Subsystem, event_bus
-from spellbook_mcp.admin.routes.schemas import GraphStatusUpdateRequest
-from spellbook_mcp.fractal.graph_ops import delete_graph, update_graph_status
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.db import query_fractal_db
+from spellbook.admin.events import Event, Subsystem, event_bus
+from spellbook.admin.routes.schemas import GraphStatusUpdateRequest
+from spellbook.fractal.graph_ops import delete_graph, update_graph_status
 
 router = APIRouter(prefix="/fractal", tags=["fractal"])
 

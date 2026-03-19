@@ -1,6 +1,6 @@
 """Background watcher for spellbook update detection.
 
-Follows the SessionWatcher pattern from spellbook_mcp/watcher.py:
+Follows the SessionWatcher pattern from spellbook/watcher.py:
 daemon thread, Event.wait() for responsive shutdown, circuit breaker.
 
 Checks at startup + configurable interval (long-lived HTTP daemon).
@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from spellbook_mcp.config_tools import config_get, config_set
+from spellbook.core.config import config_get, config_set
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ class UpdateWatcher(threading.Thread):
         if config_get("auto_update") is False:
             return  # Disabled at runtime
 
-        from spellbook_mcp.update_tools import check_for_updates
+        from spellbook.updates.tools import check_for_updates
 
         result = check_for_updates(self.spellbook_dir)
 
@@ -163,7 +163,7 @@ class UpdateWatcher(threading.Thread):
             remote_version: The available remote version
             is_major: True if this is a major version bump
         """
-        from spellbook_mcp.update_tools import apply_update
+        from spellbook.updates.tools import apply_update
 
         if is_major:
             config_set("pending_major_update", {

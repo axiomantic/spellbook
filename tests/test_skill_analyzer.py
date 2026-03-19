@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from spellbook_mcp.skill_analyzer import (
+from spellbook.sessions.skill_analyzer import (
     extract_skill_invocations,
     aggregate_metrics,
     _get_tool_uses,
@@ -16,7 +16,7 @@ from spellbook_mcp.skill_analyzer import (
     OUTCOME_COMPLETED,
     OUTCOME_ABANDONED,
 )
-from spellbook_mcp.db import init_db, get_connection
+from spellbook.core.db import init_db, get_connection
 
 
 class TestToolUseExtraction:
@@ -361,7 +361,7 @@ class TestSkillOutcome:
 
     def test_from_invocation_completed(self):
         """Test conversion of completed invocation."""
-        from spellbook_mcp.skill_analyzer import SkillOutcome, OUTCOME_COMPLETED
+        from spellbook.sessions.skill_analyzer import SkillOutcome, OUTCOME_COMPLETED
 
         inv = SkillInvocation(
             skill="debugging",
@@ -389,7 +389,7 @@ class TestSkillOutcome:
 
     def test_from_invocation_superseded(self):
         """Test conversion of superseded invocation."""
-        from spellbook_mcp.skill_analyzer import SkillOutcome, OUTCOME_SUPERSEDED
+        from spellbook.sessions.skill_analyzer import SkillOutcome, OUTCOME_SUPERSEDED
 
         inv = SkillInvocation(
             skill="debugging",
@@ -402,7 +402,7 @@ class TestSkillOutcome:
 
     def test_from_invocation_abandoned(self):
         """Test conversion of abandoned invocation."""
-        from spellbook_mcp.skill_analyzer import SkillOutcome, OUTCOME_ABANDONED
+        from spellbook.sessions.skill_analyzer import SkillOutcome, OUTCOME_ABANDONED
 
         inv = SkillInvocation(
             skill="debugging",
@@ -416,7 +416,7 @@ class TestSkillOutcome:
 
     def test_from_invocation_still_active(self):
         """Test conversion of still-active invocation returns empty outcome."""
-        from spellbook_mcp.skill_analyzer import SkillOutcome
+        from spellbook.sessions.skill_analyzer import SkillOutcome
 
         inv = SkillInvocation(
             skill="debugging",
@@ -438,10 +438,10 @@ class TestPersistOutcome:
 
     def test_persist_outcome_creates_record(self, tmp_path):
         """Test that persist_outcome creates a database record."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, OUTCOME_COMPLETED
         )
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = str(tmp_path / "test.db")
@@ -501,10 +501,10 @@ class TestPersistOutcome:
 
     def test_persist_outcome_upserts_on_duplicate(self, tmp_path):
         """Test that duplicate outcomes are updated, not duplicated."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, OUTCOME_COMPLETED, OUTCOME_ABANDONED
         )
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = str(tmp_path / "test.db")
@@ -551,11 +551,11 @@ class TestFinalizeSessionOutcomes:
 
     def test_finalize_session_outcomes_marks_open_as_session_ended(self, tmp_path):
         """Test that open outcomes are marked as session_ended."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, finalize_session_outcomes,
             OUTCOME_COMPLETED, OUTCOME_SESSION_ENDED
         )
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = str(tmp_path / "test.db")
@@ -599,7 +599,7 @@ class TestAnonymizeForTelemetry:
 
     def test_anonymize_excludes_local_only_fields(self):
         """Test that session_id, project_encoded, corrections are excluded."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, anonymize_for_telemetry, OUTCOME_COMPLETED
         )
         from datetime import datetime
@@ -629,7 +629,7 @@ class TestAnonymizeForTelemetry:
 
     def test_anonymize_buckets_duration(self):
         """Test that duration is bucketed correctly."""
-        from spellbook_mcp.skill_analyzer import bucket_duration
+        from spellbook.sessions.skill_analyzer import bucket_duration
 
         # 30 seconds -> "<1m"
         assert bucket_duration(30) == "<1m"
@@ -644,7 +644,7 @@ class TestAnonymizeForTelemetry:
 
     def test_anonymize_buckets_tokens(self):
         """Test that tokens are bucketed correctly."""
-        from spellbook_mcp.skill_analyzer import bucket_tokens
+        from spellbook.sessions.skill_analyzer import bucket_tokens
 
         assert bucket_tokens(500) == "<1k"
         assert bucket_tokens(2000) == "1-5k"
@@ -654,7 +654,7 @@ class TestAnonymizeForTelemetry:
 
     def test_anonymize_respects_min_count(self):
         """Test that aggregates with fewer than min_count are excluded."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, anonymize_for_telemetry, OUTCOME_COMPLETED
         )
         from datetime import datetime
@@ -677,7 +677,7 @@ class TestAnonymizeForTelemetry:
 
     def test_anonymize_groups_by_skill_version_outcome_buckets(self):
         """Test that outcomes are grouped by skill, version, outcome, and buckets."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, anonymize_for_telemetry, OUTCOME_COMPLETED
         )
         from datetime import datetime

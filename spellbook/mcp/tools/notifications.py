@@ -3,15 +3,15 @@
 import json
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp import notify as notify_module
-from spellbook_mcp import tts as tts_module
-from spellbook_mcp.config_tools import (
+from spellbook import notify as notify_module
+from spellbook import tts as tts_module
+from spellbook.core.config import (
     config_get,
     config_set_many,
     notify_session_set as do_notify_session_set,
     tts_session_set as do_tts_session_set,
 )
-from spellbook_mcp.injection import inject_recovery_context
+from spellbook.sessions.injection import inject_recovery_context
 
 
 # --- TTS Tools ---

@@ -1,6 +1,6 @@
 """Tests for pr_distill type definitions."""
 
-from spellbook_mcp.pr_distill.types import (
+from spellbook.pr_distill.types import (
     DiffLine,
     Hunk,
     FileDiff,

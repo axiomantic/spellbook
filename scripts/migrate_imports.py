@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Migrate spellbook_mcp imports to the new spellbook package structure.
+"""Migrate spellbook imports to the new spellbook package structure.
 
 Usage:
     python scripts/migrate_imports.py --dry-run          # Preview all changes
@@ -19,52 +19,52 @@ from typing import NamedTuple
 # Only includes modules that have actually been moved to the new package.
 MODULE_MAP: dict[str, str] = {
     # Core modules
-    "spellbook_mcp.db": "spellbook.core.db",
-    "spellbook_mcp.config_tools": "spellbook.core.config",
-    "spellbook_mcp.auth": "spellbook.core.auth",
-    "spellbook_mcp.path_utils": "spellbook.core.path_utils",
-    "spellbook_mcp.models": "spellbook.core.models",
+    "spellbook.core.db": "spellbook.core.db",
+    "spellbook.core.config": "spellbook.core.config",
+    "spellbook.core.auth": "spellbook.core.auth",
+    "spellbook.core.path_utils": "spellbook.core.path_utils",
+    "spellbook.core.models": "spellbook.core.models",
     # Health
-    "spellbook_mcp.health": "spellbook.health.checker",
-    "spellbook_mcp.metrics": "spellbook.health.metrics",
+    "spellbook.health.checker": "spellbook.health.checker",
+    "spellbook.health.metrics": "spellbook.health.metrics",
     # Memory
-    "spellbook_mcp.memory_tools": "spellbook.memory.tools",
-    "spellbook_mcp.memory_store": "spellbook.memory.store",
-    "spellbook_mcp.memory_consolidation": "spellbook.memory.consolidation",
+    "spellbook.memory.tools": "spellbook.memory.tools",
+    "spellbook.memory.store": "spellbook.memory.store",
+    "spellbook.memory.consolidation": "spellbook.memory.consolidation",
     # Sessions
-    "spellbook_mcp.session_ops": "spellbook.sessions.parser",
-    "spellbook_mcp.resume": "spellbook.sessions.resume",
-    "spellbook_mcp.watcher": "spellbook.sessions.watcher",
-    "spellbook_mcp.injection": "spellbook.sessions.injection",
-    "spellbook_mcp.soul_extractor": "spellbook.sessions.soul_extractor",
-    "spellbook_mcp.skill_analyzer": "spellbook.sessions.skill_analyzer",
-    "spellbook_mcp.compaction_detector": "spellbook.sessions.compaction",
+    "spellbook.sessions.parser": "spellbook.sessions.parser",
+    "spellbook.sessions.resume": "spellbook.sessions.resume",
+    "spellbook.sessions.watcher": "spellbook.sessions.watcher",
+    "spellbook.sessions.injection": "spellbook.sessions.injection",
+    "spellbook.sessions.soul_extractor": "spellbook.sessions.soul_extractor",
+    "spellbook.sessions.skill_analyzer": "spellbook.sessions.skill_analyzer",
+    "spellbook.sessions.compaction": "spellbook.sessions.compaction",
     # Notifications
-    "spellbook_mcp.tts": "spellbook.notifications.tts",
-    "spellbook_mcp.notify": "spellbook.notifications.notify",
+    "spellbook.notifications.tts": "spellbook.notifications.tts",
+    "spellbook.notifications.notify": "spellbook.notifications.notify",
     # Updates
-    "spellbook_mcp.update_tools": "spellbook.updates.tools",
-    "spellbook_mcp.update_watcher": "spellbook.updates.watcher",
+    "spellbook.updates.tools": "spellbook.updates.tools",
+    "spellbook.updates.watcher": "spellbook.updates.watcher",
     # Experiments
-    "spellbook_mcp.ab_test": "spellbook.experiments.ab_test",
+    "spellbook.experiments.ab_test": "spellbook.experiments.ab_test",
     # MCP server
-    "spellbook_mcp.server": "spellbook.mcp.server",
+    "spellbook.mcp.server": "spellbook.mcp.server",
     # Subpackages: prefix swap (order matters, longer first in sorted keys)
-    "spellbook_mcp.security": "spellbook.security",
-    "spellbook_mcp.forged": "spellbook.forged",
-    "spellbook_mcp.fractal": "spellbook.fractal",
-    "spellbook_mcp.code_review": "spellbook.code_review",
-    "spellbook_mcp.pr_distill": "spellbook.pr_distill",
-    "spellbook_mcp.coordination": "spellbook.coordination",
-    "spellbook_mcp.admin": "spellbook.admin",
-    "spellbook_mcp.extractors": "spellbook.extractors",
-    "spellbook_mcp.session": "spellbook.session",
+    "spellbook.security": "spellbook.security",
+    "spellbook.forged": "spellbook.forged",
+    "spellbook.fractal": "spellbook.fractal",
+    "spellbook.code_review": "spellbook.code_review",
+    "spellbook.pr_distill": "spellbook.pr_distill",
+    "spellbook.coordination": "spellbook.coordination",
+    "spellbook.admin": "spellbook.admin",
+    "spellbook.extractors": "spellbook.extractors",
+    "spellbook.session": "spellbook.session",
 }
 
 # Sort keys by length (longest first) to prevent partial replacements.
 _SORTED_KEYS = sorted(MODULE_MAP.keys(), key=len, reverse=True)
 
-# Fallback regex for any remaining spellbook_mcp references not in the map.
+# Fallback regex for any remaining spellbook references not in the map.
 _FALLBACK_RE = re.compile(r"\bspellbook_mcp\b")
 
 
@@ -77,10 +77,10 @@ class Change(NamedTuple):
 
 
 def rewrite_line(line: str) -> str:
-    """Rewrite a single line, replacing spellbook_mcp references.
+    """Rewrite a single line, replacing spellbook references.
 
     Applies MODULE_MAP replacements (longest key first), then falls back
-    to a regex substitution for any remaining spellbook_mcp occurrences.
+    to a regex substitution for any remaining spellbook occurrences.
     """
     result = line
     for old_path in _SORTED_KEYS:
@@ -91,13 +91,13 @@ def rewrite_line(line: str) -> str:
         pattern = re.compile(re.escape(old_path) + r"(?=\b|\.)")
         result = pattern.sub(new_path, result)
 
-    # Fallback: catch any remaining spellbook_mcp references
+    # Fallback: catch any remaining spellbook references
     result = _FALLBACK_RE.sub("spellbook", result)
     return result
 
 
 def migrate_file(filepath: str, *, dry_run: bool = False) -> list[Change]:
-    """Migrate a single file, rewriting spellbook_mcp references.
+    """Migrate a single file, rewriting spellbook references.
 
     Args:
         filepath: Path to the file to migrate.
@@ -144,7 +144,7 @@ def find_files(root: Path) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Migrate spellbook_mcp imports to the new spellbook package."
+        description="Migrate spellbook imports to the new spellbook package."
     )
     parser.add_argument(
         "--dry-run",

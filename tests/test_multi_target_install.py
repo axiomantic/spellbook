@@ -120,8 +120,8 @@ class TestCrushCrossPlatformCoupling:
         spellbook = tmp_path / "spellbook"
         spellbook.mkdir()
         (spellbook / ".version").write_text("0.1.0")
-        (spellbook / "spellbook_mcp").mkdir()
-        (spellbook / "spellbook_mcp" / "server.py").write_text("# stub")
+        (spellbook / "spellbook").mkdir()
+        (spellbook / "spellbook" / "server.py").write_text("# stub")
         (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook\n\nTest.")
         return spellbook
 
@@ -176,8 +176,8 @@ class TestOpenCodeDynamicPath:
         spellbook = tmp_path / "spellbook"
         spellbook.mkdir()
         (spellbook / ".version").write_text("0.1.0")
-        (spellbook / "spellbook_mcp").mkdir()
-        (spellbook / "spellbook_mcp" / "server.py").write_text("# stub")
+        (spellbook / "spellbook").mkdir()
+        (spellbook / "spellbook" / "server.py").write_text("# stub")
         (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook\n\nTest.")
         # Create the extensions directory for system prompt source
         ext_dir = spellbook / "extensions" / "opencode"

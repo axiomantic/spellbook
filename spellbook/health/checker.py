@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from spellbook.core.db import get_connection
-from spellbook_mcp.preferences import CoordinationBackend, load_coordination_config
+from spellbook.preferences import CoordinationBackend, load_coordination_config
 
 # =============================================================================
 # Constants
@@ -731,7 +731,7 @@ def check_security_domain(db_path: str | None = None) -> DomainCheck:
     rules_loadable = False
     injection_rules_count = 0
     try:
-        from spellbook_mcp.security.rules import INJECTION_RULES
+        from spellbook.security.rules import INJECTION_RULES
 
         rules_loadable = len(INJECTION_RULES) > 0
         injection_rules_count = len(INJECTION_RULES)

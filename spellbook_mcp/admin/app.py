@@ -27,17 +27,17 @@ def create_admin_app() -> FastAPI:
         return JSONResponse({"error": "Internal admin error"}, status_code=500)
 
     # Register route modules
-    from spellbook_mcp.admin.routes import auth as auth_routes
-    from spellbook_mcp.admin.routes import config as config_routes
-    from spellbook_mcp.admin.routes import dashboard as dashboard_routes
-    from spellbook_mcp.admin.routes import memory as memory_routes
-    from spellbook_mcp.admin.routes import security as security_routes
-    from spellbook_mcp.admin.routes import sessions as sessions_routes
-    from spellbook_mcp.admin.routes import fractal as fractal_routes
-    from spellbook_mcp.admin.routes import analytics as analytics_routes
-    from spellbook_mcp.admin.routes import events as events_routes
-    from spellbook_mcp.admin.routes import focus as focus_routes
-    from spellbook_mcp.admin.routes import health as health_routes
+    from spellbook.admin.routes import auth as auth_routes
+    from spellbook.admin.routes import config as config_routes
+    from spellbook.admin.routes import dashboard as dashboard_routes
+    from spellbook.admin.routes import memory as memory_routes
+    from spellbook.admin.routes import security as security_routes
+    from spellbook.admin.routes import sessions as sessions_routes
+    from spellbook.admin.routes import fractal as fractal_routes
+    from spellbook.admin.routes import analytics as analytics_routes
+    from spellbook.admin.routes import events as events_routes
+    from spellbook.admin.routes import focus as focus_routes
+    from spellbook.admin.routes import health as health_routes
 
     app.include_router(auth_routes.router, prefix="/api")
     app.include_router(config_routes.router, prefix="/api")
@@ -52,7 +52,7 @@ def create_admin_app() -> FastAPI:
     app.include_router(health_routes.router, prefix="/api")
 
     # WebSocket endpoint (no /api prefix -- connects at /ws)
-    from spellbook_mcp.admin.routes.ws import websocket_handler
+    from spellbook.admin.routes.ws import websocket_handler
 
     app.websocket("/ws")(websocket_handler)
 

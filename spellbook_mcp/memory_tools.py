@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from spellbook_mcp.memory_store import (
+from spellbook.memory.store import (
     recall_by_query,
     recall_by_file_path,
     soft_delete_memory,
@@ -23,7 +23,7 @@ from spellbook_mcp.memory_store import (
     insert_link,
     mark_events_consolidated,
 )
-from spellbook_mcp.memory_consolidation import (
+from spellbook.memory.consolidation import (
     build_consolidation_prompt,
     parse_llm_response,
     compute_bibliographic_coupling,

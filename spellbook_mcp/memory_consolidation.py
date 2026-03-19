@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, TypedDict
 
-from spellbook_mcp.db import get_connection
-from spellbook_mcp.memory_store import (
+from spellbook.core.db import get_connection
+from spellbook.memory.store import (
     get_unconsolidated_events,
     insert_memory,
     insert_branch_association,

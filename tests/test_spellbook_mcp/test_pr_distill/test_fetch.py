@@ -6,8 +6,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from spellbook_mcp.pr_distill.errors import ErrorCode, PRDistillError
-from spellbook_mcp.pr_distill.fetch import (
+from spellbook.pr_distill.errors import ErrorCode, PRDistillError
+from spellbook.pr_distill.fetch import (
     MIN_GH_VERSION,
     GH_TIMEOUT,
     run_command,
@@ -74,7 +74,7 @@ class TestCheckGhVersion:
     def test_valid_version_exact_minimum(self):
         """Exact minimum version passes."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="gh version 2.30.0 (2023-05-10)"
         ):
             result = check_gh_version()
@@ -83,7 +83,7 @@ class TestCheckGhVersion:
     def test_valid_version_higher(self):
         """Version higher than minimum passes."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="gh version 2.40.0 (2024-01-15)"
         ):
             result = check_gh_version()
@@ -92,7 +92,7 @@ class TestCheckGhVersion:
     def test_version_too_old(self):
         """Version below minimum raises GH_VERSION_TOO_OLD."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="gh version 2.29.0 (2023-04-01)"
         ):
             with pytest.raises(PRDistillError) as exc_info:
@@ -104,7 +104,7 @@ class TestCheckGhVersion:
     def test_gh_not_installed(self):
         """gh CLI not installed raises GH_NOT_AUTHENTICATED."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             side_effect=subprocess.CalledProcessError(1, "gh --version")
         ):
             with pytest.raises(PRDistillError) as exc_info:
@@ -115,7 +115,7 @@ class TestCheckGhVersion:
     def test_unparseable_version_output(self):
         """Unparseable version output raises GH_VERSION_TOO_OLD."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="some weird output"
         ):
             with pytest.raises(PRDistillError) as exc_info:
@@ -141,7 +141,7 @@ class TestParsePRIdentifier:
     def test_parse_number_with_git_remote(self):
         """Parse PR number using git remote for repo."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="https://github.com/myorg/myrepo.git"
         ):
             result = parse_pr_identifier("789")
@@ -151,7 +151,7 @@ class TestParsePRIdentifier:
     def test_parse_number_with_ssh_remote(self):
         """Parse PR number using SSH git remote."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             return_value="git@github.com:org/project.git"
         ):
             result = parse_pr_identifier("42")
@@ -167,7 +167,7 @@ class TestParsePRIdentifier:
     def test_parse_number_no_git_remote(self):
         """PR number with no git remote raises GH_PR_NOT_FOUND."""
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             side_effect=subprocess.CalledProcessError(1, "git remote")
         ):
             with pytest.raises(PRDistillError) as exc_info:
@@ -235,7 +235,7 @@ class TestFetchPR:
             raise Exception(f"Unexpected command: {cmd}")
 
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             side_effect=mock_run_command
         ):
             result = fetch_pr(pr_identifier)
@@ -259,7 +259,7 @@ class TestFetchPR:
             raise Exception(f"Unexpected command: {cmd}")
 
         with patch(
-            "spellbook_mcp.pr_distill.fetch.run_command",
+            "spellbook.pr_distill.fetch.run_command",
             side_effect=mock_run_command
         ):
             with pytest.raises(PRDistillError) as exc_info:
@@ -335,8 +335,8 @@ class TestParsePRIdentifierEdgeCases:
 class TestFetchPRErrorPaths:
     """Tests for fetch_pr error handling."""
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetch_pr_invalid_json(self, mock_run_command, mock_check_version):
         """fetch_pr raises PRDistillError on invalid JSON response."""
         mock_check_version.return_value = True
@@ -348,8 +348,8 @@ class TestFetchPRErrorPaths:
         assert exc_info.value.code == ErrorCode.GH_NETWORK_ERROR
         assert "Invalid JSON" in str(exc_info.value)
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetch_pr_diff_fails(self, mock_run_command, mock_check_version):
         """fetch_pr handles failure when pr view succeeds but pr diff fails."""
         mock_check_version.return_value = True
@@ -371,8 +371,8 @@ class TestFetchPRErrorPaths:
         # Should map to GH_PR_NOT_FOUND since stderr contains "not found"
         assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetch_pr_rate_limited(self, mock_run_command, mock_check_version):
         """fetch_pr handles rate limit errors."""
         mock_check_version.return_value = True
@@ -385,8 +385,8 @@ class TestFetchPRErrorPaths:
         assert exc_info.value.code == ErrorCode.GH_RATE_LIMITED
         assert exc_info.value.recoverable is True
 
-    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
-    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    @patch("spellbook.pr_distill.fetch.check_gh_version")
+    @patch("spellbook.pr_distill.fetch.run_command")
     def test_fetch_pr_auth_error(self, mock_run_command, mock_check_version):
         """fetch_pr handles authentication errors."""
         mock_check_version.return_value = True

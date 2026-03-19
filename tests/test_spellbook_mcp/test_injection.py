@@ -9,7 +9,7 @@ class TestShouldInject:
 
     def test_should_inject_first_call_after_compaction(self):
         """Test injection triggers on first call after compaction."""
-        from spellbook_mcp.injection import should_inject, _reset_state, _set_pending_compaction
+        from spellbook.sessions.injection import should_inject, _reset_state, _set_pending_compaction
 
         _reset_state()
 
@@ -20,7 +20,7 @@ class TestShouldInject:
 
     def test_should_inject_every_10th_call(self):
         """Test injection triggers every 10th call."""
-        from spellbook_mcp.injection import should_inject, _reset_state
+        from spellbook.sessions.injection import should_inject, _reset_state
 
         _reset_state()
 
@@ -40,7 +40,7 @@ class TestShouldInject:
 
     def test_should_inject_compaction_resets_counter(self):
         """Test that compaction detection resets the call counter."""
-        from spellbook_mcp.injection import should_inject, _reset_state, _set_pending_compaction
+        from spellbook.sessions.injection import should_inject, _reset_state, _set_pending_compaction
 
         _reset_state()
 
@@ -63,7 +63,7 @@ class TestShouldInject:
 
     def test_should_inject_clears_pending_flag(self):
         """Test that pending compaction flag is cleared after injection."""
-        from spellbook_mcp.injection import should_inject, _reset_state, _set_pending_compaction
+        from spellbook.sessions.injection import should_inject, _reset_state, _set_pending_compaction
 
         _reset_state()
         _set_pending_compaction(True)
@@ -80,7 +80,7 @@ class TestWrapWithReminder:
 
     def test_wrap_with_reminder_string(self):
         """Test wrapping string result with reminder."""
-        from spellbook_mcp.injection import wrap_with_reminder
+        from spellbook.sessions.injection import wrap_with_reminder
 
         result = "Original result"
         context = "Test context"
@@ -97,7 +97,7 @@ class TestWrapWithReminder:
 
     def test_wrap_with_reminder_dict(self):
         """Test wrapping dict result with reminder."""
-        from spellbook_mcp.injection import wrap_with_reminder
+        from spellbook.sessions.injection import wrap_with_reminder
 
         result = {"status": "ok", "data": "test"}
         context = "Test context"
@@ -114,7 +114,7 @@ class TestWrapWithReminder:
 
     def test_wrap_with_reminder_list(self):
         """Test wrapping list result with reminder."""
-        from spellbook_mcp.injection import wrap_with_reminder
+        from spellbook.sessions.injection import wrap_with_reminder
 
         result = [{"id": 1}, {"id": 2}]
         context = "Test context"
@@ -129,7 +129,7 @@ class TestWrapWithReminder:
 
     def test_wrap_with_reminder_empty_context(self):
         """Test that empty context returns original result."""
-        from spellbook_mcp.injection import wrap_with_reminder
+        from spellbook.sessions.injection import wrap_with_reminder
 
         result = {"status": "ok"}
 
@@ -140,7 +140,7 @@ class TestWrapWithReminder:
 
     def test_wrap_with_reminder_other_types(self):
         """Test wrapping non-standard types (fallback to string)."""
-        from spellbook_mcp.injection import wrap_with_reminder
+        from spellbook.sessions.injection import wrap_with_reminder
 
         # Integer
         wrapped = wrap_with_reminder(42, "Test context")
@@ -160,8 +160,8 @@ class TestBuildRecoveryContext:
 
     def test_build_recovery_context_with_full_soul(self, tmp_path):
         """Test building recovery context from database with all fields."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -216,8 +216,8 @@ class TestBuildRecoveryContext:
 
     def test_build_recovery_context_no_soul(self, tmp_path):
         """Test building context when no soul exists for project."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -230,8 +230,8 @@ class TestBuildRecoveryContext:
 
     def test_build_recovery_context_partial_soul(self, tmp_path):
         """Test building context with only some fields populated."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -260,8 +260,8 @@ class TestBuildRecoveryContext:
 
     def test_build_recovery_context_truncation(self, tmp_path):
         """Test that context is truncated when exceeding max_tokens."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -294,8 +294,8 @@ class TestBuildRecoveryContext:
 
     def test_build_recovery_context_empty_json_fields(self, tmp_path):
         """Test handling of empty JSON arrays."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -324,8 +324,8 @@ class TestBuildRecoveryContextSkillPhase:
 
     def test_build_recovery_context_includes_skill_phase(self, tmp_path):
         """Test that skill_phase is included in recovery context when present."""
-        from spellbook_mcp.injection import build_recovery_context
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import build_recovery_context
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -362,8 +362,8 @@ class TestInjectRecoveryContextDecorator:
 
     def test_decorator_without_injection(self, tmp_path, monkeypatch):
         """Test decorator passes through result when no injection needed."""
-        from spellbook_mcp.injection import inject_recovery_context, _reset_state
-        from spellbook_mcp.db import init_db, close_all_connections
+        from spellbook.sessions.injection import inject_recovery_context, _reset_state
+        from spellbook.core.db import init_db, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -371,7 +371,7 @@ class TestInjectRecoveryContextDecorator:
         _reset_state()
 
         # Mock get_db_path to use test database
-        monkeypatch.setattr("spellbook_mcp.injection.get_db_path", lambda: tmp_path / "test.db")
+        monkeypatch.setattr("spellbook.sessions.injection.get_db_path", lambda: tmp_path / "test.db")
 
         @inject_recovery_context
         def my_tool():
@@ -387,8 +387,8 @@ class TestInjectRecoveryContextDecorator:
 
     def test_decorator_with_injection_on_10th_call(self, tmp_path, monkeypatch):
         """Test decorator injects on 10th call."""
-        from spellbook_mcp.injection import inject_recovery_context, _reset_state
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.injection import inject_recovery_context, _reset_state
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -414,7 +414,7 @@ class TestInjectRecoveryContextDecorator:
         _reset_state()
 
         # Mock get_db_path and getcwd
-        monkeypatch.setattr("spellbook_mcp.injection.get_db_path", lambda: tmp_path / "test.db")
+        monkeypatch.setattr("spellbook.sessions.injection.get_db_path", lambda: tmp_path / "test.db")
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
         @inject_recovery_context
@@ -434,12 +434,12 @@ class TestInjectRecoveryContextDecorator:
 
     def test_decorator_with_compaction_flag(self, tmp_path, monkeypatch):
         """Test decorator injects when compaction flag is set."""
-        from spellbook_mcp.injection import (
+        from spellbook.sessions.injection import (
             inject_recovery_context,
             _reset_state,
             _set_pending_compaction,
         )
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.core.db import init_db, get_connection, close_all_connections
         from datetime import datetime
 
         db_path = str(tmp_path / "test.db")
@@ -463,7 +463,7 @@ class TestInjectRecoveryContextDecorator:
         _reset_state()
         _set_pending_compaction(True)
 
-        monkeypatch.setattr("spellbook_mcp.injection.get_db_path", lambda: tmp_path / "test.db")
+        monkeypatch.setattr("spellbook.sessions.injection.get_db_path", lambda: tmp_path / "test.db")
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
         @inject_recovery_context
@@ -478,7 +478,7 @@ class TestInjectRecoveryContextDecorator:
 
     def test_decorator_preserves_function_metadata(self):
         """Test that decorator preserves function name and docstring."""
-        from spellbook_mcp.injection import inject_recovery_context, _reset_state
+        from spellbook.sessions.injection import inject_recovery_context, _reset_state
 
         _reset_state()
 
@@ -492,12 +492,12 @@ class TestInjectRecoveryContextDecorator:
 
     def test_decorator_no_injection_without_heartbeat(self, tmp_path, monkeypatch):
         """Test decorator does not inject when heartbeat is stale."""
-        from spellbook_mcp.injection import (
+        from spellbook.sessions.injection import (
             inject_recovery_context,
             _reset_state,
             _set_pending_compaction,
         )
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+        from spellbook.core.db import init_db, get_connection, close_all_connections
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -516,7 +516,7 @@ class TestInjectRecoveryContextDecorator:
         _reset_state()
         _set_pending_compaction(True)  # Trigger injection attempt
 
-        monkeypatch.setattr("spellbook_mcp.injection.get_db_path", lambda: tmp_path / "test.db")
+        monkeypatch.setattr("spellbook.sessions.injection.get_db_path", lambda: tmp_path / "test.db")
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
         @inject_recovery_context

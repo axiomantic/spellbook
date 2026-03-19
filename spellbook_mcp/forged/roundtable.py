@@ -17,9 +17,9 @@ Each archetype brings a unique perspective to validate stage completion:
 
 from typing import Optional
 
-from spellbook_mcp.forged.artifacts import read_artifact
-from spellbook_mcp.forged.models import VALID_STAGES, Feedback
-from spellbook_mcp.forged.verdict_parsing import (
+from spellbook.forged.artifacts import read_artifact
+from spellbook.forged.models import VALID_STAGES, Feedback
+from spellbook.forged.verdict_parsing import (
     VALID_ROUNDTABLE_VERDICTS,
     ParsedVerdict,
     parse_roundtable_response,

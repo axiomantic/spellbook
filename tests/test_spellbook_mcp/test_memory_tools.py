@@ -5,8 +5,8 @@ import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from spellbook_mcp.db import init_db, get_connection, close_all_connections
-from spellbook_mcp.memory_store import (
+from spellbook.core.db import init_db, get_connection, close_all_connections
+from spellbook.memory.store import (
     insert_memory,
     get_memory,
     log_raw_event,
@@ -35,7 +35,7 @@ class TestMemoryRecallTool:
             tags=["fastapi", "rest"],
             citations=[],
         )
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(
             db_path=db,
@@ -76,7 +76,7 @@ class TestMemoryRecallTool:
             tags=[],
             citations=[],
         )
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(db_path=db, query="", namespace="ns", limit=5)
         assert result["query"] == ""
@@ -99,7 +99,7 @@ class TestMemoryRecallTool:
             tags=["auth"],
             citations=[{"file_path": "src/auth.py", "line_range": "1-50", "snippet": "class Auth:"}],
         )
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(
             db_path=db, query="", namespace="ns", limit=5, file_path="src/auth.py"
@@ -125,7 +125,7 @@ class TestMemoryRecallTool:
         assert mem_before["importance"] == 1.0
         assert mem_before["accessed_at"] is None
 
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         do_memory_recall(db_path=db, query="tracking", namespace="ns", limit=5)
 
@@ -154,7 +154,7 @@ class TestMemoryRecallTool:
             tags=["shared"],
             citations=[],
         )
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(
             db_path=db, query="memory", namespace="project-a", limit=10
@@ -173,7 +173,7 @@ class TestMemoryRecallTool:
                 tags=["testing"],
                 citations=[],
             )
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(db_path=db, query="testing", namespace="ns", limit=2)
         assert result["count"] == 2
@@ -181,7 +181,7 @@ class TestMemoryRecallTool:
 
     def test_recall_no_results(self, db):
         """Query with no matches returns empty list."""
-        from spellbook_mcp.memory_tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall
 
         result = do_memory_recall(
             db_path=db, query="nonexistent", namespace="ns", limit=5
@@ -207,7 +207,7 @@ class TestMemoryForgetTool:
             tags=[],
             citations=[],
         )
-        from spellbook_mcp.memory_tools import do_memory_forget
+        from spellbook.memory.tools import do_memory_forget
 
         result = do_memory_forget(db_path=db, memory_id=mem_id)
         assert result["status"] == "deleted"
@@ -224,7 +224,7 @@ class TestMemoryForgetTool:
 
     def test_forget_nonexistent(self, db):
         """Forgetting a nonexistent memory returns not_found."""
-        from spellbook_mcp.memory_tools import do_memory_forget
+        from spellbook.memory.tools import do_memory_forget
 
         result = do_memory_forget(db_path=db, memory_id="nonexistent-id")
         assert result == {"status": "not_found", "memory_id": "nonexistent-id"}
@@ -239,7 +239,7 @@ class TestMemoryForgetTool:
             tags=["forgettable"],
             citations=[],
         )
-        from spellbook_mcp.memory_tools import do_memory_forget, do_memory_recall
+        from spellbook.memory.tools import do_memory_forget, do_memory_recall
 
         do_memory_forget(db_path=db, memory_id=mem_id)
 
@@ -254,7 +254,7 @@ class TestEventLogging:
 
     def test_log_event(self, db):
         """Logging an event returns status and positive event_id."""
-        from spellbook_mcp.memory_tools import do_log_event
+        from spellbook.memory.tools import do_log_event
 
         result = do_log_event(
             db_path=db,
@@ -287,7 +287,7 @@ class TestEventLogging:
 
     def test_log_event_with_tags_and_event_type(self, db):
         """Custom tags and event_type are persisted."""
-        from spellbook_mcp.memory_tools import do_log_event
+        from spellbook.memory.tools import do_log_event
 
         result = do_log_event(
             db_path=db,
@@ -317,7 +317,7 @@ class TestMemoryStoreSchema:
 
     def test_schema_structure(self):
         """MEMORY_STORE_SCHEMA has correct top-level structure."""
-        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+        from spellbook.memory.tools import MEMORY_STORE_SCHEMA
 
         assert MEMORY_STORE_SCHEMA == {
             "type": "object",
@@ -366,7 +366,7 @@ class TestMemoryStoreSchema:
 
     def test_schema_is_valid_json_serializable(self):
         """Schema can be JSON-serialized (needed for response_schema field)."""
-        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+        from spellbook.memory.tools import MEMORY_STORE_SCHEMA
 
         serialized = json.dumps(MEMORY_STORE_SCHEMA)
         deserialized = json.loads(serialized)
@@ -395,7 +395,7 @@ class TestDoGetUnconsolidated:
 
     def test_no_events_returns_empty(self, db):
         """No unconsolidated events returns empty result with schema."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
+        from spellbook.memory.tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
 
         result = do_get_unconsolidated(db_path=db, namespace="test-project")
         assert result == {
@@ -407,7 +407,7 @@ class TestDoGetUnconsolidated:
 
     def test_returns_unconsolidated_events(self, db):
         """Returns unconsolidated events with count, prompt, and schema."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
+        from spellbook.memory.tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
 
         event_ids = self._log_events(db, count=2, project="test-project")
 
@@ -431,7 +431,7 @@ class TestDoGetUnconsolidated:
         assert result["events"][1]["summary"] == "Read file1.py (15 lines)"
 
         # Prompt should match build_consolidation_prompt() exactly
-        from spellbook_mcp.memory_consolidation import build_consolidation_prompt
+        from spellbook.memory.consolidation import build_consolidation_prompt
         expected_prompt = build_consolidation_prompt(result["events"])
         assert result["consolidation_prompt"] == expected_prompt
 
@@ -440,7 +440,7 @@ class TestDoGetUnconsolidated:
 
     def test_namespace_filtering(self, db):
         """Only events matching namespace are returned."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         self._log_events(db, count=2, project="project-a")
         self._log_events(db, count=1, project="project-b")
@@ -452,7 +452,7 @@ class TestDoGetUnconsolidated:
 
     def test_empty_namespace_returns_all(self, db):
         """Empty namespace string returns all events."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         self._log_events(db, count=2, project="project-a")
         self._log_events(db, count=1, project="project-b")
@@ -462,7 +462,7 @@ class TestDoGetUnconsolidated:
 
     def test_limit_parameter(self, db):
         """Limit parameter caps number of returned events."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         self._log_events(db, count=5, project="test-project")
 
@@ -472,7 +472,7 @@ class TestDoGetUnconsolidated:
 
     def test_include_consolidated_merges_events(self, db):
         """include_consolidated=True merges recently consolidated events."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         # Log and consolidate some events
         consolidated_ids = self._log_events(db, count=2, project="test-project")
@@ -494,7 +494,7 @@ class TestDoGetUnconsolidated:
 
     def test_include_consolidated_respects_limit(self, db):
         """include_consolidated=True still respects the total limit."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         # Log and consolidate events
         consolidated_ids = self._log_events(db, count=3, project="test-project")
@@ -512,7 +512,7 @@ class TestDoGetUnconsolidated:
 
     def test_include_consolidated_no_duplicates(self, db):
         """include_consolidated=True does not duplicate events."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated
+        from spellbook.memory.tools import do_get_unconsolidated
 
         # All unconsolidated, none consolidated
         event_ids = self._log_events(db, count=3, project="test-project")
@@ -547,7 +547,7 @@ class TestDoStoreMemories:
 
     def test_store_valid_memories(self, db):
         """Stores valid memories and returns success with correct counts."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -593,7 +593,7 @@ class TestDoStoreMemories:
 
     def test_store_bare_list_format(self, db):
         """Accepts bare list format (not wrapped in {"memories": [...]})."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps([
             {
@@ -619,7 +619,7 @@ class TestDoStoreMemories:
 
     def test_store_invalid_json(self, db):
         """Invalid JSON returns error."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         result = do_store_memories(
             db_path=db,
@@ -631,7 +631,7 @@ class TestDoStoreMemories:
 
     def test_store_non_object_non_array(self, db):
         """Non-object/non-array JSON returns error."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         result = do_store_memories(
             db_path=db,
@@ -643,7 +643,7 @@ class TestDoStoreMemories:
 
     def test_store_empty_content_rejected(self, db):
         """Memories with empty content are rejected."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -661,7 +661,7 @@ class TestDoStoreMemories:
 
     def test_store_invalid_memory_type_defaults_to_fact(self, db):
         """Invalid memory_type is silently corrected to 'fact'."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -687,7 +687,7 @@ class TestDoStoreMemories:
 
     def test_store_tags_capped_at_20(self, db):
         """Tags list is capped at 20 items."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         too_many_tags = [f"tag{i}" for i in range(25)]
         memories_json = json.dumps({
@@ -716,7 +716,7 @@ class TestDoStoreMemories:
 
     def test_store_marks_events_consolidated(self, db):
         """Providing event_ids_str marks those events as consolidated."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         event_ids = self._log_events(db, count=3, project="test-project")
 
@@ -753,7 +753,7 @@ class TestDoStoreMemories:
 
     def test_store_computes_bibliographic_coupling(self, db):
         """New memories get bibliographic coupling links computed."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         # Insert an existing memory citing a file
         existing_id = insert_memory(
@@ -800,7 +800,7 @@ class TestDoStoreMemories:
 
     def test_store_dedup_via_content_hash(self, db):
         """Duplicate content returns existing memory ID (dedup)."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -831,7 +831,7 @@ class TestDoStoreMemories:
 
     def test_store_with_source_meta(self, db):
         """Stored memories have extra_meta={"source": "client_llm"}."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -856,7 +856,7 @@ class TestDoStoreMemories:
 
     def test_store_whitespace_only_content_accepted(self, db):
         """Whitespace-only content passes parse_llm_response (truthy string) and is stored."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -879,7 +879,7 @@ class TestDoStoreMemories:
 
     def test_store_missing_content_field_rejected(self, db):
         """Memories missing 'content' key entirely are rejected."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -897,7 +897,7 @@ class TestDoStoreMemories:
 
     def test_store_partial_valid_memories(self, db):
         """Mix of valid and invalid memories: only valid ones are stored."""
-        from spellbook_mcp.memory_tools import do_store_memories
+        from spellbook.memory.tools import do_store_memories
 
         memories_json = json.dumps({
             "memories": [
@@ -942,7 +942,7 @@ class TestTwoToolPatternEndToEnd:
 
     def test_full_flow_get_parse_store(self, db):
         """Full two-tool pattern: get events, construct memories, store them."""
-        from spellbook_mcp.memory_tools import (
+        from spellbook.memory.tools import (
             do_get_unconsolidated,
             do_store_memories,
             MEMORY_STORE_SCHEMA,
@@ -1025,7 +1025,7 @@ class TestTwoToolPatternEndToEnd:
 
     def test_get_then_store_with_include_consolidated(self, db):
         """After storing, include_consolidated=True still shows recently consolidated events."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated, do_store_memories
+        from spellbook.memory.tools import do_get_unconsolidated, do_store_memories
 
         # Log and consolidate via store
         event_ids = self._log_events(db, count=2, project="test-project")
@@ -1066,7 +1066,7 @@ class TestTwoToolPatternEndToEnd:
 
     def test_store_multiple_memories_from_single_batch(self, db):
         """Client produces multiple memories from a single get_unconsolidated call."""
-        from spellbook_mcp.memory_tools import do_get_unconsolidated, do_store_memories
+        from spellbook.memory.tools import do_get_unconsolidated, do_store_memories
 
         event_ids = self._log_events(db, count=4, project="test-project")
 
@@ -1116,7 +1116,7 @@ class TestMemoryToolsServerRegistration:
 
     def test_memory_consolidate_docstring_updated(self):
         """memory_consolidate docstring references heuristic strategies, not LLM."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         docstring = server.memory_consolidate.fn.__doc__
         assert "heuristic strategies" in docstring, (
@@ -1128,7 +1128,7 @@ class TestMemoryToolsServerRegistration:
 
     def test_memory_get_unconsolidated_is_registered(self):
         """memory_get_unconsolidated is registered as a tool on the server module."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         assert hasattr(server, "memory_get_unconsolidated"), (
             "memory_get_unconsolidated not found on server module"
@@ -1139,7 +1139,7 @@ class TestMemoryToolsServerRegistration:
 
     def test_memory_store_memories_is_registered(self):
         """memory_store_memories is registered as a tool on the server module."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         assert hasattr(server, "memory_store_memories"), (
             "memory_store_memories not found on server module"
@@ -1150,7 +1150,7 @@ class TestMemoryToolsServerRegistration:
 
     def test_server_imports_do_get_unconsolidated(self):
         """do_get_unconsolidated is imported in server module."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         assert hasattr(server, "do_get_unconsolidated"), (
             "do_get_unconsolidated not imported in server"
@@ -1158,7 +1158,7 @@ class TestMemoryToolsServerRegistration:
 
     def test_server_imports_do_store_memories(self):
         """do_store_memories is imported in server module."""
-        from spellbook_mcp import server
+        from spellbook import server
 
         assert hasattr(server, "do_store_memories"), (
             "do_store_memories not imported in server"
@@ -1167,8 +1167,8 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_get_unconsolidated_delegates_to_do_function(self, db):
         """memory_get_unconsolidated delegates to do_get_unconsolidated with correct args."""
-        from spellbook_mcp import server
-        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+        from spellbook import server
+        from spellbook.memory.tools import MEMORY_STORE_SCHEMA
         from unittest.mock import patch
 
         mock_ctx = MagicMock()
@@ -1207,8 +1207,8 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_get_unconsolidated_auto_detects_namespace(self, db):
         """memory_get_unconsolidated auto-detects namespace from context when empty."""
-        from spellbook_mcp import server
-        from spellbook_mcp.path_utils import encode_cwd
+        from spellbook import server
+        from spellbook.core.path_utils import encode_cwd
         from unittest.mock import patch
 
         mock_ctx = MagicMock()
@@ -1238,7 +1238,7 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_get_unconsolidated_returns_error_when_no_namespace(self, db):
         """memory_get_unconsolidated returns error when namespace empty and context fails."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
         mock_ctx = MagicMock()
@@ -1260,7 +1260,7 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_store_memories_delegates_to_do_function(self, db):
         """memory_store_memories delegates to do_store_memories with correct args."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
         mock_ctx = MagicMock()
@@ -1299,8 +1299,8 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_store_memories_auto_detects_namespace(self, db):
         """memory_store_memories auto-detects namespace from context when empty."""
-        from spellbook_mcp import server
-        from spellbook_mcp.path_utils import encode_cwd
+        from spellbook import server
+        from spellbook.core.path_utils import encode_cwd
         from unittest.mock import patch
 
         mock_ctx = MagicMock()
@@ -1336,7 +1336,7 @@ class TestMemoryToolsServerRegistration:
     @pytest.mark.asyncio
     async def test_memory_store_memories_returns_error_when_no_namespace(self, db):
         """memory_store_memories returns error when namespace empty and context fails."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
         mock_ctx = MagicMock()

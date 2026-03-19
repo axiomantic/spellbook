@@ -5,15 +5,15 @@ from typing import Optional
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.config_tools import (
+from spellbook.core.config import (
     config_get,
     config_set,
     session_init,
     session_mode_get,
     session_mode_set,
 )
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.path_utils import get_project_path_from_context
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.core.path_utils import get_project_path_from_context
 
 
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
@@ -67,7 +67,7 @@ def spellbook_config_set(key: str, value) -> dict:
     """
     result = config_set(key, value)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -149,7 +149,7 @@ def spellbook_telemetry_enable(endpoint_url: str = None) -> dict:
     Returns:
         {"status": "enabled", "endpoint_url": str|None}
     """
-    from spellbook_mcp.config_tools import telemetry_enable as do_telemetry_enable
+    from spellbook.core.config import telemetry_enable as do_telemetry_enable
 
     return do_telemetry_enable(endpoint_url=endpoint_url)
 
@@ -162,7 +162,7 @@ def spellbook_telemetry_disable() -> dict:
     Returns:
         {"status": "disabled"}
     """
-    from spellbook_mcp.config_tools import telemetry_disable as do_telemetry_disable
+    from spellbook.core.config import telemetry_disable as do_telemetry_disable
 
     return do_telemetry_disable()
 
@@ -175,6 +175,6 @@ def spellbook_telemetry_status() -> dict:
     Returns:
         {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
     """
-    from spellbook_mcp.config_tools import telemetry_status as do_telemetry_status
+    from spellbook.core.config import telemetry_status as do_telemetry_status
 
     return do_telemetry_status()

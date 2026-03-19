@@ -19,7 +19,7 @@ import pytest
 
 def _init_test_db(tmp_path):
     """Create a test DB with schema initialized, return db_path string."""
-    from spellbook_mcp.db import close_all_connections, init_db
+    from spellbook.core.db import close_all_connections, init_db
 
     close_all_connections()
     db_path = str(tmp_path / "test.db")
@@ -61,7 +61,7 @@ class TestPermissiveModeRejected:
 
     def test_permissive_returns_error_dict(self, tmp_path):
         """Requesting permissive mode returns error dict instead of raising."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("permissive", db_path=db_path)
@@ -79,7 +79,7 @@ class TestPermissiveModeRejected:
 
     def test_permissive_does_not_change_db_mode(self, tmp_path):
         """Requesting permissive must not alter the stored security mode."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         # Set to paranoid first
@@ -100,7 +100,7 @@ class TestPermissiveModeRejected:
 
     def test_permissive_does_not_raise(self, tmp_path):
         """Permissive mode should return error dict, not raise ValueError."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
 
@@ -127,7 +127,7 @@ class TestPermissiveAttemptLogged:
 
     def test_logs_permissive_attempt_event(self, tmp_path):
         """A security event is logged when permissive mode is requested."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("permissive", db_path=db_path)
@@ -152,7 +152,7 @@ class TestPermissiveAttemptLogged:
 
     def test_multiple_attempts_log_multiple_events(self, tmp_path):
         """Each permissive attempt logs its own event."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         do_set_security_mode("permissive", db_path=db_path)
@@ -180,7 +180,7 @@ class TestValidModesUnchanged:
 
     def test_standard_mode_still_valid(self, tmp_path):
         """Standard mode accepted and persisted."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("standard", db_path=db_path)
@@ -202,7 +202,7 @@ class TestValidModesUnchanged:
 
     def test_paranoid_mode_still_valid(self, tmp_path):
         """Paranoid mode accepted and persisted."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("paranoid", db_path=db_path)
@@ -233,7 +233,7 @@ class TestInvalidModesStillRaise:
 
     def test_lockdown_raises_valueerror(self, tmp_path):
         """Unknown mode 'lockdown' raises ValueError."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
 
@@ -249,7 +249,7 @@ class TestInvalidModesStillRaise:
 
     def test_empty_string_raises_valueerror(self, tmp_path):
         """Empty string mode raises ValueError."""
-        from spellbook_mcp.security.tools import do_set_security_mode
+        from spellbook.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
 
@@ -274,7 +274,7 @@ class TestValidModesConstant:
 
     def test_valid_modes_excludes_permissive(self):
         """_VALID_MODES must contain only standard and paranoid."""
-        from spellbook_mcp.security.tools import _VALID_MODES
+        from spellbook.security.tools import _VALID_MODES
 
         # ESCAPE: test_valid_modes_excludes_permissive
         #   CLAIM: _VALID_MODES is exactly {"standard", "paranoid"}

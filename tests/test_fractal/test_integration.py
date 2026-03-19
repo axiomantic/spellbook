@@ -15,17 +15,17 @@ class TestFractalEndToEnd:
 
     def test_full_lifecycle(self, fractal_db):
         """End-to-end test: create graph, build tree, query, complete, delete."""
-        from spellbook_mcp.fractal.graph_ops import (
+        from spellbook.fractal.graph_ops import (
             create_graph,
             delete_graph,
             update_graph_status,
         )
-        from spellbook_mcp.fractal.node_ops import (
+        from spellbook.fractal.node_ops import (
             add_node,
             mark_saturated,
             update_node,
         )
-        from spellbook_mcp.fractal.query_ops import (
+        from spellbook.fractal.query_ops import (
             get_branch,
             get_open_questions,
             get_saturation_status,
@@ -33,7 +33,7 @@ class TestFractalEndToEnd:
             query_contradictions,
             query_convergence,
         )
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
 
         # ----------------------------------------------------------------
         # Step 1: create_graph

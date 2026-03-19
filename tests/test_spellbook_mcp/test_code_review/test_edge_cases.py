@@ -2,14 +2,14 @@
 
 import pytest
 
-from spellbook_mcp.code_review.edge_cases import (
+from spellbook.code_review.edge_cases import (
     EdgeCaseResult,
     check_empty_diff,
     check_no_comments,
     check_diff_too_large,
     check_binary_files,
 )
-from spellbook_mcp.code_review.models import FileDiff
+from spellbook.code_review.models import FileDiff
 
 
 class TestEdgeCaseResult:

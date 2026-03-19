@@ -12,7 +12,7 @@ class TestSessionStateTtsKey:
     """_get_session_state() includes 'tts' key for TTS overrides."""
 
     def test_new_session_has_tts_key(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -27,7 +27,7 @@ class TestSessionStateTtsKey:
         _session_activity.clear()
 
     def test_existing_session_gets_tts_key_backfilled(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -49,7 +49,7 @@ class TestTtsSessionSet:
     """tts_session_set() updates TTS overrides in session state."""
 
     def test_sets_all_fields(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             tts_session_set,
@@ -69,7 +69,7 @@ class TestTtsSessionSet:
         _session_activity.clear()
 
     def test_partial_update_preserves_other_keys(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -94,7 +94,7 @@ class TestTtsSessionSet:
         _session_activity.clear()
 
     def test_uses_session_id(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -117,7 +117,7 @@ class TestTtsSessionSet:
         _session_activity.clear()
 
     def test_omitted_fields_not_added(self):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -142,7 +142,7 @@ class TestTtsSessionGet:
     """tts_session_get() resolves TTS settings: session > config > defaults."""
 
     def test_returns_defaults_when_nothing_set(self, tmp_path, monkeypatch):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             tts_session_get,
@@ -151,7 +151,7 @@ class TestTtsSessionGet:
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("{}")
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -172,7 +172,7 @@ class TestTtsSessionGet:
     def test_config_overrides_defaults(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             tts_session_get,
@@ -185,7 +185,7 @@ class TestTtsSessionGet:
             )
         )
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -206,7 +206,7 @@ class TestTtsSessionGet:
     def test_session_overrides_config(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _get_session_state,
             _session_activity,
             _session_states,
@@ -220,7 +220,7 @@ class TestTtsSessionGet:
             )
         )
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -245,7 +245,7 @@ class TestTtsSessionGet:
     def test_partial_config_falls_through_to_defaults(self, tmp_path, monkeypatch):
         import json
 
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             tts_session_get,
@@ -255,7 +255,7 @@ class TestTtsSessionGet:
         # Only voice is set in config
         config_path.write_text(json.dumps({"tts_voice": "am_adam"}))
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()
@@ -274,7 +274,7 @@ class TestTtsSessionGet:
         _session_activity.clear()
 
     def test_session_id_isolation(self, tmp_path, monkeypatch):
-        from spellbook_mcp.config_tools import (
+        from spellbook.core.config import (
             _session_activity,
             _session_states,
             tts_session_get,
@@ -284,7 +284,7 @@ class TestTtsSessionGet:
         config_path = tmp_path / "spellbook.json"
         config_path.write_text("{}")
         monkeypatch.setattr(
-            "spellbook_mcp.config_tools.get_config_path", lambda: config_path
+            "spellbook.core.config.get_config_path", lambda: config_path
         )
 
         _session_states.clear()

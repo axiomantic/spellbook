@@ -1,6 +1,6 @@
 """Tests for spellbook.memory domain modules.
 
-Verifies that all public exports from spellbook_mcp memory modules
+Verifies that all public exports from spellbook memory modules
 exist in the corresponding spellbook.memory modules.
 """
 
@@ -41,8 +41,8 @@ class TestMemoryStoreImports:
         assert callable(log_raw_event)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.memory_store must exist in spellbook.memory.store."""
-        import spellbook_mcp.memory_store as old_mod
+        """Every public callable in spellbook.memory.store must exist in spellbook.memory.store."""
+        import spellbook.memory.store as old_mod
         import spellbook.memory.store as new_mod
 
         old_public = {
@@ -84,8 +84,8 @@ class TestMemoryConsolidationImports:
         assert callable(consolidate_batch)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.memory_consolidation must exist."""
-        import spellbook_mcp.memory_consolidation as old_mod
+        """Every public callable in spellbook.memory.consolidation must exist."""
+        import spellbook.memory.consolidation as old_mod
         import spellbook.memory.consolidation as new_mod
 
         old_public = {
@@ -127,8 +127,8 @@ class TestMemoryToolsImports:
         assert callable(do_get_unconsolidated)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.memory_tools must exist."""
-        import spellbook_mcp.memory_tools as old_mod
+        """Every public callable in spellbook.memory.tools must exist."""
+        import spellbook.memory.tools as old_mod
         import spellbook.memory.tools as new_mod
 
         old_public = {

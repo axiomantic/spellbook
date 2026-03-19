@@ -541,7 +541,7 @@ def persist_outcome(
         db_path: Path to database (defaults to standard location)
         experiment_variant_id: Optional variant ID if this outcome is part of an experiment
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -596,7 +596,7 @@ def finalize_session_outcomes(session_id: str, db_path: str = None) -> int:
     Returns:
         Count of outcomes finalized
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -638,7 +638,7 @@ def get_analytics_summary(
             "version_comparisons": [...] if versions present
         }
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
     from datetime import datetime, timedelta
 
     if db_path is None:

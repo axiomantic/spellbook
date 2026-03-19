@@ -10,7 +10,7 @@ Tests that:
 import pytest
 import json
 
-from spellbook_mcp.fractal.schema import (
+from spellbook.fractal.schema import (
     close_all_fractal_connections,
     init_fractal_schema,
 )
@@ -54,7 +54,7 @@ EXPECTED_FRACTAL_TOOLS = [
 @pytest.mark.parametrize("tool_name", EXPECTED_FRACTAL_TOOLS)
 def test_fractal_tool_exists_on_server(tool_name):
     """Each fractal tool must be a callable attribute on the server module."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     assert hasattr(server, tool_name), (
         f"server module missing tool function '{tool_name}'"
@@ -73,7 +73,7 @@ def test_fractal_tool_exists_on_server(tool_name):
 
 def test_init_fractal_schema_imported_in_server():
     """init_fractal_schema must be importable from the server module's namespace."""
-    from spellbook_mcp import server
+    from spellbook import server
 
     # Check that the import exists - the function should be accessible
     # via the module's globals
@@ -92,7 +92,7 @@ class TestFractalCreateGraphDelegation:
 
     def test_create_graph_returns_expected_keys(self, fractal_db):
         """create_graph should return graph_id, root_node_id, intensity, etc."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         result = create_graph(
             seed="What is consciousness?",
@@ -109,7 +109,7 @@ class TestFractalCreateGraphDelegation:
 
     def test_create_graph_with_metadata(self, fractal_db):
         """create_graph should accept metadata_json parameter."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook.fractal.graph_ops import create_graph
 
         meta = json.dumps({"source": "test"})
         result = create_graph(
@@ -129,7 +129,7 @@ class TestFractalResumeGraphDelegation:
 
     def test_resume_graph_returns_snapshot(self, fractal_db):
         """resume_graph on an active graph returns full snapshot."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, resume_graph
+        from spellbook.fractal.graph_ops import create_graph, resume_graph
 
         created = create_graph(
             seed="Test seed",
@@ -150,7 +150,7 @@ class TestFractalResumeGraphDelegation:
 
     def test_resume_graph_not_found(self, fractal_db):
         """resume_graph with invalid ID returns error."""
-        from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook.fractal.graph_ops import resume_graph
 
         result = resume_graph(graph_id="nonexistent", db_path=fractal_db)
         assert "error" in result
@@ -161,7 +161,7 @@ class TestFractalDeleteGraphDelegation:
 
     def test_delete_graph_success(self, fractal_db):
         """delete_graph removes a graph and returns deleted=True."""
-        from spellbook_mcp.fractal.graph_ops import create_graph, delete_graph
+        from spellbook.fractal.graph_ops import create_graph, delete_graph
 
         created = create_graph(
             seed="To delete",
@@ -180,7 +180,7 @@ class TestFractalUpdateGraphStatusDelegation:
 
     def test_update_status_valid_transition(self, fractal_db):
         """update_graph_status with valid transition succeeds."""
-        from spellbook_mcp.fractal.graph_ops import (
+        from spellbook.fractal.graph_ops import (
             create_graph,
             update_graph_status,
         )
@@ -208,8 +208,8 @@ class TestFractalAddNodeDelegation:
 
     def test_add_node_returns_expected_keys(self, fractal_db):
         """add_node should return node_id, graph_id, parent_id, depth, etc."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node
 
         created = create_graph(
             seed="Node test",
@@ -235,8 +235,8 @@ class TestFractalAddNodeDelegation:
 
     def test_add_node_with_metadata(self, fractal_db):
         """add_node should accept metadata_json parameter."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node
 
         created = create_graph(
             seed="Meta test",
@@ -263,8 +263,8 @@ class TestFractalUpdateNodeDelegation:
 
     def test_update_node_merges_metadata(self, fractal_db):
         """update_node should merge new metadata into existing."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, update_node
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, update_node
 
         created = create_graph(
             seed="Update test",
@@ -297,8 +297,8 @@ class TestFractalMarkSaturatedDelegation:
 
     def test_mark_saturated_success(self, fractal_db):
         """mark_saturated should transition node to saturated status."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.node_ops import add_node, mark_saturated
 
         created = create_graph(
             seed="Saturation test",
@@ -331,8 +331,8 @@ class TestFractalGetSnapshotDelegation:
 
     def test_get_snapshot_returns_full_graph(self, fractal_db):
         """get_snapshot should return graph with nodes and edges."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import get_snapshot
 
         created = create_graph(
             seed="Snapshot test",
@@ -358,8 +358,8 @@ class TestFractalGetBranchDelegation:
 
     def test_get_branch_returns_subtree(self, fractal_db):
         """get_branch should return nodes and edges for a subtree."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import get_branch
 
         created = create_graph(
             seed="Branch test",
@@ -384,8 +384,8 @@ class TestFractalGetOpenQuestionsDelegation:
 
     def test_get_open_questions_returns_list(self, fractal_db):
         """get_open_questions should return open question nodes."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import get_open_questions
 
         created = create_graph(
             seed="Open Q test",
@@ -409,8 +409,8 @@ class TestFractalQueryConvergenceDelegation:
 
     def test_query_convergence_returns_structure(self, fractal_db):
         """query_convergence should return convergence_points list."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import query_convergence
 
         created = create_graph(
             seed="Convergence test",
@@ -434,8 +434,8 @@ class TestFractalQueryContradictionsDelegation:
 
     def test_query_contradictions_returns_structure(self, fractal_db):
         """query_contradictions should return contradictions list."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import query_contradictions
 
         created = create_graph(
             seed="Contradiction test",
@@ -459,8 +459,8 @@ class TestFractalGetSaturationStatusDelegation:
 
     def test_get_saturation_status_returns_branches(self, fractal_db):
         """get_saturation_status should return branches with saturation info."""
-        from spellbook_mcp.fractal.graph_ops import create_graph
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.query_ops import get_saturation_status
 
         created = create_graph(
             seed="Saturation status test",
@@ -489,10 +489,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_create_graph_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_create_graph wrapper should pass metadata as metadata_json."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_create_graph") as mock_create:
+        with patch("spellbook.mcp.server.do_fractal_create_graph") as mock_create:
             mock_create.return_value = {"graph_id": "test", "status": "active"}
 
             # Call the wrapper's underlying function
@@ -512,10 +512,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_add_node_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_add_node wrapper should pass metadata as metadata_json."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_add_node") as mock_add:
+        with patch("spellbook.mcp.server.do_fractal_add_node") as mock_add:
             mock_add.return_value = {"node_id": "test", "status": "open"}
 
             server.fractal_add_node.fn(
@@ -538,10 +538,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_update_node_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_update_node wrapper should pass metadata as metadata_json."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_update_node") as mock_update:
+        with patch("spellbook.mcp.server.do_fractal_update_node") as mock_update:
             mock_update.return_value = {"node_id": "n1", "metadata": {}}
 
             server.fractal_update_node.fn(
@@ -558,10 +558,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_resume_graph_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_resume_graph wrapper should pass graph_id directly."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_resume_graph") as mock_resume:
+        with patch("spellbook.mcp.server.do_fractal_resume_graph") as mock_resume:
             mock_resume.return_value = {"graph_id": "g1", "status": "active"}
 
             server.fractal_resume_graph.fn(graph_id="g1")
@@ -570,10 +570,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_delete_graph_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_delete_graph wrapper should pass graph_id directly."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_delete_graph") as mock_delete:
+        with patch("spellbook.mcp.server.do_fractal_delete_graph") as mock_delete:
             mock_delete.return_value = {"deleted": True}
 
             server.fractal_delete_graph.fn(graph_id="g1")
@@ -582,10 +582,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_update_graph_status_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_update_graph_status wrapper should pass all params."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_update_graph_status") as mock_status:
+        with patch("spellbook.mcp.server.do_fractal_update_graph_status") as mock_status:
             mock_status.return_value = {"status": "completed"}
 
             server.fractal_update_graph_status.fn(
@@ -602,10 +602,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_mark_saturated_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_mark_saturated wrapper should pass all params."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_mark_saturated") as mock_sat:
+        with patch("spellbook.mcp.server.do_fractal_mark_saturated") as mock_sat:
             mock_sat.return_value = {"status": "saturated"}
 
             server.fractal_mark_saturated.fn(
@@ -622,10 +622,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_get_snapshot_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_get_snapshot wrapper should pass graph_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_get_snapshot") as mock_snap:
+        with patch("spellbook.mcp.server.do_fractal_get_snapshot") as mock_snap:
             mock_snap.return_value = {"graph_id": "g1", "nodes": []}
 
             server.fractal_get_snapshot.fn(graph_id="g1")
@@ -634,10 +634,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_get_branch_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_get_branch wrapper should pass graph_id and node_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_get_branch") as mock_branch:
+        with patch("spellbook.mcp.server.do_fractal_get_branch") as mock_branch:
             mock_branch.return_value = {"graph_id": "g1", "nodes": []}
 
             server.fractal_get_branch.fn(graph_id="g1", node_id="n1")
@@ -646,10 +646,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_get_open_questions_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_get_open_questions wrapper should pass graph_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_get_open_questions") as mock_oq:
+        with patch("spellbook.mcp.server.do_fractal_get_open_questions") as mock_oq:
             mock_oq.return_value = {"graph_id": "g1", "open_questions": []}
 
             server.fractal_get_open_questions.fn(graph_id="g1")
@@ -658,10 +658,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_query_convergence_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_query_convergence wrapper should pass graph_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_query_convergence") as mock_conv:
+        with patch("spellbook.mcp.server.do_fractal_query_convergence") as mock_conv:
             mock_conv.return_value = {"graph_id": "g1", "convergence_points": []}
 
             server.fractal_query_convergence.fn(graph_id="g1")
@@ -670,10 +670,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_query_contradictions_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_query_contradictions wrapper should pass graph_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_query_contradictions") as mock_cont:
+        with patch("spellbook.mcp.server.do_fractal_query_contradictions") as mock_cont:
             mock_cont.return_value = {"graph_id": "g1", "contradictions": []}
 
             server.fractal_query_contradictions.fn(graph_id="g1")
@@ -682,10 +682,10 @@ class TestServerToolParameterMapping:
 
     def test_fractal_get_saturation_status_wrapper_delegates(self, fractal_db, monkeypatch):
         """fractal_get_saturation_status wrapper should pass graph_id."""
-        from spellbook_mcp import server
+        from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook_mcp.server.do_fractal_get_saturation_status") as mock_ss:
+        with patch("spellbook.mcp.server.do_fractal_get_saturation_status") as mock_ss:
             mock_ss.return_value = {"graph_id": "g1", "branches": []}
 
             server.fractal_get_saturation_status.fn(graph_id="g1")

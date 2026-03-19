@@ -12,8 +12,8 @@ import subprocess
 import sys
 from typing import Any, Optional
 
-from spellbook_mcp import config_tools
-from spellbook_mcp.config_tools import NOTIFY_DEFAULT_ENABLED, NOTIFY_DEFAULT_TITLE
+from spellbook import config_tools
+from spellbook.core.config import NOTIFY_DEFAULT_ENABLED, NOTIFY_DEFAULT_TITLE
 
 logger = logging.getLogger(__name__)
 

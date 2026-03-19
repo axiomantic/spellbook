@@ -97,7 +97,7 @@ def get_spellbook_dir() -> Path:
 
 def get_server_script() -> Path:
     """Get path to the server script."""
-    return get_spellbook_dir() / "spellbook_mcp" / "server.py"
+    return get_spellbook_dir() / "spellbook" / "server.py"
 
 
 def get_uv_path() -> str | None:
@@ -276,7 +276,7 @@ def generate_launchd_plist() -> str:
     """Generate launchd plist content.
 
     Prefers the daemon venv Python (SPELLBOOK_DAEMON_PYTHON) when available,
-    falling back to ``uv run python -m spellbook_mcp.server`` for backward
+    falling back to ``uv run python -m spellbook.mcp.server`` for backward
     compatibility.
     """
     spellbook_dir = get_spellbook_dir()
@@ -291,7 +291,7 @@ def generate_launchd_plist() -> str:
         program_args = (
             f"                <string>{daemon_python}</string>\n"
             f"                <string>-m</string>\n"
-            f"                <string>spellbook_mcp.server</string>"
+            f"                <string>spellbook.mcp.server</string>"
         )
     else:
         uv_path = get_uv_path()
@@ -300,7 +300,7 @@ def generate_launchd_plist() -> str:
             f"                <string>run</string>\n"
             f"                <string>python</string>\n"
             f"                <string>-m</string>\n"
-            f"                <string>spellbook_mcp.server</string>"
+            f"                <string>spellbook.mcp.server</string>"
         )
 
     return textwrap.dedent(f"""\
@@ -453,7 +453,7 @@ def generate_systemd_service() -> str:
     """Generate systemd user service content.
 
     Prefers the daemon venv Python (SPELLBOOK_DAEMON_PYTHON) when available,
-    falling back to ``uv run python -m spellbook_mcp.server`` for backward
+    falling back to ``uv run python -m spellbook.mcp.server`` for backward
     compatibility.
     """
     spellbook_dir = get_spellbook_dir()
@@ -463,10 +463,10 @@ def generate_systemd_service() -> str:
 
     daemon_python = get_daemon_python()
     if daemon_python:
-        exec_start = f"{daemon_python} -m spellbook_mcp.server"
+        exec_start = f"{daemon_python} -m spellbook.mcp.server"
     else:
         uv_path = get_uv_path()
-        exec_start = f"{uv_path} run python -m spellbook_mcp.server"
+        exec_start = f"{uv_path} run python -m spellbook.mcp.server"
 
     return textwrap.dedent(f"""\
         [Unit]
@@ -794,7 +794,7 @@ def cmd_start(foreground: bool = False) -> int:
     env["SPELLBOOK_DIR"] = str(spellbook_dir)
 
     if daemon_python:
-        cmd = [daemon_python, "-m", "spellbook_mcp.server"]
+        cmd = [daemon_python, "-m", "spellbook.mcp.server"]
     else:
         # Use uv run to automatically install dependencies
         cmd = [uv_path, "run", str(server_script)]

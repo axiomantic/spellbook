@@ -15,7 +15,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from spellbook_mcp.admin.auth import require_admin_auth
+from spellbook.admin.auth import require_admin_auth
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 

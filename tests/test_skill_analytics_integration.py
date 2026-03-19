@@ -12,9 +12,9 @@ class TestEndToEndSkillAnalytics:
 
     def test_full_analytics_flow(self, tmp_path, monkeypatch):
         """Test: session created -> watcher detects -> outcomes persisted -> analytics queried."""
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
-        from spellbook_mcp.watcher import SessionWatcher
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.watcher import SessionWatcher
+        from spellbook.sessions.skill_analyzer import (
             get_analytics_summary,
             OUTCOME_COMPLETED,
         )
@@ -67,7 +67,7 @@ class TestEndToEndSkillAnalytics:
         watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
         with patch(
-            "spellbook_mcp.compaction_detector._get_current_session_file",
+            "spellbook.sessions.compaction._get_current_session_file",
             return_value=session_file,
         ):
             watcher._analyze_skills()
@@ -89,7 +89,7 @@ class TestEndToEndSkillAnalytics:
 
     def test_privacy_compliance(self, tmp_path):
         """Test that telemetry aggregates exclude sensitive data."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, anonymize_for_telemetry, OUTCOME_COMPLETED
         )
 
@@ -136,7 +136,7 @@ class TestEndToEndSkillAnalytics:
 
     def test_telemetry_min_count_enforcement(self, tmp_path):
         """Test that aggregates below min_count are excluded."""
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, anonymize_for_telemetry, OUTCOME_COMPLETED, OUTCOME_ABANDONED
         )
 
@@ -178,9 +178,9 @@ class TestSessionInactivityHandling:
 
     def test_inactive_session_finalizes_open_skills(self, tmp_path):
         """Test that inactive sessions have their open skills finalized."""
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
-        from spellbook_mcp.watcher import SessionWatcher, SessionSkillState, SESSION_INACTIVE_THRESHOLD_SECONDS
-        from spellbook_mcp.skill_analyzer import OUTCOME_SESSION_ENDED
+        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.watcher import SessionWatcher, SessionSkillState, SESSION_INACTIVE_THRESHOLD_SECONDS
+        from spellbook.sessions.skill_analyzer import OUTCOME_SESSION_ENDED
 
         db_path = tmp_path / "test.db"
         project_path = tmp_path / "project"
@@ -209,7 +209,7 @@ class TestSessionInactivityHandling:
 
         # First poll: detect skill
         with patch(
-            "spellbook_mcp.compaction_detector._get_current_session_file",
+            "spellbook.sessions.compaction._get_current_session_file",
             return_value=session_file,
         ):
             watcher._analyze_skills()
@@ -232,7 +232,7 @@ class TestSessionInactivityHandling:
 
         # Second poll: should finalize
         with patch(
-            "spellbook_mcp.compaction_detector._get_current_session_file",
+            "spellbook.sessions.compaction._get_current_session_file",
             return_value=session_file,
         ):
             watcher._analyze_skills()
@@ -259,8 +259,8 @@ class TestAnalyticsSummaryFiltering:
 
     def test_filter_by_project(self, tmp_path):
         """Test that project_encoded filter works correctly."""
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED,
         )
@@ -297,8 +297,8 @@ class TestAnalyticsSummaryFiltering:
 
     def test_filter_by_skill(self, tmp_path):
         """Test that skill filter works correctly."""
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED,
         )
@@ -335,8 +335,8 @@ class TestAnalyticsSummaryFiltering:
 
     def test_filter_by_days(self, tmp_path):
         """Test that days filter works correctly."""
-        from spellbook_mcp.db import init_db, get_connection, close_all_connections
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED,
         )
@@ -386,8 +386,8 @@ class TestWeakSkillDetection:
 
     def test_weak_skills_ranked_by_failure_score(self, tmp_path):
         """Test that weak skills are correctly identified and ranked."""
-        from spellbook_mcp.db import init_db, close_all_connections
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.core.db import init_db, close_all_connections
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED, OUTCOME_ABANDONED,
         )

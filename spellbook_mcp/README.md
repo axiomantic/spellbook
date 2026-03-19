@@ -36,13 +36,13 @@ This will install Python dependencies and register the MCP server with Claude Co
 #### 1. Install Python Dependencies
 
 ```bash
-pip install -r spellbook_mcp/requirements.txt
+pip install -r spellbook/requirements.txt
 ```
 
 #### 2. Add to Claude Code
 
 ```bash
-claude mcp add spellbook -- python /path/to/spellbook/spellbook_mcp/server.py
+claude mcp add spellbook -- python /path/to/spellbook/spellbook/server.py
 ```
 
 Replace `/path/to/spellbook` with the absolute path to your spellbook repository.
@@ -51,7 +51,7 @@ Replace `/path/to/spellbook` with the absolute path to your spellbook repository
 
 ```bash
 claude mcp list
-# Should show: spellbook (python .../spellbook_mcp/server.py)
+# Should show: spellbook (python .../spellbook/server.py)
 ```
 
 ## Usage
@@ -108,7 +108,7 @@ pytest tests/test_spellbook_mcp/ -v
 pytest tests/test_spellbook_mcp/test_server_integration.py -v
 
 # Run with coverage
-pytest tests/test_spellbook_mcp/ -v --cov=spellbook_mcp
+pytest tests/test_spellbook_mcp/ -v --cov=spellbook
 ```
 
 ### Test Quality
@@ -123,7 +123,7 @@ Tests are audited for green mirage patterns. All assertions verify actual values
 ### Project Structure
 
 ```
-spellbook_mcp/
+spellbook/
 ├── server.py           # FastMCP server with tool registrations
 ├── session_ops.py      # Session loading, metadata, chunking
 ├── path_utils.py       # Path encoding and project resolution
@@ -144,7 +144,7 @@ Make sure you're using the absolute path in `claude mcp add`:
 
 ```bash
 pwd  # Get current directory
-claude mcp add spellbook python $(pwd)/spellbook_mcp/server.py
+claude mcp add spellbook python $(pwd)/spellbook/server.py
 ```
 
 ### Sessions Not Found

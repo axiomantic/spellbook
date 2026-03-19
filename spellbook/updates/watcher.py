@@ -1,6 +1,6 @@
 """Background watcher for spellbook update detection.
 
-Follows the SessionWatcher pattern from spellbook_mcp/watcher.py:
+Follows the SessionWatcher pattern from spellbook/watcher.py:
 daemon thread, Event.wait() for responsive shutdown, circuit breaker.
 
 Checks at startup + configurable interval (long-lived HTTP daemon).

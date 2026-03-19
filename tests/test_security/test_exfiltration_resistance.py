@@ -15,8 +15,8 @@ Validates:
 
 import pytest
 
-from spellbook_mcp.db import get_connection, init_db
-from spellbook_mcp.security.tools import (
+from spellbook.core.db import get_connection, init_db
+from spellbook.security.tools import (
     do_canary_check,
     do_canary_create,
     do_check_output,

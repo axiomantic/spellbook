@@ -10,7 +10,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from spellbook_mcp import db as db_module
+from spellbook import db as db_module
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix permissions only")
@@ -29,7 +29,7 @@ class TestDBFilePermissions:
                   Mitigated: we check actual stat, not return value.
           IMPACT: Other users on shared system can read DB containing session state.
         """
-        from spellbook_mcp.db import get_db_path
+        from spellbook.core.db import get_db_path
 
         with pytest.MonkeyPatch().context() as m:
             m.setattr(Path, "home", lambda: tmp_path)
@@ -50,7 +50,7 @@ class TestDBFilePermissions:
                   Mitigated: test runs on Unix with tmp_path (real FS).
           IMPACT: Other users can read/write the DB, enabling data theft or corruption.
         """
-        from spellbook_mcp.db import get_connection, init_db, _connections, _connections_lock
+        from spellbook.core.db import get_connection, init_db, _connections, _connections_lock
 
         db_path = str(tmp_path / "test.db")
 

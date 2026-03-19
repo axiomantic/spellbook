@@ -9,15 +9,15 @@ def mock_mcp_token(tmp_path):
     token = secrets.token_urlsafe(32)
     token_path = tmp_path / ".mcp-token"
     token_path.write_text(token)
-    with patch("spellbook_mcp.admin.auth.load_token", return_value=token), \
-         patch("spellbook_mcp.admin.routes.auth.load_token", return_value=token):
+    with patch("spellbook.admin.auth.load_token", return_value=token), \
+         patch("spellbook.admin.routes.auth.load_token", return_value=token):
         yield token
 
 
 @pytest.fixture
 def admin_app():
     """Create admin app for testing."""
-    from spellbook_mcp.admin.app import create_admin_app
+    from spellbook.admin.app import create_admin_app
 
     return create_admin_app()
 
@@ -26,7 +26,7 @@ def admin_app():
 def client(admin_app, mock_mcp_token):
     """Test client with authenticated session."""
     from fastapi.testclient import TestClient
-    from spellbook_mcp.admin.auth import create_session_cookie
+    from spellbook.admin.auth import create_session_cookie
 
     client = TestClient(admin_app)
     cookie = create_session_cookie("test-session")

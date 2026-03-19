@@ -23,8 +23,8 @@ import os
 from typing import Optional
 from uuid import uuid4
 
-from spellbook_mcp.forged.models import VALID_STAGES, Feedback, IterationState
-from spellbook_mcp.forged.schema import get_forged_connection, init_forged_schema
+from spellbook.forged.models import VALID_STAGES, Feedback, IterationState
+from spellbook.forged.schema import get_forged_connection, init_forged_schema
 
 
 # Stages that can be returned to (not terminal states)

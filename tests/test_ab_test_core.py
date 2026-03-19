@@ -1,14 +1,14 @@
 """Tests for A/B test core logic functions."""
 
 import pytest
-from spellbook_mcp.db import init_db, get_connection
+from spellbook.core.db import init_db, get_connection
 
 
 class TestExperimentCreate:
     """Test experiment_create function."""
 
     def test_creates_experiment_with_variants(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create
+        from spellbook.experiments.ab_test import experiment_create
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -35,7 +35,7 @@ class TestExperimentCreate:
         assert result["variants"][1]["skill_version"] == "v2"
 
     def test_rejects_duplicate_name(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, ExperimentExistsError
+        from spellbook.experiments.ab_test import experiment_create, ExperimentExistsError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -64,7 +64,7 @@ class TestExperimentCreate:
             )
 
     def test_rejects_invalid_weight_sum(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+        from spellbook.experiments.ab_test import experiment_create, InvalidVariantsError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -81,7 +81,7 @@ class TestExperimentCreate:
             )
 
     def test_rejects_no_control_variant(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+        from spellbook.experiments.ab_test import experiment_create, InvalidVariantsError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -98,7 +98,7 @@ class TestExperimentCreate:
             )
 
     def test_rejects_single_variant(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+        from spellbook.experiments.ab_test import experiment_create, InvalidVariantsError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -116,7 +116,7 @@ class TestExperimentStart:
     """Test experiment_start function."""
 
     def test_starts_created_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_start
+        from spellbook.experiments.ab_test import experiment_create, experiment_start
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -138,7 +138,7 @@ class TestExperimentStart:
         assert result["started_at"] is not None
 
     def test_rejects_starting_active_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             InvalidStatusTransitionError,
@@ -163,7 +163,7 @@ class TestExperimentStart:
             experiment_start(create_result["experiment_id"], db_path=db_path)
 
     def test_rejects_concurrent_experiment_for_same_skill(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             ConcurrentExperimentError,
@@ -200,7 +200,7 @@ class TestExperimentStart:
             experiment_start(result2["experiment_id"], db_path=db_path)
 
     def test_rejects_nonexistent_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_start, ExperimentNotFoundError
+        from spellbook.experiments.ab_test import experiment_start, ExperimentNotFoundError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -213,7 +213,7 @@ class TestExperimentPause:
     """Test experiment_pause function."""
 
     def test_pauses_active_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_pause
+        from spellbook.experiments.ab_test import experiment_create, experiment_start, experiment_pause
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -235,7 +235,7 @@ class TestExperimentPause:
         assert result["status"] == "paused"
 
     def test_rejects_pausing_created_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_pause,
             InvalidStatusTransitionError,
@@ -262,7 +262,7 @@ class TestExperimentComplete:
     """Test experiment_complete function."""
 
     def test_completes_active_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             experiment_complete,
@@ -289,7 +289,7 @@ class TestExperimentComplete:
         assert result["completed_at"] is not None
 
     def test_completes_paused_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             experiment_pause,
@@ -317,7 +317,7 @@ class TestExperimentComplete:
         assert result["status"] == "completed"
 
     def test_rejects_completing_created_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_complete,
             InvalidStatusTransitionError,
@@ -344,7 +344,7 @@ class TestExperimentStatus:
     """Test experiment_status function."""
 
     def test_returns_experiment_with_variant_counts(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_status
+        from spellbook.experiments.ab_test import experiment_create, experiment_start, experiment_status
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -373,7 +373,7 @@ class TestExperimentStatus:
         assert result["total_outcomes"] == 0
 
     def test_rejects_nonexistent_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_status, ExperimentNotFoundError
+        from spellbook.experiments.ab_test import experiment_status, ExperimentNotFoundError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -386,7 +386,7 @@ class TestExperimentList:
     """Test experiment_list function."""
 
     def test_lists_all_experiments(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_list
+        from spellbook.experiments.ab_test import experiment_create, experiment_start, experiment_list
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -419,7 +419,7 @@ class TestExperimentList:
         assert len(result["experiments"]) == 2
 
     def test_filters_by_status(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_list
+        from spellbook.experiments.ab_test import experiment_create, experiment_start, experiment_list
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -450,7 +450,7 @@ class TestExperimentList:
         assert result["experiments"][0]["name"] == "exp-2"
 
     def test_filters_by_skill_name(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_create, experiment_list
+        from spellbook.experiments.ab_test import experiment_create, experiment_list
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -484,7 +484,7 @@ class TestVariantAssignment:
     """Test variant assignment logic."""
 
     def test_assigns_variant_deterministically(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             get_skill_version_for_session,
@@ -526,7 +526,7 @@ class TestVariantAssignment:
         assert skill_version2 == skill_version
 
     def test_returns_none_when_no_active_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import get_skill_version_for_session
+        from spellbook.experiments.ab_test import get_skill_version_for_session
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -542,7 +542,7 @@ class TestVariantAssignment:
         assert skill_version is None
 
     def test_paused_experiment_no_new_assignments(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             experiment_pause,
@@ -593,7 +593,7 @@ class TestVariantAssignment:
         assert variant_id3 is None
 
     def test_assignment_distribution_roughly_follows_weights(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             get_skill_version_for_session,
@@ -638,7 +638,7 @@ class TestExperimentResults:
     """Test experiment_results function."""
 
     def test_returns_per_variant_metrics(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             get_skill_version_for_session,
@@ -692,7 +692,7 @@ class TestExperimentResults:
         assert "results" in result
 
     def test_rejects_nonexistent_experiment(self, tmp_path):
-        from spellbook_mcp.ab_test import experiment_results, ExperimentNotFoundError
+        from spellbook.experiments.ab_test import experiment_results, ExperimentNotFoundError
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)

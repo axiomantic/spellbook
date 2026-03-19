@@ -1,7 +1,7 @@
 """Tests for extractor shared utilities."""
 
 import pytest
-from spellbook_mcp.extractors.message_utils import (
+from spellbook.extractors.message_utils import (
     get_tool_calls,
     get_content,
     get_timestamp,

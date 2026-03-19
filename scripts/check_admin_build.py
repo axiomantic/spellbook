@@ -4,7 +4,7 @@
 Computes a SHA-256 hash of all frontend source files (src/, index.html,
 package.json, vite.config.ts, tsconfig.json, tailwind.config.js,
 postcss.config.js) and compares it to the stored hash in
-spellbook_mcp/admin/static/.build-hash.
+spellbook/admin/static/.build-hash.
 
 Exit codes:
     0 - dist is up to date (or no frontend source exists)
@@ -22,8 +22,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = REPO_ROOT / "spellbook_mcp" / "admin" / "frontend"
-STATIC_DIR = REPO_ROOT / "spellbook_mcp" / "admin" / "static"
+FRONTEND_DIR = REPO_ROOT / "spellbook" / "admin" / "frontend"
+STATIC_DIR = REPO_ROOT / "spellbook" / "admin" / "static"
 HASH_FILE = STATIC_DIR / ".build-hash"
 
 # Files/dirs whose content determines the build output
@@ -65,15 +65,15 @@ def main() -> int:
         return 0
 
     if not HASH_FILE.exists():
-        print("ERROR: No .build-hash file found in spellbook_mcp/admin/static/")
-        print("Run: cd spellbook_mcp/admin/frontend && npm run build")
+        print("ERROR: No .build-hash file found in spellbook/admin/static/")
+        print("Run: cd spellbook/admin/frontend && npm run build")
         print("Then: python3 scripts/check_admin_build.py --update")
         return 1
 
     stored_hash = HASH_FILE.read_text().strip()
     if current_hash != stored_hash:
         print("ERROR: Admin frontend dist is stale (source files changed since last build)")
-        print("Run: cd spellbook_mcp/admin/frontend && npm run build")
+        print("Run: cd spellbook/admin/frontend && npm run build")
         print("Then: python3 scripts/check_admin_build.py --update")
         print("Then commit the updated static/ directory")
         return 1

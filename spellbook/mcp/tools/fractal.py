@@ -1,20 +1,20 @@
 """MCP tools for fractal thinking."""
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.fractal.graph_ops import (
+from spellbook.fractal.graph_ops import (
     create_graph as do_fractal_create_graph,
     delete_graph as do_fractal_delete_graph,
     resume_graph as do_fractal_resume_graph,
     update_graph_status as do_fractal_update_graph_status,
 )
-from spellbook_mcp.fractal.node_ops import (
+from spellbook.fractal.node_ops import (
     add_node as do_fractal_add_node,
     claim_work as do_fractal_claim_work,
     mark_saturated as do_fractal_mark_saturated,
     synthesize_node as do_fractal_synthesize_node,
     update_node as do_fractal_update_node,
 )
-from spellbook_mcp.fractal.query_ops import (
+from spellbook.fractal.query_ops import (
     get_branch as do_fractal_get_branch,
     get_claimable_work as do_fractal_get_claimable_work,
     get_open_questions as do_fractal_get_open_questions,
@@ -24,7 +24,7 @@ from spellbook_mcp.fractal.query_ops import (
     query_contradictions as do_fractal_query_contradictions,
     query_convergence as do_fractal_query_convergence,
 )
-from spellbook_mcp.injection import inject_recovery_context
+from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()
@@ -33,7 +33,7 @@ def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metada
     """Create a new fractal thinking graph with a seed question."""
     result = do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -64,7 +64,7 @@ def fractal_delete_graph(graph_id: str):
     """Delete a fractal thinking graph and all its nodes/edges."""
     result = do_fractal_delete_graph(graph_id=graph_id)
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -94,7 +94,7 @@ def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, o
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -132,7 +132,7 @@ def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(
@@ -214,7 +214,7 @@ def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
     except ValueError as e:
         return {"error": str(e)}
     try:
-        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+        from spellbook.admin.events import Event, Subsystem, publish_sync
 
         publish_sync(
             Event(

@@ -18,12 +18,12 @@ class TestConfigFileLocking:
 
     def test_config_set_creates_lock_file(self, tmp_path, monkeypatch):
         """config_set should use CrossPlatformLock during writes."""
-        from spellbook_mcp.config_tools import config_set, get_config_path
+        from spellbook.core.config import config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         # Patch CrossPlatformLock to verify it's used as a context manager
         from installer.compat import CrossPlatformLock
@@ -47,12 +47,12 @@ class TestConfigFileLocking:
 
     def test_concurrent_config_writes_no_data_loss(self, tmp_path, monkeypatch):
         """Concurrent writes should not lose data due to locking."""
-        from spellbook_mcp.config_tools import config_set, config_get, get_config_path
+        from spellbook.core.config import config_set, config_get, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         # Write initial config
         config_path.write_text(json.dumps({"initial": True}) + "\n")
@@ -86,12 +86,12 @@ class TestConfigFileLocking:
 
     def test_config_get_reads_with_shared_lock(self, tmp_path, monkeypatch):
         """config_get should work correctly with locking."""
-        from spellbook_mcp.config_tools import config_get, config_set, get_config_path
+        from spellbook.core.config import config_get, config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
-        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
         config_set("locked_key", 42)
         result = config_get("locked_key")

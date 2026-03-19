@@ -1,7 +1,7 @@
 """Memory storage module: CRUD operations for the memory system.
 
 All functions accept db_path as first argument to support testing with tmp_path.
-Uses the shared connection pool from spellbook_mcp.db.
+Uses the shared connection pool from spellbook.core.db.
 """
 
 import hashlib
@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from spellbook_mcp.db import get_connection
-from spellbook_mcp.memory_secrets import scan_for_secrets
+from spellbook.core.db import get_connection
+from spellbook.memory_secrets import scan_for_secrets
 
 
 def _content_hash(content: str) -> str:
@@ -380,7 +380,7 @@ def _apply_branch_scoring(
     multiplier, re-sorts, strips internal score, and truncates to limit.
     Also lazily populates the junction table for ancestor relationships.
     """
-    from spellbook_mcp.branch_ancestry import (
+    from spellbook.branch_ancestry import (
         BRANCH_MULTIPLIERS,
         BranchRelationship,
         get_branch_relationship,

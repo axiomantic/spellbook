@@ -1,7 +1,7 @@
 """MCP tools for A/B testing experiments."""
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.ab_test import (
+from spellbook.experiments.ab_test import (
     ABTestError,
     experiment_complete as do_experiment_complete,
     experiment_create as do_experiment_create,
@@ -11,7 +11,7 @@ from spellbook_mcp.ab_test import (
     experiment_start as do_experiment_start,
     experiment_status as do_experiment_status,
 )
-from spellbook_mcp.injection import inject_recovery_context
+from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()

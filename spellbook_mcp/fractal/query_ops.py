@@ -7,7 +7,7 @@ points, contradictions, and saturation status.
 
 import json
 
-from spellbook_mcp.fractal.schema import get_fractal_connection
+from spellbook.fractal.schema import get_fractal_connection
 
 
 def _graph_exists(cursor, graph_id):

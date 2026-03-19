@@ -1,4 +1,4 @@
-"""Tests for spellbook_mcp.security.tools.do_check_output() function.
+"""Tests for spellbook.security.tools.do_check_output() function.
 
 Validates:
 - Credential pattern detection (sk-*, AKIA*, ghp_*, gho_*, private keys,
@@ -14,7 +14,7 @@ Validates:
 import sqlite3
 import pytest
 
-from spellbook_mcp.security.tools import do_check_output
+from spellbook.security.tools import do_check_output
 
 
 # =============================================================================

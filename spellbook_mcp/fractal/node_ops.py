@@ -7,12 +7,12 @@ fractal exploration graphs.
 import json
 import uuid
 
-from spellbook_mcp.fractal.models import (
+from spellbook.fractal.models import (
     INTENSITY_BUDGETS,
     VALID_NODE_TYPES,
     VALID_SATURATION_REASONS,
 )
-from spellbook_mcp.fractal.schema import get_fractal_connection
+from spellbook.fractal.schema import get_fractal_connection
 
 
 def add_node(graph_id, parent_id, node_type, text, owner=None, metadata_json=None, db_path=None):

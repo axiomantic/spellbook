@@ -11,13 +11,13 @@ from starlette.responses import JSONResponse
 
 from spellbook.mcp import state as _state
 from spellbook.mcp.server import mcp
-from spellbook_mcp import tts as tts_module
-from spellbook_mcp.db import get_db_path
-from spellbook_mcp.memory_tools import (
+from spellbook import tts as tts_module
+from spellbook.core.db import get_db_path
+from spellbook.memory.tools import (
     do_log_event,
     do_memory_recall,
 )
-from spellbook_mcp.path_utils import get_spellbook_config_dir
+from spellbook.core.path_utils import get_spellbook_config_dir
 
 
 def _get_version() -> str:

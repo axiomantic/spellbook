@@ -7,7 +7,7 @@ import pytest
 def test_dashboard_returns_200(client):
     """Dashboard endpoint returns health, counts, and activity."""
     with patch(
-        "spellbook_mcp.admin.routes.dashboard.get_dashboard_data",
+        "spellbook.admin.routes.dashboard.get_dashboard_data",
         new_callable=AsyncMock,
     ) as mock:
         mock.return_value = {
@@ -67,7 +67,7 @@ def test_dashboard_requires_auth(unauthenticated_client):
 def test_dashboard_response_schema(client):
     """DashboardResponse schema validates all required fields and types."""
     with patch(
-        "spellbook_mcp.admin.routes.dashboard.get_dashboard_data",
+        "spellbook.admin.routes.dashboard.get_dashboard_data",
         new_callable=AsyncMock,
     ) as mock:
         mock.return_value = {
@@ -118,21 +118,21 @@ def test_dashboard_response_schema(client):
 def test_dashboard_cross_db_aggregation(client):
     """get_dashboard_data queries all databases in parallel via asyncio.gather."""
     with patch(
-        "spellbook_mcp.admin.routes.dashboard.query_spellbook_db",
+        "spellbook.admin.routes.dashboard.query_spellbook_db",
         new_callable=AsyncMock,
     ) as mock_spellbook, patch(
-        "spellbook_mcp.admin.routes.dashboard.query_fractal_db",
+        "spellbook.admin.routes.dashboard.query_fractal_db",
         new_callable=AsyncMock,
     ) as mock_fractal, patch(
-        "spellbook_mcp.admin.routes.dashboard.query_coordination_db",
+        "spellbook.admin.routes.dashboard.query_coordination_db",
         new_callable=AsyncMock,
     ) as mock_coordination, patch(
-        "spellbook_mcp.admin.routes.dashboard.event_bus",
+        "spellbook.admin.routes.dashboard.event_bus",
     ) as mock_bus, patch(
-        "spellbook_mcp.admin.routes.dashboard.pkg_version",
+        "spellbook.admin.routes.dashboard.pkg_version",
         return_value="0.30.5",
     ), patch(
-        "spellbook_mcp.admin.routes.dashboard._get_db_size",
+        "spellbook.admin.routes.dashboard._get_db_size",
         return_value=2048,
     ):
         mock_bus.subscriber_count = 2
@@ -192,21 +192,21 @@ def test_dashboard_cross_db_aggregation(client):
 def test_dashboard_handles_db_errors_gracefully(client):
     """Dashboard returns safe defaults when database queries fail."""
     with patch(
-        "spellbook_mcp.admin.routes.dashboard.query_spellbook_db",
+        "spellbook.admin.routes.dashboard.query_spellbook_db",
         new_callable=AsyncMock,
     ) as mock_spellbook, patch(
-        "spellbook_mcp.admin.routes.dashboard.query_fractal_db",
+        "spellbook.admin.routes.dashboard.query_fractal_db",
         new_callable=AsyncMock,
     ) as mock_fractal, patch(
-        "spellbook_mcp.admin.routes.dashboard.query_coordination_db",
+        "spellbook.admin.routes.dashboard.query_coordination_db",
         new_callable=AsyncMock,
     ) as mock_coordination, patch(
-        "spellbook_mcp.admin.routes.dashboard.event_bus",
+        "spellbook.admin.routes.dashboard.event_bus",
     ) as mock_bus, patch(
-        "spellbook_mcp.admin.routes.dashboard.pkg_version",
+        "spellbook.admin.routes.dashboard.pkg_version",
         return_value="0.30.5",
     ), patch(
-        "spellbook_mcp.admin.routes.dashboard._get_db_size",
+        "spellbook.admin.routes.dashboard._get_db_size",
         return_value=0,
     ):
         mock_bus.subscriber_count = 0

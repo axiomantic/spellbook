@@ -749,7 +749,7 @@ def check_tts_available() -> bool:
 def _set_tts_config(enabled: bool) -> None:
     """Persist the tts_enabled config value via spellbook config_tools."""
     try:
-        from spellbook_mcp.config_tools import config_set as _cfg_set
+        from spellbook.core.config import config_set as _cfg_set
         _cfg_set("tts_enabled", enabled)
     except ImportError:
         pass
@@ -850,7 +850,7 @@ def setup_tts(
 
     # Check if user already made a TTS decision (don't re-prompt on reinstall)
     try:
-        from spellbook_mcp.config_tools import config_get as _cfg_get
+        from spellbook.core.config import config_get as _cfg_get
         existing = _cfg_get("tts_enabled")
         if existing is not None:
             if check_tts_available():
@@ -1093,7 +1093,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     admin_enabled = True
     if not args.dry_run:
         try:
-            from spellbook_mcp.config_tools import config_get as _cfg_get, config_set as _cfg_set
+            from spellbook.core.config import config_get as _cfg_get, config_set as _cfg_set
 
             if args.no_admin:
                 # Explicit opt-out always wins

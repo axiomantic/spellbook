@@ -14,7 +14,7 @@ import pytest
 
 def _get_registered_tool_names() -> list[str]:
     """Get tool names from the FastMCP registry (v2 or v3)."""
-    from spellbook_mcp.server import mcp
+    from spellbook.mcp.server import mcp
 
     # FastMCP v2: tools in _tool_manager._tools dict
     try:
@@ -66,7 +66,7 @@ class TestStintToolRegistration:
 
 def _get_stint_push_tool():
     """Get the FunctionTool object for stint_push from the FastMCP registry."""
-    from spellbook_mcp.server import mcp
+    from spellbook.mcp.server import mcp
 
     # FastMCP v3: tools in _local_provider._components dict
     try:
@@ -126,7 +126,7 @@ class TestStintPushBehavioralMode:
 
         mock_result = {"success": True, "depth": 1, "stack": []}
         with patch(
-            "spellbook_mcp.stint_tools.push_stint",
+            "spellbook.stint_tools.push_stint",
             return_value=mock_result,
         ) as mock_push:
             result = fn(

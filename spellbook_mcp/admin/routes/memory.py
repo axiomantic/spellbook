@@ -16,11 +16,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.db import execute_spellbook_db, query_spellbook_db
-from spellbook_mcp.admin.events import Event, Subsystem, event_bus
-from spellbook_mcp.db import get_db_path
-from spellbook_mcp.memory_consolidation import consolidate_batch
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.db import execute_spellbook_db, query_spellbook_db
+from spellbook.admin.events import Event, Subsystem, event_bus
+from spellbook.core.db import get_db_path
+from spellbook.memory.consolidation import consolidate_batch
 
 logger = logging.getLogger(__name__)
 

@@ -92,7 +92,7 @@ def start_daemon(foreground: bool = False) -> None:
     env["SPELLBOOK_DIR"] = str(spellbook_dir)
 
     if daemon_python:
-        cmd = [daemon_python, "-m", "spellbook_mcp.server"]
+        cmd = [daemon_python, "-m", "spellbook.mcp.server"]
     else:
         cmd = [uv_path, "run", str(server_script)]  # type: ignore[list-item]
 

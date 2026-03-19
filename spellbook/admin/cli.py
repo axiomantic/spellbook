@@ -1,7 +1,7 @@
 """CLI command for opening the Spellbook admin interface.
 
 Usage:
-    python -m spellbook_mcp.admin.cli open [--port PORT]
+    python -m spellbook.admin.cli open [--port PORT]
 
 Reads the .mcp-token, exchanges it for a browser auth token,
 and opens the admin interface in the default browser.

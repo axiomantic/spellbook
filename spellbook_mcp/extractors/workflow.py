@@ -8,8 +8,8 @@ Detects workflow patterns:
 
 from typing import Any, Dict, List
 
-from spellbook_mcp.extractors.message_utils import get_tool_calls
-from spellbook_mcp.extractors.types import WorkflowPattern
+from spellbook.extractors.message_utils import get_tool_calls
+from spellbook.extractors.types import WorkflowPattern
 
 
 def _is_pytest_command(command: str) -> bool:

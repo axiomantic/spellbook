@@ -9,8 +9,8 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from spellbook_mcp.auth import load_token
-from spellbook_mcp.admin.auth import (
+from spellbook.core.auth import load_token
+from spellbook.admin.auth import (
     create_exchange_token,
     create_session_cookie,
     create_ws_ticket,

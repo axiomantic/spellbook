@@ -1,7 +1,7 @@
 """Configuration management and session initialization for spellbook.
 
 Canonical location for configuration utilities. This module was migrated from
-spellbook_mcp.config_tools as part of the three-layer architecture reorganization.
+spellbook.core.config as part of the three-layer architecture reorganization.
 """
 
 import json
@@ -884,8 +884,8 @@ def _get_resume_context(
     Returns:
         Dict with resume_available and optional resume_* fields
     """
-    from spellbook_mcp.db import get_db_path
-    from spellbook_mcp.resume import (
+    from spellbook.core.db import get_db_path
+    from spellbook.sessions.resume import (
         detect_continuation_intent,
         get_resume_fields,
     )
@@ -936,7 +936,7 @@ def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:
     Returns:
         {"status": "enabled", "endpoint_url": str|None} or {"status": "error", "message": str}
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -968,7 +968,7 @@ def telemetry_disable(db_path: str = None) -> dict:
     Returns:
         {"status": "disabled"} or {"status": "error", "message": str}
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -1000,7 +1000,7 @@ def telemetry_status(db_path: str = None) -> dict:
         {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
         or includes "status": "error", "message": str on failure
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())

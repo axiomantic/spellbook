@@ -7,12 +7,12 @@ fractal exploration graphs.
 import json
 import uuid
 
-from spellbook_mcp.fractal.models import (
+from spellbook.fractal.models import (
     INTENSITY_BUDGETS,
     VALID_INTENSITIES,
     validate_checkpoint_mode,
 )
-from spellbook_mcp.fractal.schema import get_fractal_connection
+from spellbook.fractal.schema import get_fractal_connection
 
 # Valid status transitions: {from_status: [allowed_to_statuses]}
 VALID_TRANSITIONS = {

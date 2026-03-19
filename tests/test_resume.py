@@ -10,7 +10,7 @@ class TestContinuationIntent:
 
     def test_continuation_intent_has_required_fields(self):
         """Test that ContinuationIntent TypedDict has all required fields."""
-        from spellbook_mcp.resume import ContinuationIntent
+        from spellbook.sessions.resume import ContinuationIntent
 
         # Create instance to verify structure
         intent: ContinuationIntent = {
@@ -25,7 +25,7 @@ class TestContinuationIntent:
 
     def test_continuation_intent_pattern_can_be_none(self):
         """Test that pattern field can be None for neutral intent."""
-        from spellbook_mcp.resume import ContinuationIntent
+        from spellbook.sessions.resume import ContinuationIntent
 
         intent: ContinuationIntent = {
             "intent": "neutral",
@@ -56,7 +56,7 @@ class TestDetectContinuationIntent:
     ])
     def test_explicit_continue_patterns(self, message, expected_intent, expected_confidence):
         """Test explicit continue patterns are detected with high confidence."""
-        from spellbook_mcp.resume import detect_continuation_intent
+        from spellbook.sessions.resume import detect_continuation_intent
 
         result = detect_continuation_intent(message, has_recent_session=False)
 
@@ -82,7 +82,7 @@ class TestDetectContinuationIntent:
     ])
     def test_fresh_start_patterns(self, message):
         """Test fresh start patterns override resume even if session exists."""
-        from spellbook_mcp.resume import detect_continuation_intent
+        from spellbook.sessions.resume import detect_continuation_intent
 
         result = detect_continuation_intent(message, has_recent_session=True)
 
@@ -106,7 +106,7 @@ class TestDetectContinuationIntent:
     ])
     def test_implicit_continue_with_session(self, message):
         """Test implicit patterns trigger continue only with recent session."""
-        from spellbook_mcp.resume import detect_continuation_intent
+        from spellbook.sessions.resume import detect_continuation_intent
 
         # With recent session: medium confidence continue
         result = detect_continuation_intent(message, has_recent_session=True)
@@ -121,7 +121,7 @@ class TestDetectContinuationIntent:
     ])
     def test_implicit_patterns_without_session(self, message):
         """Test implicit patterns return neutral without recent session."""
-        from spellbook_mcp.resume import detect_continuation_intent
+        from spellbook.sessions.resume import detect_continuation_intent
 
         result = detect_continuation_intent(message, has_recent_session=False)
         assert result["intent"] == "neutral"
@@ -133,7 +133,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_none_input(self):
         """Test None input returns (0, False)."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
 
         count, corrupted = count_pending_todos(None)
 
@@ -142,7 +142,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_empty_array(self):
         """Test empty array returns (0, False)."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
 
         count, corrupted = count_pending_todos("[]")
 
@@ -151,7 +151,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_with_pending(self):
         """Test counts non-completed todos."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
         import json
 
         todos = json.dumps([
@@ -167,7 +167,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_all_completed(self):
         """Test all completed returns 0."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
         import json
 
         todos = json.dumps([
@@ -182,7 +182,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_malformed_json(self):
         """Test malformed JSON returns (0, True)."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
 
         count, corrupted = count_pending_todos("not valid json")
 
@@ -191,7 +191,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_not_array(self):
         """Test non-array JSON returns (0, True)."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
 
         count, corrupted = count_pending_todos('{"key": "value"}')
 
@@ -200,7 +200,7 @@ class TestCountPendingTodos:
 
     def test_count_pending_todos_mixed_items(self):
         """Test handles mixed item types gracefully."""
-        from spellbook_mcp.resume import count_pending_todos
+        from spellbook.sessions.resume import count_pending_todos
         import json
 
         todos = json.dumps([
@@ -222,7 +222,7 @@ class TestFindPlanningDocs:
 
     def test_find_impl_docs(self, tmp_path):
         """Test finds *-impl.md files."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         # Create test files
         impl_doc = tmp_path / "feature-impl.md"
@@ -236,7 +236,7 @@ class TestFindPlanningDocs:
 
     def test_find_design_docs(self, tmp_path):
         """Test finds *-design.md files."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         design_doc = tmp_path / "feature-design.md"
         design_doc.write_text("# Design Doc")
@@ -247,7 +247,7 @@ class TestFindPlanningDocs:
 
     def test_find_plan_docs(self, tmp_path):
         """Test finds *-plan.md files."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         plan_doc = tmp_path / "feature-plan.md"
         plan_doc.write_text("# Plan")
@@ -258,7 +258,7 @@ class TestFindPlanningDocs:
 
     def test_find_plans_directory(self, tmp_path):
         """Test finds files in plans/ directories."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         plans_dir = tmp_path / "plans"
         plans_dir.mkdir()
@@ -271,7 +271,7 @@ class TestFindPlanningDocs:
 
     def test_skips_missing_files(self, tmp_path):
         """Test skips files that no longer exist."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         # Reference non-existent file
         missing = str(tmp_path / "missing-impl.md")
@@ -283,7 +283,7 @@ class TestFindPlanningDocs:
 
     def test_limits_to_three_docs(self, tmp_path):
         """Test limits result to 3 documents."""
-        from spellbook_mcp.resume import _find_planning_docs
+        from spellbook.sessions.resume import _find_planning_docs
 
         docs = []
         for i in range(5):
@@ -301,7 +301,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_has_section_0_header(self):
         """Test boot prompt starts with Section 0 header."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -317,7 +317,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_no_active_skill(self):
         """Test boot prompt handles no active skill."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -334,7 +334,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_with_active_skill(self):
         """Test boot prompt includes Skill() call when active."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -352,7 +352,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_with_skill_no_phase(self):
         """Test boot prompt handles skill without phase."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -370,7 +370,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_has_checkpoint_section(self):
         """Test boot prompt includes restoration checkpoint."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -388,7 +388,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_has_constraints_section(self):
         """Test boot prompt includes behavioral constraints."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -406,7 +406,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_with_todos(self):
         """Test boot prompt includes TodoWrite for pending todos."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
         import json
 
         todos = json.dumps([
@@ -431,7 +431,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_no_todos(self):
         """Test boot prompt handles no todos."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -447,7 +447,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_empty_todos(self):
         """Test boot prompt handles empty todos array."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -463,7 +463,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_with_planning_docs(self, tmp_path):
         """Test boot prompt includes Read() for planning docs."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         # Create actual planning doc
         impl_doc = tmp_path / "feature-impl.md"
@@ -484,7 +484,7 @@ class TestGenerateBootPrompt:
 
     def test_boot_prompt_no_planning_docs(self):
         """Test boot prompt handles no planning docs."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "id": "test-soul-1",
@@ -504,8 +504,8 @@ class TestGetResumeFields:
 
     def test_no_recent_session_returns_unavailable(self, tmp_path):
         """Test returns resume_available=False when no recent session."""
-        from spellbook_mcp.resume import get_resume_fields
-        from spellbook_mcp.db import init_db
+        from spellbook.sessions.resume import get_resume_fields
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
@@ -517,8 +517,8 @@ class TestGetResumeFields:
 
     def test_recent_session_returns_resume_fields(self, tmp_path):
         """Test returns resume fields when recent session exists."""
-        from spellbook_mcp.resume import get_resume_fields
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.sessions.resume import get_resume_fields
+        from spellbook.core.db import init_db, get_connection
         import json
         from datetime import datetime
 
@@ -552,8 +552,8 @@ class TestGetResumeFields:
 
     def test_old_session_not_returned(self, tmp_path):
         """Test sessions older than 24h are not returned."""
-        from spellbook_mcp.resume import get_resume_fields
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.sessions.resume import get_resume_fields
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime, timedelta
 
         db_path = tmp_path / "test.db"
@@ -574,8 +574,8 @@ class TestGetResumeFields:
 
     def test_corrupted_todos_sets_flag(self, tmp_path):
         """Test corrupted todos JSON sets resume_todos_corrupted flag."""
-        from spellbook_mcp.resume import get_resume_fields
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.sessions.resume import get_resume_fields
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = tmp_path / "test.db"
@@ -600,13 +600,13 @@ class TestSessionInitResume:
 
     def test_session_init_accepts_continuation_message(self, tmp_path, monkeypatch):
         """Test session_init accepts continuation_message parameter."""
-        from spellbook_mcp.db import init_db
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         # Should not raise
         result = session_init(session_id=None, continuation_message="continue")
@@ -616,13 +616,13 @@ class TestSessionInitResume:
 
     def test_session_init_resume_fields_present(self, tmp_path, monkeypatch):
         """Test session_init includes resume fields in response."""
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
         import json
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
 
         # Insert a recent soul
         conn = get_connection(str(db_path))
@@ -635,7 +635,7 @@ class TestSessionInitResume:
         # Mock getcwd to return matching project path
         monkeypatch.setattr("os.getcwd", lambda: "/tmp")
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         result = session_init(session_id=None, continuation_message="continue")
 
@@ -644,12 +644,12 @@ class TestSessionInitResume:
 
     def test_session_init_fresh_start_overrides(self, tmp_path, monkeypatch):
         """Test fresh start message overrides available resume."""
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
 
         # Insert a recent soul
         conn = get_connection(str(db_path))
@@ -661,7 +661,7 @@ class TestSessionInitResume:
 
         monkeypatch.setattr("os.getcwd", lambda: "/tmp")
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         result = session_init(session_id=None, continuation_message="start fresh")
 
@@ -706,14 +706,14 @@ class TestIntegrationEndToEnd:
 
     def test_full_flow_new_session_no_resume(self, tmp_path, monkeypatch):
         """Test full flow: new session with no prior session to resume."""
-        from spellbook_mcp.db import init_db
+        from spellbook.core.db import init_db
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         result = session_init(
             session_id="test-session-1",
@@ -727,13 +727,13 @@ class TestIntegrationEndToEnd:
 
     def test_full_flow_continue_prior_session(self, tmp_path, monkeypatch):
         """Test full flow: continue prior session with active skill."""
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
         import json
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
         # Create a planning doc
@@ -760,7 +760,7 @@ class TestIntegrationEndToEnd:
         ))
         conn.commit()
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         result = session_init(
             session_id="new-session",
@@ -784,12 +784,12 @@ class TestIntegrationEndToEnd:
 
     def test_full_flow_fresh_start_overrides(self, tmp_path, monkeypatch):
         """Test full flow: fresh start overrides even when prior session exists."""
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
-        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.core.db.get_db_path", lambda: db_path)
         monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
         # Insert a recent soul
@@ -800,7 +800,7 @@ class TestIntegrationEndToEnd:
         """, ("soul-1", "prior-session", str(tmp_path), datetime.now().isoformat(), "debugging"))
         conn.commit()
 
-        from spellbook_mcp.config_tools import session_init
+        from spellbook.core.config import session_init
 
         result = session_init(
             session_id="new-session",
@@ -816,7 +816,7 @@ class TestAllowedStateKeys:
 
     def test_new_keys_present(self):
         """Test that skill_constraints, decisions_binding, identity_role are in _ALLOWED_STATE_KEYS."""
-        from spellbook_mcp.resume import _ALLOWED_STATE_KEYS
+        from spellbook.sessions.resume import _ALLOWED_STATE_KEYS
 
         assert "skill_constraints" in _ALLOWED_STATE_KEYS
         assert "decisions_binding" in _ALLOWED_STATE_KEYS
@@ -824,7 +824,7 @@ class TestAllowedStateKeys:
 
     def test_original_keys_still_present(self):
         """Test that original keys are still present after expansion."""
-        from spellbook_mcp.resume import _ALLOWED_STATE_KEYS
+        from spellbook.sessions.resume import _ALLOWED_STATE_KEYS
 
         for key in ("active_skill", "skill_phase", "todos", "recent_files",
                      "workflow_pattern", "boot_prompt", "pending_todos"):
@@ -836,7 +836,7 @@ class TestExtractSectionContent:
 
     def test_extracts_matching_section(self):
         """Test extraction of content between matching XML tags."""
-        from spellbook_mcp.resume import _extract_section_content
+        from spellbook.sessions.resume import _extract_section_content
 
         content = "Preamble\n<FORBIDDEN>\n- Do not do X\n- Do not do Y\n</FORBIDDEN>\nPostamble"
         result = _extract_section_content(content, "FORBIDDEN")
@@ -847,7 +847,7 @@ class TestExtractSectionContent:
 
     def test_returns_none_for_no_match(self):
         """Test returns None when section tag is not present."""
-        from spellbook_mcp.resume import _extract_section_content
+        from spellbook.sessions.resume import _extract_section_content
 
         content = "Just some text with no tags."
         result = _extract_section_content(content, "FORBIDDEN")
@@ -856,7 +856,7 @@ class TestExtractSectionContent:
 
     def test_case_insensitive(self):
         """Test that tag matching is case-insensitive."""
-        from spellbook_mcp.resume import _extract_section_content
+        from spellbook.sessions.resume import _extract_section_content
 
         content = "<forbidden>\n- item\n</forbidden>"
         result = _extract_section_content(content, "FORBIDDEN")
@@ -866,7 +866,7 @@ class TestExtractSectionContent:
 
     def test_multiple_sections_concatenated(self):
         """Test that multiple matching sections are concatenated."""
-        from spellbook_mcp.resume import _extract_section_content
+        from spellbook.sessions.resume import _extract_section_content
 
         content = "<FORBIDDEN>\nFirst block\n</FORBIDDEN>\nMiddle\n<FORBIDDEN>\nSecond block\n</FORBIDDEN>"
         result = _extract_section_content(content, "FORBIDDEN")
@@ -881,7 +881,7 @@ class TestParseSectionItems:
 
     def test_strips_dash_bullets(self):
         """Test strips leading '- ' from items."""
-        from spellbook_mcp.resume import _parse_section_items
+        from spellbook.sessions.resume import _parse_section_items
 
         text = "- Item one\n- Item two"
         result = _parse_section_items(text)
@@ -890,7 +890,7 @@ class TestParseSectionItems:
 
     def test_strips_asterisk_bullets(self):
         """Test strips leading '* ' from items."""
-        from spellbook_mcp.resume import _parse_section_items
+        from spellbook.sessions.resume import _parse_section_items
 
         text = "* Alpha\n* Beta"
         result = _parse_section_items(text)
@@ -899,7 +899,7 @@ class TestParseSectionItems:
 
     def test_strips_numbered_bullets(self):
         """Test strips leading '1. ' style from items."""
-        from spellbook_mcp.resume import _parse_section_items
+        from spellbook.sessions.resume import _parse_section_items
 
         text = "1. First\n2. Second\n10. Tenth"
         result = _parse_section_items(text)
@@ -908,7 +908,7 @@ class TestParseSectionItems:
 
     def test_skips_empty_lines(self):
         """Test skips empty lines."""
-        from spellbook_mcp.resume import _parse_section_items
+        from spellbook.sessions.resume import _parse_section_items
 
         text = "- Item\n\n\n- Other"
         result = _parse_section_items(text)
@@ -917,7 +917,7 @@ class TestParseSectionItems:
 
     def test_filters_bold_subheaders(self):
         """Test filters out lines that are entirely bold sub-headers."""
-        from spellbook_mcp.resume import _parse_section_items
+        from spellbook.sessions.resume import _parse_section_items
 
         text = "**Phase 0 violations:**\n- Do not skip\n**More header:**\n- Also important"
         result = _parse_section_items(text)
@@ -932,7 +932,7 @@ class TestGetSkillConstraints:
 
     def test_real_skill_with_forbidden(self):
         """Test extracting FORBIDDEN constraints from debugging skill."""
-        from spellbook_mcp.resume import _get_skill_constraints
+        from spellbook.sessions.resume import _get_skill_constraints
 
         result = _get_skill_constraints("debugging")
 
@@ -943,7 +943,7 @@ class TestGetSkillConstraints:
 
     def test_nonexistent_skill_returns_empty(self):
         """Test non-existent skill returns empty lists."""
-        from spellbook_mcp.resume import _get_skill_constraints
+        from spellbook.sessions.resume import _get_skill_constraints
 
         result = _get_skill_constraints("this-skill-does-not-exist-xyz")
 
@@ -951,7 +951,7 @@ class TestGetSkillConstraints:
 
     def test_returns_dict_structure(self):
         """Test return value always has forbidden and required keys."""
-        from spellbook_mcp.resume import _get_skill_constraints
+        from spellbook.sessions.resume import _get_skill_constraints
 
         result = _get_skill_constraints("debugging")
 
@@ -969,7 +969,7 @@ class TestBootPromptSignature:
 
     def test_backward_compatible_no_new_params(self):
         """Calling with just soul dict works (backward compatible)."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "test-skill",
@@ -984,7 +984,7 @@ class TestBootPromptSignature:
 
     def test_accepts_skill_constraints_param(self):
         """Passing skill_constraints does not raise."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(
@@ -995,7 +995,7 @@ class TestBootPromptSignature:
 
     def test_accepts_binding_decisions_param(self):
         """Passing binding_decisions does not raise."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(
@@ -1006,7 +1006,7 @@ class TestBootPromptSignature:
 
     def test_accepts_identity_role_param(self):
         """Passing identity_role does not raise."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(
@@ -1021,7 +1021,7 @@ class TestGenerateBootPromptWithIdentityRole:
 
     def test_orchestrator_identity_always_present(self):
         """Section 0.6 Orchestrator Identity is always in the output."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul)
@@ -1031,7 +1031,7 @@ class TestGenerateBootPromptWithIdentityRole:
 
     def test_identity_role_used_when_provided(self):
         """Section 0.6 uses the provided identity_role string."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul, identity_role="Red Team Lead")
@@ -1042,7 +1042,7 @@ class TestGenerateBootPromptWithIdentityRole:
 
     def test_default_orchestrator_role_when_no_identity(self):
         """Section 0.6 defaults to ORCHESTRATOR when identity_role is None."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul, identity_role=None)
@@ -1054,7 +1054,7 @@ class TestGenerateBootPromptWithSkillConstraints:
 
     def test_skill_constraints_section(self):
         """Section 0.7 appears when skill_constraints is provided."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         constraints = {
@@ -1072,7 +1072,7 @@ class TestGenerateBootPromptWithSkillConstraints:
 
     def test_skill_constraints_absent_when_none(self):
         """Section 0.7 is absent when skill_constraints is None."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul, skill_constraints=None)
@@ -1080,7 +1080,7 @@ class TestGenerateBootPromptWithSkillConstraints:
 
     def test_skill_constraints_absent_when_empty(self):
         """Section 0.7 is absent when skill_constraints has empty lists."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(
@@ -1090,7 +1090,7 @@ class TestGenerateBootPromptWithSkillConstraints:
 
     def test_skill_constraints_caps_at_five_items(self):
         """Section 0.7 caps forbidden and required items at 5 each."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         constraints = {
@@ -1106,7 +1106,7 @@ class TestGenerateBootPromptWithSkillConstraints:
 
     def test_skill_constraints_truncates_long_items(self):
         """Items longer than 150 chars are truncated."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         long_item = "x" * 200
@@ -1125,7 +1125,7 @@ class TestGenerateBootPromptWithBindingDecisions:
 
     def test_binding_decisions_section(self):
         """Section 0.8 appears when binding_decisions is provided."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         decisions = ["Use SQLite WAL mode", "Schema v2 migration"]
@@ -1137,7 +1137,7 @@ class TestGenerateBootPromptWithBindingDecisions:
 
     def test_binding_decisions_absent_when_none(self):
         """Section 0.8 is absent when binding_decisions is None."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul, binding_decisions=None)
@@ -1145,7 +1145,7 @@ class TestGenerateBootPromptWithBindingDecisions:
 
     def test_binding_decisions_absent_when_empty(self):
         """Section 0.8 is absent when binding_decisions is empty list."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         result = generate_boot_prompt(soul, binding_decisions=[])
@@ -1153,7 +1153,7 @@ class TestGenerateBootPromptWithBindingDecisions:
 
     def test_binding_decisions_caps_at_five(self):
         """Section 0.8 caps decisions at 5."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill"}
         decisions = [f"Decision {i}" for i in range(10)]
@@ -1167,7 +1167,7 @@ class TestGenerateBootPromptAllNewSections:
 
     def test_all_new_sections_present(self):
         """Verify all three new sections appear together."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "develop",
@@ -1191,7 +1191,7 @@ class TestGenerateBootPromptAllNewSections:
 
     def test_section_ordering(self):
         """Sections appear in correct order: 0.5, 0.6, 0.7, 0.8."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {"active_skill": "test-skill", "workflow_pattern": "TDD"}
         constraints = {
@@ -1217,7 +1217,7 @@ class TestGenerateBootPromptNoNewSections:
 
     def test_no_new_sections_except_identity(self):
         """When no new params passed, only 0.6 (always-on) is present."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "test-skill",
@@ -1235,7 +1235,7 @@ class TestGenerateBootPromptNoNewSections:
 
     def test_existing_sections_unchanged(self):
         """Existing sections 0.1-0.5 still present with no new params."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "test-skill",
@@ -1255,7 +1255,7 @@ class TestBootPromptTokenBudget:
 
     def test_token_budget_under_limit_normal_input(self):
         """Output stays under 8000 chars with reasonable input."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "develop",
@@ -1277,7 +1277,7 @@ class TestBootPromptTokenBudget:
 
     def test_priority_trimming_removes_decisions_first(self):
         """When over budget, 0.8 (decisions) is trimmed before 0.7 (constraints)."""
-        from spellbook_mcp.resume import generate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt
 
         soul = {
             "active_skill": "test-skill",
@@ -1304,7 +1304,7 @@ class TestBootPromptValidation:
 
     def test_enriched_boot_prompt_passes_validation(self):
         """Enriched boot prompt passes _validate_boot_prompt()."""
-        from spellbook_mcp.resume import generate_boot_prompt, _validate_boot_prompt
+        from spellbook.sessions.resume import generate_boot_prompt, _validate_boot_prompt
 
         soul = {"active_skill": "test-skill", "skill_phase": "IMPLEMENT"}
         constraints = {
@@ -1341,7 +1341,7 @@ class TestBootPromptContextAwareValidation:
           ESCAPE: If the line matches a safe pattern. "some value" does not match any safe pattern.
           IMPACT: Attacker smuggles unrecognized content between legitimate lines
         """
-        from spellbook_mcp.resume import _validate_boot_prompt
+        from spellbook.sessions.resume import _validate_boot_prompt
 
         boot_prompt = 'Read("/path/to/file")\n"some json-like value"\nRead("/other/file")'
         findings = _validate_boot_prompt(boot_prompt)
@@ -1363,7 +1363,7 @@ class TestBootPromptContextAwareValidation:
                   Both would need to be removed for this to escape.
           IMPACT: Dangerous commands hidden inside JSON structures execute on resume
         """
-        from spellbook_mcp.resume import _validate_boot_prompt
+        from spellbook.sessions.resume import _validate_boot_prompt
 
         boot_prompt = (
             'TodoWrite([{\n'
@@ -1389,7 +1389,7 @@ class TestBootPromptContextAwareValidation:
                   Test content is carefully chosen to avoid that.
           IMPACT: Legitimate session resume breaks due to false positives
         """
-        from spellbook_mcp.resume import _validate_boot_prompt
+        from spellbook.sessions.resume import _validate_boot_prompt
 
         boot_prompt = (
             'Skill("develop", "--resume DESIGN")\n'
@@ -1413,7 +1413,7 @@ class TestBootPromptContextAwareValidation:
           ESCAPE: None -- if safe patterns are intact, this passes. That's the correct behavior.
           IMPACT: All session resumes would fail validation
         """
-        from spellbook_mcp.resume import _validate_boot_prompt
+        from spellbook.sessions.resume import _validate_boot_prompt
 
         boot_prompt = (
             'Skill("develop", "--resume PLANNING")\n'
@@ -1428,7 +1428,7 @@ class TestRemoveSection:
 
     def test_removes_target_section(self):
         """Removes the specified section and its content."""
-        from spellbook_mcp.resume import _remove_section
+        from spellbook.sessions.resume import _remove_section
 
         text = (
             "### 0.1 First\nContent 1\n"
@@ -1445,7 +1445,7 @@ class TestRemoveSection:
 
     def test_removes_last_section(self):
         """Removes the last section correctly (no following header)."""
-        from spellbook_mcp.resume import _remove_section
+        from spellbook.sessions.resume import _remove_section
 
         text = "### 0.1 First\nContent 1\n### 0.2 Last\nContent 2\nMore content"
         result = _remove_section(text, "### 0.2")
@@ -1455,7 +1455,7 @@ class TestRemoveSection:
 
     def test_noop_when_section_not_found(self):
         """Returns text unchanged when section not found."""
-        from spellbook_mcp.resume import _remove_section
+        from spellbook.sessions.resume import _remove_section
 
         text = "### 0.1 First\nContent 1"
         result = _remove_section(text, "### 0.9")
@@ -1467,7 +1467,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def _setup_db_with_soul(self, tmp_path, active_skill="develop"):
         """Helper to create a DB with a recent soul record."""
-        from spellbook_mcp.db import init_db, get_connection
+        from spellbook.core.db import init_db, get_connection
         from datetime import datetime
 
         db_path = tmp_path / "test.db"
@@ -1490,7 +1490,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_includes_skill_constraints_from_workflow_state(self, tmp_path):
         """Constraints from workflow_state are passed to boot prompt."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         db_path, conn = self._setup_db_with_soul(tmp_path)
 
@@ -1518,7 +1518,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_includes_binding_decisions_from_workflow_state(self, tmp_path):
         """Binding decisions from workflow_state appear in boot prompt."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         db_path, conn = self._setup_db_with_soul(tmp_path)
 
@@ -1540,7 +1540,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_includes_identity_role_from_workflow_state(self, tmp_path):
         """Identity role from workflow_state appears in boot prompt."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         db_path, conn = self._setup_db_with_soul(tmp_path)
 
@@ -1557,7 +1557,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_resume_fields_include_new_keys(self, tmp_path):
         """ResumeFields dict includes the new workflow state keys."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         db_path, conn = self._setup_db_with_soul(tmp_path)
 
@@ -1582,7 +1582,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_backward_compatible_no_workflow_state(self, tmp_path):
         """Existing behavior preserved when no workflow_state exists."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         # Use a nonexistent skill so the skill file fallback produces nothing
         db_path, conn = self._setup_db_with_soul(
@@ -1601,7 +1601,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_orchestrator_identity_always_in_boot_prompt(self, tmp_path):
         """Orchestrator identity (Section 0.6) is always present even without workflow state."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         db_path, conn = self._setup_db_with_soul(tmp_path)
 
@@ -1611,7 +1611,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_falls_back_to_skill_file_when_no_workflow_constraints(self, tmp_path, monkeypatch):
         """When workflow_state has no constraints, falls back to skill file."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         # Create a soul with an active skill
         db_path, conn = self._setup_db_with_soul(tmp_path, active_skill="test-skill")
@@ -1632,7 +1632,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
             "<REQUIRED>\n- Dispatch subagents\n</REQUIRED>\n"
         )
         monkeypatch.setattr(
-            "spellbook_mcp.resume._get_spellbook_dir",
+            "spellbook.sessions.resume._get_spellbook_dir",
             lambda: tmp_path,
         )
 
@@ -1644,7 +1644,7 @@ class TestGetResumeFieldsIncludesWorkflowState:
 
     def test_new_fields_none_when_no_workflow_state(self, tmp_path):
         """New resume fields are None when no workflow_state exists."""
-        from spellbook_mcp.resume import get_resume_fields
+        from spellbook.sessions.resume import get_resume_fields
 
         # Use a skill that doesn't have FORBIDDEN/REQUIRED sections
         db_path, conn = self._setup_db_with_soul(

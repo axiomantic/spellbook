@@ -1,7 +1,7 @@
 """Tests for pr_distill error types."""
 
 import pytest
-from spellbook_mcp.pr_distill.errors import ErrorCode, PRDistillError
+from spellbook.pr_distill.errors import ErrorCode, PRDistillError
 
 
 class TestErrorCode:

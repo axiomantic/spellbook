@@ -7,7 +7,7 @@ the highest phase reached based on assistant output patterns.
 import re
 from typing import Any, Dict, List, Optional
 
-from spellbook_mcp.extractors.types import SkillPhase
+from spellbook.extractors.types import SkillPhase
 
 # Phase patterns to detect in assistant messages
 # Order matters - later phases should have higher indices

@@ -14,8 +14,8 @@ import sqlite3
 
 import pytest
 
-from spellbook_mcp.db import close_all_connections, init_db
-from spellbook_mcp.health import DomainCheck, HealthStatus
+from spellbook.core.db import close_all_connections, init_db
+from spellbook.health.checker import DomainCheck, HealthStatus
 
 
 @pytest.fixture(autouse=True)
@@ -85,34 +85,34 @@ class TestHealthyState:
     """All tables exist, no CRITICAL events, canary registered + not triggered, rules loadable."""
 
     def test_returns_domain_check(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         result = check_security_domain(db_path=db_path)
         assert isinstance(result, DomainCheck)
 
     def test_domain_is_security(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
         assert result.domain == "security"
 
     def test_status_is_healthy(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
         assert result.status == HealthStatus.HEALTHY
 
     def test_message_indicates_healthy(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
         assert result.message  # non-empty message
 
     def test_latency_is_set(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
@@ -120,7 +120,7 @@ class TestHealthyState:
         assert result.latency_ms >= 0
 
     def test_details_present(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
@@ -136,14 +136,14 @@ class TestDegradedNoCanaries:
     """Tables exist, no CRITICAL events, but no canary tokens registered."""
 
     def test_status_is_degraded(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         # No canary tokens inserted
         result = check_security_domain(db_path=db_path)
         assert result.status == HealthStatus.DEGRADED
 
     def test_message_mentions_canary(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         result = check_security_domain(db_path=db_path)
         assert "canar" in result.message.lower()
@@ -158,7 +158,7 @@ class TestUnhealthyCriticalEvents:
     """Tables exist, CRITICAL event in last 24h."""
 
     def test_status_is_unhealthy(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         _insert_critical_event(db_path)
@@ -166,7 +166,7 @@ class TestUnhealthyCriticalEvents:
         assert result.status == HealthStatus.UNHEALTHY
 
     def test_message_mentions_critical(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         _insert_critical_event(db_path)
@@ -183,13 +183,13 @@ class TestUnavailableMissingTables:
     """DB exists but no security tables."""
 
     def test_status_is_unavailable(self, db_path_no_security_tables):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         result = check_security_domain(db_path=db_path_no_security_tables)
         assert result.status == HealthStatus.UNAVAILABLE
 
     def test_message_mentions_tables(self, db_path_no_security_tables):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         result = check_security_domain(db_path=db_path_no_security_tables)
         assert "table" in result.message.lower()
@@ -204,7 +204,7 @@ class TestSecurityVersion:
     """Verify security_version field present in check details."""
 
     def test_version_in_details(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
@@ -213,14 +213,14 @@ class TestSecurityVersion:
         assert result.details["security_version"] == "1.0"
 
     def test_version_present_when_degraded(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         result = check_security_domain(db_path=db_path)
         assert result.details is not None
         assert "security_version" in result.details
 
     def test_version_present_when_unhealthy(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         _insert_critical_event(db_path)
@@ -238,7 +238,7 @@ class TestRulesLoadable:
     """Verify rules import check works."""
 
     def test_rules_loadable_in_healthy(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
@@ -246,7 +246,7 @@ class TestRulesLoadable:
         assert result.details.get("rules_loadable") is True
 
     def test_rules_count_positive(self, db_path):
-        from spellbook_mcp.health import check_security_domain
+        from spellbook.health.checker import check_security_domain
 
         _insert_canary(db_path)
         result = check_security_domain(db_path=db_path)
@@ -263,12 +263,12 @@ class TestRegistration:
     """Security domain is registered in the health check infrastructure."""
 
     def test_security_in_full_domains(self):
-        from spellbook_mcp.health import FULL_DOMAINS
+        from spellbook.health.checker import FULL_DOMAINS
 
         assert "security" in FULL_DOMAINS
 
     def test_security_included_in_full_health_check(self, db_path, tmp_path):
-        from spellbook_mcp.health import run_health_check
+        from spellbook.health.checker import run_health_check
 
         # Create required directories for filesystem check
         config_dir = str(tmp_path / "config")
@@ -292,7 +292,7 @@ class TestRegistration:
         assert "security" in result.domains
 
     def test_security_not_in_quick_mode(self, db_path, tmp_path):
-        from spellbook_mcp.health import run_health_check
+        from spellbook.health.checker import run_health_check
 
         config_dir = str(tmp_path / "config")
         data_dir = str(tmp_path / "data")

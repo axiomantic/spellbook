@@ -1,9 +1,9 @@
 """MCP tools for update checking."""
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.config_tools import get_spellbook_dir
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.update_tools import (
+from spellbook.core.config import get_spellbook_dir
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.updates.tools import (
     apply_update as do_apply_update,
     check_for_updates as do_check_for_updates,
     get_update_status as do_get_update_status,

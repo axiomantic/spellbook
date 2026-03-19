@@ -7,8 +7,8 @@ appropriate persona string.
 import re
 from typing import Any, Dict, List
 
-from spellbook_mcp.extractors.message_utils import get_content
-from spellbook_mcp.extractors.types import Persona
+from spellbook.extractors.message_utils import get_content
+from spellbook.extractors.types import Persona
 
 
 def extract_persona(messages: List[Dict[str, Any]]) -> Persona:

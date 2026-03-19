@@ -9,7 +9,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-from spellbook_mcp.fractal.models import SCHEMA_VERSION
+from spellbook.fractal.models import SCHEMA_VERSION
 
 
 def get_fractal_db_path() -> Path:

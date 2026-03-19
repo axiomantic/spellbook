@@ -1,16 +1,16 @@
 """MCP tools for PR distillation."""
 
 from spellbook.mcp.server import mcp
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.pr_distill.bless import (
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.pr_distill.bless import (
     bless_pattern as do_bless_pattern,
     list_blessed_patterns,
 )
-from spellbook_mcp.pr_distill.config import load_config as load_pr_config
-from spellbook_mcp.pr_distill.fetch import fetch_pr as do_fetch_pr, parse_pr_identifier
-from spellbook_mcp.pr_distill.matcher import match_patterns
-from spellbook_mcp.pr_distill.parse import parse_diff
-from spellbook_mcp.pr_distill.patterns import BUILTIN_PATTERNS
+from spellbook.pr_distill.config import load_config as load_pr_config
+from spellbook.pr_distill.fetch import fetch_pr as do_fetch_pr, parse_pr_identifier
+from spellbook.pr_distill.matcher import match_patterns
+from spellbook.pr_distill.parse import parse_diff
+from spellbook.pr_distill.patterns import BUILTIN_PATTERNS
 
 
 @mcp.tool()

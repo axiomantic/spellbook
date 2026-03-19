@@ -30,7 +30,7 @@ class TestDryRun:
     def test_dry_run_does_not_modify_file(self, tmp_path):
         """Dry-run should report what would change but not modify files."""
         test_file = tmp_path / "example.py"
-        original = "from spellbook_mcp.db import get_db\n"
+        original = "from spellbook.core.db import get_db\n"
         test_file.write_text(original)
 
         mod = _load_migrate_module()
@@ -42,7 +42,7 @@ class TestDryRun:
     def test_dry_run_cli_flag(self, tmp_path):
         """Test that --dry-run works as a CLI flag."""
         test_file = tmp_path / "example.py"
-        original = "from spellbook_mcp.db import get_db\n"
+        original = "from spellbook.core.db import get_db\n"
         test_file.write_text(original)
 
         result = subprocess.run(
@@ -58,9 +58,9 @@ class TestPythonImportRewriting:
     """Test rewriting of Python import statements."""
 
     def test_from_import(self, tmp_path):
-        """Rewrite 'from spellbook_mcp.db import X'."""
+        """Rewrite 'from spellbook.core.db import X'."""
         test_file = tmp_path / "example.py"
-        test_file.write_text("from spellbook_mcp.db import get_db\n")
+        test_file.write_text("from spellbook.core.db import get_db\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -68,9 +68,9 @@ class TestPythonImportRewriting:
         assert test_file.read_text() == "from spellbook.core.db import get_db\n"
 
     def test_import_statement(self, tmp_path):
-        """Rewrite 'import spellbook_mcp.db'."""
+        """Rewrite 'import spellbook.core.db'."""
         test_file = tmp_path / "example.py"
-        test_file.write_text("import spellbook_mcp.db\n")
+        test_file.write_text("import spellbook.core.db\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -78,9 +78,9 @@ class TestPythonImportRewriting:
         assert test_file.read_text() == "import spellbook.core.db\n"
 
     def test_subpackage_import(self, tmp_path):
-        """Rewrite subpackage imports like spellbook_mcp.security.check."""
+        """Rewrite subpackage imports like spellbook.security.check."""
         test_file = tmp_path / "example.py"
-        test_file.write_text("from spellbook_mcp.security.check import scan\n")
+        test_file.write_text("from spellbook.security.check import scan\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -92,9 +92,9 @@ class TestPythonImportRewriting:
         test_file = tmp_path / "example.py"
         test_file.write_text(
             textwrap.dedent("""\
-            from spellbook_mcp.db import get_db
-            from spellbook_mcp.memory_tools import store
-            import spellbook_mcp.server
+            from spellbook.core.db import get_db
+            from spellbook.memory.tools import store
+            import spellbook.mcp.server
             """)
         )
 
@@ -109,9 +109,9 @@ class TestPythonImportRewriting:
         assert test_file.read_text() == expected
 
     def test_fallback_for_unmapped_module(self, tmp_path):
-        """Unmapped modules should get spellbook_mcp -> spellbook fallback."""
+        """Unmapped modules should get spellbook -> spellbook fallback."""
         test_file = tmp_path / "example.py"
-        test_file.write_text("from spellbook_mcp.unknown_thing import foo\n")
+        test_file.write_text("from spellbook.unknown_thing import foo\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -119,7 +119,7 @@ class TestPythonImportRewriting:
         assert test_file.read_text() == "from spellbook.unknown_thing import foo\n"
 
     def test_no_false_positive_on_spellbook_mcp_substring(self, tmp_path):
-        """Should not replace 'spellbook_mcp' when it's part of a larger word."""
+        """Should not replace 'spellbook' when it's part of a larger word."""
         test_file = tmp_path / "example.py"
         test_file.write_text('name = "my_spellbook_mcp_thing"\n')
 
@@ -134,11 +134,11 @@ class TestMockPatchRewriting:
     """Test rewriting of mock.patch target strings."""
 
     def test_patch_decorator_string(self, tmp_path):
-        """Rewrite mock.patch('spellbook_mcp.db.get_db')."""
+        """Rewrite mock.patch('spellbook.core.db.get_db')."""
         test_file = tmp_path / "test_example.py"
         test_file.write_text(
             textwrap.dedent("""\
-            @mock.patch("spellbook_mcp.db.get_db")
+            @mock.patch("spellbook.core.db.get_db")
             def test_something(mock_db):
                 pass
             """)
@@ -157,7 +157,7 @@ class TestMockPatchRewriting:
     def test_patch_with_single_quotes(self, tmp_path):
         """Rewrite mock.patch with single-quoted strings."""
         test_file = tmp_path / "test_example.py"
-        test_file.write_text("    mock.patch('spellbook_mcp.memory_store.MemoryStore')\n")
+        test_file.write_text("    mock.patch('spellbook.memory.store.MemoryStore')\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -168,7 +168,7 @@ class TestMockPatchRewriting:
         """Rewrite patch target in mock.patch.object context."""
         test_file = tmp_path / "test_example.py"
         test_file.write_text(
-            '    with mock.patch("spellbook_mcp.config_tools.get_config") as m:\n'
+            '    with mock.patch("spellbook.core.config.get_config") as m:\n'
         )
 
         mod = _load_migrate_module()
@@ -183,7 +183,7 @@ class TestMarkdownFiles:
     """Test handling of markdown files."""
 
     def test_markdown_code_block(self, tmp_path):
-        """Rewrite spellbook_mcp references in markdown."""
+        """Rewrite spellbook references in markdown."""
         test_file = tmp_path / "doc.md"
         test_file.write_text(
             textwrap.dedent("""\
@@ -191,10 +191,10 @@ class TestMarkdownFiles:
 
             Old import:
             ```python
-            from spellbook_mcp.db import get_db
+            from spellbook.core.db import get_db
             ```
 
-            The `spellbook_mcp.server` module has moved.
+            The `spellbook.mcp.server` module has moved.
             """)
         )
 
@@ -204,12 +204,12 @@ class TestMarkdownFiles:
         content = test_file.read_text()
         assert "spellbook.core.db" in content
         assert "spellbook.mcp.server" in content
-        assert "spellbook_mcp" not in content
+        assert "spellbook" not in content
 
     def test_markdown_inline_reference(self, tmp_path):
-        """Rewrite inline spellbook_mcp references in markdown."""
+        """Rewrite inline spellbook references in markdown."""
         test_file = tmp_path / "readme.md"
-        test_file.write_text("See `spellbook_mcp.health` for health checks.\n")
+        test_file.write_text("See `spellbook.health.checker` for health checks.\n")
 
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
@@ -224,14 +224,14 @@ class TestRewriteLine:
         """Longer module paths should be matched before shorter prefixes."""
         mod = _load_migrate_module()
 
-        # spellbook_mcp.security.check should match security subpackage,
+        # spellbook.security.check should match security subpackage,
         # not some shorter prefix
-        line = "from spellbook_mcp.security.check import scan"
+        line = "from spellbook.security.check import scan"
         result = mod.rewrite_line(line)
         assert result == "from spellbook.security.check import scan"
 
     def test_no_change_returns_original(self):
-        """Lines without spellbook_mcp should be returned unchanged."""
+        """Lines without spellbook should be returned unchanged."""
         mod = _load_migrate_module()
         line = "import os\n"
         assert mod.rewrite_line(line) == line
@@ -239,6 +239,6 @@ class TestRewriteLine:
     def test_preserves_indentation(self):
         """Indented lines should keep their indentation."""
         mod = _load_migrate_module()
-        line = "    from spellbook_mcp.db import get_db\n"
+        line = "    from spellbook.core.db import get_db\n"
         result = mod.rewrite_line(line)
         assert result == "    from spellbook.core.db import get_db\n"

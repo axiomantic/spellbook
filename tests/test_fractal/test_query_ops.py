@@ -15,7 +15,7 @@ def graph_with_root(fractal_db):
 
     Returns a dict with graph_id, root_node_id, and db_path.
     """
-    from spellbook_mcp.fractal.graph_ops import create_graph
+    from spellbook.fractal.graph_ops import create_graph
 
     result = create_graph(
         seed="Why is the sky blue?",
@@ -46,7 +46,7 @@ def branching_graph(graph_with_root):
 
     Returns dict with all node IDs and db_path.
     """
-    from spellbook_mcp.fractal.node_ops import add_node
+    from spellbook.fractal.node_ops import add_node
 
     gid = graph_with_root["graph_id"]
     root = graph_with_root["root_node_id"]
@@ -95,7 +95,7 @@ class TestGetSnapshot:
 
     def test_snapshot_returns_graph_metadata(self, graph_with_root):
         """get_snapshot must return graph-level fields: graph_id, seed, intensity, status."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=graph_with_root["graph_id"],
@@ -109,7 +109,7 @@ class TestGetSnapshot:
 
     def test_snapshot_includes_nodes(self, graph_with_root):
         """get_snapshot must include nodes list with root node."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=graph_with_root["graph_id"],
@@ -125,7 +125,7 @@ class TestGetSnapshot:
 
     def test_snapshot_node_shape(self, graph_with_root):
         """Each node in snapshot must have required fields."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=graph_with_root["graph_id"],
@@ -145,7 +145,7 @@ class TestGetSnapshot:
 
     def test_snapshot_metadata_parsed_as_dict(self, graph_with_root):
         """Node metadata must be parsed from JSON into a dict, not raw JSON string."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=graph_with_root["graph_id"],
@@ -157,7 +157,7 @@ class TestGetSnapshot:
 
     def test_snapshot_includes_edges(self, branching_graph):
         """get_snapshot must include edges list."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=branching_graph["graph_id"],
@@ -172,7 +172,7 @@ class TestGetSnapshot:
 
     def test_snapshot_edge_shape(self, branching_graph):
         """Each edge in snapshot must have required fields."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=branching_graph["graph_id"],
@@ -187,7 +187,7 @@ class TestGetSnapshot:
 
     def test_snapshot_edge_metadata_parsed_as_dict(self, branching_graph):
         """Edge metadata must be parsed from JSON into a dict."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=branching_graph["graph_id"],
@@ -199,7 +199,7 @@ class TestGetSnapshot:
 
     def test_snapshot_includes_graph_metadata(self, graph_with_root):
         """get_snapshot must include graph-level metadata parsed as dict."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=graph_with_root["graph_id"],
@@ -212,7 +212,7 @@ class TestGetSnapshot:
 
     def test_snapshot_all_nodes_included(self, branching_graph):
         """get_snapshot must include all nodes in the graph."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id=branching_graph["graph_id"],
@@ -224,7 +224,7 @@ class TestGetSnapshot:
 
     def test_snapshot_graph_not_found(self, fractal_db):
         """get_snapshot with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import get_snapshot
+        from spellbook.fractal.query_ops import get_snapshot
 
         result = get_snapshot(
             graph_id="nonexistent-graph-id",
@@ -239,7 +239,7 @@ class TestGetBranch:
 
     def test_branch_returns_subtree_nodes(self, branching_graph):
         """get_branch must return only nodes in the subtree rooted at node_id."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -253,7 +253,7 @@ class TestGetBranch:
 
     def test_branch_excludes_sibling_branches(self, branching_graph):
         """get_branch must NOT include nodes from sibling branches."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -269,7 +269,7 @@ class TestGetBranch:
 
     def test_branch_includes_root_of_subtree(self, branching_graph):
         """get_branch must include the specified node_id as root of the subtree."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -282,7 +282,7 @@ class TestGetBranch:
 
     def test_branch_includes_subtree_edges(self, branching_graph):
         """get_branch must include edges within the subtree."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -296,7 +296,7 @@ class TestGetBranch:
 
     def test_branch_excludes_edges_outside_subtree(self, branching_graph):
         """get_branch must NOT include edges from outside the subtree."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -311,7 +311,7 @@ class TestGetBranch:
 
     def test_branch_leaf_node_returns_single_node(self, branching_graph):
         """get_branch on a leaf node must return just that node and no edges."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -325,7 +325,7 @@ class TestGetBranch:
 
     def test_branch_from_root_returns_full_graph(self, branching_graph):
         """get_branch from root must return all nodes."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=branching_graph["graph_id"],
@@ -337,7 +337,7 @@ class TestGetBranch:
 
     def test_branch_graph_not_found(self, fractal_db):
         """get_branch with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id="nonexistent-graph-id",
@@ -349,7 +349,7 @@ class TestGetBranch:
 
     def test_branch_node_not_found(self, graph_with_root):
         """get_branch with nonexistent node_id must return error."""
-        from spellbook_mcp.fractal.query_ops import get_branch
+        from spellbook.fractal.query_ops import get_branch
 
         result = get_branch(
             graph_id=graph_with_root["graph_id"],
@@ -365,7 +365,7 @@ class TestGetOpenQuestions:
 
     def test_returns_open_questions_only(self, branching_graph):
         """get_open_questions must return only question nodes with status=open."""
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.query_ops import get_open_questions
 
         result = get_open_questions(
             graph_id=branching_graph["graph_id"],
@@ -381,8 +381,8 @@ class TestGetOpenQuestions:
 
     def test_excludes_answered_questions(self, branching_graph):
         """get_open_questions must exclude questions with status=answered."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.query_ops import get_open_questions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -402,8 +402,8 @@ class TestGetOpenQuestions:
 
     def test_excludes_saturated_questions(self, branching_graph):
         """get_open_questions must exclude questions with status=saturated."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.node_ops import mark_saturated
+        from spellbook.fractal.query_ops import get_open_questions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -421,7 +421,7 @@ class TestGetOpenQuestions:
 
     def test_excludes_answer_nodes(self, branching_graph):
         """get_open_questions must exclude answer-type nodes even if status=open."""
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.query_ops import get_open_questions
 
         result = get_open_questions(
             graph_id=branching_graph["graph_id"],
@@ -434,7 +434,7 @@ class TestGetOpenQuestions:
 
     def test_count_matches_list_length(self, branching_graph):
         """get_open_questions count must match the length of open_questions list."""
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.query_ops import get_open_questions
 
         result = get_open_questions(
             graph_id=branching_graph["graph_id"],
@@ -445,7 +445,7 @@ class TestGetOpenQuestions:
 
     def test_returns_graph_id(self, branching_graph):
         """get_open_questions must include graph_id in result."""
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.query_ops import get_open_questions
 
         result = get_open_questions(
             graph_id=branching_graph["graph_id"],
@@ -456,7 +456,7 @@ class TestGetOpenQuestions:
 
     def test_graph_not_found(self, fractal_db):
         """get_open_questions with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import get_open_questions
+        from spellbook.fractal.query_ops import get_open_questions
 
         result = get_open_questions(
             graph_id="nonexistent-graph-id",
@@ -471,8 +471,8 @@ class TestQueryConvergence:
 
     def test_finds_convergence_edges(self, branching_graph):
         """query_convergence must find edges with edge_type=convergence."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_convergence
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -494,8 +494,8 @@ class TestQueryConvergence:
 
     def test_convergence_includes_insight(self, branching_graph):
         """query_convergence must extract convergence_insight from node metadata."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_convergence
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -517,8 +517,8 @@ class TestQueryConvergence:
 
     def test_convergence_includes_node_ids(self, branching_graph):
         """query_convergence convergence_points must include the connected node IDs."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_convergence
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -545,7 +545,7 @@ class TestQueryConvergence:
 
     def test_no_convergence_returns_empty(self, graph_with_root):
         """query_convergence with no convergence edges must return empty list."""
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.query_ops import query_convergence
 
         result = query_convergence(
             graph_id=graph_with_root["graph_id"],
@@ -557,7 +557,7 @@ class TestQueryConvergence:
 
     def test_convergence_returns_graph_id(self, graph_with_root):
         """query_convergence must include graph_id in result."""
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.query_ops import query_convergence
 
         result = query_convergence(
             graph_id=graph_with_root["graph_id"],
@@ -568,8 +568,8 @@ class TestQueryConvergence:
 
     def test_convergence_count_matches(self, branching_graph):
         """query_convergence count must match the number of convergence_points."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_convergence
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -589,7 +589,7 @@ class TestQueryConvergence:
 
     def test_convergence_graph_not_found(self, fractal_db):
         """query_convergence with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import query_convergence
+        from spellbook.fractal.query_ops import query_convergence
 
         result = query_convergence(
             graph_id="nonexistent-graph-id",
@@ -604,8 +604,8 @@ class TestQueryContradictions:
 
     def test_finds_contradiction_edges(self, branching_graph):
         """query_contradictions must find edges with edge_type=contradiction."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_contradictions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -627,8 +627,8 @@ class TestQueryContradictions:
 
     def test_contradiction_includes_tension(self, branching_graph):
         """query_contradictions must extract contradiction_tension from node metadata."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_contradictions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -649,8 +649,8 @@ class TestQueryContradictions:
 
     def test_contradiction_includes_node_ids(self, branching_graph):
         """query_contradictions must include the connected node IDs."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_contradictions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -676,7 +676,7 @@ class TestQueryContradictions:
 
     def test_no_contradictions_returns_empty(self, graph_with_root):
         """query_contradictions with no contradiction edges must return empty list."""
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.query_ops import query_contradictions
 
         result = query_contradictions(
             graph_id=graph_with_root["graph_id"],
@@ -688,8 +688,8 @@ class TestQueryContradictions:
 
     def test_contradiction_count_matches(self, branching_graph):
         """query_contradictions count must match the number of contradictions."""
-        from spellbook_mcp.fractal.node_ops import update_node
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.node_ops import update_node
+        from spellbook.fractal.query_ops import query_contradictions
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -709,7 +709,7 @@ class TestQueryContradictions:
 
     def test_contradiction_graph_not_found(self, fractal_db):
         """query_contradictions with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import query_contradictions
+        from spellbook.fractal.query_ops import query_contradictions
 
         result = query_contradictions(
             graph_id="nonexistent-graph-id",
@@ -724,7 +724,7 @@ class TestGetSaturationStatus:
 
     def test_returns_branch_list(self, branching_graph):
         """get_saturation_status must return a list of top-level branches (depth=1)."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -737,7 +737,7 @@ class TestGetSaturationStatus:
 
     def test_branch_shape(self, branching_graph):
         """Each branch in saturation status must have required fields."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -753,7 +753,7 @@ class TestGetSaturationStatus:
 
     def test_unsaturated_branch_reports_false(self, branching_graph):
         """Unsaturated branch must have saturated=False."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -766,8 +766,8 @@ class TestGetSaturationStatus:
 
     def test_saturated_branch_reports_true(self, branching_graph):
         """Saturated branch must have saturated=True and saturation_reason set."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.node_ops import mark_saturated
+        from spellbook.fractal.query_ops import get_saturation_status
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -786,8 +786,8 @@ class TestGetSaturationStatus:
 
     def test_mixed_saturation(self, branching_graph):
         """get_saturation_status with mixed saturated/unsaturated branches must report correctly."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.node_ops import mark_saturated
+        from spellbook.fractal.query_ops import get_saturation_status
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -809,8 +809,8 @@ class TestGetSaturationStatus:
 
     def test_all_saturated_flag_true(self, branching_graph):
         """all_saturated must be True when all branches are saturated."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.node_ops import mark_saturated
+        from spellbook.fractal.query_ops import get_saturation_status
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -825,7 +825,7 @@ class TestGetSaturationStatus:
 
     def test_all_saturated_flag_false_when_none_saturated(self, branching_graph):
         """all_saturated must be False when no branches are saturated."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -836,7 +836,7 @@ class TestGetSaturationStatus:
 
     def test_open_questions_count_in_subtree(self, branching_graph):
         """Each branch must report the count of open questions in its subtree."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -862,7 +862,7 @@ class TestGetSaturationStatus:
 
     def test_returns_graph_id(self, branching_graph):
         """get_saturation_status must include graph_id in result."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id=branching_graph["graph_id"],
@@ -873,7 +873,7 @@ class TestGetSaturationStatus:
 
     def test_graph_not_found(self, fractal_db):
         """get_saturation_status with nonexistent graph_id must return error."""
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         result = get_saturation_status(
             graph_id="nonexistent-graph-id",
@@ -888,7 +888,7 @@ class TestGetClaimableWork:
 
     def test_claimable_returns_open_questions(self, branching_graph):
         """get_claimable_work must return open question nodes."""
-        from spellbook_mcp.fractal.query_ops import get_claimable_work
+        from spellbook.fractal.query_ops import get_claimable_work
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -905,8 +905,8 @@ class TestGetClaimableWork:
 
     def test_claimable_excludes_claimed(self, branching_graph):
         """get_claimable_work must exclude claimed question nodes."""
-        from spellbook_mcp.fractal.node_ops import claim_work
-        from spellbook_mcp.fractal.query_ops import get_claimable_work
+        from spellbook.fractal.node_ops import claim_work
+        from spellbook.fractal.query_ops import get_claimable_work
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -922,8 +922,8 @@ class TestGetClaimableWork:
 
     def test_claimable_affinity_ordering(self, branching_graph):
         """get_claimable_work with worker_id must return sibling nodes first."""
-        from spellbook_mcp.fractal.node_ops import add_node, claim_work
-        from spellbook_mcp.fractal.query_ops import get_claimable_work
+        from spellbook.fractal.node_ops import add_node, claim_work
+        from spellbook.fractal.query_ops import get_claimable_work
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -935,7 +935,7 @@ class TestGetClaimableWork:
         claimed = claim_work(graph_id=gid, worker_id="worker-1", db_path=db)
 
         # Add another open question sibling to the claimed node's parent
-        from spellbook_mcp.fractal.schema import get_fractal_connection
+        from spellbook.fractal.schema import get_fractal_connection
         conn = get_fractal_connection(db)
         cursor = conn.cursor()
         cursor.execute(
@@ -958,8 +958,8 @@ class TestGetClaimableWork:
 
     def test_claimable_empty(self, graph_with_root):
         """get_claimable_work with no open questions returns empty list."""
-        from spellbook_mcp.fractal.node_ops import mark_saturated
-        from spellbook_mcp.fractal.query_ops import get_claimable_work
+        from spellbook.fractal.node_ops import mark_saturated
+        from spellbook.fractal.query_ops import get_claimable_work
 
         gid = graph_with_root["graph_id"]
         db = graph_with_root["db_path"]
@@ -981,12 +981,12 @@ class TestGetReadyToSynthesize:
 
     def test_ready_basic(self, branching_graph):
         """Node with all children synthesized/saturated is returned."""
-        from spellbook_mcp.fractal.node_ops import (
+        from spellbook.fractal.node_ops import (
             add_node,
             mark_saturated,
             synthesize_node,
         )
-        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+        from spellbook.fractal.query_ops import get_ready_to_synthesize
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -1006,7 +1006,7 @@ class TestGetReadyToSynthesize:
 
     def test_ready_excludes_incomplete(self, branching_graph):
         """Node with open children is NOT returned."""
-        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+        from spellbook.fractal.query_ops import get_ready_to_synthesize
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -1019,8 +1019,8 @@ class TestGetReadyToSynthesize:
 
     def test_ready_excludes_leaves(self, branching_graph):
         """Answered leaf nodes (no question children) are NOT returned."""
-        from spellbook_mcp.fractal.node_ops import add_node
-        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+        from spellbook.fractal.node_ops import add_node
+        from spellbook.fractal.query_ops import get_ready_to_synthesize
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -1039,11 +1039,11 @@ class TestGetReadyToSynthesize:
 
     def test_ready_depth_ordering(self, branching_graph):
         """Deeper nodes are returned before shallower nodes."""
-        from spellbook_mcp.fractal.node_ops import (
+        from spellbook.fractal.node_ops import (
             add_node,
             mark_saturated,
         )
-        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+        from spellbook.fractal.query_ops import get_ready_to_synthesize
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]
@@ -1102,7 +1102,7 @@ class TestGetReadyToSynthesize:
 
     def test_ready_empty(self, graph_with_root):
         """No ready nodes returns empty list."""
-        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+        from spellbook.fractal.query_ops import get_ready_to_synthesize
 
         gid = graph_with_root["graph_id"]
         db = graph_with_root["db_path"]
@@ -1119,11 +1119,11 @@ class TestSaturationStatusWithSynthesized:
 
     def test_synthesized_branch_counts_as_complete(self, branching_graph):
         """Branch with status 'synthesized' has saturated=True in result."""
-        from spellbook_mcp.fractal.node_ops import (
+        from spellbook.fractal.node_ops import (
             mark_saturated,
             synthesize_node,
         )
-        from spellbook_mcp.fractal.query_ops import get_saturation_status
+        from spellbook.fractal.query_ops import get_saturation_status
 
         gid = branching_graph["graph_id"]
         db = branching_graph["db_path"]

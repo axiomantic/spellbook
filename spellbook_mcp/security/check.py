@@ -11,7 +11,7 @@ Functions:
     main: CLI entry point reading JSON from stdin.
 
 Usage as CLI (Claude Code hook protocol):
-    echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | python -m spellbook_mcp.security.check
+    echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | python -m spellbook.security.check
     # Exit code 0 = safe, exit code 2 = blocked
 
 Flags:
@@ -28,7 +28,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Optional
 
-from spellbook_mcp.security.rules import (
+from spellbook.security.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
     EXFILTRATION_PATTERNS,
@@ -193,7 +193,7 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
         Falls back to "standard" if the DB is unavailable.
     """
     if db_path is None:
-        from spellbook_mcp.db import get_db_path
+        from spellbook.core.db import get_db_path
 
         db_path = str(get_db_path())
 
@@ -258,11 +258,11 @@ def log_audit_event(
     if db_path is None:
         db_path = os.environ.get("SPELLBOOK_DB_PATH")
     if db_path is None:
-        from spellbook_mcp.db import get_db_path
+        from spellbook.core.db import get_db_path
 
         db_path = str(get_db_path())
 
-    from spellbook_mcp.db import init_db
+    from spellbook.core.db import init_db
 
     init_db(db_path)
 
@@ -359,7 +359,7 @@ def main() -> None:
             output_content = data.get("tool_output", "")
 
             if output_content:
-                from spellbook_mcp.security.tools import do_canary_check
+                from spellbook.security.tools import do_canary_check
 
                 db_path = os.environ.get("SPELLBOOK_DB_PATH")
                 result = do_canary_check(output_content, db_path=db_path)

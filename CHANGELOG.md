@@ -202,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.20.0] - 2026-03-05
 
 ### Added
-- **System notification support** (`spellbook_mcp/notify.py`) - Native OS notifications as a visual/accessibility alternative to TTS. Fires macOS Notification Center, Linux `notify-send`, or Windows PowerShell toast when tools exceed a configurable threshold (default 30s). Platform detection handles containers, SSH/headless sessions, and Wayland desktops.
+- **System notification support** (`spellbook/notify.py`) - Native OS notifications as a visual/accessibility alternative to TTS. Fires macOS Notification Center, Linux `notify-send`, or Windows PowerShell toast when tools exceed a configurable threshold (default 30s). Platform detection handles containers, SSH/headless sessions, and Wayland desktops.
 - **Notification MCP tools** - `notify_send`, `notify_status`, `notify_session_set`, `notify_config_set` for manual notifications, availability checking, and per-session or persistent configuration.
 - **PostToolUse notification hooks** (`hooks/notify-on-complete.{sh,py}`) - Separate hooks that call platform notification tools directly (no HTTP round-trip, unlike TTS). Independent lifecycle, threshold, and blacklist from TTS hooks.
 - **Dual PreToolUse timer files** - `tts-timer-start` hooks now write both `/tmp/claude-tool-start-{id}` (TTS) and `/tmp/claude-notify-start-{id}` (notifications), eliminating race conditions between async hooks.
@@ -212,7 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.19.0] - 2026-03-04
 
 ### Added
-- **Crystallized v2 outputs** - All skills, commands, patterns, agents, and root documents (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.codex/spellbook-bootstrap.md`, `spellbook_mcp/coordination/WORKER_CONTRACT.md`) crystallized to v2 format. Each output verified by adversarial gap analysis before acceptance. FAIL verdicts (CRITICAL or HIGH findings) trigger source-level fixes before the crystallized output is accepted.
+- **Crystallized v2 outputs** - All skills, commands, patterns, agents, and root documents (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.codex/spellbook-bootstrap.md`, `spellbook/coordination/WORKER_CONTRACT.md`) crystallized to v2 format. Each output verified by adversarial gap analysis before acceptance. FAIL verdicts (CRITICAL or HIGH findings) trigger source-level fixes before the crystallized output is accepted.
 - **`skills/reviewing-prs`** - New skill: safe PR review protocol that detects whether the reviewing agent is working in the PR branch (`LOCAL_FILES` mode) or needs a diff-only context block (`DIFF_ONLY` mode), with mandatory injection template for subagent dispatch.
 
 ### Changed
@@ -272,7 +272,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.15.2] - 2026-03-01
 
 ### Fixed
-- **TTS plays to stale audio device** - Changing the system default output device after the MCP daemon started had no effect; playback always targeted the device that was default at startup. PortAudio now re-initializes before each playback to pick up the current system default (`spellbook_mcp/tts.py`)
+- **TTS plays to stale audio device** - Changing the system default output device after the MCP daemon started had no effect; playback always targeted the device that was default at startup. PortAudio now re-initializes before each playback to pick up the current system default (`spellbook/tts.py`)
 
 ## [0.15.1] - 2026-03-01
 
@@ -287,7 +287,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Shared hooklib module** (`hooks/nim/src/hooklib.nim`): JSON stdin parsing, recursive string extraction, MCP JSON-RPC client with SSE response parsing, fail-open/fail-closed exit handlers, SHA1 hash verification
   - **Security pattern sync**: Generated patterns include SHA1 hash of source rules; at runtime, hooks verify the hash and fall back to MCP `security_check_tool_input` if patterns are stale
   - **Installer integration**: `_detect_nim()` checks for Nim >= 1.6, `_compile_nim_hooks()` builds all binaries, `nim_available` flag propagated through hook registration to select Nim binary or shell fallback per hook
-- **`security_check_tool_input` MCP tool** - New tool that validates tool call inputs against security rules, used as runtime fallback when Nim hooks detect stale compiled patterns (`spellbook_mcp/server.py`)
+- **`security_check_tool_input` MCP tool** - New tool that validates tool call inputs against security rules, used as runtime fallback when Nim hooks detect stale compiled patterns (`spellbook/server.py`)
 
 ### Changed
 - **Green mirage audit expanded** - Added detection of skipped, xfailed, or disabled tests hiding real failures (`commands/audit-green-mirage.md`, `commands/audit-mirage-analyze.md`, `commands/audit-mirage-cross.md`, `commands/audit-mirage-report.md`, `skills/auditing-green-mirage/SKILL.md`)
@@ -309,15 +309,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **IndexError in TTS notification hook** - `shlex.split(cmd)[0]` crashes when the command string is empty or whitespace-only; now guards against empty list before indexing (`hooks/tts-notify.py`, `hooks/tts-notify.sh`)
 - **Bare except in TTS notification hook** - Narrowed `except:` to `except ValueError:` so `SystemExit` and `KeyboardInterrupt` propagate correctly (`hooks/tts-notify.sh`)
-- **3x file I/O in `tts_config_set`** - Refactored to use new `config_set_many()` for a single atomic read-modify-write cycle instead of three separate `config_set()` calls (`spellbook_mcp/server.py`, `spellbook_mcp/config_tools.py`)
-- **Import organization in MCP server** - Grouped all stdlib imports together before version detection logic per PEP 8 (`spellbook_mcp/server.py`)
+- **3x file I/O in `tts_config_set`** - Refactored to use new `config_set_many()` for a single atomic read-modify-write cycle instead of three separate `config_set()` calls (`spellbook/server.py`, `spellbook/config_tools.py`)
+- **Import organization in MCP server** - Grouped all stdlib imports together before version detection logic per PEP 8 (`spellbook/server.py`)
 - **Nonexistent `@types/node@^25.3.0`** - Pinned to `^22.0.0` across all three OpenCode extension package.json files
 - **Nonexistent `python:3.14-slim` Docker image** - Changed to `python:3.13-slim` in test Dockerfile
 - **Inconsistent `package-lock.json`** - Regenerated lockfile for `extensions/opencode/context-curator` to resolve nested SDK version mismatch
 - **Test tier time boundary inconsistency** - Aligned integration tier to "1-5s" and E2E/Slow to ">5s" to match the `slow` mark definition (`CLAUDE.spellbook.md`)
 - **Ambiguous `gpu / hardware` test mark** - Changed to comma-separated `` `gpu`, `hardware` `` to clarify these are two distinct pytest marks (`CLAUDE.spellbook.md`)
 - **"All 5 escape strategies" text outdated** - Changed to "escape strategies 1-5" since fractal exploration is now strategy 6 (`commands/deep-research-investigate.md`)
-- **`VALID_CHECKPOINT_MODES` undocumented pattern** - Added comment explaining that `depth:N` patterns are also valid but validated separately (`spellbook_mcp/fractal/models.py`)
+- **`VALID_CHECKPOINT_MODES` undocumented pattern** - Added comment explaining that `depth:N` patterns are also valid but validated separately (`spellbook/fractal/models.py`)
 - **Fractal harvest word count ranges unclear** - Labeled each range with its intensity level inline (`commands/fractal-think-harvest.md`)
 
 ## [0.13.0] - 2026-02-28
@@ -441,8 +441,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `installer/platforms/gemini.py`: added `install_daemon()` step
   - `installer/platforms/codex.py`: switched TOML config from stdio to HTTP
   - `installer/platforms/crush.py`: switched JSON config from `type: stdio` to `type: http`
-  - `spellbook_mcp/server.py`: removed stdio-specific UpdateWatcher deferral
-  - `spellbook_mcp/update_watcher.py`: removed transport parameter (HTTP-only)
+  - `spellbook/server.py`: removed stdio-specific UpdateWatcher deferral
+  - `spellbook/update_watcher.py`: removed transport parameter (HTTP-only)
 - **Docker tests skip by default** - Added `docker` pytest marker; docker tests only run in CI with `--run-docker` flag. Reduces local test suite from ~48min to ~2min.
 
 ### Fixed
@@ -518,7 +518,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Security hardening: defense-in-depth** - Comprehensive security layer for prompt injection, privilege escalation, and data exfiltration protection
-  - Runtime input/output checking via `spellbook_mcp/security/` module (rules engine, scanner, tools)
+  - Runtime input/output checking via `spellbook/security/` module (rules engine, scanner, tools)
   - 7 Claude Code hooks: `bash-gate.sh`, `spawn-guard.sh`, `state-sanitize.sh`, `audit-log.sh`, `canary-check.sh` + OpenCode `opencode-plugin.ts`
   - Gemini CLI security policy (`hooks/gemini-policy.toml`)
   - Trust registry with security modes (standard/elevated/paranoid)
@@ -546,7 +546,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - HealthStatus enum: HEALTHY, DEGRADED, UNHEALTHY, UNAVAILABLE, NOT_CONFIGURED
   - Status aggregation with critical domain handling (database, filesystem are critical)
   - Detailed domain results with latency tracking and diagnostic details
-  - New `spellbook_mcp/health.py` module (700+ lines)
+  - New `spellbook/health.py` module (700+ lines)
   - 93 new tests for health check functionality
 - **verifying-hunches skill** - Prevents premature eureka claims during debugging
   - Triggers on: "I found", "this is the issue", "root cause", "smoking gun", "aha", "got it"
@@ -856,10 +856,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **MCP daemon import errors** - Fixed watcher thread import failures that caused 600K+ error log lines
-  - Converted all imports to use full package paths (`from spellbook_mcp.x import...`)
+  - Converted all imports to use full package paths (`from spellbook.x import...`)
   - Removed fragile sys.path manipulation from server.py
   - Added pyproject.toml for proper package installation
-  - Updated daemon to run as module (`python -m spellbook_mcp.server`) instead of script
+  - Updated daemon to run as module (`python -m spellbook.mcp.server`) instead of script
 - **Watcher circuit breaker** - Watcher now gives up after 5 consecutive failures instead of infinite retry loop
 - **Test isolation for pr_bless_pattern** - Fixed test pollution from global config directory
 
@@ -1413,7 +1413,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `spellbook.command_utils` - atomic file operations, JSON handling, packet parsing
   - `spellbook.preferences` - user preference persistence
   - `spellbook.metrics` - feature implementation metrics logging
-  - `spellbook_mcp.terminal_utils` - terminal detection and spawning utilities
+  - `spellbook.terminal_utils` - terminal detection and spawning utilities
 - 61 new tests for execution mode (124 total, 86% coverage)
 - `autonomous-mode-protocol` pattern for subagent behavior without user interaction
 - `devils-advocate` skill for challenging assumptions in design documents

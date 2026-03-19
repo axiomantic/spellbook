@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from spellbook_mcp.forged.models import VALID_STAGES, ValidatorResult, Feedback
+from spellbook.forged.models import VALID_STAGES, ValidatorResult, Feedback
 
 
 @dataclass

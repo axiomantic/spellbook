@@ -278,7 +278,7 @@ def experiment_create(
         InvalidVariantsError: If variants are invalid
         ValidationError: If name format is invalid
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -385,7 +385,7 @@ def experiment_start(experiment_id: str, db_path: Optional[str] = None) -> dict:
         InvalidStatusTransitionError: If experiment not in created/paused status
         ConcurrentExperimentError: If another experiment for the skill is active
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -457,7 +457,7 @@ def experiment_pause(experiment_id: str, db_path: Optional[str] = None) -> dict:
         ExperimentNotFoundError: If experiment doesn't exist
         InvalidStatusTransitionError: If experiment not in active status
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -502,7 +502,7 @@ def experiment_complete(experiment_id: str, db_path: Optional[str] = None) -> di
         ExperimentNotFoundError: If experiment doesn't exist
         InvalidStatusTransitionError: If experiment not in active/paused status
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -548,7 +548,7 @@ def experiment_status(experiment_id: str, db_path: Optional[str] = None) -> dict
     Raises:
         ExperimentNotFoundError: If experiment doesn't exist
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -635,7 +635,7 @@ def experiment_list(
     Returns:
         Dict with list of experiments and total count
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -704,7 +704,7 @@ def get_skill_version_for_session(
         (experiment_id, variant_id, skill_version)
         All None if no active experiment for this skill.
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
@@ -826,7 +826,7 @@ def experiment_results(experiment_id: str, db_path: Optional[str] = None) -> dic
     Raises:
         ExperimentNotFoundError: If experiment doesn't exist
     """
-    from spellbook_mcp.db import get_connection, get_db_path
+    from spellbook.core.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())

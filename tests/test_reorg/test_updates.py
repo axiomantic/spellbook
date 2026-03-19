@@ -1,7 +1,7 @@
 """Tests for the spellbook.updates domain module.
 
-Verifies that key exports from spellbook_mcp.update_tools and
-spellbook_mcp.update_watcher exist in spellbook.updates.tools
+Verifies that key exports from spellbook.updates.tools and
+spellbook.updates.watcher exist in spellbook.updates.tools
 and spellbook.updates.watcher.
 """
 
@@ -9,7 +9,7 @@ import pytest
 
 
 class TestUpdatesTools:
-    """Verify spellbook.updates.tools has key exports from spellbook_mcp.update_tools."""
+    """Verify spellbook.updates.tools has key exports from spellbook.updates.tools."""
 
     def test_tools_module_importable(self):
         import spellbook.updates.tools
@@ -33,7 +33,7 @@ class TestUpdatesTools:
         assert hasattr(tools, name), f"spellbook.updates.tools missing {name}"
 
     def test_tools_imports_from_core_config(self):
-        """Verify tools.py imports config from spellbook.core, not spellbook_mcp."""
+        """Verify tools.py imports config from spellbook.core, not spellbook."""
         import ast
         import inspect
 
@@ -44,14 +44,14 @@ class TestUpdatesTools:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook_mcp"), (
+                assert not node.module.startswith("spellbook"), (
                     f"spellbook.updates.tools still imports from "
-                    f"spellbook_mcp: {node.module}"
+                    f"spellbook: {node.module}"
                 )
 
 
 class TestUpdatesWatcher:
-    """Verify spellbook.updates.watcher has key exports from spellbook_mcp.update_watcher."""
+    """Verify spellbook.updates.watcher has key exports from spellbook.updates.watcher."""
 
     def test_watcher_module_importable(self):
         import spellbook.updates.watcher
@@ -70,7 +70,7 @@ class TestUpdatesWatcher:
         assert hasattr(watcher, name), f"spellbook.updates.watcher missing {name}"
 
     def test_watcher_imports_from_core_config(self):
-        """Verify watcher.py imports config from spellbook.core, not spellbook_mcp."""
+        """Verify watcher.py imports config from spellbook.core, not spellbook."""
         import ast
         import inspect
 
@@ -81,7 +81,7 @@ class TestUpdatesWatcher:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook_mcp"), (
+                assert not node.module.startswith("spellbook"), (
                     f"spellbook.updates.watcher still imports from "
-                    f"spellbook_mcp: {node.module}"
+                    f"spellbook: {node.module}"
                 )

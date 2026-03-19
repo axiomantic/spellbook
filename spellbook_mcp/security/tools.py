@@ -25,8 +25,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from spellbook_mcp.db import get_connection, get_db_path, init_db
-from spellbook_mcp.security.rules import (
+from spellbook.core.db import get_connection, get_db_path, init_db
+from spellbook.security.rules import (
     ESCALATION_RULES,
     EXFILTRATION_RULES,
     INJECTION_RULES,
@@ -358,7 +358,7 @@ def do_set_security_mode(
     # Permissive mode has been removed -- reject with error dict and log
     if mode == "permissive":
         if db_path is None:
-            from spellbook_mcp.db import get_db_path
+            from spellbook.core.db import get_db_path
 
             db_path = str(get_db_path())
 
@@ -388,7 +388,7 @@ def do_set_security_mode(
         raise ValueError(f"invalid security mode: {mode!r}")
 
     if db_path is None:
-        from spellbook_mcp.db import get_db_path
+        from spellbook.core.db import get_db_path
 
         db_path = str(get_db_path())
 
@@ -876,7 +876,7 @@ def do_dashboard(
             honeypot_triggers: Count of honeypot_triggered events.
             recent_alerts: List of recent CRITICAL/HIGH event dicts.
     """
-    from spellbook_mcp.security.check import get_current_mode
+    from spellbook.security.check import get_current_mode
 
     # Resolve db_path
     if db_path is None:

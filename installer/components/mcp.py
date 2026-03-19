@@ -240,19 +240,19 @@ def restart_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
 
     try:
         # Find processes matching the MCP server
-        # Look for processes running the spellbook_mcp server
+        # Look for processes running the spellbook server
         plat = get_platform()
         if plat == Platform.WINDOWS:
             result = subprocess.run(
                 ["powershell", "-NoProfile", "-Command",
                  "Get-CimInstance Win32_Process | "
-                 "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+                 "Where-Object {$_.CommandLine -like '*spellbook*server*'} | "
                  "Select-Object -ExpandProperty ProcessId"],
                 capture_output=True, text=True, timeout=5,
             )
         else:
             result = subprocess.run(
-                ["pgrep", "-f", f"{name}.*server\\.py|spellbook_mcp.*server"],
+                ["pgrep", "-f", f"{name}.*server\\.py|spellbook.*server"],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -714,11 +714,11 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
         # Graceful stop failed, force kill
         try:
             if plat == Platform.WINDOWS:
-                # Find and kill spellbook_mcp processes on Windows
+                # Find and kill spellbook processes on Windows
                 result = subprocess.run(
                     ["powershell", "-NoProfile", "-Command",
                      "Get-CimInstance Win32_Process | "
-                     "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+                     "Where-Object {$_.CommandLine -like '*spellbook*server*'} | "
                      "Select-Object -ExpandProperty ProcessId"],
                     capture_output=True, text=True, timeout=10,
                 )
@@ -730,7 +730,7 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
                         )
             else:
                 subprocess.run(
-                    ["pkill", "-f", "spellbook_mcp/server.py"],
+                    ["pkill", "-f", "spellbook/server.py"],
                     capture_output=True
                 )
         except FileNotFoundError:
@@ -743,7 +743,7 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
                 # Last resort: SIGKILL (Unix only)
                 try:
                     subprocess.run(
-                        ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
+                        ["pkill", "-9", "-f", "spellbook/server.py"],
                         capture_output=True
                     )
                 except FileNotFoundError:
@@ -853,7 +853,7 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
     # so they survive venv rebuilds (lockfile hash change).
     include_tts = False
     try:
-        from spellbook_mcp.config_tools import config_get as _cfg_get
+        from spellbook.core.config import config_get as _cfg_get
         if _cfg_get("tts_enabled"):
             include_tts = True
     except (ImportError, Exception):

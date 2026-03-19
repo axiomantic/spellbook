@@ -10,22 +10,22 @@ from fastmcp import Context
 
 from spellbook.mcp.server import mcp
 from spellbook.mcp import state as _state
-from spellbook_mcp.compaction_detector import (
+from spellbook.sessions.compaction import (
     check_for_compaction,
     get_pending_context,
     get_recovery_reminder,
     mark_context_injected,
 )
-from spellbook_mcp.config_tools import (
+from spellbook.core.config import (
     config_get,
     get_spellbook_dir,
     session_init,
     session_mode_get,
 )
-from spellbook_mcp.db import get_db_path
-from spellbook_mcp.health import run_health_check
-from spellbook_mcp.injection import inject_recovery_context
-from spellbook_mcp.path_utils import get_project_path_from_context, get_spellbook_config_dir
+from spellbook.core.db import get_db_path
+from spellbook.health.checker import run_health_check
+from spellbook.sessions.injection import inject_recovery_context
+from spellbook.core.path_utils import get_project_path_from_context, get_spellbook_config_dir
 
 # Use shared state from spellbook.mcp.state for health check tracking
 

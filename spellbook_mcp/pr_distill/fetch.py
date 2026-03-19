@@ -12,7 +12,7 @@ import subprocess
 import sys
 from typing import TypedDict
 
-from spellbook_mcp.pr_distill.errors import ErrorCode, PRDistillError
+from spellbook.pr_distill.errors import ErrorCode, PRDistillError
 
 
 # Minimum required gh CLI version

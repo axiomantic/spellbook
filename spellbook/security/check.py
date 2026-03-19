@@ -11,7 +11,7 @@ Functions:
     main: CLI entry point reading JSON from stdin.
 
 Usage as CLI (Claude Code hook protocol):
-    echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | python -m spellbook_mcp.security.check
+    echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | python -m spellbook.security.check
     # Exit code 0 = safe, exit code 2 = blocked
 
 Flags:

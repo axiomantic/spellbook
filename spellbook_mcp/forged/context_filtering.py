@@ -7,7 +7,7 @@ context windows, ensuring the most relevant information fits within token budget
 import math
 from dataclasses import dataclass
 
-from spellbook_mcp.forged.models import Feedback, IterationState
+from spellbook.forged.models import Feedback, IterationState
 
 # Common English stop words for filtering in similarity calculations
 STOP_WORDS = frozenset(

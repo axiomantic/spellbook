@@ -5,7 +5,7 @@ import pytest
 
 def _get_tool_names():
     """Get tool names from the FastMCP server's internal tool registry."""
-    from spellbook_mcp.server import _get_tool_names as server_get_tool_names
+    from spellbook.mcp.server import _get_tool_names as server_get_tool_names
 
     return server_get_tool_names()
 

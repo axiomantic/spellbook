@@ -14,7 +14,7 @@ def spellbook_dir(tmp_path):
     (spellbook / ".version").write_text("0.1.0")
 
     # Create MCP server path
-    mcp_dir = spellbook / "spellbook_mcp"
+    mcp_dir = spellbook / "spellbook"
     mcp_dir.mkdir()
     (mcp_dir / "server.py").write_text("# MCP server stub")
 

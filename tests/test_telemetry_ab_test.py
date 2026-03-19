@@ -2,14 +2,14 @@
 
 import pytest
 from datetime import datetime
-from spellbook_mcp.db import init_db, get_connection
+from spellbook.core.db import init_db, get_connection
 
 
 class TestTelemetryAggregate:
     """Test TelemetryAggregate dataclass."""
 
     def test_telemetry_aggregate_creation(self):
-        from spellbook_mcp.telemetry_sync import TelemetryAggregate
+        from spellbook.telemetry_sync import TelemetryAggregate
 
         agg = TelemetryAggregate(
             skill_name="debugging",
@@ -25,7 +25,7 @@ class TestTelemetryAggregate:
         assert agg.completion_rate == 0.8
 
     def test_completion_rate_handles_zero(self):
-        from spellbook_mcp.telemetry_sync import TelemetryAggregate
+        from spellbook.telemetry_sync import TelemetryAggregate
 
         agg = TelemetryAggregate(
             skill_name="debugging",
@@ -43,17 +43,17 @@ class TestSyncOutcomesToExperiments:
     """Test sync_outcomes_to_experiments function."""
 
     def test_links_outcomes_to_variants(self, tmp_path):
-        from spellbook_mcp.ab_test import (
+        from spellbook.experiments.ab_test import (
             experiment_create,
             experiment_start,
             get_skill_version_for_session,
         )
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome,
             persist_outcome,
             OUTCOME_COMPLETED,
         )
-        from spellbook_mcp.telemetry_sync import sync_outcomes_to_experiments
+        from spellbook.telemetry_sync import sync_outcomes_to_experiments
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -103,12 +103,12 @@ class TestSyncOutcomesToExperiments:
         assert row[0] == variant_id
 
     def test_does_not_overwrite_existing_variant_id(self, tmp_path):
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.skill_analyzer import (
             SkillOutcome,
             persist_outcome,
             OUTCOME_COMPLETED,
         )
-        from spellbook_mcp.telemetry_sync import sync_outcomes_to_experiments
+        from spellbook.telemetry_sync import sync_outcomes_to_experiments
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)

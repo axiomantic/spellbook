@@ -27,37 +27,37 @@ def _write_session_file(project_dir: Path, session_id: str, messages: list[dict]
 # ---------------------------------------------------------------------------
 class TestValidatePathSegment:
     def test_valid_segment(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("Users-test-myproject") is True
 
     def test_rejects_double_dot(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("..") is False
 
     def test_rejects_embedded_double_dot(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("foo/../bar") is False
 
     def test_rejects_forward_slash(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("foo/bar") is False
 
     def test_rejects_backslash(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("foo\\bar") is False
 
     def test_rejects_null_byte(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("foo\x00bar") is False
 
     def test_accepts_dashes_and_alphanumeric(self):
-        from spellbook_mcp.admin.routes.sessions import _validate_path_segment
+        from spellbook.admin.routes.sessions import _validate_path_segment
 
         assert _validate_path_segment("abc-123-def") is True
 
@@ -67,17 +67,17 @@ class TestValidatePathSegment:
 # ---------------------------------------------------------------------------
 class TestDecodeProjectPath:
     def test_decodes_project_encoded_path(self):
-        from spellbook_mcp.admin.routes.sessions import _decode_project_path
+        from spellbook.admin.routes.sessions import _decode_project_path
 
         assert _decode_project_path("Users-test-myproject") == "/Users/test/myproject"
 
     def test_prepends_slash(self):
-        from spellbook_mcp.admin.routes.sessions import _decode_project_path
+        from spellbook.admin.routes.sessions import _decode_project_path
 
         assert _decode_project_path("home-user-code") == "/home/user/code"
 
     def test_single_segment(self):
-        from spellbook_mcp.admin.routes.sessions import _decode_project_path
+        from spellbook.admin.routes.sessions import _decode_project_path
 
         assert _decode_project_path("root") == "/root"
 
@@ -87,7 +87,7 @@ class TestDecodeProjectPath:
 # ---------------------------------------------------------------------------
 class TestNormalizeMessage:
     def test_user_message_string_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "user",
@@ -105,7 +105,7 @@ class TestNormalizeMessage:
         }
 
     def test_user_message_list_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "user",
@@ -128,7 +128,7 @@ class TestNormalizeMessage:
         }
 
     def test_assistant_message_string_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "assistant",
@@ -146,7 +146,7 @@ class TestNormalizeMessage:
         }
 
     def test_assistant_message_list_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "assistant",
@@ -170,7 +170,7 @@ class TestNormalizeMessage:
         }
 
     def test_custom_title_message(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "custom-title",
@@ -187,7 +187,7 @@ class TestNormalizeMessage:
         }
 
     def test_progress_message(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "progress",
@@ -205,7 +205,7 @@ class TestNormalizeMessage:
         }
 
     def test_system_message_string_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "system",
@@ -223,7 +223,7 @@ class TestNormalizeMessage:
         }
 
     def test_system_message_list_content(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "system",
@@ -246,7 +246,7 @@ class TestNormalizeMessage:
         }
 
     def test_unknown_type_falls_back_to_json(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "tool_result",
@@ -266,7 +266,7 @@ class TestNormalizeMessage:
         }
 
     def test_compact_summary_flag(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {
             "type": "user",
@@ -284,7 +284,7 @@ class TestNormalizeMessage:
         }
 
     def test_missing_type_defaults_to_unknown(self):
-        from spellbook_mcp.admin.routes.sessions import _normalize_message
+        from spellbook.admin.routes.sessions import _normalize_message
 
         entry = {"timestamp": "2026-03-14T10:00:00Z", "data": "something"}
         result = _normalize_message(entry, 1)
@@ -304,7 +304,7 @@ class TestNormalizeMessage:
 # ---------------------------------------------------------------------------
 class TestReadSessionMetadata:
     def test_reads_metadata_from_session_file(self):
-        from spellbook_mcp.admin.routes.sessions import _read_session_metadata
+        from spellbook.admin.routes.sessions import _read_session_metadata
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-myproject"
@@ -331,7 +331,7 @@ class TestReadSessionMetadata:
             }
 
     def test_handles_no_user_messages(self):
-        from spellbook_mcp.admin.routes.sessions import _read_session_metadata
+        from spellbook.admin.routes.sessions import _read_session_metadata
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -355,7 +355,7 @@ class TestReadSessionMetadata:
             }
 
     def test_handles_list_content_for_first_user_message(self):
-        from spellbook_mcp.admin.routes.sessions import _read_session_metadata
+        from spellbook.admin.routes.sessions import _read_session_metadata
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -379,7 +379,7 @@ class TestReadSessionMetadata:
             }
 
     def test_skips_malformed_json_lines(self):
-        from spellbook_mcp.admin.routes.sessions import _read_session_metadata
+        from spellbook.admin.routes.sessions import _read_session_metadata
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -407,7 +407,7 @@ class TestReadSessionMetadata:
 
     def test_first_user_message_is_not_truncated(self):
         """Unlike list_sessions which truncates to 200 chars, detail returns full."""
-        from spellbook_mcp.admin.routes.sessions import _read_session_metadata
+        from spellbook.admin.routes.sessions import _read_session_metadata
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -437,7 +437,7 @@ class TestReadMessagesPage:
         return _write_session_file(project_dir, "sess-paged", messages)
 
     def test_first_page(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = self._make_session_file(tmpdir, 5)
@@ -469,7 +469,7 @@ class TestReadMessagesPage:
             }
 
     def test_middle_page(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = self._make_session_file(tmpdir, 5)
@@ -500,7 +500,7 @@ class TestReadMessagesPage:
             }
 
     def test_last_page_partial(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = self._make_session_file(tmpdir, 5)
@@ -521,7 +521,7 @@ class TestReadMessagesPage:
             }
 
     def test_single_page_all_messages(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = self._make_session_file(tmpdir, 3)
@@ -532,7 +532,7 @@ class TestReadMessagesPage:
             assert len(result["messages"]) == 3
 
     def test_malformed_line_becomes_error_entry(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -559,7 +559,7 @@ class TestReadMessagesPage:
             assert result["messages"][2]["content"] == "Also good"
 
     def test_empty_lines_are_skipped(self):
-        from spellbook_mcp.admin.routes.sessions import _read_messages_page
+        from spellbook.admin.routes.sessions import _read_messages_page
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "Users-test-proj"
@@ -603,7 +603,7 @@ class TestGetSessionDetail:
             file_path = project_dir / "sess-abc.jsonl"
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/Users-test-myproject/sess-abc")
@@ -628,7 +628,7 @@ class TestGetSessionDetail:
             claude_projects.mkdir(parents=True)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/nonexistent-project/sess-abc")
@@ -644,7 +644,7 @@ class TestGetSessionDetail:
             project_dir.mkdir()
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/Users-test-myproject/nonexistent")
@@ -664,7 +664,7 @@ class TestGetSessionDetail:
             claude_projects.mkdir(parents=True)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/foo..bar/sess-abc")
@@ -681,7 +681,7 @@ class TestGetSessionDetail:
             project_dir.mkdir()
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/Users-test-myproject/foo..bar")
@@ -717,7 +717,7 @@ class TestGetSessionMessages:
             self._setup_session(tmpdir, msg_count=5)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get(
@@ -756,7 +756,7 @@ class TestGetSessionMessages:
             self._setup_session(tmpdir, msg_count=5)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get(
@@ -792,7 +792,7 @@ class TestGetSessionMessages:
             self._setup_session(tmpdir, msg_count=3)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get(
@@ -811,7 +811,7 @@ class TestGetSessionMessages:
             claude_projects.mkdir(parents=True)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/nonexistent/sess-abc/messages")
@@ -827,7 +827,7 @@ class TestGetSessionMessages:
             project_dir.mkdir()
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get("/api/sessions/Users-test-myproject/nonexistent/messages")
@@ -844,7 +844,7 @@ class TestGetSessionMessages:
             project_dir.mkdir()
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get(
@@ -859,7 +859,7 @@ class TestGetSessionMessages:
             self._setup_session(tmpdir, msg_count=5)
 
             with patch(
-                "spellbook_mcp.admin.routes.sessions.Path.home",
+                "spellbook.admin.routes.sessions.Path.home",
                 return_value=Path(tmpdir) / "fakehome",
             ):
                 response = client.get(

@@ -10,8 +10,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from spellbook_mcp.admin.auth import require_admin_auth
-from spellbook_mcp.admin.db import query_spellbook_db
+from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.db import query_spellbook_db
 
 router = APIRouter(prefix="/focus", tags=["focus"])
 

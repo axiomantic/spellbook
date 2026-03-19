@@ -1,6 +1,6 @@
 """Tests for spellbook.health domain modules.
 
-Verifies that all public exports from spellbook_mcp health modules
+Verifies that all public exports from spellbook health modules
 exist in the corresponding spellbook.health modules.
 """
 
@@ -42,8 +42,8 @@ class TestHealthCheckerImports:
         assert callable(check_security_domain)
 
     def test_all_public_exports_match(self):
-        """Every public callable/class in spellbook_mcp.health must exist in spellbook.health.checker."""
-        import spellbook_mcp.health as old_mod
+        """Every public callable/class in spellbook.health.checker must exist in spellbook.health.checker."""
+        import spellbook.health.checker as old_mod
         import spellbook.health.checker as new_mod
 
         old_public = {
@@ -80,8 +80,8 @@ class TestHealthMetricsImports:
         assert callable(get_project_encoded)
 
     def test_all_public_exports_match(self):
-        """Every public callable in spellbook_mcp.metrics must exist in spellbook.health.metrics."""
-        import spellbook_mcp.metrics as old_mod
+        """Every public callable in spellbook.health.metrics must exist in spellbook.health.metrics."""
+        import spellbook.health.metrics as old_mod
         import spellbook.health.metrics as new_mod
 
         old_public = {

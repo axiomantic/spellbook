@@ -61,7 +61,7 @@ uv run scripts/generate_docs.py
 
 ```bash
 # Run the MCP server directly
-cd spellbook_mcp
+cd spellbook
 uv run server.py
 
 # Or install as editable package

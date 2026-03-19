@@ -31,9 +31,9 @@ MANIFEST_ECOSYSTEMS = {
 SKIP_DIRS = {"node_modules", ".venv", "venv", "vendor", "__pycache__", ".git", ".claude", ".worktrees"}
 
 # Directories whose manifests are covered by a parent directory's entry
-# (e.g. spellbook_mcp/requirements.txt is covered by the root pip entry)
+# (e.g. spellbook/requirements.txt is covered by the root pip entry)
 COVERED_BY_PARENT = {
-    "/spellbook_mcp",  # requirements.txt covered by root pyproject.toml
+    "/spellbook",  # requirements.txt covered by root pyproject.toml
 }
 
 # Directories containing test fixtures, not real dependencies

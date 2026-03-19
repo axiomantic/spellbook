@@ -17,7 +17,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
     """Validate a skill file for security issues before installation.
 
     Runs the skill content through injection, exfiltration, escalation, and
-    obfuscation rule sets from spellbook_mcp.security.rules. Uses the
+    obfuscation rule sets from spellbook.security.rules. Uses the
     "standard" security mode, which flags CRITICAL and HIGH severity findings.
 
     Args:
@@ -28,7 +28,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
         - is_safe is True if no CRITICAL or HIGH findings were detected
         - issues is a list of human-readable strings describing each finding
     """
-    from spellbook_mcp.security.rules import (
+    from spellbook.security.rules import (
         ESCALATION_RULES,
         EXFILTRATION_RULES,
         INJECTION_RULES,
@@ -61,7 +61,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
 
     # Only block on HIGH and CRITICAL findings (standard mode threshold).
     # LOW/MEDIUM findings (like entropy signals) are informational only.
-    from spellbook_mcp.security.rules import Severity
+    from spellbook.security.rules import Severity
 
     blocking_findings = [
         f for f in all_findings
@@ -258,7 +258,7 @@ class Installer:
             on_progress("daemon_start", {})
 
         _on_step("Installing MCP daemon")
-        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        server_path = self.spellbook_dir / "spellbook" / "server.py"
         if server_path.exists():
             daemon_success, daemon_msg = install_daemon(
                 self.spellbook_dir, dry_run=dry_run

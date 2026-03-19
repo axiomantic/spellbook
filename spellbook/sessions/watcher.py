@@ -138,12 +138,12 @@ class SessionWatcher(threading.Thread):
         Also analyzes skills for incremental persistence every poll cycle.
         """
         # Lazy imports to avoid circular dependency at module load time
-        from spellbook_mcp.compaction_detector import (
+        from spellbook.sessions.compaction import (
             _get_current_session_file,
             check_for_compaction,
         )
-        from spellbook_mcp.soul_extractor import extract_soul
-        from spellbook_mcp.injection import _set_pending_compaction
+        from spellbook.sessions.soul_extractor import extract_soul
+        from spellbook.sessions.injection import _set_pending_compaction
 
         # Check for compaction event
         event = check_for_compaction(self.project_path)
@@ -232,7 +232,7 @@ class SessionWatcher(threading.Thread):
 
         # Clean up old swarm coordination data
         try:
-            from spellbook_mcp.coordination.state import StateManager
+            from spellbook.coordination.state import StateManager
             sm = StateManager(self.db_path)
             sm.cleanup_old_swarms(days=7)
         except Exception:
@@ -240,7 +240,7 @@ class SessionWatcher(threading.Thread):
 
         # Clean up old forged workflow data
         try:
-            from spellbook_mcp.forged.schema import get_forged_connection
+            from spellbook.forged.schema import get_forged_connection
 
             cutoff_90d_forged = (now - timedelta(days=90)).isoformat()
             fconn = get_forged_connection()
@@ -287,14 +287,14 @@ class SessionWatcher(threading.Thread):
         5. For each new/updated invocation, persist outcome
         6. Update state tracking
         """
-        from spellbook_mcp.compaction_detector import _get_current_session_file
-        from spellbook_mcp.skill_analyzer import (
+        from spellbook.sessions.compaction import _get_current_session_file
+        from spellbook.sessions.skill_analyzer import (
             extract_skill_invocations,
             persist_outcome,
             finalize_session_outcomes,
             SkillOutcome,
         )
-        from spellbook_mcp.session_ops import load_jsonl
+        from spellbook.sessions.parser import load_jsonl
 
         session_file = _get_current_session_file(self.project_path)
         if session_file is None:

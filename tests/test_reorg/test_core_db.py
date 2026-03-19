@@ -1,6 +1,6 @@
 """Tests for spellbook.core.db module.
 
-Verifies that all public exports from spellbook_mcp.db exist in spellbook.core.db.
+Verifies that all public exports from spellbook.core.db exist in spellbook.core.db.
 """
 
 import inspect
@@ -33,8 +33,8 @@ class TestCoreDbImports:
         assert callable(close_all_connections)
 
     def test_all_public_exports_match(self):
-        """Every public function in spellbook_mcp.db must exist in spellbook.core.db."""
-        import spellbook_mcp.db as old_mod
+        """Every public function in spellbook.core.db must exist in spellbook.core.db."""
+        import spellbook.core.db as old_mod
         import spellbook.core.db as new_mod
 
         old_public = {
