@@ -203,7 +203,7 @@ def _generate_launchd_plist() -> str:
         program_args = (
             f"                <string>{daemon_python}</string>\n"
             f"                <string>-m</string>\n"
-            f"                <string>spellbook.mcp.server</string>"
+            f"                <string>spellbook.mcp</string>"
         )
     else:
         uv_path = get_uv_path()
@@ -212,7 +212,7 @@ def _generate_launchd_plist() -> str:
             f"                <string>run</string>\n"
             f"                <string>python</string>\n"
             f"                <string>-m</string>\n"
-            f"                <string>spellbook.mcp.server</string>"
+            f"                <string>spellbook.mcp</string>"
         )
 
     return textwrap.dedent(f"""\
@@ -324,10 +324,10 @@ def _generate_systemd_service() -> str:
 
     daemon_python = get_daemon_python()
     if daemon_python:
-        exec_start = f"{daemon_python} -m spellbook.mcp.server"
+        exec_start = f"{daemon_python} -m spellbook.mcp"
     else:
         uv_path = get_uv_path()
-        exec_start = f"{uv_path} run python -m spellbook.mcp.server"
+        exec_start = f"{uv_path} run python -m spellbook.mcp"
 
     return textwrap.dedent(f"""\
         [Unit]
