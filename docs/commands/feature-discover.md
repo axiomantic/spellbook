@@ -523,7 +523,7 @@ Referenced from: Phase 1.5.2.5, Post-1.6, and inline via ARH during wizard.
 **Evaluation:**
 
 ```typescript
-function scope_consistent_with_tier(): boolean {
+function evaluate_scope_drift(): boolean {
   const tier = SESSION_PREFERENCES.complexity_tier;
   const signals = detect_drift_signals(discovery_answers);
 
@@ -737,7 +737,7 @@ After completing the discovery wizard, run the Scope Drift Check with all accumu
 This catches scope expansion that occurred gradually across multiple questions.
 </CRITICAL>
 
-Run `scope_consistent_with_tier()`. If it returns false, follow the "When drift detected" protocol from the Scope Drift Check section above.
+Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol from the Scope Drift Check section above.
 
 ### 1.5.3 Build Glossary
 
@@ -1104,7 +1104,7 @@ Your choice: ___
 
 After devil's advocate review, re-run the Scope Drift Check. The devil's advocate may have surfaced scope expansions not visible during initial discovery.
 
-Run `scope_consistent_with_tier()`. If it returns false, follow the "When drift detected" protocol.
+Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol.
 
 <FORBIDDEN>
 - Asking questions that Phase 1 research already answered
