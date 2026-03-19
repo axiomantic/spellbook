@@ -1113,6 +1113,7 @@ class TestValidGates:
             "fact_checking",
             "green_mirage_audit",
             "test_suite",
+            "stage_validation",
         ]
         assert VALID_GATES == expected
 

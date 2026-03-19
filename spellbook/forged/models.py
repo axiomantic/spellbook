@@ -19,6 +19,7 @@ VALID_GATES = [
     "fact_checking",
     "green_mirage_audit",
     "test_suite",
+    "stage_validation",
 ]
 
 VALID_SEVERITIES = ["blocking", "significant", "minor"]

@@ -16,7 +16,10 @@ Each archetype brings a unique perspective to validate stage completion:
 """
 
 import json
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from spellbook.forged.artifacts import read_artifact
 from spellbook.forged.models import VALID_STAGES, Feedback
@@ -101,6 +104,7 @@ GATE_ARCHETYPES: dict[str, list[str]] = {
     "fact_checking": ["Priestess", "Hermit", "Justice"],
     "green_mirage_audit": ["Fool", "Magician", "Justice"],
     "test_suite": ["Magician", "Emperor", "Justice"],
+    "stage_validation": ["Magician", "Hierophant", "Justice"],
 }
 
 _DEFAULT_GATE_ARCHETYPES: list[str] = ["Magician", "Hierophant", "Justice"]
@@ -563,7 +567,7 @@ def process_roundtable_response(
     if consensus:
         from spellbook.forged.project_tools import forge_record_gate_completion
 
-        forge_record_gate_completion(
+        result = forge_record_gate_completion(
             feature_name=feature_name,
             gate=gate,
             stage=stage,
@@ -571,6 +575,11 @@ def process_roundtable_response(
             iteration=iteration,
             verdict_summary=json.dumps(verdicts),
         )
+        if result.get("status") == "error":
+            logger.warning(
+                "Gate completion auto-recording failed: %s",
+                result.get("error", "unknown"),
+            )
 
     return {
         "consensus": consensus,

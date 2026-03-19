@@ -205,7 +205,7 @@ async function onSessionIdle(context: PluginContext): Promise<void> {
     feature_name: currentForgeState.feature_name,
     stage: currentForgeState.stage,
     artifact_path: stageArtifacts.paths[0],
-    gate: `stage_${currentForgeState.stage.toLowerCase()}`,
+    gate: 'stage_validation',
   });
 
   if (!roundtableResult) {
