@@ -1,0 +1,12 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified spellbook icon for favicon -->
+  <style>
+    .book { fill: #b4f461; }
+    .star { fill: #b4f461; opacity: 0.7; }
+  </style>
+  <!-- Book spine and pages -->
+  <path class="book" d="M6 6h8c2 0 4 1.5 4 3.5V26c0-1.5-1.5-3-3.5-3H6V6z" opacity="0.85"/>
+  <path class="book" d="M26 6h-8c-2 0-4 1.5-4 3.5V26c0-1.5 1.5-3 3.5-3H26V6z" opacity="0.65"/>
+  <!-- Four-pointed star above book -->
+  <path class="star" d="M16 2l1.2 3.5 3.5 1.2-3.5 1.2L16 11.4l-1.2-3.5L11.3 6.7l3.5-1.2z"/>
+</svg>
