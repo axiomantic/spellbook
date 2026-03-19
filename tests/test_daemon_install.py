@@ -485,15 +485,9 @@ class TestGetDaemonPython:
 
         monkeypatch.setenv("SPELLBOOK_DAEMON_PYTHON", str(symlink_python))
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
 
         assert result is not None
         # The result must contain the symlink path, not the resolved real_python path
@@ -504,30 +498,18 @@ class TestGetDaemonPython:
         """Returns None when SPELLBOOK_DAEMON_PYTHON is not set."""
         monkeypatch.delenv("SPELLBOOK_DAEMON_PYTHON", raising=False)
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
         assert result is None
 
     def test_nonexistent_file_returns_none(self, tmp_path, monkeypatch):
         """Returns None when SPELLBOOK_DAEMON_PYTHON points to a file that doesn't exist."""
         monkeypatch.setenv("SPELLBOOK_DAEMON_PYTHON", str(tmp_path / "nonexistent" / "python"))
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "spellbook_server",
-            str(Path(__file__).parent.parent / "scripts" / "spellbook-server.py"),
-        )
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        from spellbook.daemon._paths import get_daemon_python
 
-        result = mod.get_daemon_python()
+        result = get_daemon_python()
         assert result is None
 
 
