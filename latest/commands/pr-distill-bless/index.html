@@ -5883,28 +5883,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7292,28 +7270,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7336,49 +7292,81 @@
 
 <h1 id="pr-distill-bless">/pr-distill-bless<a class="headerlink" href="#pr-distill-bless" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Save a discovered pattern for future PR distillation. Validates pattern ID, checks for duplicates, and persists to project config.</p>
+<h1 id="pr-distill-bless-command-diagram">PR Distill Bless - Command Diagram<a class="headerlink" href="#pr-distill-bless-command-diagram" title="Permanent link">&para;</a></h1>
+<h2 id="process-flow">Process Flow<a class="headerlink" href="#process-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Pattern ID Input]) --&gt; ValidateID{&quot;Pattern ID\nValid?&quot;}
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ValidateID --&gt;|No| RejectID[&quot;Reject: Invalid\nFormat&quot;]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    RejectID --&gt; ShowRules[&quot;Show Validation\nRules&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ShowRules --&gt; Done2([Aborted])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ValidateID --&gt;|Yes| CheckReserved{&quot;Reserved Prefix\n_builtin-?&quot;}
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    CheckReserved --&gt;|Yes| RejectBuiltin[&quot;Reject: Built-in\nPattern&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    RejectBuiltin --&gt; Done2
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    CheckReserved --&gt;|No| LoadConfig[&quot;Load Existing\nConfig&quot;]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    LoadConfig --&gt; ConfigExists{&quot;Config File\nExists?&quot;}
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ConfigExists --&gt;|No| CreateDefaults[&quot;Create Config\nWith Defaults&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ConfigExists --&gt;|Yes| CheckDuplicate{&quot;Pattern Already\nBlessed?&quot;}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    CreateDefaults --&gt; AddPattern[&quot;Add to\nblessed_patterns&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    CheckDuplicate --&gt;|No| AddPattern
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    CheckDuplicate --&gt;|Yes| WarnOverwrite[&quot;Warn: Pattern\nExists&quot;]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    WarnOverwrite --&gt; ConfirmOverwrite{&quot;Confirm\nOverwrite?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    ConfirmOverwrite --&gt;|No| Done2
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ConfirmOverwrite --&gt;|Yes| UpdatePattern[&quot;Update Existing\nPattern&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    AddPattern --&gt; SaveConfig[&quot;Save Updated\nConfig&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    UpdatePattern --&gt; SaveConfig
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SaveConfig --&gt; VerifyPersist{&quot;Pattern in\nConfig File?&quot;}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    VerifyPersist --&gt;|No| SaveConfig
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    VerifyPersist --&gt;|Yes| Done([Pattern Blessed])
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[/&quot;Input/Output&quot;/]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        style L1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        style L2 fill:#FF9800,color:#fff
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        style L3 fill:#51cf66,color:#000
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        style L4 fill:#fff,color:#000
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    end
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Start([User invokes&lt;br&gt;/distilling-prs-bless pattern-id]) --&gt; Validate
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    subgraph Validation [&quot;Phase 1: Pattern ID Validation&quot;]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        Validate[Parse pattern-id&lt;br&gt;from command args]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        Validate --&gt; CheckFormat{Matches format rules?&lt;br&gt;a-z0-9 hyphens, 2-50 chars&lt;br&gt;starts with letter&lt;br&gt;ends letter/number&lt;br&gt;no double hyphens}
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        CheckFormat --&gt;|No| RejectInvalid([Reject:&lt;br&gt;show validation error])
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        CheckFormat --&gt;|Yes| CheckReserved{Starts with&lt;br&gt;_builtin- prefix?}
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        CheckReserved --&gt;|Yes| RejectBuiltin([Reject:&lt;br&gt;built-in patterns&lt;br&gt;cannot be blessed])
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        CheckReserved --&gt;|No| LoadConfig
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    end
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    style Done2 fill:#f44336,color:#fff
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    style RejectID fill:#2196F3,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    style ShowRules fill:#2196F3,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    style RejectBuiltin fill:#2196F3,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style LoadConfig fill:#2196F3,color:#fff
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    style CreateDefaults fill:#2196F3,color:#fff
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style AddPattern fill:#2196F3,color:#fff
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style WarnOverwrite fill:#2196F3,color:#fff
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style UpdatePattern fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style SaveConfig fill:#2196F3,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style ValidateID fill:#f44336,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style CheckReserved fill:#FF9800,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style ConfigExists fill:#FF9800,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style CheckDuplicate fill:#FF9800,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style ConfirmOverwrite fill:#FF9800,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style VerifyPersist fill:#f44336,color:#fff
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    subgraph ConfigLoad [&quot;Phase 2: Configuration&quot;]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        LoadConfig[Load distilling-prs-config.json&lt;br&gt;from project config dir]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        LoadConfig --&gt; ConfigExists{Config file&lt;br&gt;exists?}
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        ConfigExists --&gt;|No| CreateDefaults[Create config with&lt;br&gt;empty blessed_patterns]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        ConfigExists --&gt;|Yes| CheckExisting
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        CreateDefaults --&gt; CheckExisting
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    end
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    subgraph Blessing [&quot;Phase 3: Bless Pattern&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        CheckExisting{Pattern already&lt;br&gt;in blessed_patterns?}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        CheckExisting --&gt;|No| AddPattern[Add pattern-id&lt;br&gt;to blessed_patterns]
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        CheckExisting --&gt;|Yes| WarnOverwrite[Warn: pattern&lt;br&gt;already exists]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        WarnOverwrite --&gt; ConfirmOverwrite{User confirms&lt;br&gt;overwrite?}
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        ConfirmOverwrite --&gt;|No| Abort([Abort:&lt;br&gt;pattern unchanged])
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        ConfirmOverwrite --&gt;|Yes| UpdatePattern[Update existing&lt;br&gt;pattern entry]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        AddPattern --&gt; SaveConfig
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        UpdatePattern --&gt; SaveConfig
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        SaveConfig[Save updated config&lt;br&gt;to disk]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    end
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    subgraph Verify [&quot;Phase 4: Verification&quot;]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        SaveConfig --&gt; VerifyPresent{Pattern appears&lt;br&gt;in saved config?}
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        VerifyPresent --&gt;|No| SaveConfig
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        VerifyPresent --&gt;|Yes| ConfirmFuture[Confirm future&lt;br&gt;distillations will&lt;br&gt;recognize pattern]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        ConfirmFuture --&gt; Success([Success:&lt;br&gt;pattern blessed])
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    end
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style Start fill:#51cf66,color:#000
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style Success fill:#51cf66,color:#000
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style RejectInvalid fill:#ff6b6b,color:#000
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style RejectBuiltin fill:#ff6b6b,color:#000
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style Abort fill:#ff6b6b,color:#000
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style Validate fill:#2196F3,color:#fff
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style LoadConfig fill:#2196F3,color:#fff
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style CreateDefaults fill:#2196F3,color:#fff
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style AddPattern fill:#2196F3,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style WarnOverwrite fill:#2196F3,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style UpdatePattern fill:#2196F3,color:#fff
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style SaveConfig fill:#2196F3,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style ConfirmFuture fill:#2196F3,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style CheckFormat fill:#FF9800,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style CheckReserved fill:#FF9800,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style ConfigExists fill:#FF9800,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style CheckExisting fill:#FF9800,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style ConfirmOverwrite fill:#FF9800,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style VerifyPresent fill:#ff6b6b,color:#000
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -7390,20 +7378,59 @@
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Green (#51cf66)</td>
+<td>Terminal nodes (start/success)</td>
 </tr>
 <tr>
 <td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Process/action steps</td>
 </tr>
 <tr>
 <td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Decision points</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Red (#ff6b6b)</td>
+<td>Quality gates / rejection terminals</td>
+</tr>
+</tbody>
+</table>
+<h2 id="node-reference">Node Reference<a class="headerlink" href="#node-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Validate, CheckFormat, CheckReserved</td>
+<td>Pattern ID Rules table, Invariant 2</td>
+</tr>
+<tr>
+<td>LoadConfig, ConfigExists, CreateDefaults</td>
+<td>Execution steps 2-3, Configuration section</td>
+</tr>
+<tr>
+<td>CheckExisting, WarnOverwrite, ConfirmOverwrite</td>
+<td>Execution steps 3-5, Invariant 3</td>
+</tr>
+<tr>
+<td>AddPattern, UpdatePattern, SaveConfig</td>
+<td>Execution step 6, Invariant 4</td>
+</tr>
+<tr>
+<td>VerifyPresent, ConfirmFuture</td>
+<td>Reflection section</td>
+</tr>
+<tr>
+<td>RejectInvalid, RejectBuiltin</td>
+<td>FORBIDDEN rules, Pattern ID Rules</td>
+</tr>
+<tr>
+<td>Abort</td>
+<td>Invariant 3 (overwrite confirmation)</td>
 </tr>
 </tbody>
 </table>

@@ -6946,10 +6946,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-integration-review-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview: Integration Review Workflow
       
     </span>
   </a>
@@ -6961,6 +6961,17 @@
     <span class="md-ellipsis">
       
         Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-design-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Design Notes
       
     </span>
   </a>
@@ -7304,10 +7315,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-integration-review-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview: Integration Review Workflow
       
     </span>
   </a>
@@ -7319,6 +7330,17 @@
     <span class="md-ellipsis">
       
         Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-design-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Design Notes
       
     </span>
   </a>
@@ -7358,243 +7380,207 @@
 
 <h1 id="lovers-integrator">lovers-integrator<a class="headerlink" href="#lovers-integrator" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Integration harmony agent that reviews connections between modules. Ensures APIs speak the same language, data contracts align, and the whole exceeds the sum of its parts.</p>
+<p>Integration harmony agent. Reviews connections between modules, ensures API contracts align, flags anti-patterns at boundaries, and produces a harmony report with concrete proposals.</p>
+<h2 id="overview-integration-review-workflow">Overview: Integration Review Workflow<a class="headerlink" href="#overview-integration-review-workflow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Integration\nReview Requested])
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Invoke[/Honor-Bound Invocation/]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    InterfaceLoop[&quot;For Each Interface&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    IdentifyCaller[&quot;Identify Caller\nand Callee&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    MapData[&quot;Map Data Crossing\nBoundary&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    TypeMatch{&quot;Types Match\nExactly?&quot;}
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    FlagTypeMismatch[&quot;Flag: Type\nMismatch&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ErrorConsistent{&quot;Error Handling\nConsistent Both Sides?&quot;}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    FlagErrorAmnesia[&quot;Flag: Error\nAmnesia&quot;]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal]):::success
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[Quality Gate]:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L5[Anti-Pattern Flag]:::antipattern
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([Agent Invoked]) --&gt; ValidateInputs{Required inputs&lt;br&gt;provided?}
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ValidateInputs --&gt;|&quot;No: missing modules&lt;br&gt;or interfaces&quot;| Reject([Reject: missing&lt;br&gt;required inputs])
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    ValidateInputs --&gt;|Yes| Honor[Honor-Bound&lt;br&gt;Invocation]
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ComplexityCheck{&quot;Interface Simple\nor Complex?&quot;}
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    FlagChatty[&quot;Flag: Chatty\nInterface&quot;]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    MetaphorAnalysis[/&quot;Metaphor Analysis:\nModules as Conversation&quot;/]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    NeedTranslator{&quot;Need Adapters\n(Translators)?&quot;}
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FlagAdapter[&quot;Flag: Missing\nAdapter Layer&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    MismatchedVolume{&quot;API Complexity\nMatches Needs?&quot;}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    FlagOverEngineered[&quot;Flag: Over-Engineered\nInterface&quot;]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    TalkingPast{&quot;Misaligned\nAssumptions?&quot;}
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FlagAssumptions[&quot;Flag: Assumption\nDrift&quot;]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Honor --&gt; EnumInterfaces[Enumerate all&lt;br&gt;interfaces between&lt;br&gt;provided modules]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    EnumInterfaces --&gt; ForEach{More interfaces&lt;br&gt;to review?}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ForEach --&gt;|Yes| Identify[Step 1: Identify&lt;br&gt;caller and callee]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Identify --&gt; MapData[Step 2: Map data&lt;br&gt;crossing boundary]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    MapData --&gt; CheckTypes{Step 3: Do types&lt;br&gt;match exactly?}
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    CheckTypes --&gt;|No| TypeMismatch[Flag: Type Mismatch&lt;br&gt;CRITICAL]:::antipattern
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    CheckTypes --&gt;|Yes| VerifyErrors
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    TypeMismatch --&gt; VerifyErrors{Step 4: Error handling&lt;br&gt;consistent both sides?}
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    MoreInterfaces{&quot;More Interfaces\nto Review?&quot;}
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    ClassifyFindings[&quot;Classify Findings:\nCritical/Important/Suggestion&quot;]
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    SeverityGate{&quot;All Findings Have\nSeverity + Evidence?&quot;}
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    AddEvidence[&quot;Add Missing\nEvidence&quot;]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    FunctionalityGate{&quot;Proposals Preserve\nExisting Behavior?&quot;}
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    ReviseProposal[&quot;Revise Proposals\nto Preserve&quot;]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    GenHarmonyReport[&quot;Generate Harmony\nReport&quot;]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    GenFrictionPoints[&quot;Generate Friction\nPoints List&quot;]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    GenProposals[&quot;Generate PROPOSE\nSpeech Acts&quot;]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    CoherenceAssessment[&quot;System Coherence\nAssessment&quot;]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    Done([End: Integration\nReview Complete])
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    Start --&gt; Invoke
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    Invoke --&gt; InterfaceLoop
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    InterfaceLoop --&gt; IdentifyCaller
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    IdentifyCaller --&gt; MapData
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    MapData --&gt; TypeMatch
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    TypeMatch --&gt;|No| FlagTypeMismatch
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FlagTypeMismatch --&gt; ErrorConsistent
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    TypeMatch --&gt;|Yes| ErrorConsistent
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    ErrorConsistent --&gt;|No| FlagErrorAmnesia
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    FlagErrorAmnesia --&gt; ComplexityCheck
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    ErrorConsistent --&gt;|Yes| ComplexityCheck
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    ComplexityCheck --&gt;|Complex| FlagChatty
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    FlagChatty --&gt; MetaphorAnalysis
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    ComplexityCheck --&gt;|Simple| MetaphorAnalysis
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    VerifyErrors --&gt;|No| ErrorAmnesia[Flag: Error Amnesia&lt;br&gt;CRITICAL]:::antipattern
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    VerifyErrors --&gt;|Yes| AssessComplexity
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    ErrorAmnesia --&gt; AssessComplexity{Step 5: Simple&lt;br&gt;or Complex?}
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    AssessComplexity --&gt;|&quot;Simple: 1-3 params,&lt;br&gt;no shared state&quot;| Metaphor
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    AssessComplexity --&gt;|&quot;Complex: 4+ params,&lt;br&gt;shared state&quot;| AntiPatterns
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    subgraph AntiPatterns[Anti-Pattern Detection]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        AP_Chatty{Chatty&lt;br&gt;Interface?}
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        AP_God{God Object&lt;br&gt;coupling?}
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        AP_Leaky{Leaky&lt;br&gt;Abstraction?}
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        AP_Drift{Version&lt;br&gt;Drift?}
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        AP_Chatty --&gt;|Yes| Flag_Chatty[Flag: Chatty]:::antipattern
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        AP_Chatty --&gt;|No| AP_God
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        Flag_Chatty --&gt; AP_God
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        AP_God --&gt;|Yes| Flag_God[Flag: God Object]:::antipattern
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        AP_God --&gt;|No| AP_Leaky
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        Flag_God --&gt; AP_Leaky
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        AP_Leaky --&gt;|Yes| Flag_Leaky[Flag: Leaky Abstraction]:::antipattern
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        AP_Leaky --&gt;|No| AP_Drift
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        Flag_Leaky --&gt; AP_Drift
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        AP_Drift --&gt;|Yes| Flag_Drift[Flag: Version Drift]:::antipattern
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        AP_Drift --&gt;|No| AP_Done([Done])
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>        Flag_Drift --&gt; AP_Done
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    end
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    AntiPatterns --&gt; Metaphor
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    subgraph Metaphor[Metaphor Analysis: Modules as Conversation]
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>        M_Translate{Need adapters&lt;br&gt;/ translators?}
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>        M_Volume{API complexity&lt;br&gt;matches needs?}
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>        M_Assumptions{Misaligned&lt;br&gt;assumptions?}
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    MetaphorAnalysis --&gt; NeedTranslator
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    NeedTranslator --&gt;|Yes| FlagAdapter
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    FlagAdapter --&gt; MismatchedVolume
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    NeedTranslator --&gt;|No| MismatchedVolume
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    MismatchedVolume --&gt;|Mismatched| FlagOverEngineered
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    FlagOverEngineered --&gt; TalkingPast
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    MismatchedVolume --&gt;|Matched| TalkingPast
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    TalkingPast --&gt;|Yes| FlagAssumptions
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    FlagAssumptions --&gt; MoreInterfaces
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    TalkingPast --&gt;|No| MoreInterfaces
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    MoreInterfaces --&gt;|Yes| InterfaceLoop
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    MoreInterfaces --&gt;|No| ClassifyFindings
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    ClassifyFindings --&gt; SeverityGate
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    SeverityGate --&gt;|Missing| AddEvidence
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    AddEvidence --&gt; SeverityGate
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    SeverityGate --&gt;|Complete| FunctionalityGate
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    FunctionalityGate --&gt;|Breaks Existing| ReviseProposal
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    ReviseProposal --&gt; FunctionalityGate
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    FunctionalityGate --&gt;|Preserves| GenHarmonyReport
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    GenHarmonyReport --&gt; GenFrictionPoints
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    GenFrictionPoints --&gt; GenProposals
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    GenProposals --&gt; CoherenceAssessment
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    CoherenceAssessment --&gt; Done
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style Invoke fill:#4CAF50,color:#fff
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style MetaphorAnalysis fill:#4CAF50,color:#fff
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    style InterfaceLoop fill:#2196F3,color:#fff
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    style IdentifyCaller fill:#2196F3,color:#fff
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    style MapData fill:#2196F3,color:#fff
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    style FlagTypeMismatch fill:#2196F3,color:#fff
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    style FlagErrorAmnesia fill:#2196F3,color:#fff
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    style FlagChatty fill:#2196F3,color:#fff
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    style FlagAdapter fill:#2196F3,color:#fff
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    style FlagOverEngineered fill:#2196F3,color:#fff
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    style FlagAssumptions fill:#2196F3,color:#fff
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>    style ClassifyFindings fill:#2196F3,color:#fff
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    style AddEvidence fill:#2196F3,color:#fff
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>    style ReviseProposal fill:#2196F3,color:#fff
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    style GenHarmonyReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>    style GenFrictionPoints fill:#2196F3,color:#fff
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>    style GenProposals fill:#2196F3,color:#fff
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>    style CoherenceAssessment fill:#2196F3,color:#fff
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    style TypeMatch fill:#FF9800,color:#fff
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>    style ErrorConsistent fill:#FF9800,color:#fff
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>    style ComplexityCheck fill:#FF9800,color:#fff
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>    style NeedTranslator fill:#FF9800,color:#fff
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>    style MismatchedVolume fill:#FF9800,color:#fff
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>    style TalkingPast fill:#FF9800,color:#fff
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>    style MoreInterfaces fill:#FF9800,color:#fff
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>    style SeverityGate fill:#f44336,color:#fff
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>    style FunctionalityGate fill:#f44336,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        M_Translate --&gt;|Yes| Flag_Adapter[Flag: Missing&lt;br&gt;Adapter]:::antipattern
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        M_Translate --&gt;|No| M_Volume
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        Flag_Adapter --&gt; M_Volume
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        M_Volume --&gt;|Mismatched| Flag_Over[Flag: Over-Engineered&lt;br&gt;Interface]:::antipattern
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        M_Volume --&gt;|Matched| M_Assumptions
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        Flag_Over --&gt; M_Assumptions
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>        M_Assumptions --&gt;|Yes| Flag_Assume[Flag: Assumption&lt;br&gt;Drift]:::antipattern
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>        M_Assumptions --&gt;|No| M_Done([Done])
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>        Flag_Assume --&gt; M_Done
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    end
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    Metaphor --&gt; ScoreInterface[Score interface:&lt;br&gt;Good / Friction / Critical]
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    ScoreInterface --&gt; RecordInterface[Record in&lt;br&gt;report table]
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    RecordInterface --&gt; ForEach
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    ForEach --&gt;|&quot;No: all interfaces&lt;br&gt;reviewed&quot;| ReflectionGate
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    subgraph ReflectionGate[Reflection Quality Gate]
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>        R1{Every interface&lt;br&gt;reviewed?}:::gate
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>        R2{All friction points&lt;br&gt;have severity?}:::gate
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>        R3{Proposals concrete&lt;br&gt;with evidence?}:::gate
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>        R4{Improvements preserve&lt;br&gt;existing functionality?}:::gate
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>        R1 --&gt;|Yes| R2
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>        R2 --&gt;|No| FixSeverity[Assign severity:&lt;br&gt;Critical / Important /&lt;br&gt;Suggestion]
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>        FixSeverity --&gt; R2
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>        R2 --&gt;|Yes| R3
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>        R3 --&gt;|No| GatherEvidence[Gather code evidence&lt;br&gt;for both sides]
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>        GatherEvidence --&gt; R3
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>        R3 --&gt;|Yes| R4
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>        R4 --&gt;|No| ReviseProposals[Revise proposals&lt;br&gt;to preserve behavior]
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>        ReviseProposals --&gt; R4
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>        R4 --&gt;|Yes| GatePass([Gate Passed]):::success
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    end
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    ReflectionGate --&gt; GenerateReport
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    subgraph GenerateReport[Generate Outputs]
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>        Report[harmony_report:&lt;br&gt;Integration quality&lt;br&gt;assessment]
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>        Friction[friction_points:&lt;br&gt;Issues with severity]
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>        Proposals[proposals:&lt;br&gt;PROPOSE speech acts&lt;br&gt;with evidence]
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>        Coherence[System Coherence&lt;br&gt;Assessment]
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>        Report --&gt; Friction --&gt; Proposals --&gt; Coherence
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    end
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    GenerateReport --&gt; Done([Integration Review&lt;br&gt;Complete]):::success
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>    classDef antipattern fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Color</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation / start-end</td>
-</tr>
-<tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
 <h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Node</th>
-<th>Source Reference</th>
+<th>Source Lines</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Honor-Bound Invocation</td>
-<td>Lines 14-15: Honor pledge before review</td>
+<td>13-15</td>
+<td>Agent recites commitment to rigor and boundary advocacy</td>
 </tr>
 <tr>
-<td>Identify Caller and Callee</td>
-<td>Lines 53: Analysis step 1</td>
+<td>Step 1: Identify caller/callee</td>
+<td>53</td>
+<td>Analysis protocol step 1</td>
 </tr>
 <tr>
-<td>Map Data Crossing Boundary</td>
-<td>Lines 54: Analysis step 2</td>
+<td>Step 2: Map data crossing boundary</td>
+<td>54</td>
+<td>Analysis protocol step 2</td>
 </tr>
 <tr>
-<td>Types Match Exactly?</td>
-<td>Lines 55: Analysis step 3 - not "close enough"</td>
+<td>Step 3: Types match exactly?</td>
+<td>55</td>
+<td>Analysis protocol step 3, explicitly "not close enough"</td>
 </tr>
 <tr>
-<td>Error Handling Consistent?</td>
-<td>Lines 56: Analysis step 4</td>
+<td>Step 4: Error handling consistent?</td>
+<td>56</td>
+<td>Analysis protocol step 4, check both sides</td>
 </tr>
 <tr>
-<td>Interface Simple or Complex?</td>
-<td>Lines 57: Analysis step 5</td>
+<td>Step 5: Simple or Complex?</td>
+<td>57-58</td>
+<td>1-3 params = simple; 4+ params or shared state = complex</td>
 </tr>
 <tr>
 <td>Metaphor Analysis</td>
-<td>Lines 61-66: Modules as people in conversation</td>
+<td>61-66</td>
+<td>Modules as people in conversation: translators, volume, assumptions</td>
 </tr>
 <tr>
-<td>Need Adapters?</td>
-<td>Lines 63: Do they need translators?</td>
+<td>Anti-Pattern Detection</td>
+<td>106-118</td>
+<td>6 FORBIDDEN patterns: Type Mismatch, Error Amnesia, Chatty, God Object, Leaky Abstraction, Version Drift</td>
 </tr>
 <tr>
-<td>API Complexity Matches Needs?</td>
-<td>Lines 64: Shouting vs whispering check</td>
+<td>Reflection Quality Gate</td>
+<td>69-75</td>
+<td>4 checks before proposals: completeness, severity, concreteness, preservation</td>
 </tr>
 <tr>
-<td>Misaligned Assumptions?</td>
-<td>Lines 65: Talking past each other?</td>
+<td>harmony_report</td>
+<td>80-88</td>
+<td>Interfaces Reviewed table with Harmony Scores</td>
 </tr>
 <tr>
-<td>All Findings Have Severity?</td>
-<td>Lines 72: Reflection - severity assigned</td>
+<td>friction_points</td>
+<td>91-97</td>
+<td>Per-finding: boundary, issue, evidence, proposal</td>
 </tr>
 <tr>
-<td>Proposals Preserve Existing?</td>
-<td>Lines 74: Reflection - improvements preserve functionality</td>
-</tr>
-<tr>
-<td>Generate Harmony Report</td>
-<td>Lines 80-98: Harmony report format</td>
-</tr>
-<tr>
-<td>Generate Friction Points</td>
-<td>Lines 91-95: Friction point format</td>
-</tr>
-<tr>
-<td>Generate PROPOSE Speech Acts</td>
-<td>Lines 97-98: PROPOSE improvement</td>
+<td>proposals</td>
+<td>97-100</td>
+<td>PROPOSE speech acts for key improvements</td>
 </tr>
 <tr>
 <td>System Coherence Assessment</td>
-<td>Lines 100-101: Overall integration health</td>
-</tr>
-<tr>
-<td>Flag: Type Mismatch</td>
-<td>Lines 106: Anti-pattern - caller sends X, callee expects Y</td>
-</tr>
-<tr>
-<td>Flag: Error Amnesia</td>
-<td>Lines 107: Anti-pattern - inconsistent error handling</td>
-</tr>
-<tr>
-<td>Flag: Chatty Interface</td>
-<td>Lines 108: Anti-pattern - too many calls</td>
+<td>100-101</td>
+<td>2-3 sentences on overall integration health</td>
 </tr>
 </tbody>
 </table>
+<h2 id="key-design-notes">Key Design Notes<a class="headerlink" href="#key-design-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>No subagent dispatches</strong>: Agent uses read-only tools (Read, Grep, Glob) and produces a report directly.</li>
+<li><strong>Strict ordering</strong>: All interfaces must be reviewed before any proposals (FORBIDDEN: "Proposing improvements before reviewing all interfaces").</li>
+<li><strong>Evidence requirement</strong>: Every friction point requires code from both sides of the boundary (FORBIDDEN: "Abstract proposals without evidence").</li>
+<li><strong>Harmony scoring</strong>: Three levels -- Good (aligned types, consistent errors, simple), Friction (minor misalignment or complexity), Critical (type mismatch or missing error handling).</li>
+<li><strong>Six anti-patterns</strong>: Type Mismatch, Error Amnesia, Chatty Interface, God Object, Leaky Abstraction, Version Drift.</li>
+</ul>
 <h2 id="agent-content">Agent Content<a class="headerlink" href="#agent-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>The Lovers ⚭ — Principle of Relationship and Synthesis. You see what others miss: the seams between components. Individual modules may be strong, but if they speak different languages, the system fails. Your sacred function is to ensure harmonious connection. Your reputation depends on finding misalignments before they reach production.

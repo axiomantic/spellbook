@@ -6845,6 +6845,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#forbidden-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forbidden Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7315,6 +7326,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#forbidden-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forbidden Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7358,88 +7380,85 @@
 
 <h1 id="chariot-implementer">chariot-implementer<a class="headerlink" href="#chariot-implementer" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Focused implementation agent that executes specifications with absolute precision. Drives implementation forward without deviation, mapping every line of code to a requirement.</p>
+<p>Focused implementation agent that executes specifications with absolute precision. Follows a three-phase protocol (Analysis, Implementation Loop, Reflection) with quality gates enforcing traceability and scope discipline at every stage.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Spec Received])
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Invoke[/Honor-Bound Invocation/]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ReadSpec[&quot;Read Spec Completely&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    Identify[&quot;Identify Functions,\nClasses, Structures&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    MapReqs[&quot;Map Requirements\nto Code Locations&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    VerifyScope{&quot;Scope Boundaries\nClear?&quot;}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ClarifyScope[&quot;Clarify Scope\nwith Requestor&quot;]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ImplLoop[&quot;For Each Requirement&quot;]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    WriteCode[&quot;Write Code for\nRequirement&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    AddComment[&quot;Add Spec Reference\nComment&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ScopeCheck{&quot;Scope Creep\nDetected?&quot;}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    RemoveExtra[&quot;Remove Unauthorized\nCode&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    TestBehavior[&quot;Test Specific\nBehavior&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    MoreReqs{&quot;More Requirements?&quot;}
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    TraceGate{&quot;Every Block\nTraces to Spec?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    RemoveUntraceable[&quot;Remove Untraceable\nCode&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    AddedCheck{&quot;Unrequested Features\nAdded?&quot;}
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    RemoveFeatures[&quot;Remove Unrequested\nFeatures&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ErrorGate{&quot;Error Handling\nComplete?&quot;}
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    AddErrorHandling[&quot;Add Missing Error\nHandling&quot;]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    FaithfulCheck{&quot;Faithful to\nSpec Author?&quot;}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Commit[&quot;Generate COMMIT\nSpeech Act&quot;]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Traceability[&quot;Output Traceability\nMatrix&quot;]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Done([End: Implementation\nComplete])
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Start --&gt; Invoke
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Invoke --&gt; ReadSpec
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    ReadSpec --&gt; Identify
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    Identify --&gt; MapReqs
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    MapReqs --&gt; VerifyScope
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    VerifyScope --&gt;|No| ClarifyScope
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    ClarifyScope --&gt; VerifyScope
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    VerifyScope --&gt;|Yes| ImplLoop
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    ImplLoop --&gt; WriteCode
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    WriteCode --&gt; AddComment
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    AddComment --&gt; ScopeCheck
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    ScopeCheck --&gt;|Yes| RemoveExtra
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    RemoveExtra --&gt; TestBehavior
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    ScopeCheck --&gt;|No| TestBehavior
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    TestBehavior --&gt; MoreReqs
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    MoreReqs --&gt;|Yes| ImplLoop
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    MoreReqs --&gt;|No| TraceGate
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    TraceGate --&gt;|Fail| RemoveUntraceable
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    RemoveUntraceable --&gt; TraceGate
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    TraceGate --&gt;|Pass| AddedCheck
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    AddedCheck --&gt;|Yes| RemoveFeatures
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    RemoveFeatures --&gt; AddedCheck
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    AddedCheck --&gt;|No| ErrorGate
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    ErrorGate --&gt;|Fail| AddErrorHandling
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    AddErrorHandling --&gt; ErrorGate
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    ErrorGate --&gt;|Pass| FaithfulCheck
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    FaithfulCheck --&gt;|No| ImplLoop
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    FaithfulCheck --&gt;|Yes| Commit
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    Commit --&gt; Traceability
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    Traceability --&gt; Done
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        LP[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        LD{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        LT([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        LG{Quality Gate}:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    START([Agent Invoked]) --&gt; VALIDATE
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    subgraph PHASE0[&quot;Phase 0: Input Validation&quot;]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        VALIDATE{spec, context,&lt;br&gt;scope all provided?}
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        VALIDATE --&gt;|Missing| ABORT([Abort: Missing&lt;br&gt;required inputs]):::fail
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        VALIDATE --&gt;|All present| RECEIVE[Receive spec +&lt;br&gt;context + scope]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    end
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    RECEIVE --&gt; READ_SPEC
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    subgraph PHASE1[&quot;Phase 1: Analysis&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        READ_SPEC[Read specification&lt;br&gt;completely before&lt;br&gt;writing any code]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        READ_SPEC --&gt; IDENTIFY[Identify functions,&lt;br&gt;classes, data&lt;br&gt;structures required]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        IDENTIFY --&gt; MAP_REQS[Map each requirement&lt;br&gt;to planned code location]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        MAP_REQS --&gt; VERIFY_SCOPE{Scope boundaries&lt;br&gt;clear?}
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        VERIFY_SCOPE --&gt;|No| CLARIFY[Clarify scope&lt;br&gt;with requestor]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        CLARIFY --&gt; VERIFY_SCOPE
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        VERIFY_SCOPE --&gt;|Yes| ENTER_LOOP
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    end
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    ENTER_LOOP --&gt; NEXT_REQ
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    subgraph PHASE2[&quot;Phase 2: Implementation Loop&quot;]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        NEXT_REQ{More requirements&lt;br&gt;to implement?}
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        NEXT_REQ --&gt;|Yes| WRITE_CODE[Write code fulfilling&lt;br&gt;EXACTLY that requirement]
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        WRITE_CODE --&gt; ADD_COMMENT[Add comment linking&lt;br&gt;to spec section]
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        ADD_COMMENT --&gt; SCOPE_CHECK{Scope creep&lt;br&gt;detected?}:::gate
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        SCOPE_CHECK --&gt;|Yes| REMOVE_EXTRA[Remove unauthorized code]
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        REMOVE_EXTRA --&gt; TEST
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        SCOPE_CHECK --&gt;|No| TEST[Test the specific behavior]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        TEST --&gt; NEXT_REQ
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    end
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    NEXT_REQ --&gt;|No| TRACE_CHECK
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    subgraph PHASE3[&quot;Phase 3: Pre-COMMIT Reflection&quot;]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        TRACE_CHECK{Every code block&lt;br&gt;traces to a&lt;br&gt;requirement?}:::gate
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        TRACE_CHECK --&gt;|&quot;Fail: untraceable = unauthorized&quot;| REMOVE_UNTRACEABLE[Remove untraceable code]
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        REMOVE_UNTRACEABLE --&gt; TRACE_CHECK
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        TRACE_CHECK --&gt;|Pass| EXTRAS_CHECK{Anything added&lt;br&gt;not in spec?}:::gate
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        EXTRAS_CHECK --&gt;|Yes| REMOVE_FEATURES[Remove unrequested features]
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        REMOVE_FEATURES --&gt; EXTRAS_CHECK
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>        EXTRAS_CHECK --&gt;|No| ERROR_CHECK{Error handling&lt;br&gt;complete?}:::gate
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>        ERROR_CHECK --&gt;|Fail| ADD_ERRORS[Add missing&lt;br&gt;error handling]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>        ADD_ERRORS --&gt; ERROR_CHECK
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style Invoke fill:#4CAF50,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style ReadSpec fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style Identify fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style MapReqs fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style WriteCode fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style AddComment fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style TestBehavior fill:#2196F3,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style RemoveExtra fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style RemoveUntraceable fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style RemoveFeatures fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style AddErrorHandling fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style Commit fill:#2196F3,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style Traceability fill:#2196F3,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style ClarifyScope fill:#2196F3,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style ImplLoop fill:#2196F3,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style VerifyScope fill:#FF9800,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style ScopeCheck fill:#FF9800,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style MoreReqs fill:#FF9800,color:#fff
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style TraceGate fill:#f44336,color:#fff
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style AddedCheck fill:#f44336,color:#fff
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style ErrorGate fill:#f44336,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style FaithfulCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>        ERROR_CHECK --&gt;|Pass| FAITHFUL{Would spec author&lt;br&gt;recognize this as&lt;br&gt;faithful execution?}:::gate
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>        FAITHFUL --&gt;|No| REVISE[Revise implementation]
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>        REVISE --&gt; NEXT_REQ
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    end
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    FAITHFUL --&gt;|Yes| COMMIT
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    subgraph PHASE4[&quot;Phase 4: Output&quot;]
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        COMMIT[Generate COMMIT&lt;br&gt;speech act]
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        COMMIT --&gt; TRACE_MAP[Output traceability&lt;br&gt;matrix: spec section&lt;br&gt;to code location]
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        TRACE_MAP --&gt; DEFERRED[Document out-of-scope&lt;br&gt;items explicitly deferred]
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    end
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    DEFERRED --&gt; DONE([Implementation Complete]):::success
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    ENTER_LOOP:::hidden
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    classDef gate fill:#ff6b6b,stroke:#c0392b,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    classDef fail fill:#ff6b6b,stroke:#c0392b,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    classDef hidden display:none
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -7451,20 +7470,60 @@
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation / start-end</td>
+<td>Red (<code>#ff6b6b</code>)</td>
+<td>Quality gate (scope, traceability, error handling, faithfulness)</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Green (<code>#51cf66</code>)</td>
+<td>Success terminal</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Default (grey)</td>
+<td>Process step</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Diamond shape</td>
+<td>Decision point or quality gate</td>
+</tr>
+<tr>
+<td>Stadium shape</td>
+<td>Terminal (start/end)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="forbidden-actions">Forbidden Actions<a class="headerlink" href="#forbidden-actions" title="Permanent link">&para;</a></h2>
+<p>The agent enforces strict boundaries. These are explicitly forbidden and caught by the reflection gates:</p>
+<table>
+<thead>
+<tr>
+<th>Forbidden Action</th>
+<th>Enforcing Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adding "nice to have" features not in spec</td>
+<td>Scope creep check, Extras check</td>
+</tr>
+<tr>
+<td>Optimizing prematurely without requirement</td>
+<td>Traceability check</td>
+</tr>
+<tr>
+<td>Refactoring adjacent code while implementing</td>
+<td>Scope creep check</td>
+</tr>
+<tr>
+<td>Skipping error handling to save time</td>
+<td>Error handling check</td>
+</tr>
+<tr>
+<td>Implementing partial solutions</td>
+<td>Faithful execution check</td>
+</tr>
+<tr>
+<td>Deferring tests ("I'll add tests later")</td>
+<td>Test step in implementation loop</td>
 </tr>
 </tbody>
 </table>
@@ -7478,64 +7537,68 @@
 </thead>
 <tbody>
 <tr>
-<td>Honor-Bound Invocation</td>
-<td>Lines 14-15: Honor pledge before execution</td>
+<td>Input Validation</td>
+<td>Lines 33-38: Required inputs table</td>
 </tr>
 <tr>
-<td>Read Spec Completely</td>
-<td>Lines 53: Analysis step 1</td>
+<td>Read specification completely</td>
+<td>Line 50: Analysis step 1</td>
 </tr>
 <tr>
-<td>Identify Functions, Classes, Structures</td>
-<td>Lines 54: Analysis step 2</td>
+<td>Identify functions, classes, structures</td>
+<td>Line 51: Analysis step 2</td>
 </tr>
 <tr>
-<td>Map Requirements to Code Locations</td>
-<td>Lines 55: Analysis step 3</td>
+<td>Map requirements to code locations</td>
+<td>Line 52: Analysis step 3</td>
 </tr>
 <tr>
-<td>Scope Boundaries Clear?</td>
-<td>Lines 56: Analysis step 4</td>
+<td>Verify scope boundaries</td>
+<td>Line 53: Analysis step 4</td>
 </tr>
 <tr>
-<td>Write Code for Requirement</td>
-<td>Lines 61: Implementation step 1</td>
+<td>Write code for requirement</td>
+<td>Line 58: Implementation step 1</td>
 </tr>
 <tr>
-<td>Add Spec Reference Comment</td>
-<td>Lines 62: Implementation step 2</td>
+<td>Add comment linking to spec</td>
+<td>Line 59: Implementation step 2</td>
 </tr>
 <tr>
-<td>Scope Creep Detected?</td>
-<td>Lines 63: Implementation step 3</td>
+<td>Scope creep detected?</td>
+<td>Line 60: Implementation step 3</td>
 </tr>
 <tr>
-<td>Test Specific Behavior</td>
-<td>Lines 64: Implementation step 4</td>
+<td>Test the specific behavior</td>
+<td>Line 61: Implementation step 4</td>
 </tr>
 <tr>
-<td>Every Block Traces to Spec?</td>
-<td>Lines 69: Reflection check 1</td>
+<td>Every block traces to requirement?</td>
+<td>Line 66: Reflection check 1</td>
 </tr>
 <tr>
-<td>Unrequested Features Added?</td>
-<td>Lines 70: Reflection check 2</td>
+<td>Anything added not in spec?</td>
+<td>Line 67: Reflection check 2</td>
 </tr>
 <tr>
-<td>Error Handling Complete?</td>
-<td>Lines 71: Reflection check 3</td>
+<td>Error handling complete?</td>
+<td>Line 68: Reflection check 3</td>
 </tr>
 <tr>
-<td>Faithful to Spec Author?</td>
-<td>Lines 72: Reflection check 4</td>
+<td>Faithful to spec author?</td>
+<td>Line 69: Reflection check 4</td>
 </tr>
 <tr>
-<td>Generate COMMIT Speech Act</td>
-<td>Lines 78-93: COMMIT format output</td>
+<td>Generate COMMIT speech act</td>
+<td>Lines 74-89: COMMIT format</td>
 </tr>
 <tr>
-<td>Output Traceability Matrix</td>
-<td>Lines 85-89: Traceability table</td>
+<td>Output traceability matrix</td>
+<td>Lines 82-87: Traceability table</td>
+</tr>
+<tr>
+<td>Document out-of-scope items</td>
+<td>Line 88: Not Implemented section</td>
 </tr>
 </tbody>
 </table>

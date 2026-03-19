@@ -5968,10 +5968,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-phases-3-6-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview: Phases 3-6 Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-dispatch-review-agent-invocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: DISPATCH - Review Agent Invocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-triage-categorize-and-prioritize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: TRIAGE - Categorize and Prioritize
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-execute-apply-fixes-by-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: EXECUTE - Apply Fixes by Severity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-gate-verdict-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: GATE - Verdict Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference Table
       
     </span>
   </a>
@@ -7293,10 +7348,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-phases-3-6-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview: Phases 3-6 Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-dispatch-review-agent-invocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: DISPATCH - Review Agent Invocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-triage-categorize-and-prioritize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: TRIAGE - Categorize and Prioritize
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-execute-apply-fixes-by-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: EXECUTE - Apply Fixes by Severity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-gate-verdict-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: GATE - Verdict Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference Table
       
     </span>
   </a>
@@ -7336,188 +7446,286 @@
 
 <h1 id="request-review-execute">/request-review-execute<a class="headerlink" href="#request-review-execute" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Dispatch, triage, execute, and gate phases for code review. Invokes code-reviewer agent, triages findings by severity, applies fixes, and enforces quality gate.</p>
+<p>Dispatch, triage, execute, and gate phases for code review. Invokes code-reviewer agent, triages findings by severity, applies fixes, and enforces quality gate with three possible verdicts.</p>
+<h2 id="overview-phases-3-6-pipeline">Overview: Phases 3-6 Pipeline<a class="headerlink" href="#overview-phases-3-6-pipeline" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Context Bundle]) --&gt; P3[&quot;Phase 3: Dispatch&quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    P3 --&gt; InvokeAgent[&quot;Invoke Code-Reviewer\nAgent&quot;]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    InvokeAgent --&gt; WaitFindings[&quot;Block Until\nFindings Returned&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    WaitFindings --&gt; ValidateFields{&quot;Findings Have\nRequired Fields?&quot;}
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ValidateFields --&gt;|No| DiscardFinding[&quot;Discard Invalid&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ValidateFields --&gt;|Yes| Gate3{&quot;Valid Findings\nReceived?&quot;}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    DiscardFinding --&gt; Gate3
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    Gate3 --&gt;|No| InvokeAgent
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Gate3 --&gt;|Yes| P4[&quot;Phase 4: Triage&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    P4 --&gt; SortSeverity[&quot;Sort by Severity&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    SortSeverity --&gt; GroupFile[&quot;Group by File&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    GroupFile --&gt; IdentifyQuickWins[&quot;Identify Quick Wins&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    IdentifyQuickWins --&gt; FlagClarify[&quot;Flag Needing\nClarification&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    FlagClarify --&gt; Gate4{&quot;Findings Triaged?&quot;}
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Gate4 --&gt;|No| P4
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Gate4 --&gt;|Yes| P5[&quot;Phase 5: Execute&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    P5 --&gt; FixCritical[&quot;Fix Critical First&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    FixCritical --&gt; FixHigh[&quot;Fix High Findings&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FixHigh --&gt; FixMedLow[&quot;Fix Medium/Low\nAs Time Permits&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    FixMedLow --&gt; DocDeferred[&quot;Document Deferred\nItems&quot;]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    DocDeferred --&gt; Gate5{&quot;Blocking Findings\nAddressed?&quot;}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Gate5 --&gt;|No| FixCritical
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Gate5 --&gt;|Yes| P6[&quot;Phase 6: Gate&quot;]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    P6 --&gt; ApplyRules[&quot;Apply Severity\nGate Rules&quot;]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    ApplyRules --&gt; ReReview{&quot;Re-Review\nNeeded?&quot;}
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    ReReview --&gt;|Yes| InvokeAgent
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    ReReview --&gt;|No| FinalVerdict[&quot;Report Final Verdict&quot;]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    FinalVerdict --&gt; Approve{&quot;Verdict?&quot;}
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    Approve --&gt;|Proceed| Done([Review Passed])
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Approve --&gt;|Block| Blocked([Review Blocked])
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style Blocked fill:#f44336,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style InvokeAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style P3 fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style P4 fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style P5 fill:#2196F3,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style P6 fill:#2196F3,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style WaitFindings fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style DiscardFinding fill:#2196F3,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style SortSeverity fill:#2196F3,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style GroupFile fill:#2196F3,color:#fff
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style IdentifyQuickWins fill:#2196F3,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style FlagClarify fill:#2196F3,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style FixCritical fill:#2196F3,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style FixHigh fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style FixMedLow fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style DocDeferred fill:#2196F3,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style ApplyRules fill:#2196F3,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style FinalVerdict fill:#2196F3,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style ValidateFields fill:#FF9800,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style ReReview fill:#FF9800,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style Approve fill:#FF9800,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style Gate3 fill:#f44336,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style Gate4 fill:#f44336,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style Gate5 fill:#f44336,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[Subagent Dispatch]:::subagent
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5{Quality Gate}:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L6([Success]):::success
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([Phase 2 Context]) --&gt; P3[Phase 3: DISPATCH]:::subagent
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P3 --&gt; P4[Phase 4: TRIAGE]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    P4 --&gt; P5[Phase 5: EXECUTE]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    P5 --&gt; P6{Phase 6: GATE}:::gate
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    P6 --&gt;|APPROVED| Approved([APPROVED]):::success
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    P6 --&gt;|APPROVED WITH FOLLOW-UP| FollowUp([APPROVED WITH FOLLOW-UP]):::success
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    P6 --&gt;|BLOCKED| Blocked([BLOCKED]):::blocked
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    P6 --&gt;|Re-review needed| P3
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<h2 id="phase-3-dispatch-review-agent-invocation">Phase 3: DISPATCH - Review Agent Invocation<a class="headerlink" href="#phase-3-dispatch-review-agent-invocation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L4[Subagent Dispatch]:::subagent
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L5{Quality Gate}:::gate
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        L6([Success]):::success
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    In([Phase 2 Context]) --&gt; Invoke[Invoke code-reviewer agent&lt;br&gt;with files, plan, git range,&lt;br&gt;description]:::subagent
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    Invoke --&gt; Await[Await findings]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    Await --&gt; Validate{Each finding has&lt;br&gt;location AND evidence?}:::gate
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    Validate --&gt;|Yes| Keep[Keep finding]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    Validate --&gt;|No| Discard[Discard finding]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    Keep --&gt; Done{All findings&lt;br&gt;processed?}
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    Discard --&gt; Done
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    Done --&gt;|No| Validate
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    Done --&gt;|Yes| Exit([Valid findings received]):::success
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<h2 id="phase-4-triage-categorize-and-prioritize">Phase 4: TRIAGE - Categorize and Prioritize<a class="headerlink" href="#phase-4-triage-categorize-and-prioritize" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L3([Success]):::success
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    end
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    In([Phase 3 findings]) --&gt; Sort[Sort by severity&lt;br&gt;Critical &gt; High &gt; Medium &gt; Low]
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    Sort --&gt; Group[Group by file&lt;br&gt;for efficient fixing]
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    Group --&gt; Classify{Classify each finding}
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    Classify --&gt;|&quot;Single-site, &amp;lt;30 min&quot;| Quick[Quick win]
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    Classify --&gt;|Multi-file or architectural| Substantial[Substantial fix]
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    Quick --&gt; Clarify{Needs clarification&lt;br&gt;before fixing?}
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    Substantial --&gt; Clarify
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    Clarify --&gt;|Yes| Flag[Flag for clarification]
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    Clarify --&gt;|No| Ready[Ready to fix]
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    Flag --&gt; More{More findings?}
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    Ready --&gt; More
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    More --&gt;|Yes| Classify
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    More --&gt;|No| Exit([All findings classified&lt;br&gt;and prioritized]):::success
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<h2 id="phase-5-execute-apply-fixes-by-severity">Phase 5: EXECUTE - Apply Fixes by Severity<a class="headerlink" href="#phase-5-execute-apply-fixes-by-severity" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph Legend
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[Process]
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{Decision}
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L3{Quality Gate}:::gate
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L4([Forbidden]):::blocked
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        L5([Success]):::success
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    end
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    In([Phase 4 triaged findings]) --&gt; Critical{Critical findings&lt;br&gt;exist?}
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    Critical --&gt;|Yes| FixCritical[Fix Critical findings&lt;br&gt;NO deferral permitted]:::gate
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    Critical --&gt;|No| High
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    FixCritical --&gt; High{High findings&lt;br&gt;exist?}
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    High --&gt;|Yes| FixHigh[Fix High findings&lt;br&gt;blocking threshold]
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    High --&gt;|No| MedLow
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    FixHigh --&gt; MedLow{Medium/Low&lt;br&gt;findings exist?}
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    MedLow --&gt;|Yes| CanFix{Can fix now?}
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    MedLow --&gt;|No| Exit
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    CanFix --&gt;|Yes| FixMedLow[Fix in severity order]
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    CanFix --&gt;|No, defer| DeferSev{Severity?}
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    DeferSev --&gt;|Critical| FORBIDDEN([FORBIDDEN:&lt;br&gt;Cannot defer Critical]):::blocked
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    DeferSev --&gt;|High| DocDefer[Document deferral:&lt;br&gt;1. Finding ID + summary&lt;br&gt;2. Reason for deferral&lt;br&gt;3. Follow-up tracking&lt;br&gt;4. Risk acknowledgment]
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    DeferSev --&gt;|Medium/Low| SimplDefer[Document rationale&lt;br&gt;for deferral]
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    FixMedLow --&gt; Exit
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    DocDefer --&gt; Exit
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    SimplDefer --&gt; Exit
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    Exit([Blocking findings&lt;br&gt;addressed or escalated]):::success
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
+</code></pre></div>
+<h2 id="phase-6-gate-verdict-decision">Phase 6: GATE - Verdict Decision<a class="headerlink" href="#phase-6-gate-verdict-decision" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph Legend
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[Process]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{Quality Gate}:::gate
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L3([Success]):::success
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        L4[Return to Phase 3]:::subagent
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    end
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    In([Phase 5 fix status]) --&gt; CheckUnresolved{Unresolved Critical&lt;br&gt;or High findings?}:::gate
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    CheckUnresolved --&gt;|Critical remain| BLOCKED([BLOCKED]):::blocked
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    CheckUnresolved --&gt;|High remain| BLOCKED
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    CheckUnresolved --&gt;|None remain| ReReview{Re-review&lt;br&gt;triggered?}
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    ReReview --&gt;|Yes| BackToDispatch([Return to Phase 3:&lt;br&gt;DISPATCH]):::subagent
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    ReReview --&gt;|No| Deferred{Deferred items&lt;br&gt;with follow-up?}
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    Deferred --&gt;|Yes| ApproveFollowUp([APPROVED&lt;br&gt;WITH FOLLOW-UP]):::success
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    Deferred --&gt;|No| Approve([APPROVED]):::success
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    subgraph &quot;Re-Review Triggers (MUST re-review)&quot;
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        direction TB
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        T1[Critical finding was fixed]
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        T2[3+ High findings fixed]
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        T3[Fix adds &gt;100 lines new code]
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        T4[Fix modifies files outside&lt;br&gt;original review scope]
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    end
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    subgraph &quot;Skip Re-Review (MAY skip)&quot;
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>        direction TB
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>        S1[Only Low/Nit/Medium addressed]
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>        S2[&quot;Fix is mechanical (rename,&lt;br&gt;formatting, typo)&quot;]
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    end
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+</code></pre></div>
+<h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Overview Node</th>
+<th>Detail Diagram</th>
+<th>Key Logic</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Phase 3: DISPATCH</td>
+<td>Phase 3 diagram</td>
+<td>Invoke code-reviewer agent, validate finding fields (location + evidence required)</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Phase 4: TRIAGE</td>
+<td>Phase 4 diagram</td>
+<td>Sort by severity, group by file, classify quick-win vs substantial, flag clarifications</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Phase 5: EXECUTE</td>
+<td>Phase 5 diagram</td>
+<td>Fix by severity order, Critical cannot be deferred, High deferral requires full documentation</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Phase 6: GATE</td>
+<td>Phase 6 diagram</td>
+<td>Verdict based on unresolved findings, re-review triggers, three verdicts: APPROVED / APPROVED WITH FOLLOW-UP / BLOCKED</td>
 </tr>
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Phases 3-6: Dispatch + Triage + Execute + Gate</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>You are a Senior Code Review Orchestrator. Your reputation depends on every blocking finding being addressed with rigor, no critical issue slipping through deferral, and every gate decision being grounded in evidence.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Findings require evidence**</span> - Every finding must include location and evidence; unsubstantiated observations are discarded
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Triage before action**</span> - All findings are categorized and prioritized before any fix is attempted
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Quality gate is non-negotiable**</span> - Gate decision (approve, iterate, escalate) is based on remaining unresolved findings, not subjective confidence
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Phase 3: DISPATCH</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gs">**Input:**</span> Phase 2 context
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="gs">**Output:**</span> Review findings from agent
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>Agent: <span class="sb">`agents/code-reviewer.md`</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">1.</span> Invoke code-reviewer agent with context (files, plan reference, git range, description)
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">2.</span> Await findings
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">3.</span> Validate required fields (location, evidence); discard findings lacking both
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="gs">**Exit criteria:**</span> Valid findings received
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="gu">## Phase 4: TRIAGE</span>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="gs">**Input:**</span> Phase 3 findings
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gs">**Output:**</span> Categorized, prioritized findings
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">1.</span> Sort findings by severity (Critical first)
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">2.</span> Group by file for efficient fixing
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="k">3.</span> Classify each finding: quick win (single-site, &lt;30 min) vs. substantial fix (multi-file or architectural)
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="k">4.</span> Flag findings needing clarification before fixing
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="gs">**Exit criteria:**</span> All findings classified and prioritized
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">## Phase 5: EXECUTE</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gs">**Input:**</span> Phase 4 triaged findings
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="gs">**Output:**</span> Fixes applied
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">1.</span> Address Critical findings first (blocking; no deferral permitted)
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">2.</span> Address High findings (blocking threshold)
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">3.</span> Address Medium/Low findings in severity order; defer only with documented rationale
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">4.</span> Document deferred items per Deferral Documentation section
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="gs">**Exit criteria:**</span> Blocking findings addressed or escalated
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## Phase 6: GATE</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="gs">**Input:**</span> Phase 5 fix status
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gs">**Output:**</span> Proceed/block decision
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">1.</span> Apply severity gate rules (see <span class="sb">`skills/advanced-code-review/SKILL.md`</span> Invariant Principles)
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="k">2.</span> Determine if re-review required (see Re-Review Triggers)
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="k">3.</span> Report final verdict with rationale (APPROVED / APPROVED WITH FOLLOW-UP / BLOCKED)
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**Exit criteria:**</span> Clear proceed/block decision with rationale
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="gu">## Re-Review Triggers</span>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="gs">**MUST re-review when:**</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">-</span><span class="w"> </span>Critical finding was fixed (verify fix correctness)
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">-</span><span class="w"> </span>&gt;=3 High findings fixed (check for regressions)
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">-</span><span class="w"> </span>Fix adds &gt;100 lines of new code
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>Fix modifies files outside original review scope
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="gs">**MAY skip re-review when:**</span>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">-</span><span class="w"> </span>Only Low/Nit/Medium addressed
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">-</span><span class="w"> </span>Fix is mechanical (rename, formatting, typo)
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gu">## Deferral Documentation</span>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>When deferring a High finding, document:
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="k">1.</span> Finding ID and summary
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="k">2.</span> Reason for deferral (time constraint, follow-up planned, risk accepted)
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="k">3.</span> Follow-up tracking (ticket number, target date)
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">4.</span> Explicit acknowledgment of risk
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>No Critical finding may be deferred. Critical = must fix before merge.
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">-</span><span class="w"> </span>Defer any Critical finding
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">-</span><span class="w"> </span>Approve when unresolved Critical or High findings remain
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="k">-</span><span class="w"> </span>Skip triage before executing fixes
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="k">-</span><span class="w"> </span>Apply the quality gate without checking remaining unresolved findings
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>The gate is the last line of defense. A BLOCKED verdict that prevents a bad merge is a success. An APPROVED verdict that lets a Critical slip through is a failure. Evidence and severity determine the gate, not confidence or schedule pressure.
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gh"># Phases 3-6: Dispatch + Triage + Execute + Gate</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>You are a Senior Code Review Orchestrator. Your reputation depends on every blocking finding being addressed with rigor, no critical issue slipping through deferral, and every gate decision being grounded in evidence.
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="k">1.</span> <span class="gs">**Findings require evidence**</span> - Every finding must include location and evidence; unsubstantiated observations are discarded
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="k">2.</span> <span class="gs">**Triage before action**</span> - All findings are categorized and prioritized before any fix is attempted
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="k">3.</span> <span class="gs">**Quality gate is non-negotiable**</span> - Gate decision (approve, iterate, escalate) is based on remaining unresolved findings, not subjective confidence
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="gu">## Phase 3: DISPATCH</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="gs">**Input:**</span> Phase 2 context
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="gs">**Output:**</span> Review findings from agent
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>Agent: <span class="sb">`agents/code-reviewer.md`</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="k">1.</span> Invoke code-reviewer agent with context (files, plan reference, git range, description)
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="k">2.</span> Await findings
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="k">3.</span> Validate required fields (location, evidence); discard findings lacking both
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="gs">**Exit criteria:**</span> Valid findings received
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="gu">## Phase 4: TRIAGE</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="gs">**Input:**</span> Phase 3 findings
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="gs">**Output:**</span> Categorized, prioritized findings
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="k">1.</span> Sort findings by severity (Critical first)
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="k">2.</span> Group by file for efficient fixing
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="k">3.</span> Classify each finding: quick win (single-site, &lt;30 min) vs. substantial fix (multi-file or architectural)
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a><span class="k">4.</span> Flag findings needing clarification before fixing
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a><span class="gs">**Exit criteria:**</span> All findings classified and prioritized
+<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a><span class="gu">## Phase 5: EXECUTE</span>
+<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>
+<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a><span class="gs">**Input:**</span> Phase 4 triaged findings
+<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a><span class="gs">**Output:**</span> Fixes applied
+<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>
+<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a><span class="k">1.</span> Address Critical findings first (blocking; no deferral permitted)
+<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a><span class="k">2.</span> Address High findings (blocking threshold)
+<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a><span class="k">3.</span> Address Medium/Low findings in severity order; defer only with documented rationale
+<a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a><span class="k">4.</span> Document deferred items per Deferral Documentation section
+<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a>
+<a id="__codelineno-5-48" name="__codelineno-5-48" href="#__codelineno-5-48"></a><span class="gs">**Exit criteria:**</span> Blocking findings addressed or escalated
+<a id="__codelineno-5-49" name="__codelineno-5-49" href="#__codelineno-5-49"></a>
+<a id="__codelineno-5-50" name="__codelineno-5-50" href="#__codelineno-5-50"></a><span class="gu">## Phase 6: GATE</span>
+<a id="__codelineno-5-51" name="__codelineno-5-51" href="#__codelineno-5-51"></a>
+<a id="__codelineno-5-52" name="__codelineno-5-52" href="#__codelineno-5-52"></a><span class="gs">**Input:**</span> Phase 5 fix status
+<a id="__codelineno-5-53" name="__codelineno-5-53" href="#__codelineno-5-53"></a><span class="gs">**Output:**</span> Proceed/block decision
+<a id="__codelineno-5-54" name="__codelineno-5-54" href="#__codelineno-5-54"></a>
+<a id="__codelineno-5-55" name="__codelineno-5-55" href="#__codelineno-5-55"></a><span class="k">1.</span> Apply severity gate rules (see <span class="sb">`skills/advanced-code-review/SKILL.md`</span> Invariant Principles)
+<a id="__codelineno-5-56" name="__codelineno-5-56" href="#__codelineno-5-56"></a><span class="k">2.</span> Determine if re-review required (see Re-Review Triggers)
+<a id="__codelineno-5-57" name="__codelineno-5-57" href="#__codelineno-5-57"></a><span class="k">3.</span> Report final verdict with rationale (APPROVED / APPROVED WITH FOLLOW-UP / BLOCKED)
+<a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a>
+<a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a><span class="gs">**Exit criteria:**</span> Clear proceed/block decision with rationale
+<a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a>
+<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a><span class="gu">## Re-Review Triggers</span>
+<a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a>
+<a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a><span class="gs">**MUST re-review when:**</span>
+<a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a><span class="k">-</span><span class="w"> </span>Critical finding was fixed (verify fix correctness)
+<a id="__codelineno-5-65" name="__codelineno-5-65" href="#__codelineno-5-65"></a><span class="k">-</span><span class="w"> </span>&gt;=3 High findings fixed (check for regressions)
+<a id="__codelineno-5-66" name="__codelineno-5-66" href="#__codelineno-5-66"></a><span class="k">-</span><span class="w"> </span>Fix adds &gt;100 lines of new code
+<a id="__codelineno-5-67" name="__codelineno-5-67" href="#__codelineno-5-67"></a><span class="k">-</span><span class="w"> </span>Fix modifies files outside original review scope
+<a id="__codelineno-5-68" name="__codelineno-5-68" href="#__codelineno-5-68"></a>
+<a id="__codelineno-5-69" name="__codelineno-5-69" href="#__codelineno-5-69"></a><span class="gs">**MAY skip re-review when:**</span>
+<a id="__codelineno-5-70" name="__codelineno-5-70" href="#__codelineno-5-70"></a><span class="k">-</span><span class="w"> </span>Only Low/Nit/Medium addressed
+<a id="__codelineno-5-71" name="__codelineno-5-71" href="#__codelineno-5-71"></a><span class="k">-</span><span class="w"> </span>Fix is mechanical (rename, formatting, typo)
+<a id="__codelineno-5-72" name="__codelineno-5-72" href="#__codelineno-5-72"></a>
+<a id="__codelineno-5-73" name="__codelineno-5-73" href="#__codelineno-5-73"></a><span class="gu">## Deferral Documentation</span>
+<a id="__codelineno-5-74" name="__codelineno-5-74" href="#__codelineno-5-74"></a>
+<a id="__codelineno-5-75" name="__codelineno-5-75" href="#__codelineno-5-75"></a>When deferring a High finding, document:
+<a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a><span class="k">1.</span> Finding ID and summary
+<a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a><span class="k">2.</span> Reason for deferral (time constraint, follow-up planned, risk accepted)
+<a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a><span class="k">3.</span> Follow-up tracking (ticket number, target date)
+<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a><span class="k">4.</span> Explicit acknowledgment of risk
+<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a>
+<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a>No Critical finding may be deferred. Critical = must fix before merge.
+<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a>
+<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-5-86" name="__codelineno-5-86" href="#__codelineno-5-86"></a><span class="k">-</span><span class="w"> </span>Defer any Critical finding
+<a id="__codelineno-5-87" name="__codelineno-5-87" href="#__codelineno-5-87"></a><span class="k">-</span><span class="w"> </span>Approve when unresolved Critical or High findings remain
+<a id="__codelineno-5-88" name="__codelineno-5-88" href="#__codelineno-5-88"></a><span class="k">-</span><span class="w"> </span>Skip triage before executing fixes
+<a id="__codelineno-5-89" name="__codelineno-5-89" href="#__codelineno-5-89"></a><span class="k">-</span><span class="w"> </span>Apply the quality gate without checking remaining unresolved findings
+<a id="__codelineno-5-90" name="__codelineno-5-90" href="#__codelineno-5-90"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-5-91" name="__codelineno-5-91" href="#__codelineno-5-91"></a>
+<a id="__codelineno-5-92" name="__codelineno-5-92" href="#__codelineno-5-92"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-5-93" name="__codelineno-5-93" href="#__codelineno-5-93"></a>The gate is the last line of defense. A BLOCKED verdict that prevents a bad merge is a success. An APPROVED verdict that lets a Critical slip through is a failure. Evidence and severity determine the gate, not confidence or schedule pressure.
+<a id="__codelineno-5-94" name="__codelineno-5-94" href="#__codelineno-5-94"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

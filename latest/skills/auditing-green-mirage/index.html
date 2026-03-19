@@ -7685,7 +7685,6 @@
 <p>Use when auditing whether tests genuinely catch failures, or when user expresses doubt about test quality. Triggers: 'are these tests real', 'do tests catch bugs', 'tests pass but I don't trust them', 'test quality audit', 'green mirage', 'shallow tests', 'tests always pass suspiciously', 'would this test fail if code was broken'. Forensic analysis of assertions, mock usage, and code path coverage.</p>
 </blockquote>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Now I have all the source material. Let me construct the diagrams.</p>
 <h2 id="overview-auditing-green-mirage-workflow">Overview: Auditing Green Mirage Workflow<a class="headerlink" href="#overview-auditing-green-mirage-workflow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph legend[&quot; Legend &quot;]
@@ -7728,12 +7727,15 @@
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    VERDICT{All assertions&lt;br&gt;PASS?}:::gate
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    VERDICT --&gt;|PASS: All KILLED +&lt;br&gt;Level 4+ + no Pattern 10| DONE
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    VERDICT --&gt;|FAIL: SURVIVED or&lt;br&gt;Level 2 or Pattern 10| REWORK[Return to fix phase&lt;br&gt;with required changes]
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    REWORK --&gt; P7
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    classDef subagent fill:#4a9eff,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    classDef gate fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    classDef success fill:#51cf66,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    VERDICT --&gt;|FAIL: SURVIVED or&lt;br&gt;Level 2 or Pattern 10| RETRY_Q{3 consecutive FAILs&lt;br&gt;on same assertion?}
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    RETRY_Q --&gt;|No| REWORK[List required changes,&lt;br&gt;return to fix author]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    RETRY_Q --&gt;|Yes| HALT([HALT: Report to user&lt;br&gt;Circuit breaker tripped]):::fail
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    REWORK --&gt; P7
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    classDef gate fill:#ff6b6b,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    classDef success fill:#51cf66,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    classDef fail fill:#ff6b6b,color:#fff
 </code></pre></div>
 <hr />
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
@@ -8069,13 +8071,16 @@
 <a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a>        ALL_Q --&gt;|All KILLED +&lt;br&gt;Level 4+ +&lt;br&gt;no Pattern 10| PASS_OUT
 <a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a>    end
 <a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a>
-<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a>    FAIL_OUT([FAIL: List required changes&lt;br&gt;Return to fix phase]):::fail
-<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a>    PASS_OUT([PASS: Fixes verified&lt;br&gt;Audit complete]):::success
-<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a>
-<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a>    classDef subagent fill:#4a9eff,color:#fff
-<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a>    classDef gate fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a>    classDef success fill:#51cf66,color:#fff
-<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>    classDef fail fill:#ff6b6b,color:#fff
+<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a>    FAIL_OUT{3 consecutive FAILs&lt;br&gt;on same assertion?}
+<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a>    FAIL_OUT --&gt;|No| REWORK([FAIL: List required changes,&lt;br&gt;return to fix author]):::fail
+<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a>    FAIL_OUT --&gt;|Yes| HALT([HALT: Report to user&lt;br&gt;Circuit breaker tripped]):::fail
+<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a>    REWORK --&gt; START
+<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a>    PASS_OUT([PASS: Fixes verified&lt;br&gt;Audit complete]):::success
+<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a>
+<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-5-86" name="__codelineno-5-86" href="#__codelineno-5-86"></a>    classDef gate fill:#ff6b6b,color:#fff
+<a id="__codelineno-5-87" name="__codelineno-5-87" href="#__codelineno-5-87"></a>    classDef success fill:#51cf66,color:#fff
+<a id="__codelineno-5-88" name="__codelineno-5-88" href="#__codelineno-5-88"></a>    classDef fail fill:#ff6b6b,color:#fff
 </code></pre></div>
 <hr />
 <h2 id="self-check-checklist-referenced-in-phase-5-6">Self-Check Checklist (Referenced in Phase 5-6)<a class="headerlink" href="#self-check-checklist-referenced-in-phase-5-6" title="Permanent link">&para;</a></h2>

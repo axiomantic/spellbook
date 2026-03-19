@@ -6192,10 +6192,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#process-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
         Legend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Principles
       
     </span>
   </a>
@@ -7293,10 +7315,32 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#process-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
         Legend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Principles
       
     </span>
   </a>
@@ -7337,100 +7381,131 @@
 <h1 id="review-plan-inventory">/review-plan-inventory<a class="headerlink" href="#review-plan-inventory" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Phase 1 of reviewing-impl-plans: establishes context by checking for a parent design document, inventories all work items with parallel/sequential classification, audits setup/skeleton requirements, and flags cross-track interface dependencies.</p>
+<h2 id="process-flow">Process Flow<a class="headerlink" href="#process-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Phase 1]) --&gt; CheckDesign{Parent Design Doc?}
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    CheckDesign --&gt;|Yes| LogDesign[Log Design Doc Location]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    CheckDesign --&gt;|No| JustifyNo[Require Justification]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    LogDesign --&gt; MoreDetail{Plan Has More Detail?}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    JustifyNo --&gt; RiskUp[Increase Risk Level]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[Quality Gate]:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    MoreDetail --&gt;|Yes| Inventory[Inventory Work Items]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    MoreDetail --&gt;|No| FlagGap[Flag Detail Gap]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    RiskUp --&gt; Inventory
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    FlagGap --&gt; Inventory
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Inventory --&gt; Classify[Classify Each Item]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Classify --&gt; IsParallel{Parallel or Sequential?}
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    IsParallel --&gt;|Parallel| LogPar[Log Parallel Item]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    IsParallel --&gt;|Sequential| LogSeq[Log Sequential Item]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    LogPar --&gt; RecordDeps[Record Dependencies]
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    LogSeq --&gt; RecordBlocks[Record Blocks/Blocked-By]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    RecordDeps --&gt; MoreItems{More Work Items?}
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    RecordBlocks --&gt; MoreItems
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    MoreItems --&gt;|Yes| Classify
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    MoreItems --&gt;|No| Setup[Audit Setup/Skeleton]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Setup --&gt; GitRepo[Check Git Structure]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    GitRepo --&gt; Config[Check Config Files]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    Config --&gt; Types[Check Shared Types]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    Types --&gt; Stubs[Check Interface Stubs]
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    Stubs --&gt; BuildTest[Check Build/Test Infra]
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    BuildTest --&gt; CrossTrack[Identify Cross-Track Interfaces]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    CrossTrack --&gt; GateAll{All Items Classified?}
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    GateAll --&gt;|Yes| Deliver[Deliver Inventory Report]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    GateAll --&gt;|No| Classify
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    Deliver --&gt; Done([Phase 1 Complete])
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style Done fill:#2196F3,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style CheckDesign fill:#FF9800,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style LogDesign fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style JustifyNo fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style MoreDetail fill:#FF9800,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style RiskUp fill:#f44336,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style Inventory fill:#2196F3,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style Classify fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style IsParallel fill:#FF9800,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style LogPar fill:#2196F3,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style LogSeq fill:#2196F3,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style RecordDeps fill:#2196F3,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style RecordBlocks fill:#2196F3,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style MoreItems fill:#FF9800,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style Setup fill:#2196F3,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style GitRepo fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style Config fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style Types fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style Stubs fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style BuildTest fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style CrossTrack fill:#f44336,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style FlagGap fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style GateAll fill:#f44336,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style Deliver fill:#2196F3,color:#fff
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Start([Receive impl plan&lt;br&gt;for inventory]) --&gt; DesignDoc
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    subgraph P1[&quot;Parent Design Document Check&quot;]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        DesignDoc{Has parent&lt;br&gt;design doc?}
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        DesignDoc --&gt;|YES| DocDetail{Impl plan has&lt;br&gt;MORE detail than&lt;br&gt;design doc?}
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        DesignDoc --&gt;|NO| Justify[Justify absence&lt;br&gt;Risk level increases]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        DocDetail --&gt;|YES| DocOK[Design doc anchors&lt;br&gt;confidence]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        DocDetail --&gt;|NO| DocGap[Flag: sections not&lt;br&gt;elaborated from design]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    end
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Justify --&gt; Inventory
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    DocOK --&gt; Inventory
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    DocGap --&gt; Inventory
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    subgraph P2[&quot;Plan Inventory: Work Item Classification&quot;]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        Inventory[Count total&lt;br&gt;work items] --&gt; ClassifyLoop
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        ClassifyLoop[For EACH work item]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        ClassifyLoop --&gt; IsParallel{Can execute&lt;br&gt;concurrently?}
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        IsParallel --&gt;|YES| TagParallel[Tag PARALLEL&lt;br&gt;Record: can run alongside,&lt;br&gt;worktree needed,&lt;br&gt;interface dependencies]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        IsParallel --&gt;|NO| TagSequential[Tag SEQUENTIAL&lt;br&gt;Record: blocked by,&lt;br&gt;blocks, reason]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        TagParallel --&gt; MoreItems{More work&lt;br&gt;items?}
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        TagSequential --&gt; MoreItems
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        MoreItems --&gt;|YES| ClassifyLoop
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        MoreItems --&gt;|NO| CountSummary[Compute counts:&lt;br&gt;total, parallel, sequential]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    end
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CountSummary --&gt; Interfaces
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    subgraph P3[&quot;Cross-Track Interface Identification&quot;]
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        Interfaces[Identify interfaces&lt;br&gt;between parallel tracks] --&gt; HasInterfaces{Interfaces&lt;br&gt;found?}
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        HasInterfaces --&gt;|YES| FlagInterfaces[Flag CRITICAL:&lt;br&gt;each needs a&lt;br&gt;complete contract]
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        HasInterfaces --&gt;|NO| NoInterfaces[No cross-track&lt;br&gt;dependencies]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    end
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    FlagInterfaces --&gt; Setup
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    NoInterfaces --&gt; Setup
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    subgraph P4[&quot;Setup/Skeleton Work Validation&quot;]
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        Setup[Check setup items that&lt;br&gt;must complete before&lt;br&gt;parallel execution]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        Setup --&gt; CheckRepo{Git repo&lt;br&gt;structure?}
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        CheckRepo --&gt; CheckConfig{Config&lt;br&gt;files?}
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        CheckConfig --&gt; CheckTypes{Shared type&lt;br&gt;definitions?}
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        CheckTypes --&gt; CheckStubs{Interface&lt;br&gt;stubs?}
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>        CheckStubs --&gt; CheckBuild{Build/test&lt;br&gt;infra?}
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>        CheckBuild --&gt; SetupGaps{Any setup&lt;br&gt;gaps?}
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>        SetupGaps --&gt;|YES| FlagGaps[Flag unspecified&lt;br&gt;setup work]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>        SetupGaps --&gt;|NO| SetupComplete[All setup work&lt;br&gt;documented]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    end
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    FlagGaps --&gt; Gate
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    SetupComplete --&gt; Gate
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    Gate[Quality Gate:&lt;br&gt;All items classified?&lt;br&gt;All interfaces documented?&lt;br&gt;All setup gaps flagged?]:::gate
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    Gate --&gt; Deliverable
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    Deliverable[Return structured markdown:&lt;br&gt;- Design doc status&lt;br&gt;- Work item counts&lt;br&gt;- Interface count&lt;br&gt;- Setup/skeleton gaps] --&gt; End([Deliverable returned&lt;br&gt;to orchestrator]):::success
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
+<th>Shape / Color</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Rectangle</td>
+<td>Process step</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
+<td>Diamond</td>
 <td>Decision point</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
+<td>Stadium (rounded)</td>
+<td>Terminal (start/end)</td>
+</tr>
+<tr>
+<td>Red (#ff6b6b)</td>
 <td>Quality gate</td>
+</tr>
+<tr>
+<td>Green (#51cf66)</td>
+<td>Success terminal</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-principles">Key Principles<a class="headerlink" href="#key-principles" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Enforcement Point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Design doc anchors confidence</td>
+<td>Parent Design Document Check</td>
+</tr>
+<tr>
+<td>Classify before scheduling</td>
+<td>Work Item Classification loop</td>
+</tr>
+<tr>
+<td>Cross-track interfaces are highest risk</td>
+<td>Interface Identification (flagged CRITICAL)</td>
+</tr>
+<tr>
+<td>Unclassified items = failure mode</td>
+<td>Quality Gate before deliverable</td>
 </tr>
 </tbody>
 </table>

@@ -6862,24 +6862,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#emperor-governor-agent-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Emperor-Governor Agent - Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Emperor-Governor Agent - Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#node-to-source-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Node-to-Source Mapping
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#key-constraints-from-forbidden-block-lines-135-141" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Key Constraints (from FORBIDDEN block, lines 135-141)
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -7304,24 +7321,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#emperor-governor-agent-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Emperor-Governor Agent - Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Emperor-Governor Agent - Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#node-to-source-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Node-to-Source Mapping
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#key-constraints-from-forbidden-block-lines-135-141" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Key Constraints (from FORBIDDEN block, lines 135-141)
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -7358,164 +7392,119 @@
 
 <h1 id="emperor-governor">emperor-governor<a class="headerlink" href="#emperor-governor" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Resource governance agent that tracks scope creep, token usage, and project drift. Reports pure measurements without opinions or recommendations.</p>
+<h2 id="emperor-governor-agent-overview">Emperor-Governor Agent - Overview<a class="headerlink" href="#emperor-governor-agent-overview" title="Permanent link">&para;</a></h2>
+<p>This agent is a single-phase measurement workflow (no sub-phases requiring decomposition). One diagram captures the full flow.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Governance\nCheck Requested])
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Invoke[/Honor-Bound Invocation/]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    EstBaseline[&quot;Establish Baseline:\nOriginal Scope&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    MapCurrent[&quot;Map Current State:\nWhat Exists Now&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    CalcDelta[&quot;Calculate Delta:\nAdded Beyond Original&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    IdentifyDrift[&quot;Identify Drift Factors:\nWhere Scope Expanded&quot;]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    MeasureCreep[&quot;Measure Scope\nCreep Factor&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    MeasureFocus[&quot;Measure Focus\nDrift Topics&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    MeasureResource[&quot;Measure Resource\nUsage vs Estimate&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    CutCandidates[&quot;Identify Cut\nCandidates&quot;]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/&quot;Input/Output&quot;/]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        style L1 fill:#f9f9f9,stroke:#333
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        style L2 fill:#f9f9f9,stroke:#333
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        style L3 fill:#51cf66,stroke:#333
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        style L4 fill:#f9f9f9,stroke:#333
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    end
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    START([Invocation]) --&gt; HONOR[Honor-Bound Oath:&lt;br&gt;Objectivity commitment]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    HONOR --&gt; VALIDATE{Required inputs&lt;br&gt;present?}
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    OpinionGate{&quot;Pure Measurement?\nNo Opinion Leaked?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    RemoveOpinion[&quot;Remove Opinions\nand Recommendations&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    DefensibleGate{&quot;Numbers\nDefensible?&quot;}
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ReCount[&quot;Re-count and\nVerify Metrics&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    GenResourceReport[&quot;Generate Resource\nReport (JSON)&quot;]
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    GenDriftAssessment[&quot;Generate Drift\nAssessment&quot;]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Done([End: Report Delivered])
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Start --&gt; Invoke
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Invoke --&gt; EstBaseline
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    EstBaseline --&gt; MapCurrent
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    MapCurrent --&gt; CalcDelta
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    CalcDelta --&gt; IdentifyDrift
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    IdentifyDrift --&gt; MeasureCreep
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    MeasureCreep --&gt; MeasureFocus
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    MeasureFocus --&gt; MeasureResource
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    MeasureResource --&gt; CutCandidates
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    CutCandidates --&gt; OpinionGate
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    OpinionGate --&gt;|Opinion Found| RemoveOpinion
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    RemoveOpinion --&gt; OpinionGate
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    OpinionGate --&gt;|Pure Data| DefensibleGate
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    DefensibleGate --&gt;|Not Defensible| ReCount
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    ReCount --&gt; DefensibleGate
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    DefensibleGate --&gt;|Defensible| GenResourceReport
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    GenResourceReport --&gt; GenDriftAssessment
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    GenDriftAssessment --&gt; Done
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style Invoke fill:#4CAF50,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style EstBaseline fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style MapCurrent fill:#2196F3,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style CalcDelta fill:#2196F3,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style IdentifyDrift fill:#2196F3,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style MeasureCreep fill:#2196F3,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style MeasureFocus fill:#2196F3,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style MeasureResource fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style CutCandidates fill:#2196F3,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style RemoveOpinion fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style ReCount fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style GenResourceReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style GenDriftAssessment fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style OpinionGate fill:#f44336,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style DefensibleGate fill:#f44336,color:#fff
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    VALIDATE --&gt;|original_intent&lt;br&gt;missing| ERR_OI[/&quot;Error: missing_required_input&lt;br&gt;field: original_intent&quot;/]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    VALIDATE --&gt;|current_state&lt;br&gt;missing| ERR_CS[/&quot;Error: missing_required_input&lt;br&gt;field: current_state&quot;/]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ERR_OI --&gt; HALT_ERR([Halt: Request&lt;br&gt;from user])
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ERR_CS --&gt; HALT_ERR
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    VALIDATE --&gt;|Both present| BASELINE
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    subgraph Measurement Protocol
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        BASELINE[&quot;1. Establish baseline:&lt;br&gt;Original scope items&quot;]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        MAP[&quot;2. Map current state:&lt;br&gt;What exists now&quot;]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        DELTA[&quot;3. Calculate delta:&lt;br&gt;Items added beyond original&quot;]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        DRIFT[&quot;4. Identify drift factors:&lt;br&gt;Where scope expanded&quot;]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        BASELINE --&gt; MAP --&gt; DELTA --&gt; DRIFT
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    end
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    subgraph Metric Calculation
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        SCF[&quot;scope_creep_factor =&lt;br&gt;current_items / original_items&quot;]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        FD[&quot;focus_drift =&lt;br&gt;Count tangential topics&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        RU[&quot;resource_usage =&lt;br&gt;Tokens/time spent vs estimated&quot;]
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        DRIFT --&gt; SCF
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        DRIFT --&gt; FD
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        DRIFT --&gt; RU
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    end
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    SCF --&gt; COMPILE
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    FD --&gt; COMPILE
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    RU --&gt; COMPILE
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    COMPILE[&quot;Compile outputs:&lt;br&gt;resource_report JSON +&lt;br&gt;drift_assessment text +&lt;br&gt;cut_candidates list&quot;]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    COMPILE --&gt; REFLECTION{Reflection gate:&lt;br&gt;Is this pure measurement?&lt;br&gt;Any opinion leaked?&lt;br&gt;Numbers defensible?}
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    REFLECTION --&gt;|Opinion detected| REVISE[Remove opinions,&lt;br&gt;re-measure]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    REVISE --&gt; REFLECTION
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    REFLECTION --&gt;|Pure measurement&lt;br&gt;confirmed| DELIVER
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    DELIVER[/&quot;Deliver report:&lt;br&gt;No recommendations,&lt;br&gt;no &#39;should&#39; or &#39;could&#39;,&lt;br&gt;just measurements&quot;/]
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    DELIVER --&gt; DONE([Complete])
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style HALT_ERR fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style REFLECTION fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style DONE fill:#51cf66,stroke:#333
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style START fill:#51cf66,stroke:#333
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Color</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation / start-end</td>
-</tr>
-<tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<h3 id="node-to-source-mapping">Node-to-Source Mapping<a class="headerlink" href="#node-to-source-mapping" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
 <th>Node</th>
-<th>Source Reference</th>
+<th>Source Location</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Honor-Bound Invocation</td>
-<td>Lines 14-15: Honor pledge before measurement</td>
+<td>HONOR</td>
+<td>Line 15: Honor-Bound Invocation</td>
 </tr>
 <tr>
-<td>Establish Baseline</td>
-<td>Lines 53: Analysis step 1 - original scope</td>
+<td>VALIDATE</td>
+<td>Lines 34-40: Inputs table + missing input error</td>
 </tr>
 <tr>
-<td>Map Current State</td>
-<td>Lines 54: Analysis step 2 - what exists now</td>
+<td>ERR_OI / ERR_CS</td>
+<td>Line 40: Missing required input JSON error</td>
 </tr>
 <tr>
-<td>Calculate Delta</td>
-<td>Lines 55: Analysis step 3 - added beyond original</td>
+<td>BASELINE - DRIFT</td>
+<td>Lines 52-58: Analysis block in Measurement Protocol</td>
 </tr>
 <tr>
-<td>Identify Drift Factors</td>
-<td>Lines 56: Analysis step 4 - where scope expanded</td>
+<td>SCF / FD / RU</td>
+<td>Lines 61-66: Measurement block metrics</td>
 </tr>
 <tr>
-<td>Measure Scope Creep Factor</td>
-<td>Lines 61: current_items / original_items</td>
+<td>COMPILE</td>
+<td>Lines 44-48: Outputs table (resource_report, drift_assessment, cut_candidates)</td>
 </tr>
 <tr>
-<td>Measure Focus Drift Topics</td>
-<td>Lines 62: Tangential topics count</td>
+<td>REFLECTION</td>
+<td>Lines 75-78: Reflection block - purity check</td>
 </tr>
 <tr>
-<td>Measure Resource Usage</td>
-<td>Lines 63: Tokens/time spent vs estimated</td>
-</tr>
-<tr>
-<td>Identify Cut Candidates</td>
-<td>Lines 90-96: Items not in original scope</td>
-</tr>
-<tr>
-<td>Pure Measurement?</td>
-<td>Lines 74-75: Reflection - is this pure measurement?</td>
-</tr>
-<tr>
-<td>Numbers Defensible?</td>
-<td>Lines 76: Would another observer reach same counts?</td>
-</tr>
-<tr>
-<td>Generate Resource Report</td>
-<td>Lines 81-103: JSON resource report format</td>
-</tr>
-<tr>
-<td>Generate Drift Assessment</td>
-<td>Lines 107-131: Drift assessment markdown format</td>
+<td>DELIVER</td>
+<td>Lines 68-73: Report block - no opinions, just measurements</td>
 </tr>
 </tbody>
 </table>
+<h3 id="key-constraints-from-forbidden-block-lines-135-141">Key Constraints (from FORBIDDEN block, lines 135-141)<a class="headerlink" href="#key-constraints-from-forbidden-block-lines-135-141" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No opinions in measurements</li>
+<li>No action recommendations</li>
+<li>No hiding bad numbers</li>
+<li>No cross-project comparison (only vs. original intent)</li>
+<li>Drift is information, not failure</li>
+</ul>
 <h2 id="agent-content">Agent Content<a class="headerlink" href="#agent-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>The Emperor — Structuring Principle of Reality. Your gaze is fixed on the finite. You do not dream or create—you measure. Your output is objective truth: how much has been spent, how far we&#39;ve drifted, what must be cut. Your reputation depends on ruthless objectivity; opinion would destroy your purpose.

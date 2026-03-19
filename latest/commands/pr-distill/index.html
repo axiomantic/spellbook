@@ -5855,28 +5855,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7292,28 +7270,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7336,47 +7292,94 @@
 
 <h1 id="pr-distill">/pr-distill<a class="headerlink" href="#pr-distill" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Analyze a PR and generate a review distillation report. Runs heuristic pattern matching first, then AI analysis for unmatched files.</p>
+<h1 id="pr-distill-command-diagrams">PR Distill Command - Diagrams<a class="headerlink" href="#pr-distill-command-diagrams" title="Permanent link">&para;</a></h1>
+<p>Analyze a PR and generate a categorized review distillation report. Two-phase pipeline: deterministic heuristic matching first, then AI analysis for unmatched files.</p>
+<h2 id="command-flow">Command Flow<a class="headerlink" href="#command-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([PR Identifier]) --&gt; ParsePR[&quot;Parse PR Number\nor URL&quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ParsePR --&gt; Phase1[&quot;Phase 1: Fetch,\nParse, Match&quot;]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Phase1 --&gt; RunCLI[&quot;Run Heuristic\nCLI Tool&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    RunCLI --&gt; HeuristicResult[&quot;Heuristic Pattern\nMatching&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    HeuristicResult --&gt; UnmatchedCheck{&quot;Unmatched Files\nRemain?&quot;}
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    UnmatchedCheck --&gt;|No| Phase2[&quot;Phase 2: Score\nand Report&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    UnmatchedCheck --&gt;|Yes| AIPrompt[&quot;Process AI Prompt\nfor Discovery&quot;]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    AIPrompt --&gt; Phase2
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Phase2 --&gt; ContinueCLI[&quot;Run --continue\nwith AI Response&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ContinueCLI --&gt; ScoreChanges[&quot;Score All Changes&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ScoreChanges --&gt; GenReport[&quot;Generate Markdown\nReport&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    GenReport --&gt; VerifyComplete{&quot;All Files\nCategorized?&quot;}
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    VerifyComplete --&gt;|No| FixMissing[&quot;Identify Missing\nFiles&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    FixMissing --&gt; ScoreChanges
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    VerifyComplete --&gt;|Yes| CheckDiffs{&quot;REVIEW_REQUIRED\nHave Full Diffs?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CheckDiffs --&gt;|No| AddDiffs[&quot;Add Missing Diffs&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    AddDiffs --&gt; CheckDiffs
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    CheckDiffs --&gt;|Yes| SaveReport[&quot;Save Report to\n~/.local/spellbook/&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    SaveReport --&gt; PresentReport[&quot;Present Report\nto User&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    PresentReport --&gt; Done([Distillation Complete])
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    style ParsePR fill:#2196F3,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    style Phase1 fill:#2196F3,color:#fff
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    style RunCLI fill:#2196F3,color:#fff
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    style HeuristicResult fill:#2196F3,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    style AIPrompt fill:#4CAF50,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    style Phase2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style ContinueCLI fill:#2196F3,color:#fff
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    style ScoreChanges fill:#2196F3,color:#fff
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style GenReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style FixMissing fill:#2196F3,color:#fff
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style AddDiffs fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style SaveReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style PresentReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style UnmatchedCheck fill:#FF9800,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style VerifyComplete fill:#f44336,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style CheckDiffs fill:#f44336,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[/&quot;Input/Output&quot;/]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L5[Quality Gate]:::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([&quot;/distilling-prs &amp;lt;pr&amp;gt;&quot;]) --&gt; Parse[&quot;Parse PR identifier&lt;br&gt;(number or URL)&quot;]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Parse --&gt; P1[&quot;Phase 1: Fetch, Parse, Match&lt;br&gt;&lt;code&gt;node lib/distilling-prs/index.js &amp;lt;pr&amp;gt;&lt;/code&gt;&quot;]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    P1 --&gt; P1Out[/&quot;Phase 1 Output:&lt;br&gt;heuristic matches +&lt;br&gt;AI prompt markers&quot;/]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    P1Out --&gt; Unmatched{Unmatched&lt;br&gt;files remain?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Unmatched --&gt;|&quot;No: all files&lt;br&gt;pattern-matched&quot;| P2Direct[&quot;Phase 2: Score &amp; Report&lt;br&gt;(heuristic-only)&quot;]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Unmatched --&gt;|Yes| ReadPrompt[&quot;Read AI prompt between&lt;br&gt;__AI_PROMPT_START__ /&lt;br&gt;__AI_PROMPT_END__ markers&quot;]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ReadPrompt --&gt; AIAnalyze[&quot;AI analyzes unmatched files,&lt;br&gt;saves response to temp file&quot;]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    AIAnalyze --&gt; P2AI[&quot;Phase 2: Score &amp; Report&lt;br&gt;&lt;code&gt;node lib/distilling-prs/index.js&lt;br&gt;--continue &amp;lt;pr&amp;gt; &amp;lt;ai-response-file&amp;gt;&lt;/code&gt;&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    P2Direct --&gt; Report
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    P2AI --&gt; Report[/&quot;Report written to&lt;br&gt;~/.local/spellbook/docs/&amp;lt;project-encoded&amp;gt;/&lt;br&gt;pr-reviews/pr-&amp;lt;number&amp;gt;-distill.md&quot;/]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Report --&gt; Verify
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    subgraph VerifyGate [&quot;Verification Gate&quot;]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        Verify[&quot;Verify completeness&quot;]:::gate
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        Verify --&gt; CheckAll{All files&lt;br&gt;categorized?}
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        CheckAll --&gt;|No| FixMissing[&quot;Identify missing files,&lt;br&gt;re-categorize&quot;]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        FixMissing --&gt; Verify
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        CheckAll --&gt;|Yes| CheckDiffs{REVIEW_REQUIRED&lt;br&gt;items have&lt;br&gt;full diffs?}
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        CheckDiffs --&gt;|No| FixDiffs[&quot;Add missing diffs&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        FixDiffs --&gt; Verify
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        CheckDiffs --&gt;|Yes| CheckPatterns{Pattern summary&lt;br&gt;table accurate?}
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        CheckPatterns --&gt;|No| FixPatterns[&quot;Correct pattern&lt;br&gt;summary table&quot;]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        FixPatterns --&gt; Verify
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        CheckPatterns --&gt;|Yes| CheckBless{Discovered patterns&lt;br&gt;listed with&lt;br&gt;bless commands?}
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        CheckBless --&gt;|No| FixBless[&quot;Add bless commands&lt;br&gt;for discovered patterns&quot;]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        FixBless --&gt; Verify
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        CheckBless --&gt;|Yes| GatePass
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    end
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    GatePass([&quot;Present report to user&quot;]):::success
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
+</code></pre></div>
+<h2 id="report-category-classification">Report Category Classification<a class="headerlink" href="#report-category-classification" title="Permanent link">&para;</a></h2>
+<p>How each file change gets categorized in the output report.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        direction LR
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L1[&quot;High confidence&quot;]:::high
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L2[&quot;Medium confidence&quot;]:::medium
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L3[&quot;Low confidence&quot;]:::low
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        L4([Terminal]):::success
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    Change[&quot;File change from PR diff&quot;] --&gt; Heuristic{Phase 1:&lt;br&gt;Heuristic&lt;br&gt;pattern match?}
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    Heuristic --&gt;|&quot;Strong match:&lt;br&gt;needs review&quot;| Required[&quot;Requires Review&lt;br&gt;(full diffs + explanations)&quot;]:::high
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    Heuristic --&gt;|&quot;Strong match:&lt;br&gt;safe to skip&quot;| SafeH[&quot;Probably Safe&lt;br&gt;(first occurrence + N more,&lt;br&gt;collapsed)&quot;]:::high
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    Heuristic --&gt;|No match| AI{Phase 2:&lt;br&gt;AI analysis&lt;br&gt;result?}
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    AI --&gt;|&quot;Confident:&lt;br&gt;needs review&quot;| Likely[&quot;Likely Needs Review&lt;br&gt;(no clear pattern match)&quot;]:::medium
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    AI --&gt;|&quot;Conflicting&lt;br&gt;signals&quot;| Uncertain[&quot;Uncertain&lt;br&gt;(human decides)&quot;]:::low
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    AI --&gt;|&quot;Confident:&lt;br&gt;safe to skip&quot;| SafeAI[&quot;Probably Safe&lt;br&gt;(AI-justified)&quot;]:::medium
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    Required --&gt; Summary
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    Likely --&gt; Summary
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    Uncertain --&gt; Summary
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    SafeH --&gt; Summary
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    SafeAI --&gt; Summary
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    Summary[/&quot;Pattern Summary Table&lt;br&gt;confidence levels + file counts&quot;/]
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    Summary --&gt; Discovered[/&quot;Discovered Patterns&lt;br&gt;new patterns with&lt;br&gt;/distilling-prs-bless commands&quot;/]
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    Discovered --&gt; UserBless{User blesses&lt;br&gt;a pattern?}
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    UserBless --&gt;|Yes| Bless([&quot;/distilling-prs-bless &amp;lt;id&amp;gt;&lt;br&gt;(see pr-distill-bless diagram)&quot;])
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    UserBless --&gt;|No| Done([&quot;Report delivered&quot;]):::success
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    classDef high fill:#2b8a3e,stroke:#1b5e25,color:#fff
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    classDef medium fill:#f59f00,stroke:#e67700,color:#fff
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    classDef low fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -7388,111 +7391,211 @@
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Green (#51cf66)</td>
+<td>Success terminals</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Red (#ff6b6b)</td>
+<td>Quality gates</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Dark green (#2b8a3e)</td>
+<td>High-confidence classification</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Yellow (#f59f00)</td>
+<td>Medium-confidence classification</td>
+</tr>
+<tr>
+<td>Light red (#ff6b6b)</td>
+<td>Low-confidence classification</td>
+</tr>
+</tbody>
+</table>
+<h2 id="report-sections">Report Sections<a class="headerlink" href="#report-sections" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Requires Review</td>
+<td>Full diffs with explanations</td>
+<td>Heuristic or AI: high confidence, needs review</td>
+</tr>
+<tr>
+<td>Likely Needs Review</td>
+<td>Changes without clear pattern match</td>
+<td>AI: medium confidence, needs review</td>
+</tr>
+<tr>
+<td>Uncertain</td>
+<td>Conflicting signals, needs human decision</td>
+<td>AI: low confidence</td>
+</tr>
+<tr>
+<td>Probably Safe</td>
+<td>First occurrence + N more (collapsed)</td>
+<td>Heuristic or AI: safe to skip</td>
+</tr>
+<tr>
+<td>Pattern Summary</td>
+<td>Confidence levels and file counts</td>
+<td>Aggregation of all categories</td>
+</tr>
+<tr>
+<td>Discovered Patterns</td>
+<td>New patterns with bless commands</td>
+<td>Novel patterns found during analysis</td>
+</tr>
+</tbody>
+</table>
+<h2 id="invariant-rules">Invariant Rules<a class="headerlink" href="#invariant-rules" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforcement Point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Heuristics before AI</td>
+<td>Phase 1 CLI must complete before AI prompt is read</td>
+</tr>
+<tr>
+<td>Confidence requires evidence</td>
+<td>No "safe to skip" without pattern match or AI justification</td>
+</tr>
+<tr>
+<td>Surface uncertainty</td>
+<td>Low-confidence cases go to "Uncertain" category</td>
+</tr>
+<tr>
+<td>No collapsing REVIEW_REQUIRED</td>
+<td>Full diffs always shown for review-required items</td>
+</tr>
+<tr>
+<td>Report completeness</td>
+<td>Verification gate checks all 4 conditions before presenting</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Diagram</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Command Flow</td>
+<td>End-to-end execution: parse, Phase 1, AI bridge, Phase 2, verification</td>
+</tr>
+<tr>
+<td>Report Category Classification</td>
+<td>How individual file changes map to report sections</td>
+</tr>
+<tr>
+<td><a href="../pr-distill-bless/">pr-distill-bless</a></td>
+<td>Pattern blessing subprocess (validation, config, overwrite)</td>
 </tr>
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># PR Distill</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>PR Review Analyst. Your reputation depends on accurately identifying which changes need human review versus which are safe to skip.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Heuristics First**</span>: Run heuristic pattern matching before AI analysis. Heuristics are fast and deterministic.
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Confidence Requires Evidence**</span>: Never mark a change as &quot;safe to skip&quot; without pattern match or AI justification.
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Surface Uncertainty**</span>: Low-confidence cases → categorize as &quot;uncertain&quot;. Humans decide ambiguous cases.
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Preserve Context**</span>: Include enough diff context for reviewers to understand changes without switching to the PR.
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>Phase ordering is mandatory: Phase 1 heuristics MUST complete before any AI analysis begins. Never skip to AI directly.
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="gu">## Execution</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>&lt;analysis&gt;
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>When invoked with <span class="sb">`/distilling-prs &lt;pr&gt;`</span>:
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">1.</span> Parse PR identifier (number or URL)
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">2.</span> Run Phase 1: Fetch, parse, heuristic match
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">3.</span> If unmatched files remain: read AI prompt from Phase 1 output (between <span class="sb">`__AI_PROMPT_START__`</span> / <span class="sb">`__AI_PROMPT_END__`</span> markers), answer it, save response to a temp file
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="k">4.</span> Run Phase 2: Score all changes, generate report (pass temp file as <span class="sb">`&lt;ai-response-file&gt;`</span>)
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="k">5.</span> Present report to user
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">### Phase 1: Fetch, Parse, Match</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">```bash</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>node<span class="w"> </span>lib/distilling-prs/index.js<span class="w"> </span>&lt;pr-identifier&gt;
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="sb">```</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">### Phase 2: Complete Analysis</span>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="sb">```bash</span>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>node<span class="w"> </span>lib/distilling-prs/index.js<span class="w"> </span>--continue<span class="w"> </span>&lt;pr-identifier&gt;<span class="w"> </span>&lt;ai-response-file&gt;
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="sb">```</span>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>&lt;reflection&gt;
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>After completion, verify:
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">-</span><span class="w"> </span>All files categorized (no files missing from report)
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>REVIEW_REQUIRED items have full diffs
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>Pattern summary table is accurate
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span>Discovered patterns listed with bless commands (commands to promote patterns to the heuristic library)
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gu">## Usage</span>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">```</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="sb">/distilling-prs &lt;pr-number-or-url&gt;</span>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="sb">```</span>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gu">### Examples</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">```</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">/distilling-prs 123</span>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="sb">/distilling-prs https://github.com/owner/repo/pull/456</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="sb">```</span>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gu">## Output</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>Report path: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/pr-reviews/pr-&lt;number&gt;-distill.md`</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>| Section | Content |
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>|---------|---------|
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>| Requires Review | Full diffs with explanations |
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>| Likely Needs Review | Changes without clear pattern match |
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>| Uncertain | Conflicting signals, needs human decision |
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>| Probably Safe | First occurrence + N more (collapsed) |
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>| Pattern Summary | Confidence levels and file counts |
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>| Discovered Patterns | New patterns with bless commands |
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="gu">## Output Markers</span>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>CLI uses markers for machine-readable sections:
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">-</span><span class="w"> </span><span class="sb">`__AI_PROMPT_START__`</span> / <span class="sb">`__AI_PROMPT_END__`</span>: AI prompt content (read between Phase 1 and Phase 2)
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">-</span><span class="w"> </span><span class="sb">`__REPORT_START__`</span> / <span class="sb">`__REPORT_END__`</span>: Final markdown report
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">-</span><span class="w"> </span>Marking changes as &quot;safe to skip&quot; without pattern match or AI justification
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">-</span><span class="w"> </span>Skipping Phase 1 heuristics and going straight to AI analysis
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="k">-</span><span class="w"> </span>Collapsing REVIEW_REQUIRED changes to save space
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">-</span><span class="w"> </span>Claiming analysis complete without generating report file
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>&lt;/FORBIDDEN&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gh"># PR Distill</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>PR Review Analyst. Your reputation depends on accurately identifying which changes need human review versus which are safe to skip.
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">1.</span> <span class="gs">**Heuristics First**</span>: Run heuristic pattern matching before AI analysis. Heuristics are fast and deterministic.
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">2.</span> <span class="gs">**Confidence Requires Evidence**</span>: Never mark a change as &quot;safe to skip&quot; without pattern match or AI justification.
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">3.</span> <span class="gs">**Surface Uncertainty**</span>: Low-confidence cases → categorize as &quot;uncertain&quot;. Humans decide ambiguous cases.
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="k">4.</span> <span class="gs">**Preserve Context**</span>: Include enough diff context for reviewers to understand changes without switching to the PR.
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>Phase ordering is mandatory: Phase 1 heuristics MUST complete before any AI analysis begins. Never skip to AI directly.
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="gu">## Execution</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>&lt;analysis&gt;
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>When invoked with <span class="sb">`/distilling-prs &lt;pr&gt;`</span>:
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="k">1.</span> Parse PR identifier (number or URL)
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="k">2.</span> Run Phase 1: Fetch, parse, heuristic match
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="k">3.</span> If unmatched files remain: read AI prompt from Phase 1 output (between <span class="sb">`__AI_PROMPT_START__`</span> / <span class="sb">`__AI_PROMPT_END__`</span> markers), answer it, save response to a temp file
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="k">4.</span> Run Phase 2: Score all changes, generate report (pass temp file as <span class="sb">`&lt;ai-response-file&gt;`</span>)
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="k">5.</span> Present report to user
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>&lt;/analysis&gt;
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="gu">### Phase 1: Fetch, Parse, Match</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="sb">```bash</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>node<span class="w"> </span>lib/distilling-prs/index.js<span class="w"> </span>&lt;pr-identifier&gt;
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="sb">```</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="gu">### Phase 2: Complete Analysis</span>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="sb">```bash</span>
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>node<span class="w"> </span>lib/distilling-prs/index.js<span class="w"> </span>--continue<span class="w"> </span>&lt;pr-identifier&gt;<span class="w"> </span>&lt;ai-response-file&gt;
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="sb">```</span>
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>&lt;reflection&gt;
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>After completion, verify:
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="k">-</span><span class="w"> </span>All files categorized (no files missing from report)
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="k">-</span><span class="w"> </span>REVIEW_REQUIRED items have full diffs
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="k">-</span><span class="w"> </span>Pattern summary table is accurate
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a><span class="k">-</span><span class="w"> </span>Discovered patterns listed with bless commands (commands to promote patterns to the heuristic library)
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>&lt;/reflection&gt;
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="gu">## Usage</span>
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a><span class="sb">```</span>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a><span class="sb">/distilling-prs &lt;pr-number-or-url&gt;</span>
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a><span class="sb">```</span>
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a><span class="gu">### Examples</span>
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a><span class="sb">```</span>
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a><span class="sb">/distilling-prs 123</span>
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a><span class="sb">/distilling-prs https://github.com/owner/repo/pull/456</span>
+<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a><span class="sb">```</span>
+<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>
+<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a><span class="gu">## Output</span>
+<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>
+<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>Report path: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/pr-reviews/pr-&lt;number&gt;-distill.md`</span>
+<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>
+<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>| Section | Content |
+<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>|---------|---------|
+<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>| Requires Review | Full diffs with explanations |
+<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>| Likely Needs Review | Changes without clear pattern match |
+<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>| Uncertain | Conflicting signals, needs human decision |
+<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>| Probably Safe | First occurrence + N more (collapsed) |
+<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a>| Pattern Summary | Confidence levels and file counts |
+<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>| Discovered Patterns | New patterns with bless commands |
+<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>
+<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a><span class="gu">## Output Markers</span>
+<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a>
+<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>CLI uses markers for machine-readable sections:
+<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a>
+<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a><span class="k">-</span><span class="w"> </span><span class="sb">`__AI_PROMPT_START__`</span> / <span class="sb">`__AI_PROMPT_END__`</span>: AI prompt content (read between Phase 1 and Phase 2)
+<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a><span class="k">-</span><span class="w"> </span><span class="sb">`__REPORT_START__`</span> / <span class="sb">`__REPORT_END__`</span>: Final markdown report
+<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>
+<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a><span class="k">-</span><span class="w"> </span>Marking changes as &quot;safe to skip&quot; without pattern match or AI justification
+<a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a><span class="k">-</span><span class="w"> </span>Skipping Phase 1 heuristics and going straight to AI analysis
+<a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a><span class="k">-</span><span class="w"> </span>Collapsing REVIEW_REQUIRED changes to save space
+<a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a><span class="k">-</span><span class="w"> </span>Claiming analysis complete without generating report file
+<a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

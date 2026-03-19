@@ -6052,6 +6052,50 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-findings-report-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Findings Report - Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-remediation-plan-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Remediation Plan - Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7293,6 +7337,50 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-findings-report-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Findings Report - Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-remediation-plan-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Remediation Plan - Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7336,161 +7424,251 @@
 
 <h1 id="review-design-report">/review-design-report<a class="headerlink" href="#review-design-report" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Phases 6-7 of reviewing-design-docs: compiles a scored findings report with reproducible category counts, then generates a prioritized remediation plan with P1/P2/P3 items and factcheck verification tasks.</p>
+<p>Phases 6-7 of reviewing-design-docs: Findings Report + Remediation Plan. Compiles checklist scores, generates precisely actionable findings with exact remediation, then produces a priority-ordered remediation plan with factcheck verification and additions.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Phase 6-7]) --&gt; Tally[Tally Category Scores]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Tally --&gt; ScoreTable[Build Score Table]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ScoreTable --&gt; CountHW[Count Hand-Waving]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    CountHW --&gt; CountA[Count Assumed]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    CountA --&gt; CountMN[Count Magic Numbers]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    CountMN --&gt; CountE[Count Escalated]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    CountE --&gt; Findings[Compile Findings]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Findings --&gt; ForEach[For Each Finding]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ForEach --&gt; Loc[Record Location]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Loc --&gt; Current[Record Current Text]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Current --&gt; Problem[Describe Problem]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Problem --&gt; WouldGuess[What Implementer Guesses]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    WouldGuess --&gt; Required[Specify Exact Fix]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Required --&gt; MoreF{More Findings?}
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    MoreF --&gt;|Yes| ForEach
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    MoreF --&gt;|No| Reproducible{Scores Reproducible?}
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Reproducible --&gt;|No| Tally
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Reproducible --&gt;|Yes| Remediation[Build Remediation Plan]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[Quality Gate]:::gate
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    end
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    Start([Receive checklist +&lt;br&gt;hand-waving findings&lt;br&gt;from review-design-verify]) --&gt; PRINCIPLES[Load Invariant Principles:&lt;br&gt;1. Exact remediation required&lt;br&gt;2. Scores reproducible&lt;br&gt;3. Dependency-ordered fixes]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    PRINCIPLES --&gt; P6[Phase 6:&lt;br&gt;Findings Report]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P6 --&gt; SCORE[Compile Score Table]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    SCORE --&gt; FINDINGS[Generate Findings]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    FINDINGS --&gt; GATE1{Every finding has:&lt;br&gt;Loc + Current + Problem +&lt;br&gt;Would guess + Required?}:::gate
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    GATE1 --&gt;|Fail| FIX_FINDING[Add missing fields&lt;br&gt;to findings]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    FIX_FINDING --&gt; FINDINGS
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    GATE1 --&gt;|Pass| P7[Phase 7:&lt;br&gt;Remediation Plan]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    P7 --&gt; PRIORITIES[Build Priority Sections:&lt;br&gt;P1 Critical / P2 Important / P3 Minor]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    PRIORITIES --&gt; CLAIMS{Document makes&lt;br&gt;empirical or&lt;br&gt;performance claims?}
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    CLAIMS --&gt;|Yes| FACTCHECK[Add Factcheck&lt;br&gt;Verification items]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    CLAIMS --&gt;|No| ADDITIONS
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    FACTCHECK --&gt; ADDITIONS[Add Additions:&lt;br&gt;diagrams, tables, sections]
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Remediation --&gt; P1[P1 Critical Blockers]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    P1 --&gt; P2[P2 Important Items]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    P2 --&gt; P3[P3 Minor Items]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    P3 --&gt; FactV[Factcheck Verification]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    FactV --&gt; Additions[Diagrams/Tables/Sections]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Additions --&gt; Complete{Report Complete?}
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    Complete --&gt;|Yes| Done([Phase 6-7 Complete])
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    Complete --&gt;|No| Findings
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style Done fill:#2196F3,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style Tally fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style ScoreTable fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style CountHW fill:#2196F3,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style CountA fill:#2196F3,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style CountMN fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style CountE fill:#2196F3,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style Findings fill:#2196F3,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style ForEach fill:#2196F3,color:#fff
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style Loc fill:#2196F3,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style Current fill:#2196F3,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style Problem fill:#2196F3,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style WouldGuess fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style Required fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style Remediation fill:#2196F3,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style P1 fill:#f44336,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style P2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style P3 fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style FactV fill:#4CAF50,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style Additions fill:#2196F3,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style MoreF fill:#FF9800,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style Reproducible fill:#f44336,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style Complete fill:#FF9800,color:#fff
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    ADDITIONS --&gt; GATE2{All remediation items&lt;br&gt;independently actionable&lt;br&gt;without follow-up?}:::gate
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    GATE2 --&gt;|Fail| REFINE[Refine vague items&lt;br&gt;to be precise]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    REFINE --&gt; PRIORITIES
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    GATE2 --&gt;|Pass| DONE([Report + Remediation&lt;br&gt;Plan delivered]):::success
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 </code></pre></div>
+<h2 id="phase-6-findings-report-detail">Phase 6: Findings Report - Detail<a class="headerlink" href="#phase-6-findings-report-detail" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L4[Quality Gate]:::gate
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L5([Terminal]):::success
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    Start([Begin Phase 6]) --&gt; SCORE_TABLE[Compile Score Table:&lt;br&gt;Category / Specified /&lt;br&gt;Vague / Missing / N/A]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    SCORE_TABLE --&gt; HW_COUNTS[Append Hand-Waving Counts:&lt;br&gt;Hand-Waving: N&lt;br&gt;Assumed: M&lt;br&gt;Magic Numbers: P&lt;br&gt;Escalated: Q]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    HW_COUNTS --&gt; EACH_FINDING[For each gap or issue&lt;br&gt;identified in Phases 2-5]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    EACH_FINDING --&gt; FORMAT[Format Finding #N:&lt;br&gt;Title, Loc, Current quote,&lt;br&gt;Problem explanation,&lt;br&gt;Would-guess decisions,&lt;br&gt;Required exact fix]
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    FORMAT --&gt; VAGUE_CHECK{Finding says&lt;br&gt;&#39;needs more detail&#39;&lt;br&gt;without specifying&lt;br&gt;exact text?}
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    VAGUE_CHECK --&gt;|Yes| BLOCKED[BLOCKED: specify exactly&lt;br&gt;what text must appear&lt;br&gt;and where]:::gate
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    BLOCKED --&gt; FORMAT
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    VAGUE_CHECK --&gt;|No| STANDALONE{Finding stands alone:&lt;br&gt;location + current state +&lt;br&gt;problem + required fix&lt;br&gt;all present?}
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    STANDALONE --&gt;|No| ADD_FIELDS[Add missing fields]
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    ADD_FIELDS --&gt; FORMAT
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    STANDALONE --&gt;|Yes| MORE{More gaps&lt;br&gt;to report?}
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    MORE --&gt;|Yes| EACH_FINDING
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    MORE --&gt;|No| DONE([Phase 6 complete:&lt;br&gt;all findings formatted]):::success
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
+</code></pre></div>
+<h2 id="phase-7-remediation-plan-detail">Phase 7: Remediation Plan - Detail<a class="headerlink" href="#phase-7-remediation-plan-detail" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L4[Quality Gate]:::gate
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L5([Terminal]):::success
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    end
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    Start([Begin Phase 7]) --&gt; ORDER[Order findings by dependency:&lt;br&gt;structural gaps before&lt;br&gt;detail gaps, interfaces&lt;br&gt;before implementations]
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    ORDER --&gt; P1[P1 Critical:&lt;br&gt;blocks implementation&lt;br&gt;each with acceptance criteria]
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    P1 --&gt; P2[P2 Important:&lt;br&gt;clarifications needed]
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    P2 --&gt; P3[P3 Minor:&lt;br&gt;improvements]
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    P3 --&gt; CLAIMS{Document makes&lt;br&gt;empirical or&lt;br&gt;performance claims?}
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    CLAIMS --&gt;|Yes| FACTCHECK[Factcheck Verification:&lt;br&gt;claim / category / depth&lt;br&gt;for each empirical claim]
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    CLAIMS --&gt;|No| ADDITIONS
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    FACTCHECK --&gt; ADDITIONS[Additions section:&lt;br&gt;Diagrams: type + what shown&lt;br&gt;Tables: topic + what specified&lt;br&gt;Sections: name + what covered]
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    ADDITIONS --&gt; ACTIONABLE{Every remediation item&lt;br&gt;independently actionable&lt;br&gt;by author without&lt;br&gt;follow-up?}:::gate
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    ACTIONABLE --&gt;|No| REFINE[Refine: replace vague&lt;br&gt;language with exact&lt;br&gt;required text/structure]
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    REFINE --&gt; ACTIONABLE
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    ACTIONABLE --&gt;|Yes| FORBIDDEN_CHECK{Any FORBIDDEN&lt;br&gt;violations?}:::gate
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    FORBIDDEN_CHECK --&gt; F1{Vague findings&lt;br&gt;without exact&lt;br&gt;required text?}
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    F1 --&gt;|Yes| BLOCK1[BLOCKED: violation]:::gate
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    BLOCK1 --&gt; REFINE
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    F1 --&gt;|No| F2{Remediation items&lt;br&gt;not independently&lt;br&gt;actionable?}
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    F2 --&gt;|Yes| BLOCK2[BLOCKED: violation]:::gate
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>    BLOCK2 --&gt; REFINE
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    F2 --&gt;|No| F3{Factcheck Verification&lt;br&gt;skipped when empirical&lt;br&gt;claims present?}
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    F3 --&gt;|Yes| BLOCK3[BLOCKED: violation]:::gate
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    BLOCK3 --&gt; FACTCHECK
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    F3 --&gt;|No| DONE([Phase 7 complete:&lt;br&gt;Remediation Plan delivered]):::success
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
+</code></pre></div>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Overview Node</th>
+<th>Detail Diagram</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 6: Findings Report</td>
+<td>Phase 6 Detail (SCORE_TABLE through finding iteration loop)</td>
+</tr>
+<tr>
+<td>Compile Score Table</td>
+<td>Phase 6 Detail (SCORE_TABLE + HW_COUNTS)</td>
+</tr>
+<tr>
+<td>Generate Findings</td>
+<td>Phase 6 Detail (EACH_FINDING through FORMAT with VAGUE_CHECK + STANDALONE gates)</td>
+</tr>
+<tr>
+<td>Phase 7: Remediation Plan</td>
+<td>Phase 7 Detail (ORDER through DONE)</td>
+</tr>
+<tr>
+<td>Build Priority Sections</td>
+<td>Phase 7 Detail (ORDER through P1/P2/P3)</td>
+</tr>
+<tr>
+<td>Factcheck Verification items</td>
+<td>Phase 7 Detail (FACTCHECK node)</td>
+</tr>
+<tr>
+<td>All remediation items independently actionable?</td>
+<td>Phase 7 Detail (ACTIONABLE gate + FORBIDDEN_CHECK chain)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
+<th>Symbol</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Rectangle</td>
+<td>Process step</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
+<td>Diamond</td>
 <td>Decision point</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Stadium (rounded)</td>
+<td>Terminal (start/end)</td>
+</tr>
+<tr>
+<td>Red (#ff6b6b)</td>
+<td>Quality gate or BLOCKED violation</td>
+</tr>
+<tr>
+<td>Green (#51cf66)</td>
+<td>Success terminal</td>
 </tr>
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Design Document Reviewer. Your reputation depends on findings precise enough to implement without follow-up.
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gh"># Phase 6: Findings Report</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">1.</span> <span class="gs">**Findings require exact remediation**</span> - &quot;Needs more detail&quot; is not actionable; specify precisely what must be added and where
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">2.</span> <span class="gs">**Scores must be reproducible**</span> - Another reviewer following the same checklist should arrive at the same category counts
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">3.</span> <span class="gs">**Remediation plans are ordered by dependency**</span> - Fix structural gaps before detail gaps; interfaces before implementations
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gu">## Score</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="sb">```</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="sb">## Score</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="sb">| Category | Specified | Vague | Missing | N/A |</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="sb">|----------|-----------|-------|---------|-----|</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="sb">Hand-Waving: N | Assumed: M | Magic Numbers: P | Escalated: Q</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="sb">```</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="gu">## Findings Format</span>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="sb">```</span>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sb">**#N: [Title]**</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">Loc: [X]</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="sb">Current: [quote]</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">Problem: [why insufficient]</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">Would guess: [decisions]</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="sb">Required: [exact fix]</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="sb">```</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>---
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gh"># Phase 7: Remediation Plan</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="sb">```</span>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">### P1: Critical (Blocks Implementation)</span>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">1. [ ] [addition + acceptance criteria]</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">### P2: Important</span>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">1. [ ] [clarification]</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">### P3: Minor</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">1. [ ] [improvement]</span>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">### Factcheck Verification</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">1. [ ] [claim] - [category] - [depth]</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="sb">### Additions</span>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="sb">- [ ] Diagram: [type] showing [what]</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">- [ ] Table: [topic] specifying [what]</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="sb">- [ ] Section: [name] covering [what]</span>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">```</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="k">-</span><span class="w"> </span>Vague findings (&quot;needs more detail&quot;) without specifying exactly what text must appear and where
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="k">-</span><span class="w"> </span>Remediation items not independently actionable by the author without follow-up
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span>Skipping Factcheck Verification when the document makes empirical or performance claims
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>Every finding must stand alone: location, current state, problem, and required fix — all present, all precise.
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Design Document Reviewer. Your reputation depends on findings precise enough to implement without follow-up.
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="gh"># Phase 6: Findings Report</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="k">1.</span> <span class="gs">**Findings require exact remediation**</span> - &quot;Needs more detail&quot; is not actionable; specify precisely what must be added and where
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">2.</span> <span class="gs">**Scores must be reproducible**</span> - Another reviewer following the same checklist should arrive at the same category counts
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="k">3.</span> <span class="gs">**Remediation plans are ordered by dependency**</span> - Fix structural gaps before detail gaps; interfaces before implementations
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="gu">## Score</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="sb">```</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="sb">## Score</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="sb">| Category | Specified | Vague | Missing | N/A |</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="sb">|----------|-----------|-------|---------|-----|</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="sb">Hand-Waving: N | Assumed: M | Magic Numbers: P | Escalated: Q</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="sb">```</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="gu">## Findings Format</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="sb">```</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="sb">**#N: [Title]**</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="sb">Loc: [X]</span>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="sb">Current: [quote]</span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="sb">Problem: [why insufficient]</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="sb">Would guess: [decisions]</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="sb">Required: [exact fix]</span>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="sb">```</span>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>---
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="gh"># Phase 7: Remediation Plan</span>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="sb">```</span>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="sb">### P1: Critical (Blocks Implementation)</span>
+<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a><span class="sb">1. [ ] [addition + acceptance criteria]</span>
+<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>
+<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="sb">### P2: Important</span>
+<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a><span class="sb">1. [ ] [clarification]</span>
+<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>
+<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a><span class="sb">### P3: Minor</span>
+<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a><span class="sb">1. [ ] [improvement]</span>
+<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>
+<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a><span class="sb">### Factcheck Verification</span>
+<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a><span class="sb">1. [ ] [claim] - [category] - [depth]</span>
+<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>
+<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a><span class="sb">### Additions</span>
+<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a><span class="sb">- [ ] Diagram: [type] showing [what]</span>
+<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a><span class="sb">- [ ] Table: [topic] specifying [what]</span>
+<a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a><span class="sb">- [ ] Section: [name] covering [what]</span>
+<a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a><span class="sb">```</span>
+<a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a>
+<a id="__codelineno-3-59" name="__codelineno-3-59" href="#__codelineno-3-59"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-3-60" name="__codelineno-3-60" href="#__codelineno-3-60"></a><span class="k">-</span><span class="w"> </span>Vague findings (&quot;needs more detail&quot;) without specifying exactly what text must appear and where
+<a id="__codelineno-3-61" name="__codelineno-3-61" href="#__codelineno-3-61"></a><span class="k">-</span><span class="w"> </span>Remediation items not independently actionable by the author without follow-up
+<a id="__codelineno-3-62" name="__codelineno-3-62" href="#__codelineno-3-62"></a><span class="k">-</span><span class="w"> </span>Skipping Factcheck Verification when the document makes empirical or performance claims
+<a id="__codelineno-3-63" name="__codelineno-3-63" href="#__codelineno-3-63"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-3-64" name="__codelineno-3-64" href="#__codelineno-3-64"></a>
+<a id="__codelineno-3-65" name="__codelineno-3-65" href="#__codelineno-3-65"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-3-66" name="__codelineno-3-66" href="#__codelineno-3-66"></a>Every finding must stand alone: location, current state, problem, and required fix — all present, all precise.
+<a id="__codelineno-3-67" name="__codelineno-3-67" href="#__codelineno-3-67"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

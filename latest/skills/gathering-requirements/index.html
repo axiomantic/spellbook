@@ -726,10 +726,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview Diagram
       
     </span>
   </a>
@@ -737,10 +737,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#cross-reference-source-traceability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Cross-Reference: Source Traceability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Observations
       
     </span>
   </a>
@@ -3340,10 +3351,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview Diagram
       
     </span>
   </a>
@@ -3351,10 +3362,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#cross-reference-source-traceability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Cross-Reference: Source Traceability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Observations
       
     </span>
   </a>
@@ -7395,10 +7417,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview Diagram
       
     </span>
   </a>
@@ -7406,10 +7428,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#cross-reference-source-traceability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Cross-Reference: Source Traceability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Observations
       
     </span>
   </a>
@@ -7451,161 +7484,163 @@
 <p>Structured elicitation of feature requirements through discovery questions and constraint identification, examining needs from four archetype perspectives: user needs, system constraints, security surface, and scope boundaries. Produces a requirements document that prevents downstream rework. Invocable with <code>/gathering-requirements</code> or triggered automatically when you ask to define what a feature should do.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the Forged workflow.</p>
+<p>Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the develop workflow.</p>
 </blockquote>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Elicits comprehensive requirements through four archetype perspectives: Queen (user needs), Emperor (constraints), Hermit (security surface), and Priestess (scope boundaries). Produces a structured requirements document with functional requirements, open questions, and blocking/non-blocking classification.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Feature Description]) --&gt; HasFeedback{Roundtable Feedback?}:::decision
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    HasFeedback --&gt;|Yes| LoadFeedback[&quot;Load Feedback Context&quot;]:::command
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    HasFeedback --&gt;|No| Extract
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    LoadFeedback --&gt; Extract
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    Extract[&quot;Step 1: Initial Extraction&quot;]:::command --&gt; Queen
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    Queen[&quot;Queen: User Needs&quot;]:::command --&gt; Emperor
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Emperor[&quot;Emperor: Constraints&quot;]:::command --&gt; Hermit
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Hermit[&quot;Hermit: Security Surface&quot;]:::command --&gt; Priestess
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Priestess[&quot;Priestess: Scope Boundaries&quot;]:::command --&gt; AllFour{All 4 Perspectives Done?}:::gate
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    AllFour --&gt;|No| Queen
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    AllFour --&gt;|Yes| Gaps
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Gaps[&quot;Step 3: Gap Identification&quot;]:::command --&gt; HasUnknowns{Blocking Unknowns?}:::decision
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    HasUnknowns --&gt;|Yes| Clarify[&quot;Step 4: User Clarification&quot;]:::command
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    HasUnknowns --&gt;|No| Generate
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Clarify --&gt; StillBlocked{Still Blocked?}:::decision
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    StillBlocked --&gt;|Yes, escalate| MarkUnknown[&quot;Mark UNKNOWN for Roundtable&quot;]:::command
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    StillBlocked --&gt;|No| Generate
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    MarkUnknown --&gt; Generate
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Generate[&quot;Step 5: Generate Requirements Doc&quot;]:::command --&gt; GateValue{User Value Clear?}:::gate
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    GateValue --&gt;|No| Queen
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    GateValue --&gt;|Yes| GateConstraints{Constraints Documented?}:::gate
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    GateConstraints --&gt;|No| Emperor
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    GateConstraints --&gt;|Yes| GateSecurity{Security Addressed?}:::gate
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    GateSecurity --&gt;|No| Hermit
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    GateSecurity --&gt;|Yes| GateScope{Scope Bounded?}:::gate
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    GateScope --&gt;|No| Priestess
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    GateScope --&gt;|Yes| GateBlocking{No Blocking Unknowns?}:::gate
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    GateBlocking --&gt;|No| Clarify
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    GateBlocking --&gt;|Yes| SelfCheck
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    SelfCheck{Self-Check Passes?}:::gate
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    SelfCheck --&gt;|No| Revise[&quot;Revise Requirements&quot;]:::command
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    Revise --&gt; AllFour
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    SelfCheck --&gt;|Yes| Final([Requirements Delivered])
+<h2 id="overview-diagram">Overview Diagram<a class="headerlink" href="#overview-diagram" title="Permanent link">&para;</a></h2>
+<p>The gathering-requirements skill follows a linear elicitation process with one conditional branch (feedback handling) and a self-check loop. It's compact enough for a single diagram.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>---
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>title: &quot;gathering-requirements Skill Flow&quot;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>---
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>flowchart TD
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    subgraph Legend
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L1[Process]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L2{Decision}
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L3([Terminal])
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        L4[/&quot;Quality Gate&quot;/]:::gate
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        L5[Fractal Dispatch]:::subagent
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    end
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    START([Invoked]) --&gt; PARSE_INPUTS
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    subgraph Phase1[&quot;Phase 1: Initial Extraction&quot;]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        PARSE_INPUTS[&quot;Parse feature_description:&lt;br&gt;explicit reqs, implicit reqs,&lt;br&gt;constraints, unknowns&quot;]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    end
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    PARSE_INPUTS --&gt; PERSPECTIVE_ANALYSIS
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    subgraph Phase2[&quot;Phase 2: Perspective Analysis&quot;]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        PERSPECTIVE_ANALYSIS[&quot;Apply Four Perspectives&quot;]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        PERSPECTIVE_ANALYSIS --&gt; QUEEN[&quot;Queen: User Needs&lt;br&gt;Users, problem, stories,&lt;br&gt;success criteria&quot;]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        PERSPECTIVE_ANALYSIS --&gt; EMPEROR[&quot;Emperor: Constraints&lt;br&gt;Technical, resource,&lt;br&gt;integration, performance&quot;]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        PERSPECTIVE_ANALYSIS --&gt; HERMIT[&quot;Hermit: Security Surface&lt;br&gt;Data, auth, threats,&lt;br&gt;compliance&quot;]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        PERSPECTIVE_ANALYSIS --&gt; PRIESTESS[&quot;Priestess: Scope Boundaries&lt;br&gt;In-scope, out-of-scope,&lt;br&gt;edge cases, assumptions&quot;]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        QUEEN --&gt; CONTRADICTIONS
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        EMPEROR --&gt; CONTRADICTIONS
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        HERMIT --&gt; CONTRADICTIONS
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        PRIESTESS --&gt; CONTRADICTIONS
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        CONTRADICTIONS{Contradictory&lt;br&gt;requirements?}
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        CONTRADICTIONS --&gt;|Yes| FRACTAL[&quot;fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;Reconcile conflicts&quot;]:::subagent
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        CONTRADICTIONS --&gt;|No| GAP_ID
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        FRACTAL --&gt; GAP_ID
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    end
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    GAP_ID[&quot;Phase 3: Gap Identification&lt;br&gt;Unanswered questions,&lt;br&gt;unvalidated assumptions,&lt;br&gt;perspective conflicts&quot;]
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    classDef skill fill:#4CAF50,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    classDef command fill:#2196F3,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    classDef decision fill:#FF9800,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    classDef gate fill:#f44336,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    GAP_ID --&gt; HAS_FEEDBACK
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    subgraph Phase4[&quot;Phase 4: User Clarification&quot;]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        HAS_FEEDBACK{feedback_to_address&lt;br&gt;provided?}
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        HAS_FEEDBACK --&gt;|Yes| INCORPORATE[&quot;Incorporate roundtable&lt;br&gt;feedback&quot;]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        HAS_FEEDBACK --&gt;|No| EVAL_UNKNOWNS
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        INCORPORATE --&gt; EVAL_UNKNOWNS
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        EVAL_UNKNOWNS{Blocking&lt;br&gt;unknowns?}
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        EVAL_UNKNOWNS --&gt;|Yes| ASK_USER[&quot;Ask user&lt;br&gt;(one question at a time)&quot;]
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        EVAL_UNKNOWNS --&gt;|No| DOC_GEN
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        ASK_USER --&gt; EVAL_UNKNOWNS
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    end
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    DOC_GEN[&quot;Phase 5: Document Generation&lt;br&gt;Write requirements.md&lt;br&gt;covering all 4 perspectives&quot;]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    DOC_GEN --&gt; QUALITY_GATE
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    subgraph QualityGates[&quot;Quality Gates&quot;]
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>        QUALITY_GATE[/&quot;Quality Gate Check&quot;/]:::gate
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>        QUALITY_GATE --&gt; QG1{User value clear?&lt;br&gt;≥1 user story}
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>        QUALITY_GATE --&gt; QG2{Constraints&lt;br&gt;documented?}
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        QUALITY_GATE --&gt; QG3{Security&lt;br&gt;addressed?}
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        QUALITY_GATE --&gt; QG4{Scope bounded?&lt;br&gt;In + Out lists}
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        QUALITY_GATE --&gt; QG5{No blocking&lt;br&gt;unknowns?}
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        QG1 --&gt; GATE_RESULT
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        QG2 --&gt; GATE_RESULT
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>        QG3 --&gt; GATE_RESULT
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>        QG4 --&gt; GATE_RESULT
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>        QG5 --&gt; GATE_RESULT
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    end
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    GATE_RESULT{All gates&lt;br&gt;pass?}
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    GATE_RESULT --&gt;|No| SELF_CHECK_LOOP
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    subgraph SelfCheck[&quot;Self-Check Loop&quot;]
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>        SELF_CHECK_LOOP[&quot;Self-Check Checklist:&lt;br&gt;- 4 perspectives addressed&lt;br&gt;- Reqs specific + measurable&lt;br&gt;- Scope boundaries explicit&lt;br&gt;- Security documented&lt;br&gt;- Questions marked blocking/non&lt;br&gt;- Feedback addressed&quot;]
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>        SELF_CHECK_LOOP --&gt; REVISE[&quot;Revise requirements&lt;br&gt;document&quot;]
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>        REVISE --&gt; QUALITY_GATE
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    end
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    GATE_RESULT --&gt;|Yes| OUTPUT
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    subgraph Outputs[&quot;Outputs&quot;]
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>        OUTPUT[&quot;Return:&lt;br&gt;requirements_document (file)&lt;br&gt;open_questions (inline)&quot;]
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    end
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    OUTPUT --&gt; DONE([Complete]):::success
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<h2 id="cross-reference-source-traceability">Cross-Reference: Source Traceability<a class="headerlink" href="#cross-reference-source-traceability" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Diagram Node</th>
+<th>Source (SKILL.md)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>PARSE_INPUTS</td>
+<td>Line 58: Step 1 "Initial Extraction"</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>QUEEN / EMPEROR / HERMIT / PRIESTESS</td>
+<td>Lines 42-53: "The Four Perspectives"</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>CONTRADICTIONS / FRACTAL</td>
+<td>Line 54: "Fractal exploration (optional)"</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>GAP_ID</td>
+<td>Line 60: Step 3 "Gap Identification"</td>
+</tr>
+<tr>
+<td>HAS_FEEDBACK / INCORPORATE</td>
+<td>Line 61: Step 4 "If feedback_to_address provided, incorporate before step 5"</td>
+</tr>
+<tr>
+<td>EVAL_UNKNOWNS / ASK_USER</td>
+<td>Line 61: "For blocking unknowns: ask user (one question at a time)"</td>
+</tr>
+<tr>
+<td>DOC_GEN</td>
+<td>Line 62: Step 5 "Document Generation"</td>
+</tr>
+<tr>
+<td>QUALITY_GATE / QG1-QG5</td>
+<td>Lines 118-124: "Quality Gates" table</td>
+</tr>
+<tr>
+<td>SELF_CHECK_LOOP / REVISE</td>
+<td>Lines 134-143: "Self-Check" checklist + "If ANY unchecked: revise"</td>
+</tr>
+<tr>
+<td>OUTPUT</td>
+<td>Lines 37-38: Outputs table (requirements_document, open_questions)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Node</th>
-<th>Source Reference</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Roundtable Feedback?</td>
-<td>Input: feedback_to_address (line 31)</td>
-</tr>
-<tr>
-<td>Step 1: Initial Extraction</td>
-<td>Elicitation Process step 1 (line 58)</td>
-</tr>
-<tr>
-<td>Queen: User Needs</td>
-<td>The Four Perspectives: Queen (lines 42-43)</td>
-</tr>
-<tr>
-<td>Emperor: Constraints</td>
-<td>The Four Perspectives: Emperor (lines 45-46)</td>
-</tr>
-<tr>
-<td>Hermit: Security Surface</td>
-<td>The Four Perspectives: Hermit (lines 48-49)</td>
-</tr>
-<tr>
-<td>Priestess: Scope Boundaries</td>
-<td>The Four Perspectives: Priestess (lines 51-52)</td>
-</tr>
-<tr>
-<td>All 4 Perspectives Done?</td>
-<td>Invariant 1: Four Perspectives Mandatory (line 20)</td>
-</tr>
-<tr>
-<td>Step 3: Gap Identification</td>
-<td>Elicitation Process step 3 (line 60)</td>
-</tr>
-<tr>
-<td>Step 4: User Clarification</td>
-<td>Elicitation Process step 4 (line 61)</td>
-</tr>
-<tr>
-<td>Mark UNKNOWN for Roundtable</td>
-<td>Elicitation Process step 4: flag UNKNOWN (line 61)</td>
-</tr>
-<tr>
-<td>Step 5: Generate Requirements Doc</td>
-<td>Elicitation Process step 5 (line 62)</td>
-</tr>
-<tr>
-<td>User Value Clear?</td>
-<td>Quality Gate (line 126)</td>
-</tr>
-<tr>
-<td>Constraints Documented?</td>
-<td>Quality Gate (line 127)</td>
-</tr>
-<tr>
-<td>Security Addressed?</td>
-<td>Quality Gate (line 128)</td>
-</tr>
-<tr>
-<td>Scope Bounded?</td>
-<td>Quality Gate (line 129)</td>
-</tr>
-<tr>
-<td>No Blocking Unknowns?</td>
-<td>Quality Gate (line 130)</td>
-</tr>
-<tr>
-<td>Self-Check Passes?</td>
-<td>Self-Check checklist (lines 144-152)</td>
-</tr>
-</tbody>
-</table>
+<h2 id="key-observations">Key Observations<a class="headerlink" href="#key-observations" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Single conditional branch</strong>: The only true fork is whether <code>feedback_to_address</code> is provided (roundtable feedback loop from develop/Forge workflow)</li>
+<li><strong>Blocking unknown loop</strong>: The ask-user loop in Phase 4 repeats until all blocking unknowns are resolved, one question at a time</li>
+<li><strong>Self-check is a revision loop</strong>: Failed quality gates trigger revision and re-evaluation, not termination</li>
+<li><strong>Fractal dispatch is optional</strong>: Only triggered when perspectives produce contradictory requirements</li>
+</ul>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Requirements Gathering</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>

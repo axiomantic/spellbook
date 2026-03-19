@@ -6163,28 +6163,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7292,28 +7270,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7336,122 +7292,104 @@
 
 <h1 id="review-plan-contracts">/review-plan-contracts<a class="headerlink" href="#review-plan-contracts" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Phase 2 of reviewing-impl-plans: audits every interface contract between parallel work tracks, verifying request/response/error formats, shared type schemas, event/message contracts, and file/resource access patterns for completeness.</p>
+<h1 id="review-plan-contracts_1">review-plan-contracts<a class="headerlink" href="#review-plan-contracts_1" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This command is a single-phase audit process (Phase 2 of reviewing-impl-plans) that systematically checks four categories of contracts between parallel work tracks. It follows a linear flow: audit each category, flag gaps, then produce a structured report.</p>
+<h2 id="diagram">Diagram<a class="headerlink" href="#diagram" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Phase 2]) --&gt; ListIf[List All Interfaces]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ListIf --&gt; PickIf[Pick Next Interface]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    PickIf --&gt; CheckContract[Check Contract Location]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    CheckContract --&gt; HasReq{Request Format?}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    HasReq --&gt;|Specified| HasResp{Response Format?}
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    HasReq --&gt;|Missing| FlagReq[Flag CRITICAL: Missing Req]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    FlagReq --&gt; HasResp
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    HasResp --&gt;|Specified| HasErr{Error Format?}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    HasResp --&gt;|Missing| FlagResp[Flag CRITICAL: Missing Resp]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    FlagResp --&gt; HasErr
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    HasErr --&gt;|Specified| HasProto{Protocol Specified?}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    HasErr --&gt;|Missing| FlagErr[Flag CRITICAL: Missing Err]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    FlagErr --&gt; HasProto
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    HasProto --&gt;|Specified| IfOK[Interface Fully Specified]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    HasProto --&gt;|Missing| FlagProto[Flag CRITICAL: Missing Proto]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    FlagProto --&gt; IfOK
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    IfOK --&gt; MoreIf{More Interfaces?}
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    MoreIf --&gt;|Yes| PickIf
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    MoreIf --&gt;|No| TypeAudit[Type/Schema Audit]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    TypeAudit --&gt; PickType[Pick Shared Type]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    PickType --&gt; SingleSrc{Single Source of Truth?}
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    SingleSrc --&gt;|Yes| CheckFields[Check Field Completeness]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    SingleSrc --&gt;|No| FlagDup[Flag Duplicate Definitions]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    CheckFields --&gt; FieldsOK{All Fields Specified?}
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    FieldsOK --&gt;|Yes| MoreType{More Types?}
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    FieldsOK --&gt;|No| FlagFields[Flag Incomplete Schema]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    FlagDup --&gt; MoreType
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    FlagFields --&gt; MoreType
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    MoreType --&gt;|Yes| PickType
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    MoreType --&gt;|No| EventAudit[Event/Message Audit]
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    EventAudit --&gt; CheckEvents[Check Schema/Ordering/Delivery]
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    CheckEvents --&gt; FileAudit[File/Resource Audit]
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    FileAudit --&gt; CheckConflict{Writer/Reader Conflict?}
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    CheckConflict --&gt;|Yes| FlagConflict[Flag CRITICAL: Conflict]
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    CheckConflict --&gt;|No| GateAll{All Contracts Audited?}
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FlagConflict --&gt; GateAll
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    GateAll --&gt;|Yes| Deliver[Deliver Contract Audit]
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    GateAll --&gt;|No| PickIf
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    Deliver --&gt; Done([Phase 2 Complete])
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/&quot;Deliverable&quot;/]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[Gate]:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Start([Phase 2: Interface Contract Audit]) --&gt; Principles[Load Invariant Principles:&lt;br&gt;1. Missing fields = critical defects&lt;br&gt;2. Shared types = single source of truth&lt;br&gt;3. Ambiguity worse than absence]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Principles --&gt; Cat1
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    subgraph Cat1 [Category 1: Interface Contracts]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        IC_Start[For EACH interface between&lt;br&gt;parallel work tracks] --&gt; IC_Check{Contract&lt;br&gt;location&lt;br&gt;exists?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        IC_Check --&gt;|MISSING| IC_Flag[Flag as CRITICAL]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        IC_Check --&gt;|Found| IC_Fields[Check fields:&lt;br&gt;Request format&lt;br&gt;Response format&lt;br&gt;Error format&lt;br&gt;Protocol]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        IC_Fields --&gt; IC_Status{All fields&lt;br&gt;SPECIFIED?}
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        IC_Status --&gt;|Yes| IC_Pass[Interface passes]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        IC_Status --&gt;|VAGUE or MISSING| IC_Flag
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        IC_Flag --&gt; IC_Remediation[Record required addition:&lt;br&gt;exact specification needed]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        IC_Remediation --&gt; IC_Next{More&lt;br&gt;interfaces?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        IC_Pass --&gt; IC_Next
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        IC_Next --&gt;|Yes| IC_Start
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        IC_Next --&gt;|No| IC_Done[Category 1 complete]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    end
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Cat1 --&gt; Cat2
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    subgraph Cat2 [Category 2: Type/Schema Contracts]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        TS_Start[For EACH shared type or schema] --&gt; TS_Defined{Defined in&lt;br&gt;single&lt;br&gt;location?}
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        TS_Defined --&gt;|MISSING| TS_Flag[Flag as CRITICAL]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        TS_Defined --&gt;|Found| TS_Fields[Check per-field:&lt;br&gt;Type, Required, Default,&lt;br&gt;Validation, Specified]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        TS_Fields --&gt; TS_Complete{All fields&lt;br&gt;specified?}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        TS_Complete --&gt;|Yes| TS_Pass[Type passes]
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        TS_Complete --&gt;|Incomplete| TS_Flag
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        TS_Flag --&gt; TS_Remediation[Record what must be added]
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        TS_Remediation --&gt; TS_Next{More&lt;br&gt;types?}
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        TS_Pass --&gt; TS_Next
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        TS_Next --&gt;|Yes| TS_Start
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        TS_Next --&gt;|No| TS_Done[Category 2 complete]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    end
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    Cat2 --&gt; Cat3
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    subgraph Cat3 [Category 3: Event/Message Contracts]
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        EM_Start[For EACH event or message&lt;br&gt;between components] --&gt; EM_Check[Check fields:&lt;br&gt;Schema&lt;br&gt;Ordering guarantees&lt;br&gt;Delivery guarantees]
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        EM_Check --&gt; EM_Status{All fields&lt;br&gt;SPECIFIED?}
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        EM_Status --&gt;|Yes| EM_Pass[Event passes]
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        EM_Status --&gt;|VAGUE or MISSING| EM_Flag[Flag as CRITICAL]
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        EM_Flag --&gt; EM_Remediation[Record exact specification needed]
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        EM_Remediation --&gt; EM_Next{More&lt;br&gt;events?}
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>        EM_Pass --&gt; EM_Next
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>        EM_Next --&gt;|Yes| EM_Start
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>        EM_Next --&gt;|No| EM_Done[Category 3 complete]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    end
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style Done fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style ListIf fill:#2196F3,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style PickIf fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style CheckContract fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style FlagReq fill:#f44336,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style FlagResp fill:#f44336,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style FlagErr fill:#f44336,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style FlagProto fill:#f44336,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style IfOK fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style TypeAudit fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style PickType fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style CheckFields fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style FlagDup fill:#2196F3,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style FlagFields fill:#2196F3,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style EventAudit fill:#2196F3,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style CheckEvents fill:#2196F3,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style FileAudit fill:#2196F3,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style FlagConflict fill:#f44336,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style Deliver fill:#2196F3,color:#fff
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style HasReq fill:#FF9800,color:#fff
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style HasResp fill:#FF9800,color:#fff
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style HasErr fill:#FF9800,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style HasProto fill:#FF9800,color:#fff
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style MoreIf fill:#FF9800,color:#fff
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style SingleSrc fill:#FF9800,color:#fff
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style FieldsOK fill:#FF9800,color:#fff
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style MoreType fill:#FF9800,color:#fff
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style CheckConflict fill:#FF9800,color:#fff
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style GateAll fill:#f44336,color:#fff
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    Cat3 --&gt; Cat4
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    subgraph Cat4 [Category 4: File/Resource Contracts]
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>        FR_Start[For EACH shared file,&lt;br&gt;directory, or resource] --&gt; FR_Check[Check fields:&lt;br&gt;Format, Locking,&lt;br&gt;Merge strategy,&lt;br&gt;Conflict resolution]
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>        FR_Check --&gt; FR_Conflict{Writer/reader&lt;br&gt;conflict&lt;br&gt;possible?}
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        FR_Conflict --&gt;|Yes| FR_Flag[Flag as CRITICAL]
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        FR_Conflict --&gt;|No| FR_Fields{All fields&lt;br&gt;SPECIFIED?}
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        FR_Fields --&gt;|Yes| FR_Pass[Resource passes]
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        FR_Fields --&gt;|VAGUE or MISSING| FR_Flag
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        FR_Flag --&gt; FR_Remediation[Record exact specification needed]
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        FR_Remediation --&gt; FR_Next{More&lt;br&gt;resources?}
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>        FR_Pass --&gt; FR_Next
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>        FR_Next --&gt;|Yes| FR_Start
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>        FR_Next --&gt;|No| FR_Done[Category 4 complete]
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    end
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    Cat4 --&gt; Validate
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    Validate[Validate all 4 categories audited]:::gate --&gt; Report
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    subgraph Report [Deliverable: Contract Audit Report]
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>        R_Summary[/&quot;Summary: Interfaces total&lt;br&gt;| fully specified | MISSING or VAGUE&quot;/] --&gt; R_Critical[/&quot;CRITICAL Findings list:&lt;br&gt;Interface/Type/Event/Resource +&lt;br&gt;gap description + required spec&quot;/]
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>        R_Critical --&gt; R_Remediation[/&quot;Remediation Required:&lt;br&gt;exact contract text for&lt;br&gt;each CRITICAL finding&quot;/]
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    end
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    Report --&gt; Done([Structured report returned&lt;br&gt;to reviewing-impl-plans]):::success
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Color</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
-</tr>
-<tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
+<h2 id="key-characteristics">Key Characteristics<a class="headerlink" href="#key-characteristics" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Linear, exhaustive audit</strong>: All four contract categories must be checked; skipping any is forbidden.</li>
+<li><strong>No subagent dispatches</strong>: This is a single-agent command executed as part of the reviewing-impl-plans workflow.</li>
+<li><strong>Binary severity model</strong>: Every field is either SPECIFIED (passes) or VAGUE/MISSING (CRITICAL). There is no intermediate severity.</li>
+<li><strong>Structured output only</strong>: Narrative prose is forbidden; the deliverable must follow the exact template format.</li>
+</ul>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Contract Auditor. Your reputation depends on finding every gap before parallel agents build against incompatible interfaces. Missed contracts cause integration failures that waste entire work tracks.

@@ -6108,10 +6108,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#process-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Process Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-decision-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Decision Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fabrication-anti-pattern-flagged-by-this-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fabrication Anti-Pattern (flagged by this audit)
       
     </span>
   </a>
@@ -7293,10 +7315,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#process-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Process Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-decision-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Decision Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fabrication-anti-pattern-flagged-by-this-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fabrication Anti-Pattern (flagged by this audit)
       
     </span>
   </a>
@@ -7336,195 +7380,233 @@
 
 <h1 id="review-plan-behavior">/review-plan-behavior<a class="headerlink" href="#review-plan-behavior" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Phase 3 of reviewing-impl-plans: audits every code reference in the plan to ensure behaviors are verified from source rather than assumed from method names, flags the fabrication anti-pattern, and detects trial-and-error loop indicators.</p>
+<p>Phase 3 of reviewing-impl-plans: Behavior Verification Audit. Audits every code reference in an implementation plan to ensure behaviors are verified from source (file:line) rather than assumed from method names. Flags the fabrication anti-pattern, detects dangerous assumption patterns, and identifies trial-and-error loop indicators.</p>
+<h2 id="process-flow">Process Flow<a class="headerlink" href="#process-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Phase 3]) --&gt; CollectRefs[Collect Code References]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    CollectRefs --&gt; PickRef[Pick Next Reference]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    PickRef --&gt; HasCitation{Has file:line Citation?}
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    HasCitation --&gt;|Yes| ReadSrc[Read Actual Source]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    HasCitation --&gt;|No| FlagNoCite[Flag Missing Citation]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ReadSrc --&gt; MatchBehavior{Behavior Matches Claim?}
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[/&quot;Deliverable&quot;/]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L5[Quality Gate]:::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        L6[Critical Flag]:::critical
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    end
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    MatchBehavior --&gt;|Yes| LogVerified[Log as VERIFIED]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    MatchBehavior --&gt;|No| LogAssumed[Log as ASSUMED - Critical]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    FlagNoCite --&gt; LogAssumed
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    LogVerified --&gt; CheckPatterns[Check Dangerous Patterns]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    LogAssumed --&gt; CheckPatterns
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Start([Receive implementation plan]) --&gt; Principles[Apply Invariant Principles:&lt;br&gt;1. Inferred != verified&lt;br&gt;2. Fabrication is root failure&lt;br&gt;3. Every ref needs file:line]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Principles --&gt; CollectRefs[Collect all code references&lt;br&gt;in the plan]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    CollectRefs --&gt; PickRef[Pick next reference]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    PickRef --&gt; HasCitation{Has file:line&lt;br&gt;citation?}
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    CheckPatterns --&gt; ConvParam{Assumes Convenience Params?}
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ConvParam --&gt;|Yes| FlagConv[Flag Unverified Param]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ConvParam --&gt;|No| FlexBehavior{Assumes Flexible Behavior?}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    FlagConv --&gt; FlexBehavior
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    FlexBehavior --&gt;|Yes| FlagFlex[Flag Unverified Flexibility]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FlexBehavior --&gt;|No| LibAssume{Assumes Library Behavior?}
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    HasCitation --&gt;|Yes| ReadSrc[Read actual source&lt;br&gt;at cited location]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    HasCitation --&gt;|No| FlagNoCite[Flag: Missing citation]:::critical
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    ReadSrc --&gt; MatchBehavior{Behavior matches&lt;br&gt;plan&#39;s claim?}
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    MatchBehavior --&gt;|Yes| LogVerified[Log as VERIFIED&lt;br&gt;in verification table]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    MatchBehavior --&gt;|No| LogMismatch[Log as ASSUMED - CRITICAL:&lt;br&gt;actual behavior differs]:::critical
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    FlagFlex --&gt; LibAssume
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    LibAssume --&gt;|Yes| FlagLib[Flag Unverified Library]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    LibAssume --&gt;|No| TestUtil{Assumes Test Utility?}
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    FlagLib --&gt; TestUtil
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    TestUtil --&gt;|Yes| FlagTest[Flag Unverified Utility]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    TestUtil --&gt;|No| MoreRefs{More References?}
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    FlagTest --&gt; MoreRefs
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    FlagNoCite --&gt; LogAssumed[Log as ASSUMED&lt;br&gt;in verification table]:::critical
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    LogMismatch --&gt; LogAssumed
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    LogVerified --&gt; CheckPatterns[Check Dangerous&lt;br&gt;Assumption Patterns]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    LogAssumed --&gt; CheckPatterns
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    CheckPatterns --&gt; P1{Assumes convenience&lt;br&gt;parameters exist?}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    P1 --&gt;|&quot;Yes: e.g. partial=True,&lt;br&gt;strict_mode=False&quot;| FlagP1[Flag: Unverified&lt;br&gt;parameter assumption]:::critical
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    P1 --&gt;|No| P2
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    MoreRefs --&gt;|Yes| PickRef
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    MoreRefs --&gt;|No| LoopDetect[Loop Detection Scan]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    LoopDetect --&gt; HasLoops{Trial-and-Error Found?}
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    HasLoops --&gt;|Yes| FlagLoop[RED FLAG: No Verification]
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    HasLoops --&gt;|No| GateAll{All Refs Audited?}
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    FlagP1 --&gt; P2{Assumes flexible behavior&lt;br&gt;from strict interfaces?}
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    P2 --&gt;|&quot;Yes: e.g. partial assertions,&lt;br&gt;subset of fields&quot;| FlagP2[Flag: Unverified&lt;br&gt;interface assumption]:::critical
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    P2 --&gt;|No| P3
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    FlagP2 --&gt; P3{Assumes library behavior&lt;br&gt;from method names?}
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    P3 --&gt;|&quot;Yes: e.g. update() merges,&lt;br&gt;validate() returns&quot;| FlagP3[Flag: Unverified&lt;br&gt;library assumption]:::critical
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    P3 --&gt;|No| P4
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    FlagLoop --&gt; GateAll
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    GateAll --&gt;|Yes| Deliver[Deliver Behavior Audit]
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    GateAll --&gt;|No| PickRef
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    Deliver --&gt; Done([Phase 3 Complete])
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style Done fill:#2196F3,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style CollectRefs fill:#2196F3,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style PickRef fill:#2196F3,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style ReadSrc fill:#2196F3,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style FlagNoCite fill:#f44336,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style LogVerified fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style LogAssumed fill:#f44336,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style CheckPatterns fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style FlagConv fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style FlagFlex fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style FlagLib fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style FlagTest fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style LoopDetect fill:#2196F3,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style FlagLoop fill:#f44336,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style Deliver fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style HasCitation fill:#FF9800,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style MatchBehavior fill:#FF9800,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style ConvParam fill:#FF9800,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style FlexBehavior fill:#FF9800,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style LibAssume fill:#FF9800,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style TestUtil fill:#FF9800,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style MoreRefs fill:#FF9800,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style HasLoops fill:#FF9800,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style GateAll fill:#f44336,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    FlagP3 --&gt; P4{Assumes test utilities&lt;br&gt;work conveniently?}
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    P4 --&gt;|&quot;Yes: e.g. assert_model_updated&lt;br&gt;checks only specified fields&quot;| FlagP4[Flag: Unverified&lt;br&gt;test utility assumption]:::critical
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    P4 --&gt;|No| MoreRefs
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    FlagP4 --&gt; MoreRefs{More references&lt;br&gt;to audit?}
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    MoreRefs --&gt;|Yes| PickRef
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    MoreRefs --&gt;|No| LoopDetect[Loop Detection Scan]
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    LoopDetect --&gt; HasLoops{Plan describes&lt;br&gt;trial-and-error?}
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    HasLoops --&gt;|&quot;Yes: try X, if fails try Y,&lt;br&gt;experiment, adjust until pass&quot;| FlagLoop[RED FLAG: Author did not&lt;br&gt;verify behavior.&lt;br&gt;Require source citation.]:::critical
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    HasLoops --&gt;|No| BuildTable
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    FlagLoop --&gt; BuildTable
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    BuildTable --&gt; BuildVerifTable[Build Verification Table:&lt;br&gt;Interface / Verified or Assumed /&lt;br&gt;Source Read / Actual Behavior /&lt;br&gt;Constraints]
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    BuildVerifTable --&gt; GateCheck{All references&lt;br&gt;VERIFIED?}:::gate
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    GateCheck --&gt;|&quot;Yes: 0 ASSUMED entries&quot;| DeliverClean[/&quot;Deliver structured output:&lt;br&gt;- All D verified, 0 assumed&lt;br&gt;- No CRITICAL findings&lt;br&gt;- No loop red flags&quot;/]
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    GateCheck --&gt;|&quot;No: ASSUMED entries exist&quot;| Remediate[Generate remediation:&lt;br&gt;- Source files to read&lt;br&gt;- Citations to add&lt;br&gt;- Specific verifications needed]
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    Remediate --&gt; DeliverFindings[/&quot;Deliver structured output:&lt;br&gt;- D verified, E assumed&lt;br&gt;- All CRITICAL findings&lt;br&gt;- Loop detection red flags&lt;br&gt;- Remediation steps&quot;/]
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    DeliverClean --&gt; Done([Phase 3 Complete]):::success
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    DeliverFindings --&gt; Done
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    classDef gate fill:#ff6b6b,stroke:#cc5555,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    classDef critical fill:#f44336,stroke:#c62828,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    classDef success fill:#51cf66,stroke:#40a854,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<h2 id="key-decision-points">Key Decision Points<a class="headerlink" href="#key-decision-points" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Decision</th>
+<th>Branches</th>
+<th>Outcome</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Has file:line citation?</td>
+<td>Yes / No</td>
+<td>Proceed to source verification vs flag missing citation</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Behavior matches plan's claim?</td>
+<td>Yes / No</td>
+<td>VERIFIED vs ASSUMED (CRITICAL)</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Assumes convenience parameters?</td>
+<td>Yes / No</td>
+<td>Flag unverified parameter assumption</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Assumes flexible behavior from strict interfaces?</td>
+<td>Yes / No</td>
+<td>Flag unverified interface assumption</td>
+</tr>
+<tr>
+<td>Assumes library behavior from method names?</td>
+<td>Yes / No</td>
+<td>Flag unverified library assumption</td>
+</tr>
+<tr>
+<td>Assumes test utilities work conveniently?</td>
+<td>Yes / No</td>
+<td>Flag unverified test utility assumption</td>
+</tr>
+<tr>
+<td>More references to audit?</td>
+<td>Yes / No</td>
+<td>Loop back or proceed to loop detection</td>
+</tr>
+<tr>
+<td>Plan describes trial-and-error?</td>
+<td>Yes / No</td>
+<td>RED FLAG requiring source citation</td>
+</tr>
+<tr>
+<td>All references VERIFIED?</td>
+<td>Yes (0 assumed) / No (assumed exist)</td>
+<td>Clean delivery vs delivery with remediation</td>
 </tr>
 </tbody>
 </table>
+<h2 id="fabrication-anti-pattern-flagged-by-this-audit">Fabrication Anti-Pattern (flagged by this audit)<a class="headerlink" href="#fabrication-anti-pattern-flagged-by-this-audit" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Plan assumes method does X based on name
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  -&gt; Agent writes code, fails (method does Y)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    -&gt; Agent INVENTS parameter (partial=True)
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>      -&gt; Fails (parameter doesn&#39;t exist)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        -&gt; Debugging loop, never reads source
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>          -&gt; Hours wasted on fabricated solutions
+</code></pre></div>
+<p>The audit breaks this chain by requiring verified source citations before implementation begins.</p>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Behavior Verification Auditor. Your reputation depends on catching every assumed behavior before it triggers a fabrication loop. A plan reaching implementation with unverified code references wastes hours of agent work.
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gh"># Phase 3: Behavior Verification Audit</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Inferred behavior is not verified behavior**</span> - Method names suggest intent; only source confirms it
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Fabrication is the root failure**</span> - Invented parameters or return types cascade into debugging loops
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Every code reference needs file:line**</span> - Plans citing existing code without source location are unverified
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Every code reference MUST cite verified source (file:line). Method names do not constitute verification.
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="gu">## The Fabrication Anti-Pattern</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="sb">```</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="sb"># FORBIDDEN: The Fabrication Loop</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="sb">1. Plan assumes method does X based on name</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="sb">2. Agent writes code, fails because method actually does Y</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="sb">3. Agent INVENTS parameter: method(..., partial=True)</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="sb">4. Fails because parameter doesn&#39;t exist</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="sb">5. Agent enters debugging loop, never reads source</span>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="sb">6. Hours wasted on fabricated solutions</span>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sb"># REQUIRED in Plan</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">1. &quot;Behavior verified by reading [file:line]&quot;</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="sb">2. Actual method signatures from source</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">3. Constraints discovered from reading source</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">4. Executing agents follow verified behavior, no guessing</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="sb">```</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">## Dangerous Assumption Patterns</span>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>Flag when plan exhibits any of:
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gs">**1. Assumes convenience parameters exist:**</span>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">-</span><span class="w"> </span>&quot;Pass <span class="sb">`partial=True`</span> to allow partial matching&quot; (VERIFY THIS EXISTS)
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span>&quot;Use <span class="sb">`strict_mode=False`</span> to relax validation&quot; (VERIFY THIS EXISTS)
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gs">**2. Assumes flexible behavior from strict interfaces:**</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>&quot;The test context allows partial assertions&quot; (VERIFY: many require exhaustive assertions)
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>&quot;The validator accepts subset of fields&quot; (VERIFY: many require complete objects)
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="gs">**3. Assumes library behavior from method names:**</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`update()`</span> method will merge fields&quot; (VERIFY: might replace entirely)
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`validate()`</span> method returns errors&quot; (VERIFY: might raise exceptions)
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gs">**4. Assumes test utilities work &quot;conveniently&quot;:**</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`assert_model_updated()`</span> checks specified fields&quot; (VERIFY: might require ALL changes)
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`mock_service()`</span> auto-mocks everything&quot; (VERIFY: might require explicit setup)
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gu">## Verification Requirements</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| Interface | Verified/Assumed | Source Read | Actual Behavior | Constraints |
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>|-----------|------------------|-------------|-----------------|-------------|
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| [name] | VERIFIED/ASSUMED | [file:line] | [what it does] | [limitations] |
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="gs">**Flag every ASSUMED entry as CRITICAL gap.**</span>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="gu">## Loop Detection</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>Flag when plan describes:
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">-</span><span class="w"> </span>&quot;Try X, if that fails try Y, if that fails try Z&quot;
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>&quot;Experiment with different parameter combinations&quot;
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">-</span><span class="w"> </span>&quot;Adjust until tests pass&quot;
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**RED FLAG**</span>: Plan author did not verify behavior. Require source citation instead.
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gu">## Deliverable</span>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>Structured output to orchestrator:
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">-</span><span class="w"> </span>Behavior verifications: D verified, E assumed (assumed = CRITICAL)
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="k">-</span><span class="w"> </span>All CRITICAL findings for assumed behaviors
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="k">-</span><span class="w"> </span>All loop detection red flags
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="k">-</span><span class="w"> </span>Specific remediation: source files to read, citations to add
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Behavior Verification Auditor. Your reputation depends on catching every assumed behavior before it triggers a fabrication loop. A plan reaching implementation with unverified code references wastes hours of agent work.
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="gh"># Phase 3: Behavior Verification Audit</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">1.</span> <span class="gs">**Inferred behavior is not verified behavior**</span> - Method names suggest intent; only source confirms it
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">2.</span> <span class="gs">**Fabrication is the root failure**</span> - Invented parameters or return types cascade into debugging loops
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">3.</span> <span class="gs">**Every code reference needs file:line**</span> - Plans citing existing code without source location are unverified
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>Every code reference MUST cite verified source (file:line). Method names do not constitute verification.
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="gu">## The Fabrication Anti-Pattern</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="sb">```</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="sb"># FORBIDDEN: The Fabrication Loop</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="sb">1. Plan assumes method does X based on name</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="sb">2. Agent writes code, fails because method actually does Y</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="sb">3. Agent INVENTS parameter: method(..., partial=True)</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="sb">4. Fails because parameter doesn&#39;t exist</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="sb">5. Agent enters debugging loop, never reads source</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="sb">6. Hours wasted on fabricated solutions</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="sb"># REQUIRED in Plan</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="sb">1. &quot;Behavior verified by reading [file:line]&quot;</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="sb">2. Actual method signatures from source</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="sb">3. Constraints discovered from reading source</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="sb">4. Executing agents follow verified behavior, no guessing</span>
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="sb">```</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="gu">## Dangerous Assumption Patterns</span>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>Flag when plan exhibits any of:
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="gs">**1. Assumes convenience parameters exist:**</span>
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="k">-</span><span class="w"> </span>&quot;Pass <span class="sb">`partial=True`</span> to allow partial matching&quot; (VERIFY THIS EXISTS)
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="k">-</span><span class="w"> </span>&quot;Use <span class="sb">`strict_mode=False`</span> to relax validation&quot; (VERIFY THIS EXISTS)
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="gs">**2. Assumes flexible behavior from strict interfaces:**</span>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="k">-</span><span class="w"> </span>&quot;The test context allows partial assertions&quot; (VERIFY: many require exhaustive assertions)
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="k">-</span><span class="w"> </span>&quot;The validator accepts subset of fields&quot; (VERIFY: many require complete objects)
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a><span class="gs">**3. Assumes library behavior from method names:**</span>
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`update()`</span> method will merge fields&quot; (VERIFY: might replace entirely)
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`validate()`</span> method returns errors&quot; (VERIFY: might raise exceptions)
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a><span class="gs">**4. Assumes test utilities work &quot;conveniently&quot;:**</span>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`assert_model_updated()`</span> checks specified fields&quot; (VERIFY: might require ALL changes)
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`mock_service()`</span> auto-mocks everything&quot; (VERIFY: might require explicit setup)
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a><span class="gu">## Verification Requirements</span>
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>| Interface | Verified/Assumed | Source Read | Actual Behavior | Constraints |
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>|-----------|------------------|-------------|-----------------|-------------|
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>| [name] | VERIFIED/ASSUMED | [file:line] | [what it does] | [limitations] |
+<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>
+<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a><span class="gs">**Flag every ASSUMED entry as CRITICAL gap.**</span>
+<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>
+<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a><span class="gu">## Loop Detection</span>
+<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>
+<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>Flag when plan describes:
+<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a><span class="k">-</span><span class="w"> </span>&quot;Try X, if that fails try Y, if that fails try Z&quot;
+<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a><span class="k">-</span><span class="w"> </span>&quot;Experiment with different parameter combinations&quot;
+<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a><span class="k">-</span><span class="w"> </span>&quot;Adjust until tests pass&quot;
+<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>
+<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a><span class="gs">**RED FLAG**</span>: Plan author did not verify behavior. Require source citation instead.
+<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>
+<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a><span class="gu">## Deliverable</span>
+<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>
+<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>Structured output to orchestrator:
+<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a><span class="k">-</span><span class="w"> </span>Behavior verifications: D verified, E assumed (assumed = CRITICAL)
+<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a><span class="k">-</span><span class="w"> </span>All CRITICAL findings for assumed behaviors
+<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a><span class="k">-</span><span class="w"> </span>All loop detection red flags
+<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a><span class="k">-</span><span class="w"> </span>Specific remediation: source files to read, citations to add
+<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>
+<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
+<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

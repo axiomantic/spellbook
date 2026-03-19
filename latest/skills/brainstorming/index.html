@@ -642,6 +642,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#full-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2773,6 +2784,17 @@
     <span class="md-ellipsis">
       
         Workflow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Workflow
       
     </span>
   </a>
@@ -7395,6 +7417,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#full-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7458,98 +7491,80 @@
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Workflow for the brainstorming skill. Supports two modes: Synthesis (autonomous, context pre-collected) and Interactive (discovery-driven collaboration). Both converge on approach selection, design presentation, quality assessment, and documentation. Includes circuit breakers for security-critical or contradictory situations.</p>
+<p>Two-mode design exploration skill. <strong>Synthesis mode</strong> (context pre-collected) skips discovery and designs autonomously. <strong>Interactive mode</strong> discovers requirements through one-question-at-a-time collaboration. Both converge on design documentation, quality assessment, self-check, and optional implementation setup.</p>
+<h2 id="full-workflow">Full Workflow<a class="headerlink" href="#full-workflow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start]) --&gt; DetectMode{Mode detection?}
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    DetectMode --&gt;|&quot;SYNTHESIS MODE signals&quot;| Synthesis[&quot;Synthesis Mode&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    DetectMode --&gt;|&quot;No signals&quot;| Interactive[&quot;Interactive Mode&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    subgraph SynthesisPath[&quot;Synthesis Path&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        AutoDecide[&quot;Autonomous decisions&quot;]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        DocRationale[&quot;Document rationale&quot;]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        CircuitBreaker{Circuit breaker?}
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        AutoDecide --&gt; DocRationale
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        DocRationale --&gt; CircuitBreaker
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        CircuitBreaker --&gt;|&quot;Security/contradiction&quot;| PauseReport[&quot;Pause and report gaps&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        CircuitBreaker --&gt;|Clear| SynthApproach[&quot;Select approach&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    end
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    subgraph InteractivePath[&quot;Interactive Path&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        CheckProject[&quot;Check project state&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        ExplorePatterns[&quot;Explore codebase patterns&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        AskQuestion[&quot;Ask one question&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        GotAnswer{Sufficient context?}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        CheckProject --&gt; ExplorePatterns
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        ExplorePatterns --&gt; AskQuestion
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        AskQuestion --&gt; GotAnswer
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        GotAnswer --&gt;|No| AskQuestion
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        GotAnswer --&gt;|Yes| ProposeApproaches[&quot;Propose 2-3 approaches&quot;]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        ProposeApproaches --&gt; UserPicks[&quot;User selects approach&quot;]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    end
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend[&quot; Legend &quot;]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        Lproc[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        Ldec{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        Lterm([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        Lsub[&quot;Subagent / Skill&quot;]:::subagent
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        Lgate{{&quot;Quality Gate&quot;}}:::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([Brainstorming invoked]) --&gt; Input[&quot;Receive inputs:&lt;br&gt;feature_idea, constraints,&lt;br&gt;existing_patterns, mode_override&quot;]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Input --&gt; ModeDetect{&quot;Context contains&lt;br&gt;SYNTHESIS MODE signals?&lt;br&gt;(line 45-48)&quot;}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    %% ===== SYNTHESIS MODE =====
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ModeDetect --&gt;|&quot;Yes&quot;| SynthDecide[&quot;Make autonomous decisions:&lt;br&gt;architecture, trade-offs,&lt;br&gt;scope boundaries.&lt;br&gt;Document rationale.&lt;br&gt;(line 63)&quot;]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    SynthDecide --&gt; CircuitBreaker{&quot;Circuit Breaker:&lt;br&gt;1. Security-critical, no guidance?&lt;br&gt;2. Contradictory requirements?&lt;br&gt;3. Missing context?&lt;br&gt;(line 66-69)&quot;}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CircuitBreaker --&gt;|&quot;Any triggered&quot;| Pause([&quot;PAUSE:&lt;br&gt;report to caller&quot;])
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CircuitBreaker --&gt;|&quot;None&quot;| SynthDesign[&quot;Write complete design&lt;br&gt;document autonomously&quot;]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    %% Synthesis assessment loop
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SynthDesign --&gt; SynthAssess[&quot;Run /design-assessment&lt;br&gt;autonomously, self-score&lt;br&gt;(line 138-142)&quot;]:::subagent
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    SynthAssess --&gt; SynthAvail{&quot;Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)&quot;}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SynthAvail --&gt;|&quot;Failed/unavailable&quot;| DegradedWarn1[&quot;Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate&lt;br&gt;(line 148)&quot;]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    DegradedWarn1 --&gt; WriteDoc
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SynthAvail --&gt;|&quot;Succeeded&quot;| SynthGate{{&quot;Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)&quot;}}:::gate
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    SynthGate --&gt;|&quot;NOT_READY /&lt;br&gt;NEEDS_WORK&quot;| SynthGaps[&quot;Report gaps.&lt;br&gt;Iterate on design.&lt;br&gt;(line 142)&quot;]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    SynthGaps --&gt; SynthDesign
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SynthGate --&gt;|&quot;READY&quot;| WriteDoc
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    Synthesis --&gt; AutoDecide
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Interactive --&gt; CheckProject
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    PauseReport --&gt; AutoDecide
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    SynthApproach --&gt; DesignPresentation
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    UserPicks --&gt; DesignPresentation
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    DesignPresentation[&quot;Present design sections&quot;]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    DesignPresentation --&gt; Architecture[&quot;Architecture&quot;]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    Architecture --&gt; Components[&quot;Components&quot;]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    Components --&gt; DataFlow[&quot;Data flow&quot;]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    DataFlow --&gt; ErrorHandling[&quot;Error handling&quot;]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    ErrorHandling --&gt; Testing[&quot;Testing strategy&quot;]
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    Testing --&gt; Assessment[&quot;/design-assessment&quot;]
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    Assessment --&gt; GateScore{Blocking dims &gt;= 3?}
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    GateScore --&gt;|No| FixGaps[&quot;Report gaps, iterate&quot;]
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    GateScore --&gt;|Yes| GateCritical{CRITICAL findings?}
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    FixGaps --&gt; DesignPresentation
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    GateCritical --&gt;|Yes| FixGaps
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    GateCritical --&gt;|No| WriteDoc[&quot;Write design document&quot;]
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    WriteDoc --&gt; DocPath[&quot;Save to ~/.local/spellbook/docs/&quot;]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    %% ===== INTERACTIVE MODE =====
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    ModeDetect --&gt;|&quot;No&quot;| Discovery[&quot;Discovery Phase:&lt;br&gt;Check project state&lt;br&gt;(files, docs, commits)&lt;br&gt;(line 75)&quot;]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    Discovery --&gt; ExploreAgent[&quot;Explore subagent:&lt;br&gt;codebase patterns&lt;br&gt;(line 76)&quot;]:::subagent
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    ExploreAgent --&gt; AskQuestions[&quot;Ask questions one at a time.&lt;br&gt;Prefer multiple choice.&lt;br&gt;Focus: purpose, constraints,&lt;br&gt;success criteria.&lt;br&gt;(line 77-78)&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    AskQuestions --&gt; SufficientCtx{&quot;Sufficient&lt;br&gt;context?&quot;}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    SufficientCtx --&gt;|&quot;No&quot;| AskQuestions
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    SufficientCtx --&gt;|&quot;Yes&quot;| ProposeApproaches[&quot;Propose 2-3 approaches&lt;br&gt;with trade-offs.&lt;br&gt;Lead with recommendation.&lt;br&gt;(line 81-82)&quot;]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    ProposeApproaches --&gt; TradeoffCheck{&quot;2+ approaches have&lt;br&gt;non-obvious trade-offs?&lt;br&gt;(line 84)&quot;}
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    TradeoffCheck --&gt;|&quot;Yes&quot;| Fractal[&quot;Invoke fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;seed: deep trade-offs&lt;br&gt;(line 84)&quot;]:::subagent
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    Fractal --&gt; EnrichCompare[&quot;Enrich trade-off comparison&lt;br&gt;with fractal synthesis&quot;]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    EnrichCompare --&gt; UserSelect[&quot;User selects approach&quot;]
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    TradeoffCheck --&gt;|&quot;No&quot;| UserSelect
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    UserSelect --&gt; DesignPresent[&quot;Design Presentation:&lt;br&gt;200-300 word sections.&lt;br&gt;Validate after each.&lt;br&gt;Cover: architecture, components,&lt;br&gt;data flow, error handling, testing.&lt;br&gt;(line 87-89)&quot;]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    %% Interactive assessment loop
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    DesignPresent --&gt; IntAssess[&quot;Run /design-assessment&lt;br&gt;(line 110-111)&quot;]:::subagent
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    IntAssess --&gt; IntAvail{&quot;Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)&quot;}
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    IntAvail --&gt;|&quot;Failed/unavailable&quot;| DegradedWarn2[&quot;Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate&quot;]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    DegradedWarn2 --&gt; WriteDoc
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    IntAvail --&gt;|&quot;Succeeded&quot;| IntGate{{&quot;Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)&quot;}}:::gate
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    IntGate --&gt;|&quot;No&quot;| IntFix[&quot;Address findings,&lt;br&gt;iterate on design&quot;]
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    IntFix --&gt; DesignPresent
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    IntGate --&gt;|&quot;READY&quot;| WriteDoc
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    DocPath --&gt; ImplReady{Ready for implementation?}
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    ImplReady --&gt;|No| Done([Done])
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    ImplReady --&gt;|Yes| Worktree[&quot;using-git-worktrees&quot;]
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    Worktree --&gt; WritePlan[&quot;writing-plans&quot;]
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    WritePlan --&gt; Done
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style Synthesis fill:#4CAF50,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style Interactive fill:#4CAF50,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style Worktree fill:#4CAF50,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style WritePlan fill:#4CAF50,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style Assessment fill:#4CAF50,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style AutoDecide fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style DocRationale fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style PauseReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style SynthApproach fill:#2196F3,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style CheckProject fill:#2196F3,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style ExplorePatterns fill:#2196F3,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style AskQuestion fill:#2196F3,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style ProposeApproaches fill:#2196F3,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style UserPicks fill:#2196F3,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style DesignPresentation fill:#2196F3,color:#fff
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style Architecture fill:#2196F3,color:#fff
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style Components fill:#2196F3,color:#fff
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style DataFlow fill:#2196F3,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style ErrorHandling fill:#2196F3,color:#fff
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style Testing fill:#2196F3,color:#fff
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style WriteDoc fill:#2196F3,color:#fff
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style DocPath fill:#2196F3,color:#fff
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style FixGaps fill:#2196F3,color:#fff
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style DetectMode fill:#FF9800,color:#fff
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style CircuitBreaker fill:#FF9800,color:#fff
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style GotAnswer fill:#FF9800,color:#fff
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style ImplReady fill:#FF9800,color:#fff
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style GateScore fill:#f44336,color:#fff
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style GateCritical fill:#f44336,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    %% ===== CONVERGENCE =====
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    WriteDoc[&quot;Write design document to&lt;br&gt;~/.local/spellbook/docs/&lt;br&gt;PROJECT_ENCODED/plans/&lt;br&gt;YYYY-MM-DD-topic-design.md&lt;br&gt;(line 96-101)&quot;]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    WriteDoc --&gt; SelfCheck{{&quot;Self-Check:&lt;br&gt;1. 2-3 approaches presented?&lt;br&gt;2. Doc in correct location?&lt;br&gt;3. All sections covered?&lt;br&gt;4. No YAGNI violations?&lt;br&gt;5. Mode correctly detected?&lt;br&gt;(line 169-175)&quot;}}:::gate
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    SelfCheck --&gt;|&quot;Any unchecked&quot;| FixItems[&quot;STOP and fix&lt;br&gt;unchecked items&lt;br&gt;(line 176)&quot;]
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    FixItems --&gt; SelfCheck
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    SelfCheck --&gt;|&quot;All pass&quot;| ModeRouting{&quot;Interactive&lt;br&gt;mode?&quot;}
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    ModeRouting --&gt;|&quot;No (Synthesis)&quot;| Complete([&quot;Design complete.&lt;br&gt;Return to caller.&quot;]):::success
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    ModeRouting --&gt;|&quot;Yes&quot;| AskImpl{&quot;Ask user:&lt;br&gt;Ready for implementation?&lt;br&gt;(line 104)&quot;}
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    AskImpl --&gt;|&quot;No&quot;| Complete
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    AskImpl --&gt;|&quot;Yes&quot;| Worktree[&quot;Invoke using-git-worktrees&lt;br&gt;for isolation&lt;br&gt;(line 105)&quot;]:::subagent
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    Worktree --&gt; ImplPlan[&quot;Invoke writing-plans&lt;br&gt;for implementation plan&lt;br&gt;(line 106)&quot;]:::subagent
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    ImplPlan --&gt; ImplReady([&quot;Implementation ready.&quot;]):::success
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -7561,20 +7576,20 @@
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Blue (<code>#4a9eff</code>)</td>
+<td>Subagent dispatch or skill invocation</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Red (<code>#ff6b6b</code>)</td>
+<td>Quality gate (must pass to proceed)</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Green (<code>#51cf66</code>)</td>
+<td>Success terminal</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Default</td>
+<td>Process step or decision</td>
 </tr>
 </tbody>
 </table>
@@ -7583,61 +7598,80 @@
 <thead>
 <tr>
 <th>Node</th>
-<th>Source Reference</th>
+<th>Source Lines</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Mode detection</td>
-<td>SKILL.md: Mode Detection - synthesis signals vs interactive</td>
+<td>Mode Detection</td>
+<td>39-53</td>
+<td>Checks for SYNTHESIS MODE / AUTONOMOUS / pre-collected context signals</td>
 </tr>
 <tr>
-<td>Synthesis Mode</td>
-<td>SKILL.md: Synthesis Mode Protocol - skip discovery</td>
+<td>Circuit Breakers</td>
+<td>65-70</td>
+<td>Security-critical decisions, contradictory requirements, missing context</td>
 </tr>
 <tr>
-<td>Interactive Mode</td>
-<td>SKILL.md: Interactive Mode Protocol - one question per turn</td>
+<td>Explore subagent</td>
+<td>76</td>
+<td>Dispatches explore agent for codebase patterns (saves main context)</td>
 </tr>
 <tr>
-<td>Circuit breaker</td>
-<td>SKILL.md: Synthesis Mode - security-critical, contradictory, or missing context</td>
+<td>One question per turn</td>
+<td>77-78</td>
+<td>Invariant 1: single questions get better answers</td>
 </tr>
 <tr>
 <td>Propose 2-3 approaches</td>
-<td>SKILL.md: Invariant 2 - "Explore Before Committing"</td>
+<td>81-82</td>
+<td>Invariant 2: explore before committing</td>
 </tr>
 <tr>
-<td>Ask one question</td>
-<td>SKILL.md: Invariant 1 - "One Question Per Turn"</td>
+<td>Fractal exploration</td>
+<td>84</td>
+<td>fractal-thinking with intensity <code>pulse</code> for non-obvious trade-offs</td>
 </tr>
 <tr>
-<td>Design sections</td>
-<td>SKILL.md: Design Presentation - architecture, components, data flow, error handling, testing</td>
+<td>Design Presentation</td>
+<td>86-89</td>
+<td>200-300 word sections covering architecture, components, data flow, error handling, testing</td>
 </tr>
 <tr>
 <td>/design-assessment</td>
-<td>SKILL.md: Design Quality Assessment - run assessment command</td>
+<td>110-126</td>
+<td>Quality gate: generate framework, score dimensions, determine verdict</td>
 </tr>
 <tr>
 <td>Blocking dims &gt;= 3</td>
-<td>SKILL.md: Quality Gate - completeness, clarity, accuracy &gt;= 3</td>
+<td>130-133</td>
+<td>Completeness, clarity, accuracy must score &gt;= 3; no CRITICAL/HIGH findings</td>
 </tr>
 <tr>
-<td>CRITICAL findings</td>
-<td>SKILL.md: Quality Gate - no CRITICAL or HIGH findings</td>
+<td>Assessment fallback</td>
+<td>146-149</td>
+<td>If /design-assessment fails: warn and proceed in degraded mode</td>
 </tr>
 <tr>
-<td>Write design document</td>
-<td>SKILL.md: After Design Complete - Documentation path</td>
+<td>Self-Check</td>
+<td>169-176</td>
+<td>5-item checklist; STOP and fix if any unchecked</td>
+</tr>
+<tr>
+<td>Write design doc</td>
+<td>96-101</td>
+<td>Output to <code>~/.local/spellbook/docs/PROJECT_ENCODED/plans/</code></td>
 </tr>
 <tr>
 <td>using-git-worktrees</td>
-<td>SKILL.md: After Design Complete - Implementation isolation</td>
+<td>105</td>
+<td>Implementation isolation (interactive mode only)</td>
 </tr>
 <tr>
 <td>writing-plans</td>
-<td>SKILL.md: After Design Complete - Implementation plan</td>
+<td>106</td>
+<td>Implementation plan generation (interactive mode only)</td>
 </tr>
 </tbody>
 </table>
