@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/scientific-debugging/scientific-debugging.md", "source_hash": "sha256:81c6e47e40b155e163594c3ea0a06d2784d0488e02bf95de22c12b4f2f5fcfde", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/scientific-debugging/scientific-debugging.md","source_hash": "sha256:42ebd28ee793cd088b88d610a0d3f5fd57c553e9a51a0423da3d06ee13f72fcb","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: scientific-debugging
 
 Rigorous theory-experiment debugging methodology. Forms exactly 3 theories from the symptom alone (no data gathering first, no ranking), designs 3+ experiments per theory with explicit prove/disprove criteria, tests one theory at a time, and cycles until root cause is confirmed.

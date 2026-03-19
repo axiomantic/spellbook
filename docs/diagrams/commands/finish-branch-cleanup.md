@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/finish-branch-cleanup.md", "source_hash": "sha256:357f96c3bbfd47d0bbea1fbc1edb4bb0667cf43dc30d6785462dec97fa00ad4d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/finish-branch-cleanup.md","source_hash": "sha256:2201603fb399f8c177729f3f569dadda943c45e192cd6af99785e6f933ad59d6","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: finish-branch-cleanup
 
 Worktree cleanup after branch integration. Applies to merge, PR, and discard options. Keeps worktree intact for keep-as-is option.

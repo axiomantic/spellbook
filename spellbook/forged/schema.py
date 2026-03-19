@@ -1,7 +1,7 @@
-"""Database schema and connection management for Forged autonomous development.
+"""Database schema and connection management for the workflow system.
 
 This module provides SQLite database initialization and connection management
-for the Forged workflow system, including schema versioning and WAL mode.
+for the workflow enforcement system, including schema versioning and WAL mode.
 """
 
 import sqlite3
@@ -13,7 +13,7 @@ from spellbook.forged.models import SCHEMA_VERSION
 
 
 def get_forged_db_path() -> Path:
-    """Get path to Forged database file.
+    """Get path to the forged database file.
 
     Returns:
         Path to ~/.local/spellbook/forged.db
@@ -55,7 +55,7 @@ def get_forged_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
 
 
 def init_forged_schema(db_path: Optional[str] = None) -> None:
-    """Initialize Forged database schema.
+    """Initialize the forged database schema.
 
     Creates all required tables with indices. Idempotent - safe to call
     multiple times. Records schema version on first initialization.
@@ -82,7 +82,7 @@ def init_forged_schema(db_path: Optional[str] = None) -> None:
             (SCHEMA_VERSION,)
         )
 
-    # Forge tokens - workflow enforcement
+    # Workflow tokens - stage transition enforcement
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS forge_tokens (
             id TEXT PRIMARY KEY,
@@ -179,11 +179,36 @@ def init_forged_schema(db_path: Optional[str] = None) -> None:
         CREATE INDEX IF NOT EXISTS idx_tool_analytics_called ON tool_analytics(called_at)
     """)
 
+    # Gate completions - tracks per-gate roundtable results
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gate_completions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_path TEXT NOT NULL,
+            feature_name TEXT NOT NULL,
+            gate TEXT NOT NULL,
+            stage TEXT NOT NULL,
+            consensus INTEGER NOT NULL DEFAULT 0,
+            iteration INTEGER NOT NULL DEFAULT 1,
+            verdict_summary TEXT,
+            completed_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_gate_completions_feature
+        ON gate_completions(project_path, feature_name)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_gate_completions_gate
+        ON gate_completions(project_path, feature_name, gate)
+    """)
+
     conn.commit()
 
 
 def close_forged_connections() -> None:
-    """Close all cached Forged database connections.
+    """Close all cached forged database connections.
 
     Used primarily for cleanup in tests.
     """

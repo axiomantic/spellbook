@@ -146,7 +146,7 @@ Users say "this is broken" far more often than "I need to debug." Write for the 
 - [ ] **Leads with user intent**, not implementation details or internal workflow jargon
 - [ ] **Disambiguates from overlapping skills** with "NOT for" or "For X instead, use Y"
 - [ ] **Notes invocation path** if primarily called by other skills ("Also invoked by X")
-- [ ] **Avoids being too broad** ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the Forged workflow")
+- [ ] **Avoids being too broad** ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the develop workflow")
 - [ ] **No internal jargon** that only spellbook developers would know
 
 ### Model Descriptions

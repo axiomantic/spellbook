@@ -4,89 +4,131 @@ Structured elicitation of feature requirements through discovery questions and c
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the Forged workflow.
+> Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the develop workflow.
 
 ## Workflow Diagram
 
-Elicits comprehensive requirements through four archetype perspectives: Queen (user needs), Emperor (constraints), Hermit (security surface), and Priestess (scope boundaries). Produces a structured requirements document with functional requirements, open questions, and blocking/non-blocking classification.
+## Overview Diagram
+
+The gathering-requirements skill follows a linear elicitation process with one conditional branch (feedback handling) and a self-check loop. It's compact enough for a single diagram.
 
 ```mermaid
+---
+title: "gathering-requirements Skill Flow"
+---
 flowchart TD
-    Start([Start: Feature Description]) --> HasFeedback{Roundtable Feedback?}:::decision
-    HasFeedback -->|Yes| LoadFeedback["Load Feedback Context"]:::command
-    HasFeedback -->|No| Extract
-    LoadFeedback --> Extract
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Quality Gate"/]:::gate
+        L5[Fractal Dispatch]:::subagent
+    end
 
-    Extract["Step 1: Initial Extraction"]:::command --> Queen
+    START([Invoked]) --> PARSE_INPUTS
 
-    Queen["Queen: User Needs"]:::command --> Emperor
-    Emperor["Emperor: Constraints"]:::command --> Hermit
-    Hermit["Hermit: Security Surface"]:::command --> Priestess
-    Priestess["Priestess: Scope Boundaries"]:::command --> AllFour{All 4 Perspectives Done?}:::gate
-    AllFour -->|No| Queen
-    AllFour -->|Yes| Gaps
+    subgraph Phase1["Phase 1: Initial Extraction"]
+        PARSE_INPUTS["Parse feature_description:<br>explicit reqs, implicit reqs,<br>constraints, unknowns"]
+    end
 
-    Gaps["Step 3: Gap Identification"]:::command --> HasUnknowns{Blocking Unknowns?}:::decision
-    HasUnknowns -->|Yes| Clarify["Step 4: User Clarification"]:::command
-    HasUnknowns -->|No| Generate
-    Clarify --> StillBlocked{Still Blocked?}:::decision
-    StillBlocked -->|Yes, escalate| MarkUnknown["Mark UNKNOWN for Roundtable"]:::command
-    StillBlocked -->|No| Generate
-    MarkUnknown --> Generate
+    PARSE_INPUTS --> PERSPECTIVE_ANALYSIS
 
-    Generate["Step 5: Generate Requirements Doc"]:::command --> GateValue{User Value Clear?}:::gate
-    GateValue -->|No| Queen
-    GateValue -->|Yes| GateConstraints{Constraints Documented?}:::gate
-    GateConstraints -->|No| Emperor
-    GateConstraints -->|Yes| GateSecurity{Security Addressed?}:::gate
-    GateSecurity -->|No| Hermit
-    GateSecurity -->|Yes| GateScope{Scope Bounded?}:::gate
-    GateScope -->|No| Priestess
-    GateScope -->|Yes| GateBlocking{No Blocking Unknowns?}:::gate
-    GateBlocking -->|No| Clarify
-    GateBlocking -->|Yes| SelfCheck
+    subgraph Phase2["Phase 2: Perspective Analysis"]
+        PERSPECTIVE_ANALYSIS["Apply Four Perspectives"]
+        PERSPECTIVE_ANALYSIS --> QUEEN["Queen: User Needs<br>Users, problem, stories,<br>success criteria"]
+        PERSPECTIVE_ANALYSIS --> EMPEROR["Emperor: Constraints<br>Technical, resource,<br>integration, performance"]
+        PERSPECTIVE_ANALYSIS --> HERMIT["Hermit: Security Surface<br>Data, auth, threats,<br>compliance"]
+        PERSPECTIVE_ANALYSIS --> PRIESTESS["Priestess: Scope Boundaries<br>In-scope, out-of-scope,<br>edge cases, assumptions"]
 
-    SelfCheck{Self-Check Passes?}:::gate
-    SelfCheck -->|No| Revise["Revise Requirements"]:::command
-    Revise --> AllFour
-    SelfCheck -->|Yes| Final([Requirements Delivered])
+        QUEEN --> CONTRADICTIONS
+        EMPEROR --> CONTRADICTIONS
+        HERMIT --> CONTRADICTIONS
+        PRIESTESS --> CONTRADICTIONS
 
-    classDef skill fill:#4CAF50,color:#fff
-    classDef command fill:#2196F3,color:#fff
-    classDef decision fill:#FF9800,color:#fff
-    classDef gate fill:#f44336,color:#fff
+        CONTRADICTIONS{Contradictory<br>requirements?}
+        CONTRADICTIONS -->|Yes| FRACTAL["fractal-thinking<br>intensity: pulse<br>Reconcile conflicts"]:::subagent
+        CONTRADICTIONS -->|No| GAP_ID
+        FRACTAL --> GAP_ID
+    end
+
+    GAP_ID["Phase 3: Gap Identification<br>Unanswered questions,<br>unvalidated assumptions,<br>perspective conflicts"]
+
+    GAP_ID --> HAS_FEEDBACK
+
+    subgraph Phase4["Phase 4: User Clarification"]
+        HAS_FEEDBACK{feedback_to_address<br>provided?}
+        HAS_FEEDBACK -->|Yes| INCORPORATE["Incorporate roundtable<br>feedback"]
+        HAS_FEEDBACK -->|No| EVAL_UNKNOWNS
+        INCORPORATE --> EVAL_UNKNOWNS
+
+        EVAL_UNKNOWNS{Blocking<br>unknowns?}
+        EVAL_UNKNOWNS -->|Yes| ASK_USER["Ask user<br>(one question at a time)"]
+        EVAL_UNKNOWNS -->|No| DOC_GEN
+        ASK_USER --> EVAL_UNKNOWNS
+    end
+
+    DOC_GEN["Phase 5: Document Generation<br>Write requirements.md<br>covering all 4 perspectives"]
+
+    DOC_GEN --> QUALITY_GATE
+
+    subgraph QualityGates["Quality Gates"]
+        QUALITY_GATE[/"Quality Gate Check"/]:::gate
+        QUALITY_GATE --> QG1{User value clear?<br>≥1 user story}
+        QUALITY_GATE --> QG2{Constraints<br>documented?}
+        QUALITY_GATE --> QG3{Security<br>addressed?}
+        QUALITY_GATE --> QG4{Scope bounded?<br>In + Out lists}
+        QUALITY_GATE --> QG5{No blocking<br>unknowns?}
+
+        QG1 --> GATE_RESULT
+        QG2 --> GATE_RESULT
+        QG3 --> GATE_RESULT
+        QG4 --> GATE_RESULT
+        QG5 --> GATE_RESULT
+    end
+
+    GATE_RESULT{All gates<br>pass?}
+    GATE_RESULT -->|No| SELF_CHECK_LOOP
+
+    subgraph SelfCheck["Self-Check Loop"]
+        SELF_CHECK_LOOP["Self-Check Checklist:<br>- 4 perspectives addressed<br>- Reqs specific + measurable<br>- Scope boundaries explicit<br>- Security documented<br>- Questions marked blocking/non<br>- Feedback addressed"]
+        SELF_CHECK_LOOP --> REVISE["Revise requirements<br>document"]
+        REVISE --> QUALITY_GATE
+    end
+
+    GATE_RESULT -->|Yes| OUTPUT
+
+    subgraph Outputs["Outputs"]
+        OUTPUT["Return:<br>requirements_document (file)<br>open_questions (inline)"]
+    end
+
+    OUTPUT --> DONE([Complete]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
 ```
 
-## Legend
+## Cross-Reference: Source Traceability
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Diagram Node | Source (SKILL.md) |
+|---|---|
+| PARSE_INPUTS | Line 58: Step 1 "Initial Extraction" |
+| QUEEN / EMPEROR / HERMIT / PRIESTESS | Lines 42-53: "The Four Perspectives" |
+| CONTRADICTIONS / FRACTAL | Line 54: "Fractal exploration (optional)" |
+| GAP_ID | Line 60: Step 3 "Gap Identification" |
+| HAS_FEEDBACK / INCORPORATE | Line 61: Step 4 "If feedback_to_address provided, incorporate before step 5" |
+| EVAL_UNKNOWNS / ASK_USER | Line 61: "For blocking unknowns: ask user (one question at a time)" |
+| DOC_GEN | Line 62: Step 5 "Document Generation" |
+| QUALITY_GATE / QG1-QG5 | Lines 118-124: "Quality Gates" table |
+| SELF_CHECK_LOOP / REVISE | Lines 134-143: "Self-Check" checklist + "If ANY unchecked: revise" |
+| OUTPUT | Lines 37-38: Outputs table (requirements_document, open_questions) |
 
-## Cross-Reference
+## Key Observations
 
-| Node | Source Reference |
-|------|----------------|
-| Roundtable Feedback? | Input: feedback_to_address (line 31) |
-| Step 1: Initial Extraction | Elicitation Process step 1 (line 58) |
-| Queen: User Needs | The Four Perspectives: Queen (lines 42-43) |
-| Emperor: Constraints | The Four Perspectives: Emperor (lines 45-46) |
-| Hermit: Security Surface | The Four Perspectives: Hermit (lines 48-49) |
-| Priestess: Scope Boundaries | The Four Perspectives: Priestess (lines 51-52) |
-| All 4 Perspectives Done? | Invariant 1: Four Perspectives Mandatory (line 20) |
-| Step 3: Gap Identification | Elicitation Process step 3 (line 60) |
-| Step 4: User Clarification | Elicitation Process step 4 (line 61) |
-| Mark UNKNOWN for Roundtable | Elicitation Process step 4: flag UNKNOWN (line 61) |
-| Step 5: Generate Requirements Doc | Elicitation Process step 5 (line 62) |
-| User Value Clear? | Quality Gate (line 126) |
-| Constraints Documented? | Quality Gate (line 127) |
-| Security Addressed? | Quality Gate (line 128) |
-| Scope Bounded? | Quality Gate (line 129) |
-| No Blocking Unknowns? | Quality Gate (line 130) |
-| Self-Check Passes? | Self-Check checklist (lines 144-152) |
+- **Single conditional branch**: The only true fork is whether `feedback_to_address` is provided (roundtable feedback loop from develop/Forge workflow)
+- **Blocking unknown loop**: The ask-user loop in Phase 4 repeats until all blocking unknowns are resolved, one question at a time
+- **Self-check is a revision loop**: Failed quality gates trigger revision and re-evaluation, not termination
+- **Fractal dispatch is optional**: Only triggered when perspectives produce contradictory requirements
 
 ## Skill Content
 

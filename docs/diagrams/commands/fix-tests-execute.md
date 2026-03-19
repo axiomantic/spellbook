@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source":"commands/fix-tests-execute.md","source_hash":"sha256:9f5209f68bf3c4e03154ea0bd63f76fe7cc2c92ee61ac78bd1ad8fa3a6814641","generated_at":"2026-02-19T00:00:00Z","generator":"generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fix-tests-execute.md","source_hash": "sha256:bd02b2f5914b9b2e7f25139d23a410ffe4decadc2c0af4b68572d97997582c13","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: fix-tests-execute
 
 Execute test fixes by priority: investigate each work item, classify the fix type, apply the fix, verify it catches the original blind spot, and commit independently.

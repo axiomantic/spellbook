@@ -2,56 +2,142 @@
 
 ## Workflow Diagram
 
-Artifact contract for code review workflow. Defines directory structure, phase outputs, manifest schema, and SHA persistence for traceability.
+Artifact contract for the request-review workflow. Defines deterministic directory structure, phase-to-artifact mapping, manifest schema, and SHA persistence rules for traceability and resume capability.
+
+## Artifact Lifecycle Overview
 
 ```mermaid
 flowchart TD
-    Start([Review Initiated]) --> CreateDir["Create Artifact Dir\n~/.local/spellbook/reviews/"]
-    CreateDir --> EncodeProject["Encode Project Path"]
-    EncodeProject --> TimestampDir["Create Timestamped\nSubdirectory"]
-    TimestampDir --> P1Art["Phase 1 Artifact:\nreview-manifest.json"]
-    P1Art --> StoreRange["Store Git Range\n+ File List"]
-    StoreRange --> StoreSHA["Persist base_sha\n+ reviewed_sha"]
-    StoreSHA --> P2Art["Phase 2 Artifact:\ncontext-bundle.md"]
-    P2Art --> P3Art["Phase 3 Artifact:\nreview-findings.json"]
-    P3Art --> ValidateSchema{"Manifest Schema\nValid?"}
-    ValidateSchema -->|No| FixSchema["Fix Schema Issues"]
-    FixSchema --> ValidateSchema
-    ValidateSchema -->|Yes| P4Art["Phase 4 Artifact:\ntriage-report.md"]
-    P4Art --> P5Art["Phase 5 Artifact:\nfix-report.md"]
-    P5Art --> P6Art["Phase 6 Artifact:\ngate-decision.md"]
-    P6Art --> SHACheck{"Use reviewed_sha\nNot HEAD?"}
-    SHACheck -->|Yes| Done([Artifacts Complete])
-    SHACheck -->|No| WarnSHA["Warn: Stale HEAD\nUse Manifest SHA"]
-    WarnSHA --> Done
+    subgraph Legend
+        direction LR
+        Lp[Process]
+        Ld{Decision / Rule}
+        Lt([Terminal])
+        Lg["Quality Gate"]
+        style Lp fill:#f9f9f9,stroke:#333
+        style Ld fill:#fff3cd,stroke:#333
+        style Lt fill:#51cf66,stroke:#333,color:#fff
+        style Lg fill:#ff6b6b,stroke:#333,color:#fff
+    end
 
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style CreateDir fill:#2196F3,color:#fff
-    style EncodeProject fill:#2196F3,color:#fff
-    style TimestampDir fill:#2196F3,color:#fff
-    style P1Art fill:#2196F3,color:#fff
-    style StoreRange fill:#2196F3,color:#fff
-    style StoreSHA fill:#2196F3,color:#fff
-    style P2Art fill:#2196F3,color:#fff
-    style P3Art fill:#2196F3,color:#fff
-    style FixSchema fill:#2196F3,color:#fff
-    style P4Art fill:#2196F3,color:#fff
-    style P5Art fill:#2196F3,color:#fff
-    style P6Art fill:#2196F3,color:#fff
-    style WarnSHA fill:#2196F3,color:#fff
-    style ValidateSchema fill:#f44336,color:#fff
-    style SHACheck fill:#FF9800,color:#fff
+    Start([Review Initiated]) --> DirCreate["Create artifact directory<br>~/.local/spellbook/reviews/&lt;project-encoded&gt;/&lt;timestamp&gt;/"]
+
+    DirCreate --> P1["Phase 1: Planning<br>Produce review-manifest.json"]
+    P1 --> P2["Phase 2: Context Assembly<br>Produce context-bundle.md"]
+    P2 --> P3["Phase 3: Review Dispatch<br>Produce review-findings.json"]
+    P3 --> P4["Phase 4: Triage<br>Produce triage-report.md"]
+    P4 --> P5["Phase 5: Fix Execution<br>Produce fix-report.md"]
+    P5 --> P6["Phase 6: Quality Gate<br>Produce gate-decision.md"]
+
+    P6 --> ArtifactCheck{"All 6 artifacts<br>produced?"}
+    ArtifactCheck -->|Yes| Complete([All Artifacts Complete])
+    ArtifactCheck -->|No| Violation["FORBIDDEN:<br>Skipping artifact<br>for any phase"]
+    Violation --> ArtifactCheck
+
+    style Start fill:#51cf66,stroke:#333,color:#fff
+    style Complete fill:#51cf66,stroke:#333,color:#fff
+    style DirCreate fill:#4a9eff,stroke:#333,color:#fff
+    style P1 fill:#f9f9f9,stroke:#333
+    style P2 fill:#f9f9f9,stroke:#333
+    style P3 fill:#f9f9f9,stroke:#333
+    style P4 fill:#f9f9f9,stroke:#333
+    style P5 fill:#f9f9f9,stroke:#333
+    style P6 fill:#ff6b6b,stroke:#333,color:#fff
+    style ArtifactCheck fill:#fff3cd,stroke:#333
+    style Violation fill:#ff6b6b,stroke:#333,color:#fff
 ```
 
-## Legend
+## Manifest Schema and SHA Persistence
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+```mermaid
+flowchart TD
+    subgraph Legend
+        direction LR
+        Lp[Process]
+        Ld{Rule / Constraint}
+        Lt([Terminal])
+        Lf[/"Input"/]
+        style Lp fill:#f9f9f9,stroke:#333
+        style Ld fill:#ff6b6b,stroke:#333,color:#fff
+        style Lt fill:#51cf66,stroke:#333,color:#fff
+        style Lf fill:#e8f4f8,stroke:#333
+    end
+
+    GitState[/"Git state at review start"/] --> Manifest
+
+    subgraph Manifest ["review-manifest.json schema"]
+        direction TB
+        F1["timestamp: ISO 8601"]
+        F2["project: project name"]
+        F3["branch: branch name"]
+        F4["base_sha: merge base commit"]
+        F5["reviewed_sha: HEAD at review time"]
+        F6["files: list of reviewed files"]
+        F7["complexity:<br>file_count, line_count,<br>estimated_effort"]
+    end
+
+    Manifest --> SHARule{{"CRITICAL: Always use<br>reviewed_sha from manifest<br>for inline comments"}}
+
+    SHARule -->|Correct| UseManifestSHA["Reference reviewed_sha<br>in all inline comments"]
+    SHARule -->|Violation| Forbidden["FORBIDDEN: Never query<br>live HEAD -- commits may<br>have been pushed"]
+
+    UseManifestSHA --> Idempotent(["Deterministic,<br>resumable review"])
+    Forbidden -.->|must fix| SHARule
+
+    style GitState fill:#e8f4f8,stroke:#333
+    style SHARule fill:#ff6b6b,stroke:#333,color:#fff
+    style Forbidden fill:#ff6b6b,stroke:#333,color:#fff
+    style Idempotent fill:#51cf66,stroke:#333,color:#fff
+    style UseManifestSHA fill:#f9f9f9,stroke:#333
+```
+
+## Invariant Rules
+
+```mermaid
+flowchart LR
+    subgraph Legend
+        direction LR
+        Lr{Invariant}
+        Lc["Consequence"]
+        Lf[/"Forbidden"/]
+        style Lr fill:#ff6b6b,stroke:#333,color:#fff
+        style Lc fill:#51cf66,stroke:#333,color:#fff
+        style Lf fill:#fff3cd,stroke:#333
+    end
+
+    I1{{"Every phase produces<br>a deterministic artifact"}} --> C1["Enables resume, audit,<br>cross-session traceability"]
+    I2{{"SHA persistence<br>enables idempotency"}} --> C2["Prevents duplicate reviews,<br>enables diff comparisons"]
+    I3{{"Artifacts live outside<br>the project directory"}} --> C3["Stored in<br>~/.local/spellbook/reviews/"]
+
+    F1[/"FORBIDDEN: Skip artifact<br>for any phase"/] -.->|violates| I1
+    F2[/"FORBIDDEN: Use live HEAD<br>instead of reviewed_sha"/] -.->|violates| I2
+    F3[/"FORBIDDEN: Store artifacts<br>inside project directory"/] -.->|violates| I3
+
+    style I1 fill:#ff6b6b,stroke:#333,color:#fff
+    style I2 fill:#ff6b6b,stroke:#333,color:#fff
+    style I3 fill:#ff6b6b,stroke:#333,color:#fff
+    style C1 fill:#51cf66,stroke:#333,color:#fff
+    style C2 fill:#51cf66,stroke:#333,color:#fff
+    style C3 fill:#51cf66,stroke:#333,color:#fff
+    style F1 fill:#fff3cd,stroke:#333
+    style F2 fill:#fff3cd,stroke:#333
+    style F3 fill:#fff3cd,stroke:#333
+```
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram | Source Lines |
+|---------------|----------------|--------------|
+| Create artifact directory | Invariant Rules (I3) | L15, L19-21 |
+| Phase 1: Planning | Manifest Schema diagram | L29, L38-52 |
+| Phase 2: Context Assembly | -- | L30 |
+| Phase 3: Review Dispatch | -- | L31 |
+| Phase 4: Triage | -- | L32 |
+| Phase 5: Fix Execution | -- | L33 |
+| Phase 6: Quality Gate | -- | L34 |
+| SHA Persistence | Manifest Schema diagram | L56-58 |
+| Invariant Rules | Invariant Rules diagram | L13-15 |
+| Forbidden actions | Invariant Rules diagram | L60-64 |
 
 ## Command Content
 

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/merge-worktree-resolve.md", "source_hash": "sha256:8ed240638a694c3c718f9e1e7abe302b549b76145a6553179d2f5c81a9214cad", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/merge-worktree-resolve.md","source_hash": "sha256:d58d0475f223a86e4ee41a44d2a5c407065414485d5c35923dcfd15bb4dc8d64","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: merge-worktree-resolve
 
 Phase 3 of merging-worktrees: delegates merge conflicts to the resolving-merge-conflicts skill with interface contract context, then verifies that resolved code matches contract specifications for type signatures and function behavior before continuing.

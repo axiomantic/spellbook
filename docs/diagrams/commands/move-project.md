@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/move-project.md", "source_hash": "sha256:9bf64d5273717497ec11bf9267727c70643a572a2d8e02cc0718fbece00541e6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/move-project.md","source_hash": "sha256:1cd7e6afbacc5b6acad2027b638a30fda287a717d2da5ea8cde025c92fce675e","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: move-project
 
 Safely relocates a project directory and updates all Claude Code session references (history.jsonl, projects directory) with mandatory safety checks, backups, and user confirmation.

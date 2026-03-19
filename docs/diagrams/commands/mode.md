@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/mode.md", "source_hash": "sha256:a4cd6b75b6e037d40cd99912bc0ac529a44a686130bb2b8ad71f064dc41d06c7", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/mode.md","source_hash": "sha256:9e437cc7b0f2175e47e16e0e9a90cc1e0a58c8b6abcd975621e2a1b4e42a4966","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: mode
 
 Manages spellbook session modes (fun, tarot, off). Handles status queries, mode switching with permanence preference, and skill loading for creative dialogue modes.

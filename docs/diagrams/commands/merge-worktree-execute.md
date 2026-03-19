@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/merge-worktree-execute.md", "source_hash": "sha256:9e604dd546024b715eb36bf80de9354ca3a0f3608dd01dda7588b4342da45c09", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/merge-worktree-execute.md","source_hash": "sha256:c89ed32bf99940063ec740293be4dc9082d2de19371f316715c24735ba414b4b","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: merge-worktree-execute
 
 Phase 2 of merging-worktrees: merges worktrees sequentially in dependency order, running the full test suite after each round, escalating conflicts to the resolution phase and test failures to the systematic-debugging skill.

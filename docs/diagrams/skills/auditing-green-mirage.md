@@ -1,7 +1,5 @@
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md","source_hash": "sha256:33689cb89c26acf2b80e5e10d6f6e724f97a58f6e5967c9e75ee119966dfcddc","generated_at": "2026-03-02T19:07:13Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md","generated_at": "2026-03-19T00:00:00Z","generator": "generating-diagrams skill","source_hash": "sha256:6aec3604ce9bffbcfda1950ca2e4827d702f23737448bfc7075d33d78746b7e4","stamped_at": "2026-03-19T06:31:44Z"} -->
 # Diagram: auditing-green-mirage
-
-Now I have all the source material. Let me construct the diagrams.
 
 ## Overview: Auditing Green Mirage Workflow
 
@@ -47,12 +45,15 @@ flowchart TD
 
     VERDICT{All assertions<br>PASS?}:::gate
     VERDICT -->|PASS: All KILLED +<br>Level 4+ + no Pattern 10| DONE
-    VERDICT -->|FAIL: SURVIVED or<br>Level 2 or Pattern 10| REWORK[Return to fix phase<br>with required changes]
+    VERDICT -->|FAIL: SURVIVED or<br>Level 2 or Pattern 10| RETRY_Q{3 consecutive FAILs<br>on same assertion?}
+    RETRY_Q -->|No| REWORK[List required changes,<br>return to fix author]
+    RETRY_Q -->|Yes| HALT([HALT: Report to user<br>Circuit breaker tripped]):::fail
     REWORK --> P7
 
     classDef subagent fill:#4a9eff,color:#fff
     classDef gate fill:#ff6b6b,color:#fff
     classDef success fill:#51cf66,color:#fff
+    classDef fail fill:#ff6b6b,color:#fff
 ```
 
 ---
@@ -382,7 +383,10 @@ flowchart TD
         ALL_Q -->|All KILLED +<br>Level 4+ +<br>no Pattern 10| PASS_OUT
     end
 
-    FAIL_OUT([FAIL: List required changes<br>Return to fix phase]):::fail
+    FAIL_OUT{3 consecutive FAILs<br>on same assertion?}
+    FAIL_OUT -->|No| REWORK([FAIL: List required changes,<br>return to fix author]):::fail
+    FAIL_OUT -->|Yes| HALT([HALT: Report to user<br>Circuit breaker tripped]):::fail
+    REWORK --> START
     PASS_OUT([PASS: Fixes verified<br>Audit complete]):::success
 
     classDef subagent fill:#4a9eff,color:#fff

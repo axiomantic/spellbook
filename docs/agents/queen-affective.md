@@ -2,203 +2,162 @@
 
 ## Workflow Diagram
 
-Emotional state monitor that senses when a project is stuck, frustrated, or needs intervention. Reads patterns humans miss to detect affective state and suggest targeted interventions.
+## Overview Diagram
+
+The Queen Affective agent follows a linear sensing protocol: analyze conversation tone, read for rhythm patterns, detect state signals, ground in evidence, reflect on assessment quality, then produce an affective report with optional intervention.
 
 ```mermaid
-flowchart TD
-    Start([Start: Sensing\nRequested])
-    Invoke[/Honor-Bound Invocation/]
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Input/Output"/]
+        L5[Quality Gate]:::gate
+    end
 
-    ReadTone["Analyze Overall\nConversation Tone"]
-    FindPatterns["Find Repeated\nPatterns and Words"]
-    CompareEnergy["Compare Energy:\nStart vs End"]
+    INPUT[/"Receive conversation input<br>(+ optional history)"/] --> ANALYSIS
 
-    ReadRhythm[/"Read for Rhythm,\nNot Content"/]
+    ANALYSIS["Phase 1: Analysis<br>Overall tone assessment<br>Emotional weight of words<br>Compare start vs end energy"]
 
-    EnergyDir{"Energy Rising\nor Falling?"}
-    Rising["Signal: Energy\nRising"]
-    Falling["Signal: Energy\nFalling"]
+    ANALYSIS --> READING["Phase 2: Reading<br>Read for rhythm, not content:<br>- Energy rising or falling?<br>- Responses getting shorter?<br>- Same points repeating?<br>- Forward or circular motion?"]
 
-    ResponseLen{"Responses Getting\nShorter?"}
-    FatigueSignal["Signal: Fatigue\nDetected"]
+    READING --> PATTERN["Phase 3: Pattern Detection<br>Match signals to states:<br>Inspired / Driven / Cautious<br>Frustrated / Blocked"]
 
-    Repeating{"Same Points\nRepeating?"}
-    StuckSignal["Signal: Stuck\nLoop Detected"]
+    PATTERN --> EVIDENCE["Phase 4: Evidence Grounding<br>Quote specific phrases<br>Note pattern types<br>Compare to baseline history<br>Name ambiguity if signals conflict"]
 
-    MotionType{"Forward or\nCircular Motion?"}
-    CircularSignal["Signal: Circular\nMotion"]
+    EVIDENCE --> REFLECTION["Phase 5: Reflection<br>Grounded or projection?<br>Would others agree?<br>Over- or under-interpreting?"]:::gate
 
-    PatternMatch{"Match State\nPattern"}
-    Inspired["State: Inspired\n(New Ideas, 'What If')"]
-    Driven["State: Driven\n(Progress, 'Done', 'Next')"]
-    Cautious["State: Cautious\n(Questions, Hedging)"]
-    Frustrated["State: Frustrated\n(Repetition, Short)"]
-    Blocked["State: Blocked\n(Silence, Avoidance)"]
+    REFLECTION --> CLASSIFY{Classify<br>Affective State}
 
-    GroundEvidence["Ground Intuition\nin Specifics"]
-    QuoteSignals["Quote Phrases\nThat Signal State"]
-    NotePattern["Note Pattern Type:\nRepetition/Shortening"]
-    CompareBaseline["Compare to\nBaseline History"]
+    CLASSIFY -->|Inspired| INSPIRED(["Inspired<br>High energy, expanding<br>Action: Capture ideas"]):::success
+    CLASSIFY -->|Driven| DRIVEN(["Driven<br>High energy, forward<br>Action: Don't interrupt"]):::success
+    CLASSIFY -->|Cautious| CAUTIOUS(["Cautious<br>Medium energy, hesitant<br>Action: Gather missing info"]):::warn
+    CLASSIFY -->|Frustrated| FRUSTRATED(["Frustrated<br>Low energy, circular<br>Action: Call The Fool"]):::warn
+    CLASSIFY -->|Blocked| BLOCKED(["Blocked<br>Very low energy, stalled<br>Action: Reframe problem"]):::warn
 
-    ProjectionGate{"Assessment Grounded\nin Evidence?"}
-    ReAssess["Re-assess Without\nProjection"]
+    INSPIRED --> REPORT
+    DRIVEN --> REPORT
+    CAUTIOUS --> INTERVENE
+    FRUSTRATED --> INTERVENE
+    BLOCKED --> INTERVENE
 
-    AgreementGate{"Would Others Reach\nSame Conclusion?"}
-    Recalibrate["Recalibrate\nAssessment"]
+    INTERVENE["Generate Intervention<br>Practical suggestion<br>(not therapeutic)"]
+    INTERVENE --> REPORT
 
-    ConcerningState{"State Frustrated\nor Blocked?"}
+    REPORT[/"Output Affective Report<br>- State + Reading<br>- Evidence table<br>- State indicators<br>- Intervention (if needed)"/]
 
-    SelectIntervention["Select Targeted\nIntervention"]
-    CallFool["Suggest: Call Fool\nfor Fresh Perspective"]
-    StepBack["Suggest: Step Back\nand Reframe"]
-    Acknowledge["Suggest: Acknowledge\nFrustration"]
-    ChangeApproach["Suggest: Change\nApproach Entirely"]
-
-    GenReport["Generate Affective\nState Report"]
-    GenEvidence["Generate Evidence\nTable"]
-    GenIndicators["Generate State\nIndicators"]
-
-    Done([End: Reading\nComplete])
-
-    Start --> Invoke
-    Invoke --> ReadTone
-    ReadTone --> FindPatterns
-    FindPatterns --> CompareEnergy
-    CompareEnergy --> ReadRhythm
-
-    ReadRhythm --> EnergyDir
-    EnergyDir -->|Rising| Rising
-    EnergyDir -->|Falling| Falling
-    Rising --> ResponseLen
-    Falling --> ResponseLen
-
-    ResponseLen -->|Yes| FatigueSignal
-    FatigueSignal --> Repeating
-    ResponseLen -->|No| Repeating
-
-    Repeating -->|Yes| StuckSignal
-    StuckSignal --> MotionType
-    Repeating -->|No| MotionType
-
-    MotionType -->|Circular| CircularSignal
-    CircularSignal --> PatternMatch
-    MotionType -->|Forward| PatternMatch
-
-    PatternMatch --> Inspired
-    PatternMatch --> Driven
-    PatternMatch --> Cautious
-    PatternMatch --> Frustrated
-    PatternMatch --> Blocked
-
-    Inspired --> GroundEvidence
-    Driven --> GroundEvidence
-    Cautious --> GroundEvidence
-    Frustrated --> GroundEvidence
-    Blocked --> GroundEvidence
-
-    GroundEvidence --> QuoteSignals
-    QuoteSignals --> NotePattern
-    NotePattern --> CompareBaseline
-
-    CompareBaseline --> ProjectionGate
-    ProjectionGate -->|Projection| ReAssess
-    ReAssess --> ReadRhythm
-    ProjectionGate -->|Grounded| AgreementGate
-
-    AgreementGate -->|No| Recalibrate
-    Recalibrate --> GroundEvidence
-    AgreementGate -->|Yes| ConcerningState
-
-    ConcerningState -->|Yes| SelectIntervention
-    SelectIntervention --> CallFool
-    SelectIntervention --> StepBack
-    SelectIntervention --> Acknowledge
-    SelectIntervention --> ChangeApproach
-    CallFool --> GenReport
-    StepBack --> GenReport
-    Acknowledge --> GenReport
-    ChangeApproach --> GenReport
-
-    ConcerningState -->|No| GenReport
-
-    GenReport --> GenEvidence
-    GenEvidence --> GenIndicators
-    GenIndicators --> Done
-
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Invoke fill:#4CAF50,color:#fff
-    style ReadRhythm fill:#4CAF50,color:#fff
-    style ReadTone fill:#2196F3,color:#fff
-    style FindPatterns fill:#2196F3,color:#fff
-    style CompareEnergy fill:#2196F3,color:#fff
-    style Rising fill:#2196F3,color:#fff
-    style Falling fill:#2196F3,color:#fff
-    style FatigueSignal fill:#2196F3,color:#fff
-    style StuckSignal fill:#2196F3,color:#fff
-    style CircularSignal fill:#2196F3,color:#fff
-    style Inspired fill:#2196F3,color:#fff
-    style Driven fill:#2196F3,color:#fff
-    style Cautious fill:#2196F3,color:#fff
-    style Frustrated fill:#2196F3,color:#fff
-    style Blocked fill:#2196F3,color:#fff
-    style GroundEvidence fill:#2196F3,color:#fff
-    style QuoteSignals fill:#2196F3,color:#fff
-    style NotePattern fill:#2196F3,color:#fff
-    style CompareBaseline fill:#2196F3,color:#fff
-    style ReAssess fill:#2196F3,color:#fff
-    style Recalibrate fill:#2196F3,color:#fff
-    style SelectIntervention fill:#2196F3,color:#fff
-    style CallFool fill:#2196F3,color:#fff
-    style StepBack fill:#2196F3,color:#fff
-    style Acknowledge fill:#2196F3,color:#fff
-    style ChangeApproach fill:#2196F3,color:#fff
-    style GenReport fill:#2196F3,color:#fff
-    style GenEvidence fill:#2196F3,color:#fff
-    style GenIndicators fill:#2196F3,color:#fff
-    style EnergyDir fill:#FF9800,color:#fff
-    style ResponseLen fill:#FF9800,color:#fff
-    style Repeating fill:#FF9800,color:#fff
-    style MotionType fill:#FF9800,color:#fff
-    style PatternMatch fill:#FF9800,color:#fff
-    style ConcerningState fill:#FF9800,color:#fff
-    style ProjectionGate fill:#f44336,color:#fff
-    style AgreementGate fill:#f44336,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+    classDef warn fill:#ffd43b,stroke:#333,color:#000
 ```
 
-## Legend
+## Detailed: Pattern Detection Signals
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation / start-end |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+```mermaid
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+    end
 
-## Cross-Reference
+    SIGNALS{Detect<br>Signal Type} 
 
-| Node | Source Reference |
-|------|----------------|
-| Honor-Bound Invocation | Lines 14-15: Honor pledge before sensing |
-| Analyze Overall Conversation Tone | Lines 52: Analysis - overall tone |
-| Find Repeated Patterns | Lines 53: Analysis - patterns and emotional weight |
-| Compare Energy: Start vs End | Lines 54: Analysis - energy comparison |
-| Read for Rhythm, Not Content | Lines 57: Reading phase |
-| Energy Rising or Falling? | Lines 59: Reading signal 1 |
-| Responses Getting Shorter? | Lines 60: Reading signal 2 (fatigue) |
-| Same Points Repeating? | Lines 61: Reading signal 3 (stuck) |
-| Forward or Circular Motion? | Lines 62: Reading signal 4 |
-| Match State Pattern | Lines 66-71: Pattern detection for each state |
-| State: Inspired | Lines 67: New ideas, "what if", enthusiasm |
-| State: Driven | Lines 68: Progress markers, "done", "next" |
-| State: Cautious | Lines 69: Questions, hedging, "but what about" |
-| State: Frustrated | Lines 70: Repetition, short responses, "still", "again" |
-| State: Blocked | Lines 71: Silence, topic avoidance, "I don't know" |
-| Ground Intuition in Specifics | Lines 74-79: Evidence grounding |
-| Assessment Grounded in Evidence? | Lines 82: Reflection - evidence vs projection |
-| Would Others Reach Same Conclusion? | Lines 83: Reflection - objectivity check |
-| Select Targeted Intervention | Lines 129-135: Intervention suggestions by state |
-| Generate Affective State Report | Lines 90-115: Report format |
+    SIGNALS -->|"New ideas, 'what if',<br>enthusiasm"| INSPIRED([Inspired]):::success
+    SIGNALS -->|"Progress markers,<br>'done', 'next'"| DRIVEN([Driven]):::success
+    SIGNALS -->|"Questions, hedging,<br>'but what about'"| CAUTIOUS([Cautious]):::warn
+    SIGNALS -->|"Repetition, short responses,<br>'still', 'again'"| FRUSTRATED([Frustrated]):::danger
+    SIGNALS -->|"Silence, topic avoidance,<br>'I don't know'"| BLOCKED([Blocked]):::danger
+
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+    classDef warn fill:#ffd43b,stroke:#333,color:#000
+    classDef danger fill:#ff6b6b,stroke:#333,color:#fff
+```
+
+## Detailed: Reflection Quality Gate
+
+```mermaid
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L5[Quality Gate]:::gate
+    end
+
+    ENTER["Enter Reflection"] --> Q1{Grounded in<br>evidence or<br>projection?}
+    Q1 -->|Projection| REVISE["Revise: re-examine<br>evidence, remove<br>unsupported claims"]:::gate
+    Q1 -->|Grounded| Q2{Would others<br>reach same<br>conclusion?}
+    REVISE --> Q1
+
+    Q2 -->|No| RECALIBRATE["Recalibrate: check<br>for over/under<br>interpretation"]:::gate
+    Q2 -->|Yes| Q3{Signals<br>conflict or<br>insufficient?}
+    RECALIBRATE --> Q2
+
+    Q3 -->|Yes| AMBIGUITY["Name ambiguity<br>explicitly in output"]
+    Q3 -->|No| PASS(["Reflection Passed"]):::success
+
+    AMBIGUITY --> PASS
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+```
+
+## Detailed: Intervention Routing
+
+```mermaid
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+    end
+
+    STATE{Concerning<br>State?}
+
+    STATE -->|Cautious| C["Gather specific<br>missing information"]
+    STATE -->|Frustrated| F["Call The Fool to<br>break assumptions"]
+    STATE -->|Blocked| B["Step back, reframe<br>problem entirely"]
+
+    C --> OTHER{"Also consider"}
+    F --> OTHER
+    B --> OTHER
+
+    OTHER -->|"Energy falling"| ACK["Acknowledge frustration<br>explicitly"]
+    OTHER -->|"Circular motion"| CHANGE["Change approach<br>entirely"]
+    OTHER -->|"Fresh eyes needed"| FOOL["Invoke The Fool<br>for fresh perspective"]
+
+    ACK --> OUTPUT[/"Intervention section<br>in Affective Report"/]
+    CHANGE --> OUTPUT
+    FOOL --> OUTPUT
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+```
+
+## Anti-Patterns (Forbidden Behaviors)
+
+```mermaid
+graph TD
+    subgraph Legend
+        L5[Forbidden]:::forbidden
+    end
+
+    F1["Dismissing emotional<br>signals as irrelevant"]:::forbidden
+    F2["Over-pathologizing<br>normal caution"]:::forbidden
+    F3["Projecting states not<br>evidenced in data"]:::forbidden
+    F4["Ignoring obvious<br>frustration signals"]:::forbidden
+    F5["Providing therapy instead<br>of practical intervention"]:::forbidden
+
+    classDef forbidden fill:#ff6b6b,stroke:#333,color:#fff
+```
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram |
+|---|---|
+| Phase 3: Pattern Detection | Detailed: Pattern Detection Signals |
+| Phase 5: Reflection | Detailed: Reflection Quality Gate |
+| Generate Intervention | Detailed: Intervention Routing |
 
 ## Agent Content
 

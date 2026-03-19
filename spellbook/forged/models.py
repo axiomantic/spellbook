@@ -1,7 +1,7 @@
-"""Data models for the Forged autonomous development system.
+"""Data models for the workflow enforcement and work item tracking system.
 
 These dataclasses represent the core domain objects used for tracking
-autonomous development workflows with validator-based feedback loops.
+development workflows with validator-based feedback loops.
 """
 
 from dataclasses import dataclass, field
@@ -9,9 +9,17 @@ from typing import Optional
 
 
 # Constants
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 VALID_STAGES = ["DISCOVER", "DESIGN", "PLAN", "IMPLEMENT", "COMPLETE", "ESCALATED"]
+
+VALID_GATES = [
+    "implementation_completion",
+    "code_review",
+    "fact_checking",
+    "green_mirage_audit",
+    "test_suite",
+]
 
 VALID_SEVERITIES = ["blocking", "significant", "minor"]
 

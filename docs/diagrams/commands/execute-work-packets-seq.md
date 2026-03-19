@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/execute-work-packets-seq.md", "source_hash": "sha256:27bddfb29176759ca20eedebd0cfe8b62d619cf2ae21690bb6126c24d8e752fe", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/execute-work-packets-seq.md","source_hash": "sha256:e6700ac8014398bac044ad9f173a1f679865bb1f979b7e1a37ac94b232108a2b","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: execute-work-packets-seq
 
 Execute all work packets in dependency order, one at a time, with context compaction between tracks.

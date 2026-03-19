@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/develop/SKILL.md","source_hash": "sha256:199377aed6b4aa6199532c4043a7b2263e2192b11c0efa9c7015bef9be00fdca","generated_at": "2026-02-20T00:13:23Z","generator": "generate_diagrams.py","stamped_at": "2026-03-15T08:56:55Z"} -->
+<!-- diagram-meta: {"source": "skills/develop/SKILL.md","source_hash": "sha256:7920d805880ec4182030f17f0cbb675457c6aa309f2c15364c276c74757788cb","generated_at": "2026-02-20T00:13:23Z","generator": "generate_diagrams.py","stamped_at": "2026-03-15T08:56:55Z"} -->
 # Diagram: develop
 
 Overview of the develop skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.

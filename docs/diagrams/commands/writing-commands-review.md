@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/writing-commands-review.md", "source_hash": "sha256:bd6310c55468b60350b28fb42b36eced81ef76dd0bab6a4390398d9e03c9de80", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/writing-commands-review.md","source_hash": "sha256:b964b5760ce4692f6cc7525d0b4cb760b92c0aca335e18ac33599cf438092680","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: writing-commands-review
 
 Review and test a command against the full quality checklist. Evaluates structure, content quality, behavioral clarity, and anti-patterns. Produces a scored review report and runs the command testing protocol (dry run, happy path, error path, edge case).

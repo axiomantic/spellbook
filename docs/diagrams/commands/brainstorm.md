@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/brainstorm.md", "source_hash": "sha256:9f1f8427a673ec1375ffcf32ff7a296dd24505ac12a6ae2def464fa438986ef0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/brainstorm.md","source_hash": "sha256:af96623cf09273a6457774a7baa847e7b8797911131ea864647b2c540f09b7a2","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: brainstorm
 
 Enforce structured exploration before creative work by delegating to the brainstorming skill.

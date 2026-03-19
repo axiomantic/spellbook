@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/isolated-testing/SKILL.md", "source_hash": "sha256:c7fdf04ceea09724ef0dcfa4397b875c28caf4072234ba69742273b58d1d8c07", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/isolated-testing/SKILL.md","source_hash": "sha256:a5313974293e224c1eb856738ed05cf734a55ca2ee5ae639974ce640772d0268","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: isolated-testing
 
 Disciplined one-theory-one-test protocol for debugging. Enforces strict queue ordering, requires full test design before execution, and halts investigation immediately upon reproduction. Detects and prevents chaos patterns.

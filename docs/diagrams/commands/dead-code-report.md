@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/dead-code-report.md", "source_hash": "sha256:30adff5cda20321f45ea4767743dbc7b60e882f343cd3e46f2458bb68cfa6a92", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/dead-code-report.md","source_hash": "sha256:87a57ade19ce884c3a8b37b0c87d60dfc307dbe2da806ac7e32e1aed7802443f","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: dead-code-report
 
 Generate a comprehensive dead code report with categorized findings, evidence, risk assessment, and an ordered implementation plan for safe deletion. Runs after `/dead-code-analyze`.

@@ -1,72 +1,104 @@
-<!-- diagram-meta: {"source": "commands/simplify-verify.md", "source_hash": "sha256:0f45126b306b647868113539dc933e6d16bf1010c57123c50457d591d8709d3b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify-verify.md","source_hash": "sha256:eb4ff3805cf438f66d5bdd095c57ea08b2048285442dc42e2b3f7d36b8f1dd15","generator": "stamp"} -->
 # Diagram: simplify-verify
 
-Multi-gate verification pipeline for simplification candidates. Each candidate passes through parse, type, test, and complexity gates.
+Multi-gate verification pipeline for simplification candidates. Each candidate passes through parse, type, test, and complexity gates sequentially. Failure at any gate aborts that candidate and continues to the next.
 
 ```mermaid
 flowchart TD
-    Start([Analyzed Candidates]) --> NextCandidate["Load Next\nCandidate"]
-    NextCandidate --> Gate1["Gate 1:\nParse Check"]
-    Gate1 --> ParseResult{"Syntax Valid?"}
-    ParseResult -->|No| AbortParse["Abort: Syntax Error"]
-    ParseResult -->|Yes| Gate2["Gate 2:\nType Check"]
-    Gate2 --> TypeResult{"Types Valid?"}
-    TypeResult -->|No| AbortType["Abort: Type Error"]
-    TypeResult -->|Yes| Gate3["Gate 3:\nTest Run"]
-    Gate3 --> TestCoverage{"Tests Found?"}
-    TestCoverage -->|No| AllowUncovered{"--allow-uncovered\nFlag Set?"}
-    AllowUncovered -->|No| AbortCoverage["Abort: No Coverage"]
-    AllowUncovered -->|Yes| HighRisk["Proceed with\nHigh Risk Flag"]
-    TestCoverage -->|Yes| RunTests["Run Covering Tests"]
-    RunTests --> TestResult{"Tests Pass?"}
-    TestResult -->|No| AbortTest["Abort: Tests Failed"]
-    TestResult -->|Yes| Gate4["Gate 4:\nComplexity Delta"]
-    HighRisk --> Gate4
-    Gate4 --> CalcDelta["Calculate\nBefore/After Scores"]
-    CalcDelta --> DeltaResult{"Complexity\nReduced?"}
-    DeltaResult -->|No| AbortDelta["Abort: No Improvement"]
-    DeltaResult -->|Yes| RecordMetrics["Record Metrics\nBefore/After/Delta"]
-    AbortParse --> RecordFail["Record Failure\nReason"]
-    AbortType --> RecordFail
-    AbortCoverage --> RecordFail
-    AbortTest --> RecordFail
-    AbortDelta --> RecordFail
-    RecordFail --> MoreCandidates{"More\nCandidates?"}
-    RecordMetrics --> MoreCandidates
-    MoreCandidates -->|Yes| NextCandidate
-    MoreCandidates -->|No| Output([Verified Candidates\n+ SESSION_STATE])
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4["Gate check"]
+        style L3 fill:#51cf66,color:#000
+        style L4 fill:#ff6b6b,color:#fff
+    end
 
-    style Start fill:#4CAF50,color:#fff
-    style Output fill:#4CAF50,color:#fff
-    style NextCandidate fill:#2196F3,color:#fff
-    style RunTests fill:#2196F3,color:#fff
-    style CalcDelta fill:#2196F3,color:#fff
-    style RecordMetrics fill:#2196F3,color:#fff
-    style RecordFail fill:#2196F3,color:#fff
-    style HighRisk fill:#2196F3,color:#fff
-    style AbortParse fill:#2196F3,color:#fff
-    style AbortType fill:#2196F3,color:#fff
-    style AbortCoverage fill:#2196F3,color:#fff
-    style AbortTest fill:#2196F3,color:#fff
-    style AbortDelta fill:#2196F3,color:#fff
-    style Gate1 fill:#f44336,color:#fff
-    style Gate2 fill:#f44336,color:#fff
-    style Gate3 fill:#f44336,color:#fff
-    style Gate4 fill:#f44336,color:#fff
-    style ParseResult fill:#FF9800,color:#fff
-    style TypeResult fill:#FF9800,color:#fff
-    style TestCoverage fill:#FF9800,color:#fff
-    style AllowUncovered fill:#FF9800,color:#fff
-    style TestResult fill:#FF9800,color:#fff
-    style DeltaResult fill:#FF9800,color:#fff
-    style MoreCandidates fill:#FF9800,color:#fff
+    Start([Receive candidates<br>from /simplify-analyze]) --> Iterate
+
+    Iterate{More candidates<br>remaining?}
+    Iterate -- No --> Output
+    Iterate -- Yes --> G1
+
+    subgraph Pipeline ["Verification Pipeline - per candidate"]
+        G1["Gate 1: Parse Check<br>Verify syntax validity"]
+        G1 --> G1D{Parse<br>passes?}
+        G1D -- No --> Abort1["Abort: syntax error"]
+        G1D -- Yes --> G2
+
+        G2{"Gate 2: Type Check<br>Type system present<br>AND annotations exist?"}
+        G2 -- No types/checker --> G3
+        G2 -- Yes --> G2Run["Run type checker<br>(mypy / tsc)"]
+        G2Run --> G2D{Type check<br>passes?}
+        G2D -- No --> Abort2["Abort: type error"]
+        G2D -- Yes --> G3
+
+        G3["Gate 3: Test Run<br>Find covering tests"]
+        G3 --> G3Found{Tests<br>found?}
+        G3Found -- Yes --> G3Run["Run targeted tests<br>with coverage"]
+        G3Run --> G3D{Tests<br>pass?}
+        G3D -- No --> Abort3["Abort: tests failed"]
+        G3D -- Yes --> G4
+
+        G3Found -- No --> G3Uncov{"--allow-uncovered<br>flag set?"}
+        G3Uncov -- No --> Abort4["Abort: no coverage"]
+        G3Uncov -- Yes --> G4Flag["Proceed with<br>high-risk flag"]
+        G4Flag --> G4
+
+        G4["Gate 4: Complexity Delta<br>Calculate before/after<br>cognitive complexity"]
+        G4 --> G4D{"Delta < 0?<br>(complexity reduced)"}
+        G4D -- No --> Abort5["Abort: complexity<br>not reduced"]
+        G4D -- Yes --> Record["Record metrics:<br>before, after, delta %"]
+        Record --> Pass["Candidate PASS"]
+    end
+
+    Abort1 --> RecordFail["Record failure reason"]
+    Abort2 --> RecordFail
+    Abort3 --> RecordFail
+    Abort4 --> RecordFail
+    Abort5 --> RecordFail
+    RecordFail --> Iterate
+    Pass --> Iterate
+
+    Output[/"Output:<br>1. PASS/FAIL per candidate<br>2. Complexity metrics<br>3. SESSION_STATE"/]
+    Output --> Next([Next: /simplify-transform])
+
+    style G1 fill:#4a9eff,color:#fff
+    style G2Run fill:#4a9eff,color:#fff
+    style G3Run fill:#4a9eff,color:#fff
+    style G4 fill:#4a9eff,color:#fff
+    style G1D fill:#ff6b6b,color:#fff
+    style G2D fill:#ff6b6b,color:#fff
+    style G2 fill:#ff6b6b,color:#fff
+    style G3D fill:#ff6b6b,color:#fff
+    style G3Uncov fill:#ff6b6b,color:#fff
+    style G4D fill:#ff6b6b,color:#fff
+    style Pass fill:#51cf66,color:#000
+    style Next fill:#51cf66,color:#000
+    style Start fill:#51cf66,color:#000
+    style Abort1 fill:#ff6b6b,color:#fff
+    style Abort2 fill:#ff6b6b,color:#fff
+    style Abort3 fill:#ff6b6b,color:#fff
+    style Abort4 fill:#ff6b6b,color:#fff
+    style Abort5 fill:#ff6b6b,color:#fff
 ```
 
 ## Legend
 
 | Color | Meaning |
 |-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Blue (#4a9eff) | Process / execution step |
+| Red (#ff6b6b) | Quality gate / abort condition |
+| Green (#51cf66) | Success terminal |
+
+## Node-to-Source Reference
+
+| Node | Source Section |
+|------|---------------|
+| Gate 1: Parse Check | Section 4.2 - Language-specific syntax validation (py_compile, tsc, nim check, gcc/clang) |
+| Gate 2: Type Check | Section 4.3 - Conditional on type system and annotation presence (mypy, tsc) |
+| Gate 3: Test Run | Section 4.4 - Targeted test execution with coverage mapping |
+| --allow-uncovered | Section 4.4 + Invariant Principle 4 - Explicit flag for uncovered functions |
+| Gate 4: Complexity Delta | Section 4.5 - Before/after cognitive complexity, delta must be negative |
+| Abort paths | Invariant Principles 1-2 - All gates must pass; failures recorded and skipped |
+| Output / SESSION_STATE | Output section - Feeds into /simplify-transform |

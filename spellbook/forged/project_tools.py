@@ -1,22 +1,23 @@
-"""MCP tools for Forged project management.
+"""MCP tools for project management.
 
 This module provides MCP tool functions for managing projects, features,
-and skill invocations in the Forged autonomous development system.
+and skill invocations in the workflow enforcement and work item tracking system.
 """
 
 import json
+import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
 from spellbook.forged.artifacts import (
-    artifact_base_path,
     get_project_encoded,
     read_artifact,
     write_artifact,
 )
-from spellbook.forged.models import IterationState
+from spellbook.forged.models import IterationState, VALID_GATES
+from spellbook.forged.schema import get_forged_connection, init_forged_schema
 from spellbook.forged.project_graph import (
     CyclicDependencyError,
     FeatureNode,
@@ -422,4 +423,67 @@ def forge_skill_complete(
         "feature_id": feature_id,
         "skill_name": skill_name,
         "result": result,
+    }
+
+
+def _get_project_path_for_gates() -> str:
+    """Get current project path for gate completion recording.
+
+    Returns:
+        Absolute path to current working directory
+    """
+    return os.getcwd()
+
+
+def forge_record_gate_completion(
+    feature_name: str,
+    gate: str,
+    stage: str,
+    consensus: bool,
+    iteration: int = 1,
+    verdict_summary: Optional[str] = None,
+) -> dict:
+    """Record a gate completion result in the database.
+
+    Called after process_roundtable_response returns consensus for a gate.
+
+    Args:
+        feature_name: Feature being developed
+        gate: Gate identifier (must be in VALID_GATES)
+        stage: Workflow stage
+        consensus: Whether roundtable reached consensus
+        iteration: Iteration number
+        verdict_summary: JSON summary of verdicts
+
+    Returns:
+        Dict with status and gate_id
+    """
+    if gate not in VALID_GATES:
+        return {
+            "status": "error",
+            "error": f"Invalid gate '{gate}'. Must be one of: {VALID_GATES}",
+        }
+
+    conn = get_forged_connection()
+    init_forged_schema()
+
+    project_path = _get_project_path_for_gates()
+
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO gate_completions
+        (project_path, feature_name, gate, stage, consensus, iteration, verdict_summary)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (project_path, feature_name, gate, stage, int(consensus), iteration, verdict_summary),
+    )
+    conn.commit()
+
+    return {
+        "status": "recorded",
+        "gate_id": cursor.lastrowid,
+        "feature_name": feature_name,
+        "gate": gate,
+        "consensus": consensus,
     }

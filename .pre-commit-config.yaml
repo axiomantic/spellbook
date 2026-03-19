@@ -31,7 +31,7 @@ repos:
 
       - id: check-diagram-freshness
         name: Check diagram freshness
-        entry: python3 scripts/check_diagram_freshness.py
+        entry: python3 scripts/check_diagram_freshness.py --staged
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/|docs/diagrams/)

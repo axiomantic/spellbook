@@ -117,268 +117,140 @@ Dispatch subagent to invoke executing-plans skill. Pass: impl plan path, specifi
 ### 3.4.5 Execution Mode Analysis
 
 <CRITICAL>
-Analyze feature size and complexity to determine optimal execution strategy.
+Determine execution strategy from plan structure and context budget.
 </CRITICAL>
 
 <analysis>
-**Token Estimation:**
+**Plan Structure Analysis:**
 
-```python
-TOKENS_PER_KB = 350
-BASE_OVERHEAD = 20000
-TOKENS_PER_TASK_OUTPUT = 2000
-TOKENS_PER_REVIEW = 800
-TOKENS_PER_FACTCHECK = 500
-TOKENS_PER_FILE = 400
-CONTEXT_WINDOW = 200000
+1. Parse implementation plan for track markers (`## Track N:` headers)
+2. Count tasks (`- [ ] Task N.M:` lines)
+3. Check for dependency markers (`<!-- depends-on: -->`)
 
-def estimate_session_tokens(design_context_kb, design_doc_kb, impl_plan_kb, num_tasks, num_files):
-    design_phase = (design_context_kb + design_doc_kb + impl_plan_kb) * TOKENS_PER_KB
-    per_task = TOKENS_PER_TASK_OUTPUT + TOKENS_PER_REVIEW + TOKENS_PER_FACTCHECK
-    execution_phase = num_tasks * per_task
-    file_context = num_files * TOKENS_PER_FILE
-    return BASE_OVERHEAD + design_phase + execution_phase + file_context
+**Execution Mode Decision:**
+
 ```
-
-**Parse implementation plan:**
-
-- `num_tasks`: Count all `- [ ] Task N.M:` lines
-- `num_files`: Count all unique files in "Files:" lines
-- `num_parallel_tracks`: Count all `## Track N:` headers
-
-**Execution Mode Selection:**
-
-```python
-def recommend_execution_mode(estimated_tokens, num_tasks, num_parallel_tracks):
-    usage_ratio = estimated_tokens / CONTEXT_WINDOW
-
-    if num_tasks > 25 or usage_ratio > 0.80:
-        return "swarmed", "Feature size exceeds safe single-session capacity"
-
-    if usage_ratio > 0.65 or (num_tasks > 15 and num_parallel_tracks >= 3):
-        return "swarmed", "Large feature with good parallelization potential"
-
-    if num_tasks > 10 or usage_ratio > 0.40:
-        return "delegated", "Moderate size, subagents can handle workload"
-
-    return "direct", "Small feature, direct execution is efficient"
+if complexity_tier == "trivial": exit skill (already handled in Phase 0)
+if complexity_tier == "simple": direct (already handled via Simple Path)
+if impl_plan has multiple tracks with dependencies: decompose into work items
+elif num_tasks > 15: decompose into work items (context budget concern)
+else: delegated (single session, subagent execution)
 ```
 
 **Modes:**
 
-- **swarmed**: Generate work packets, spawn separate sessions, EXIT this session
-- **delegated**: Stay in session, delegate heavily to subagents
-- **direct**: Stay in session, minimal delegation
+- **delegated**: Stay in session, delegate to subagents. Default for STANDARD.
+- **work_items**: Generate prompt files for each work item, present to user. For COMPLEX or large STANDARD.
+- **direct**: Stay in session, minimal delegation. Only for very small STANDARD.
 
 **Routing:**
 
-- If `swarmed`: Proceed to 3.5 and 3.6
+- If `work_items`: Proceed to 3.5 and 3.6
 - If `delegated` or `direct`: Skip to Phase 4
 </analysis>
 
-### 3.5 Generate Work Packets (if swarmed)
+### 3.5 Generate Work Items (if work_items mode)
 
-<CRITICAL>Only runs when execution_mode is "swarmed".</CRITICAL>
+<CRITICAL>Only runs when execution_mode is "work_items".</CRITICAL>
 
-**Track Extraction:**
+**Work Item Generation:**
 
-```python
-def extract_tracks_from_impl_plan(impl_plan_content):
-    tracks = []
-    current_track = None
+1. Parse tracks from implementation plan (same extraction as current)
+2. Create work items in DB via `forge_project_init` (project graph)
+3. Generate prompt files at `.claude/prompts/<feature-slug>-chunk-<N>.md`
 
-    for line in impl_plan_content.split('\n'):
-        if line.startswith('## Track '):
-            if current_track:
-                tracks.append(current_track)
-            parts = line[9:].split(':', 1)
-            track_id = int(parts[0].strip())
-            track_name = parts[1].strip().lower().replace(' ', '-')
-            current_track = {
-                "id": track_id,
-                "name": track_name,
-                "depends_on": [],
-                "tasks": [],
-                "files": []
-            }
-        elif current_track and line.strip().startswith('<!-- depends-on:'):
-            deps_str = line.strip()[16:-4]
-            for dep in deps_str.split(','):
-                if dep.strip().startswith('Track '):
-                    dep_id = int(dep.strip()[6:])
-                    current_track["depends_on"].append(dep_id)
-        elif current_track and line.strip().startswith('- [ ] Task '):
-            current_track["tasks"].append(line.strip()[6:])
-        elif current_track and line.strip().startswith('Files:'):
-            files = [f.strip() for f in line.strip()[6:].split(',')]
-            current_track["files"].extend(files)
+**Prompt File Template:**
 
-    if current_track:
-        tracks.append(current_track)
-    return tracks
-```
+Each work item prompt file follows this structure:
 
-**Create work packet directory:** `~/.claude/work-packets/[feature-slug]/`
-
-**Generate files:**
-
-- `manifest.json`: Track metadata, dependencies, status
-- `README.md`: Execution instructions with quality gate checklist
-- `track-{id}-{name}.md`: Work packet per track
-
-#### Work Packet Template
-
-<CRITICAL>
-Work packets MUST include mandatory quality gates. Packets without gates produce incomplete work that passes tests but fails in production.
-</CRITICAL>
-
-Each `track-{id}-{name}.md` MUST follow this template:
-
-```markdown
-# Work Packet: [Track Name]
-
-**Feature:** [feature-name]
-**Track:** [track-id]
-**Dependencies:** [list or "none"]
+~~~markdown
+# <Feature Name> - Chunk <N>/<Total>: <Chunk Title>
 
 ## Context
 
-[Design context, architectural constraints, interfaces]
+<Brief description of what this chunk accomplishes>
 
-## Tasks
+Previous chunks completed: <list or "none (this is the first chunk)">
 
-[Task list from implementation plan]
+## Execution
 
-## Quality Gates (MANDATORY)
+Use the `develop` skill with these settings:
+- Escape hatch: impl plan at `<path to impl plan>`, treat as ready
+- Task range: Tasks <start>-<end>
+- Complexity tier: standard (each chunk is standard-sized)
+- Autonomous mode: fully autonomous
 
-After completing ALL tasks in this packet, you MUST run:
+The implementation plan is at:
+`<path to impl plan>`
 
-### Gate 1: Implementation Completion Verification
+The design document is at:
+`<path to design doc>`
 
-For each task, verify:
+Execute Tasks <start> through <end> from the implementation plan.
+Follow TDD, code review, and quality gates per the develop skill workflow.
 
-- [ ] All acceptance criteria traced to code
-- [ ] All expected outputs exist with correct interfaces
-- [ ] No dead code paths or unused implementations
+## Pre-conditions
 
-### Gate 2: Code Review
+<What must be true before starting this chunk>
 
-Invoke `requesting-code-review` skill:
+## Exit Criteria
 
-- Files: [list of files created/modified]
-- Review criteria: code quality, error handling, type safety, security
+<What must be true when this chunk is complete>
+- All changes committed
 
-Fix ALL critical and important issues before proceeding.
+## Next
 
-### Gate 3: Fact-Checking
-
-Invoke `fact-checking` skill:
-
-- Verify all docstrings match actual behavior
-- Verify all comments are accurate
-- Verify all type hints are correct
-- Verify error messages are truthful
-
-Fix ALL false claims before proceeding.
-
-### Gate 4: Test Quality (Green Mirage Audit)
-
-Invoke `audit-green-mirage` skill on test files:
-
-- Verify tests have meaningful assertions (not just "passes")
-- Verify tests cover error paths (not just happy path)
-- Verify tests don't mock too much
-
-Fix ALL green mirage issues before proceeding.
-
-### Gate 5: Full Test Suite
-
-Run `uv run pytest tests/` (or equivalent).
-ALL tests must pass. No exceptions.
-
-## Completion Checklist
-
-Before marking this packet complete:
-
-- [ ] All tasks implemented
-- [ ] Gate 1: Implementation completion verified
-- [ ] Gate 2: Code review passed (no critical/important issues)
-- [ ] Gate 3: Fact-checking passed (no false claims)
-- [ ] Gate 4: Green mirage audit passed
-- [ ] Gate 5: Full test suite passes
-- [ ] Changes committed with descriptive message
-
-If ANY checkbox is unchecked, the packet is NOT complete.
+When complete, run the next chunk:
 ```
+Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
+```
+~~~
 
-#### README.md Template
+The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch`.
 
-The work packet `README.md` MUST include:
+**Quality gates are inherited from the develop skill.** Each chunk invokes develop, which enforces all 5 gates (implementation completion, code review, fact-checking, green mirage, test suite) per task. No separate gate checklist in prompt files is needed.
+
+### 3.6 Work Item Presentation
+
+Present work items to user based on parallelization preference:
+
+**If parallelization == "maximize":**
 
 ```markdown
-# Work Packets: [Feature Name]
+## Work Items Generated
 
-## Execution Protocol
+[count] work items created. Independent items will launch in parallel.
 
-<CRITICAL>
-Each packet includes MANDATORY quality gates. Do NOT skip them.
-Completing tasks without running gates produces incomplete work.
-</CRITICAL>
+| Chunk | Title | Tasks | Dependencies | Status |
+|-------|-------|-------|--------------|--------|
+| 1 | [title] | [range] | none | ready |
+| 2 | [title] | [range] | Chunk 1 | blocked |
+| ... | ... | ... | ... | ... |
 
-### For Each Packet:
-
-1. Read the packet's Context section
-2. Implement all Tasks using TDD
-3. Run ALL Quality Gates (5 gates, in order)
-4. Complete the Completion Checklist
-5. Commit with descriptive message
-6. Update manifest.json status to "complete"
-
-### Quality Gate Summary
-
-| Gate                      | Skill to Invoke        | Pass Criteria                |
-| ------------------------- | ---------------------- | ---------------------------- |
-| Implementation Completion | (manual verification)  | All criteria traced          |
-| Code Review               | requesting-code-review | No critical/important issues |
-| Fact-Checking             | fact-checking          | No false claims              |
-| Green Mirage Audit        | audit-green-mirage     | No mirage issues             |
-| Test Suite                | (run tests)            | All tests pass               |
-
-### After All Packets Complete
-
-Run final integration verification across all packets.
+Launching [N] independent chunks now...
 ```
 
-### 3.6 Session Handoff (TERMINAL)
+Auto-launch independent work items using the session spawning MCP tool, or provide manual prompt file paths.
 
-<CRITICAL>
-After handoff, this session TERMINATES. Orchestrator's job ends here.
-Workers take over execution.
-</CRITICAL>
+Note: The user's selection of `parallelization == 'maximize'` in Phase 0.4 constitutes explicit permission for session spawning. This satisfies the CLAUDE.md security requirement that session spawning only occur when explicitly requested by the user.
 
-If `spawn_claude_session` MCP tool available:
+**If parallelization == "conservative":**
 
-```
-Would you like me to:
-1. Auto-launch all [count] independent tracks now
-2. Provide manual commands for you to run
-3. Launch only specific tracks
+```markdown
+## Work Items Generated
 
-Please choose: ___
+[count] work items created for sequential execution.
+
+Start with: `.claude/prompts/<feature-slug>-chunk-1.md`
+
+Each chunk links to the next. Complete them in order.
 ```
 
-Otherwise, provide manual commands:
+**If parallelization == "ask":**
 
-```bash
-# Create worktree
-git worktree add [worktree_path] -b [branch_name]
+Present the work item graph and let user choose which to launch.
 
-# Start Claude session with work packet
-cd [worktree_path]
-claude --session-context [work_packet_path]
-```
-
-**EXIT this session after handoff.**
+**For single-session work (delegated/direct):** Skip 3.5/3.6, proceed to Phase 4.
 
 ---
 
@@ -398,8 +270,8 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 - [ ] Reviewing-impl-plans subagent DISPATCHED
 - [ ] Approval gate handled per autonomous_mode
 - [ ] All critical/important findings fixed (if any)
-- [ ] Execution mode analyzed (swarmed/delegated/direct)
-- [ ] If swarmed: Work packets generated, session handoff complete, EXIT
+- [ ] Execution mode analyzed (work_items/delegated/direct)
+- [ ] If work_items: Work item prompt files generated, presentation complete
 
 If ANY unchecked: Go back to Phase 3. Do NOT proceed.
 
@@ -565,6 +437,32 @@ Task:
     Commit when done.
     Report: files changed, test results, commit hash.
 ```
+
+### 4.3.1 Dialectic Overlay at Quality Gates (if enabled)
+
+When `SESSION_PREFERENCES.dialectic_mode == "roundtable"`:
+
+**At planning_and_gates level:**
+After each per-task quality gate (4.5 code review, 4.5.1 fact-checking), optionally invoke roundtable with 3-archetype fast mode:
+
+```
+forge_roundtable_convene(
+    feature_name=feature_name,
+    stage="IMPLEMENT",
+    artifact_path=<path to reviewed file>,
+    gate=<gate_name>,
+    archetypes=get_gate_archetypes(<gate_name>)  # 3-archetype subset
+)
+```
+
+**At full level:**
+Same as planning_and_gates, but all 10 archetypes at every gate.
+
+**At planning_only level:**
+No roundtable overlay during Phase 4. Roundtable was used only during Phases 2 and 3.
+
+**Token enforcement interaction:**
+When `token_enforcement == "gate_level"`, each gate completion is recorded via `forge_record_gate_completion`. When `token_enforcement == "every_step"`, phase transitions also require token validation via `forge_iteration_advance`.
 
 ### 4.4 Implementation Completion Verification
 
@@ -1047,37 +945,17 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | 2.4, 3.4            | executing-plans                | Fix findings                                                               |
 | 3.1                 | writing-plans                  | Create impl plan                                                           |
 | 3.2                 | reviewing-impl-plans           | Review impl plan                                                           |
-| 3.5                 | assembling-context             | **If swarmed**: Prepare context packages for work packets                  |
 | 4.1                 | using-git-worktrees            | Create workspace(s)                                                        |
 | 4.2                 | dispatching-parallel-agents    | Parallel execution                                                         |
 | 4.2                 | assembling-context             | Prepare context for parallel subagents                                     |
 | 4.2.5               | merging-worktrees              | Merge parallel worktrees                                                   |
 | 4.3                 | test-driven-development        | TDD per task                                                               |
+| 4.3.1               | roundtable (via MCP)           | Dialectic overlay at quality gates (if dialectic_mode != none)             |
 | 4.5                 | requesting-code-review         | Review per task                                                            |
 | 4.5.1, 4.6.4, 4.6.5 | fact-checking                  | Claim validation                                                           |
 | 4.6.2               | systematic-debugging           | Debug test failures                                                        |
 | 4.6.3               | audit-green-mirage             | Test quality audit                                                         |
 | 4.7                 | finishing-a-development-branch | Complete workflow                                                           |
-
-## Forge Integration (Optional)
-
-When forge tools are available via MCP, they provide token-based workflow enforcement and roundtable validation.
-
-| Tool                                | Purpose                                                |
-| ----------------------------------- | ------------------------------------------------------ |
-| `forge_project_init`                | Initialize feature decomposition with dependency graph |
-| `forge_iteration_start`             | Start/resume a feature iteration, get workflow token   |
-| `forge_iteration_advance`           | Move to next stage after APPROVE verdict               |
-| `forge_iteration_return`            | Return to earlier stage after ITERATE verdict          |
-| `forge_roundtable_convene`          | Generate validation prompts with tarot archetypes      |
-| `forge_process_roundtable_response` | Parse LLM roundtable output for verdicts               |
-| `forge_select_skill`                | Get recommended skill for current stage/context        |
-
-**Token-based stage transitions:** Each stage requires a valid token from the previous operation, preventing stage skipping.
-
-**Roundtable Validation:** Uses tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) to validate stage completion from multiple perspectives.
-
----
 
 <FORBIDDEN>
 ## Anti-Patterns
@@ -1140,15 +1018,13 @@ When forge tools are available via MCP, they provide token-based workflow enforc
 - Not running tests after merge
 - Leaving worktrees after merge
 
-### Swarmed Execution (Work Packets)
+### Work Item Execution
 
-- **Generating work packets WITHOUT quality gate checklist** - packets must include 5 gates
-- **Completing packet tasks without running quality gates** - gates are MANDATORY, not optional
-- **Skipping code review in packets** - each packet needs requesting-code-review
-- **Skipping fact-checking in packets** - each packet needs fact-checking skill
-- **Skipping green mirage audit in packets** - each packet needs audit-green-mirage
-- **Marking packet complete with unchecked gates** - all 5 gates must pass
-- **Assuming tests passing = quality** - tests verify behavior, gates verify quality
+- **Generating work items without natural boundaries** - each chunk must be a coherent unit
+- **Work items that span migration cutovers** - keep cutovers atomic within a single chunk
+- **Skipping quality gates because "the next chunk will catch it"** - each chunk must pass all gates
+- **Work items without pre-conditions or exit criteria** - every prompt file needs both
+- **Missing the "Next" link between sequential items** - each chunk (except last) must link to the next
 </FORBIDDEN>
 
 ---
@@ -1229,17 +1105,17 @@ Answer honestly: Did I dispatch subagents for ALL of these?
 - [ ] Subagent invoked reviewing-impl-plans
 - [ ] Handled approval gate per autonomous_mode
 - [ ] Subagent invoked executing-plans to fix
-- [ ] Analyzed execution mode (swarmed/delegated/direct)
-- [ ] If swarmed: Generated work packets and handed off
+- [ ] Analyzed execution mode (work_items/delegated/direct)
+- [ ] If work_items: Generated work item prompts and presented
 
-### Phase 3.5 (if swarmed)
+### Phase 3.5 (if work_items)
 
-- [ ] Work packets include quality gate checklist (5 gates)
-- [ ] Work packets include completion checklist
-- [ ] README.md includes execution protocol with gate summary
-- [ ] Each packet specifies skills to invoke for gates
+- [ ] Work item prompt files generated at `.claude/prompts/<feature>-chunk-N.md`
+- [ ] Each prompt file includes: context, task range, pre-conditions, exit criteria
+- [ ] Final chunk includes finishing instructions
+- [ ] Work items presented per parallelization preference
 
-### Phase 4 (if not swarmed)
+### Phase 4 (if not work_items)
 
 - [ ] Subagent invoked using-git-worktrees (if applicable)
 - [ ] Executed tasks with appropriate parallelization

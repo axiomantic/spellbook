@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/deep-research-investigate.md", "source_hash": "sha256:a9f2516909e71c8136c0a6eae3dacc6743fccc3036012276e21cb8fb295a3c88", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/deep-research-investigate.md","source_hash": "sha256:dd3d7e22a7a19a3f23dd1f0d1abfbe6215b7dbc5fd5ab4122f950e5298c61c6c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: deep-research-investigate
 
 Execute iterative web research for a single thread using the Triplet Engine (Scope, Search, Extract) with plateau detection, drift guards, and micro-report generation each round.

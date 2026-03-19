@@ -1,4 +1,4 @@
-"""Roundtable MCP tools for Forged autonomous development system.
+"""Roundtable MCP tools for workflow validation.
 
 This module provides roundtable validation using tarot archetypes.
 Each archetype brings a unique perspective to validate stage completion:
@@ -15,6 +15,7 @@ Each archetype brings a unique perspective to validate stage completion:
 - Queen: User needs, stakeholder value
 """
 
+import json
 from typing import Optional
 
 from spellbook.forged.artifacts import read_artifact
@@ -92,6 +93,32 @@ _DEFAULT_ARCHETYPES_BY_STAGE: dict[str, list[str]] = {
     "COMPLETE": ["Magician", "Queen", "Justice"],
     "ESCALATED": ["Justice"],
 }
+
+# Gate-specific archetype subsets (3 archetypes for fast validation at quality gates)
+GATE_ARCHETYPES: dict[str, list[str]] = {
+    "implementation_completion": ["Magician", "Chariot", "Justice"],
+    "code_review": ["Magician", "Hierophant", "Justice"],
+    "fact_checking": ["Priestess", "Hermit", "Justice"],
+    "green_mirage_audit": ["Fool", "Magician", "Justice"],
+    "test_suite": ["Magician", "Emperor", "Justice"],
+}
+
+_DEFAULT_GATE_ARCHETYPES: list[str] = ["Magician", "Hierophant", "Justice"]
+
+
+def get_gate_archetypes(gate: str) -> list[str]:
+    """Get the 3-archetype subset for a specific quality gate.
+
+    Used when dialectic_level is "planning_and_gates" to provide
+    lightweight roundtable validation at quality gates.
+
+    Args:
+        gate: Quality gate identifier (e.g., "code_review")
+
+    Returns:
+        List of 3 archetype names appropriate for the gate
+    """
+    return GATE_ARCHETYPES.get(gate, _DEFAULT_GATE_ARCHETYPES)
 
 
 # =============================================================================
@@ -338,6 +365,7 @@ def roundtable_convene(
     feature_name: str,
     stage: str,
     artifact_path: str,
+    gate: str,
     archetypes: Optional[list[str]] = None,
 ) -> dict:
     """Convene roundtable to validate stage completion.
@@ -353,6 +381,7 @@ def roundtable_convene(
         feature_name: Name of the feature being developed
         stage: Current workflow stage (must be in VALID_STAGES)
         artifact_path: Path to the artifact file to validate
+        gate: Quality gate being validated (e.g., "code_review"). Required.
         archetypes: List of archetype names to include (optional)
 
     Returns:
@@ -393,6 +422,7 @@ def roundtable_convene(
             "return_to": stage,
             "dialogue": "",
             "error": f"Artifact not found: {artifact_path}",
+            "gate": gate,
         }
 
     # Get archetypes
@@ -419,6 +449,7 @@ def roundtable_convene(
         "return_to": None,  # Will be set if ITERATE
         "dialogue": dialogue,
         "archetypes": archetypes,  # Included for reference
+        "gate": gate,
     }
 
 
@@ -482,6 +513,8 @@ def roundtable_debate(
 def process_roundtable_response(
     response: str,
     stage: str,
+    gate: str,
+    feature_name: str,
     iteration: int = 1,
 ) -> dict:
     """Process an LLM response from roundtable convene.
@@ -492,6 +525,9 @@ def process_roundtable_response(
     Args:
         response: Raw LLM response text
         stage: The workflow stage
+        gate: Quality gate being validated. Required. When consensus
+              is reached, automatically records gate completion.
+        feature_name: Feature name for gate completion recording.
         iteration: Current iteration number
 
     Returns:
@@ -523,10 +559,24 @@ def process_roundtable_response(
                     ).to_dict()
                 )
 
+    # Auto-record gate completion when consensus reached
+    if consensus:
+        from spellbook.forged.project_tools import forge_record_gate_completion
+
+        forge_record_gate_completion(
+            feature_name=feature_name,
+            gate=gate,
+            stage=stage,
+            consensus=True,
+            iteration=iteration,
+            verdict_summary=json.dumps(verdicts),
+        )
+
     return {
         "consensus": consensus,
         "verdicts": verdicts,
         "feedback": feedback,
         "return_to": return_to,
         "parsed_verdicts": [pv.to_dict() for pv in parsed_verdicts],
+        "gate": gate,
     }

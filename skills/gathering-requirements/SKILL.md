@@ -1,6 +1,6 @@
 ---
 name: gathering-requirements
-description: "Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the Forged workflow."
+description: "Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the develop workflow."
 intro: |
   Structured elicitation of feature requirements through discovery questions and constraint identification, examining needs from four archetype perspectives: user needs, system constraints, security surface, and scope boundaries. Produces a requirements document that prevents downstream rework. Invocable with `/gathering-requirements` or triggered automatically when you ask to define what a feature should do.
 ---

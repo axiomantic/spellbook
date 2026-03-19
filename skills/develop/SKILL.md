@@ -120,7 +120,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 ```
 
 - [ ] Understanding document exists
-- [ ] Completeness score = 100% (11/11 validation functions)
+- [ ] Completeness score = 100% (12/12 validation functions)
 - [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
 
@@ -182,7 +182,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 - [ ] Implementation plan exists
 - [ ] Plan review subagent (reviewing-impl-plans) was dispatched
-- [ ] Execution mode determined (swarmed/delegated/direct)
+- [ ] Execution mode determined (work_items/delegated/direct)
 
 ### During Phase 4 (for EACH task):
 
@@ -294,6 +294,9 @@ That IS the rationalization. Run the prerequisite check instead.
 | 5 | **Competence Assertion** | "I'm confident...", "No need to check..." | Confidence is not evidence. Even experts need quality gates. |
 | 6 | **Phase Collapse** | "I'll combine research and discovery...", "These are essentially the same..." | Phases have distinct outputs and quality gates. Collapsing skips gates. |
 | 7 | **Escape Hatch Abuse** | "The user's description is basically a design doc..." | Escape hatches require EXPLICIT artifacts at SPECIFIC paths. Prose is not an artifact. |
+| 8 | **Gate Elision** | "Gate X passed clean, so we can skip Gate Y" | Each gate validates a different dimension. Execute all 5 in order. |
+| 9 | **Self-Review Substitution** | "I reviewed the code myself instead of invoking the skill" | Skills contain specialized logic. Self-review is not equivalent. Invoke the skill. |
+| 10 | **Momentum Preservation** | "We're making good progress, let's not slow down with gates" | Gates exist because velocity without quality produces rework. Execute the gate. |
 
 ### Valid Skip Reasons (Exhaustive List)
 
@@ -373,6 +376,18 @@ If during execution the task reveals greater complexity than classified:
 4. **GET** confirmation before continuing
 5. **RESTART** from the appropriate phase if tier changed upward
 
+**Detection Points:**
+- Phase 0.7: Initial classification (existing)
+- Phase 1.5: Scope Drift Check after discovery wizard (NEW)
+- Phase 1.5: ARH SCOPE_EXPANSION during wizard (NEW)
+- Phase 2: Design complexity exceeds tier (existing, clarified)
+
+**STANDARD -> COMPLEX upgrade in Phase 1.5:**
+When scope drift upgrades STANDARD to COMPLEX mid-discovery:
+- Run `forge_project_init` inline with single-feature project
+- Do NOT restart from Phase 0; continue discovery with COMPLEX constraints
+- Rewrite understanding document to reflect expanded scope
+
 ---
 
 ## Skill Invocation Pattern
@@ -405,6 +420,33 @@ Task (or subagent simulation):
     Use the [skill-name] skill to do X.
     [Then duplicating the skill's instructions here]  <-- WRONG
 ```
+
+<CRITICAL>
+### Subagent Skill Invocation Verification
+
+After dispatching ANY subagent that should invoke a skill:
+
+1. Check subagent output for skill invocation confirmation
+2. Pattern match: output MUST contain "Launching skill: [skill-name]" or equivalent
+3. If pattern not found: subagent did NOT invoke the skill
+4. Re-dispatch with explicit instruction: "You MUST invoke the [skill-name] skill using the Skill tool BEFORE doing any work"
+
+Anti-rationalization #9 (Self-Review Substitution) applies here.
+</CRITICAL>
+
+### Phase 4 Dispatch Discipline
+
+<CRITICAL>
+Every Phase 4 dispatch point follows this protocol:
+
+1. **Pre-dispatch:** Verify previous gate passed (if any)
+2. **Dispatch:** Include skill invocation requirement in subagent prompt
+3. **Post-dispatch:** Verify gate artifact exists
+4. **Record:** When token_enforcement is gate_level or every_step, record gate completion
+5. **Advance:** Only after ALL gates pass, advance workflow token (if token_enforcement enabled)
+
+Skipping ANY step is forbidden. See Anti-Rationalization patterns #8, #9, #10.
+</CRITICAL>
 
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:
@@ -459,7 +501,7 @@ Phase 0: Configuration Wizard
     ├─[TRIVIAL]──> EXIT SKILL (log: "Trivial change, no workflow needed")
     ├─[SIMPLE]───> Simple Path (see below)
     ├─[STANDARD]─> Full workflow (below)
-    └─[COMPLEX]──> Full workflow (below, may add parallel tracks)
+    └─[COMPLEX]──> Full workflow (below, multi-work-item decomposition)
     ↓
 Phase 1: Research (STANDARD/COMPLEX only)
   ├─ 1.1: Research strategy planning
@@ -474,7 +516,7 @@ Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
   ├─ 1.5.3: Build glossary
   ├─ 1.5.4: Synthesize design_context
-  ├─ 1.5.5: GATE: Completeness Score = 100% (11 validation functions)
+  ├─ 1.5.5: GATE: Completeness Score = 100% (12 validation functions)
   ├─ 1.5.6: Create Understanding Document
   ├─ 1.5.7: Dehallucination Gate
   └─ 1.6: Invoke devils-advocate skill
@@ -491,9 +533,9 @@ Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escap
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (tokens/tasks/tracks -> swarmed|delegated|direct)
-  ├─ 3.5: Generate work packets (if swarmed)
-  └─ 3.6: Session handoff (TERMINAL - if swarmed, EXIT here)
+  ├─ 3.4.5: Execution mode analysis (work_items for large features, delegated for single-session)
+  ├─ 3.5: Generate work item prompts (if work_items)
+  └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)
     ↓
 Phase 4: Implementation (if delegated/direct)
   ├─ 4.1: Setup worktree(s) per preference
@@ -530,12 +572,15 @@ interface SessionPreferences {
   worktree: "single" | "per_parallel_track" | "none";
   worktree_paths: string[]; // Filled during Phase 4.1 if per_parallel_track
   post_impl: "offer_options" | "auto_pr" | "stop";
+  dialectic_mode: "none" | "roundtable";  // default: "none"
+  dialectic_level: "planning_only" | "planning_and_gates" | "full";  // default: "planning_and_gates"
+  token_enforcement: "work_item" | "gate_level" | "every_step";  // default: "gate_level"
   escape_hatch: null | {
     type: "design_doc" | "impl_plan";
     path: string;
     handling: "review_first" | "treat_as_ready";
   };
-  execution_mode?: "swarmed" | "sequential" | "delegated" | "direct";
+  execution_mode?: "work_items" | "delegated" | "direct";
   estimated_tokens?: number;
   feature_stats?: {
     num_tasks: number;
@@ -648,7 +693,7 @@ interface DesignContext {
 | Gate                      | Threshold          | Bypass       |
 | ------------------------- | ------------------ | ------------ |
 | Research Quality          | 100%               | User consent |
-| Completeness              | 100% (11/11)       | User consent |
+| Completeness              | 100% (12/12)       | User consent |
 | Implementation Completion | All items COMPLETE | Never        |
 | Tests                     | All passing        | Never        |
 | Green Mirage Audit        | Clean              | Never        |
@@ -704,7 +749,7 @@ After `/feature-config` completes (including Phase 0.7):
 
 **STANDARD tier:** Run all commands in order.
 
-**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 may trigger swarmed execution (multiple parallel subagents, each receiving work packets via SESSION_CONTEXT).
+**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines work item decomposition. Large features are split into work items with prompt files, not work packets.
 
 ### Simple Path Guardrails
 

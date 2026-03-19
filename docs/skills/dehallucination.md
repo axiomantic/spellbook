@@ -4,7 +4,7 @@ Verifies that claims, file references, and assertions in documents are grounded 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, Forge workflow, and after deep-research verification.
+> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, develop workflow, and after deep-research verification.
 
 ## Workflow Diagram
 
@@ -228,7 +228,7 @@ Artifact claims: "Use the existing UserValidator class in src/validators.py"
 5. Recovery: Correct to "Create new UserValidator class" or find actual validator location
 </example>
 
-## Integration with Forge
+## Integration with Develop Workflow
 
 Invoke after: gathering-requirements (verify codebase claims), brainstorming (verify technical capabilities), writing-plans (verify implementation assumptions), roundtable flags hallucination concerns.
 
@@ -254,6 +254,6 @@ If ANY unchecked: complete before returning. Do not return a partial verificatio
 </CRITICAL>
 
 <FINAL_EMPHASIS>
-Hallucinations are confident lies. Every claim needs evidence or explicit uncertainty. When you find one, trace its spread and correct at source. The forge pipeline depends on factual grounding.
+Hallucinations are confident lies. Every claim needs evidence or explicit uncertainty. When you find one, trace its spread and correct at source. The development workflow depends on factual grounding.
 </FINAL_EMPHASIS>
 ``````````

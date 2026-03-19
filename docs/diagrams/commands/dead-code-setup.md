@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/dead-code-setup.md", "source_hash": "sha256:d0a19df4171dd31fbf3ad3314f1882dde6454c4dc8a84fae8c81bcb6cac21417", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/dead-code-setup.md","source_hash": "sha256:b3267b6e266620a4a3f60ec6f33a36a716619ea2316ccf3c4dd56d39efbfa45c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: dead-code-setup
 
 Git safety checks and scope selection for dead code analysis.

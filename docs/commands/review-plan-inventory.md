@@ -4,86 +4,97 @@
 
 Phase 1 of reviewing-impl-plans: establishes context by checking for a parent design document, inventories all work items with parallel/sequential classification, audits setup/skeleton requirements, and flags cross-track interface dependencies.
 
+## Process Flow
+
 ```mermaid
 flowchart TD
-    Start([Start Phase 1]) --> CheckDesign{Parent Design Doc?}
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+    end
 
-    CheckDesign -->|Yes| LogDesign[Log Design Doc Location]
-    CheckDesign -->|No| JustifyNo[Require Justification]
+    Start([Receive impl plan<br>for inventory]) --> DesignDoc
 
-    LogDesign --> MoreDetail{Plan Has More Detail?}
-    JustifyNo --> RiskUp[Increase Risk Level]
+    subgraph P1["Parent Design Document Check"]
+        DesignDoc{Has parent<br>design doc?}
+        DesignDoc -->|YES| DocDetail{Impl plan has<br>MORE detail than<br>design doc?}
+        DesignDoc -->|NO| Justify[Justify absence<br>Risk level increases]
+        DocDetail -->|YES| DocOK[Design doc anchors<br>confidence]
+        DocDetail -->|NO| DocGap[Flag: sections not<br>elaborated from design]
+    end
 
-    MoreDetail -->|Yes| Inventory[Inventory Work Items]
-    MoreDetail -->|No| FlagGap[Flag Detail Gap]
-    RiskUp --> Inventory
-    FlagGap --> Inventory
+    Justify --> Inventory
+    DocOK --> Inventory
+    DocGap --> Inventory
 
-    Inventory --> Classify[Classify Each Item]
+    subgraph P2["Plan Inventory: Work Item Classification"]
+        Inventory[Count total<br>work items] --> ClassifyLoop
+        ClassifyLoop[For EACH work item]
+        ClassifyLoop --> IsParallel{Can execute<br>concurrently?}
+        IsParallel -->|YES| TagParallel[Tag PARALLEL<br>Record: can run alongside,<br>worktree needed,<br>interface dependencies]
+        IsParallel -->|NO| TagSequential[Tag SEQUENTIAL<br>Record: blocked by,<br>blocks, reason]
+        TagParallel --> MoreItems{More work<br>items?}
+        TagSequential --> MoreItems
+        MoreItems -->|YES| ClassifyLoop
+        MoreItems -->|NO| CountSummary[Compute counts:<br>total, parallel, sequential]
+    end
 
-    Classify --> IsParallel{Parallel or Sequential?}
+    CountSummary --> Interfaces
 
-    IsParallel -->|Parallel| LogPar[Log Parallel Item]
-    IsParallel -->|Sequential| LogSeq[Log Sequential Item]
+    subgraph P3["Cross-Track Interface Identification"]
+        Interfaces[Identify interfaces<br>between parallel tracks] --> HasInterfaces{Interfaces<br>found?}
+        HasInterfaces -->|YES| FlagInterfaces[Flag CRITICAL:<br>each needs a<br>complete contract]
+        HasInterfaces -->|NO| NoInterfaces[No cross-track<br>dependencies]
+    end
 
-    LogPar --> RecordDeps[Record Dependencies]
-    LogSeq --> RecordBlocks[Record Blocks/Blocked-By]
+    FlagInterfaces --> Setup
+    NoInterfaces --> Setup
 
-    RecordDeps --> MoreItems{More Work Items?}
-    RecordBlocks --> MoreItems
+    subgraph P4["Setup/Skeleton Work Validation"]
+        Setup[Check setup items that<br>must complete before<br>parallel execution]
+        Setup --> CheckRepo{Git repo<br>structure?}
+        CheckRepo --> CheckConfig{Config<br>files?}
+        CheckConfig --> CheckTypes{Shared type<br>definitions?}
+        CheckTypes --> CheckStubs{Interface<br>stubs?}
+        CheckStubs --> CheckBuild{Build/test<br>infra?}
+        CheckBuild --> SetupGaps{Any setup<br>gaps?}
+        SetupGaps -->|YES| FlagGaps[Flag unspecified<br>setup work]
+        SetupGaps -->|NO| SetupComplete[All setup work<br>documented]
+    end
 
-    MoreItems -->|Yes| Classify
-    MoreItems -->|No| Setup[Audit Setup/Skeleton]
+    FlagGaps --> Gate
+    SetupComplete --> Gate
 
-    Setup --> GitRepo[Check Git Structure]
-    GitRepo --> Config[Check Config Files]
-    Config --> Types[Check Shared Types]
-    Types --> Stubs[Check Interface Stubs]
-    Stubs --> BuildTest[Check Build/Test Infra]
+    Gate[Quality Gate:<br>All items classified?<br>All interfaces documented?<br>All setup gaps flagged?]:::gate
+    Gate --> Deliverable
 
-    BuildTest --> CrossTrack[Identify Cross-Track Interfaces]
-    CrossTrack --> GateAll{All Items Classified?}
+    Deliverable[Return structured markdown:<br>- Design doc status<br>- Work item counts<br>- Interface count<br>- Setup/skeleton gaps] --> End([Deliverable returned<br>to orchestrator]):::success
 
-    GateAll -->|Yes| Deliver[Deliver Inventory Report]
-    GateAll -->|No| Classify
-
-    Deliver --> Done([Phase 1 Complete])
-
-    style Start fill:#2196F3,color:#fff
-    style Done fill:#2196F3,color:#fff
-    style CheckDesign fill:#FF9800,color:#fff
-    style LogDesign fill:#2196F3,color:#fff
-    style JustifyNo fill:#2196F3,color:#fff
-    style MoreDetail fill:#FF9800,color:#fff
-    style RiskUp fill:#f44336,color:#fff
-    style Inventory fill:#2196F3,color:#fff
-    style Classify fill:#2196F3,color:#fff
-    style IsParallel fill:#FF9800,color:#fff
-    style LogPar fill:#2196F3,color:#fff
-    style LogSeq fill:#2196F3,color:#fff
-    style RecordDeps fill:#2196F3,color:#fff
-    style RecordBlocks fill:#2196F3,color:#fff
-    style MoreItems fill:#FF9800,color:#fff
-    style Setup fill:#2196F3,color:#fff
-    style GitRepo fill:#2196F3,color:#fff
-    style Config fill:#2196F3,color:#fff
-    style Types fill:#2196F3,color:#fff
-    style Stubs fill:#2196F3,color:#fff
-    style BuildTest fill:#2196F3,color:#fff
-    style CrossTrack fill:#f44336,color:#fff
-    style FlagGap fill:#2196F3,color:#fff
-    style GateAll fill:#f44336,color:#fff
-    style Deliver fill:#2196F3,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
 ```
 
 ## Legend
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Shape / Color | Meaning |
+|---------------|---------|
+| Rectangle | Process step |
+| Diamond | Decision point |
+| Stadium (rounded) | Terminal (start/end) |
+| Red (#ff6b6b) | Quality gate |
+| Green (#51cf66) | Success terminal |
+
+## Key Principles
+
+| Principle | Enforcement Point |
+|-----------|-------------------|
+| Design doc anchors confidence | Parent Design Document Check |
+| Classify before scheduling | Work Item Classification loop |
+| Cross-track interfaces are highest risk | Interface Identification (flagged CRITICAL) |
+| Unclassified items = failure mode | Quality Gate before deliverable |
 
 ## Command Content
 

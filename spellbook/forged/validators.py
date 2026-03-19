@@ -1,4 +1,4 @@
-"""Validator infrastructure for the Forged autonomous development system.
+"""Validator infrastructure for the workflow system.
 
 This module provides the validator catalog and tools for invoking validators
 on artifacts, managing validator dependencies, and handling transform levels.
@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from spellbook.forged.models import VALID_STAGES, ValidatorResult, Feedback
+from spellbook.forged.models import VALID_STAGES, ValidatorResult
 
 
 @dataclass
 class Validator:
-    """Represents a validator in the Forged system.
+    """Represents a validator in the workflow system.
 
     Validators check artifacts for quality, correctness, and compliance with
     various standards. They can be backed by existing skills or be planned

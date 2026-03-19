@@ -1,7 +1,7 @@
-"""Forged - Autonomous development workflow system.
+"""Workflow enforcement and work item tracking system.
 
-This module provides artifact storage and tracking for autonomous
-development workflows with validator-based feedback loops.
+This module provides artifact storage and tracking for development
+workflows with validator-based feedback loops.
 """
 
 # Artifacts module exports

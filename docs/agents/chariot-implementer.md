@@ -2,120 +2,132 @@
 
 ## Workflow Diagram
 
-Focused implementation agent that executes specifications with absolute precision. Drives implementation forward without deviation, mapping every line of code to a requirement.
+Focused implementation agent that executes specifications with absolute precision. Follows a three-phase protocol (Analysis, Implementation Loop, Reflection) with quality gates enforcing traceability and scope discipline at every stage.
 
 ```mermaid
 flowchart TD
-    Start([Start: Spec Received])
-    Invoke[/Honor-Bound Invocation/]
-    ReadSpec["Read Spec Completely"]
-    Identify["Identify Functions,\nClasses, Structures"]
-    MapReqs["Map Requirements\nto Code Locations"]
-    VerifyScope{"Scope Boundaries\nClear?"}
-    ClarifyScope["Clarify Scope\nwith Requestor"]
-    ImplLoop["For Each Requirement"]
-    WriteCode["Write Code for\nRequirement"]
-    AddComment["Add Spec Reference\nComment"]
-    ScopeCheck{"Scope Creep\nDetected?"}
-    RemoveExtra["Remove Unauthorized\nCode"]
-    TestBehavior["Test Specific\nBehavior"]
-    MoreReqs{"More Requirements?"}
-    TraceGate{"Every Block\nTraces to Spec?"}
-    RemoveUntraceable["Remove Untraceable\nCode"]
-    AddedCheck{"Unrequested Features\nAdded?"}
-    RemoveFeatures["Remove Unrequested\nFeatures"]
-    ErrorGate{"Error Handling\nComplete?"}
-    AddErrorHandling["Add Missing Error\nHandling"]
-    FaithfulCheck{"Faithful to\nSpec Author?"}
-    Commit["Generate COMMIT\nSpeech Act"]
-    Traceability["Output Traceability\nMatrix"]
-    Done([End: Implementation\nComplete])
+    subgraph Legend
+        direction LR
+        LP[Process]
+        LD{Decision}
+        LT([Terminal])
+        LG{Quality Gate}:::gate
+    end
 
-    Start --> Invoke
-    Invoke --> ReadSpec
-    ReadSpec --> Identify
-    Identify --> MapReqs
-    MapReqs --> VerifyScope
-    VerifyScope -->|No| ClarifyScope
-    ClarifyScope --> VerifyScope
-    VerifyScope -->|Yes| ImplLoop
-    ImplLoop --> WriteCode
-    WriteCode --> AddComment
-    AddComment --> ScopeCheck
-    ScopeCheck -->|Yes| RemoveExtra
-    RemoveExtra --> TestBehavior
-    ScopeCheck -->|No| TestBehavior
-    TestBehavior --> MoreReqs
-    MoreReqs -->|Yes| ImplLoop
-    MoreReqs -->|No| TraceGate
-    TraceGate -->|Fail| RemoveUntraceable
-    RemoveUntraceable --> TraceGate
-    TraceGate -->|Pass| AddedCheck
-    AddedCheck -->|Yes| RemoveFeatures
-    RemoveFeatures --> AddedCheck
-    AddedCheck -->|No| ErrorGate
-    ErrorGate -->|Fail| AddErrorHandling
-    AddErrorHandling --> ErrorGate
-    ErrorGate -->|Pass| FaithfulCheck
-    FaithfulCheck -->|No| ImplLoop
-    FaithfulCheck -->|Yes| Commit
-    Commit --> Traceability
-    Traceability --> Done
+    START([Agent Invoked]) --> VALIDATE
 
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Invoke fill:#4CAF50,color:#fff
-    style ReadSpec fill:#2196F3,color:#fff
-    style Identify fill:#2196F3,color:#fff
-    style MapReqs fill:#2196F3,color:#fff
-    style WriteCode fill:#2196F3,color:#fff
-    style AddComment fill:#2196F3,color:#fff
-    style TestBehavior fill:#2196F3,color:#fff
-    style RemoveExtra fill:#2196F3,color:#fff
-    style RemoveUntraceable fill:#2196F3,color:#fff
-    style RemoveFeatures fill:#2196F3,color:#fff
-    style AddErrorHandling fill:#2196F3,color:#fff
-    style Commit fill:#2196F3,color:#fff
-    style Traceability fill:#2196F3,color:#fff
-    style ClarifyScope fill:#2196F3,color:#fff
-    style ImplLoop fill:#2196F3,color:#fff
-    style VerifyScope fill:#FF9800,color:#fff
-    style ScopeCheck fill:#FF9800,color:#fff
-    style MoreReqs fill:#FF9800,color:#fff
-    style TraceGate fill:#f44336,color:#fff
-    style AddedCheck fill:#f44336,color:#fff
-    style ErrorGate fill:#f44336,color:#fff
-    style FaithfulCheck fill:#f44336,color:#fff
+    subgraph PHASE0["Phase 0: Input Validation"]
+        VALIDATE{spec, context,<br>scope all provided?}
+        VALIDATE -->|Missing| ABORT([Abort: Missing<br>required inputs]):::fail
+        VALIDATE -->|All present| RECEIVE[Receive spec +<br>context + scope]
+    end
+
+    RECEIVE --> READ_SPEC
+
+    subgraph PHASE1["Phase 1: Analysis"]
+        READ_SPEC[Read specification<br>completely before<br>writing any code]
+        READ_SPEC --> IDENTIFY[Identify functions,<br>classes, data<br>structures required]
+        IDENTIFY --> MAP_REQS[Map each requirement<br>to planned code location]
+        MAP_REQS --> VERIFY_SCOPE{Scope boundaries<br>clear?}
+        VERIFY_SCOPE -->|No| CLARIFY[Clarify scope<br>with requestor]
+        CLARIFY --> VERIFY_SCOPE
+        VERIFY_SCOPE -->|Yes| ENTER_LOOP
+    end
+
+    ENTER_LOOP --> NEXT_REQ
+
+    subgraph PHASE2["Phase 2: Implementation Loop"]
+        NEXT_REQ{More requirements<br>to implement?}
+        NEXT_REQ -->|Yes| WRITE_CODE[Write code fulfilling<br>EXACTLY that requirement]
+        WRITE_CODE --> ADD_COMMENT[Add comment linking<br>to spec section]
+        ADD_COMMENT --> SCOPE_CHECK{Scope creep<br>detected?}:::gate
+        SCOPE_CHECK -->|Yes| REMOVE_EXTRA[Remove unauthorized code]
+        REMOVE_EXTRA --> TEST
+        SCOPE_CHECK -->|No| TEST[Test the specific behavior]
+        TEST --> NEXT_REQ
+    end
+
+    NEXT_REQ -->|No| TRACE_CHECK
+
+    subgraph PHASE3["Phase 3: Pre-COMMIT Reflection"]
+        TRACE_CHECK{Every code block<br>traces to a<br>requirement?}:::gate
+        TRACE_CHECK -->|"Fail: untraceable = unauthorized"| REMOVE_UNTRACEABLE[Remove untraceable code]
+        REMOVE_UNTRACEABLE --> TRACE_CHECK
+
+        TRACE_CHECK -->|Pass| EXTRAS_CHECK{Anything added<br>not in spec?}:::gate
+        EXTRAS_CHECK -->|Yes| REMOVE_FEATURES[Remove unrequested features]
+        REMOVE_FEATURES --> EXTRAS_CHECK
+
+        EXTRAS_CHECK -->|No| ERROR_CHECK{Error handling<br>complete?}:::gate
+        ERROR_CHECK -->|Fail| ADD_ERRORS[Add missing<br>error handling]
+        ADD_ERRORS --> ERROR_CHECK
+
+        ERROR_CHECK -->|Pass| FAITHFUL{Would spec author<br>recognize this as<br>faithful execution?}:::gate
+        FAITHFUL -->|No| REVISE[Revise implementation]
+        REVISE --> NEXT_REQ
+    end
+
+    FAITHFUL -->|Yes| COMMIT
+
+    subgraph PHASE4["Phase 4: Output"]
+        COMMIT[Generate COMMIT<br>speech act]
+        COMMIT --> TRACE_MAP[Output traceability<br>matrix: spec section<br>to code location]
+        TRACE_MAP --> DEFERRED[Document out-of-scope<br>items explicitly deferred]
+    end
+
+    DEFERRED --> DONE([Implementation Complete]):::success
+
+    ENTER_LOOP:::hidden
+
+    classDef gate fill:#ff6b6b,stroke:#c0392b,color:#fff
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
+    classDef fail fill:#ff6b6b,stroke:#c0392b,color:#fff
+    classDef hidden display:none
 ```
 
 ## Legend
 
 | Color | Meaning |
 |-------|---------|
-| Green (#4CAF50) | Skill invocation / start-end |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+| Red (`#ff6b6b`) | Quality gate (scope, traceability, error handling, faithfulness) |
+| Green (`#51cf66`) | Success terminal |
+| Default (grey) | Process step |
+| Diamond shape | Decision point or quality gate |
+| Stadium shape | Terminal (start/end) |
+
+## Forbidden Actions
+
+The agent enforces strict boundaries. These are explicitly forbidden and caught by the reflection gates:
+
+| Forbidden Action | Enforcing Gate |
+|---|---|
+| Adding "nice to have" features not in spec | Scope creep check, Extras check |
+| Optimizing prematurely without requirement | Traceability check |
+| Refactoring adjacent code while implementing | Scope creep check |
+| Skipping error handling to save time | Error handling check |
+| Implementing partial solutions | Faithful execution check |
+| Deferring tests ("I'll add tests later") | Test step in implementation loop |
 
 ## Cross-Reference
 
 | Node | Source Reference |
 |------|----------------|
-| Honor-Bound Invocation | Lines 14-15: Honor pledge before execution |
-| Read Spec Completely | Lines 53: Analysis step 1 |
-| Identify Functions, Classes, Structures | Lines 54: Analysis step 2 |
-| Map Requirements to Code Locations | Lines 55: Analysis step 3 |
-| Scope Boundaries Clear? | Lines 56: Analysis step 4 |
-| Write Code for Requirement | Lines 61: Implementation step 1 |
-| Add Spec Reference Comment | Lines 62: Implementation step 2 |
-| Scope Creep Detected? | Lines 63: Implementation step 3 |
-| Test Specific Behavior | Lines 64: Implementation step 4 |
-| Every Block Traces to Spec? | Lines 69: Reflection check 1 |
-| Unrequested Features Added? | Lines 70: Reflection check 2 |
-| Error Handling Complete? | Lines 71: Reflection check 3 |
-| Faithful to Spec Author? | Lines 72: Reflection check 4 |
-| Generate COMMIT Speech Act | Lines 78-93: COMMIT format output |
-| Output Traceability Matrix | Lines 85-89: Traceability table |
+| Input Validation | Lines 33-38: Required inputs table |
+| Read specification completely | Line 50: Analysis step 1 |
+| Identify functions, classes, structures | Line 51: Analysis step 2 |
+| Map requirements to code locations | Line 52: Analysis step 3 |
+| Verify scope boundaries | Line 53: Analysis step 4 |
+| Write code for requirement | Line 58: Implementation step 1 |
+| Add comment linking to spec | Line 59: Implementation step 2 |
+| Scope creep detected? | Line 60: Implementation step 3 |
+| Test the specific behavior | Line 61: Implementation step 4 |
+| Every block traces to requirement? | Line 66: Reflection check 1 |
+| Anything added not in spec? | Line 67: Reflection check 2 |
+| Error handling complete? | Line 68: Reflection check 3 |
+| Faithful to spec author? | Line 69: Reflection check 4 |
+| Generate COMMIT speech act | Lines 74-89: COMMIT format |
+| Output traceability matrix | Lines 82-87: Traceability table |
+| Document out-of-scope items | Line 88: Not Implemented section |
 
 ## Agent Content
 

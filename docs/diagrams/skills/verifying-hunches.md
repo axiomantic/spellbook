@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/verifying-hunches/SKILL.md","source_hash": "sha256:02f3ae1f510513ba7ca77a7ca7d351fab6c67ee10fbde8dbd5b86c045fcd9ce7","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/verifying-hunches/SKILL.md","source_hash": "sha256:ba55f59244cc689d79bc097ef3638dabb835e0b99c686f0da1b032470b9a1239","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: verifying-hunches
 
 Prevents premature root cause claims during debugging by enforcing hypothesis registration, specificity requirements, falsification criteria, and test-before-claim discipline.

@@ -24,7 +24,6 @@ Usage:
 
 import argparse
 import fnmatch
-import hashlib
 import json
 import os
 import subprocess
@@ -45,6 +44,7 @@ from diagram_config import (
     MANDATORY_SKILLS,
     REPO_ROOT,
     SKILLS_DIR,
+    compute_structure_hash,
 )
 
 # Timeout for each Claude headless invocation (5 minutes)
@@ -191,9 +191,13 @@ def discover_agents() -> list[SourceItem]:
 
 
 def compute_hash(filepath: Path) -> str:
-    """Compute SHA256 hex digest of a file's content."""
-    content = filepath.read_bytes()
-    return hashlib.sha256(content).hexdigest()
+    """Compute SHA256 hex digest of a file's heading structure.
+
+    Only markdown headings (after stripping YAML frontmatter) contribute
+    to the hash, so cosmetic edits like wording tweaks or frontmatter
+    changes do not trigger unnecessary diagram regeneration.
+    """
+    return compute_structure_hash(filepath)
 
 
 # ---------------------------------------------------------------------------

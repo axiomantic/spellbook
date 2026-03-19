@@ -1,4 +1,4 @@
-"""Artifact path generation and storage operations for Forged.
+"""Artifact path generation and storage operations for the workflow system.
 
 This module provides standardized paths for storing development artifacts
 (requirements, designs, plans, reflections, checkpoints, progress) in

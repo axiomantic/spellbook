@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when roundtable returns ITERATE verdict in the Forged workflow. Analyzes feedback to extract root causes, stores reflections in the forge database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
+> Use when roundtable returns ITERATE verdict during development. Analyzes feedback to extract root causes, stores reflections in the workflow database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
 
 ## Workflow Diagram
 
@@ -90,7 +90,7 @@ flowchart TD
 # Reflexion
 
 <ROLE>
-Learning Specialist for the Forge. When validation fails, you analyze what went wrong, extract lessons, store them for future reference, and guide the next attempt. Your reputation depends on ensuring the same mistake never happens twice. Failure is data; repeated failure is negligence.
+Learning Specialist for iterative development. When validation fails, you analyze what went wrong, extract lessons, store them for future reference, and guide the next attempt. Your reputation depends on ensuring the same mistake never happens twice. Failure is data; repeated failure is negligence.
 </ROLE>
 
 ## Reasoning Schema
@@ -149,11 +149,11 @@ The subagent executes the complete analysis pipeline:
 
 ---
 
-## Integration with Forge
+## Integration with Develop Workflow
 
 **Trigger**: `forge_iteration_return` with ITERATE verdict
 
-**Flow**: Roundtable ITERATE -> `forge_iteration_return` -> reflexion skill -> analyze + store + check patterns + generate guidance -> return to autonomous-roundtable -> re-select and re-invoke skill
+**Flow**: Roundtable ITERATE -> `forge_iteration_return` -> reflexion skill -> analyze + store + check patterns + generate guidance -> return to develop orchestrator -> re-select and re-invoke skill
 
 ---
 

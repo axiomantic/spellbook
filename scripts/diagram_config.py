@@ -5,6 +5,8 @@ Both generate_diagrams.py and check_diagram_freshness.py import from here
 to avoid duplicating tiering configuration and exclusion lists.
 """
 
+import hashlib
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -95,3 +97,47 @@ MANDATORY_COMMAND_PREFIXES: tuple[str, ...] = (
 
 # All agents are mandatory (small set, always worth diagramming)
 MANDATORY_AGENTS: bool = True
+
+
+# ---------------------------------------------------------------------------
+# Structure hashing
+# ---------------------------------------------------------------------------
+
+# Regex to match YAML frontmatter: opening --- at start of file, content, closing ---
+_FRONTMATTER_RE = re.compile(r"\A---\n.*?\n---\n?", re.DOTALL)
+
+# Regex to match markdown headings (ATX-style: lines starting with one or more #)
+_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+
+
+def strip_frontmatter(content: str) -> str:
+    """Remove YAML frontmatter from markdown content.
+
+    Frontmatter is delimited by ``---`` on its own line at the very start
+    of the file and a closing ``---`` line.
+    """
+    return _FRONTMATTER_RE.sub("", content)
+
+
+def extract_headings(content: str) -> list[str]:
+    """Extract all markdown heading lines from content.
+
+    Returns a list of strings like ``"## Section Name"`` preserving the
+    heading level prefix so that hierarchy changes are detected.
+    """
+    return [f"{m.group(1)} {m.group(2)}" for m in _HEADING_RE.finditer(content)]
+
+
+def compute_structure_hash(filepath: Path) -> str:
+    """Compute a SHA256 hash of a markdown file's heading structure.
+
+    The hash is based solely on the ATX-style headings (``#``, ``##``, etc.)
+    after stripping any YAML frontmatter.  This means changes to body text,
+    frontmatter metadata, or non-heading content do **not** alter the hash,
+    preventing unnecessary diagram regeneration for cosmetic edits.
+    """
+    content = filepath.read_text(encoding="utf-8")
+    content = strip_frontmatter(content)
+    headings = extract_headings(content)
+    structure = "\n".join(headings)
+    return hashlib.sha256(structure.encode("utf-8")).hexdigest()

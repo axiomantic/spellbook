@@ -2,103 +2,92 @@
 
 ## Workflow Diagram
 
-Resource governance agent that tracks scope creep, token usage, and project drift. Reports pure measurements without opinions or recommendations.
+## Emperor-Governor Agent - Overview
+
+This agent is a single-phase measurement workflow (no sub-phases requiring decomposition). One diagram captures the full flow.
 
 ```mermaid
 flowchart TD
-    Start([Start: Governance\nCheck Requested])
-    Invoke[/Honor-Bound Invocation/]
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Input/Output"/]
+        style L1 fill:#f9f9f9,stroke:#333
+        style L2 fill:#f9f9f9,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L4 fill:#f9f9f9,stroke:#333
+    end
 
-    EstBaseline["Establish Baseline:\nOriginal Scope"]
-    MapCurrent["Map Current State:\nWhat Exists Now"]
-    CalcDelta["Calculate Delta:\nAdded Beyond Original"]
-    IdentifyDrift["Identify Drift Factors:\nWhere Scope Expanded"]
+    START([Invocation]) --> HONOR[Honor-Bound Oath:<br>Objectivity commitment]
+    HONOR --> VALIDATE{Required inputs<br>present?}
 
-    MeasureCreep["Measure Scope\nCreep Factor"]
-    MeasureFocus["Measure Focus\nDrift Topics"]
-    MeasureResource["Measure Resource\nUsage vs Estimate"]
+    VALIDATE -->|original_intent<br>missing| ERR_OI[/"Error: missing_required_input<br>field: original_intent"/]
+    VALIDATE -->|current_state<br>missing| ERR_CS[/"Error: missing_required_input<br>field: current_state"/]
+    ERR_OI --> HALT_ERR([Halt: Request<br>from user])
+    ERR_CS --> HALT_ERR
 
-    CutCandidates["Identify Cut\nCandidates"]
+    VALIDATE -->|Both present| BASELINE
 
-    OpinionGate{"Pure Measurement?\nNo Opinion Leaked?"}
-    RemoveOpinion["Remove Opinions\nand Recommendations"]
+    subgraph Measurement Protocol
+        BASELINE["1. Establish baseline:<br>Original scope items"]
+        MAP["2. Map current state:<br>What exists now"]
+        DELTA["3. Calculate delta:<br>Items added beyond original"]
+        DRIFT["4. Identify drift factors:<br>Where scope expanded"]
+        BASELINE --> MAP --> DELTA --> DRIFT
+    end
 
-    DefensibleGate{"Numbers\nDefensible?"}
-    ReCount["Re-count and\nVerify Metrics"]
+    subgraph Metric Calculation
+        SCF["scope_creep_factor =<br>current_items / original_items"]
+        FD["focus_drift =<br>Count tangential topics"]
+        RU["resource_usage =<br>Tokens/time spent vs estimated"]
+        DRIFT --> SCF
+        DRIFT --> FD
+        DRIFT --> RU
+    end
 
-    GenResourceReport["Generate Resource\nReport (JSON)"]
-    GenDriftAssessment["Generate Drift\nAssessment"]
+    SCF --> COMPILE
+    FD --> COMPILE
+    RU --> COMPILE
 
-    Done([End: Report Delivered])
+    COMPILE["Compile outputs:<br>resource_report JSON +<br>drift_assessment text +<br>cut_candidates list"]
 
-    Start --> Invoke
-    Invoke --> EstBaseline
-    EstBaseline --> MapCurrent
-    MapCurrent --> CalcDelta
-    CalcDelta --> IdentifyDrift
+    COMPILE --> REFLECTION{Reflection gate:<br>Is this pure measurement?<br>Any opinion leaked?<br>Numbers defensible?}
 
-    IdentifyDrift --> MeasureCreep
-    MeasureCreep --> MeasureFocus
-    MeasureFocus --> MeasureResource
-    MeasureResource --> CutCandidates
+    REFLECTION -->|Opinion detected| REVISE[Remove opinions,<br>re-measure]
+    REVISE --> REFLECTION
 
-    CutCandidates --> OpinionGate
-    OpinionGate -->|Opinion Found| RemoveOpinion
-    RemoveOpinion --> OpinionGate
-    OpinionGate -->|Pure Data| DefensibleGate
+    REFLECTION -->|Pure measurement<br>confirmed| DELIVER
 
-    DefensibleGate -->|Not Defensible| ReCount
-    ReCount --> DefensibleGate
-    DefensibleGate -->|Defensible| GenResourceReport
+    DELIVER[/"Deliver report:<br>No recommendations,<br>no 'should' or 'could',<br>just measurements"/]
+    DELIVER --> DONE([Complete])
 
-    GenResourceReport --> GenDriftAssessment
-    GenDriftAssessment --> Done
-
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Invoke fill:#4CAF50,color:#fff
-    style EstBaseline fill:#2196F3,color:#fff
-    style MapCurrent fill:#2196F3,color:#fff
-    style CalcDelta fill:#2196F3,color:#fff
-    style IdentifyDrift fill:#2196F3,color:#fff
-    style MeasureCreep fill:#2196F3,color:#fff
-    style MeasureFocus fill:#2196F3,color:#fff
-    style MeasureResource fill:#2196F3,color:#fff
-    style CutCandidates fill:#2196F3,color:#fff
-    style RemoveOpinion fill:#2196F3,color:#fff
-    style ReCount fill:#2196F3,color:#fff
-    style GenResourceReport fill:#2196F3,color:#fff
-    style GenDriftAssessment fill:#2196F3,color:#fff
-    style OpinionGate fill:#f44336,color:#fff
-    style DefensibleGate fill:#f44336,color:#fff
+    style HALT_ERR fill:#ff6b6b,stroke:#333,color:#fff
+    style REFLECTION fill:#ff6b6b,stroke:#333,color:#fff
+    style DONE fill:#51cf66,stroke:#333
+    style START fill:#51cf66,stroke:#333
 ```
 
-## Legend
+### Node-to-Source Mapping
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation / start-end |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
-
-## Cross-Reference
-
-| Node | Source Reference |
+| Node | Source Location |
 |------|----------------|
-| Honor-Bound Invocation | Lines 14-15: Honor pledge before measurement |
-| Establish Baseline | Lines 53: Analysis step 1 - original scope |
-| Map Current State | Lines 54: Analysis step 2 - what exists now |
-| Calculate Delta | Lines 55: Analysis step 3 - added beyond original |
-| Identify Drift Factors | Lines 56: Analysis step 4 - where scope expanded |
-| Measure Scope Creep Factor | Lines 61: current_items / original_items |
-| Measure Focus Drift Topics | Lines 62: Tangential topics count |
-| Measure Resource Usage | Lines 63: Tokens/time spent vs estimated |
-| Identify Cut Candidates | Lines 90-96: Items not in original scope |
-| Pure Measurement? | Lines 74-75: Reflection - is this pure measurement? |
-| Numbers Defensible? | Lines 76: Would another observer reach same counts? |
-| Generate Resource Report | Lines 81-103: JSON resource report format |
-| Generate Drift Assessment | Lines 107-131: Drift assessment markdown format |
+| HONOR | Line 15: Honor-Bound Invocation |
+| VALIDATE | Lines 34-40: Inputs table + missing input error |
+| ERR_OI / ERR_CS | Line 40: Missing required input JSON error |
+| BASELINE - DRIFT | Lines 52-58: Analysis block in Measurement Protocol |
+| SCF / FD / RU | Lines 61-66: Measurement block metrics |
+| COMPILE | Lines 44-48: Outputs table (resource_report, drift_assessment, cut_candidates) |
+| REFLECTION | Lines 75-78: Reflection block - purity check |
+| DELIVER | Lines 68-73: Report block - no opinions, just measurements |
+
+### Key Constraints (from FORBIDDEN block, lines 135-141)
+
+- No opinions in measurements
+- No action recommendations
+- No hiding bad numbers
+- No cross-project comparison (only vs. original intent)
+- Drift is information, not failure
 
 ## Agent Content
 

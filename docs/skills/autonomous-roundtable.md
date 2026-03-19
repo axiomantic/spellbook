@@ -1,236 +1,194 @@
 # autonomous-roundtable
 
-Multi-perspective project decomposition using archetypal roles to surface blind spots and generate balanced designs. Decomposes projects into features and drives each through discovery, design, planning, and implementation with roundtable consensus at decision points. This core spellbook skill powers the Forge autonomous development workflow.
-
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.
+> DEPRECATED: This skill has been absorbed into the develop skill. Use develop instead.
+The capabilities of autonomous-roundtable (project decomposition, roundtable gating,
+reflexion on ITERATE) are now available through develop's dialectic_mode and
+token_enforcement preferences. Set dialectic_mode to "roundtable" in Phase 0.4
+for equivalent behavior.
 
 ## Workflow Diagram
 
-Workflow for the autonomous-roundtable skill (Forged system). A meta-orchestrator that decomposes projects into features, processes each through DISCOVER, DESIGN, PLAN, IMPLEMENT, COMPLETE stages with roundtable consensus gating. Runs exclusively as a subagent, with handoff protocol for context overflow.
+> **Deprecated:** This skill has been absorbed into `develop`. These diagrams capture the original workflow for reference. See [develop diagrams](./develop.md) for the current equivalent.
+
+## Overview: Forge Loop
 
 ```mermaid
-flowchart TD
-    Start([Start]) --> SpawnSub["Spawn orchestrator subagent"]
-    SpawnSub --> InitProject["forge_project_init"]
-    InitProject --> DepOrder["Order features by deps"]
-    DepOrder --> NextFeature{Next feature?}
-
-    NextFeature -->|Yes| CheckDeps{Dependencies COMPLETE?}
-    NextFeature -->|No| ProjectDone([Project Complete])
-
-    CheckDeps -->|No| SkipFeature["Skip, process later"]
-    CheckDeps -->|Yes| IterStart["forge_iteration_start"]
-    SkipFeature --> NextFeature
-
-    IterStart --> SelectSkill["forge_select_skill"]
-    SelectSkill --> InvokeSkill["Invoke stage skill"]
-
-    subgraph Stages["Stage Skills"]
-        Discover["gathering-requirements"]
-        Design["brainstorming"]
-        Plan["writing-plans"]
-        Implement["develop"]
-        Complete["Final roundtable"]
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/Skill Reference/]
+        L5[[Subagent Dispatch]]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L4 fill:#4a9eff,stroke:#333,color:#fff
+        style L5 fill:#4a9eff,stroke:#333,color:#fff
     end
 
-    InvokeSkill --> Discover
-    InvokeSkill --> Design
-    InvokeSkill --> Plan
-    InvokeSkill --> Implement
-    InvokeSkill --> Complete
+    START([User invokes<br>autonomous-roundtable]) --> SPAWN[[Main chat spawns<br>orchestrator subagent]]
+    SPAWN --> INIT[forge_project_init]
+    INIT --> FEATURES[Get features<br>in dependency order]
+    FEATURES --> NEXT_FEAT{More features<br>remaining?}
 
-    Discover --> Roundtable
-    Design --> Roundtable
-    Plan --> Roundtable
-    Implement --> Roundtable
-    Complete --> Roundtable
+    NEXT_FEAT -->|No| DONE([All features COMPLETE])
+    NEXT_FEAT -->|Yes| DEP_CHECK{Dependencies<br>satisfied?}
 
-    Roundtable["roundtable_convene"]
-    Roundtable --> Verdict{Verdict?}
+    DEP_CHECK -->|No| SKIP[Skip feature,<br>try next]
+    SKIP --> NEXT_FEAT
+    DEP_CHECK -->|Yes| ITER_START[forge_iteration_start]
 
-    Verdict -->|APPROVE| Advance["forge_iteration_advance"]
-    Verdict -->|ITERATE| IterReturn["forge_iteration_return"]
+    ITER_START --> STAGE_LOOP["Stage loop<br>(see Detail diagram)"]
+    STAGE_LOOP --> COMPLETE{Feature<br>COMPLETE?}
 
-    Advance --> LastStage{Last stage?}
-    LastStage -->|No| SelectSkill
-    LastStage -->|Yes| FeatureDone["Feature COMPLETE"]
-    FeatureDone --> NextFeature
+    COMPLETE -->|Yes| NEXT_FEAT
+    COMPLETE -->|No / ESCALATED| ESCALATE[Report to user,<br>continue non-blocked features]
+    ESCALATE --> NEXT_FEAT
 
-    IterReturn --> Reflexion["reflexion skill"]
-    Reflexion --> FailCount{3+ failures?}
-    FailCount -->|Yes| Escalate["ESCALATE to user"]
-    FailCount -->|No| SelectSkill
-
-    Escalate --> ContinueOthers["Continue non-blocked"]
-    ContinueOthers --> NextFeature
-
-    %% Context overflow
-    InvokeSkill -.->|"<20% capacity"| Handoff["Generate HANDOFF"]
-    Handoff -.-> ReturnMain["Return to main chat"]
-    ReturnMain -.-> SpawnSuccessor["Spawn successor"]
-    SpawnSuccessor -.-> InitProject
-
-    style Start fill:#4CAF50,color:#fff
-    style ProjectDone fill:#4CAF50,color:#fff
-    style SpawnSub fill:#4CAF50,color:#fff
-    style Discover fill:#4CAF50,color:#fff
-    style Design fill:#4CAF50,color:#fff
-    style Plan fill:#4CAF50,color:#fff
-    style Implement fill:#4CAF50,color:#fff
-    style Complete fill:#4CAF50,color:#fff
-    style Reflexion fill:#4CAF50,color:#fff
-    style InitProject fill:#2196F3,color:#fff
-    style DepOrder fill:#2196F3,color:#fff
-    style SkipFeature fill:#2196F3,color:#fff
-    style IterStart fill:#2196F3,color:#fff
-    style SelectSkill fill:#2196F3,color:#fff
-    style InvokeSkill fill:#2196F3,color:#fff
-    style Roundtable fill:#2196F3,color:#fff
-    style Advance fill:#2196F3,color:#fff
-    style IterReturn fill:#2196F3,color:#fff
-    style FeatureDone fill:#2196F3,color:#fff
-    style Escalate fill:#2196F3,color:#fff
-    style ContinueOthers fill:#2196F3,color:#fff
-    style Handoff fill:#2196F3,color:#fff
-    style ReturnMain fill:#2196F3,color:#fff
-    style SpawnSuccessor fill:#2196F3,color:#fff
-    style NextFeature fill:#FF9800,color:#fff
-    style CheckDeps fill:#FF9800,color:#fff
-    style LastStage fill:#FF9800,color:#fff
-    style FailCount fill:#FF9800,color:#fff
-    style Verdict fill:#f44336,color:#fff
+    style START fill:#f5f5f5,stroke:#333
+    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
+    style INIT fill:#f5f5f5,stroke:#333
+    style DONE fill:#51cf66,stroke:#333
+    style ESCALATE fill:#ff6b6b,stroke:#333,color:#fff
 ```
 
-## Legend
+## Detail: Stage Execution and Roundtable Gating
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+```mermaid
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision / Gate}
+        L3([Terminal])
+        L4[/Skill Invocation/]
+        LG>Roundtable Gate]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L4 fill:#4a9eff,stroke:#333,color:#fff
+        style LG fill:#ff6b6b,stroke:#333,color:#fff
+    end
 
-## Cross-Reference
+    ENTRY([Enter stage loop]) --> ANALYSIS["&lt;analysis&gt;<br>Check: feature, stage,<br>deps, context capacity"]
+    ANALYSIS --> CTX_CHECK{Context<br>< 20% capacity?}
 
-| Node | Source Reference |
-|------|----------------|
-| Spawn orchestrator subagent | SKILL.md: MANDATE - "Forge NEVER runs in main chat" |
-| forge_project_init | SKILL.md: MCP Tools - Project initialization |
-| Order features by deps | SKILL.md: Invariant 2 - "Dependency Order" |
-| forge_iteration_start | SKILL.md: MCP Tools - Iteration start |
-| forge_select_skill | SKILL.md: MCP Tools - Skill selection, priority rules |
-| gathering-requirements | SKILL.md: Stages table - DISCOVER stage |
-| brainstorming | SKILL.md: Stages table - DESIGN stage |
-| writing-plans | SKILL.md: Stages table - PLAN stage |
-| develop | SKILL.md: Stages table - IMPLEMENT stage |
-| Final roundtable | SKILL.md: Stages table - COMPLETE stage |
-| roundtable_convene | SKILL.md: MCP Tools - Roundtable convene |
-| Verdict (APPROVE/ITERATE) | SKILL.md: Forge Loop - roundtable outcomes |
-| forge_iteration_advance | SKILL.md: Forge Loop - advance to next stage |
-| forge_iteration_return | SKILL.md: ITERATE Handling - return for reflexion |
-| reflexion skill | SKILL.md: Invariant 4 - "Feedback to Reflexion" |
-| 3+ failures escalation | SKILL.md: ITERATE Handling - "After 3 failures: ESCALATE" |
-| HANDOFF | SKILL.md: Context Overflow Protocol - handoff format |
-| Spawn successor | SKILL.md: Context Overflow Protocol - main chat spawns successor |
+    CTX_CHECK -->|Yes| HANDOFF([Generate HANDOFF,<br>return to main chat])
+    CTX_CHECK -->|No| SELECT[forge_select_skill]
+
+    SELECT --> STAGE{Current stage?}
+    STAGE -->|DISCOVER| S1[/gathering-requirements/]
+    STAGE -->|DESIGN| S2[/brainstorming/]
+    STAGE -->|PLAN| S3[/writing-plans/]
+    STAGE -->|IMPLEMENT| S4[/develop/]
+    STAGE -->|COMPLETE| S5[Final roundtable]
+
+    S1 --> ARTIFACT[Produce artifact]
+    S2 --> ARTIFACT
+    S3 --> ARTIFACT
+    S4 --> ARTIFACT
+    S5 --> ARTIFACT
+
+    ARTIFACT --> RT>roundtable_convene]
+    RT --> DEBATE[roundtable_debate]
+    DEBATE --> PROCESS[process_roundtable_response]
+    PROCESS --> VERDICT{Verdict?}
+
+    VERDICT -->|APPROVE| REFLECT["&lt;reflection&gt;<br>Log artifacts, verdict"]
+    REFLECT --> ADVANCE[forge_iteration_advance]
+    ADVANCE --> NEXT_STAGE{More stages?}
+    NEXT_STAGE -->|Yes| ANALYSIS
+    NEXT_STAGE -->|No| FEATURE_DONE([Feature COMPLETE])
+
+    VERDICT -->|ITERATE| FAIL_COUNT{Iteration<br>count >= 3?}
+    FAIL_COUNT -->|Yes| ESCALATE_OUT([ESCALATE to user])
+    FAIL_COUNT -->|No| RETURN[forge_iteration_return]
+    RETURN --> REFLEXION[/reflexion skill/]
+    REFLEXION --> RESELECT[forge_select_skill<br>with feedback]
+    RESELECT --> RETRY_STAGE{Same stage}
+    RETRY_STAGE --> STAGE
+
+    style ENTRY fill:#f5f5f5,stroke:#333
+    style HANDOFF fill:#ff6b6b,stroke:#333,color:#fff
+    style FEATURE_DONE fill:#51cf66,stroke:#333
+    style ESCALATE_OUT fill:#ff6b6b,stroke:#333,color:#fff
+    style RT fill:#ff6b6b,stroke:#333,color:#fff
+    style S1 fill:#4a9eff,stroke:#333,color:#fff
+    style S2 fill:#4a9eff,stroke:#333,color:#fff
+    style S3 fill:#4a9eff,stroke:#333,color:#fff
+    style S4 fill:#4a9eff,stroke:#333,color:#fff
+    style S5 fill:#4a9eff,stroke:#333,color:#fff
+    style REFLEXION fill:#4a9eff,stroke:#333,color:#fff
+```
+
+## Detail: Context Overflow and Handoff
+
+```mermaid
+graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L5[[Subagent Dispatch]]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L5 fill:#4a9eff,stroke:#333,color:#fff
+    end
+
+    CHECK{Context<br>< 20% capacity?} -->|Yes| GEN[Generate HANDOFF:<br>project, feature, stage,<br>iteration, call stack,<br>completed, in-progress,<br>decisions, corrections]
+    GEN --> RETURN([Return handoff<br>to main chat])
+    RETURN --> MAIN[Main chat receives<br>handoff]
+    MAIN --> SPAWN[[Spawn successor<br>subagent with<br>full handoff in prompt]]
+    SPAWN --> STATUS[forge_project_status]
+    STATUS --> RESUME[Resume at exact<br>position from handoff]
+
+    style RETURN fill:#ff6b6b,stroke:#333,color:#fff
+    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
+    style RESUME fill:#51cf66,stroke:#333
+```
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram | Description |
+|---|---|---|
+| "Main chat spawns orchestrator subagent" | Context Overflow and Handoff | Subagent spawning and handoff lifecycle |
+| "Stage loop" | Stage Execution and Roundtable Gating | Per-stage skill selection, execution, and roundtable verdict handling |
+| "Report to user" | Stage Execution (ESCALATE) | After 3 ITERATE failures on a stage |
+
+## Migration Reference
+
+| Former Capability | New Location | Configuration |
+|---|---|---|
+| Project decomposition | `develop` COMPLEX tier | Automatic based on complexity classification |
+| Roundtable validation | `develop` Phase 0.4 | `dialectic_mode: "roundtable"` |
+| Token enforcement | `develop` Phase 0.4 | `token_enforcement: "gate_level"` or `"every_step"` |
+| Reflexion on ITERATE | `develop` (built-in) | Automatic when roundtable returns ITERATE verdict |
+| Context overflow handoff | `develop` (built-in) | Automatic via compaction and session resume |
 
 ## Skill Content
 
 ``````````markdown
-# Autonomous Roundtable
-
-<ROLE>Meta-Orchestrator of Forged. Decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills. Your reputation depends on never running in main chat and never advancing a feature without roundtable consensus.</ROLE>
+# Autonomous Roundtable (Deprecated)
 
 <CRITICAL>
-## Execution Model: Subagent Only
+This skill is deprecated. Its functionality has been absorbed into the `develop` skill.
 
-**Forge NEVER runs in main chat.** Main chat spawns orchestrator subagent using `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general):
+**Migration:**
+- Project decomposition: Use develop with COMPLEX tier (automatic work item decomposition)
+- Roundtable validation: Set `dialectic_mode: "roundtable"` in Phase 0.4 preferences
+- Token enforcement: Set `token_enforcement: "gate_level"` or `"every_step"` in Phase 0.4
+- Reflexion on ITERATE: Still invoked automatically by develop when roundtable returns ITERATE
 
-```
-Task(subagent_type="[CURRENT_AGENT_TYPE]", description="Forge orchestrator",
-  prompt="<SKILL>autonomous-roundtable</SKILL>\nPROJECT: [desc]\nPATH: [path]\nBEGIN FORGE LOOP.")
-```
-
-OpenCode: use `yolo` or `yolo-focused` when parent has autonomous permissions.
+**To use:** Invoke the `develop` skill instead. Configure dialectic preferences in Phase 0.4.
 </CRITICAL>
-
-## Context Overflow Protocol
-
-At <20% capacity: generate HANDOFF, return. Main chat spawns successor with handoff.
-
-**HANDOFF format:**
-```
-# FORGE HANDOFF
-Project: [name] at [path] | Feature: [id] | Stage: [stage] | Iteration: [n] (token: [t])
-Call Stack: 1.Big goal 2.Sub-goal 3.Task 4.Exact action in progress
-Completed: [list] | In-Progress: [list] | Decisions: [table] | Corrections: [list]
-Resume: forge_project_status([path]), then [exact position]
-```
-
-Main chat on receiving handoff: spawn successor with full handoff in prompt.
-
-<analysis>Before phase: feature, stage, deps satisfied, context capacity.</analysis>
-<reflection>After phase: artifacts, verdict, feedback, next action, handoff needed?</reflection>
 
 ## Invariant Principles
 
-1. **Subagent Only**: Never main chat
-2. **Dependency Order**: No feature before deps COMPLETE
-3. **Roundtable Guards**: Stage transitions need consensus
-4. **Feedback→Reflexion**: ITERATE triggers reflexion skill
-5. **Context Flows**: Pass knowledge forward
-6. **Tokens Enforce**: Use iteration tool tokens
-7. **Graceful Handoff**: At 80% capacity, handoff
+1. **Deprecated** - Do not use this skill. Use `develop` instead.
 
-## Forge Loop
-
-```
-forge_project_init → [features in dep order]
-Per feature: forge_iteration_start → forge_select_skill → Skill → roundtable_convene
-  APPROVE → forge_iteration_advance → next stage
-  ITERATE → reflexion → re-select skill
-```
-
-## Stages
-
-| Stage     | Skill                  | Artifact     |
-| --------- | ---------------------- | ------------ |
-| DISCOVER  | gathering-requirements | Requirements |
-| DESIGN    | brainstorming          | Design doc   |
-| PLAN      | writing-plans          | Impl plan    |
-| IMPLEMENT | develop  | Code+tests   |
-| COMPLETE  | (final roundtable)     | Report       |
-
-## MCP Tools
-
-**Project**: `forge_project_init`, `forge_project_status`, `forge_feature_update`, `forge_select_skill`
-**Iteration**: `forge_iteration_start`, `forge_iteration_advance`, `forge_iteration_return`
-**Roundtable**: `roundtable_convene`, `roundtable_debate`, `process_roundtable_response`
-
-## Skill Selection
-
-Priority: 1.Error recovery→debugging 2.Feedback-driven→stage skill 3.Stage defaults
-
-## ITERATE Handling
-
-`forge_iteration_return` → `reflexion` skill → `forge_select_skill` with feedback → re-invoke.
-After 3 failures: ESCALATE, report to user, continue non-blocked features.
-
-<FORBIDDEN>
-- Running in main chat (MUST subagent)
-- Ignoring handoff signal
-- Features before deps COMPLETE
-- Stages without roundtable
-- Ignoring ITERATE/skipping reflexion
-- 3+ failures without escalation
-- Running until exhaustion (handoff at 80%)
-</FORBIDDEN>
-
-## Self-Check
-
-Orchestrator: [ ]Subagent [ ]Deps ordered [ ]Roundtables [ ]ITERATE→reflexion [ ]Handoff before exhaustion
-Main chat: [ ]Spawned subagent [ ]Monitor handoff/complete [ ]Spawn successor
-
-<FINAL_EMPHASIS>Features flow through stages. Artifacts face roundtable. Consensus advances. Feedback teaches. Context overflows gracefully. Successors continue mid-stride.</FINAL_EMPHASIS>
+<analysis>This skill is deprecated. Redirect to develop skill.</analysis>
+<reflection>If invoked, redirect user to the develop skill with dialectic_mode: "roundtable".</reflection>
 ``````````

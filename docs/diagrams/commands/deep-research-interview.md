@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/deep-research-interview.md", "source_hash": "sha256:8537e8444ffb5ec37986b346481ebdf11deb77d14de3c4c2dc3da1e47d439427", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/deep-research-interview.md","source_hash": "sha256:11da5f00df27eff0fd64fb8d81593be9c346be27aa99a24ea222e691fa27da63","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: deep-research-interview
 
 Transform a raw research request into a Research Brief through assumption extraction, disambiguation, structured interview across five categories, and quality-gated brief generation.

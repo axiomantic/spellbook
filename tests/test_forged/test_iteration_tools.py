@@ -763,3 +763,140 @@ class TestTokenSystem:
         assert advance_b["status"] == "advanced"
         assert advance_a["current_stage"] == "DESIGN"
         assert advance_b["current_stage"] == "DESIGN"
+
+
+class TestForgeIterationStartDependencyEnforcement:
+    """Tests for dependency enforcement in forge_iteration_start."""
+
+    def _setup_project_graph(self, tmp_path, features):
+        """Helper to create a project graph with given features."""
+        from spellbook_mcp.forged.project_tools import (
+            _save_project_graph,
+        )
+        from spellbook_mcp.forged.project_graph import ProjectGraph, FeatureNode, compute_dependency_order
+
+        feature_nodes = {}
+        for feat in features:
+            node = FeatureNode(
+                id=feat["id"],
+                name=feat["name"],
+                description=feat.get("description", "test"),
+                depends_on=feat.get("depends_on", []),
+                status=feat.get("status", "pending"),
+                estimated_complexity="medium",
+                assigned_skill=None,
+                artifacts=[],
+            )
+            feature_nodes[node.id] = node
+
+        dependency_order = compute_dependency_order(feature_nodes)
+        graph = ProjectGraph(
+            project_name="test-project",
+            features=feature_nodes,
+            dependency_order=dependency_order,
+            current_feature=None,
+            completed_features=[f["id"] for f in features if f.get("status") == "complete"],
+        )
+        _save_project_graph(str(tmp_path), graph)
+
+    def test_blocks_when_deps_incomplete(self, tmp_path):
+        """forge_iteration_start returns blocked when deps are not COMPLETE."""
+        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        self._setup_project_graph(tmp_path, [
+            {"id": "auth", "name": "auth", "status": "complete"},
+            {"id": "api", "name": "api", "depends_on": ["auth"], "status": "pending"},
+            {"id": "ui", "name": "ui", "depends_on": ["api"], "status": "pending"},
+        ])
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = get_forged_connection(str(db_path))
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = str(tmp_path)
+
+                result = forge_iteration_start(
+                    feature_name="ui",
+                    starting_stage="IMPLEMENT",
+                )
+
+        assert result["status"] == "blocked"
+        assert "dependencies" in result
+        assert any(d["name"] == "api" and d["blocking"] for d in result["dependencies"])
+
+    def test_allows_when_deps_complete(self, tmp_path):
+        """forge_iteration_start proceeds when all deps are COMPLETE."""
+        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        self._setup_project_graph(tmp_path, [
+            {"id": "auth", "name": "auth", "status": "complete"},
+            {"id": "api", "name": "api", "depends_on": ["auth"], "status": "complete"},
+            {"id": "ui", "name": "ui", "depends_on": ["api"], "status": "pending"},
+        ])
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = get_forged_connection(str(db_path))
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = str(tmp_path)
+
+                result = forge_iteration_start(
+                    feature_name="ui",
+                    starting_stage="IMPLEMENT",
+                )
+
+        assert result["status"] in ("started", "resumed")
+        assert "token" in result
+
+    def test_no_deps_proceeds_normally(self, tmp_path):
+        """forge_iteration_start proceeds when feature has no deps."""
+        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        self._setup_project_graph(tmp_path, [
+            {"id": "standalone", "name": "standalone", "status": "pending"},
+        ])
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = get_forged_connection(str(db_path))
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = str(tmp_path)
+
+                result = forge_iteration_start(
+                    feature_name="standalone",
+                    starting_stage="DISCOVER",
+                )
+
+        assert result["status"] == "started"
+        assert "token" in result
+
+    def test_no_project_graph_proceeds_normally(self, tmp_path):
+        """forge_iteration_start proceeds when no project graph exists (no deps to check)."""
+        from spellbook_mcp.forged.iteration_tools import forge_iteration_start
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+
+        # No project graph created
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = get_forged_connection(str(db_path))
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = str(tmp_path)
+
+                result = forge_iteration_start(
+                    feature_name="any-feature",
+                    starting_stage="DISCOVER",
+                )
+
+        assert result["status"] == "started"

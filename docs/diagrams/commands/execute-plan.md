@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/execute-plan.md", "source_hash": "sha256:4d9f434d63f49ad20b208b8faceaae810e2bcd97e26283313c1919485a44ce46", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/execute-plan.md","source_hash": "sha256:1125c4729a7efbb858c89d7629d0eb5b2ec976dabb73a1e56584f60977215381","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: execute-plan
 
 Execute implementation plans with structured review checkpoints via the executing-plans skill.
