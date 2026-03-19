@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from spellbook.core.db import get_connection
-from spellbook.preferences import CoordinationBackend, load_coordination_config
+from spellbook.core.preferences import CoordinationBackend, load_coordination_config
 
 # =============================================================================
 # Constants

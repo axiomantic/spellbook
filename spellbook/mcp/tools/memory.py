@@ -5,7 +5,7 @@ import asyncio
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook.branch_ancestry import get_current_branch
+from spellbook.core.branch_ancestry import get_current_branch
 from spellbook.core.db import get_db_path
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.memory.consolidation import consolidate_batch, should_consolidate

@@ -75,7 +75,7 @@ class TestDoLogEventBranch:
 class TestDoMemoryRecallBranch:
     def test_branch_and_repo_path_forwarded(self, db_path, git_repo):
         """do_memory_recall should forward branch/repo_path so scoring activates."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         from spellbook.memory.store import insert_memory
 
         clear_ancestry_cache()

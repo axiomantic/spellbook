@@ -137,7 +137,7 @@ class TestGetBranchAssociations:
 class TestRecallByQueryBranch:
     def test_same_branch_boosted(self, db_with_memories, git_repo):
         """Memories on same branch should score higher (1.5x multiplier)."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         results = recall_by_query(
             db_path=db_with_memories,
@@ -164,7 +164,7 @@ class TestRecallByQueryBranch:
 
     def test_ancestor_branch_boosted(self, db_with_memories, git_repo):
         """Memories on ancestor branch get 1.2x boost when recalling from descendant."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         # Recall from feature-x: main is ANCESTOR of feature-x
         results = recall_by_query(
@@ -207,7 +207,7 @@ class TestRecallByQueryBranch:
 
     def test_returns_branch_field(self, db_with_memories, git_repo):
         """Results should include the branch field from the memory with exact expected values."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         results = recall_by_query(
             db_path=db_with_memories,
@@ -223,7 +223,7 @@ class TestRecallByQueryBranch:
 
     def test_lazy_junction_population_on_ancestor(self, db_with_memories, git_repo):
         """When recall finds ANCESTOR relationship, it should insert ancestor association."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         # Recall from feature-x: main is ancestor of feature-x
         recall_by_query(
@@ -252,7 +252,7 @@ class TestRecallBranchOrderingWithEqualBaseScores:
 
     def test_same_branch_ranks_above_unrelated_equal_importance(self, db_path, git_repo):
         """With equal importance, same-branch (1.5x) must rank above unrelated (0.8x)."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
 
         # Create an unrelated branch in the git repo
@@ -303,7 +303,7 @@ class TestRecallBranchOrderingWithEqualBaseScores:
 class TestRecallByFilePathBranch:
     def test_file_path_recall_with_branch(self, db_with_memories, git_repo):
         """recall_by_file_path should apply branch weighting when repo_path is provided."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         results = recall_by_file_path(
             db_path=db_with_memories,
@@ -334,7 +334,7 @@ class TestRecallByFilePathBranch:
 
     def test_file_path_recall_lazy_junction_population(self, db_with_memories, git_repo):
         """recall_by_file_path should lazily populate junction for ancestor relationships."""
-        from spellbook.branch_ancestry import clear_ancestry_cache
+        from spellbook.core.branch_ancestry import clear_ancestry_cache
         clear_ancestry_cache()
         recall_by_file_path(
             db_path=db_with_memories,

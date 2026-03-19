@@ -28,7 +28,7 @@ class TestWorkPacketE2E:
     def test_full_work_packet_lifecycle(self, tmp_path):
         """Test creating, reading, and updating work packet artifacts."""
         from spellbook.core.models import Manifest, Track, Checkpoint, CompletionMarker
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook.core.command_utils import atomic_write_json, read_json_safe
 
         # Step 1: Create manifest
         packet_dir = tmp_path / "work-packets" / "test-feature"
@@ -120,7 +120,7 @@ class TestWorkPacketE2E:
 
     def test_concurrent_checkpoint_updates(self, tmp_path):
         """Test that concurrent checkpoint updates don't corrupt files."""
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook.core.command_utils import atomic_write_json, read_json_safe
 
         checkpoint_path = tmp_path / "checkpoint.json"
         results = []
@@ -169,7 +169,7 @@ class TestWorkPacketE2E:
 
     def test_packet_file_parsing(self, tmp_path):
         """Test parsing work packet markdown files with YAML frontmatter."""
-        from spellbook.command_utils import parse_packet_file
+        from spellbook.core.command_utils import parse_packet_file
 
         packet_content = """---
 format_version: "1.0.0"
@@ -226,7 +226,7 @@ class TestTerminalUtilsE2E:
     @pytest.mark.skipif(sys.platform != "darwin", reason="macOS only")
     def test_macos_terminal_detection_real(self):
         """Test actual terminal detection on macOS (no mocking)."""
-        from spellbook.terminal_utils import detect_macos_terminal
+        from spellbook.daemon.terminal import detect_macos_terminal
 
         # Should return one of the known terminals (case-sensitive)
         result = detect_macos_terminal()
@@ -235,7 +235,7 @@ class TestTerminalUtilsE2E:
     @pytest.mark.skipif(sys.platform != "linux", reason="Linux only")
     def test_linux_terminal_detection_real(self):
         """Test actual terminal detection on Linux (no mocking)."""
-        from spellbook.terminal_utils import detect_linux_terminal
+        from spellbook.daemon.terminal import detect_linux_terminal
 
         # Should return a terminal name
         result = detect_linux_terminal()
@@ -244,7 +244,7 @@ class TestTerminalUtilsE2E:
 
     def test_detect_terminal_returns_string(self):
         """Test that detect_terminal always returns a string."""
-        from spellbook.terminal_utils import detect_terminal
+        from spellbook.daemon.terminal import detect_terminal
 
         result = detect_terminal()
         assert isinstance(result, str)
@@ -252,10 +252,10 @@ class TestTerminalUtilsE2E:
 
     def test_spawn_command_generation(self):
         """Test that spawn functions generate proper commands."""
-        from spellbook.terminal_utils import spawn_macos_terminal, spawn_linux_terminal
+        from spellbook.daemon.terminal import spawn_macos_terminal, spawn_linux_terminal
 
         # Mock subprocess.Popen for macOS (uses Popen, not run)
-        with patch('spellbook.terminal_utils.subprocess.Popen') as mock_popen:
+        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
             mock_popen.return_value = MagicMock(pid=12345)
 
             # Test macOS iTerm2
@@ -268,7 +268,7 @@ class TestTerminalUtilsE2E:
             call_args = mock_popen.call_args
             assert call_args[0][0][0] == "osascript"
 
-        with patch('spellbook.terminal_utils.subprocess.Popen') as mock_popen:
+        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
             mock_popen.return_value = MagicMock(pid=67890)
 
             # Test Linux gnome-terminal
@@ -283,10 +283,10 @@ class TestMCPToolE2E:
 
     def test_spawn_workflow_auto_detection(self):
         """Test spawn workflow with auto terminal detection (tests underlying functions)."""
-        from spellbook.terminal_utils import spawn_terminal_window
+        from spellbook.daemon.terminal import spawn_terminal_window
 
-        with patch('spellbook.terminal_utils.detect_terminal') as mock_detect:
-            with patch('spellbook.terminal_utils.subprocess.Popen') as mock_popen:
+        with patch('spellbook.daemon.terminal.detect_terminal') as mock_detect:
+            with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
                 # Mock detect to return iTerm2
                 mock_detect.return_value = "iTerm2"
                 mock_popen.return_value = MagicMock(pid=12345)
@@ -307,9 +307,9 @@ class TestMCPToolE2E:
 
     def test_spawn_workflow_explicit_terminal(self):
         """Test spawn workflow with explicit terminal."""
-        from spellbook.terminal_utils import spawn_terminal_window
+        from spellbook.daemon.terminal import spawn_terminal_window
 
-        with patch('spellbook.terminal_utils.subprocess.Popen') as mock_popen:
+        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
             mock_popen.return_value = MagicMock(pid=67890)
 
             result = spawn_terminal_window(
@@ -328,11 +328,11 @@ class TestPreferencesE2E:
 
     def test_preferences_persistence(self, tmp_path, monkeypatch):
         """Test that preferences persist across calls."""
-        from spellbook.preferences import load_preferences, save_preference, get_preferences_path
+        from spellbook.core.preferences import load_preferences, save_preference, get_preferences_path
 
         # Monkeypatch the preferences path to use tmp_path
         prefs_path = tmp_path / "preferences.json"
-        monkeypatch.setattr('spellbook.preferences.get_preferences_path', lambda: prefs_path)
+        monkeypatch.setattr('spellbook.core.preferences.get_preferences_path', lambda: prefs_path)
 
         # Save a preference (dot-separated key)
         save_preference("terminal.program", "iterm2")
@@ -348,11 +348,11 @@ class TestPreferencesE2E:
 
     def test_preferences_default_values(self, tmp_path, monkeypatch):
         """Test that missing preferences return defaults."""
-        from spellbook.preferences import load_preferences, get_preferences_path
+        from spellbook.core.preferences import load_preferences, get_preferences_path
 
         # Monkeypatch the preferences path to use non-existent file
         prefs_path = tmp_path / "nonexistent.json"
-        monkeypatch.setattr('spellbook.preferences.get_preferences_path', lambda: prefs_path)
+        monkeypatch.setattr('spellbook.core.preferences.get_preferences_path', lambda: prefs_path)
 
         # Load preferences (should return defaults)
         prefs = load_preferences()
@@ -410,7 +410,7 @@ class TestDataclassesE2E:
     def test_manifest_round_trip(self, tmp_path):
         """Test Manifest dataclass can be serialized and deserialized."""
         from spellbook.core.models import Manifest, Track
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook.core.command_utils import atomic_write_json, read_json_safe
         from dataclasses import asdict
 
         track = Track(
@@ -454,7 +454,7 @@ class TestDataclassesE2E:
     def test_checkpoint_round_trip(self, tmp_path):
         """Test Checkpoint dataclass can be serialized and deserialized."""
         from spellbook.core.models import Checkpoint
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook.core.command_utils import atomic_write_json, read_json_safe
         from dataclasses import asdict
 
         checkpoint = Checkpoint(

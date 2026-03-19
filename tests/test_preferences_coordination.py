@@ -3,7 +3,7 @@
 import json
 import pytest
 from pathlib import Path
-from spellbook.preferences import (
+from spellbook.core.preferences import (
     load_preferences,
     save_preference,
     get_preferences_path,
@@ -27,7 +27,7 @@ def temp_prefs_file(tmp_path, monkeypatch):
 
     # Mock get_preferences_path to use temp directory
     monkeypatch.setattr(
-        "spellbook.preferences.get_preferences_path",
+        "spellbook.core.preferences.get_preferences_path",
         lambda: prefs_file
     )
 

@@ -633,7 +633,7 @@ Follow these requirements.
         """Test getting full skill content without section filter."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(skill_name="test-skill")
 
@@ -648,7 +648,7 @@ Follow these requirements.
         """Test extracting specific sections (FORBIDDEN, ROLE)."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -666,7 +666,7 @@ Follow these requirements.
         """Test returns error for non-existent skill."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(skill_name="nonexistent-skill")
 
@@ -678,7 +678,7 @@ Follow these requirements.
         """Test extracting <FORBIDDEN>...</FORBIDDEN> style sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -693,7 +693,7 @@ Follow these requirements.
         """Test extracting ## Section Name style sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -708,7 +708,7 @@ Follow these requirements.
         """Test that missing sections are simply not included."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -723,7 +723,7 @@ Follow these requirements.
         """Test that content field contains combined sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",

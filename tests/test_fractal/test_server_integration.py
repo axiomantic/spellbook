@@ -492,7 +492,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_create_graph") as mock_create:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_create_graph") as mock_create:
             mock_create.return_value = {"graph_id": "test", "status": "active"}
 
             # Call the wrapper's underlying function
@@ -515,7 +515,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_add_node") as mock_add:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_add_node") as mock_add:
             mock_add.return_value = {"node_id": "test", "status": "open"}
 
             server.fractal_add_node.fn(
@@ -541,7 +541,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_update_node") as mock_update:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_update_node") as mock_update:
             mock_update.return_value = {"node_id": "n1", "metadata": {}}
 
             server.fractal_update_node.fn(
@@ -561,7 +561,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_resume_graph") as mock_resume:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_resume_graph") as mock_resume:
             mock_resume.return_value = {"graph_id": "g1", "status": "active"}
 
             server.fractal_resume_graph.fn(graph_id="g1")
@@ -573,7 +573,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_delete_graph") as mock_delete:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_delete_graph") as mock_delete:
             mock_delete.return_value = {"deleted": True}
 
             server.fractal_delete_graph.fn(graph_id="g1")
@@ -585,7 +585,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_update_graph_status") as mock_status:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_update_graph_status") as mock_status:
             mock_status.return_value = {"status": "completed"}
 
             server.fractal_update_graph_status.fn(
@@ -605,7 +605,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_mark_saturated") as mock_sat:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_mark_saturated") as mock_sat:
             mock_sat.return_value = {"status": "saturated"}
 
             server.fractal_mark_saturated.fn(
@@ -625,7 +625,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_get_snapshot") as mock_snap:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_get_snapshot") as mock_snap:
             mock_snap.return_value = {"graph_id": "g1", "nodes": []}
 
             server.fractal_get_snapshot.fn(graph_id="g1")
@@ -637,7 +637,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_get_branch") as mock_branch:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_get_branch") as mock_branch:
             mock_branch.return_value = {"graph_id": "g1", "nodes": []}
 
             server.fractal_get_branch.fn(graph_id="g1", node_id="n1")
@@ -649,7 +649,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_get_open_questions") as mock_oq:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_get_open_questions") as mock_oq:
             mock_oq.return_value = {"graph_id": "g1", "open_questions": []}
 
             server.fractal_get_open_questions.fn(graph_id="g1")
@@ -661,7 +661,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_query_convergence") as mock_conv:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_query_convergence") as mock_conv:
             mock_conv.return_value = {"graph_id": "g1", "convergence_points": []}
 
             server.fractal_query_convergence.fn(graph_id="g1")
@@ -673,7 +673,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_query_contradictions") as mock_cont:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_query_contradictions") as mock_cont:
             mock_cont.return_value = {"graph_id": "g1", "contradictions": []}
 
             server.fractal_query_contradictions.fn(graph_id="g1")
@@ -685,7 +685,7 @@ class TestServerToolParameterMapping:
         from spellbook import server
         from unittest.mock import patch
 
-        with patch("spellbook.server.do_fractal_get_saturation_status") as mock_ss:
+        with patch("spellbook.mcp.tools.fractal.do_fractal_get_saturation_status") as mock_ss:
             mock_ss.return_value = {"graph_id": "g1", "branches": []}
 
             server.fractal_get_saturation_status.fn(graph_id="g1")

@@ -782,7 +782,7 @@ class TestCoordinationCheck:
     def test_coordination_not_configured(self, monkeypatch):
         """Backend == NONE returns NOT_CONFIGURED."""
         from spellbook.health.checker import _check_coordination, HealthStatus
-        from spellbook.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
 
         def mock_load():
             return CoordinationConfig(backend=CoordinationBackend.NONE)
@@ -801,7 +801,7 @@ class TestCoordinationCheck:
     def test_coordination_configured_mcp(self, monkeypatch):
         """MCP backend configured returns HEALTHY."""
         from spellbook.health.checker import _check_coordination, HealthStatus
-        from spellbook.preferences import (
+        from spellbook.core.preferences import (
             CoordinationConfig,
             CoordinationBackend,
             MCPSSEConfig,
@@ -1086,7 +1086,7 @@ class TestRunHealthCheck:
         """Full mode checks all 6 domains."""
         from spellbook.health.checker import run_health_check, HealthStatus
         from spellbook.core.db import init_db
-        from spellbook.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -1248,7 +1248,7 @@ class TestRunHealthCheck:
         """quick parameter defaults to False (full check)."""
         from spellbook.health.checker import run_health_check
         from spellbook.core.db import init_db
-        from spellbook.preferences import CoordinationConfig, CoordinationBackend
+        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories

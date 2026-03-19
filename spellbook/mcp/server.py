@@ -125,7 +125,7 @@ def startup() -> None:
     from spellbook.updates.watcher import UpdateWatcher
     from spellbook.forged.schema import init_forged_schema
     from spellbook.fractal.schema import init_fractal_schema
-    from spellbook.curator_tools import init_curator_tables
+    from spellbook.coordination.curator import init_curator_tables
 
     # Initialize databases
     db_path = str(get_db_path())
@@ -236,8 +236,8 @@ def build_http_run_kwargs() -> Dict[str, Any]:
     )
     from spellbook.core.config import get_env
 
-    host = get_env("SPELLBOOK_MCP_HOST", "127.0.0.1")
-    port = int(get_env("SPELLBOOK_MCP_PORT", "8765"))
+    host = get_env("HOST", "127.0.0.1")
+    port = int(get_env("PORT", "8765"))
 
     auth_middleware = []
     if not auth_is_disabled():

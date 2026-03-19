@@ -1,7 +1,7 @@
 """Integration tests for MCP server with swarm tools."""
 import pytest
 from unittest.mock import patch, AsyncMock
-from spellbook.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+from spellbook.core.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
 
 
 class TestMCPServerSwarmToolsIntegration:
@@ -20,7 +20,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_create_tool_is_callable(self):
         """Test that mcp_swarm_create tool is callable."""
-        from spellbook.swarm_tools import swarm_create
+        from spellbook.coordination.swarm import swarm_create
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -30,8 +30,8 @@ class TestMCPServerSwarmToolsIntegration:
         mock_backend = AsyncMock()
         mock_backend.create_swarm.return_value = "swarm-test-123"
 
-        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_create(
                     feature="test-feature",
                     manifest_path="/path/to/manifest.json"
@@ -42,7 +42,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_register_tool_is_callable(self):
         """Test that mcp_swarm_register tool is callable."""
-        from spellbook.swarm_tools import swarm_register
+        from spellbook.coordination.swarm import swarm_register
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -55,8 +55,8 @@ class TestMCPServerSwarmToolsIntegration:
             "packet_id": 1
         }
 
-        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_register(
                     swarm_id="swarm-123",
                     packet_id=1,
@@ -70,7 +70,7 @@ class TestMCPServerSwarmToolsIntegration:
 
     def test_swarm_monitor_tool_is_callable(self):
         """Test that mcp_swarm_monitor tool is callable."""
-        from spellbook.swarm_tools import swarm_monitor
+        from spellbook.coordination.swarm import swarm_monitor
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
@@ -87,8 +87,8 @@ class TestMCPServerSwarmToolsIntegration:
             "ready_for_merge": False
         }
 
-        with patch("spellbook.swarm_tools.load_coordination_config", return_value=config):
-            with patch("spellbook.swarm_tools._get_backend", return_value=mock_backend):
+        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
+            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
                 result = swarm_monitor(swarm_id="swarm-123")
 
                 assert result["swarm_id"] == "swarm-123"

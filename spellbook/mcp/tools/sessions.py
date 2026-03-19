@@ -14,7 +14,7 @@ from spellbook.core.path_utils import (
     get_project_path_from_context,
 )
 from spellbook.sessions.parser import list_sessions_with_samples, split_by_char_limit
-from spellbook.terminal_utils import detect_terminal, spawn_terminal_window
+from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
 
 
 @mcp.tool()

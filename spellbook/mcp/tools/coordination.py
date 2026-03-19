@@ -1,9 +1,9 @@
 """MCP tools for swarm coordination, curator, and stint tracking."""
 
 from spellbook.mcp.server import mcp
-from spellbook.curator_tools import curator_track_prune
+from spellbook.coordination.curator import curator_track_prune
 from spellbook.sessions.injection import inject_recovery_context
-from spellbook.swarm_tools import (
+from spellbook.coordination.swarm import (
     swarm_complete,
     swarm_create,
     swarm_error,
@@ -220,7 +220,7 @@ def stint_push(
     Returns:
         {"success": True, "depth": int, "stack": list}
     """
-    from spellbook.stint_tools import push_stint
+    from spellbook.coordination.stint import push_stint
     result = push_stint(
         project_path=project_path,
         name=name,
@@ -269,7 +269,7 @@ def stint_pop(
     Returns:
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
     """
-    from spellbook.stint_tools import pop_stint
+    from spellbook.coordination.stint import pop_stint
     result = pop_stint(project_path=project_path, name=name)
     try:
         from spellbook.admin.events import Event, Subsystem, publish_sync
@@ -308,7 +308,7 @@ def stint_check(
     Returns:
         {"success": True, "depth": int, "stack": list}
     """
-    from spellbook.stint_tools import check_stint
+    from spellbook.coordination.stint import check_stint
     return check_stint(project_path=project_path)
 
 
@@ -333,7 +333,7 @@ def stint_replace(
     Returns:
         {"success": True, "depth": int, "correction_logged": True}
     """
-    from spellbook.stint_tools import replace_stint
+    from spellbook.coordination.stint import replace_stint
     result = replace_stint(
         project_path=project_path,
         stack=stack,

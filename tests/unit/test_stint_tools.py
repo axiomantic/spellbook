@@ -100,7 +100,7 @@ class TestStintDatabaseSchema:
             assert cursor.fetchone() is not None, f"{index_name} index not created"
 
 
-from spellbook.stint_tools import (
+from spellbook.coordination.stint import (
     push_stint,
     pop_stint,
     check_stint,

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from spellbook.core.db import get_connection
-from spellbook.memory_secrets import scan_for_secrets
+from spellbook.memory.secrets import scan_for_secrets
 
 
 def _content_hash(content: str) -> str:
@@ -343,7 +343,7 @@ def _apply_branch_scoring(
     multiplier, re-sorts, strips internal score, and truncates to limit.
     Also lazily populates the junction table for ancestor relationships.
     """
-    from spellbook.branch_ancestry import (
+    from spellbook.core.branch_ancestry import (
         BRANCH_MULTIPLIERS,
         BranchRelationship,
         get_branch_relationship,

@@ -87,6 +87,6 @@ def test_server_docstring_updated():
     assert "find_spellbook_skills" not in docstring, "Docstring should not mention find_spellbook_skills"
     assert "use_spellbook_skill" not in docstring, "Docstring should not mention use_spellbook_skill"
 
-    # Verify session and swarm tools are mentioned
-    assert "find_session" in docstring or "Session Management" in docstring, "Docstring should mention session tools"
-    assert "swarm_create" in docstring or "Swarm Coordination" in docstring, "Docstring should mention swarm tools"
+    # server.py is now a backward compatibility shim
+    assert "shim" in docstring.lower() or "backward" in docstring.lower(), \
+        "Docstring should indicate this is a backward compatibility shim"

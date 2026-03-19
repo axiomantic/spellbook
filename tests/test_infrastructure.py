@@ -98,7 +98,7 @@ def test_completion_marker_dataclass():
 
 def test_atomic_write_json_basic(tmp_path):
     """Test atomic JSON writes."""
-    from spellbook.command_utils import atomic_write_json, read_json_safe
+    from spellbook.core.command_utils import atomic_write_json, read_json_safe
 
     test_file = tmp_path / "test.json"
     data = {"foo": "bar", "count": 42}
@@ -111,7 +111,7 @@ def test_atomic_write_json_basic(tmp_path):
 
 def test_atomic_write_json_concurrent(tmp_path):
     """Test concurrent writes don't corrupt file."""
-    from spellbook.command_utils import atomic_write_json
+    from spellbook.core.command_utils import atomic_write_json
     import threading
 
     test_file = tmp_path / "concurrent.json"
@@ -133,7 +133,7 @@ def test_atomic_write_json_concurrent(tmp_path):
 
 def test_read_json_safe_retry(tmp_path):
     """Test read_json_safe handles empty file gracefully."""
-    from spellbook.command_utils import read_json_safe
+    from spellbook.core.command_utils import read_json_safe
 
     test_file = tmp_path / "test.json"
     test_file.write_text('{"valid": true}')
@@ -143,7 +143,7 @@ def test_read_json_safe_retry(tmp_path):
 
 def test_parse_packet_file(tmp_path):
     """Test parsing work packet with YAML frontmatter."""
-    from spellbook.command_utils import parse_packet_file
+    from spellbook.core.command_utils import parse_packet_file
 
     packet_path = tmp_path / "test-packet.md"
     packet_path.write_text("""---
@@ -174,7 +174,7 @@ Acceptance: tests pass
 
 def test_preferences_read_write(tmp_path, monkeypatch):
     """Test reading and writing preferences."""
-    from spellbook.preferences import save_preference, load_preferences
+    from spellbook.core.preferences import save_preference, load_preferences
 
     # Use tmp_path as home directory
     monkeypatch.setenv("HOME", str(tmp_path))
@@ -193,7 +193,7 @@ def test_preferences_read_write(tmp_path, monkeypatch):
 
 def test_preferences_defaults(tmp_path, monkeypatch):
     """Test default preferences when no file exists."""
-    from spellbook.preferences import load_preferences
+    from spellbook.core.preferences import load_preferences
 
     monkeypatch.setenv("HOME", str(tmp_path))
     # On Windows, Path.home() uses USERPROFILE, and get_config_dir uses APPDATA

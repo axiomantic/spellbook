@@ -126,7 +126,7 @@ class TestStintPushBehavioralMode:
 
         mock_result = {"success": True, "depth": 1, "stack": []}
         with patch(
-            "spellbook.stint_tools.push_stint",
+            "spellbook.coordination.stint.push_stint",
             return_value=mock_result,
         ) as mock_push:
             result = fn(

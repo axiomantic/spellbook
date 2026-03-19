@@ -9,7 +9,7 @@ class TestTelemetryAggregate:
     """Test TelemetryAggregate dataclass."""
 
     def test_telemetry_aggregate_creation(self):
-        from spellbook.telemetry_sync import TelemetryAggregate
+        from spellbook.experiments.telemetry_sync import TelemetryAggregate
 
         agg = TelemetryAggregate(
             skill_name="debugging",
@@ -25,7 +25,7 @@ class TestTelemetryAggregate:
         assert agg.completion_rate == 0.8
 
     def test_completion_rate_handles_zero(self):
-        from spellbook.telemetry_sync import TelemetryAggregate
+        from spellbook.experiments.telemetry_sync import TelemetryAggregate
 
         agg = TelemetryAggregate(
             skill_name="debugging",
@@ -53,7 +53,7 @@ class TestSyncOutcomesToExperiments:
             persist_outcome,
             OUTCOME_COMPLETED,
         )
-        from spellbook.telemetry_sync import sync_outcomes_to_experiments
+        from spellbook.experiments.telemetry_sync import sync_outcomes_to_experiments
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)
@@ -108,7 +108,7 @@ class TestSyncOutcomesToExperiments:
             persist_outcome,
             OUTCOME_COMPLETED,
         )
-        from spellbook.telemetry_sync import sync_outcomes_to_experiments
+        from spellbook.experiments.telemetry_sync import sync_outcomes_to_experiments
 
         db_path = str(tmp_path / "test.db")
         init_db(db_path)

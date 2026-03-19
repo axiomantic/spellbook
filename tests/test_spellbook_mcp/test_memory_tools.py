@@ -1174,9 +1174,9 @@ class TestMemoryToolsServerRegistration:
         mock_ctx = MagicMock()
         mock_ctx.list_roots = AsyncMock(return_value=[])
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None) as mock_get_path, \
-             patch.object(server, "do_get_unconsolidated") as mock_do:
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None) as mock_get_path, \
+             patch("spellbook.mcp.tools.memory.do_get_unconsolidated") as mock_do:
             mock_do.return_value = {
                 "events": [],
                 "count": 0,
@@ -1216,9 +1216,9 @@ class TestMemoryToolsServerRegistration:
         fake_project_path = "/Users/test/myproject"
         expected_namespace = encode_cwd(fake_project_path)
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
-             patch.object(server, "do_get_unconsolidated") as mock_do:
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
+             patch("spellbook.mcp.tools.memory.do_get_unconsolidated") as mock_do:
             mock_do.return_value = {"events": [], "count": 0, "consolidation_prompt": "", "response_schema": "{}"}
 
             result = await server.memory_get_unconsolidated.fn(
@@ -1243,8 +1243,8 @@ class TestMemoryToolsServerRegistration:
 
         mock_ctx = MagicMock()
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None):
             result = await server.memory_get_unconsolidated.fn(
                 ctx=mock_ctx,
                 namespace="",
@@ -1265,9 +1265,9 @@ class TestMemoryToolsServerRegistration:
 
         mock_ctx = MagicMock()
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None), \
-             patch.object(server, "do_store_memories") as mock_do:
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None), \
+             patch("spellbook.mcp.tools.memory.do_store_memories") as mock_do:
             mock_do.return_value = {
                 "status": "success",
                 "memories_created": 1,
@@ -1307,10 +1307,10 @@ class TestMemoryToolsServerRegistration:
         fake_project_path = "/Users/test/myproject"
         expected_namespace = encode_cwd(fake_project_path)
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
-             patch.object(server, "get_current_branch", return_value="main"), \
-             patch.object(server, "do_store_memories") as mock_do:
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
+             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="main"), \
+             patch("spellbook.mcp.tools.memory.do_store_memories") as mock_do:
             mock_do.return_value = {
                 "status": "success",
                 "memories_created": 0,
@@ -1341,8 +1341,8 @@ class TestMemoryToolsServerRegistration:
 
         mock_ctx = MagicMock()
 
-        with patch.object(server, "get_db_path", return_value=db), \
-             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
+             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None):
             result = await server.memory_store_memories.fn(
                 ctx=mock_ctx,
                 memories='{"memories": []}',
