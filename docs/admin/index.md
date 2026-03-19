@@ -7,7 +7,7 @@ The admin interface is a web-based dashboard served from the Spellbook MCP daemo
 
 ## Prerequisites
 
-- MCP daemon running: `python3 scripts/spellbook-server.py install`
+- MCP daemon running: `spellbook server install`
 
 ## Authentication
 

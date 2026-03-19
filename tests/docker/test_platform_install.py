@@ -71,8 +71,8 @@ def _make_spellbook_dir(base: Path) -> Path:
     scripts_dir.mkdir()
     (scripts_dir / "example.py").write_text("# example script\n")
     (scripts_dir / "example.sh").write_text("#!/bin/bash\n")
-    # spellbook-server.py is required by the MCP daemon installer
-    (scripts_dir / "spellbook-server.py").write_text("# spellbook server stub\n")
+    # scripts directory exists for other scripts
+
 
     # Agents directory
     agents_dir = spellbook / "agents"
@@ -179,7 +179,7 @@ def test_fresh_install(platform: str, spellbook_dir: Path, tmp_path: Path):
     results = installer.install()
 
     # Components that may legitimately fail in test environments.
-    # MCP daemon/server cannot start without the real spellbook-server.py and
+    # MCP daemon/server cannot start without the spellbook daemon module and
     # without the claude CLI available for registration.
     _ALLOWED_FAILURES = {"mcp_daemon", "mcp_server"}
 

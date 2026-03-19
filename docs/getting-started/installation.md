@@ -253,13 +253,13 @@ mkdir -p ~/.claude/{skills,commands,agents}
 Check if the daemon is running:
 
 ```bash
-python3 ~/.local/share/spellbook/scripts/spellbook-server.py status
+spellbook server status
 ```
 
 Restart if needed:
 
 ```bash
-python3 ~/.local/share/spellbook/scripts/spellbook-server.py restart
+spellbook server restart
 ```
 
 ## Companion Tools

@@ -178,7 +178,6 @@ Also consider a `bootstrap.bat` one-liner that invokes PowerShell for users who 
 | Script | Current | Windows Need |
 |--------|---------|-------------|
 | `scripts/install-hooks.sh` | Bash, installs git hooks | Python or PowerShell equivalent |
-| `scripts/spellbook-server.py` | Python | Already cross-platform |
 | `scripts/generate_docs.py` | Python | Already cross-platform |
 | `scripts/auto_update.py` | Python | Already cross-platform |
 

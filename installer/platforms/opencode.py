@@ -14,7 +14,7 @@ via the options.skills_paths setting in opencode.json.
 
 MCP Server: OpenCode connects to the spellbook MCP daemon via HTTP transport
 at http://127.0.0.1:8765/mcp (same daemon used by Claude Code). The daemon must
-be running - use `python3 scripts/spellbook-server.py start` to start it.
+be running - use `spellbook server start` to start it.
 
 OpenCode MCP config uses:
 - "type": "local" for stdio servers (command-based)

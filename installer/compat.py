@@ -691,36 +691,26 @@ class ServiceManager:
         )
 
     def _install_macos(self) -> tuple[bool, str]:
-        """Install launchd service. Delegates plist generation to spellbook-server.py."""
-        server_script = self.spellbook_dir / "scripts" / "spellbook-server.py"
-        if not server_script.exists():
-            return False, f"Server script not found: {server_script}"
-        result = subprocess.run(
-            [sys.executable, str(server_script), "install"],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            env={**os.environ, "SPELLBOOK_DIR": str(self.spellbook_dir)},
-        )
-        if result.returncode == 0:
+        """Install launchd service via spellbook.daemon.manager."""
+        try:
+            from spellbook.daemon.manager import install_service
+            install_service()
             return True, "Installed launchd service"
-        return False, f"Failed: {result.stderr.strip()}"
+        except SystemExit:
+            return False, "Failed to install launchd service"
+        except Exception as e:
+            return False, f"Failed: {e}"
 
     def _install_linux(self) -> tuple[bool, str]:
-        """Install systemd service. Delegates to spellbook-server.py."""
-        server_script = self.spellbook_dir / "scripts" / "spellbook-server.py"
-        if not server_script.exists():
-            return False, f"Server script not found: {server_script}"
-        result = subprocess.run(
-            [sys.executable, str(server_script), "install"],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            env={**os.environ, "SPELLBOOK_DIR": str(self.spellbook_dir)},
-        )
-        if result.returncode == 0:
+        """Install systemd service via spellbook.daemon.manager."""
+        try:
+            from spellbook.daemon.manager import install_service
+            install_service()
             return True, "Installed systemd service"
-        return False, f"Failed: {result.stderr.strip()}"
+        except SystemExit:
+            return False, "Failed to install systemd service"
+        except Exception as e:
+            return False, f"Failed: {e}"
 
     def _install_windows(self) -> tuple[bool, str]:
         """Install Windows Task Scheduler task running the watchdog."""

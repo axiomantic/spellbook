@@ -843,15 +843,10 @@ class TestInstallDaemonTtsInclusion:
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        (sb_dir / "scripts").mkdir()
-        (sb_dir / "scripts" / "spellbook-server.py").write_text("# stub")
-
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.get_python_executable", return_value="python3"), \
-             patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
-             patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
+             patch("spellbook.daemon.manager.install_service"), \
              patch("spellbook.core.config.config_get", return_value=True):
             install_daemon(sb_dir, dry_run=False)
 
@@ -866,15 +861,11 @@ class TestInstallDaemonTtsInclusion:
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        (sb_dir / "scripts").mkdir()
-        (sb_dir / "scripts" / "spellbook-server.py").write_text("# stub")
 
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.get_python_executable", return_value="python3"), \
-             patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
-             patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
+             patch("spellbook.daemon.manager.install_service"), \
              patch("spellbook.core.config.config_get", return_value=False):
             install_daemon(sb_dir, dry_run=False)
 
@@ -888,16 +879,12 @@ class TestInstallDaemonTtsInclusion:
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        (sb_dir / "scripts").mkdir()
-        (sb_dir / "scripts" / "spellbook-server.py").write_text("# stub")
 
         # Make config_get raise ImportError by patching the import
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.get_python_executable", return_value="python3"), \
-             patch("installer.components.mcp.get_daemon_python", return_value=tmp_path / "python"), \
              patch("installer.components.mcp.is_daemon_running", return_value=True), \
-             patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")), \
+             patch("spellbook.daemon.manager.install_service"), \
              patch.dict("sys.modules", {"spellbook.core.config": None}):
             install_daemon(sb_dir, dry_run=False)
 
