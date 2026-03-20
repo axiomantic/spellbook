@@ -541,47 +541,48 @@ def persist_outcome(
         db_path: Path to database (defaults to standard location)
         experiment_variant_id: Optional variant ID if this outcome is part of an experiment
     """
-    from spellbook.core.db import get_connection, get_db_path
+    from spellbook.core.db import get_db_path
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SkillOutcome as SkillOutcomeModel
 
     if db_path is None:
         db_path = str(get_db_path())
-
-    conn = get_connection(db_path)
 
     # Format start_time for SQLite
     start_time_str = outcome.start_time.isoformat() if outcome.start_time else None
     end_time_str = outcome.end_time.isoformat() if outcome.end_time else None
 
-    conn.execute("""
-        INSERT INTO skill_outcomes (
-            skill_name, skill_version, session_id, project_encoded,
-            start_time, end_time, duration_seconds, outcome,
-            tokens_used, corrections, retries, experiment_variant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(session_id, skill_name, start_time) DO UPDATE SET
-            skill_version = excluded.skill_version,
-            end_time = excluded.end_time,
-            duration_seconds = excluded.duration_seconds,
-            outcome = excluded.outcome,
-            tokens_used = excluded.tokens_used,
-            corrections = excluded.corrections,
-            retries = excluded.retries,
-            experiment_variant_id = excluded.experiment_variant_id
-    """, (
-        outcome.skill_name,
-        outcome.skill_version,
-        outcome.session_id,
-        outcome.project_encoded,
-        start_time_str,
-        end_time_str,
-        outcome.duration_seconds,
-        outcome.outcome,
-        outcome.tokens_used,
-        outcome.corrections,
-        outcome.retries,
-        experiment_variant_id,
-    ))
-    conn.commit()
+    from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+    with get_sync_session(db_path) as session:
+        stmt = sqlite_insert(SkillOutcomeModel).values(
+            skill_name=outcome.skill_name,
+            skill_version=outcome.skill_version,
+            session_id=outcome.session_id,
+            project_encoded=outcome.project_encoded,
+            start_time=start_time_str,
+            end_time=end_time_str,
+            duration_seconds=outcome.duration_seconds,
+            outcome=outcome.outcome,
+            tokens_used=outcome.tokens_used,
+            corrections=outcome.corrections,
+            retries=outcome.retries,
+            experiment_variant_id=experiment_variant_id,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["session_id", "skill_name", "start_time"],
+            set_={
+                "skill_version": stmt.excluded.skill_version,
+                "end_time": stmt.excluded.end_time,
+                "duration_seconds": stmt.excluded.duration_seconds,
+                "outcome": stmt.excluded.outcome,
+                "tokens_used": stmt.excluded.tokens_used,
+                "corrections": stmt.excluded.corrections,
+                "retries": stmt.excluded.retries,
+                "experiment_variant_id": stmt.excluded.experiment_variant_id,
+            },
+        )
+        session.execute(stmt)
 
 
 def finalize_session_outcomes(session_id: str, db_path: str = None) -> int:
@@ -596,23 +597,25 @@ def finalize_session_outcomes(session_id: str, db_path: str = None) -> int:
     Returns:
         Count of outcomes finalized
     """
-    from spellbook.core.db import get_connection, get_db_path
+    from spellbook.core.db import get_db_path
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SkillOutcome as SkillOutcomeModel
 
     if db_path is None:
         db_path = str(get_db_path())
 
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
+    from sqlalchemy import update
 
-    # Update outcomes where outcome is empty (still open)
-    cursor.execute("""
-        UPDATE skill_outcomes
-        SET outcome = ?
-        WHERE session_id = ? AND outcome = ''
-    """, (OUTCOME_SESSION_ENDED, session_id))
+    with get_sync_session(db_path) as session:
+        stmt = (
+            update(SkillOutcomeModel)
+            .where(SkillOutcomeModel.session_id == session_id)
+            .where(SkillOutcomeModel.outcome == "")
+            .values(outcome=OUTCOME_SESSION_ENDED)
+        )
+        result = session.execute(stmt)
+        count = result.rowcount
 
-    count = cursor.rowcount
-    conn.commit()
     return count
 
 
@@ -638,37 +641,35 @@ def get_analytics_summary(
             "version_comparisons": [...] if versions present
         }
     """
-    from spellbook.core.db import get_connection, get_db_path
+    from spellbook.core.db import get_db_path
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SkillOutcome as SkillOutcomeModel
     from datetime import datetime, timedelta
+    from sqlalchemy import select
 
     if db_path is None:
         db_path = str(get_db_path())
 
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-
     # Build query with filters
     cutoff = (datetime.now() - timedelta(days=days)).isoformat()
-    params = [cutoff]
-    where_clauses = ["created_at >= ?"]
+
+    stmt = select(
+        SkillOutcomeModel.skill_name,
+        SkillOutcomeModel.skill_version,
+        SkillOutcomeModel.outcome,
+        SkillOutcomeModel.tokens_used,
+        SkillOutcomeModel.corrections,
+        SkillOutcomeModel.retries,
+    ).where(SkillOutcomeModel.created_at >= cutoff)
 
     if project_encoded:
-        where_clauses.append("project_encoded = ?")
-        params.append(project_encoded)
+        stmt = stmt.where(SkillOutcomeModel.project_encoded == project_encoded)
 
     if skill:
-        where_clauses.append("skill_name = ?")
-        params.append(skill)
+        stmt = stmt.where(SkillOutcomeModel.skill_name == skill)
 
-    where_sql = " AND ".join(where_clauses)
-
-    cursor.execute(f"""
-        SELECT skill_name, skill_version, outcome, tokens_used, corrections, retries
-        FROM skill_outcomes
-        WHERE {where_sql}
-    """, params)
-
-    rows = cursor.fetchall()
+    with get_sync_session(db_path) as session:
+        rows = session.execute(stmt).all()
 
     # Aggregate metrics
     by_skill: Dict[str, Dict] = defaultdict(lambda: {

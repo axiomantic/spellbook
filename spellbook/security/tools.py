@@ -20,12 +20,20 @@ Functions:
 """
 
 import re
-import sqlite3
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from spellbook.core.db import get_connection, get_db_path, init_db
+from sqlalchemy import select
+
+from spellbook.core.db import get_db_path
+from spellbook.db.engines import get_sync_session
+from spellbook.db.spellbook_models import (
+    CanaryToken,
+    SecurityEvent,
+    SecurityMode,
+    TrustRegistry,
+)
 from spellbook.security.rules import (
     ESCALATION_RULES,
     EXFILTRATION_RULES,
@@ -36,6 +44,15 @@ from spellbook.security.rules import (
     Severity,
     check_patterns,
 )
+
+def _sqlite_now() -> str:
+    """Return current UTC time in SQLite datetime('now') format.
+
+    Matches the DEFAULT expression used by init_db() table definitions:
+    ``YYYY-MM-DD HH:MM:SS`` with no timezone suffix.
+    """
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
 
 # All rule sets used for deep injection detection.
 _ALL_RULE_SETS: list[tuple[str, list[tuple[str, Severity, str, str]]]] = [
@@ -239,16 +256,24 @@ def do_log_event(
         truncated_len = _DETAIL_MAX_BYTES - len(_TRUNCATION_MARKER)
         detail = detail[:truncated_len] + _TRUNCATION_MARKER
 
+    if db_path is None:
+        db_path = str(get_db_path())
+
     try:
-        conn = get_connection(db_path)
-        cur = conn.execute(
-            "INSERT INTO security_events "
-            "(event_type, severity, source, detail, session_id, tool_name, action_taken) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (event_type, severity, source, detail, session_id, tool_name, action_taken),
-        )
-        conn.commit()
-        return {"success": True, "event_id": cur.lastrowid}
+        with get_sync_session(db_path) as session:
+            event = SecurityEvent(
+                event_type=event_type,
+                severity=severity,
+                source=source,
+                detail=detail,
+                session_id=session_id,
+                tool_name=tool_name,
+                action_taken=action_taken,
+                created_at=_sqlite_now(),
+            )
+            session.add(event)
+            session.flush()
+            return {"success": True, "event_id": event.id}
     except Exception:
         return dict(_DEGRADED_RESPONSE)
 
@@ -276,52 +301,31 @@ def do_query_events(
     Returns:
         Dict with ``success``, ``events`` list, and ``count``.
     """
+    if db_path is None:
+        db_path = str(get_db_path())
+
     try:
-        conn = get_connection(db_path)
-        clauses: list[str] = []
-        params: list = []
+        with get_sync_session(db_path) as session:
+            from sqlalchemy import func, text
 
-        if event_type is not None:
-            clauses.append("event_type = ?")
-            params.append(event_type)
-        if severity is not None:
-            clauses.append("severity = ?")
-            params.append(severity)
-        if since_hours is not None:
-            clauses.append("created_at >= datetime('now', ?)")
-            params.append(f"-{since_hours} hours")
+            stmt = select(SecurityEvent)
 
-        where = ""
-        if clauses:
-            where = "WHERE " + " AND ".join(clauses)
+            if event_type is not None:
+                stmt = stmt.where(SecurityEvent.event_type == event_type)
+            if severity is not None:
+                stmt = stmt.where(SecurityEvent.severity == severity)
+            if since_hours is not None:
+                stmt = stmt.where(
+                    SecurityEvent.created_at >= func.datetime("now", f"-{since_hours} hours")
+                )
 
-        query = (
-            f"SELECT id, event_type, severity, source, detail, "
-            f"session_id, tool_name, action_taken, created_at "
-            f"FROM security_events {where} "
-            f"ORDER BY created_at DESC LIMIT ?"
-        )
-        params.append(limit)
+            stmt = stmt.order_by(SecurityEvent.created_at.desc()).limit(limit)
 
-        cur = conn.execute(query, params)
-        rows = cur.fetchall()
+            rows = session.execute(stmt).scalars().all()
 
-        events = [
-            {
-                "id": row[0],
-                "event_type": row[1],
-                "severity": row[2],
-                "source": row[3],
-                "detail": row[4],
-                "session_id": row[5],
-                "tool_name": row[6],
-                "action_taken": row[7],
-                "created_at": row[8],
-            }
-            for row in rows
-        ]
+            events = [row.to_dict() for row in rows]
 
-        return {"success": True, "events": events, "count": len(events)}
+            return {"success": True, "events": events, "count": len(events)}
     except Exception:
         return {**_DEGRADED_RESPONSE, "events": [], "count": 0}
 
@@ -355,30 +359,20 @@ def do_set_security_mode(
     Raises:
         ValueError: If mode is not a valid security mode.
     """
+    if db_path is None:
+        db_path = str(get_db_path())
+
     # Permissive mode has been removed -- reject with error dict and log
     if mode == "permissive":
-        if db_path is None:
-            from spellbook.core.db import get_db_path
-
-            db_path = str(get_db_path())
-
-        conn = sqlite3.connect(db_path, timeout=5.0)
-        try:
-            conn.execute(
-                "INSERT INTO security_events "
-                "(event_type, severity, source, detail, action_taken) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (
-                    "permissive_mode_blocked",
-                    "WARNING",
-                    "security_set_mode",
-                    "Blocked attempt to set permissive security mode",
-                    "rejected",
-                ),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        with get_sync_session(db_path) as session:
+            session.add(SecurityEvent(
+                event_type="permissive_mode_blocked",
+                severity="WARNING",
+                source="security_set_mode",
+                detail="Blocked attempt to set permissive security mode",
+                action_taken="rejected",
+                created_at=_sqlite_now(),
+            ))
 
         return {
             "error": "Permissive mode has been removed for security. Only 'standard' and 'paranoid' are available."
@@ -387,40 +381,30 @@ def do_set_security_mode(
     if mode not in _VALID_MODES:
         raise ValueError(f"invalid security mode: {mode!r}")
 
-    if db_path is None:
-        from spellbook.core.db import get_db_path
-
-        db_path = str(get_db_path())
-
     now = datetime.now(timezone.utc)
     auto_restore_at = now + timedelta(minutes=30)
 
-    conn = sqlite3.connect(db_path, timeout=5.0)
-    try:
-        conn.execute(
-            "UPDATE security_mode SET mode = ?, updated_at = ?, "
-            "updated_by = ?, auto_restore_at = ? WHERE id = 1",
-            (mode, now.isoformat(), reason, auto_restore_at.isoformat()),
-        )
+    with get_sync_session(db_path) as session:
+        mode_row = session.execute(
+            select(SecurityMode).where(SecurityMode.id == 1)
+        ).scalars().first()
+
+        if mode_row is not None:
+            mode_row.mode = mode
+            mode_row.updated_at = now.isoformat()
+            mode_row.updated_by = reason
+            mode_row.auto_restore_at = auto_restore_at.isoformat()
 
         # Log the mode transition as a security event
-        conn.execute(
-            "INSERT INTO security_events "
-            "(event_type, severity, source, detail, action_taken) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (
-                "mode_change",
-                "INFO",
-                "security_set_mode",
-                f"Security mode changed to {mode}"
-                + (f": {reason}" if reason else ""),
-                f"set_mode:{mode}",
-            ),
-        )
-
-        conn.commit()
-    finally:
-        conn.close()
+        session.add(SecurityEvent(
+            event_type="mode_change",
+            severity="INFO",
+            source="security_set_mode",
+            detail=f"Security mode changed to {mode}"
+            + (f": {reason}" if reason else ""),
+            action_taken=f"set_mode:{mode}",
+            created_at=_sqlite_now(),
+        ))
 
     return {
         "mode": mode,
@@ -474,12 +458,14 @@ def do_canary_create(
     hex_part = uuid.uuid4().hex[:12]
     token = f"CANARY-{hex_part}-{type_code}"
 
-    conn = get_connection(db_path or str(get_db_path()))
-    conn.execute(
-        "INSERT INTO canary_tokens (token, token_type, context) VALUES (?, ?, ?)",
-        (token, token_type, context),
-    )
-    conn.commit()
+    resolved_path = db_path or str(get_db_path())
+    with get_sync_session(resolved_path) as session:
+        session.add(CanaryToken(
+            token=token,
+            token_type=token_type,
+            context=context,
+            created_at=_sqlite_now(),
+        ))
 
     return {
         "token": token,
@@ -510,47 +496,39 @@ def do_canary_check(
             clean: True if no registered canaries found in content.
             triggered_canaries: List of dicts with token, token_type, context.
     """
-    conn = get_connection(db_path or str(get_db_path()))
-    cur = conn.cursor()
-    cur.execute("SELECT token, token_type, context FROM canary_tokens")
-    all_canaries = cur.fetchall()
+    resolved_path = db_path or str(get_db_path())
 
-    triggered: list[dict] = []
-    now = datetime.now(timezone.utc).isoformat()
+    with get_sync_session(resolved_path) as session:
+        all_canaries = session.execute(
+            select(CanaryToken)
+        ).scalars().all()
 
-    for token, token_type, ctx in all_canaries:
-        if token in content:
-            triggered.append({
-                "token": token,
-                "token_type": token_type,
-                "context": ctx,
-            })
-            # Mark canary as triggered in DB
-            conn.execute(
-                "UPDATE canary_tokens SET triggered_at = ?, triggered_by = ? "
-                "WHERE token = ?",
-                (now, "security_canary_check", token),
-            )
-            # Log CRITICAL security event
-            try:
-                conn.execute(
-                    "INSERT INTO security_events "
-                    "(event_type, severity, source, detail, tool_name) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (
-                        "canary_triggered",
-                        "CRITICAL",
-                        "security_canary_check",
-                        f"Canary token triggered: {token} (type={token_type})",
-                        "security_canary_check",
-                    ),
-                )
-            except sqlite3.OperationalError:
-                # Graceful degradation if security_events table is missing
-                pass
+        triggered: list[dict] = []
+        now = datetime.now(timezone.utc).isoformat()
 
-    if triggered:
-        conn.commit()
+        for canary in all_canaries:
+            if canary.token in content:
+                triggered.append({
+                    "token": canary.token,
+                    "token_type": canary.token_type,
+                    "context": canary.context,
+                })
+                # Mark canary as triggered in DB
+                canary.triggered_at = now
+                canary.triggered_by = "security_canary_check"
+                # Log CRITICAL security event
+                try:
+                    session.add(SecurityEvent(
+                        event_type="canary_triggered",
+                        severity="CRITICAL",
+                        source="security_canary_check",
+                        detail=f"Canary token triggered: {canary.token} (type={canary.token_type})",
+                        tool_name="security_canary_check",
+                        created_at=_sqlite_now(),
+                    ))
+                except Exception:
+                    # Graceful degradation if security_events table is missing
+                    pass
 
     return {
         "clean": len(triggered) == 0,
@@ -599,7 +577,8 @@ def do_set_trust(
             f"Must be one of: {', '.join(TRUST_LEVELS)}"
         )
 
-    conn = get_connection(db_path)
+    if db_path is None:
+        db_path = str(get_db_path())
 
     now = datetime.now(timezone.utc)
     registered_at = now.isoformat()
@@ -608,20 +587,22 @@ def do_set_trust(
     if ttl_hours is not None:
         expires_at = (now + timedelta(hours=ttl_hours)).isoformat()
 
-    # Delete existing entry for this content_hash, then insert new one.
-    # This ensures re-registration overwrites cleanly.
-    cur = conn.cursor()
-    cur.execute(
-        "DELETE FROM trust_registry WHERE content_hash = ?",
-        (content_hash,),
-    )
-    cur.execute(
-        """INSERT INTO trust_registry
-            (content_hash, source, trust_level, registered_at, expires_at)
-        VALUES (?, ?, ?, ?, ?)""",
-        (content_hash, source, trust_level, registered_at, expires_at),
-    )
-    conn.commit()
+    with get_sync_session(db_path) as session:
+        # Delete existing entry for this content_hash, then insert new one.
+        # This ensures re-registration overwrites cleanly.
+        existing = session.execute(
+            select(TrustRegistry).where(TrustRegistry.content_hash == content_hash)
+        ).scalars().all()
+        for entry in existing:
+            session.delete(entry)
+
+        session.add(TrustRegistry(
+            content_hash=content_hash,
+            source=source,
+            trust_level=trust_level,
+            registered_at=registered_at,
+            expires_at=expires_at,
+        ))
 
     return {
         "registered": True,
@@ -668,13 +649,13 @@ def do_check_trust(
             f"Must be one of: {', '.join(TRUST_LEVELS)}"
         )
 
-    conn = get_connection(db_path)
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT trust_level, expires_at FROM trust_registry WHERE content_hash = ?",
-        (content_hash,),
-    )
-    row = cur.fetchone()
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    with get_sync_session(db_path) as session:
+        row = session.execute(
+            select(TrustRegistry).where(TrustRegistry.content_hash == content_hash)
+        ).scalars().first()
 
     if row is None:
         return {
@@ -685,16 +666,17 @@ def do_check_trust(
             "expired": False,
         }
 
-    stored_level, expires_at_str = row
+    stored_level = row.trust_level
+    expires_at_str = row.expires_at
 
     # Check expiration
     expired = False
     if expires_at_str is not None:
-        expires_at = datetime.fromisoformat(expires_at_str)
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        expires_at_dt = datetime.fromisoformat(expires_at_str)
+        if expires_at_dt.tzinfo is None:
+            expires_at_dt = expires_at_dt.replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
-        if now >= expires_at:
+        if now >= expires_at_dt:
             expired = True
 
     if expired:
@@ -786,21 +768,18 @@ def do_check_output(
     # 1. Canary token leaks
     if db_path is not None:
         try:
-            conn = sqlite3.connect(db_path)
-            try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT token, token_type, context FROM canary_tokens")
-                rows = cursor.fetchall()
-            finally:
-                conn.close()
-            for token, token_type, context in rows:
-                if token in text:
+            with get_sync_session(db_path) as session:
+                canaries = session.execute(
+                    select(CanaryToken)
+                ).scalars().all()
+            for canary in canaries:
+                if canary.token in text:
                     canary_leaks.append({
-                        "token_type": token_type,
-                        "context": context,
-                        "evidence": _mask_credential(token),
+                        "token_type": canary.token_type,
+                        "context": canary.context,
+                        "evidence": _mask_credential(canary.token),
                     })
-        except sqlite3.Error:
+        except Exception:
             pass
 
     # 2. Credential patterns
@@ -898,114 +877,119 @@ def do_dashboard(
         "recent_alerts": [],
     }
 
-    try:
-        conn = sqlite3.connect(db_path, timeout=5.0)
-    except (sqlite3.Error, OSError):
-        return result
+    from sqlalchemy import func, text
 
     time_param = f"-{since_hours} hours"
+    time_filter = SecurityEvent.created_at >= func.datetime("now", time_param)
 
     try:
-        # Total events in period
-        try:
-            row = conn.execute(
-                "SELECT COUNT(*) FROM security_events "
-                "WHERE created_at >= datetime('now', ?)",
-                (time_param,),
-            ).fetchone()
-            result["total_events"] = row[0] if row else 0
-        except sqlite3.OperationalError:
-            pass
+        with get_sync_session(db_path) as session:
+            # Total events in period
+            try:
+                row = session.execute(
+                    select(func.count()).select_from(SecurityEvent).where(time_filter)
+                ).scalar()
+                result["total_events"] = row or 0
+            except Exception:
+                pass
 
-        # Injections detected: event_type contains "injection" or "blocked"
-        try:
-            row = conn.execute(
-                "SELECT COUNT(*) FROM security_events "
-                "WHERE created_at >= datetime('now', ?) "
-                "AND (event_type LIKE '%injection%' OR event_type LIKE '%blocked%')",
-                (time_param,),
-            ).fetchone()
-            result["injections_detected"] = row[0] if row else 0
-        except sqlite3.OperationalError:
-            pass
+            # Injections detected: event_type contains "injection" or "blocked"
+            try:
+                row = session.execute(
+                    select(func.count()).select_from(SecurityEvent).where(
+                        time_filter,
+                        SecurityEvent.event_type.like("%injection%")
+                        | SecurityEvent.event_type.like("%blocked%"),
+                    )
+                ).scalar()
+                result["injections_detected"] = row or 0
+            except Exception:
+                pass
 
-        # Canary status
-        try:
-            row = conn.execute("SELECT COUNT(*) FROM canary_tokens").fetchone()
-            total_canaries = row[0] if row else 0
-            row = conn.execute(
-                "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
-            ).fetchone()
-            triggered_canaries = row[0] if row else 0
-            result["canary_status"] = {
-                "total": total_canaries,
-                "triggered": triggered_canaries,
-            }
-        except sqlite3.OperationalError:
-            pass
+            # Canary status
+            try:
+                total_canaries = session.execute(
+                    select(func.count()).select_from(CanaryToken)
+                ).scalar() or 0
+                triggered_canaries = session.execute(
+                    select(func.count()).select_from(CanaryToken).where(
+                        CanaryToken.triggered_at.isnot(None)
+                    )
+                ).scalar() or 0
+                result["canary_status"] = {
+                    "total": total_canaries,
+                    "triggered": triggered_canaries,
+                }
+            except Exception:
+                pass
 
-        # Trust distribution
-        try:
-            rows = conn.execute(
-                "SELECT trust_level, COUNT(*) FROM trust_registry GROUP BY trust_level"
-            ).fetchall()
-            result["trust_distribution"] = {row[0]: row[1] for row in rows}
-        except sqlite3.OperationalError:
-            pass
+            # Trust distribution
+            try:
+                rows = session.execute(
+                    select(TrustRegistry.trust_level, func.count())
+                    .group_by(TrustRegistry.trust_level)
+                ).all()
+                result["trust_distribution"] = {row[0]: row[1] for row in rows}
+            except Exception:
+                pass
 
-        # Top blocked rules: action_taken as rule_id for blocked events
-        try:
-            rows = conn.execute(
-                "SELECT action_taken, COUNT(*) as cnt FROM security_events "
-                "WHERE created_at >= datetime('now', ?) "
-                "AND (event_type LIKE '%blocked%') "
-                "AND action_taken IS NOT NULL "
-                "GROUP BY action_taken "
-                "ORDER BY cnt DESC LIMIT 10",
-                (time_param,),
-            ).fetchall()
-            result["top_blocked_rules"] = [[row[0], row[1]] for row in rows]
-        except sqlite3.OperationalError:
-            pass
+            # Top blocked rules: action_taken as rule_id for blocked events
+            try:
+                rows = session.execute(
+                    select(SecurityEvent.action_taken, func.count().label("cnt"))
+                    .where(
+                        time_filter,
+                        SecurityEvent.event_type.like("%blocked%"),
+                        SecurityEvent.action_taken.isnot(None),
+                    )
+                    .group_by(SecurityEvent.action_taken)
+                    .order_by(func.count().desc())
+                    .limit(10)
+                ).all()
+                result["top_blocked_rules"] = [[row[0], row[1]] for row in rows]
+            except Exception:
+                pass
 
-        # Honeypot triggers
-        try:
-            row = conn.execute(
-                "SELECT COUNT(*) FROM security_events "
-                "WHERE created_at >= datetime('now', ?) "
-                "AND event_type = 'honeypot_triggered'",
-                (time_param,),
-            ).fetchone()
-            result["honeypot_triggers"] = row[0] if row else 0
-        except sqlite3.OperationalError:
-            pass
+            # Honeypot triggers
+            try:
+                row = session.execute(
+                    select(func.count()).select_from(SecurityEvent).where(
+                        time_filter,
+                        SecurityEvent.event_type == "honeypot_triggered",
+                    )
+                ).scalar()
+                result["honeypot_triggers"] = row or 0
+            except Exception:
+                pass
 
-        # Recent alerts: CRITICAL/HIGH events, limit 5, newest first
-        try:
-            rows = conn.execute(
-                "SELECT event_type, severity, created_at, detail "
-                "FROM security_events "
-                "WHERE created_at >= datetime('now', ?) "
-                "AND severity IN ('CRITICAL', 'HIGH') "
-                "ORDER BY created_at DESC LIMIT 5",
-                (time_param,),
-            ).fetchall()
-            alerts = []
-            for row in rows:
-                detail = row[3] or ""
-                if len(detail) > _ALERT_DETAIL_MAX_LEN:
-                    detail = detail[:_ALERT_DETAIL_MAX_LEN]
-                alerts.append({
-                    "event_type": row[0],
-                    "severity": row[1],
-                    "timestamp": row[2],
-                    "detail": detail,
-                })
-            result["recent_alerts"] = alerts
-        except sqlite3.OperationalError:
-            pass
-    finally:
-        conn.close()
+            # Recent alerts: CRITICAL/HIGH events, limit 5, newest first
+            try:
+                alert_rows = session.execute(
+                    select(SecurityEvent)
+                    .where(
+                        time_filter,
+                        SecurityEvent.severity.in_(["CRITICAL", "HIGH"]),
+                    )
+                    .order_by(SecurityEvent.created_at.desc())
+                    .limit(5)
+                ).scalars().all()
+                alerts = []
+                for evt in alert_rows:
+                    detail = evt.detail or ""
+                    if len(detail) > _ALERT_DETAIL_MAX_LEN:
+                        detail = detail[:_ALERT_DETAIL_MAX_LEN]
+                    alerts.append({
+                        "event_type": evt.event_type,
+                        "severity": evt.severity,
+                        "timestamp": evt.created_at,
+                        "detail": detail,
+                    })
+                result["recent_alerts"] = alerts
+            except Exception:
+                pass
+    except Exception:
+        # DB unavailable - return defaults
+        pass
 
     return result
 

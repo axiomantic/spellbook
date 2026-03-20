@@ -2,7 +2,6 @@
 
 import json
 import os
-import sqlite3
 import threading
 import time
 import logging
@@ -11,8 +10,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, Optional, Set
-
-from spellbook.core.db import get_connection
 
 
 logger = logging.getLogger(__name__)
@@ -201,75 +198,107 @@ class SessionWatcher(threading.Thread):
 
     def _cleanup_stale_data(self):
         """Prune old rows from high-volume database tables."""
+        import sqlite3
         from datetime import timedelta
+        from sqlalchemy import delete
+        from spellbook.db.engines import get_sync_session
+        from spellbook.db.spellbook_models import (
+            Correction,
+            Decision,
+            SecurityEvent,
+            SkillOutcome as SkillOutcomeModel,
+            Soul,
+            Subagent,
+        )
 
         now = datetime.now()
         cutoff_30d = (now - timedelta(days=30)).isoformat()
         cutoff_90d = (now - timedelta(days=90)).isoformat()
 
         try:
-            conn = get_connection(self.db_path)
-
-            for table, column, cutoff in [
-                ("souls", "bound_at", cutoff_30d),
-                ("security_events", "created_at", cutoff_90d),
-                ("skill_outcomes", "created_at", cutoff_90d),
-                ("subagents", "spawned_at", cutoff_90d),
-                ("decisions", "decided_at", cutoff_90d),
-                ("corrections", "recorded_at", cutoff_90d),
-            ]:
-                try:
-                    conn.execute(
-                        f"DELETE FROM {table} WHERE {column} < ?",  # noqa: S608
-                        (cutoff,),
-                    )
-                except sqlite3.OperationalError:
-                    pass
-
-            conn.commit()
+            with get_sync_session(self.db_path) as session:
+                # Each delete is wrapped in try/except to handle missing tables
+                cleanup_ops = [
+                    (Soul, Soul.bound_at, cutoff_30d),
+                    (SecurityEvent, SecurityEvent.created_at, cutoff_90d),
+                    (SkillOutcomeModel, SkillOutcomeModel.created_at, cutoff_90d),
+                    (Subagent, Subagent.spawned_at, cutoff_90d),
+                    (Decision, Decision.decided_at, cutoff_90d),
+                    (Correction, Correction.recorded_at, cutoff_90d),
+                ]
+                for model, column, cutoff in cleanup_ops:
+                    try:
+                        session.execute(
+                            delete(model).where(column < cutoff)
+                        )
+                    except Exception:
+                        pass
         except Exception:
             pass
 
-        # Clean up old swarm coordination data
+        # Clean up old swarm coordination data (async ORM)
         try:
+            import asyncio
             from spellbook.coordination.state import StateManager
-            sm = StateManager(self.db_path)
-            sm.cleanup_old_swarms(days=7)
+            from spellbook.db import get_coordination_session
+
+            async def _cleanup_swarms():
+                async with get_coordination_session() as session:
+                    sm = StateManager(session=session)
+                    await sm.cleanup_old_swarms(days=7)
+
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(_cleanup_swarms())
+            except RuntimeError:
+                asyncio.run(_cleanup_swarms())
         except Exception:
             pass
 
-        # Clean up old forged workflow data
+        # Clean up old forged workflow data (async ORM)
         try:
-            from spellbook.forged.schema import get_forged_connection
+            from sqlalchemy import delete
+            from spellbook.db import get_forged_session
+            from spellbook.db.forged_models import ForgeToken, ToolAnalytic, ForgeReflection
 
             cutoff_90d_forged = (now - timedelta(days=90)).isoformat()
-            fconn = get_forged_connection()
+
+            async def _cleanup_forged():
+                async with get_forged_session() as session:
+                    try:
+                        await session.execute(
+                            delete(ForgeToken).where(
+                                ForgeToken.invalidated_at.isnot(None),
+                                ForgeToken.invalidated_at < cutoff_90d_forged,
+                            )
+                        )
+                    except Exception:
+                        pass
+
+                    try:
+                        await session.execute(
+                            delete(ToolAnalytic).where(
+                                ToolAnalytic.called_at < cutoff_90d_forged,
+                            )
+                        )
+                    except Exception:
+                        pass
+
+                    try:
+                        await session.execute(
+                            delete(ForgeReflection).where(
+                                ForgeReflection.created_at < cutoff_90d_forged,
+                                ForgeReflection.status == "RESOLVED",
+                            )
+                        )
+                    except Exception:
+                        pass
 
             try:
-                fconn.execute(
-                    "DELETE FROM forge_tokens WHERE invalidated_at IS NOT NULL AND invalidated_at < ?",
-                    (cutoff_90d_forged,),
-                )
-            except sqlite3.OperationalError:
-                pass
-
-            try:
-                fconn.execute(
-                    "DELETE FROM tool_analytics WHERE called_at < ?",
-                    (cutoff_90d_forged,),
-                )
-            except sqlite3.OperationalError:
-                pass
-
-            try:
-                fconn.execute(
-                    "DELETE FROM reflections WHERE created_at < ? AND status = 'RESOLVED'",
-                    (cutoff_90d_forged,),
-                )
-            except sqlite3.OperationalError:
-                pass
-
-            fconn.commit()
+                loop = asyncio.get_running_loop()
+                loop.create_task(_cleanup_forged())
+            except RuntimeError:
+                asyncio.run(_cleanup_forged())
         except Exception:
             pass
 
@@ -392,43 +421,44 @@ class SessionWatcher(threading.Thread):
             session_id: Session identifier
             soul: Extracted soul dict with keys: todos, active_skill, persona, etc.
         """
-        conn = get_connection(self.db_path)
+        from spellbook.db.engines import get_sync_session
+        from spellbook.db.spellbook_models import Soul
 
         # Generate unique soul ID
         soul_id = str(uuid.uuid4())
 
-        conn.execute(
-            """
-            INSERT INTO souls (
-                id, project_path, session_id, bound_at,
-                persona, active_skill, skill_phase,
-                todos, recent_files, exact_position, workflow_pattern
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                soul_id,
-                self.project_path,
-                session_id,
-                datetime.now().isoformat(),
-                soul.get("persona"),
-                soul.get("active_skill"),
-                soul.get("skill_phase"),
-                json.dumps(soul.get("todos", [])),
-                json.dumps(soul.get("recent_files", [])),
-                json.dumps(soul.get("exact_position", [])),
-                soul.get("workflow_pattern"),
-            ),
-        )
-        conn.commit()
+        with get_sync_session(self.db_path) as session:
+            soul_record = Soul(
+                id=soul_id,
+                project_path=self.project_path,
+                session_id=session_id,
+                bound_at=datetime.now().isoformat(),
+                persona=soul.get("persona"),
+                active_skill=soul.get("active_skill"),
+                skill_phase=soul.get("skill_phase"),
+                todos=json.dumps(soul.get("todos", [])),
+                recent_files=json.dumps(soul.get("recent_files", [])),
+                exact_position=json.dumps(soul.get("exact_position", [])),
+                workflow_pattern=soul.get("workflow_pattern"),
+            )
+            session.add(soul_record)
 
     def _write_heartbeat(self):
         """Write heartbeat to database."""
-        conn = get_connection(self.db_path)
-        conn.execute(
-            "INSERT OR REPLACE INTO heartbeat (id, timestamp) VALUES (1, ?)",
-            (datetime.now().isoformat(),)
-        )
-        conn.commit()
+        from spellbook.db.engines import get_sync_session
+        from spellbook.db.spellbook_models import Heartbeat
+        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+        with get_sync_session(self.db_path) as session:
+            stmt = sqlite_insert(Heartbeat).values(
+                id=1,
+                timestamp=datetime.now().isoformat(),
+            )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_={"timestamp": stmt.excluded.timestamp},
+            )
+            session.execute(stmt)
 
 
 def is_heartbeat_fresh(db_path: str, max_age: float = 30.0) -> bool:
@@ -442,18 +472,21 @@ def is_heartbeat_fresh(db_path: str, max_age: float = 30.0) -> bool:
         True if heartbeat exists and is fresh
     """
     try:
-        conn = get_connection(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT timestamp FROM heartbeat WHERE id = 1")
-        row = cursor.fetchone()
+        from sqlalchemy import select
+        from spellbook.db.engines import get_sync_session
+        from spellbook.db.spellbook_models import Heartbeat
 
-        if not row:
+        with get_sync_session(db_path) as session:
+            stmt = select(Heartbeat).where(Heartbeat.id == 1)
+            hb = session.execute(stmt).scalars().first()
+
+        if not hb or not hb.timestamp:
             return False
 
-        heartbeat = datetime.fromisoformat(row[0])
+        heartbeat = datetime.fromisoformat(hb.timestamp)
         age = (datetime.now() - heartbeat).total_seconds()
 
         return age < max_age
-    except sqlite3.OperationalError:
-        # Table doesn't exist - database not initialized
+    except Exception:
+        # Table doesn't exist or other error - database not initialized
         return False

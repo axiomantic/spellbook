@@ -493,99 +493,85 @@ def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
     Returns:
         ResumeFields dict with resume_available and optional resume context
     """
-    from spellbook.core.db import get_connection
+    from sqlalchemy import select
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import Soul, WorkflowState
 
     try:
-        conn = get_connection(db_path)
-        cursor = conn.cursor()
-
         # Calculate threshold time (24 hours ago)
         from datetime import timedelta
         threshold = (datetime.now() - timedelta(hours=24)).isoformat()
 
-        # Query for recent soul (within 24 hours)
-        cursor.execute("""
-            SELECT
-                id,
-                session_id,
-                bound_at,
-                persona,
-                active_skill,
-                skill_phase,
-                todos,
-                recent_files,
-                exact_position,
-                workflow_pattern
-            FROM souls
-            WHERE project_path = ?
-              AND bound_at > ?
-            ORDER BY bound_at DESC
-            LIMIT 1
-        """, (project_path, threshold))
+        with get_sync_session(db_path) as session:
+            # Query for recent soul (within 24 hours)
+            stmt = (
+                select(Soul)
+                .where(Soul.project_path == project_path)
+                .where(Soul.bound_at > threshold)
+                .order_by(Soul.bound_at.desc())
+                .limit(1)
+            )
+            soul = session.execute(stmt).scalars().first()
 
-        row = cursor.fetchone()
+            if not soul:
+                return ResumeFields(resume_available=False)
 
-        if not row:
-            return ResumeFields(resume_available=False)
+            # Extract fields from ORM object
+            soul_id = soul.id
+            session_id = soul.session_id
+            bound_at = soul.bound_at
+            persona = soul.persona
+            active_skill = soul.active_skill
+            skill_phase = soul.skill_phase
+            todos_json = soul.todos
+            recent_files_json = soul.recent_files
+            exact_position = soul.exact_position
+            workflow_pattern = soul.workflow_pattern
 
-        # Parse row
-        soul_id = row[0]
-        session_id = row[1]
-        bound_at = row[2]
-        persona = row[3]
-        active_skill = row[4]
-        skill_phase = row[5]
-        todos_json = row[6]
-        recent_files_json = row[7]
-        exact_position = row[8]
-        workflow_pattern = row[9]
+            # Validate required fields
+            if not soul_id or not bound_at:
+                logger.error("Corrupted soul record: missing required fields")
+                return ResumeFields(resume_available=False)
 
-        # Validate required fields
-        if not soul_id or not bound_at:
-            logger.error("Corrupted soul record: missing required fields")
-            return ResumeFields(resume_available=False)
+            # Parse recent_files
+            recent_files = []
+            if recent_files_json:
+                try:
+                    recent_files = json.loads(recent_files_json)
+                except json.JSONDecodeError:
+                    logger.warning("Could not parse recent_files JSON")
 
-        # Parse recent_files
-        recent_files = []
-        if recent_files_json:
+            # Count pending todos and check for corruption
+            pending_count, todos_corrupted = count_pending_todos(todos_json)
+
+            # Query workflow_state table for additional context
+            skill_constraints = None
+            binding_decisions = None
+            identity_role = None
+
             try:
-                recent_files = json.loads(recent_files_json)
-            except json.JSONDecodeError:
-                logger.warning("Could not parse recent_files JSON")
+                ws_stmt = (
+                    select(WorkflowState)
+                    .where(WorkflowState.project_path == project_path)
+                )
+                ws = session.execute(ws_stmt).scalars().first()
 
-        # Count pending todos and check for corruption
-        pending_count, todos_corrupted = count_pending_todos(todos_json)
+                if ws:
+                    ws_state = json.loads(ws.state_json)
 
-        # Query workflow_state table for additional context
-        skill_constraints = None
-        binding_decisions = None
-        identity_role = None
+                    # Extract skill constraints from workflow state
+                    if ws_state.get("skill_constraints"):
+                        skill_constraints = ws_state["skill_constraints"]
 
-        try:
-            cursor.execute("""
-                SELECT state_json, updated_at
-                FROM workflow_state
-                WHERE project_path = ?
-            """, (project_path,))
-            ws_row = cursor.fetchone()
+                    # Extract binding decisions from workflow state
+                    if ws_state.get("decisions_binding"):
+                        binding_decisions = ws_state["decisions_binding"]
 
-            if ws_row:
-                ws_state_json, ws_updated_at = ws_row
-                ws_state = json.loads(ws_state_json)
-
-                # Extract skill constraints from workflow state
-                if ws_state.get("skill_constraints"):
-                    skill_constraints = ws_state["skill_constraints"]
-
-                # Extract binding decisions from workflow state
-                if ws_state.get("decisions_binding"):
-                    binding_decisions = ws_state["decisions_binding"]
-
-                # Extract identity role from workflow state
-                if ws_state.get("identity_role"):
-                    identity_role = ws_state["identity_role"]
-        except Exception as e:
-            logger.warning(f"Failed to query workflow_state: {e}")
+                    # Extract identity role from workflow state
+                    if ws_state.get("identity_role"):
+                        identity_role = ws_state["identity_role"]
+            except Exception as e:
+                logger.warning(f"Failed to query workflow_state: {e}")
 
         # Fallback: read constraints from skill file if not in workflow state
         if skill_constraints is None and active_skill:
@@ -1024,23 +1010,19 @@ def load_workflow_state(
             trigger: The trigger that saved the state, or None.
             rejected: True if state existed but failed validation.
     """
-    from spellbook.core.db import get_connection
+    from sqlalchemy import select
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import WorkflowState
 
     try:
-        conn = get_connection(db_path)
-        cursor = conn.cursor()
+        with get_sync_session(db_path) as session:
+            stmt = (
+                select(WorkflowState)
+                .where(WorkflowState.project_path == project_path)
+            )
+            ws = session.execute(stmt).scalars().first()
 
-        cursor.execute(
-            """
-            SELECT state_json, trigger, updated_at
-            FROM workflow_state
-            WHERE project_path = ?
-            """,
-            (project_path,),
-        )
-        row = cursor.fetchone()
-
-        if row is None:
+        if ws is None:
             return {
                 "success": True,
                 "found": False,
@@ -1049,7 +1031,9 @@ def load_workflow_state(
                 "trigger": None,
             }
 
-        state_json_str, trigger, updated_at_str = row
+        state_json_str = ws.state_json
+        trigger = ws.trigger
+        updated_at_str = ws.updated_at
 
         # Parse updated_at timestamp
         from datetime import timezone

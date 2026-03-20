@@ -10,6 +10,8 @@ import csv
 import io
 import sqlite3
 
+from sqlalchemy.exc import OperationalError as SAOperationalError
+
 from spellbook.cli.formatting import output
 from spellbook.core.db import get_db_path
 
@@ -73,7 +75,7 @@ def _run_search(args: argparse.Namespace) -> None:
             namespace=args.namespace,
             limit=args.limit,
         )
-    except (sqlite3.OperationalError, FileNotFoundError, OSError):
+    except (sqlite3.OperationalError, SAOperationalError, FileNotFoundError, OSError):
         result = {"memories": [], "count": 0, "query": args.query}
 
     if json_mode:

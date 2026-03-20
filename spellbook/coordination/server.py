@@ -43,14 +43,14 @@ class CoordinationServer:
         """Setup FastAPI routes."""
 
         @self.app.post("/swarm/create", response_model=SwarmCreateResponse, status_code=status.HTTP_201_CREATED)
-        def create_swarm(
+        async def create_swarm(
             feature: str,
             manifest_path: str,
             auto_merge: bool = False,
             notify_on_complete: bool = True
         ):
             """Create a new swarm."""
-            swarm_id = self.state.create_swarm(feature, manifest_path, auto_merge, notify_on_complete)
+            swarm_id = await self.state.create_swarm(feature, manifest_path, auto_merge, notify_on_complete)
             return SwarmCreateResponse(
                 swarm_id=swarm_id,
                 endpoint=f"http://{self.host}:{self.port}/swarm/{swarm_id}",
@@ -60,15 +60,15 @@ class CoordinationServer:
             )
 
         @self.app.post("/swarm/{swarm_id}/register", response_model=RegisterResponse)
-        def register_worker(swarm_id: str, request: RegisterRequest):
+        async def register_worker(swarm_id: str, request: RegisterRequest):
             """Register a worker with the swarm."""
             try:
-                self.state.get_swarm(swarm_id)
+                await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
             try:
-                self.state.register_worker(
+                await self.state.register_worker(
                     swarm_id=swarm_id,
                     packet_id=request.packet_id,
                     packet_name=request.packet_name,
@@ -89,14 +89,14 @@ class CoordinationServer:
             )
 
         @self.app.post("/swarm/{swarm_id}/progress", response_model=ProgressResponse)
-        def report_progress(swarm_id: str, request: ProgressRequest):
+        async def report_progress(swarm_id: str, request: ProgressRequest):
             """Report worker progress."""
             try:
-                self.state.get_swarm(swarm_id)
+                await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
-            self.state.update_progress(
+            await self.state.update_progress(
                 swarm_id=swarm_id,
                 packet_id=request.packet_id,
                 task_id=request.task_id,
@@ -117,14 +117,14 @@ class CoordinationServer:
             )
 
         @self.app.post("/swarm/{swarm_id}/complete", response_model=CompleteResponse)
-        def report_complete(swarm_id: str, request: CompleteRequest):
+        async def report_complete(swarm_id: str, request: CompleteRequest):
             """Report worker completion."""
             try:
-                swarm = self.state.get_swarm(swarm_id)
+                swarm = await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
-            self.state.mark_complete(
+            await self.state.mark_complete(
                 swarm_id=swarm_id,
                 packet_id=request.packet_id,
                 final_commit=request.final_commit,
@@ -133,11 +133,10 @@ class CoordinationServer:
             )
 
             # Check if swarm is now complete
-            updated_swarm = self.state.get_swarm(swarm_id)
+            updated_swarm = await self.state.get_swarm(swarm_id)
             swarm_complete = updated_swarm["status"] == "complete"
 
             # Count remaining workers
-            # This is a simplified calculation - in production would query workers table
             remaining_workers = 0 if swarm_complete else 1
 
             return CompleteResponse(
@@ -150,14 +149,14 @@ class CoordinationServer:
             )
 
         @self.app.post("/swarm/{swarm_id}/error", response_model=ErrorResponse)
-        def report_error(swarm_id: str, request: ErrorRequest):
+        async def report_error(swarm_id: str, request: ErrorRequest):
             """Report worker error."""
             try:
-                self.state.get_swarm(swarm_id)
+                await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
-            self.state.record_error(
+            await self.state.record_error(
                 swarm_id=swarm_id,
                 packet_id=request.packet_id,
                 task_id=request.task_id,
@@ -180,16 +179,13 @@ class CoordinationServer:
             )
 
         @self.app.get("/swarm/{swarm_id}/status", response_model=SwarmStatus)
-        def get_swarm_status(swarm_id: str):
+        async def get_swarm_status(swarm_id: str):
             """Get current swarm status."""
             try:
-                swarm = self.state.get_swarm(swarm_id)
+                swarm = await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
-            # Get events to build worker status
-            # For MVP, we'll return minimal status
-            # Full implementation would query workers table and build detailed status
             return SwarmStatus(
                 swarm_id=swarm_id,
                 status=swarm["status"],
@@ -206,7 +202,7 @@ class CoordinationServer:
         async def get_events_sse(swarm_id: str, since_event_id: int = 0):
             """Get events via Server-Sent Events (SSE)."""
             try:
-                self.state.get_swarm(swarm_id)
+                await self.state.get_swarm(swarm_id)
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Swarm not found: {swarm_id}")
 
@@ -215,7 +211,7 @@ class CoordinationServer:
                 last_id = since_event_id
 
                 while True:
-                    events = self.state.get_events(swarm_id, since_event_id=last_id)
+                    events = await self.state.get_events(swarm_id, since_event_id=last_id)
 
                     for event in events:
                         # Format as SSE
@@ -234,7 +230,7 @@ class CoordinationServer:
                         last_id = event["event_id"]
 
                     # Check if swarm is complete
-                    swarm = self.state.get_swarm(swarm_id)
+                    swarm = await self.state.get_swarm(swarm_id)
                     if swarm["status"] in ("complete", "failed"):
                         break
 

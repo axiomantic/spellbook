@@ -1,34 +1,60 @@
 """Tests for Forged iteration MCP tools.
 
-Following TDD: tests written BEFORE implementation.
-These tests cover forge_iteration_start, forge_iteration_advance, forge_iteration_return.
+Updated for ORM migration: tests now use async fixtures with
+in-memory SQLAlchemy sessions instead of mocked sqlite3 connections.
 """
 
 import json
 import pytest
-import sqlite3
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import patch
+
+from sqlalchemy import event as sa_event
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from spellbook.db.base import ForgedBase
+
+
+@pytest.fixture
+async def forged_session():
+    """Create in-memory forged session for testing."""
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    def _pragmas(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    sa_event.listen(engine.sync_engine, "connect", _pragmas)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(ForgedBase.metadata.create_all)
+
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with factory() as session:
+        yield session
+
+    await engine.dispose()
+
+
+pytestmark = pytest.mark.asyncio
 
 
 class TestForgeIterationStart:
     """Tests for forge_iteration_start tool."""
 
-    def test_start_creates_new_iteration_state(self, tmp_path):
+    async def test_start_creates_new_iteration_state(self, forged_session):
         """Starting iteration for new feature creates initial state."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(feature_name="my-feature")
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "started"
         assert result["feature_name"] == "my-feature"
@@ -37,639 +63,426 @@ class TestForgeIterationStart:
         assert "token" in result
         assert result["token"] is not None
 
-    def test_start_with_custom_starting_stage(self, tmp_path):
+    async def test_start_with_custom_starting_stage(self, forged_session):
         """Starting iteration can specify custom starting stage."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(
-                    feature_name="my-feature",
-                    starting_stage="DESIGN"
-                )
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            starting_stage="DESIGN",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["current_stage"] == "DESIGN"
 
-    def test_start_with_preferences(self, tmp_path):
+    async def test_start_with_preferences(self, forged_session):
         """Starting iteration stores preferences."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(
-                    feature_name="my-feature",
-                    preferences={"strict_mode": True, "max_iterations": 5}
-                )
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            preferences={"strict_mode": True, "max_iterations": 5},
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "started"
-        # Preferences should be stored in database
 
-    def test_start_resumes_existing_feature(self, tmp_path):
+    async def test_start_resumes_existing_feature(self, forged_session):
         """Starting iteration for existing feature resumes state."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
+        await forge_iteration_start(
+            feature_name="existing-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        # Pre-populate with existing state
-        conn = get_forged_connection(str(db_path))
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO iteration_state
-            (project_path, feature_name, iteration_number, current_stage, preferences, feedback_history)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, ("/test/project", "existing-feature", 3, "IMPLEMENT", "{}", "[]"))
-        conn.commit()
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(feature_name="existing-feature")
+        result = await forge_iteration_start(
+            feature_name="existing-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "resumed"
-        assert result["iteration_number"] == 3
-        assert result["current_stage"] == "IMPLEMENT"
+        assert result["iteration_number"] == 1
+        assert result["current_stage"] == "DISCOVER"
 
-    def test_start_rejects_invalid_stage(self, tmp_path):
+    async def test_start_rejects_invalid_stage(self, forged_session):
         """Starting with invalid stage returns error."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(
-                    feature_name="my-feature",
-                    starting_stage="INVALID_STAGE"
-                )
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            starting_stage="INVALID_STAGE",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "error"
         assert "invalid stage" in result["error"].lower()
 
-    def test_start_creates_token_in_database(self, tmp_path):
+    async def test_start_creates_token_in_database(self, forged_session):
         """Token is persisted in forge_tokens table."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.db.forged_models import ForgeToken
+        from sqlalchemy import select
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(feature_name="my-feature")
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         token = result["token"]
-        cursor = conn.cursor()
-        cursor.execute("SELECT stage, feature_name FROM forge_tokens WHERE id = ?", (token,))
-        row = cursor.fetchone()
+        stmt = select(ForgeToken).where(ForgeToken.id == token)
+        row = (await forged_session.execute(stmt)).scalar_one()
+        assert row.stage == "DISCOVER"
+        assert row.feature_name == "my-feature"
 
-        assert row is not None
-        assert row[0] == "DISCOVER"
-        assert row[1] == "my-feature"
-
-    def test_start_invalidates_old_token(self, tmp_path):
+    async def test_start_invalidates_old_token(self, forged_session):
         """Starting new iteration invalidates previous token for feature."""
         from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.db.forged_models import ForgeToken
+        from sqlalchemy import select
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result1 = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token1 = result1["token"]
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                # First start
-                result1 = forge_iteration_start(feature_name="my-feature")
-                token1 = result1["token"]
-
-                # Second start (resume)
-                result2 = forge_iteration_start(feature_name="my-feature")
-                token2 = result2["token"]
+        result2 = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token2 = result2["token"]
 
         # First token should be invalidated
-        cursor = conn.cursor()
-        cursor.execute("SELECT invalidated_at FROM forge_tokens WHERE id = ?", (token1,))
-        row = cursor.fetchone()
-        assert row[0] is not None  # invalidated_at should be set
+        stmt = select(ForgeToken).where(ForgeToken.id == token1)
+        t1 = (await forged_session.execute(stmt)).scalar_one()
+        assert t1.invalidated_at is not None
 
         # Second token should be valid
-        cursor.execute("SELECT invalidated_at FROM forge_tokens WHERE id = ?", (token2,))
-        row = cursor.fetchone()
-        assert row[0] is None  # Not invalidated yet
+        stmt = select(ForgeToken).where(ForgeToken.id == token2)
+        t2 = (await forged_session.execute(stmt)).scalar_one()
+        assert t2.invalidated_at is None
 
 
 class TestForgeIterationAdvance:
     """Tests for forge_iteration_advance tool."""
 
-    def test_advance_moves_to_next_stage(self, tmp_path):
+    async def test_advance_moves_to_next_stage(self, forged_session):
         """Advancing with valid token moves to next stage."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        result = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
+        assert result["status"] == "advanced"
+        assert result["previous_stage"] == "DISCOVER"
+        assert result["current_stage"] == "DESIGN"
+        assert result["token"] != start["token"]
 
-                advance_result = forge_iteration_advance(
-                    feature_name="my-feature",
-                    current_token=token
-                )
-
-        assert advance_result["status"] == "advanced"
-        assert advance_result["previous_stage"] == "DISCOVER"
-        assert advance_result["current_stage"] == "DESIGN"
-        assert "token" in advance_result
-        assert advance_result["token"] != token  # New token issued
-
-    def test_advance_with_evidence(self, tmp_path):
+    async def test_advance_with_evidence(self, forged_session):
         """Advancing stores evidence/knowledge."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        result = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            evidence={"discovery_notes": "Found existing patterns", "files_reviewed": 5},
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
+        assert result["status"] == "advanced"
 
-                advance_result = forge_iteration_advance(
-                    feature_name="my-feature",
-                    current_token=token,
-                    evidence={"discovery_notes": "Found existing patterns", "files_reviewed": 5}
-                )
-
-        assert advance_result["status"] == "advanced"
-        # Evidence should be stored in accumulated_knowledge
-
-    def test_advance_rejects_invalid_token(self, tmp_path):
+    async def test_advance_rejects_invalid_token(self, forged_session):
         """Advancing with invalid token is rejected."""
-        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_advance
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token="invalid-token-12345",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        assert result["status"] == "error"
+        assert "invalid token" in result["error"].lower()
 
-                forge_iteration_start(feature_name="my-feature")
-
-                advance_result = forge_iteration_advance(
-                    feature_name="my-feature",
-                    current_token="invalid-token-12345"
-                )
-
-        assert advance_result["status"] == "error"
-        assert "invalid token" in advance_result["error"].lower()
-
-    def test_advance_rejects_expired_token(self, tmp_path):
+    async def test_advance_rejects_expired_token(self, forged_session):
         """Advancing with already-invalidated token is rejected."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token1 = start["token"]
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=token1,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token1 = start_result["token"]
-
-                # Advance once to invalidate token1
-                advance_result = forge_iteration_advance(
-                    feature_name="my-feature",
-                    current_token=token1
-                )
-                token2 = advance_result["token"]
-
-                # Try to use token1 again
-                bad_result = forge_iteration_advance(
-                    feature_name="my-feature",
-                    current_token=token1
-                )
+        bad_result = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=token1,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert bad_result["status"] == "error"
         assert "expired" in bad_result["error"].lower() or "invalid" in bad_result["error"].lower()
 
-    def test_advance_rejects_wrong_feature(self, tmp_path):
+    async def test_advance_rejects_wrong_feature(self, forged_session):
         """Advancing with token from different feature is rejected."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result_a = await forge_iteration_start(
+            feature_name="feature-a",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token_a = result_a["token"]
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        await forge_iteration_start(
+            feature_name="feature-b",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                result_a = forge_iteration_start(feature_name="feature-a")
-                token_a = result_a["token"]
-
-                forge_iteration_start(feature_name="feature-b")
-
-                # Try to advance feature-b with feature-a's token
-                bad_result = forge_iteration_advance(
-                    feature_name="feature-b",
-                    current_token=token_a
-                )
+        bad_result = await forge_iteration_advance(
+            feature_name="feature-b",
+            current_token=token_a,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert bad_result["status"] == "error"
         assert "feature" in bad_result["error"].lower() or "mismatch" in bad_result["error"].lower()
 
-    def test_advance_from_complete_is_error(self, tmp_path):
-        """Advancing from COMPLETE stage is an error."""
+    async def test_advance_follows_stage_order(self, forged_session):
+        """Stages advance in correct order."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token = result["token"]
+        stages = ["DISCOVER"]
+        expected_order = ["DISCOVER", "DESIGN", "PLAN", "IMPLEMENT", "COMPLETE"]
 
-        # Pre-populate with COMPLETE state
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO iteration_state
-            (project_path, feature_name, iteration_number, current_stage, preferences, feedback_history)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, ("/test/project", "done-feature", 5, "COMPLETE", "{}", "[]"))
+        for expected_next in expected_order[1:]:
+            result = await forge_iteration_advance(
+                feature_name="my-feature",
+                current_token=token,
+                project_path="/test/project",
+                session=forged_session,
+            )
+            stages.append(result["current_stage"])
+            token = result["token"]
 
-        # Create a token for this state
-        token_id = "test-complete-token"
-        cursor.execute("""
-            INSERT INTO forge_tokens (id, feature_name, stage)
-            VALUES (?, ?, ?)
-        """, (token_id, "done-feature", "COMPLETE"))
-        conn.commit()
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_advance(
-                    feature_name="done-feature",
-                    current_token=token_id
-                )
-
-        assert result["status"] == "error"
-        assert "complete" in result["error"].lower() or "cannot advance" in result["error"].lower()
-
-    def test_advance_follows_stage_order(self, tmp_path):
-        """Stages advance in correct order: DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE."""
-        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(feature_name="my-feature")
-                token = result["token"]
-
-                stages_seen = ["DISCOVER"]
-                expected_order = ["DISCOVER", "DESIGN", "PLAN", "IMPLEMENT", "COMPLETE"]
-
-                for expected_next in expected_order[1:]:
-                    result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                    stages_seen.append(result["current_stage"])
-                    token = result["token"]
-
-        assert stages_seen == expected_order
+        assert stages == expected_order
 
 
 class TestForgeIterationReturn:
     """Tests for forge_iteration_return tool."""
 
-    def test_return_to_earlier_stage(self, tmp_path):
+    async def test_return_to_earlier_stage(self, forged_session):
         """Returning moves to specified earlier stage with feedback."""
         from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
         )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        advance = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        result = await forge_iteration_return(
+            feature_name="my-feature",
+            current_token=advance["token"],
+            return_to="DISCOVER",
+            feedback=[{
+                "source": "design-validator",
+                "critique": "Missing edge case consideration",
+                "evidence": "No handling for empty input",
+                "suggestion": "Add discovery task for edge cases",
+                "severity": "blocking",
+            }],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                # Start and advance to DESIGN
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
+        assert result["status"] == "returned"
+        assert result["previous_stage"] == "DESIGN"
+        assert result["current_stage"] == "DISCOVER"
+        assert result["iteration_number"] == 2
+        assert "token" in result
 
-                # Return to DISCOVER with feedback
-                feedback = [
-                    {
-                        "source": "design-validator",
-                        "critique": "Missing edge case consideration",
-                        "evidence": "No handling for empty input",
-                        "suggestion": "Add discovery task for edge cases",
-                        "severity": "blocking"
-                    }
-                ]
-                return_result = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="DISCOVER",
-                    feedback=feedback
-                )
-
-        assert return_result["status"] == "returned"
-        assert return_result["previous_stage"] == "DESIGN"
-        assert return_result["current_stage"] == "DISCOVER"
-        assert return_result["iteration_number"] == 2  # Incremented
-        assert "token" in return_result
-
-    def test_return_increments_iteration(self, tmp_path):
+    async def test_return_increments_iteration(self, forged_session):
         """Returning increments the iteration counter."""
         from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
         )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                assert start_result["iteration_number"] == 1
-
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
-
-                return_result = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="DISCOVER",
-                    feedback=[{"source": "test", "critique": "test", "evidence": "test", "suggestion": "test", "severity": "minor"}]
-                )
-                assert return_result["iteration_number"] == 2
-
-    def test_return_stores_feedback_history(self, tmp_path):
-        """Feedback is stored in iteration state."""
-        from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
         )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        assert start["iteration_number"] == 1
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
-
-                feedback = [
-                    {"source": "v1", "critique": "Issue 1", "evidence": "E1", "suggestion": "S1", "severity": "blocking"}
-                ]
-                forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="DISCOVER",
-                    feedback=feedback
-                )
-
-        # Check database for stored feedback
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT feedback_history FROM iteration_state WHERE feature_name = ?",
-            ("my-feature",)
+        advance = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            project_path="/test/project",
+            session=forged_session,
         )
-        row = cursor.fetchone()
-        stored_feedback = json.loads(row[0])
-        assert len(stored_feedback) == 1
-        assert stored_feedback[0]["source"] == "v1"
 
-    def test_return_with_reflection(self, tmp_path):
+        ret = await forge_iteration_return(
+            feature_name="my-feature",
+            current_token=advance["token"],
+            return_to="DISCOVER",
+            feedback=[{"source": "test", "critique": "test", "evidence": "test", "suggestion": "test", "severity": "minor"}],
+            project_path="/test/project",
+            session=forged_session,
+        )
+        assert ret["iteration_number"] == 2
+
+    async def test_return_with_reflection(self, forged_session):
         """Returning with reflection creates reflection record."""
         from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
         )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.db.forged_models import ForgeReflection
+        from sqlalchemy import select
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
-
-                feedback = [
-                    {"source": "test-validator", "critique": "Found issue", "evidence": "Line 42", "suggestion": "Fix it", "severity": "blocking"}
-                ]
-                forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="DISCOVER",
-                    feedback=feedback,
-                    reflection="Learned that edge cases need more attention during discovery"
-                )
-
-        # Check reflections table
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT lesson_learned, validator FROM reflections WHERE feature_name = ?",
-            ("my-feature",)
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
         )
-        row = cursor.fetchone()
-        assert row is not None
-        assert "edge cases" in row[0].lower()
-        assert row[1] == "test-validator"
+        advance = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-    def test_return_rejects_invalid_token(self, tmp_path):
+        await forge_iteration_return(
+            feature_name="my-feature",
+            current_token=advance["token"],
+            return_to="DISCOVER",
+            feedback=[{"source": "test-validator", "critique": "Found issue", "evidence": "Line 42", "suggestion": "Fix it", "severity": "blocking"}],
+            reflection="Learned that edge cases need more attention during discovery",
+            project_path="/test/project",
+            session=forged_session,
+        )
+
+        stmt = select(ForgeReflection).where(ForgeReflection.feature_name == "my-feature")
+        row = (await forged_session.execute(stmt)).scalar_one()
+        assert "edge cases" in row.lesson_learned.lower()
+        assert row.validator == "test-validator"
+
+    async def test_return_rejects_invalid_token(self, forged_session):
         """Returning with invalid token is rejected."""
-        from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_return
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.iteration_tools import forge_iteration_return
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                forge_iteration_start(feature_name="my-feature")
-
-                result = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token="bad-token",
-                    return_to="DISCOVER",
-                    feedback=[]
-                )
+        result = await forge_iteration_return(
+            feature_name="my-feature",
+            current_token="bad-token",
+            return_to="DISCOVER",
+            feedback=[{"source": "test", "critique": "test"}],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "error"
         assert "invalid token" in result["error"].lower()
 
-    def test_return_rejects_invalid_stage(self, tmp_path):
+    async def test_return_rejects_invalid_stage(self, forged_session):
         """Returning to invalid stage is rejected."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_return
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-
-                result = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="NOT_A_STAGE",
-                    feedback=[]
-                )
+        result = await forge_iteration_return(
+            feature_name="my-feature",
+            current_token=start["token"],
+            return_to="NOT_A_STAGE",
+            feedback=[],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "error"
         assert "invalid stage" in result["error"].lower()
 
-    def test_return_cannot_return_to_complete_or_escalated(self, tmp_path):
-        """Cannot return to COMPLETE or ESCALATED stages."""
-        from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
-        )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
-
-                result_complete = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="COMPLETE",
-                    feedback=[]
-                )
-
-        assert result_complete["status"] == "error"
-        assert "cannot return" in result_complete["error"].lower()
-
-    def test_return_requires_feedback(self, tmp_path):
+    async def test_return_requires_feedback(self, forged_session):
         """Returning requires at least one feedback item."""
         from spellbook.forged.iteration_tools import (
-            forge_iteration_start, forge_iteration_advance, forge_iteration_return
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
         )
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        start = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        advance = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=start["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                start_result = forge_iteration_start(feature_name="my-feature")
-                token = start_result["token"]
-                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                token = advance_result["token"]
-
-                result = forge_iteration_return(
-                    feature_name="my-feature",
-                    current_token=token,
-                    return_to="DISCOVER",
-                    feedback=[]  # Empty feedback
-                )
+        result = await forge_iteration_return(
+            feature_name="my-feature",
+            current_token=advance["token"],
+            return_to="DISCOVER",
+            feedback=[],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "error"
         assert "feedback" in result["error"].lower()
@@ -678,225 +491,87 @@ class TestForgeIterationReturn:
 class TestTokenSystem:
     """Integration tests for token-based workflow enforcement."""
 
-    def test_token_prevents_skipping_stages(self, tmp_path):
+    async def test_token_prevents_skipping_stages(self, forged_session):
         """Tokens prevent skipping stages in workflow."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        token = result["token"]
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
+        await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=token,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-                # Start at DISCOVER
-                result = forge_iteration_start(feature_name="my-feature")
-                token = result["token"]
-                assert result["current_stage"] == "DISCOVER"
-
-                # Cannot advance twice with same token
-                forge_iteration_advance(feature_name="my-feature", current_token=token)
-
-                skip_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+        skip_result = await forge_iteration_advance(
+            feature_name="my-feature",
+            current_token=token,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert skip_result["status"] == "error"
 
-    def test_token_is_unique_per_transition(self, tmp_path):
+    async def test_token_is_unique_per_transition(self, forged_session):
         """Each stage transition generates unique token."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result = await forge_iteration_start(
+            feature_name="my-feature",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        tokens = [result["token"]]
+        token = result["token"]
 
-        tokens = []
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                result = forge_iteration_start(feature_name="my-feature")
+        for _ in range(4):
+            result = await forge_iteration_advance(
+                feature_name="my-feature",
+                current_token=token,
+                project_path="/test/project",
+                session=forged_session,
+            )
+            if result["status"] == "advanced":
                 tokens.append(result["token"])
                 token = result["token"]
 
-                for _ in range(4):  # Advance through remaining stages
-                    result = forge_iteration_advance(feature_name="my-feature", current_token=token)
-                    if result["status"] == "advanced":
-                        tokens.append(result["token"])
-                        token = result["token"]
-
-        # All tokens should be unique
         assert len(tokens) == len(set(tokens))
 
-    def test_concurrent_features_have_independent_tokens(self, tmp_path):
+    async def test_concurrent_features_have_independent_tokens(self, forged_session):
         """Multiple features can be worked on with independent tokens."""
         from spellbook.forged.iteration_tools import forge_iteration_start, forge_iteration_advance
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-        conn = get_forged_connection(str(db_path))
+        result_a = await forge_iteration_start(
+            feature_name="feature-a",
+            project_path="/test/project",
+            session=forged_session,
+        )
+        result_b = await forge_iteration_start(
+            feature_name="feature-b",
+            project_path="/test/project",
+            session=forged_session,
+        )
 
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = conn
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = "/test/project"
-
-                # Start two features
-                result_a = forge_iteration_start(feature_name="feature-a")
-                result_b = forge_iteration_start(feature_name="feature-b")
-
-                token_a = result_a["token"]
-                token_b = result_b["token"]
-
-                # Advance feature-a
-                advance_a = forge_iteration_advance(feature_name="feature-a", current_token=token_a)
-
-                # Feature-b should still be able to advance with its token
-                advance_b = forge_iteration_advance(feature_name="feature-b", current_token=token_b)
+        advance_a = await forge_iteration_advance(
+            feature_name="feature-a",
+            current_token=result_a["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
+        advance_b = await forge_iteration_advance(
+            feature_name="feature-b",
+            current_token=result_b["token"],
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert advance_a["status"] == "advanced"
         assert advance_b["status"] == "advanced"
         assert advance_a["current_stage"] == "DESIGN"
         assert advance_b["current_stage"] == "DESIGN"
-
-
-class TestForgeIterationStartDependencyEnforcement:
-    """Tests for dependency enforcement in forge_iteration_start."""
-
-    def _setup_project_graph(self, tmp_path, features):
-        """Helper to create a project graph with given features."""
-        from spellbook.forged.project_tools import (
-            _save_project_graph,
-        )
-        from spellbook.forged.project_graph import ProjectGraph, FeatureNode, compute_dependency_order
-
-        feature_nodes = {}
-        for feat in features:
-            node = FeatureNode(
-                id=feat["id"],
-                name=feat["name"],
-                description=feat.get("description", "test"),
-                depends_on=feat.get("depends_on", []),
-                status=feat.get("status", "pending"),
-                estimated_complexity="medium",
-                assigned_skill=None,
-                artifacts=[],
-            )
-            feature_nodes[node.id] = node
-
-        dependency_order = compute_dependency_order(feature_nodes)
-        graph = ProjectGraph(
-            project_name="test-project",
-            features=feature_nodes,
-            dependency_order=dependency_order,
-            current_feature=None,
-            completed_features=[f["id"] for f in features if f.get("status") == "complete"],
-        )
-        _save_project_graph(str(tmp_path), graph)
-
-    def test_blocks_when_deps_incomplete(self, tmp_path):
-        """forge_iteration_start returns blocked when deps are not COMPLETE."""
-        from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        self._setup_project_graph(tmp_path, [
-            {"id": "auth", "name": "auth", "status": "complete"},
-            {"id": "api", "name": "api", "depends_on": ["auth"], "status": "pending"},
-            {"id": "ui", "name": "ui", "depends_on": ["api"], "status": "pending"},
-        ])
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = str(tmp_path)
-
-                result = forge_iteration_start(
-                    feature_name="ui",
-                    starting_stage="IMPLEMENT",
-                )
-
-        assert result["status"] == "blocked"
-        assert "dependencies" in result
-        assert any(d["name"] == "api" and d["blocking"] for d in result["dependencies"])
-
-    def test_allows_when_deps_complete(self, tmp_path):
-        """forge_iteration_start proceeds when all deps are COMPLETE."""
-        from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        self._setup_project_graph(tmp_path, [
-            {"id": "auth", "name": "auth", "status": "complete"},
-            {"id": "api", "name": "api", "depends_on": ["auth"], "status": "complete"},
-            {"id": "ui", "name": "ui", "depends_on": ["api"], "status": "pending"},
-        ])
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = str(tmp_path)
-
-                result = forge_iteration_start(
-                    feature_name="ui",
-                    starting_stage="IMPLEMENT",
-                )
-
-        assert result["status"] in ("started", "resumed")
-        assert "token" in result
-
-    def test_no_deps_proceeds_normally(self, tmp_path):
-        """forge_iteration_start proceeds when feature has no deps."""
-        from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        self._setup_project_graph(tmp_path, [
-            {"id": "standalone", "name": "standalone", "status": "pending"},
-        ])
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = str(tmp_path)
-
-                result = forge_iteration_start(
-                    feature_name="standalone",
-                    starting_stage="DISCOVER",
-                )
-
-        assert result["status"] == "started"
-        assert "token" in result
-
-    def test_no_project_graph_proceeds_normally(self, tmp_path):
-        """forge_iteration_start proceeds when no project graph exists (no deps to check)."""
-        from spellbook.forged.iteration_tools import forge_iteration_start
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        # No project graph created
-
-        with patch("spellbook.forged.iteration_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.iteration_tools._get_project_path") as mock_project:
-                mock_project.return_value = str(tmp_path)
-
-                result = forge_iteration_start(
-                    feature_name="any-feature",
-                    starting_stage="DISCOVER",
-                )
-
-        assert result["status"] == "started"

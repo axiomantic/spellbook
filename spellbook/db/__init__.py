@@ -19,8 +19,11 @@ from spellbook.db.engines import (
     FractalSession,
     SpellbookSession,
     coordination_engine,
+    dispose_sync_engines,
     forged_engine,
     fractal_engine,
+    get_spellbook_sync_session,
+    get_sync_session,
     spellbook_engine,
 )
 
@@ -111,6 +114,9 @@ __all__ = [
     "get_fractal_session",
     "get_forged_session",
     "get_coordination_session",
+    "get_sync_session",
+    "get_spellbook_sync_session",
+    "dispose_sync_engines",
     "spellbook_db",
     "fractal_db",
     "forged_db",

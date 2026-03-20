@@ -139,7 +139,7 @@ async def delete_graph_endpoint(
     _auth: str = Depends(require_admin_auth),
 ):
     """Delete a fractal graph and all its nodes/edges."""
-    result = await asyncio.to_thread(delete_graph, graph_id)
+    result = await delete_graph(graph_id)
 
     if "error" in result:
         return _error_response("GRAPH_NOT_FOUND", "Graph not found", 404)
@@ -162,7 +162,7 @@ async def update_graph_status_endpoint(
     _auth: str = Depends(require_admin_auth),
 ):
     """Update the status of a fractal graph."""
-    result = await asyncio.to_thread(update_graph_status, graph_id, body.status, body.reason)
+    result = await update_graph_status(graph_id, body.status, body.reason)
 
     if "error" in result:
         error_msg = result["error"]

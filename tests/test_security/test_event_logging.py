@@ -261,7 +261,7 @@ class TestDoLogEventDegradedMode:
         # connection to raise
         bad_path = str(tmp_path / "nonexistent_dir" / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -276,7 +276,7 @@ class TestDoLogEventDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -291,7 +291,7 @@ class TestDoLogEventDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_log_event(
@@ -544,7 +544,7 @@ class TestDoQueryEventsDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
@@ -555,7 +555,7 @@ class TestDoQueryEventsDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
@@ -566,7 +566,7 @@ class TestDoQueryEventsDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)
@@ -577,7 +577,7 @@ class TestDoQueryEventsDegradedMode:
 
         bad_path = str(tmp_path / "bad.db")
         with patch(
-            "spellbook.security.tools.get_connection",
+            "spellbook.security.tools.get_sync_session",
             side_effect=Exception("DB unavailable"),
         ):
             result = do_query_events(db_path=bad_path)

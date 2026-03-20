@@ -17,7 +17,7 @@ import threading
 from functools import wraps
 from typing import Any, Optional
 
-from spellbook.core.db import get_connection, get_db_path
+from spellbook.core.db import get_db_path
 from spellbook.sessions.watcher import is_heartbeat_fresh
 
 logger = logging.getLogger(__name__)
@@ -183,26 +183,28 @@ def build_recovery_context(
     Returns:
         Formatted context string, or None if no soul found or soul is empty
     """
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
+    from sqlalchemy import select
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import Soul
 
-    # Get latest soul for this project (most recently bound)
-    cursor.execute(
-        """
-        SELECT persona, active_skill, skill_phase, todos, recent_files, exact_position, workflow_pattern
-        FROM souls
-        WHERE project_path = ?
-        ORDER BY bound_at DESC
-        LIMIT 1
-    """,
-        (project_path,),
-    )
+    with get_sync_session(db_path) as session:
+        stmt = (
+            select(Soul)
+            .where(Soul.project_path == project_path)
+            .order_by(Soul.bound_at.desc())
+            .limit(1)
+        )
+        soul = session.execute(stmt).scalars().first()
 
-    row = cursor.fetchone()
-    if not row:
+    if not soul:
         return None
 
-    persona, active_skill, skill_phase, todos_json, files_json, position_json, workflow = row
+    persona = soul.persona
+    active_skill = soul.active_skill
+    skill_phase = soul.skill_phase
+    todos_json = soul.todos
+    files_json = soul.recent_files
+    position_json = soul.exact_position
 
     # Parse JSON fields with error handling for corrupted data
     try:

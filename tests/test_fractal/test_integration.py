@@ -13,7 +13,7 @@ import json
 class TestFractalEndToEnd:
     """Exercises the full fractal thinking CRUD pipeline in a realistic sequence."""
 
-    def test_full_lifecycle(self, fractal_db):
+    async def test_full_lifecycle(self, fractal_db):
         """End-to-end test: create graph, build tree, query, complete, delete."""
         from spellbook.fractal.graph_ops import (
             create_graph,
@@ -38,7 +38,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 1: create_graph
         # ----------------------------------------------------------------
-        graph = create_graph(
+        graph = await create_graph(
             seed="What are the tradeoffs of microservices vs monoliths?",
             intensity="explore",
             checkpoint_mode="autonomous",
@@ -57,7 +57,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 2: add_node - 3 child question branches off the root
         # ----------------------------------------------------------------
-        branch_q1 = add_node(
+        branch_q1 = await add_node(
             graph_id=graph_id,
             parent_id=root_id,
             node_type="question",
@@ -68,7 +68,7 @@ class TestFractalEndToEnd:
         assert branch_q1["node_type"] == "question"
         assert branch_q1["status"] == "open"
 
-        branch_q2 = add_node(
+        branch_q2 = await add_node(
             graph_id=graph_id,
             parent_id=root_id,
             node_type="question",
@@ -78,7 +78,7 @@ class TestFractalEndToEnd:
         assert branch_q2["depth"] == 1
         assert branch_q2["node_type"] == "question"
 
-        branch_q3 = add_node(
+        branch_q3 = await add_node(
             graph_id=graph_id,
             parent_id=root_id,
             node_type="question",
@@ -96,7 +96,7 @@ class TestFractalEndToEnd:
         # Step 3: add_node - answer nodes to questions 1 and 2
         #   Verifies auto-transition: parent question status -> "answered"
         # ----------------------------------------------------------------
-        answer_a1 = add_node(
+        answer_a1 = await add_node(
             graph_id=graph_id,
             parent_id=q1_id,
             node_type="answer",
@@ -115,7 +115,7 @@ class TestFractalEndToEnd:
         )
         assert cursor.fetchone()[0] == "answered"
 
-        answer_a2 = add_node(
+        answer_a2 = await add_node(
             graph_id=graph_id,
             parent_id=q2_id,
             node_type="answer",
@@ -136,7 +136,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 4: add_node - sub-questions branching from answers
         # ----------------------------------------------------------------
-        sub_q1 = add_node(
+        sub_q1 = await add_node(
             graph_id=graph_id,
             parent_id=a1_id,
             node_type="question",
@@ -146,7 +146,7 @@ class TestFractalEndToEnd:
         assert sub_q1["depth"] == 3
         assert sub_q1["node_type"] == "question"
 
-        sub_q2 = add_node(
+        sub_q2 = await add_node(
             graph_id=graph_id,
             parent_id=a2_id,
             node_type="question",
@@ -158,7 +158,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 5: update_node - convergence metadata between two answers
         # ----------------------------------------------------------------
-        convergence_result = update_node(
+        convergence_result = await update_node(
             graph_id=graph_id,
             node_id=a1_id,
             metadata_json=json.dumps({
@@ -175,7 +175,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 6: update_node - contradiction metadata between two answers
         # ----------------------------------------------------------------
-        contradiction_result = update_node(
+        contradiction_result = await update_node(
             graph_id=graph_id,
             node_id=a2_id,
             metadata_json=json.dumps({
@@ -193,7 +193,7 @@ class TestFractalEndToEnd:
         # Step 7: mark_saturated - mark branch q1 as saturated
         # ----------------------------------------------------------------
         # q1 is currently "answered"; mark_saturated allows "answered" status
-        saturate_result = mark_saturated(
+        saturate_result = await mark_saturated(
             graph_id=graph_id,
             node_id=q1_id,
             reason="semantic_overlap",
@@ -212,7 +212,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 8: get_snapshot - verify full graph structure
         # ----------------------------------------------------------------
-        snapshot = get_snapshot(graph_id, db_path=fractal_db)
+        snapshot = await get_snapshot(graph_id, db_path=fractal_db)
 
         assert "error" not in snapshot
         assert snapshot["graph_id"] == graph_id
@@ -236,7 +236,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 9: get_branch - subtree rooted at branch q2
         # ----------------------------------------------------------------
-        branch = get_branch(graph_id, q2_id, db_path=fractal_db)
+        branch = await get_branch(graph_id, q2_id, db_path=fractal_db)
 
         assert "error" not in branch
         assert branch["graph_id"] == graph_id
@@ -253,7 +253,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 10: get_open_questions - only unanswered questions
         # ----------------------------------------------------------------
-        open_qs = get_open_questions(graph_id, db_path=fractal_db)
+        open_qs = await get_open_questions(graph_id, db_path=fractal_db)
 
         assert "error" not in open_qs
         assert open_qs["graph_id"] == graph_id
@@ -274,7 +274,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 11: query_convergence - verify convergence points
         # ----------------------------------------------------------------
-        convergence = query_convergence(graph_id, db_path=fractal_db)
+        convergence = await query_convergence(graph_id, db_path=fractal_db)
 
         assert "error" not in convergence
         assert convergence["graph_id"] == graph_id
@@ -292,7 +292,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 12: query_contradictions - verify contradiction points
         # ----------------------------------------------------------------
-        contradictions = query_contradictions(graph_id, db_path=fractal_db)
+        contradictions = await query_contradictions(graph_id, db_path=fractal_db)
 
         assert "error" not in contradictions
         assert contradictions["graph_id"] == graph_id
@@ -312,7 +312,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 13: get_saturation_status - per-branch saturation
         # ----------------------------------------------------------------
-        sat_status = get_saturation_status(graph_id, db_path=fractal_db)
+        sat_status = await get_saturation_status(graph_id, db_path=fractal_db)
 
         assert "error" not in sat_status
         assert sat_status["graph_id"] == graph_id
@@ -346,7 +346,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 14: update_graph_status - transition to "completed"
         # ----------------------------------------------------------------
-        status_result = update_graph_status(
+        status_result = await update_graph_status(
             graph_id,
             "completed",
             reason="All branches explored to satisfaction.",
@@ -368,7 +368,7 @@ class TestFractalEndToEnd:
         # ----------------------------------------------------------------
         # Step 15: delete_graph - cleanup and verify cascade
         # ----------------------------------------------------------------
-        delete_result = delete_graph(graph_id, db_path=fractal_db)
+        delete_result = await delete_graph(graph_id, db_path=fractal_db)
 
         assert delete_result["deleted"] is True
         assert delete_result["graph_id"] == graph_id

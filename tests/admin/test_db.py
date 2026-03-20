@@ -89,10 +89,10 @@ async def test_query_spellbook_db_runs_in_thread():
 
 
 @pytest.mark.asyncio
-async def test_query_coordination_db_returns_empty_for_missing_db(tmp_path):
-    """Test coordination DB returns empty list when DB file doesn't exist."""
+async def test_query_coordination_db_returns_empty_for_bad_query():
+    """Test coordination DB returns empty list for queries on non-existent tables."""
     from spellbook.admin.db import query_coordination_db
 
-    with patch("spellbook.admin.db.Path.home", return_value=tmp_path):
-        results = await query_coordination_db("SELECT 1")
-        assert results == []
+    # ORM session always connects; bad table queries return empty via exception handler
+    results = await query_coordination_db("SELECT * FROM nonexistent_table_xyz")
+    assert results == []

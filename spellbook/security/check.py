@@ -23,11 +23,14 @@ Flags:
 import argparse
 import json
 import os
-import sqlite3
 import sys
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import select
+
+from spellbook.db.engines import get_sync_session
+from spellbook.db.spellbook_models import SecurityEvent, SecurityMode
 from spellbook.security.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
@@ -198,18 +201,16 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
         db_path = str(get_db_path())
 
     try:
-        conn = sqlite3.connect(db_path, timeout=5.0)
-        try:
-            conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                "SELECT mode, auto_restore_at FROM security_mode WHERE id = 1"
-            ).fetchone()
+        with get_sync_session(db_path) as session:
+            row = session.execute(
+                select(SecurityMode).where(SecurityMode.id == 1)
+            ).scalars().first()
 
             if row is None:
                 return "standard"
 
-            mode = row["mode"]
-            auto_restore_at = row["auto_restore_at"]
+            mode = row.mode
+            auto_restore_at = row.auto_restore_at
 
             # Lazy restore: if mode != standard and auto_restore_at has expired
             if mode != "standard" and auto_restore_at is not None:
@@ -220,20 +221,15 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
                         restore_time = restore_time.replace(tzinfo=timezone.utc)
                     now = datetime.now(timezone.utc)
                     if now > restore_time:
-                        conn.execute(
-                            "UPDATE security_mode SET mode = 'standard', "
-                            "updated_at = ?, auto_restore_at = NULL WHERE id = 1",
-                            (now.isoformat(),),
-                        )
-                        conn.commit()
+                        row.mode = "standard"
+                        row.updated_at = now.isoformat()
+                        row.auto_restore_at = None
                         return "standard"
                 except (ValueError, TypeError):
                     pass
 
             return mode
-        finally:
-            conn.close()
-    except (sqlite3.Error, OSError):
+    except Exception:
         return "standard"
 
 
@@ -270,17 +266,15 @@ def log_audit_event(
     if len(detail) > _AUDIT_DETAIL_MAX_LEN:
         detail = detail[:_AUDIT_DETAIL_MAX_LEN] + "..."
 
-    conn = sqlite3.connect(db_path, timeout=5.0)
-    try:
-        conn.execute(
-            "INSERT INTO security_events "
-            "(event_type, severity, source, tool_name, detail) "
-            "VALUES (?, ?, ?, ?, ?)",
-            ("tool_call", "INFO", "audit-log.sh", tool_name, detail),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    with get_sync_session(db_path) as session:
+        session.add(SecurityEvent(
+            event_type="tool_call",
+            severity="INFO",
+            source="audit-log.sh",
+            tool_name=tool_name,
+            detail=detail,
+            created_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        ))
 
 
 def _extract_strings(obj: object) -> list[str]:

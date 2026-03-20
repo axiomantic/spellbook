@@ -62,33 +62,44 @@ async def query_fractal_db(
 async def query_forged_db(
     sql: str, params: tuple = ()
 ) -> list[dict[str, Any]]:
-    """Run a query against forged.db in a thread pool."""
-    from spellbook.forged.schema import get_forged_connection
+    """Run a query against forged.db using async ORM session."""
+    from sqlalchemy import text
+    from spellbook.db import get_forged_session
 
-    def _run():
-        conn = get_forged_connection()
-        conn.row_factory = sqlite3.Row
-        cursor = conn.execute(sql, params)
-        return _rows_to_dicts(cursor.fetchall())
+    # Re-format SQL: replace ? with :p0, :p1, etc. for SQLAlchemy text()
+    reformatted_sql = sql
+    param_dict = {}
+    for i, p in enumerate(params):
+        reformatted_sql = reformatted_sql.replace("?", f":p{i}", 1)
+        param_dict[f"p{i}"] = p
 
-    return await asyncio.to_thread(_run)
+    try:
+        async with get_forged_session() as session:
+            result = await session.execute(text(reformatted_sql), param_dict)
+            rows = result.mappings().all()
+            return [dict(row) for row in rows]
+    except Exception:
+        return []
 
 
 async def query_coordination_db(
     sql: str, params: tuple = ()
 ) -> list[dict[str, Any]]:
-    """Run a query against coordination.db in a thread pool."""
+    """Run a query against coordination.db using async ORM session."""
+    from sqlalchemy import text
+    from spellbook.db import get_coordination_session
 
-    def _run():
-        db_path = Path.home() / ".local" / "spellbook" / "coordination.db"
-        if not db_path.exists():
-            return []
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        try:
-            cursor = conn.execute(sql, params)
-            return _rows_to_dicts(cursor.fetchall())
-        finally:
-            conn.close()
+    # Re-format SQL: replace ? with :p0, :p1, etc.
+    reformatted_sql = sql
+    param_dict = {}
+    for i, p in enumerate(params):
+        reformatted_sql = reformatted_sql.replace("?", f":p{i}", 1)
+        param_dict[f"p{i}"] = p
 
-    return await asyncio.to_thread(_run)
+    try:
+        async with get_coordination_session() as session:
+            result = await session.execute(text(reformatted_sql), param_dict)
+            rows = result.mappings().all()
+            return [dict(row) for row in rows]
+    except Exception:
+        return []
