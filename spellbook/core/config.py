@@ -749,6 +749,17 @@ def _get_repairs() -> list[dict]:
     return repairs
 
 
+def _regenerate_memory_md(project_path: Optional[str]) -> None:
+    """Regenerate MEMORY.md for the project. Fail-open."""
+    if not project_path:
+        return
+    try:
+        from spellbook.memory.bootstrap import regenerate_memory_md_for_project
+        regenerate_memory_md_for_project(project_path)
+    except Exception:
+        pass  # Fail-open: never block session init
+
+
 def session_init(
     session_id: Optional[str] = None,
     continuation_message: Optional[str] = None,
@@ -858,6 +869,9 @@ def session_init(
 
     # Add update notification (if any)
     _add_update_notification(result)
+
+    # Regenerate MEMORY.md from structured memory
+    _regenerate_memory_md(project_path)
 
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
