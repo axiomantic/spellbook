@@ -5,11 +5,11 @@ class TestConstants:
     """Tests for module-level constants."""
 
     def test_schema_version_defined(self):
-        """SCHEMA_VERSION must be defined as integer 3."""
+        """SCHEMA_VERSION must be defined as integer 4."""
         from spellbook.fractal.models import SCHEMA_VERSION
 
         assert isinstance(SCHEMA_VERSION, int)
-        assert SCHEMA_VERSION == 3
+        assert SCHEMA_VERSION == 4
 
     def test_valid_intensities_defined(self):
         """VALID_INTENSITIES must contain pulse, explore, deep."""
