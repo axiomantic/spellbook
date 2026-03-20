@@ -149,6 +149,8 @@ export interface FractalGraphSummary {
   status: string
   total_nodes: number
   created_at: string
+  updated_at: string
+  project_dir: string | null
 }
 
 export interface FractalGraphListResponse extends PaginatedResponse {

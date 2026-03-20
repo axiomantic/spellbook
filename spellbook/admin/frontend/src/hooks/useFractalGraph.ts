@@ -10,12 +10,22 @@ import type {
   GraphStatusUpdateResponse,
 } from '../api/types'
 
-export function useFractalGraphList(page: number = 1, status?: string) {
+export interface FractalGraphListParams {
+  page?: number
+  status?: string
+  project_dir?: string
+  search?: string
+  sort_by?: 'created_at' | 'updated_at' | 'seed' | 'status'
+  sort_order?: 'asc' | 'desc'
+}
+
+export function useFractalGraphList(params: FractalGraphListParams = {}) {
+  const { page = 1, status, project_dir, search, sort_by, sort_order } = params
   return useQuery({
-    queryKey: ['fractal', 'graphs', page, status],
+    queryKey: ['fractal', 'graphs', page, status, project_dir, search, sort_by, sort_order],
     queryFn: () =>
       fetchApi<FractalGraphListResponse>('/api/fractal/graphs', {
-        params: { page, status },
+        params: { page, status, project_dir, search, sort_by, sort_order },
       }),
     placeholderData: keepPreviousData,
   })

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStintStacks, useCorrectionEvents } from '../hooks/useFocus'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { StintStack, StintEntry, CorrectionEvent } from '../api/types'
 
 const PERIODS = [
@@ -220,12 +221,9 @@ export function FocusPage() {
   })
 
   return (
-    <div className="p-6">
+    <PageLayout segments={[{ label: 'ACTIVE FOCUS STACKS' }]}>
       {/* ACTIVE_FOCUS_STACKS */}
       <div className="mb-8">
-        <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary mb-6">
-          // Active Focus Stacks
-        </h1>
 
         {stacksLoading && !stacks && <LoadingSpinner className="py-16" />}
 
@@ -313,6 +311,6 @@ export function FocusPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }

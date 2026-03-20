@@ -1,14 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useFractalGraphList, useFractalCytoscape, useFractalGraphDetail } from '../hooks/useFractalGraph'
-import { GraphList } from '../components/fractal/GraphList'
+import { useFractalCytoscape, useFractalGraphDetail } from '../hooks/useFractalGraph'
+import { GraphTable } from '../components/fractal/GraphTable'
 import { GraphDetailsSidebar } from '../components/fractal/GraphDetailsSidebar'
 import { GraphCanvas } from '../components/fractal/GraphCanvas'
 import { GraphControls } from '../components/fractal/GraphControls'
 import { NodeDetail } from '../components/fractal/NodeDetail'
 import { ChatLogPanel } from '../components/fractal/ChatLogPanel'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
-import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 
 export function FractalExplorer() {
   const { graphId: urlGraphId, nodeId: urlNodeId } = useParams<{
@@ -24,11 +24,9 @@ export function FractalExplorer() {
 
   // Derive state from URL params
   const selectedGraphId = urlGraphId || null
-  // Check if the current URL ends with /chat
   const showChatLog = window.location.pathname.endsWith('/chat')
   const chatLogNodeId = showChatLog && urlNodeId ? urlNodeId : null
 
-  const { data: graphListData, isLoading: listLoading } = useFractalGraphList()
   const { data: graphDetailData } = useFractalGraphDetail(selectedGraphId)
   const { data: cytoscapeData, isLoading: graphLoading } = useFractalCytoscape(
     selectedGraphId,
@@ -83,15 +81,6 @@ export function FractalExplorer() {
     return ''
   }, [searchParams])
 
-  const setSelectedGraphId = useCallback((graphId: string | null) => {
-    if (graphId) {
-      navigate(`/fractal/${graphId}`)
-    } else {
-      navigate('/fractal')
-    }
-    setSelectedNode(null)
-  }, [navigate])
-
   const handleNodeClick = useCallback((_nodeId: string, nodeData: Record<string, unknown>) => {
     setSelectedNode(nodeData)
     if (selectedGraphId) {
@@ -120,58 +109,48 @@ export function FractalExplorer() {
     }
   }, [selectedGraphId, navigate, viewportQuery])
 
+  // Extract seed for breadcrumb display
+  const graphSeed = graphDetailData ? String(graphDetailData.seed || '') : null
+
+  // Build breadcrumb segments (same logic as Breadcrumb component)
+  const truncate = (text: string, max: number) => text.length <= max ? text : text.slice(0, max) + '...'
+  const segments: { label: string; path?: string }[] = [
+    { label: 'FRACTAL', path: selectedGraphId ? '/fractal' : undefined },
+  ]
+  if (selectedGraphId) {
+    const seedLabel = graphSeed ? truncate(graphSeed, 40) : selectedGraphId.slice(0, 12) + '...'
+    segments.push({
+      label: `Graph "${seedLabel}"`,
+      path: urlNodeId ? `/fractal/${selectedGraphId}` : undefined,
+    })
+  }
+  if (urlNodeId) {
+    segments.push({
+      label: `Node #${urlNodeId}`,
+      path: showChatLog ? `/fractal/${selectedGraphId}/${urlNodeId}` : undefined,
+    })
+  }
+  if (showChatLog) {
+    segments.push({ label: 'Chat Log' })
+  }
+
+  // ── LIST VIEW: no graph selected ──
+  if (!selectedGraphId) {
+    return (
+      <PageLayout segments={segments} fullHeight>
+        <GraphTable />
+      </PageLayout>
+    )
+  }
+
+  // ── GRAPH VIEW: graph selected ──
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-bg-border">
-        <h1 className="font-mono text-xs uppercase tracking-widest text-text-secondary">
-          // FRACTAL EXPLORER
-        </h1>
-      </div>
+    <PageLayout segments={segments} fullHeight>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar: graph list */}
-        <div className="w-64 border-r border-bg-border overflow-y-auto p-3 space-y-3">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim">
-            // GRAPHS
-          </h2>
-
-          {listLoading ? (
-            <LoadingSpinner className="h-32" />
-          ) : !graphListData?.graphs.length ? (
-            <EmptyState
-              title="No Graphs"
-              message="No fractal graphs have been created yet."
-            />
-          ) : (
-            <GraphList
-              graphs={graphListData.graphs}
-              selectedId={selectedGraphId}
-              onSelect={setSelectedGraphId}
-            />
-          )}
-
-          {/* Graph details sidebar */}
-          {selectedGraphId && graphDetailData && (
-            <div className="pt-3 mt-3 border-t border-bg-border">
-              <GraphDetailsSidebar
-                graph={graphDetailData}
-                stats={cytoscapeData?.stats ?? null}
-              />
-            </div>
-          )}
-        </div>
-
         {/* Main: graph canvas */}
         <div className="flex-1 relative">
-          {!selectedGraphId ? (
-            <div className="flex items-center justify-center h-full">
-              <EmptyState
-                title="Select a Graph"
-                message="Choose a fractal graph from the list to visualize it."
-              />
-            </div>
-          ) : graphLoading ? (
+          {graphLoading ? (
             <LoadingSpinner className="h-full" />
           ) : cytoscapeData ? (
             <>
@@ -198,7 +177,7 @@ export function FractalExplorer() {
           ) : null}
 
           {/* Controls overlay */}
-          {selectedGraphId && cytoscapeData && (
+          {cytoscapeData && (
             <div className="absolute bottom-4 left-4 w-64 z-10">
               <GraphControls
                 maxDepth={maxDepth}
@@ -209,7 +188,17 @@ export function FractalExplorer() {
             </div>
           )}
         </div>
+
+        {/* Right pane: graph details sidebar */}
+        {graphDetailData && (
+          <div className="w-80 border-l border-bg-border overflow-y-auto p-4 flex-shrink-0">
+            <GraphDetailsSidebar
+              graph={graphDetailData}
+              stats={cytoscapeData?.stats ?? null}
+            />
+          </div>
+        )}
       </div>
-    </div>
+    </PageLayout>
   )
 }

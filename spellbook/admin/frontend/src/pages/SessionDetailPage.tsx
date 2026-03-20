@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useSessionDetail } from '../hooks/useSessions'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -37,36 +38,22 @@ export function SessionDetailPage() {
     const errCode = (error as Error & { code?: string })?.code
     if (errCode === 'NOT_FOUND') {
       return (
-        <div className="p-6">
-          <Link to="/sessions" className="font-mono text-xs text-accent-green hover:underline">
-            &larr; Back to Sessions
-          </Link>
+        <PageLayout segments={[{ label: 'SESSIONS', path: '/sessions' }, { label: 'SESSION DETAIL' }]}>
           <EmptyState title="Session not found" message="This session may have been deleted." />
-        </div>
+        </PageLayout>
       )
     }
     return (
-      <div className="p-6">
-        <Link to="/sessions" className="font-mono text-xs text-accent-green hover:underline">
-          &larr; Back to Sessions
-        </Link>
+      <PageLayout segments={[{ label: 'SESSIONS', path: '/sessions' }, { label: 'SESSION DETAIL' }]}>
         <EmptyState title="Error loading session" message={(error as Error)?.message || 'Unknown error'} />
-      </div>
+      </PageLayout>
     )
   }
 
   if (!data) return null
 
   return (
-    <div className="p-6">
-      <Link to="/sessions" className="font-mono text-xs text-accent-green hover:underline">
-        &larr; Back to Sessions
-      </Link>
-
-      <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary mt-4 mb-6">
-        // Session Detail
-      </h1>
-
+    <PageLayout segments={[{ label: 'SESSIONS', path: '/sessions' }, { label: 'SESSION DETAIL' }]}>
       <div className="card">
         <DetailRow label="Session ID" value={data.id} />
         <DetailRow label="Project" value={data.project_decoded} />
@@ -95,6 +82,6 @@ export function SessionDetailPage() {
           View Chat History &rarr;
         </Link>
       </div>
-    </div>
+    </PageLayout>
   )
 }

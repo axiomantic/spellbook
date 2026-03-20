@@ -5,6 +5,7 @@ import { usePagination } from '../hooks/usePagination'
 import { Pagination } from '../components/shared/Pagination'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { SessionItem } from '../api/types'
 
 function formatSize(bytes: number): string {
@@ -224,11 +225,7 @@ export function Sessions() {
   }, [pagination])
 
   return (
-    <div className="p-6">
-      <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary mb-6">
-        // Sessions
-      </h1>
-
+    <PageLayout segments={[{ label: 'SESSIONS' }]}>
       {/* Filter bar */}
       <div className="flex items-center gap-3 mb-4">
         <input
@@ -278,6 +275,6 @@ export function Sessions() {
           onPageChange={pagination.setPage}
         />
       )}
-    </div>
+    </PageLayout>
   )
 }

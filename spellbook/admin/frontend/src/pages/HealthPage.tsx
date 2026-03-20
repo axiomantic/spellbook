@@ -1,6 +1,7 @@
 import { useHealthMatrix } from '../hooks/useHealth'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { SubsystemHealth, TableHealth } from '../api/types'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -94,18 +95,10 @@ export function HealthPage() {
   const { data, isLoading, isError } = useHealthMatrix()
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary">
-          // Health Matrix
-        </h1>
-        {data && (
-          <span className="font-mono text-xs text-text-dim">
-            Updated: {formatTime(data.generated_at)}
-          </span>
-        )}
-      </div>
-
+    <PageLayout
+      segments={[{ label: 'HEALTH MATRIX' }]}
+      headerRight={data ? `Updated: ${formatTime(data.generated_at)}` : undefined}
+    >
       {isLoading && <LoadingSpinner className="py-16" />}
       {isError && (
         <EmptyState
@@ -116,6 +109,6 @@ export function HealthPage() {
 
       {data &&
         data.databases.map((db) => <DatabaseCard key={db.name} db={db} />)}
-    </div>
+    </PageLayout>
   )
 }

@@ -29,13 +29,37 @@ def _get_db_size() -> int:
     return db_path.stat().st_size if db_path.exists() else 0
 
 
+def _count_session_files() -> int:
+    """Count Claude Code session JSONL files in ~/.claude/projects/.
+
+    This matches the same data source used by the Sessions page, which scans
+    these files for session metadata. We only need the count here, so we
+    avoid reading file contents.
+    """
+    projects_dir = Path.home() / ".claude" / "projects"
+    if not projects_dir.exists():
+        return 0
+    count = 0
+    for project_dir in projects_dir.iterdir():
+        if not project_dir.is_dir():
+            continue
+        for jsonl_file in project_dir.glob("*.jsonl"):
+            try:
+                if jsonl_file.stat().st_size > 0:
+                    count += 1
+            except (OSError, PermissionError):
+                continue
+    return count
+
+
 async def get_dashboard_data() -> dict:
     """Gather dashboard data from all databases in parallel."""
     version = pkg_version("spellbook")
 
     # Parallel database queries across spellbook, coordination, and fractal DBs
+    # plus filesystem scan for session count (matches Sessions page data source)
     (
-        sessions_result,
+        session_count,
         memories_result,
         security_result,
         experiments_result,
@@ -44,10 +68,7 @@ async def get_dashboard_data() -> dict:
         swarms_result,
         graphs_result,
     ) = await asyncio.gather(
-        query_spellbook_db(
-            "SELECT COUNT(*) as cnt FROM souls "
-            "WHERE bound_at > datetime('now', '-24 hours')"
-        ),
+        asyncio.to_thread(_count_session_files),
         query_spellbook_db(
             "SELECT COUNT(*) as cnt FROM memories WHERE status = 'active'"
         ),
@@ -105,7 +126,7 @@ async def get_dashboard_data() -> dict:
             "event_bus_dropped_events": event_bus.total_dropped_events,
         },
         "counts": {
-            "active_sessions": safe_count(sessions_result),
+            "active_sessions": session_count if not isinstance(session_count, Exception) else 0,
             "total_memories": safe_count(memories_result),
             "security_events_24h": safe_count(security_result),
             "running_swarms": safe_count(swarms_result),

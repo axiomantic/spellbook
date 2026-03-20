@@ -97,6 +97,7 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
             status TEXT NOT NULL DEFAULT 'active'
                 CHECK(status IN ('active', 'paused', 'completed', 'error', 'budget_exhausted')),
             metadata_json TEXT DEFAULT '{}',
+            project_dir TEXT DEFAULT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
@@ -208,6 +209,18 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
 
         cursor.execute(
             "INSERT INTO schema_version (version, applied_at) VALUES (3, datetime('now'))"
+        )
+
+    if current_version < 4:
+        # v3 -> v4 migration: add project_dir column to graphs
+        existing_cols = {
+            row[1] for row in cursor.execute("PRAGMA table_info(graphs)").fetchall()
+        }
+        if "project_dir" not in existing_cols:
+            cursor.execute("ALTER TABLE graphs ADD COLUMN project_dir TEXT DEFAULT NULL")
+
+        cursor.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (4, datetime('now'))"
         )
 
     if current_version >= SCHEMA_VERSION:

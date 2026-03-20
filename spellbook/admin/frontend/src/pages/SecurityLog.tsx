@@ -5,6 +5,7 @@ import { Badge } from '../components/shared/Badge'
 import { Pagination } from '../components/shared/Pagination'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { SecurityEvent } from '../api/types'
 
 const SEVERITY_LEVELS = ['all', 'critical', 'warning', 'info'] as const
@@ -119,11 +120,7 @@ export function SecurityLog() {
   })
 
   return (
-    <div className="p-6">
-      <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary mb-6">
-        // Security Log
-      </h1>
-
+    <PageLayout segments={[{ label: 'SECURITY LOG' }]}>
       {summaryData && <SummaryCards summary={summaryData.by_severity} />}
 
       {/* Filters */}
@@ -196,6 +193,6 @@ export function SecurityLog() {
           onPageChange={pagination.setPage}
         />
       )}
-    </div>
+    </PageLayout>
   )
 }

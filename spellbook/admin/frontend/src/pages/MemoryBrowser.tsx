@@ -14,6 +14,7 @@ import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
 import { Badge } from '../components/shared/Badge'
 import { Pagination } from '../components/shared/Pagination'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { MemoryItem } from '../api/types'
 
 // -- Search bar with debounce --
@@ -465,10 +466,9 @@ export function MemoryBrowser() {
   )
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
+    <PageLayout segments={[{ label: 'MEMORY' }]} fullHeight>
+      {/* Subheader */}
       <div className="p-6 pb-0">
-        <h1 className="text-2xl font-sans text-text-primary mb-1">// MEMORY</h1>
         <p className="text-sm text-text-secondary mb-4">
           Browse, search, and manage memories across namespaces.
         </p>
@@ -577,6 +577,6 @@ export function MemoryBrowser() {
           />
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-03-20
+
+### Added
+- **Fractal explorer redesign**: two-view layout with full-width data table (list view) and dedicated details pane (graph view)
+- **GraphTable component**: sortable columns (seed, status, intensity, nodes, project dir, created, updated), text search, status filter, project dir filter, pagination
+- **Breadcrumb navigation**: `// FRACTAL // Graph "seed..." // Node #id // Chat Log` with clickable segments
+- **`project_dir` column** on fractal graphs table (v3-to-v4 schema migration), exposed in list API with filtering support
+- **Fractal list API enhancements**: `search`, `sort_by`, `sort_order`, `project_dir` query params; `updated_at` in response
+- **PageHeader and PageLayout components**: shared layout primitives for consistent headers across all admin pages
+- **Dashboard improvements**: per-database health indicators, top 5 tools with analytics summary, session count from actual conversation files
+
+### Changed
+- All 12 admin pages migrated to shared PageLayout component for consistent `// PAGE_NAME` headers and spacing
+- Dashboard session count now scans `~/.claude/projects/*.jsonl` files instead of querying transient `souls` table
+- Dashboard Event Bus section collapsed to single compact row
+- Analytics page period selector styled as inline text toggles
+
+### Fixed
+- Dashboard showing 0 sessions (was querying wrong data source)
+
 ## [0.33.0] - 2026-03-19
 
 ### Added

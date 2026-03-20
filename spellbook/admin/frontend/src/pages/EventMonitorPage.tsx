@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useEventStream } from '../hooks/useEventStream'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { WSEvent } from '../api/types'
 
 function formatTimestamp(ts: string): string {
@@ -128,31 +129,28 @@ export function EventMonitorPage() {
   }, [events.length, autoScroll])
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-6 pb-0">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary">
-            // Event Monitor
-          </h1>
-          <div className="flex items-center gap-3">
-            {/* Connection indicator */}
-            <span className="flex items-center gap-1.5 font-mono text-xs">
-              <span
-                className={`inline-block w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-accent-green' : 'bg-accent-red'
-                }`}
-              />
-              <span className={isConnected ? 'text-accent-green' : 'text-accent-red'}>
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
+    <PageLayout
+      segments={[{ label: 'EVENT MONITOR' }]}
+      fullHeight
+      headerRight={
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 font-mono text-xs">
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${
+                isConnected ? 'bg-accent-green' : 'bg-accent-red'
+              }`}
+            />
+            <span className={isConnected ? 'text-accent-green' : 'text-accent-red'}>
+              {isConnected ? 'Connected' : 'Disconnected'}
             </span>
-
-            <span className="font-mono text-xs text-text-dim">
-              {events.length} events
-            </span>
-          </div>
+          </span>
+          <span className="font-mono text-xs text-text-dim">
+            {events.length} events
+          </span>
         </div>
-
+      }
+    >
+      <div className="p-6 pb-0">
         {/* Controls */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <SubsystemFilterBar
@@ -222,6 +220,6 @@ export function EventMonitorPage() {
           />
         ))}
       </div>
-    </div>
+    </PageLayout>
   )
 }

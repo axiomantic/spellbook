@@ -29,11 +29,23 @@ def _error_response(code: str, message: str, status: int) -> JSONResponse:
 @router.get("/graphs")
 async def list_graphs(
     status: Optional[str] = Query(None, description="Filter by graph status"),
+    project_dir: Optional[str] = Query(None, description="Filter by project directory"),
+    search: Optional[str] = Query(None, description="Search by seed text"),
+    sort_by: Optional[str] = Query(
+        "created_at",
+        description="Sort field",
+        regex="^(created_at|updated_at|seed|status)$",
+    ),
+    sort_order: Optional[str] = Query(
+        "desc",
+        description="Sort order",
+        regex="^(asc|desc)$",
+    ),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
     _session: str = Depends(require_admin_auth),
 ):
-    """List fractal graphs with pagination and optional status filter."""
+    """List fractal graphs with pagination, filtering, and sorting."""
     where_clauses = []
     params: list = []
 
@@ -41,7 +53,22 @@ async def list_graphs(
         where_clauses.append("g.status = ?")
         params.append(status)
 
+    if project_dir:
+        where_clauses.append("g.project_dir = ?")
+        params.append(project_dir)
+
+    if search:
+        where_clauses.append("g.seed LIKE ?")
+        params.append(f"%{search}%")
+
     where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+    # Validate sort_by against allowed columns (defense in depth beyond regex)
+    allowed_sort_columns = {"created_at", "updated_at", "seed", "status"}
+    if sort_by not in allowed_sort_columns:
+        sort_by = "created_at"
+    order_direction = "ASC" if sort_order == "asc" else "DESC"
+    order_sql = f"g.{sort_by} {order_direction}"
 
     count_result = await query_fractal_db(
         f"SELECT COUNT(*) as cnt FROM graphs g WHERE {where_sql}",
@@ -54,12 +81,13 @@ async def list_graphs(
     rows = await query_fractal_db(
         f"""
         SELECT g.id, g.seed, g.intensity, g.status, g.created_at,
+               g.updated_at, g.project_dir,
                COUNT(n.id) as total_nodes
         FROM graphs g
         LEFT JOIN nodes n ON g.id = n.graph_id
         WHERE {where_sql}
         GROUP BY g.id
-        ORDER BY g.created_at DESC
+        ORDER BY {order_sql}
         LIMIT ? OFFSET ?
         """,
         tuple(params + [per_page, offset]),

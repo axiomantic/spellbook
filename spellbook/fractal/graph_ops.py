@@ -25,7 +25,7 @@ VALID_TRANSITIONS = {
 TERMINAL_STATES = ["completed", "error", "budget_exhausted"]
 
 
-def create_graph(seed, intensity, checkpoint_mode, metadata_json=None, db_path=None):
+def create_graph(seed, intensity, checkpoint_mode, metadata_json=None, project_dir=None, db_path=None):
     """Create a new fractal exploration graph with a root question node.
 
     Args:
@@ -33,6 +33,7 @@ def create_graph(seed, intensity, checkpoint_mode, metadata_json=None, db_path=N
         intensity: Exploration intensity ("pulse", "explore", "deep")
         checkpoint_mode: When to pause for human review
         metadata_json: Optional JSON string of metadata to store
+        project_dir: Optional project directory path associated with this graph
         db_path: Path to database file (defaults to standard location)
 
     Returns:
@@ -58,9 +59,9 @@ def create_graph(seed, intensity, checkpoint_mode, metadata_json=None, db_path=N
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO graphs (id, seed, intensity, checkpoint_mode, metadata_json) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (graph_id, seed, intensity, checkpoint_mode, metadata_json),
+        "INSERT INTO graphs (id, seed, intensity, checkpoint_mode, metadata_json, project_dir) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (graph_id, seed, intensity, checkpoint_mode, metadata_json, project_dir),
     )
     cursor.execute(
         "INSERT INTO nodes (id, graph_id, node_type, text, depth, status) "

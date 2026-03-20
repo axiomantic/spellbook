@@ -134,14 +134,16 @@ def test_dashboard_cross_db_aggregation(client):
     ), patch(
         "spellbook.admin.routes.dashboard._get_db_size",
         return_value=2048,
+    ), patch(
+        "spellbook.admin.routes.dashboard._count_session_files",
+        return_value=3,
     ):
         mock_bus.subscriber_count = 2
         mock_bus.total_dropped_events = 5
 
-        # Spellbook DB returns: sessions, memories, security count, experiments,
+        # Spellbook DB returns: memories, security count, experiments,
         # recent security events, recent memories
         mock_spellbook.side_effect = [
-            [{"cnt": 3}],       # active sessions
             [{"cnt": 200}],     # total memories
             [{"cnt": 10}],      # security events 24h
             [{"cnt": 1}],       # open experiments
@@ -183,8 +185,8 @@ def test_dashboard_cross_db_aggregation(client):
         assert data["counts"]["fractal_graphs"] == 4
         assert len(data["recent_activity"]) == 2
 
-        # Verify all three DB query functions were called
-        assert mock_spellbook.call_count == 6
+        # Verify DB query functions were called (sessions now come from filesystem)
+        assert mock_spellbook.call_count == 5
         assert mock_coordination.call_count == 1
         assert mock_fractal.call_count == 1
 
@@ -208,6 +210,9 @@ def test_dashboard_handles_db_errors_gracefully(client):
     ), patch(
         "spellbook.admin.routes.dashboard._get_db_size",
         return_value=0,
+    ), patch(
+        "spellbook.admin.routes.dashboard._count_session_files",
+        side_effect=Exception("Filesystem error"),
     ):
         mock_bus.subscriber_count = 0
         mock_bus.total_dropped_events = 0

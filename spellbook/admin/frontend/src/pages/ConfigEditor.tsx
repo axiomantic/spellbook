@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useConfig, useConfigSchema, useUpdateConfig } from '../hooks/useConfig'
 import type { ConfigSchemaKey } from '../hooks/useConfig'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
+import { PageLayout } from '../components/layout/PageLayout'
 
 function ToggleSwitch({
   checked,
@@ -197,19 +198,21 @@ export function ConfigEditor() {
 
   if (configLoading || schemaLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
+      <PageLayout segments={[{ label: 'CONFIG' }]}>
+        <div className="flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </PageLayout>
     )
   }
 
   if (configError) {
     return (
-      <div className="p-8">
+      <PageLayout segments={[{ label: 'CONFIG' }]}>
         <div className="text-accent-red font-mono text-sm">
           Failed to load config: {(configError as Error).message}
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
@@ -218,8 +221,8 @@ export function ConfigEditor() {
   const schemaMap = new Map(schemaKeys.map((k) => [k.key, k]))
 
   return (
-    <div className="p-8 max-w-3xl">
-      <h1 className="text-2xl font-sans text-text-primary mb-1">// CONFIG</h1>
+    <PageLayout segments={[{ label: 'CONFIG' }]}>
+      <div className="max-w-3xl">
       <p className="text-sm text-text-secondary mb-6">
         Spellbook configuration. Changes are saved to spellbook.json immediately.
       </p>
@@ -252,6 +255,7 @@ export function ConfigEditor() {
           </div>
         )
       })}
-    </div>
+      </div>
+    </PageLayout>
   )
 }

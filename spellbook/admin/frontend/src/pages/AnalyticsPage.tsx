@@ -6,6 +6,7 @@ import {
 } from '../hooks/useAnalytics'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { PageLayout } from '../components/layout/PageLayout'
 import type { ToolFrequencyItem, ErrorRateItem } from '../api/types'
 
 const PERIODS = [
@@ -28,10 +29,10 @@ function PeriodSelector({
         <button
           key={p.value}
           onClick={() => onChange(p.value)}
-          className={`px-3 py-1.5 font-mono text-xs uppercase tracking-widest transition-colors border ${
+          className={`px-2 font-mono text-xs uppercase tracking-widest transition-colors ${
             value === p.value
-              ? 'text-accent-green border-accent-green bg-bg-elevated'
-              : 'text-text-secondary border-bg-border hover:text-accent-cyan'
+              ? 'text-accent-green'
+              : 'text-text-dim hover:text-accent-cyan'
           }`}
         >
           {p.label}
@@ -187,14 +188,10 @@ export function AnalyticsPage() {
   const isLoading = summaryLoading || frequencyLoading || errorsLoading
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-mono text-sm uppercase tracking-widest text-text-secondary">
-          // Analytics
-        </h1>
-        <PeriodSelector value={period} onChange={setPeriod} />
-      </div>
-
+    <PageLayout
+      segments={[{ label: 'ANALYTICS' }]}
+      headerRight={<PeriodSelector value={period} onChange={setPeriod} />}
+    >
       {isLoading && !summary && <LoadingSpinner className="py-16" />}
 
       {summary && (
@@ -218,6 +215,6 @@ export function AnalyticsPage() {
       )}
 
       {errors && <ErrorRatesTable tools={errors.tools} />}
-    </div>
+    </PageLayout>
   )
 }
