@@ -2,14 +2,18 @@
 
 Provides aggregated views of security_events data: tool frequency,
 error rates, timeline, and summary statistics.
+
+Uses SQLAlchemy ORM queries against the SecurityEvent model.
 """
 
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import case, func, select
 
 from spellbook.admin.auth import require_admin_auth
-from spellbook.admin.db import query_spellbook_db
+from spellbook.db import get_spellbook_session
+from spellbook.db.spellbook_models import SecurityEvent
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -20,15 +24,27 @@ PERIOD_MAP = {
 }
 
 
-def _period_clause(period: str) -> tuple[str, tuple]:
-    """Return (WHERE clause fragment, params) for period filtering.
+def _error_count_expr():
+    """SQLAlchemy expression for counting error/critical severity events."""
+    return func.sum(
+        case(
+            (SecurityEvent.severity.in_(["error", "critical"]), 1),
+            else_=0,
+        )
+    )
 
-    Returns empty clause for 'all' period.
+
+def _apply_period_filter(stmt, period: str):
+    """Add period-based date filtering to a SELECT statement.
+
+    Returns the statement unchanged for 'all' period.
     """
     sqlite_offset = PERIOD_MAP.get(period)
-    if sqlite_offset is None:
-        return "", ()
-    return "AND created_at >= datetime('now', ?)", (sqlite_offset,)
+    if sqlite_offset is not None:
+        stmt = stmt.where(
+            SecurityEvent.created_at >= func.datetime("now", sqlite_offset)
+        )
+    return stmt
 
 
 @router.get("/tool-frequency")
@@ -38,32 +54,31 @@ async def tool_frequency(
     _session: str = Depends(require_admin_auth),
 ):
     """Tool call counts grouped by tool_name, sorted descending."""
-    period_clause, period_params = _period_clause(period)
+    async with get_spellbook_session() as session:
+        errors_expr = _error_count_expr()
+        stmt = (
+            select(
+                SecurityEvent.tool_name,
+                func.count().label("count"),
+                errors_expr.label("errors"),
+            )
+            .where(SecurityEvent.tool_name.isnot(None))
+        )
 
-    conditions = ["tool_name IS NOT NULL", "1=1"]
-    params: list = []
+        stmt = _apply_period_filter(stmt, period)
 
-    if period_clause:
-        conditions.append(period_clause.lstrip("AND "))
-        params.extend(period_params)
+        if event_type:
+            stmt = stmt.where(SecurityEvent.event_type == event_type)
 
-    if event_type:
-        conditions.append("event_type = ?")
-        params.append(event_type)
+        stmt = stmt.group_by(SecurityEvent.tool_name).order_by(
+            func.count().desc()
+        )
 
-    where = " AND ".join(conditions)
-
-    rows = await query_spellbook_db(
-        f"""
-        SELECT tool_name, COUNT(*) as count,
-               SUM(CASE WHEN severity IN ('error', 'critical') THEN 1 ELSE 0 END) as errors
-        FROM security_events
-        WHERE {where}
-        GROUP BY tool_name
-        ORDER BY count DESC
-        """,
-        tuple(params),
-    )
+        result = await session.execute(stmt)
+        rows = [
+            {"tool_name": row.tool_name, "count": row.count, "errors": row.errors}
+            for row in result
+        ]
 
     return {"tools": rows}
 
@@ -74,34 +89,39 @@ async def error_rates(
     _session: str = Depends(require_admin_auth),
 ):
     """Error rates by tool, ordered by error count descending."""
-    period_clause, period_params = _period_clause(period)
+    async with get_spellbook_session() as session:
+        errors_expr = _error_count_expr()
 
-    conditions = ["tool_name IS NOT NULL", "1=1"]
-    params: list = []
+        stmt = (
+            select(
+                SecurityEvent.tool_name,
+                func.count().label("total"),
+                errors_expr.label("errors"),
+                func.round(
+                    100.0 * errors_expr / func.count(), 2
+                ).label("error_rate"),
+            )
+            .where(SecurityEvent.tool_name.isnot(None))
+        )
 
-    if period_clause:
-        conditions.append(period_clause.lstrip("AND "))
-        params.extend(period_params)
+        stmt = _apply_period_filter(stmt, period)
 
-    where = " AND ".join(conditions)
+        stmt = (
+            stmt.group_by(SecurityEvent.tool_name)
+            .having(errors_expr > 0)
+            .order_by(errors_expr.desc())
+        )
 
-    rows = await query_spellbook_db(
-        f"""
-        SELECT tool_name,
-               COUNT(*) as total,
-               SUM(CASE WHEN severity IN ('error', 'critical') THEN 1 ELSE 0 END) as errors,
-               ROUND(
-                   100.0 * SUM(CASE WHEN severity IN ('error', 'critical') THEN 1 ELSE 0 END) / COUNT(*),
-                   2
-               ) as error_rate
-        FROM security_events
-        WHERE {where}
-        GROUP BY tool_name
-        HAVING errors > 0
-        ORDER BY errors DESC
-        """,
-        tuple(params),
-    )
+        result = await session.execute(stmt)
+        rows = [
+            {
+                "tool_name": row.tool_name,
+                "total": row.total,
+                "errors": row.errors,
+                "error_rate": row.error_rate,
+            }
+            for row in result
+        ]
 
     return {"tools": rows}
 
@@ -112,32 +132,28 @@ async def timeline(
     _session: str = Depends(require_admin_auth),
 ):
     """Time-series event counts bucketed by hour (24h) or day (7d/30d/all)."""
-    period_clause, period_params = _period_clause(period)
-
-    # Use hour buckets for 24h, day buckets otherwise
     bucket_format = "%Y-%m-%d %H:00" if period == "24h" else "%Y-%m-%d"
 
-    conditions = ["1=1"]
-    params: list = []
+    async with get_spellbook_session() as session:
+        bucket_col = func.strftime(bucket_format, SecurityEvent.created_at).label(
+            "bucket"
+        )
 
-    if period_clause:
-        conditions.append(period_clause.lstrip("AND "))
-        params.extend(period_params)
+        stmt = select(
+            bucket_col,
+            func.count().label("count"),
+            _error_count_expr().label("errors"),
+        )
 
-    where = " AND ".join(conditions)
+        stmt = _apply_period_filter(stmt, period)
 
-    rows = await query_spellbook_db(
-        f"""
-        SELECT strftime('{bucket_format}', created_at) as bucket,
-               COUNT(*) as count,
-               SUM(CASE WHEN severity IN ('error', 'critical') THEN 1 ELSE 0 END) as errors
-        FROM security_events
-        WHERE {where}
-        GROUP BY bucket
-        ORDER BY bucket
-        """,
-        tuple(params),
-    )
+        stmt = stmt.group_by(bucket_col).order_by(bucket_col)
+
+        result = await session.execute(stmt)
+        rows = [
+            {"bucket": row.bucket, "count": row.count, "errors": row.errors}
+            for row in result
+        ]
 
     return {"timeline": rows}
 
@@ -148,41 +164,43 @@ async def analytics_summary(
     _session: str = Depends(require_admin_auth),
 ):
     """Aggregate statistics: total events, unique tools, error rate, events today."""
-    period_clause, period_params = _period_clause(period)
+    async with get_spellbook_session() as session:
+        errors_expr = _error_count_expr()
+        stmt = select(
+            func.count().label("total_events"),
+            func.count(func.distinct(SecurityEvent.tool_name)).label("unique_tools"),
+            func.round(
+                100.0 * errors_expr / func.max(func.count(), 1),
+                2,
+            ).label("error_rate"),
+            func.sum(
+                case(
+                    (
+                        SecurityEvent.created_at
+                        >= func.datetime("now", "-24 hours"),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("events_today"),
+        )
 
-    conditions = ["1=1"]
-    params: list = []
+        stmt = _apply_period_filter(stmt, period)
 
-    if period_clause:
-        conditions.append(period_clause.lstrip("AND "))
-        params.extend(period_params)
+        result = await session.execute(stmt)
+        row = result.one_or_none()
 
-    where = " AND ".join(conditions)
+        if row and row.total_events:
+            return {
+                "total_events": row.total_events,
+                "unique_tools": row.unique_tools,
+                "error_rate": row.error_rate,
+                "events_today": row.events_today,
+            }
 
-    rows = await query_spellbook_db(
-        f"""
-        SELECT
-            COUNT(*) as total_events,
-            COUNT(DISTINCT tool_name) as unique_tools,
-            ROUND(
-                100.0 * SUM(CASE WHEN severity IN ('error', 'critical') THEN 1 ELSE 0 END) / MAX(COUNT(*), 1),
-                2
-            ) as error_rate,
-            SUM(CASE WHEN created_at >= datetime('now', '-24 hours') THEN 1 ELSE 0 END) as events_today
-        FROM security_events
-        WHERE {where}
-        """,
-        tuple(params),
-    )
-
-    if rows:
-        result = rows[0]
-    else:
-        result = {
-            "total_events": 0,
-            "unique_tools": 0,
-            "error_rate": 0,
-            "events_today": 0,
-        }
-
-    return result
+    return {
+        "total_events": 0,
+        "unique_tools": 0,
+        "error_rate": 0,
+        "events_today": 0,
+    }

@@ -1,7 +1,10 @@
 """Tests for the dashboard API endpoint."""
 
-from unittest.mock import patch, AsyncMock
+from contextlib import asynccontextmanager
+from unittest.mock import patch, AsyncMock, MagicMock
 import pytest
+
+from spellbook.db.spellbook_models import SecurityEvent, Memory
 
 
 def test_dashboard_returns_200(client):
@@ -115,18 +118,72 @@ def test_dashboard_response_schema(client):
         assert isinstance(data["recent_activity"], list)
 
 
+def _make_orm_session_ctx(scalars_results):
+    """Build an async context manager that yields a mock ORM session.
+
+    scalars_results: list where each entry is either an int (for scalar_one)
+    or a list (for scalars().all()). Each session.execute() call consumes
+    the next entry.
+    """
+    call_index = [0]
+
+    async def _execute(query):
+        idx = call_index[0]
+        call_index[0] += 1
+        result_mock = MagicMock()
+        value = scalars_results[idx]
+        if isinstance(value, int):
+            result_mock.scalar_one.return_value = value
+        else:
+            scalars_mock = MagicMock()
+            scalars_mock.all.return_value = value
+            result_mock.scalars.return_value = scalars_mock
+        return result_mock
+
+    session = MagicMock()
+    session.execute = AsyncMock(side_effect=_execute)
+    session.commit = AsyncMock()
+    session.rollback = AsyncMock()
+    session.close = AsyncMock()
+
+    @asynccontextmanager
+    async def _ctx():
+        yield session
+
+    return _ctx, session
+
+
 def test_dashboard_cross_db_aggregation(client):
-    """get_dashboard_data queries all databases in parallel via asyncio.gather."""
+    """get_dashboard_data queries all databases in parallel via ORM sessions."""
+    sec_event = MagicMock(spec=SecurityEvent)
+    sec_event.event_type = "canary_check"
+    sec_event.created_at = "2026-03-14T12:00:00Z"
+    sec_event.detail = "Canary verified"
+
+    mem = MagicMock(spec=Memory)
+    mem.created_at = "2026-03-14T11:00:00Z"
+    mem.content = "Stored a new memory about testing"
+
+    spellbook_ctx, spellbook_session = _make_orm_session_ctx([
+        200,            # active memories count
+        10,             # security events 24h count
+        1,              # open experiments count
+        [sec_event],    # recent security events
+        [mem],          # recent memories
+    ])
+    coord_ctx, coord_session = _make_orm_session_ctx([2])
+    fractal_ctx, fractal_session = _make_orm_session_ctx([4])
+
     with patch(
-        "spellbook.admin.routes.dashboard.query_spellbook_db",
-        new_callable=AsyncMock,
-    ) as mock_spellbook, patch(
-        "spellbook.admin.routes.dashboard.query_fractal_db",
-        new_callable=AsyncMock,
-    ) as mock_fractal, patch(
-        "spellbook.admin.routes.dashboard.query_coordination_db",
-        new_callable=AsyncMock,
-    ) as mock_coordination, patch(
+        "spellbook.admin.routes.dashboard.get_spellbook_session",
+        side_effect=spellbook_ctx,
+    ), patch(
+        "spellbook.admin.routes.dashboard.get_coordination_session",
+        side_effect=coord_ctx,
+    ), patch(
+        "spellbook.admin.routes.dashboard.get_fractal_session",
+        side_effect=fractal_ctx,
+    ), patch(
         "spellbook.admin.routes.dashboard.event_bus",
     ) as mock_bus, patch(
         "spellbook.admin.routes.dashboard.pkg_version",
@@ -140,34 +197,6 @@ def test_dashboard_cross_db_aggregation(client):
     ):
         mock_bus.subscriber_count = 2
         mock_bus.total_dropped_events = 5
-
-        # Spellbook DB returns: memories, security count, experiments,
-        # recent security events, recent memories
-        mock_spellbook.side_effect = [
-            [{"cnt": 200}],     # total memories
-            [{"cnt": 10}],      # security events 24h
-            [{"cnt": 1}],       # open experiments
-            [                   # recent security events
-                {
-                    "type": "canary_check",
-                    "timestamp": "2026-03-14T12:00:00Z",
-                    "summary": "Canary verified",
-                },
-            ],
-            [                   # recent memories
-                {
-                    "type": "memory_created",
-                    "timestamp": "2026-03-14T11:00:00Z",
-                    "summary": "Stored a new memory about testing",
-                },
-            ],
-        ]
-
-        # Coordination DB: swarms
-        mock_coordination.return_value = [{"cnt": 2}]
-
-        # Fractal DB: graphs
-        mock_fractal.return_value = [{"cnt": 4}]
 
         response = client.get("/api/dashboard")
         assert response.status_code == 200
@@ -185,24 +214,30 @@ def test_dashboard_cross_db_aggregation(client):
         assert data["counts"]["fractal_graphs"] == 4
         assert len(data["recent_activity"]) == 2
 
-        # Verify DB query functions were called (sessions now come from filesystem)
-        assert mock_spellbook.call_count == 5
-        assert mock_coordination.call_count == 1
-        assert mock_fractal.call_count == 1
+        # Verify ORM sessions were used
+        assert spellbook_session.execute.call_count == 5
+        assert coord_session.execute.call_count == 1
+        assert fractal_session.execute.call_count == 1
 
 
 def test_dashboard_handles_db_errors_gracefully(client):
-    """Dashboard returns safe defaults when database queries fail."""
+    """Dashboard returns safe defaults when ORM sessions raise exceptions."""
+
+    @asynccontextmanager
+    async def _failing_session():
+        raise Exception("DB locked")
+        yield  # pragma: no cover
+
     with patch(
-        "spellbook.admin.routes.dashboard.query_spellbook_db",
-        new_callable=AsyncMock,
-    ) as mock_spellbook, patch(
-        "spellbook.admin.routes.dashboard.query_fractal_db",
-        new_callable=AsyncMock,
-    ) as mock_fractal, patch(
-        "spellbook.admin.routes.dashboard.query_coordination_db",
-        new_callable=AsyncMock,
-    ) as mock_coordination, patch(
+        "spellbook.admin.routes.dashboard.get_spellbook_session",
+        side_effect=_failing_session,
+    ), patch(
+        "spellbook.admin.routes.dashboard.get_fractal_session",
+        side_effect=_failing_session,
+    ), patch(
+        "spellbook.admin.routes.dashboard.get_coordination_session",
+        side_effect=_failing_session,
+    ), patch(
         "spellbook.admin.routes.dashboard.event_bus",
     ) as mock_bus, patch(
         "spellbook.admin.routes.dashboard.pkg_version",
@@ -216,11 +251,6 @@ def test_dashboard_handles_db_errors_gracefully(client):
     ):
         mock_bus.subscriber_count = 0
         mock_bus.total_dropped_events = 0
-
-        # All queries raise exceptions
-        mock_spellbook.side_effect = Exception("DB locked")
-        mock_fractal.side_effect = Exception("DB not found")
-        mock_coordination.side_effect = Exception("Connection refused")
 
         response = client.get("/api/dashboard")
         assert response.status_code == 200

@@ -1,16 +1,25 @@
-"""Tests for memory browser admin routes."""
+"""Tests for memory browser admin routes (SQLAlchemy ORM migration).
 
+Tests verify:
+- ORM session usage (no raw SQL via query_spellbook_db/execute_spellbook_db)
+- Standard API envelope: list endpoint returns {items, total, page, per_page, pages}
+- FTS5 via text() escape hatch within ORM session
+- citation_count via func.count() per memory
+- Sort whitelist enforcement
+- All existing behavior preserved (CRUD, consolidation, events, auth)
+"""
+
+import hashlib
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-WK = "/Users/elijahrutschman/Development/spellbook/.worktrees/web-admin-interface"
 ROUTE_MODULE = "spellbook.admin.routes.memory"
 
 
-def _memory_row(
+def _make_memory_obj(
     id="mem-1",
     content="test memory content",
     memory_type="observation",
@@ -20,10 +29,28 @@ def _memory_row(
     created_at="2026-03-14T10:00:00Z",
     accessed_at=None,
     status="active",
+    deleted_at=None,
+    content_hash="abc123",
     meta="{}",
     citation_count=0,
 ):
-    return {
+    """Create a mock Memory ORM object with to_dict()."""
+    obj = MagicMock()
+    obj.id = id
+    obj.content = content
+    obj.memory_type = memory_type
+    obj.namespace = namespace
+    obj.branch = branch
+    obj.importance = importance
+    obj.created_at = created_at
+    obj.accessed_at = accessed_at
+    obj.status = status
+    obj.deleted_at = deleted_at
+    obj.content_hash = content_hash
+    obj.meta = meta
+    # Store citation_count for test retrieval
+    obj._citation_count = citation_count
+    obj.to_dict.return_value = {
         "id": id,
         "content": content,
         "memory_type": memory_type,
@@ -33,136 +60,281 @@ def _memory_row(
         "created_at": created_at,
         "accessed_at": accessed_at,
         "status": status,
-        "meta": meta,
-        "citation_count": citation_count,
+        "deleted_at": deleted_at,
+        "content_hash": content_hash,
+        "meta": json.loads(meta) if meta else {},
     }
+    return obj
+
+
+def _make_citation_obj(
+    id=1,
+    memory_id="mem-1",
+    file_path="/src/main.py",
+    line_range="10-20",
+    content_snippet="def main():",
+):
+    """Create a mock MemoryCitation ORM object with to_dict()."""
+    obj = MagicMock()
+    obj.id = id
+    obj.memory_id = memory_id
+    obj.file_path = file_path
+    obj.line_range = line_range
+    obj.content_snippet = content_snippet
+    obj.to_dict.return_value = {
+        "id": id,
+        "memory_id": memory_id,
+        "file_path": file_path,
+        "line_range": line_range,
+        "content_snippet": content_snippet,
+    }
+    return obj
+
+
+def _build_execute_result(result_type, value):
+    """Build a mock result object for session.execute().
+
+    result_type:
+    - 'scalar_one': returns value via .scalar_one() (for counts)
+    - 'scalars_all': returns value via .scalars().all() (for lists)
+    - 'scalar_one_or_none': returns value via .scalar_one_or_none() (for lookups)
+    - 'all_tuples': returns value via .all() (for group_by queries returning tuples)
+    """
+    mock_result = MagicMock()
+    if result_type == "scalar_one":
+        mock_result.scalar_one.return_value = value
+    elif result_type == "scalars_all":
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = value
+        mock_result.scalars.return_value = mock_scalars
+    elif result_type == "scalar_one_or_none":
+        mock_result.scalar_one_or_none.return_value = value
+    elif result_type == "all_tuples":
+        mock_result.all.return_value = value
+    return mock_result
+
+
+def _make_list_session(memories, total=None, citation_counts=None):
+    """Create a mock session for the list endpoint.
+
+    The list endpoint executes:
+    1. count query -> scalar_one
+    2. data query -> scalars().all()
+    3. N citation count queries -> scalar_one each
+    """
+    if total is None:
+        total = len(memories)
+    if citation_counts is None:
+        citation_counts = [getattr(m, '_citation_count', 0) for m in memories]
+
+    results = [
+        _build_execute_result("scalar_one", total),      # count
+        _build_execute_result("scalars_all", memories),   # data
+    ]
+    # One citation count query per memory
+    for cc in citation_counts:
+        results.append(_build_execute_result("scalar_one", cc))
+
+    session = AsyncMock(spec=AsyncSession)
+    session.execute = AsyncMock(side_effect=results)
+    return session
+
+
+def _make_test_client(session):
+    """Create an authenticated test client with the given mock session as db dependency."""
+    from spellbook.admin.app import create_admin_app
+    from spellbook.db import spellbook_db
+    from fastapi.testclient import TestClient
+    from spellbook.admin.auth import create_session_cookie
+
+    app = create_admin_app()
+    app.dependency_overrides[spellbook_db] = lambda: session
+    test_client = TestClient(app)
+    cookie = create_session_cookie("test-session")
+    test_client.cookies.set("spellbook_admin_session", cookie)
+    return test_client
 
 
 class TestMemoryList:
-    def test_list_memories_returns_paginated(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 1}],  # count query
-                [_memory_row()],  # data query
-            ]
-            response = client.get("/api/memories")
-            assert response.status_code == 200
-            data = response.json()
-            assert "memories" in data
-            assert data["total"] == 1
-            assert data["page"] == 1
-            assert data["per_page"] == 50
-            assert data["pages"] == 1
-            assert len(data["memories"]) == 1
-            mem = data["memories"][0]
-            assert mem["id"] == "mem-1"
-            assert mem["citation_count"] == 0
+    def test_list_memories_returns_items_key(self, client):
+        """List endpoint returns standard {items, ...} envelope, not {memories, ...}."""
+        session = _make_list_session([_make_memory_obj()])
+        test_client = _make_test_client(session)
 
-    def test_list_memories_with_search(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 1}],
-                [_memory_row(content="matching result")],
-            ]
-            response = client.get("/api/memories?q=matching")
-            assert response.status_code == 200
-            # Verify FTS query was used (second call should have FTS JOIN)
-            count_sql = mock_query.call_args_list[0][0][0]
-            assert "memories_fts" in count_sql
+        response = test_client.get("/api/memories")
+        assert response.status_code == 200
+        data = response.json()
+        # Standard envelope uses "items" key
+        assert "items" in data, f"Expected 'items' key in response, got keys: {list(data.keys())}"
+        assert "memories" not in data, "Response should use 'items' not 'memories'"
+        assert data["total"] == 1
+        assert data["page"] == 1
+        assert data["per_page"] == 50
+        assert data["pages"] == 1
+        assert len(data["items"]) == 1
+        item = data["items"][0]
+        assert item["id"] == "mem-1"
+        assert item["content"] == "test memory content"
+        assert item["memory_type"] == "observation"
+        assert item["namespace"] == "project-a"
+        assert item["branch"] == "main"
+        assert item["importance"] == 1.0
+        assert item["created_at"] == "2026-03-14T10:00:00Z"
+        assert item["accessed_at"] is None
+        assert item["status"] == "active"
+        assert item["meta"] == {}
 
-    def test_list_memories_namespace_filter(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 1}],
-                [_memory_row(namespace="filtered-ns")],
-            ]
-            response = client.get("/api/memories?namespace=filtered-ns")
-            assert response.status_code == 200
-            # Verify namespace filter was applied
-            count_sql = mock_query.call_args_list[0][0][0]
-            assert "namespace" in count_sql
+    def test_list_memories_with_citation_count(self, client):
+        """List includes citation_count field from per-memory count query."""
+        mem = _make_memory_obj(citation_count=3)
+        session = _make_list_session([mem], citation_counts=[3])
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"][0]["citation_count"] == 3
 
     def test_list_memories_pagination(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 75}],
-                [_memory_row(id=f"mem-{i}") for i in range(25)],
-            ]
-            response = client.get("/api/memories?page=2&per_page=25")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["page"] == 2
-            assert data["per_page"] == 25
-            assert data["pages"] == 3
-            assert data["total"] == 75
-            # Verify OFFSET was used
-            data_sql = mock_query.call_args_list[1][0][0]
-            assert "OFFSET" in data_sql
+        """Pagination metadata is correct for multi-page results."""
+        mems = [_make_memory_obj(id=f"mem-{i}") for i in range(25)]
+        session = _make_list_session(mems, total=75)
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories?page=2&per_page=25")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["page"] == 2
+        assert data["per_page"] == 25
+        assert data["pages"] == 3
+        assert data["total"] == 75
+
+    def test_list_memories_fts_search(self, client):
+        """FTS search uses text() escape hatch, not ORM."""
+        # FTS path returns raw dicts from text() query, not ORM objects.
+        # Build mock for FTS path: count (scalar_one) + data (mappings().all())
+        session = AsyncMock(spec=AsyncSession)
+        count_result = _build_execute_result("scalar_one", 1)
+        data_result = MagicMock()
+        mappings = MagicMock()
+        mappings.all.return_value = [{
+            "id": "mem-1",
+            "content": "matching result",
+            "memory_type": "observation",
+            "namespace": "project-a",
+            "branch": "main",
+            "importance": 1.0,
+            "created_at": "2026-03-14T10:00:00Z",
+            "accessed_at": None,
+            "status": "active",
+            "meta": "{}",
+            "deleted_at": None,
+            "content_hash": "abc123",
+            "citation_count": 0,
+        }]
+        data_result.mappings.return_value = mappings
+        session.execute = AsyncMock(side_effect=[count_result, data_result])
+
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories?q=matching")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 1
+        assert data["items"][0]["content"] == "matching result"
+        assert data["items"][0]["citation_count"] == 0
+        # Verify session.execute was called (FTS uses text() within session)
+        assert session.execute.call_count == 2  # count + data query
+
+    def test_list_memories_invalid_sort_defaults_to_created_at(self, client):
+        """Invalid sort column silently defaults to created_at."""
+        session = _make_list_session([], total=0)
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories?sort=invalid_column")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 0
+        assert data["items"] == []
 
     def test_list_memories_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/memories")
         assert response.status_code == 401
 
-    def test_list_memories_citation_count_uses_left_join(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 1}],
-                [_memory_row(citation_count=3)],
-            ]
-            response = client.get("/api/memories")
-            assert response.status_code == 200
-            # Verify LEFT JOIN was used in the data query
-            data_sql = mock_query.call_args_list[1][0][0]
-            assert "LEFT JOIN" in data_sql
-            assert "memory_citations" in data_sql
-            assert response.json()["memories"][0]["citation_count"] == 3
+    def test_list_memories_namespace_filter(self, client):
+        """Namespace filter produces filtered results."""
+        mem = _make_memory_obj(namespace="filtered-ns")
+        session = _make_list_session([mem])
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories?namespace=filtered-ns")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"][0]["namespace"] == "filtered-ns"
+
+    def test_list_memories_status_filter_overrides_deleted_exclusion(self, client):
+        """When status filter is provided, it replaces the default deleted exclusion."""
+        mem = _make_memory_obj(status="deleted")
+        d = mem.to_dict()
+        d["status"] = "deleted"
+        mem.to_dict.return_value = d
+        session = _make_list_session([mem])
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories?status=deleted")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 1
+        assert data["items"][0]["status"] == "deleted"
 
 
 class TestMemoryDetail:
-    def test_get_memory_returns_detail(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [_memory_row(content="full content here", citation_count=2)],
-                [
-                    {
-                        "id": 1,
-                        "memory_id": "mem-1",
-                        "file_path": "/src/main.py",
-                        "line_range": "10-20",
-                        "content_snippet": "def main():",
-                    }
-                ],
-            ]
-            response = client.get("/api/memories/mem-1")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["id"] == "mem-1"
-            assert data["content"] == "full content here"
-            assert data["citation_count"] == 2
-            assert len(data["citations"]) == 1
-            assert data["citations"][0]["file_path"] == "/src/main.py"
+    def test_get_memory_returns_detail_with_citations(self, client):
+        """Detail endpoint returns memory with citations list."""
+        mem = _make_memory_obj(content="full content here")
+        citation = _make_citation_obj()
+
+        session = AsyncMock(spec=AsyncSession)
+        # 1. Memory lookup (scalar_one_or_none)
+        mem_result = _build_execute_result("scalar_one_or_none", mem)
+        # 2. Citation count (scalar_one)
+        cite_count_result = _build_execute_result("scalar_one", 1)
+        # 3. Citations list (scalars_all)
+        citations_result = _build_execute_result("scalars_all", [citation])
+        session.execute = AsyncMock(
+            side_effect=[mem_result, cite_count_result, citations_result]
+        )
+
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories/mem-1")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == "mem-1"
+        assert data["content"] == "full content here"
+        assert data["citation_count"] == 1
+        assert len(data["citations"]) == 1
+        assert data["citations"][0] == {
+            "id": 1,
+            "memory_id": "mem-1",
+            "file_path": "/src/main.py",
+            "line_range": "10-20",
+            "content_snippet": "def main():",
+        }
 
     def test_get_memory_not_found(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.return_value = []
-            response = client.get("/api/memories/nonexistent")
-            assert response.status_code == 404
-            data = response.json()
-            assert data["error"]["code"] == "MEMORY_NOT_FOUND"
+        """Non-existent memory returns 404 with error code."""
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", None)
+        )
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories/nonexistent")
+        assert response.status_code == 404
+        data = response.json()
+        assert data["error"]["code"] == "MEMORY_NOT_FOUND"
+        assert "nonexistent" in data["error"]["message"]
 
     def test_get_memory_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/memories/mem-1")
@@ -171,72 +343,115 @@ class TestMemoryDetail:
 
 class TestMemoryUpdate:
     def test_update_memory_content(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_q:
-            with patch(
-                f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-            ) as mock_exec:
-                mock_q.return_value = [
-                    _memory_row(id="mem-1", content="old content")
-                ]
-                mock_exec.return_value = 1
-                response = client.put(
-                    "/api/memories/mem-1", json={"content": "updated content"}
-                )
-                assert response.status_code == 200
-                data = response.json()
-                assert data["status"] == "ok"
-                # Verify UPDATE SQL was executed
-                update_sql = mock_exec.call_args[0][0]
-                assert "UPDATE memories" in update_sql
+        """Update content also updates content_hash."""
+        mem = _make_memory_obj(id="mem-1", content="old content")
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
+        with patch(f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock):
+            response = test_client.put(
+                "/api/memories/mem-1", json={"content": "updated content"}
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"status": "ok", "memory_id": "mem-1"}
+        # Verify the ORM object was modified
+        assert mem.content == "updated content"
+        expected_hash = hashlib.sha256("updated content".encode()).hexdigest()
+        assert mem.content_hash == expected_hash
 
     def test_update_memory_importance(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_q:
-            with patch(
-                f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-            ) as mock_exec:
-                mock_q.return_value = [_memory_row()]
-                mock_exec.return_value = 1
-                response = client.put(
-                    "/api/memories/mem-1", json={"importance": 5.0}
-                )
-                assert response.status_code == 200
+        """Update importance field via ORM."""
+        mem = _make_memory_obj()
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
+        with patch(f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock):
+            response = test_client.put(
+                "/api/memories/mem-1", json={"importance": 5.0}
+            )
+        assert response.status_code == 200
+        assert mem.importance == 5.0
+
+    def test_update_memory_meta(self, client):
+        """Update meta field stores JSON string on ORM object."""
+        mem = _make_memory_obj()
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
+        with patch(f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock):
+            response = test_client.put(
+                "/api/memories/mem-1", json={"meta": {"key": "value"}}
+            )
+        assert response.status_code == 200
+        assert mem.meta == json.dumps({"key": "value"})
 
     def test_update_memory_not_found(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_q:
-            mock_q.return_value = []
-            response = client.put(
-                "/api/memories/nonexistent", json={"content": "new"}
-            )
-            assert response.status_code == 404
-            assert response.json()["error"]["code"] == "MEMORY_NOT_FOUND"
+        """Update non-existent memory returns 404."""
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", None)
+        )
+        test_client = _make_test_client(session)
+
+        response = test_client.put(
+            "/api/memories/nonexistent", json={"content": "new"}
+        )
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "MEMORY_NOT_FOUND"
+
+    def test_update_no_valid_fields(self, client):
+        """Update with empty body returns 400."""
+        mem = _make_memory_obj()
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        test_client = _make_test_client(session)
+
+        response = test_client.put("/api/memories/mem-1", json={})
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "INVALID_REQUEST"
 
     def test_update_publishes_event(self, client):
+        """Update publishes memory.updated event."""
+        mem = _make_memory_obj()
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
         with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_q:
-            with patch(
-                f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-            ) as mock_exec:
-                with patch(
-                    f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock
-                ) as mock_pub:
-                    mock_q.return_value = [_memory_row()]
-                    mock_exec.return_value = 1
-                    response = client.put(
-                        "/api/memories/mem-1",
-                        json={"content": "updated"},
-                    )
-                    assert response.status_code == 200
-                    mock_pub.assert_called_once()
-                    event = mock_pub.call_args[0][0]
-                    assert event.event_type == "memory.updated"
-                    assert event.data["memory_id"] == "mem-1"
+            f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock
+        ) as mock_pub:
+            response = test_client.put(
+                "/api/memories/mem-1",
+                json={"content": "updated"},
+            )
+            assert response.status_code == 200
+            mock_pub.assert_called_once()
+            event = mock_pub.call_args[0][0]
+            assert event.event_type == "memory.updated"
+            assert event.data["memory_id"] == "mem-1"
+            assert event.data["fields"] == ["content"]
 
     def test_update_memory_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.put(
@@ -247,44 +462,70 @@ class TestMemoryUpdate:
 
 class TestMemoryDelete:
     def test_delete_memory_soft_deletes(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-        ) as mock_exec:
-            mock_exec.return_value = 1
-            response = client.delete("/api/memories/mem-1")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "ok"
-            # Verify soft delete (SET status='deleted')
-            sql = mock_exec.call_args[0][0]
-            assert "status" in sql.lower()
-            assert "deleted" in sql.lower() or "deleted" in str(
-                mock_exec.call_args[0][1]
-            )
+        """Delete sets status='deleted' and deleted_at via ORM."""
+        mem = _make_memory_obj(id="mem-1", status="active")
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
+        with patch(f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock):
+            response = test_client.delete("/api/memories/mem-1")
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"status": "ok", "memory_id": "mem-1"}
+        # Verify ORM object was modified for soft delete
+        assert mem.status == "deleted"
+        assert mem.deleted_at is not None  # Should be set to current time
 
     def test_delete_memory_not_found(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-        ) as mock_exec:
-            mock_exec.return_value = 0
-            response = client.delete("/api/memories/nonexistent")
-            assert response.status_code == 404
-            assert response.json()["error"]["code"] == "MEMORY_NOT_FOUND"
+        """Delete non-existent memory returns 404."""
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", None)
+        )
+        test_client = _make_test_client(session)
+
+        response = test_client.delete("/api/memories/nonexistent")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "MEMORY_NOT_FOUND"
+
+    def test_delete_already_deleted_returns_404(self, client):
+        """Delete on already-deleted memory returns 404."""
+        mem = _make_memory_obj(id="mem-1", status="deleted")
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        test_client = _make_test_client(session)
+
+        response = test_client.delete("/api/memories/mem-1")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "MEMORY_NOT_FOUND"
 
     def test_delete_publishes_event(self, client):
+        """Delete publishes memory.deleted event."""
+        mem = _make_memory_obj(id="mem-1", status="active")
+        session = AsyncMock(spec=AsyncSession)
+        session.execute = AsyncMock(
+            return_value=_build_execute_result("scalar_one_or_none", mem)
+        )
+        session.flush = AsyncMock()
+
+        test_client = _make_test_client(session)
+
         with patch(
-            f"{ROUTE_MODULE}.execute_spellbook_db", new_callable=AsyncMock
-        ) as mock_exec:
-            with patch(
-                f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock
-            ) as mock_pub:
-                mock_exec.return_value = 1
-                response = client.delete("/api/memories/mem-1")
-                assert response.status_code == 200
-                mock_pub.assert_called_once()
-                event = mock_pub.call_args[0][0]
-                assert event.event_type == "memory.deleted"
-                assert event.data["memory_id"] == "mem-1"
+            f"{ROUTE_MODULE}.event_bus.publish", new_callable=AsyncMock
+        ) as mock_pub:
+            response = test_client.delete("/api/memories/mem-1")
+            assert response.status_code == 200
+            mock_pub.assert_called_once()
+            event = mock_pub.call_args[0][0]
+            assert event.event_type == "memory.deleted"
+            assert event.data["memory_id"] == "mem-1"
 
     def test_delete_memory_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.delete("/api/memories/mem-1")
@@ -310,8 +551,10 @@ class TestConsolidate:
                 )
                 assert response.status_code == 200
                 data = response.json()
-                assert data["memories_created"] == 3
-                assert data["events_consolidated"] == 10
+                assert data == {
+                    "memories_created": 3,
+                    "events_consolidated": 10,
+                }
 
     def test_consolidate_409_when_running(self, client):
         with patch(
@@ -319,7 +562,6 @@ class TestConsolidate:
         ) as mock_consolidate:
             import asyncio
 
-            # Simulate long-running consolidation
             mock_consolidate.side_effect = lambda *a, **kw: asyncio.sleep(100)
 
             with patch(
@@ -346,44 +588,56 @@ class TestConsolidate:
 
 
 class TestNamespaces:
-    def test_list_namespaces(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.return_value = [
-                {"namespace": "project-a"},
-                {"namespace": "project-b"},
-            ]
-            response = client.get("/api/memories/namespaces")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["namespaces"] == ["project-a", "project-b"]
+    def test_list_namespaces_via_orm(self, client):
+        """Namespaces endpoint uses ORM query."""
+        mock_mem_a = MagicMock()
+        mock_mem_a.namespace = "project-a"
+        mock_mem_b = MagicMock()
+        mock_mem_b.namespace = "project-b"
+
+        session = AsyncMock(spec=AsyncSession)
+        result = _build_execute_result("scalars_all", [mock_mem_a, mock_mem_b])
+        session.execute = AsyncMock(return_value=result)
+
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories/namespaces")
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"namespaces": ["project-a", "project-b"]}
 
 
 class TestMemoryStats:
-    def test_stats_returns_aggregated(self, client):
-        with patch(
-            f"{ROUTE_MODULE}.query_spellbook_db", new_callable=AsyncMock
-        ) as mock_query:
-            mock_query.side_effect = [
-                [{"cnt": 42}],  # total
-                [
-                    {"memory_type": "observation", "cnt": 30},
-                    {"memory_type": "synthesis", "cnt": 12},
-                ],
-                [
-                    {"status": "active", "cnt": 40},
-                    {"status": "deleted", "cnt": 2},
-                ],
-                [
-                    {"namespace": "project-a", "cnt": 25},
-                    {"namespace": "project-b", "cnt": 17},
-                ],
-            ]
-            response = client.get("/api/memories/stats")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["total"] == 42
-            assert data["by_type"]["observation"] == 30
-            assert data["by_status"]["active"] == 40
-            assert data["by_namespace"]["project-a"] == 25
+    def test_stats_returns_aggregated_via_orm(self, client):
+        """Stats endpoint uses ORM func.count() and group_by."""
+        session = AsyncMock(spec=AsyncSession)
+
+        total_result = _build_execute_result("scalar_one", 42)
+        type_result = _build_execute_result("all_tuples", [
+            ("observation", 30),
+            ("synthesis", 12),
+        ])
+        status_result = _build_execute_result("all_tuples", [
+            ("active", 40),
+            ("deleted", 2),
+        ])
+        ns_result = _build_execute_result("all_tuples", [
+            ("project-a", 25),
+            ("project-b", 17),
+        ])
+
+        session.execute = AsyncMock(
+            side_effect=[total_result, type_result, status_result, ns_result]
+        )
+
+        test_client = _make_test_client(session)
+
+        response = test_client.get("/api/memories/stats")
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {
+            "total": 42,
+            "by_type": {"observation": 30, "synthesis": 12},
+            "by_status": {"active": 40, "deleted": 2},
+            "by_namespace": {"project-a": 25, "project-b": 17},
+        }

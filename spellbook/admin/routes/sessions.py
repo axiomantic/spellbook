@@ -8,7 +8,6 @@ full file contents.
 import asyncio
 import json
 import math
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -16,13 +15,19 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from spellbook.admin.auth import require_admin_auth
+from spellbook.admin.routes.list_helpers import build_list_response, validate_sort_order
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
+
+
+_SORT_WHITELIST = {"last_activity", "created_at", "message_count", "size_bytes"}
 
 
 def _scan_sessions(
     project_filter: Optional[str] = None,
     search: Optional[str] = None,
+    sort: str = "last_activity",
+    order: str = "desc",
 ) -> list[dict]:
     """Scan ~/.claude/projects/ for session JSONL files.
 
@@ -127,8 +132,17 @@ def _scan_sessions(
             or search_lower in (s.get("custom_title") or "").lower()
         ]
 
-    # Sort by last activity descending
-    sessions.sort(key=lambda s: s.get("last_activity") or "", reverse=True)
+    # Validate and apply sort
+    sort_field = sort if sort in _SORT_WHITELIST else "last_activity"
+    sort_order = validate_sort_order(order)
+    reverse = sort_order == "desc"
+
+    # Use appropriate default for missing values based on field type
+    if sort_field in ("message_count", "size_bytes"):
+        sessions.sort(key=lambda s: s.get(sort_field) or 0, reverse=reverse)
+    else:
+        sessions.sort(key=lambda s: s.get(sort_field) or "", reverse=reverse)
+
     return sessions
 
 
@@ -136,25 +150,22 @@ def _scan_sessions(
 async def list_sessions(
     project: Optional[str] = Query(None, description="Filter by project path substring (comma-separated for multiple)"),
     search: Optional[str] = Query(None, description="Free-text search across title, slug, and first message"),
+    sort: str = Query("last_activity", description="Sort field"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
     _session: str = Depends(require_admin_auth),
 ):
     """List sessions by scanning JSONL session files."""
-    all_sessions = await asyncio.to_thread(_scan_sessions, project, search)
+    all_sessions = await asyncio.to_thread(
+        _scan_sessions, project, search, sort, order
+    )
 
     total = len(all_sessions)
-    pages = max(1, math.ceil(total / per_page))
     offset = (page - 1) * per_page
     page_sessions = all_sessions[offset : offset + per_page]
 
-    return {
-        "sessions": page_sessions,
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": pages,
-    }
+    return build_list_response(page_sessions, total, page, per_page)
 
 
 def _validate_path_segment(segment: str) -> bool:

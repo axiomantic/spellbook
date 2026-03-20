@@ -9,28 +9,19 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.db import query_spellbook_db
+from spellbook.admin.routes.list_helpers import build_list_response, validate_sort_order
+from spellbook.db import spellbook_db
+from spellbook.db.helpers import apply_pagination, apply_sorting
+from spellbook.db.spellbook_models import StintCorrectionEvent, StintStack
 
 router = APIRouter(prefix="/focus", tags=["focus"])
 
-PERIOD_MAP = {
-    "24h": "-24 hours",
-    "7d": "-7 days",
-    "30d": "-30 days",
-}
-
-
-def _period_clause(period: str) -> tuple[str, tuple]:
-    """Return (WHERE clause fragment, params) for period filtering.
-
-    Returns empty clause for 'all' period.
-    """
-    sqlite_offset = PERIOD_MAP.get(period)
-    if sqlite_offset is None:
-        return "", ()
-    return "AND created_at >= datetime('now', ?)", (sqlite_offset,)
+CORRECTIONS_SORT_WHITELIST = {"created_at", "project_path", "correction_type"}
 
 
 def _parse_json(text: str) -> list:
@@ -44,88 +35,80 @@ def _parse_json(text: str) -> list:
         return []
 
 
+def _stack_to_dict(stack: StintStack) -> dict:
+    """Convert a StintStack ORM object to a response dict with depth."""
+    d = stack.to_dict()
+    parsed = d.get("stack") or []
+    return {
+        "project_path": d["project_path"],
+        "session_id": d["session_id"],
+        "stack": parsed,
+        "depth": len(parsed),
+        "updated_at": d["updated_at"],
+    }
+
+
 @router.get("/stacks")
 async def focus_stacks(
     _session: str = Depends(require_admin_auth),
+    db: AsyncSession = Depends(spellbook_db),
 ):
     """All active stint stacks, ordered by most recently updated."""
-    rows = await query_spellbook_db(
-        """
-        SELECT project_path, session_id, stack_json, updated_at
-        FROM stint_stack
-        ORDER BY updated_at DESC
-        """,
-        (),
-    )
+    query = select(StintStack).order_by(desc(StintStack.updated_at))
+    result = await db.execute(query)
+    stacks = list(result.scalars().all())
 
-    stacks = []
-    for row in rows:
-        parsed = _parse_json(row.get("stack_json", "[]"))
-        stacks.append(
-            {
-                "project_path": row.get("project_path"),
-                "session_id": row.get("session_id"),
-                "stack": parsed,
-                "depth": len(parsed),
-                "updated_at": row.get("updated_at"),
-            }
-        )
-
-    return {"stacks": stacks}
+    items = [_stack_to_dict(s) for s in stacks]
+    return {"items": items}
 
 
 @router.get("/corrections")
 async def focus_corrections(
-    period: str = Query("7d", description="Time period: 24h, 7d, 30d, all"),
     project: Optional[str] = Query(None, description="Filter by project_path"),
     correction_type: Optional[str] = Query(
         None, description="Filter by correction_type: llm_wrong, mcp_wrong"
     ),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=200, description="Items per page"),
+    sort: str = Query("created_at", description="Sort column"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
     _session: str = Depends(require_admin_auth),
+    db: AsyncSession = Depends(spellbook_db),
 ):
-    """Correction events with optional filtering."""
-    period_clause, period_params = _period_clause(period)
-
-    conditions = ["1=1"]
-    params: list = []
-
-    if period_clause:
-        conditions.append(period_clause.lstrip("AND "))
-        params.extend(period_params)
+    """Correction events with optional filtering, sorting, and pagination."""
+    # Build base query with filters
+    query = select(StintCorrectionEvent)
 
     if project:
-        conditions.append("project_path = ?")
-        params.append(project)
+        query = query.where(StintCorrectionEvent.project_path == project)
 
     if correction_type:
-        conditions.append("correction_type = ?")
-        params.append(correction_type)
+        query = query.where(StintCorrectionEvent.correction_type == correction_type)
 
-    where = " AND ".join(conditions)
+    # Count total matching rows
+    count_query = select(func.count()).select_from(query.subquery())
+    count_result = await db.execute(count_query)
+    total = count_result.scalar_one()
 
-    rows = await query_spellbook_db(
-        f"""
-        SELECT *
-        FROM stint_correction_events
-        WHERE {where}
-        ORDER BY created_at DESC
-        LIMIT 200
-        """,
-        tuple(params),
+    # Apply sorting
+    sort_order = validate_sort_order(order)
+    query = apply_sorting(
+        query,
+        StintCorrectionEvent,
+        sort,
+        sort_order,
+        allowed_columns=CORRECTIONS_SORT_WHITELIST,
+        default_column="created_at",
     )
 
-    corrections = []
-    for row in rows:
-        parsed_row = dict(row)
-        parsed_row["old_stack_json"] = _parse_json(
-            parsed_row.get("old_stack_json", "[]")
-        )
-        parsed_row["new_stack_json"] = _parse_json(
-            parsed_row.get("new_stack_json", "[]")
-        )
-        corrections.append(parsed_row)
+    # Apply pagination
+    query = apply_pagination(query, page, per_page)
 
-    return {"corrections": corrections, "total": len(corrections)}
+    result = await db.execute(query)
+    corrections = list(result.scalars().all())
+
+    items = [c.to_dict() for c in corrections]
+    return build_list_response(items=items, total=total, page=page, per_page=per_page)
 
 
 @router.get("/summary")

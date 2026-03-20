@@ -13,7 +13,7 @@ import asyncio
 import time
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from spellbook.admin.events import Event, EventBus, Subsystem
 
@@ -94,45 +94,68 @@ class TestDashboardPerformance:
 class TestFractalCytoscapePerformance:
     def test_cytoscape_500_nodes(self, client):
         """Cytoscape endpoint should handle 500 nodes within 2 seconds."""
-        nodes = [
-            {
-                "id": f"n-{i}",
-                "node_type": "question" if i % 2 == 0 else "answer",
-                "text": f"Node text for node {i}",
-                "depth": i % 5,
-                "status": ["open", "claimed", "answered", "synthesized", "saturated"][i % 5],
-                "parent_id": f"n-{i // 2}" if i > 0 else None,
-                "owner": f"agent-{i % 3}",
-                "session_id": None,
-                "claimed_at": None,
-                "answered_at": None,
-                "synthesized_at": None,
-            }
-            for i in range(500)
-        ]
+        statuses = ["open", "claimed", "answered", "synthesized", "saturated"]
 
-        edges = [
-            {
-                "source": f"n-{i}",
-                "target": f"n-{i + 1}",
-                "edge_type": "parent_child",
-            }
-            for i in range(499)
-        ] + [
-            {"source": "n-10", "target": "n-20", "edge_type": "convergence"},
-            {"source": "n-30", "target": "n-40", "edge_type": "contradiction"},
-        ]
+        # Build mock ORM node objects
+        mock_nodes = []
+        for i in range(500):
+            node = MagicMock()
+            node.id = f"n-{i}"
+            node.node_type = "question" if i % 2 == 0 else "answer"
+            node.text = f"Node text for node {i}"
+            node.depth = i % 5
+            node.status = statuses[i % 5]
+            node.parent_id = f"n-{i // 2}" if i > 0 else None
+            node.owner = f"agent-{i % 3}"
+            node.session_id = None
+            node.claimed_at = None
+            node.answered_at = None
+            node.synthesized_at = None
+            mock_nodes.append(node)
 
-        with patch(
-            "spellbook.admin.routes.fractal.query_fractal_db",
-            new_callable=AsyncMock,
-        ) as mock:
-            mock.side_effect = [
-                [{"id": "g-1"}],  # graph exists
-                nodes,
-                edges,
-            ]
+        # Build mock ORM edge objects
+        mock_edges = []
+        for i in range(499):
+            edge = MagicMock()
+            edge.from_node = f"n-{i}"
+            edge.to_node = f"n-{i + 1}"
+            edge.edge_type = "parent_child"
+            mock_edges.append(edge)
+        conv_edge = MagicMock()
+        conv_edge.from_node = "n-10"
+        conv_edge.to_node = "n-20"
+        conv_edge.edge_type = "convergence"
+        mock_edges.append(conv_edge)
+        contra_edge = MagicMock()
+        contra_edge.from_node = "n-30"
+        contra_edge.to_node = "n-40"
+        contra_edge.edge_type = "contradiction"
+        mock_edges.append(contra_edge)
 
+        mock_session = AsyncMock()
+
+        # graph exists check
+        graph_result = MagicMock()
+        graph_obj = MagicMock()
+        graph_obj.id = "g-1"
+        graph_result.scalars.return_value.first.return_value = graph_obj
+
+        # nodes query
+        nodes_result = MagicMock()
+        nodes_result.scalars.return_value.all.return_value = mock_nodes
+
+        # edges query
+        edges_result = MagicMock()
+        edges_result.scalars.return_value.all.return_value = mock_edges
+
+        mock_session.execute = AsyncMock(
+            side_effect=[graph_result, nodes_result, edges_result]
+        )
+
+        from spellbook.db import fractal_db
+
+        client.app.dependency_overrides[fractal_db] = lambda: mock_session
+        try:
             start = time.monotonic()
             response = client.get("/api/fractal/graphs/g-1/cytoscape")
             elapsed_ms = (time.monotonic() - start) * 1000
@@ -141,6 +164,8 @@ class TestFractalCytoscapePerformance:
             data = response.json()
             assert data["stats"]["total_nodes"] == 500
             assert elapsed_ms < 2000, f"Cytoscape took {elapsed_ms:.0f}ms, budget is 2000ms"
+        finally:
+            client.app.dependency_overrides.pop(fractal_db, None)
 
 
 @pytest.mark.slow
