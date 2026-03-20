@@ -5,7 +5,8 @@ import type { StintStack, CorrectionEvent, FocusSummary } from '../api/types'
 export function useStintStacks() {
   return useQuery({
     queryKey: ['focus', 'stacks'],
-    queryFn: () => fetchApi<StintStack[]>('/api/focus/stacks'),
+    queryFn: () =>
+      fetchApi<{ stacks: StintStack[] }>('/api/focus/stacks').then((r) => r.stacks),
     refetchInterval: 30_000,
   })
 }
@@ -20,9 +21,9 @@ export function useCorrectionEvents(params: CorrectionParams = {}) {
   return useQuery({
     queryKey: ['focus', 'corrections', params.period, params.project, params.correction_type],
     queryFn: () =>
-      fetchApi<CorrectionEvent[]>('/api/focus/corrections', {
+      fetchApi<{ corrections: CorrectionEvent[] }>('/api/focus/corrections', {
         params: params as Record<string, string | number | undefined>,
-      }),
+      }).then((r) => r.corrections),
     placeholderData: keepPreviousData,
   })
 }
