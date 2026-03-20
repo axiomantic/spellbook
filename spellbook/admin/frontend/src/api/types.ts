@@ -328,6 +328,15 @@ export interface FocusSummary {
   max_depth: number
 }
 
+// Generic list response for useListPage
+export interface ListResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
+}
+
 // Errors
 export interface ErrorDetail {
   code: string
