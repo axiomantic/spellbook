@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/security-auditing/SKILL.md", "source_hash": "sha256:07e79fa6bbf8cb6c32166fcf760b20c26e0808ce73f6bd272581cc511d266b5a", "generated_at": "2026-03-19T05:50:51Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/security-auditing/SKILL.md", "source_hash": "sha256:477e873e9e465a152759c501fb2042296d295e44696f8787264e004668bbdcb2", "generated_at": "2026-03-19T05:50:51Z", "generator": "generate_diagrams.py", "stamped_at": "2026-03-20T21:29:23Z"} -->
 # Diagram: security-auditing
 
 Now I have the full skill. Let me generate the diagrams.

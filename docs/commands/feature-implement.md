@@ -196,11 +196,51 @@ Skill tool call:
   args: "Escape hatch: impl plan at <path to impl plan>, treat as ready. Tasks <start>-<end>. Fully autonomous."
 ```
 
-The develop skill will orchestrate the full workflow including TDD (via `test-driven-development` skill), code review (via `requesting-code-review` skill), and quality gates. Each of those sub-skills must also be invoked via the Skill tool by the subagents that develop dispatches. Do NOT implement code directly without going through the skill workflow.
-
 **Key documents:**
 - Implementation plan: `<path to impl plan>`
 - Design document: `<path to design doc>`
+
+## Subagent Dispatch Discipline
+
+<CRITICAL>
+The develop skill orchestrates via subagents. Every subagent that does
+substantive work MUST invoke the appropriate skill using the Skill tool.
+
+"Do TDD" is NOT the same as "invoke the test-driven-development skill."
+"Review the code" is NOT the same as "invoke the requesting-code-review skill."
+Doing the work without invoking the skill is a workflow violation.
+Skills contain specialized logic that ad-hoc execution cannot replicate.
+
+Every subagent prompt MUST begin with:
+  "First, invoke the [skill-name] skill using the Skill tool.
+   Then follow its complete workflow."
+
+After each subagent returns, verify its output contains
+"Launching skill: [name]". If not found, re-dispatch with explicit
+instruction to invoke the skill.
+</CRITICAL>
+
+### Per-Task Gate Sequence (mandatory, sequential, not batched)
+
+After EACH task, run these gates in order:
+
+1. **TDD** (4.3): Dispatch subagent → invokes `test-driven-development` skill
+2. **Completion verification** (4.4): Dispatch subagent with inline audit prompt
+3. **Code review** (4.5): Dispatch subagent → invokes `requesting-code-review` skill
+4. **Fact-checking** (4.5.1): Dispatch subagent → invokes `fact-checking` skill
+
+Do NOT batch gates across tasks. Each task completes all 4 gates before
+the next task begins.
+
+### Post-All-Tasks Gates (mandatory)
+
+After all tasks pass per-task gates:
+
+1. Comprehensive implementation audit (4.6.1)
+2. Full test suite (4.6.2)
+3. Green mirage audit (4.6.3) → invokes `audit-green-mirage` skill
+4. Comprehensive fact-checking (4.6.4) → invokes `fact-checking` skill
+5. Finishing (4.7) → invokes `finishing-a-development-branch` skill
 
 ## Pre-conditions
 
@@ -221,7 +261,23 @@ Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
 
 The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch` using the Skill tool.
 
-**Quality gates are inherited from the develop skill.** Each chunk invokes develop, which enforces all 5 gates (implementation completion, code review, fact-checking, green mirage, test suite) per task. No separate gate checklist in prompt files is needed.
+**Quality gates are explicit in each chunk prompt.** The "Subagent Dispatch Discipline" section in each chunk enforces skill invocation, per-task sequential gating, and post-implementation gates. This redundancy is intentional: the develop skill has the full gate definitions, but chunks must also state the gate sequence explicitly to prevent orchestrator hand-waving.
+
+### 3.5.5 Chunk Prompt Quality Gate
+
+After generating chunk prompts, verify EVERY chunk contains these required elements:
+
+| Required Element | Check |
+|-----------------|-------|
+| `invoke the \`develop\` skill using the Skill tool` | Exact phrase in Execution section |
+| `Subagent Dispatch Discipline` section | Section header present |
+| Per-Task Gate Sequence | Numbered list with 4 gates |
+| Skill invocation verification | "Launching skill:" check pattern |
+| Pre-conditions section | Non-empty |
+| Exit criteria with "committed" | Present |
+| Next section (or Finishing for final chunk) | Present |
+
+If ANY chunk fails ANY check: fix before presenting to user.
 
 ### 3.6 Work Item Presentation
 
