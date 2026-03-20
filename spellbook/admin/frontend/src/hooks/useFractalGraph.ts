@@ -1,7 +1,6 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '../api/client'
 import type {
-  FractalGraphListResponse,
   CytoscapeResponse,
   FractalGraphSummary,
   ChatLogResponse,
@@ -9,27 +8,6 @@ import type {
   GraphStatusUpdateRequest,
   GraphStatusUpdateResponse,
 } from '../api/types'
-
-export interface FractalGraphListParams {
-  page?: number
-  status?: string
-  project_dir?: string
-  search?: string
-  sort_by?: 'created_at' | 'updated_at' | 'seed' | 'status'
-  sort_order?: 'asc' | 'desc'
-}
-
-export function useFractalGraphList(params: FractalGraphListParams = {}) {
-  const { page = 1, status, project_dir, search, sort_by, sort_order } = params
-  return useQuery({
-    queryKey: ['fractal', 'graphs', page, status, project_dir, search, sort_by, sort_order],
-    queryFn: () =>
-      fetchApi<FractalGraphListResponse>('/api/fractal/graphs', {
-        params: { page, status, project_dir, search, sort_by, sort_order },
-      }),
-    placeholderData: keepPreviousData,
-  })
-}
 
 export function useFractalGraphDetail(graphId: string | null) {
   return useQuery({

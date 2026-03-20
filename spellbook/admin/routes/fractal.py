@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.events import Event, Subsystem, event_bus
-from spellbook.admin.routes.list_helpers import build_list_response
+from spellbook.admin.routes.list_helpers import build_list_response, validate_sort_order
 from spellbook.admin.routes.schemas import GraphStatusUpdateRequest
 from spellbook.db import fractal_db
 from spellbook.db.fractal_models import FractalEdge, FractalGraph, FractalNode
@@ -41,13 +41,13 @@ async def list_graphs(
     status: Optional[str] = Query(None, description="Filter by graph status"),
     project_dir: Optional[str] = Query(None, description="Filter by project directory"),
     search: Optional[str] = Query(None, description="Search by seed text"),
-    sort_by: Optional[str] = Query(
+    sort: Optional[str] = Query(
         "created_at",
         description="Sort field",
     ),
-    sort_order: Optional[str] = Query(
+    order: Optional[str] = Query(
         "desc",
-        description="Sort order",
+        description="Sort order: asc or desc",
     ),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
@@ -84,12 +84,12 @@ async def list_graphs(
         data_query = data_query.where(f)
 
     # Apply sorting
-    order_direction = "asc" if sort_order == "asc" else "desc"
+    sort_order = validate_sort_order(order or "desc")
     data_query = apply_sorting(
         data_query,
         FractalGraph,
-        sort_by or "created_at",
-        order_direction,
+        sort or "created_at",
+        sort_order,
         GRAPH_SORT_WHITELIST,
     )
     data_query = data_query.limit(per_page).offset(offset)

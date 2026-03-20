@@ -52,9 +52,6 @@ export interface MemoryItem {
   citation_count: number
 }
 
-export interface MemoryListResponse extends PaginatedResponse {
-  memories: MemoryItem[]
-}
 
 export interface MemoryUpdateRequest {
   content?: string

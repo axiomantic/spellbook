@@ -242,7 +242,7 @@ class TestFractalGraphList:
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get(
-                "/api/fractal/graphs?sort_by=seed&sort_order=asc"
+                "/api/fractal/graphs?sort=seed&order=asc"
             )
             assert response.status_code == 200
             data = response.json()

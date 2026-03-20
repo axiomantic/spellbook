@@ -1,17 +1,6 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '../api/client'
-import type { MemoryItem, MemoryListResponse, MemoryUpdateRequest } from '../api/types'
-
-export interface MemoryListParams {
-  q?: string
-  namespace?: string
-  memory_type?: string
-  status?: string
-  sort?: string
-  order?: string
-  page?: number
-  per_page?: number
-}
+import type { MemoryItem, MemoryUpdateRequest } from '../api/types'
 
 export interface MemoryDetail extends MemoryItem {
   citations: Citation[]
@@ -44,26 +33,6 @@ export interface MemoryStatsResponse {
 
 export interface NamespaceListResponse {
   namespaces: string[]
-}
-
-export function useMemories(params: MemoryListParams = {}) {
-  return useQuery({
-    queryKey: ['memories', params],
-    queryFn: () =>
-      fetchApi<MemoryListResponse>('/api/memories', {
-        params: {
-          q: params.q || undefined,
-          namespace: params.namespace || undefined,
-          memory_type: params.memory_type || undefined,
-          status: params.status || undefined,
-          sort: params.sort || undefined,
-          order: params.order || undefined,
-          page: params.page || undefined,
-          per_page: params.per_page || undefined,
-        },
-      }),
-    placeholderData: keepPreviousData,
-  })
 }
 
 export function useMemory(id: string | null) {

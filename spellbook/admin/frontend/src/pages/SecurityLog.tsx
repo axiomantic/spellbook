@@ -1,21 +1,19 @@
 import { useState } from 'react'
-import { useSecurityEvents, useSecuritySummary } from '../hooks/useSecurity'
-import { usePagination } from '../hooks/usePagination'
+import { useSecuritySummary } from '../hooks/useSecurity'
+import { useListPage } from '../hooks/useListPage'
+import { DataTable } from '../components/shared/DataTable'
+import { FilterBar } from '../components/shared/FilterBar'
 import { Badge } from '../components/shared/Badge'
-import { Pagination } from '../components/shared/Pagination'
-import { LoadingSpinner } from '../components/shared/LoadingSpinner'
-import { EmptyState } from '../components/shared/EmptyState'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { SecurityEvent } from '../api/types'
+import type { ColumnDef } from '@tanstack/react-table'
 
-const SEVERITY_LEVELS = ['all', 'critical', 'warning', 'info'] as const
-
-const severityBorder: Record<string, string> = {
-  critical: 'border-l-accent-red',
-  error: 'border-l-accent-red',
-  warning: 'border-l-accent-amber',
-  info: 'border-l-accent-cyan',
-}
+const SEVERITY_OPTIONS = [
+  { label: 'all', value: 'all' },
+  { label: 'critical', value: 'critical' },
+  { label: 'warning', value: 'warning' },
+  { label: 'info', value: 'info' },
+]
 
 const severityCardColor: Record<string, string> = {
   critical: 'text-accent-red',
@@ -45,52 +43,6 @@ function SummaryCards({ summary }: { summary: Record<string, number> }) {
   )
 }
 
-function EventRow({
-  event,
-  isExpanded,
-  onToggle,
-}: {
-  event: SecurityEvent
-  isExpanded: boolean
-  onToggle: () => void
-}) {
-  const borderColor = severityBorder[event.severity] || 'border-l-text-dim'
-
-  return (
-    <div
-      className={`card border-l-4 ${borderColor} mb-2 cursor-pointer hover:bg-bg-elevated transition-colors`}
-      onClick={onToggle}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Badge label={event.severity} />
-          <span className="font-mono text-xs text-text-secondary">{event.event_type}</span>
-          {event.tool_name && (
-            <span className="font-mono text-xs text-text-dim">{event.tool_name}</span>
-          )}
-        </div>
-        <span className="font-mono text-xs text-text-dim">
-          {new Date(event.created_at).toLocaleString()}
-        </span>
-      </div>
-      {event.detail && (
-        <p className="mt-1 font-mono text-xs text-text-secondary truncate">
-          {event.detail}
-        </p>
-      )}
-      {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-bg-border grid grid-cols-2 gap-2">
-          <Detail label="Source" value={event.source} />
-          <Detail label="Session" value={event.session_id} />
-          <Detail label="Tool" value={event.tool_name} />
-          <Detail label="Action" value={event.action_taken} />
-          <Detail label="Event ID" value={String(event.id)} />
-        </div>
-      )}
-    </div>
-  )
-}
-
 function Detail({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
   return (
@@ -101,97 +53,108 @@ function Detail({ label, value }: { label: string; value: string | null }) {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columns: ColumnDef<SecurityEvent, any>[] = [
+  {
+    id: 'severity',
+    header: 'Severity',
+    accessorKey: 'severity',
+    cell: ({ getValue }) => <Badge label={getValue() as string} />,
+  },
+  {
+    id: 'event_type',
+    header: 'Event Type',
+    accessorKey: 'event_type',
+  },
+  {
+    id: 'tool_name',
+    header: 'Tool',
+    accessorKey: 'tool_name',
+    cell: ({ getValue }) => getValue() || '\u2014',
+  },
+  {
+    id: 'detail',
+    header: 'Detail',
+    accessorKey: 'detail',
+    cell: ({ getValue }) => {
+      const v = getValue() as string | null
+      return v ? (
+        <span className="truncate max-w-xs inline-block">{v}</span>
+      ) : (
+        '\u2014'
+      )
+    },
+  },
+  {
+    id: 'created_at',
+    header: 'Time',
+    accessorKey: 'created_at',
+    cell: ({ getValue }) => new Date(getValue() as string).toLocaleString(),
+  },
+]
+
 export function SecurityLog() {
-  const [severity, setSeverity] = useState<string>('all')
-  const [eventType, setEventType] = useState<string>('')
-  const [since, setSince] = useState<string>('')
-  const [until, setUntil] = useState<string>('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const pagination = usePagination(50)
+
+  const listPage = useListPage<SecurityEvent>({
+    queryKey: ['security-events'],
+    endpoint: '/api/security/events',
+    defaultPerPage: 50,
+  })
 
   const { data: summaryData } = useSecuritySummary()
-  const { data, isLoading, isError } = useSecurityEvents({
-    severity: severity === 'all' ? undefined : severity,
-    event_type: eventType || undefined,
-    since: since || undefined,
-    until: until || undefined,
-    page: pagination.page,
-    per_page: pagination.per_page,
-  })
+
+  const activeSeverity = listPage.filters.severity || 'all'
+
+  const handleSeverityChange = (value: string) => {
+    if (value === 'all') {
+      const { severity: _, ...rest } = listPage.filters
+      listPage.setFilters(rest)
+    } else {
+      listPage.setFilters({ ...listPage.filters, severity: value })
+    }
+  }
+
+  const handleRowClick = (event: SecurityEvent) => {
+    setExpandedId(expandedId === event.id ? null : event.id)
+  }
+
+  const expandedEvent = listPage.data.find((e) => e.id === expandedId)
 
   return (
     <PageLayout segments={[{ label: 'SECURITY LOG' }]}>
       {summaryData && <SummaryCards summary={summaryData.by_severity} />}
 
-      {/* Filters */}
+      {/* Severity filter */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        {/* Severity filter chips */}
-        <div className="flex gap-1">
-          {SEVERITY_LEVELS.map((level) => (
-            <button
-              key={level}
-              onClick={() => { setSeverity(level); pagination.resetPage() }}
-              className={`px-3 py-1 font-mono text-xs uppercase tracking-widest border transition-colors ${
-                severity === level
-                  ? 'border-accent-green text-accent-green bg-bg-elevated'
-                  : 'border-bg-border text-text-secondary hover:border-accent-cyan'
-              }`}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
-
-        {/* Event type filter */}
-        <input
-          type="text"
-          placeholder="Event type..."
-          value={eventType}
-          onChange={(e) => { setEventType(e.target.value); pagination.resetPage() }}
-          className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none"
-        />
-
-        {/* Date range */}
-        <input
-          type="date"
-          value={since}
-          onChange={(e) => { setSince(e.target.value); pagination.resetPage() }}
-          className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary focus:border-accent-green outline-none"
-        />
-        <span className="font-mono text-xs text-text-dim">to</span>
-        <input
-          type="date"
-          value={until}
-          onChange={(e) => { setUntil(e.target.value); pagination.resetPage() }}
-          className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary focus:border-accent-green outline-none"
+        <FilterBar
+          type="chips"
+          options={SEVERITY_OPTIONS}
+          value={activeSeverity}
+          onChange={handleSeverityChange}
         />
       </div>
 
-      {/* Event list */}
-      {isLoading && <LoadingSpinner className="py-16" />}
-      {isError && (
-        <EmptyState title="Error loading events" message="Failed to fetch security events." />
-      )}
-      {data && data.events.length === 0 && (
-        <EmptyState title="No events" message="No security events match the current filters." />
-      )}
-      {data && data.events.map((event) => (
-        <EventRow
-          key={event.id}
-          event={event}
-          isExpanded={expandedId === event.id}
-          onToggle={() => setExpandedId(expandedId === event.id ? null : event.id)}
-        />
-      ))}
+      {/* Event table */}
+      <DataTable<SecurityEvent>
+        columns={columns}
+        emptyTitle="No events"
+        emptyMessage="No security events match the current filters."
+        onRowClick={handleRowClick}
+        {...listPage.tableProps}
+      />
 
-      {/* Pagination */}
-      {data && data.pages > 1 && (
-        <Pagination
-          page={data.page}
-          pages={data.pages}
-          total={data.total}
-          onPageChange={pagination.setPage}
-        />
+      {/* Expanded detail */}
+      {expandedEvent && (
+        <div className="mt-2 p-3 card border-l-4 border-l-accent-cyan">
+          <div className="grid grid-cols-2 gap-2">
+            <Detail label="Source" value={expandedEvent.source} />
+            <Detail label="Session" value={expandedEvent.session_id} />
+            <Detail label="Tool" value={expandedEvent.tool_name} />
+            <Detail label="Action" value={expandedEvent.action_taken} />
+            <Detail label="Event ID" value={String(expandedEvent.id)} />
+          </div>
+        </div>
       )}
     </PageLayout>
   )
