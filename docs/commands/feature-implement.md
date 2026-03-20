@@ -188,20 +188,19 @@ Previous chunks completed: <list or "none (this is the first chunk)">
 
 ## Execution
 
-Use the `develop` skill with these settings:
-- Escape hatch: impl plan at `<path to impl plan>`, treat as ready
-- Task range: Tasks <start>-<end>
-- Complexity tier: standard (each chunk is standard-sized)
-- Autonomous mode: fully autonomous
+**MANDATORY: You MUST invoke the `develop` skill using the Skill tool before doing ANY work.**
 
-The implementation plan is at:
-`<path to impl plan>`
+```
+Skill tool call:
+  skill: "develop"
+  args: "Escape hatch: impl plan at <path to impl plan>, treat as ready. Tasks <start>-<end>. Fully autonomous."
+```
 
-The design document is at:
-`<path to design doc>`
+The develop skill will orchestrate the full workflow including TDD (via `test-driven-development` skill), code review (via `requesting-code-review` skill), and quality gates. Each of those sub-skills must also be invoked via the Skill tool by the subagents that develop dispatches. Do NOT implement code directly without going through the skill workflow.
 
-Execute Tasks <start> through <end> from the implementation plan.
-Follow TDD, code review, and quality gates per the develop skill workflow.
+**Key documents:**
+- Implementation plan: `<path to impl plan>`
+- Design document: `<path to design doc>`
 
 ## Pre-conditions
 
@@ -220,7 +219,7 @@ Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
 ```
 ````
 
-The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch`.
+The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch` using the Skill tool.
 
 **Quality gates are inherited from the develop skill.** Each chunk invokes develop, which enforces all 5 gates (implementation completion, code review, fact-checking, green mirage, test suite) per task. No separate gate checklist in prompt files is needed.
 
