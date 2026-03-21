@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.1] - 2026-03-21
+
+### Changed
+- **Stint system redesign**: Stints are now LLM-owned attention declarations, not auto-generated tool call traces
+- **Simplified stint entry schema**: Removed `type`, `parent`, `exited_at`, `success_criteria` fields from new entries
+- **Admin stacks page**: Removed type badge and type column; depth gauge max changed from 8 to 6
+
+### Added
+- **Depth cap**: Hard limit of 6 on stint stack depth in `push_stint`
+- **Empty-stack nudge**: Depth check now returns a nudge when no focus is declared
+- **Staleness warnings**: Entries older than 4 hours are flagged in depth check output
+- **Focus Tracking guidance** in `AGENTS.spellbook.md` explaining stint ownership model
+- **One-time cleanup script** (`scripts/reset_bloated_stints.py`) for resetting bloated stacks
+
+### Removed
+- **`_stint_auto_push` hook**: No longer auto-pushes stints on Skill tool invocations (root cause of unbounded stack growth)
+- **`success_criteria` parameter** from `stint_push` MCP tool
+
 ## [0.35.0] - 2026-03-21
 
 ### Added
