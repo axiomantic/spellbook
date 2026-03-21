@@ -7359,52 +7359,40 @@
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<h1 id="executing-plans-skill-diagrams">Executing Plans - Skill Diagrams<a class="headerlink" href="#executing-plans-skill-diagrams" title="Permanent link">&para;</a></h1>
-<h2 id="overview-diagram">Overview Diagram<a class="headerlink" href="#overview-diagram" title="Permanent link">&para;</a></h2>
-<p>High-level flow showing mode selection, two execution paths, and shared completion gate.</p>
+<h1 id="executing-plans-skill-diagram">Executing Plans - Skill Diagram<a class="headerlink" href="#executing-plans-skill-diagram" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/&quot;Subagent Dispatch&quot;/]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5{{Quality Gate}}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    START([Plan Document Received]) --&gt; ANNOUNCE[&quot;Announce:&lt;br&gt;Using executing-plans skill&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ANNOUNCE --&gt; MODE_CHECK{Mode selection:&lt;br&gt;batch vs subagent}
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    MODE_CHECK --&gt;|&quot;batch (default)&quot;| BATCH_P1[&quot;Batch Phase 1:&lt;br&gt;Load and Review Plan&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    MODE_CHECK --&gt;|subagent| SUB_P1[&quot;Subagent Phase 1:&lt;br&gt;Extract Tasks&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    BATCH_P1 --&gt; BATCH_P2[&quot;Batch Phase 2:&lt;br&gt;Execute Batch&quot;]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    BATCH_P2 --&gt; BATCH_P3[&quot;Batch Phase 3:&lt;br&gt;Report&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    BATCH_P3 --&gt; BATCH_P4[&quot;Batch Phase 4:&lt;br&gt;Continue&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    BATCH_P4 --&gt;|More tasks| BATCH_P2
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    BATCH_P4 --&gt;|All tasks done| BATCH_P5[&quot;Batch Phase 5:&lt;br&gt;Complete Development&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    SUB_P1 --&gt; SUB_P2[&quot;Subagent Phase 2:&lt;br&gt;Per-Task Execution Loop&quot;]
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SUB_P2 --&gt;|More tasks| SUB_P2
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    SUB_P2 --&gt;|All tasks done| SUB_P3[&quot;Subagent Phase 3:&lt;br&gt;Final Review&quot;]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SUB_P3 --&gt; SUB_P4[&quot;Subagent Phase 4:&lt;br&gt;Complete Development&quot;]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    BATCH_P5 --&gt; SELFCHECK{{Self-Check Gate}}
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SUB_P4 --&gt; SELFCHECK
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    SELFCHECK --&gt;|All checked| FINISH([&quot;Invoke finishing-a-development-branch&quot;])
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SELFCHECK --&gt;|Unchecked items| FIX[&quot;Stop and fix&quot;] --&gt; SELFCHECK
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    BATCH_P2 -.-&gt;|&quot;Stop condition&quot;| CB_STOP([STOP: Circuit breaker])
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    SUB_P2 -.-&gt;|&quot;Stop condition&quot;| CB_STOP
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    BATCH_P1 -.-&gt;|&quot;Critical plan gap&quot;| CB_STOP
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style L4 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style L5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style FINISH fill:#51cf66,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style SELFCHECK fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style CB_STOP fill:#ff6b6b,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        l1[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        l2{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        l3([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        l4[/&quot;Subagent Dispatch&quot;/]:::subagent
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        l5[[Quality Gate]]:::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        l6([Success]):::success
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    end
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    START([Plan Document Received]) --&gt; WD[Verify Working Directory]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    WD --&gt; WD_OK{Directory &amp;&lt;br&gt;branch correct?}
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    WD_OK --&gt;|No| WD_FAIL([STOP: Fix directory]):::gate
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    WD_OK --&gt;|Yes| MODE{Mode Selection}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    MODE --&gt;|batch| BATCH[Batch Mode&lt;br&gt;see Detail A]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    MODE --&gt;|subagent| SUB[Subagent Mode&lt;br&gt;see Detail B]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    BATCH --&gt; SELF[[Self-Check Gate]]:::gate
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SUB --&gt; SELF
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SELF --&gt; SELF_OK{All checks pass?}
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    SELF_OK --&gt;|No| FIX[Fix unchecked items] --&gt; SELF
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SELF_OK --&gt;|Yes| FINISH[Invoke&lt;br&gt;finishing-a-development-branch]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FINISH --&gt; DONE([Implementation Complete]):::success
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 </code></pre></div>
-<h3 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h3>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -7414,383 +7402,186 @@
 </thead>
 <tbody>
 <tr>
-<td>Batch Phase 1: Load and Review Plan</td>
-<td><a href="#batch-mode-detail">Batch Mode Detail</a></td>
+<td>Batch Mode</td>
+<td>Detail A: Batch Mode Process</td>
 </tr>
 <tr>
-<td>Batch Phase 2: Execute Batch</td>
-<td><a href="#batch-mode-detail">Batch Mode Detail</a></td>
-</tr>
-<tr>
-<td>Batch Phase 3: Report</td>
-<td><a href="#batch-mode-detail">Batch Mode Detail</a></td>
-</tr>
-<tr>
-<td>Batch Phase 4: Continue</td>
-<td><a href="#batch-mode-detail">Batch Mode Detail</a></td>
-</tr>
-<tr>
-<td>Batch Phase 5: Complete Development</td>
-<td><a href="#batch-mode-detail">Batch Mode Detail</a></td>
-</tr>
-<tr>
-<td>Subagent Phase 1: Extract Tasks</td>
-<td><a href="#subagent-mode-detail">Subagent Mode Detail</a></td>
-</tr>
-<tr>
-<td>Subagent Phase 2: Per-Task Execution Loop</td>
-<td><a href="#subagent-mode-detail">Subagent Mode Detail</a></td>
-</tr>
-<tr>
-<td>Subagent Phase 3: Final Review</td>
-<td><a href="#subagent-mode-detail">Subagent Mode Detail</a></td>
-</tr>
-<tr>
-<td>Subagent Phase 4: Complete Development</td>
-<td><a href="#subagent-mode-detail">Subagent Mode Detail</a></td>
+<td>Subagent Mode</td>
+<td>Detail B: Subagent Mode Process</td>
 </tr>
 <tr>
 <td>Self-Check Gate</td>
-<td><a href="#self-check-gate-detail">Self-Check Gate Detail</a></td>
-</tr>
-<tr>
-<td>STOP: Circuit breaker</td>
-<td><a href="#stop-conditions-and-circuit-breakers">Stop Conditions and Circuit Breakers</a></td>
+<td>Shared across both modes (shown inline)</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="batch-mode-detail">Batch Mode Detail<a class="headerlink" href="#batch-mode-detail" title="Permanent link">&para;</a></h2>
+<h2 id="detail-a-batch-mode-process">Detail A: Batch Mode Process<a class="headerlink" href="#detail-a-batch-mode-process" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L3([Terminal])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L5{{Quality Gate}}
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    subgraph &quot;Phase 1: Load and Review Plan&quot;
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        B1_READ[&quot;Read plan file&quot;]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        B1_REVIEW[&quot;Review critically:&lt;br&gt;identify questions/concerns&quot;]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        B1_CONCERNS{Concerns found?}
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        B1_ASK[&quot;AskUserQuestion:&lt;br&gt;Discuss / Proceed / Update plan&quot;]
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        B1_RESPONSE{User response}
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        B1_TODO[&quot;Create TodoWrite&lt;br&gt;with plan tasks&quot;]
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        B1_READ --&gt; B1_REVIEW --&gt; B1_CONCERNS
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        B1_CONCERNS --&gt;|Yes| B1_ASK --&gt; B1_RESPONSE
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        B1_CONCERNS --&gt;|No| B1_TODO
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        B1_RESPONSE --&gt;|Discuss| B1_ASK
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        B1_RESPONSE --&gt;|Update plan| B1_READ
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        B1_RESPONSE --&gt;|Proceed| B1_TODO
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    end
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    subgraph &quot;Phase 2: Execute Batch&quot;
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        B2_SELECT[&quot;Select next batch&lt;br&gt;(default 3 tasks)&quot;]
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        B2_MARK_IP[&quot;Mark task as in_progress&quot;]
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>        B2_EXECUTE[&quot;Follow each step exactly&quot;]
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        B2_VERIFY[&quot;Run verifications as specified&quot;]
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        B2_EVIDENCE{Verification passed?}
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        B2_MARK_DONE[&quot;Mark task completed&lt;br&gt;with evidence&quot;]
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>        B2_MORE_IN_BATCH{More tasks&lt;br&gt;in batch?}
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>        B2_STOP[&quot;STOP: Hit blocker&lt;br&gt;Ask for clarification&quot;]
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>        B2_SELECT --&gt; B2_MARK_IP --&gt; B2_EXECUTE --&gt; B2_VERIFY
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>        B2_VERIFY --&gt; B2_EVIDENCE
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>        B2_EVIDENCE --&gt;|Yes| B2_MARK_DONE --&gt; B2_MORE_IN_BATCH
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>        B2_EVIDENCE --&gt;|No| B2_STOP
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>        B2_STOP --&gt;|&quot;Clarification received&quot;| B2_EXECUTE
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>        B2_MORE_IN_BATCH --&gt;|Yes| B2_MARK_IP
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>        B2_MORE_IN_BATCH --&gt;|No| B3_REPORT
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    end
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    subgraph &quot;Phase 3: Report&quot;
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>        B3_REPORT[&quot;Show what was implemented&quot;]
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>        B3_SHOW[&quot;Show verification output&quot;]
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>        B3_READY[&quot;Say: Ready for feedback&quot;]
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        direction LR
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        l1[Process]
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        l2{Decision}
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        l4[/&quot;Subagent Dispatch&quot;/]:::subagent
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        l5[[Quality Gate]]:::gate
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        l6([Terminal]):::success
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    end
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    P1[Phase 1: Load &amp; Review Plan] --&gt; ANALYZE[Analyze phases,&lt;br&gt;dependencies, concerns]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    ANALYZE --&gt; CONCERNS{Concerns found?}
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    CONCERNS --&gt;|Yes| ASK[AskUserQuestion:&lt;br&gt;Discuss / Proceed / Update]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    ASK --&gt; ASK_R{User response}
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    ASK_R --&gt;|Discuss| ASK
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    ASK_R --&gt;|Update plan| P1
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    ASK_R --&gt;|Proceed| TODO[Create TodoWrite&lt;br&gt;with all tasks]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    CONCERNS --&gt;|No| TODO
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    TODO --&gt; P2[Phase 2: Execute Batch&lt;br&gt;default 3 tasks]
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    subgraph batch_loop[&quot;Batch Execution Loop&quot;]
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        P2 --&gt; TASK[Mark task in_progress]
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        TASK --&gt; EXEC[Follow plan steps exactly]
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        EXEC --&gt; VERIFY[Run verifications]
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>        VERIFY --&gt; V_OK{Verification passes?}
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        V_OK --&gt;|No| STOP_CHECK{Circuit breaker:&lt;br&gt;3+ consecutive failures?}
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        STOP_CHECK --&gt;|Yes| HALT([STOP: Escalate to user]):::gate
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        STOP_CHECK --&gt;|No| EXEC
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>        V_OK --&gt;|Yes| MARK[Mark completed&lt;br&gt;with evidence]
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>        MARK --&gt; MORE_IN_BATCH{More tasks&lt;br&gt;in batch?}
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>        MORE_IN_BATCH --&gt;|Yes| TASK
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>        MORE_IN_BATCH --&gt;|No| P3
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    end
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    P3[Phase 3: Report&lt;br&gt;Show implementation + evidence]
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    P3 --&gt; FEEDBACK[Say &#39;Ready for feedback&#39;]
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    FEEDBACK --&gt; P4{Phase 4: User Feedback}
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    P4 --&gt;|Changes needed| APPLY[Apply changes] --&gt; P2_NEXT[Execute next batch]
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    P4 --&gt;|Approved| MORE{More tasks&lt;br&gt;remaining?}
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    P2_NEXT --&gt; batch_loop
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>    MORE --&gt;|Yes| P2
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    MORE --&gt;|No| P5[[Phase 5: Completion&lt;br&gt;Reflection Gate]]:::gate
 <a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>        B3_REPORT --&gt; B3_SHOW --&gt; B3_READY
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    end
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>    subgraph &quot;Phase 4: Continue&quot;
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>        B4_FEEDBACK{User feedback}
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>        B4_APPLY[&quot;Apply requested changes&quot;]
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>        B4_MORE{More tasks&lt;br&gt;in plan?}
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>        B4_FEEDBACK --&gt;|Changes needed| B4_APPLY --&gt; B2_SELECT
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>        B4_FEEDBACK --&gt;|Approved| B4_MORE
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>        B4_MORE --&gt;|Yes| B2_SELECT
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>        B4_MORE --&gt;|No| B5_REFLECT
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>    end
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>    subgraph &quot;Phase 5: Complete Development&quot;
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>        B5_REFLECT{{&quot;Reflection gate:&lt;br&gt;Evidence for all tasks?&lt;br&gt;No unapproved deviations?&quot;}}
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>        B5_FIX[&quot;STOP and fix&quot;]
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>        B5_FINISH([&quot;Invoke finishing-a-development-branch&quot;])
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>        B5_REFLECT --&gt;|Issues found| B5_FIX --&gt; B5_REFLECT
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>        B5_REFLECT --&gt;|All clean| B5_FINISH
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>    end
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>    B1_TODO --&gt; B2_SELECT
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>    B3_READY --&gt; B4_FEEDBACK
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>    style L5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>    style B5_REFLECT fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>    style B5_FINISH fill:#51cf66,color:#fff
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>    style B2_STOP fill:#ff6b6b,color:#fff
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    P5 --&gt; REFLECT{Evidence for&lt;br&gt;every task?&lt;br&gt;No unapproved deviations?}
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    REFLECT --&gt;|No| FIX_IT[STOP and fix] --&gt; P5
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    REFLECT --&gt;|Yes| DONE([To Self-Check]):::success
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 </code></pre></div>
 <hr />
-<h2 id="subagent-mode-detail">Subagent Mode Detail<a class="headerlink" href="#subagent-mode-detail" title="Permanent link">&para;</a></h2>
+<h2 id="detail-b-subagent-mode-process">Detail B: Subagent Mode Process<a class="headerlink" href="#detail-b-subagent-mode-process" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L3([Terminal])
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L4[/&quot;Subagent Dispatch&quot;/]
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        L5{{Quality Gate}}
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    end
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    subgraph &quot;Phase 1: Extract Tasks&quot;
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        S1_READ[&quot;Read plan once&quot;]
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        S1_EXTRACT[&quot;Extract all tasks&lt;br&gt;with full text and context&quot;]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        S1_TODO[&quot;Create TodoWrite&quot;]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        S1_READ --&gt; S1_EXTRACT --&gt; S1_TODO
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    end
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    subgraph &quot;Phase 2: Per-Task Execution Loop&quot;
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        S2_NEXT[&quot;Select next task&quot;]
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        S2_IMPL[/&quot;Dispatch implementer subagent&lt;br&gt;(implementer-prompt.md)&quot;/]
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        S2_QUESTIONS{Implementer&lt;br&gt;has questions?}
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        S2_SCOPE{Affects scope?}
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>        S2_ANSWER[&quot;Answer clearly&lt;br&gt;and completely&quot;]
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>        S2_ASK_USER[&quot;AskUserQuestion:&lt;br&gt;Include / Exclude / Defer&quot;]
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>        S2_IMPL_DONE[&quot;Implementer: implement,&lt;br&gt;test, commit, self-review&quot;]
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        S2_SPEC[/&quot;Dispatch spec reviewer&lt;br&gt;(spec-reviewer-prompt.md)&quot;/]
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        S2_SPEC_PASS{{Spec compliant?}}
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>        S2_SPEC_FIX[/&quot;Dispatch fix subagent&lt;br&gt;with failure context&quot;/]
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>        S2_SPEC_CYCLES{3+ review&lt;br&gt;cycles?}
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>        S2_ESCALATE[&quot;Escalate to user&quot;]
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>        S2_QUALITY[/&quot;Dispatch code quality reviewer&lt;br&gt;(code-quality-reviewer-prompt.md)&quot;/]
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>        S2_QUAL_PASS{{Quality approved?}}
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>        S2_QUAL_FIX[/&quot;Dispatch fix subagent&lt;br&gt;with failure context&quot;/]
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>        S2_QUAL_CYCLES{3+ review&lt;br&gt;cycles?}
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>        S2_QUAL_ESCALATE[&quot;Escalate to user&quot;]
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>        S2_MARK[&quot;Mark task complete&lt;br&gt;in TodoWrite&quot;]
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>        S2_MORE{More tasks?}
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>        S2_NEXT --&gt; S2_IMPL
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>        S2_IMPL --&gt; S2_QUESTIONS
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>        S2_QUESTIONS --&gt;|Yes| S2_SCOPE
-<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>        S2_QUESTIONS --&gt;|No| S2_IMPL_DONE
-<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>        S2_SCOPE --&gt;|Yes| S2_ASK_USER --&gt; S2_IMPL_DONE
-<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>        S2_SCOPE --&gt;|No| S2_ANSWER --&gt; S2_IMPL_DONE
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        direction LR
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        l1[Process]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        l2{Decision}
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        l4[/&quot;Subagent Dispatch&quot;/]:::subagent
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        l5[[Quality Gate]]:::gate
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        l6([Terminal]):::success
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    end
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    P1[Phase 1: Extract Tasks&lt;br&gt;Read plan, extract full text] --&gt; TODO[Create TodoWrite&lt;br&gt;with all tasks]
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    TODO --&gt; P2[Phase 2: Per-Task Loop]
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    subgraph task_loop[&quot;Per-Task Execution Loop (sequential only)&quot;]
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        P2 --&gt; IMPL[/&quot;Dispatch Implementer&lt;br&gt;subagent&quot;/]:::subagent
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>        IMPL --&gt; Q{Implementer&lt;br&gt;has questions?}
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>        Q --&gt;|Yes| SCOPE{Affects scope?}
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        SCOPE --&gt;|Yes| ASK_USER[AskUserQuestion&lt;br&gt;with options]
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        SCOPE --&gt;|No| ANSWER[Answer clearly&lt;br&gt;and completely]
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        ASK_USER --&gt; IMPL
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        ANSWER --&gt; IMPL
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        Q --&gt;|No| IMPL_DONE[Implementer: implement,&lt;br&gt;test, commit, self-review]
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>        IMPL_DONE --&gt; SPEC[/&quot;Dispatch Spec Reviewer&lt;br&gt;subagent&quot;/]:::subagent
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>        subgraph spec_loop[&quot;Spec Review Loop&quot;]
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>            SPEC --&gt; SPEC_OK{Spec compliant?}
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>            SPEC_OK --&gt;|No| SPEC_CYCLE{3+ review&lt;br&gt;cycles?}
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>            SPEC_CYCLE --&gt;|Yes| ESCALATE([Escalate to user]):::gate
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>            SPEC_CYCLE --&gt;|No| SPEC_FIX[/&quot;Dispatch fix subagent&lt;br&gt;with failure context&quot;/]:::subagent
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>            SPEC_FIX --&gt; SPEC
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        end
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>        SPEC_OK --&gt;|Yes| QUAL[/&quot;Dispatch Code Quality&lt;br&gt;Reviewer subagent&quot;/]:::subagent
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>        subgraph qual_loop[&quot;Quality Review Loop&quot;]
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>            QUAL --&gt; QUAL_OK{Quality approved?}
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>            QUAL_OK --&gt;|No| QUAL_CYCLE{3+ review&lt;br&gt;cycles?}
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>            QUAL_CYCLE --&gt;|Yes| ESCALATE2([Escalate to user]):::gate
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>            QUAL_CYCLE --&gt;|No| QUAL_FIX[/&quot;Dispatch fix subagent&lt;br&gt;with failure context&quot;/]:::subagent
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>            QUAL_FIX --&gt; QUAL
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>        end
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>        QUAL_OK --&gt;|Yes| COMPLETE[Mark task complete&lt;br&gt;in TodoWrite]
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>        COMPLETE --&gt; NEXT{More tasks?}
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>        NEXT --&gt;|Yes| P2
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>    end
 <a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>
-<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>        S2_IMPL_DONE --&gt; S2_SPEC
-<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>        S2_SPEC --&gt; S2_SPEC_PASS
-<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>        S2_SPEC_PASS --&gt;|Pass| S2_QUALITY
-<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>        S2_SPEC_PASS --&gt;|Issues| S2_SPEC_CYCLES
-<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>        S2_SPEC_CYCLES --&gt;|No| S2_SPEC_FIX --&gt; S2_SPEC
-<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>        S2_SPEC_CYCLES --&gt;|Yes| S2_ESCALATE --&gt; S2_SPEC_FIX
-<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>
-<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>        S2_QUALITY --&gt; S2_QUAL_PASS
-<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>        S2_QUAL_PASS --&gt;|Pass| S2_MARK
-<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>        S2_QUAL_PASS --&gt;|Issues| S2_QUAL_CYCLES
-<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>        S2_QUAL_CYCLES --&gt;|No| S2_QUAL_FIX --&gt; S2_QUALITY
-<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>        S2_QUAL_CYCLES --&gt;|Yes| S2_QUAL_ESCALATE --&gt; S2_QUAL_FIX
-<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>
-<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>        S2_MARK --&gt; S2_MORE
-<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>        S2_MORE --&gt;|Yes| S2_NEXT
-<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>    end
-<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>
-<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>    subgraph &quot;Phase 3: Final Review&quot;
-<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>        S3_REVIEW[/&quot;Dispatch final code reviewer&lt;br&gt;for entire implementation&quot;/]
-<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>        S3_PASS{{Approved?}}
-<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>        S3_FIX[/&quot;Dispatch fix subagent&quot;/]
-<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>
-<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>        S3_REVIEW --&gt; S3_PASS
-<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a>        S3_PASS --&gt;|Issues| S3_FIX --&gt; S3_REVIEW
-<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>        S3_PASS --&gt;|Pass| S4_FINISH
-<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>    end
-<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a>
-<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a>    subgraph &quot;Phase 4: Complete Development&quot;
-<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>        S4_FINISH([&quot;Invoke finishing-a-development-branch&quot;])
-<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a>    end
-<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>
-<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>    S1_TODO --&gt; S2_NEXT
-<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>    S2_MORE --&gt;|No| S3_REVIEW
-<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>
-<a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a>    style L4 fill:#4a9eff,color:#fff
-<a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a>    style L5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a>    style S2_IMPL fill:#4a9eff,color:#fff
-<a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a>    style S2_SPEC fill:#4a9eff,color:#fff
-<a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>    style S2_QUALITY fill:#4a9eff,color:#fff
-<a id="__codelineno-2-88" name="__codelineno-2-88" href="#__codelineno-2-88"></a>    style S2_SPEC_FIX fill:#4a9eff,color:#fff
-<a id="__codelineno-2-89" name="__codelineno-2-89" href="#__codelineno-2-89"></a>    style S2_QUAL_FIX fill:#4a9eff,color:#fff
-<a id="__codelineno-2-90" name="__codelineno-2-90" href="#__codelineno-2-90"></a>    style S3_REVIEW fill:#4a9eff,color:#fff
-<a id="__codelineno-2-91" name="__codelineno-2-91" href="#__codelineno-2-91"></a>    style S3_FIX fill:#4a9eff,color:#fff
-<a id="__codelineno-2-92" name="__codelineno-2-92" href="#__codelineno-2-92"></a>    style S4_FINISH fill:#51cf66,color:#fff
-<a id="__codelineno-2-93" name="__codelineno-2-93" href="#__codelineno-2-93"></a>    style S2_SPEC_PASS fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-94" name="__codelineno-2-94" href="#__codelineno-2-94"></a>    style S2_QUAL_PASS fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-95" name="__codelineno-2-95" href="#__codelineno-2-95"></a>    style S3_PASS fill:#ff6b6b,color:#fff
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>    NEXT --&gt;|No| P3[/&quot;Phase 3: Dispatch Final&lt;br&gt;Code Reviewer for&lt;br&gt;entire implementation&quot;/]:::subagent
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>    P3 --&gt; P4([Phase 4: To Self-Check]):::success
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 </code></pre></div>
 <hr />
-<h2 id="self-check-gate-detail">Self-Check Gate Detail<a class="headerlink" href="#self-check-gate-detail" title="Permanent link">&para;</a></h2>
-<p>Five sequential gates that must all pass before declaring execution complete.</p>
+<h2 id="stop-conditions-circuit-breakers">Stop Conditions &amp; Circuit Breakers<a class="headerlink" href="#stop-conditions-circuit-breakers" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph Legend
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[Process]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L3([Terminal])
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L5{{Quality Gate}}
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        direction LR
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        l5[[Circuit Breaker]]:::gate
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        l6([Action])
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    end
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    ENTER([Enter Self-Check]) --&gt; C1{{&quot;Every task has&lt;br&gt;verification output?&quot;}}
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    C1 --&gt;|No| FIX1[&quot;STOP: Collect missing evidence&quot;]
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    FIX1 --&gt; C1
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    C1 --&gt;|Yes| C2{{&quot;No tasks marked complete&lt;br&gt;without evidence?&quot;}}
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    C2 --&gt;|No| FIX2[&quot;STOP: Fix false completions&quot;]
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    FIX2 --&gt; C2
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    C2 --&gt;|Yes| C3{{&quot;All review issues&lt;br&gt;addressed?&quot;}}
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    C3 --&gt;|No| FIX3[&quot;STOP: Address open reviews&quot;]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    FIX3 --&gt; C3
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    C3 --&gt;|Yes| C4{{&quot;Plan followed exactly or&lt;br&gt;deviations approved?&quot;}}
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    C4 --&gt;|No| FIX4[&quot;STOP: Reconcile deviations&quot;]
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    FIX4 --&gt; C4
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    C4 --&gt;|Yes| C5{{&quot;finishing-a-development-branch&lt;br&gt;invoked?&quot;}}
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    C5 --&gt;|No| FIX5[&quot;Invoke skill now&quot;]
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    FIX5 --&gt; C5
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    C5 --&gt;|Yes| PASS([All Gates Passed])
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    style L5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    style C1 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    style C2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    style C3 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    style C4 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    style C5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    style PASS fill:#51cf66,color:#fff
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    ANY[Any point during execution] --&gt; CHECK{Stop condition&lt;br&gt;detected?}
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    CHECK --&gt;|Blocker mid-task| STOP([STOP: Ask for clarification]):::gate
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    CHECK --&gt;|Critical plan gap| STOP
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    CHECK --&gt;|Unclear instruction| STOP
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    CHECK --&gt;|Repeated verification failure| CB1[[3+ consecutive&lt;br&gt;test failures]]:::gate --&gt; STOP
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    CHECK --&gt;|Security-sensitive op&lt;br&gt;not in plan| STOP
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    CHECK --&gt;|Scope question| ASK[AskUserQuestion&lt;br&gt;with scope options]
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    CHECK --&gt;|3+ review cycles&lt;br&gt;same issue| STOP
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    STOP --&gt; RESUME{User provides&lt;br&gt;resolution}
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    RESUME --&gt;|Update plan| RELOAD[Return to Phase 1:&lt;br&gt;Reload Plan]
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    RESUME --&gt;|Clarification| CONTINUE[Resume execution]
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    RESUME --&gt;|Fundamental rethink| RELOAD
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
 </code></pre></div>
 <hr />
-<h2 id="stop-conditions-and-circuit-breakers">Stop Conditions and Circuit Breakers<a class="headerlink" href="#stop-conditions-and-circuit-breakers" title="Permanent link">&para;</a></h2>
-<p>Conditions that halt execution, including those that pause even in autonomous mode.</p>
+<h2 id="autonomous-mode-behavior">Autonomous Mode Behavior<a class="headerlink" href="#autonomous-mode-behavior" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph Legend
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[Process]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{Decision}
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L3([Terminal])
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        direction LR
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        l1[Auto-decided]:::auto
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        l5[[Still pauses]]:::gate
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    end
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    EXECUTING[&quot;Executing task&quot;] --&gt; CHECK{Stop condition&lt;br&gt;triggered?}
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    CHECK --&gt;|No| CONTINUE[&quot;Continue execution&quot;]
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    AUTO{Autonomous Mode&lt;br&gt;active?}
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    AUTO --&gt;|No| NORMAL[Normal interactive flow]
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    AUTO --&gt;|Yes| SKIP[Skip: plan concerns log,&lt;br&gt;feedback checkpoints,&lt;br&gt;completion confirmations]
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    CHECK --&gt;|Yes| CLASSIFY{Condition type}
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    SKIP --&gt; DECIDE[Auto-decide:&lt;br&gt;batch size = 3,&lt;br&gt;impl details documented,&lt;br&gt;apply review fixes]:::auto
 <a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    CLASSIFY --&gt;|&quot;Blocker mid-task&lt;br&gt;(missing dep, test fail,&lt;br&gt;unclear instruction)&quot;| HALT_ASK[&quot;HALT:&lt;br&gt;Ask for clarification&quot;]
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    CLASSIFY --&gt;|&quot;Critical plan gaps&quot;| HALT_PLAN[&quot;HALT:&lt;br&gt;Return to Phase 1&quot;]
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    CLASSIFY --&gt;|&quot;Don&#39;t understand&lt;br&gt;instruction&quot;| HALT_ASK
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    CLASSIFY --&gt;|&quot;3+ consecutive&lt;br&gt;test failures&quot;| CIRCUIT_BREAK[&quot;CIRCUIT BREAKER:&lt;br&gt;Pause even in&lt;br&gt;autonomous mode&quot;]
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    CLASSIFY --&gt;|&quot;Security-sensitive ops&lt;br&gt;not clearly specified&quot;| CIRCUIT_BREAK
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    CLASSIFY --&gt;|&quot;Scope/requirements&lt;br&gt;question&quot;| SCOPE_ASK[&quot;AskUserQuestion:&lt;br&gt;Include / Exclude / Defer&quot;]
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    CLASSIFY --&gt;|&quot;3+ review cycles&lt;br&gt;on same issue&quot;| CIRCUIT_BREAK
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    HALT_ASK --&gt;|&quot;Clarification received&quot;| EXECUTING
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    HALT_PLAN --&gt;|&quot;Plan updated&quot;| EXECUTING
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    CIRCUIT_BREAK --&gt;|&quot;User resolves&quot;| EXECUTING
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    SCOPE_ASK --&gt;|&quot;Decision made&quot;| EXECUTING
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    style CIRCUIT_BREAK fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    style HALT_ASK fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    style HALT_PLAN fill:#ff6b6b,color:#fff
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    DECIDE --&gt; CB{Circuit breaker&lt;br&gt;triggered?}
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    CB --&gt;|Critical plan gap| PAUSE[[PAUSE: Ask user]]:::gate
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    CB --&gt;|3+ test failures| PAUSE
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    CB --&gt;|Security-sensitive op| PAUSE
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    CB --&gt;|Scope question| PAUSE
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    CB --&gt;|3+ review cycles| PAUSE
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    CB --&gt;|No breaker| CONTINUE[Continue autonomous&lt;br&gt;execution]
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    classDef auto fill:#4a9eff,stroke:#2b7de9,color:#fff
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
 </code></pre></div>
-<hr />
-<h2 id="source-cross-reference">Source Cross-Reference<a class="headerlink" href="#source-cross-reference" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Diagram Node</th>
-<th>Source Location (SKILL.md)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Mode selection (batch/subagent)</td>
-<td>Mode Selection table (lines 38-47)</td>
-</tr>
-<tr>
-<td>Autonomous mode / circuit breakers</td>
-<td>Autonomous Mode (lines 48-79)</td>
-</tr>
-<tr>
-<td>Batch Phase 1: Load and review plan</td>
-<td>Batch Mode Phase 1 (lines 97-110)</td>
-</tr>
-<tr>
-<td>Batch Phase 2: Execute batch</td>
-<td>Batch Mode Phase 2 (lines 112-118)</td>
-</tr>
-<tr>
-<td>Batch Phase 3: Report</td>
-<td>Batch Mode Phase 3 (lines 120-122)</td>
-</tr>
-<tr>
-<td>Batch Phase 4: Continue</td>
-<td>Batch Mode Phase 4 (lines 124-126)</td>
-</tr>
-<tr>
-<td>Batch Phase 5: Complete / reflection gate</td>
-<td>Batch Mode Phase 5 (lines 128-138)</td>
-</tr>
-<tr>
-<td>Subagent Phase 1: Extract tasks</td>
-<td>Subagent Mode Phase 1 (lines 146-148)</td>
-</tr>
-<tr>
-<td>Subagent Phase 2: Per-task loop</td>
-<td>Subagent Mode Phase 2 (lines 150-158)</td>
-</tr>
-<tr>
-<td>Spec reviewer dispatch + loop</td>
-<td>Phase 2 step 4 (line 155), Handling Review Issues (lines 210-211)</td>
-</tr>
-<tr>
-<td>Quality reviewer dispatch + loop</td>
-<td>Phase 2 step 5 (line 156), Handling Review Issues (lines 210-211)</td>
-</tr>
-<tr>
-<td>3+ review cycle escalation</td>
-<td>Handling Review Issues (line 211)</td>
-</tr>
-<tr>
-<td>Subagent Phase 3: Final review</td>
-<td>Subagent Mode Phase 3 (line 160)</td>
-</tr>
-<tr>
-<td>finishing-a-development-branch</td>
-<td>Batch Phase 5 (line 138), Subagent Phase 4 (line 166)</td>
-</tr>
-<tr>
-<td>Self-check gate (5 items)</td>
-<td>Self-Check section (lines 220-231)</td>
-</tr>
-<tr>
-<td>Stop conditions</td>
-<td>Stop Conditions (lines 170-179)</td>
-</tr>
-<tr>
-<td>Revisit Phase 1</td>
-<td>When to Revisit Phase 1 (line 183)</td>
-</tr>
-<tr>
-<td>Handling subagent failure</td>
-<td>Handling Subagent Failure (lines 214-216)</td>
-</tr>
-</tbody>
-</table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gh"># Executing Plans</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -7808,225 +7599,256 @@
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">4.</span> <span class="gs">**Review Before Proceed**</span>: No task advances past unaddressed review findings. Spec compliance precedes code quality.
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="k">5.</span> <span class="gs">**Context Completeness**</span>: Subagents receive full task text, never file references. Fresh contexts lack your accumulated knowledge.
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="gu">## Inputs / Outputs</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="gu">## Working Directory Verification</span>
 <a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>| Input | Required | Description |
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>|-------|----------|-------------|
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>| Plan document | Yes | Implementation plan from <span class="sb">`writing-plans`</span> with numbered tasks |
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>| Mode preference | No | <span class="sb">`batch`</span> (default) or <span class="sb">`subagent`</span> |
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>| Batch size | No | Tasks per batch in batch mode (default: 3) |
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>When executing in a worktree or specific directory, ALL work must happen in that directory.
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>Before executing any plan tasks, verify the working directory:
 <a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>| Output | Type | Description |
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>|--------|------|-------------|
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>| Completed implementation | Code | All plan tasks implemented and verified |
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>| Verification evidence | Inline | Test output, build results per task |
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>| Task completion log | TodoWrite | Progress tracking with completion status |
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="gu">## Mode Selection</span>
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>| Mode | Review Type | Task Execution | Checkpoints |
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>|------|-------------|----------------|-------------|
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>| <span class="sb">`batch`</span> (default) | Human-in-loop | Sequential inline | Between batches |
-<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>| <span class="sb">`subagent`</span> | Automated two-stage | Fresh subagent per task | After each task |
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="sb">```bash</span>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="nb">cd</span><span class="w"> </span>&lt;WORKING_DIRECTORY&gt;<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">pwd</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>--show-current
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="sb">```</span>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>If a working directory was specified in the dispatch context:
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="k">1.</span> Verify you are in the correct directory
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="k">2.</span> Verify the branch matches expectations
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="k">3.</span> ALL file paths must be absolute, rooted at the working directory
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="k">4.</span> ALL git commands must run from the working directory
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a><span class="k">5.</span> Do NOT create new branches. Work on the existing branch.
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>When dispatching implementer subagents, include the working directory verification in their prompts:
 <a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>
-<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>Use <span class="sb">`batch`</span> when: architect wants review between batches, tasks tightly coupled, plan needs active discussion.
-<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>Use <span class="sb">`subagent`</span> when: tasks mostly independent, faster iteration desired, want automated spec+quality review.
-<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>
-<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a><span class="gu">## Autonomous Mode</span>
-<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>
-<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a>Check for &quot;Mode: AUTONOMOUS&quot; or explicit autonomous instruction.
-<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a>
-<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a><span class="gs">**Skip:**</span> Plan concerns (log for later), &quot;ready for feedback&quot; checkpoints, completion confirmations.
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a><span class="sb">```</span>
+<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a><span class="sb">BEFORE ANY WORK:</span>
+<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a><span class="sb">1. cd &lt;WORKING_DIRECTORY&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current</span>
+<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a><span class="sb">2. Verify the branch is &lt;EXPECTED_BRANCH&gt;</span>
+<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a><span class="sb">3. ALL file paths must be absolute, rooted at &lt;WORKING_DIRECTORY&gt;</span>
+<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a><span class="sb">4. ALL git commands must run from &lt;WORKING_DIRECTORY&gt;</span>
+<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a><span class="sb">5. Do NOT create new branches. Work on the existing branch.</span>
+<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a><span class="sb">```</span>
 <a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a>
-<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a><span class="gs">**Auto-decide:**</span> Batch size (default 3), implementation details (document choice), applying review fixes.
+<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a><span class="gu">## Inputs / Outputs</span>
 <a id="__codelineno-5-48" name="__codelineno-5-48" href="#__codelineno-5-48"></a>
-<a id="__codelineno-5-49" name="__codelineno-5-49" href="#__codelineno-5-49"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-5-50" name="__codelineno-5-50" href="#__codelineno-5-50"></a><span class="gs">**Circuit breakers (still pause in autonomous mode):**</span>
-<a id="__codelineno-5-51" name="__codelineno-5-51" href="#__codelineno-5-51"></a><span class="k">-</span><span class="w"> </span>Critical plan gaps preventing execution
-<a id="__codelineno-5-52" name="__codelineno-5-52" href="#__codelineno-5-52"></a><span class="k">-</span><span class="w"> </span>3+ consecutive test failures
-<a id="__codelineno-5-53" name="__codelineno-5-53" href="#__codelineno-5-53"></a><span class="k">-</span><span class="w"> </span>Security-sensitive operations not clearly specified
-<a id="__codelineno-5-54" name="__codelineno-5-54" href="#__codelineno-5-54"></a><span class="k">-</span><span class="w"> </span>Scope/requirements questions (affects what gets built)
-<a id="__codelineno-5-55" name="__codelineno-5-55" href="#__codelineno-5-55"></a><span class="k">-</span><span class="w"> </span>3+ review cycles on same issue
-<a id="__codelineno-5-56" name="__codelineno-5-56" href="#__codelineno-5-56"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-5-57" name="__codelineno-5-57" href="#__codelineno-5-57"></a>
-<a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a>When subagent raises scope question in autonomous mode, MUST use AskUserQuestion:
-<a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a>
-<a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a><span class="sb">```javascript</span>
-<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a><span class="nx">AskUserQuestion</span><span class="p">({</span>
-<a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a><span class="w">  </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a><span class="w">    </span><span class="nx">question</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Implementer asks: &#39;Should this also handle X case?&#39; This affects scope.&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a><span class="w">    </span><span class="nx">header</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Scope&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-65" name="__codelineno-5-65" href="#__codelineno-5-65"></a><span class="w">    </span><span class="nx">options</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-5-66" name="__codelineno-5-66" href="#__codelineno-5-66"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Yes, include X&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Expand scope&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-5-67" name="__codelineno-5-67" href="#__codelineno-5-67"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;No, exclude X (Recommended)&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Keep minimal per YAGNI&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-5-68" name="__codelineno-5-68" href="#__codelineno-5-68"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Defer to future task&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Note for later&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-5-69" name="__codelineno-5-69" href="#__codelineno-5-69"></a><span class="w">    </span><span class="p">],</span>
-<a id="__codelineno-5-70" name="__codelineno-5-70" href="#__codelineno-5-70"></a><span class="w">  </span><span class="p">}],</span>
-<a id="__codelineno-5-71" name="__codelineno-5-71" href="#__codelineno-5-71"></a><span class="p">});</span>
-<a id="__codelineno-5-72" name="__codelineno-5-72" href="#__codelineno-5-72"></a><span class="sb">```</span>
+<a id="__codelineno-5-49" name="__codelineno-5-49" href="#__codelineno-5-49"></a>| Input | Required | Description |
+<a id="__codelineno-5-50" name="__codelineno-5-50" href="#__codelineno-5-50"></a>|-------|----------|-------------|
+<a id="__codelineno-5-51" name="__codelineno-5-51" href="#__codelineno-5-51"></a>| Plan document | Yes | Implementation plan from <span class="sb">`writing-plans`</span> with numbered tasks |
+<a id="__codelineno-5-52" name="__codelineno-5-52" href="#__codelineno-5-52"></a>| Mode preference | No | <span class="sb">`batch`</span> (default) or <span class="sb">`subagent`</span> |
+<a id="__codelineno-5-53" name="__codelineno-5-53" href="#__codelineno-5-53"></a>| Batch size | No | Tasks per batch in batch mode (default: 3) |
+<a id="__codelineno-5-54" name="__codelineno-5-54" href="#__codelineno-5-54"></a>| Working directory | No | Absolute path to worktree or project root. If provided, all work happens here. |
+<a id="__codelineno-5-55" name="__codelineno-5-55" href="#__codelineno-5-55"></a>
+<a id="__codelineno-5-56" name="__codelineno-5-56" href="#__codelineno-5-56"></a>| Output | Type | Description |
+<a id="__codelineno-5-57" name="__codelineno-5-57" href="#__codelineno-5-57"></a>|--------|------|-------------|
+<a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a>| Completed implementation | Code | All plan tasks implemented and verified |
+<a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a>| Verification evidence | Inline | Test output, build results per task |
+<a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a>| Task completion log | TodoWrite | Progress tracking with completion status |
+<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a>
+<a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a><span class="gu">## Mode Selection</span>
+<a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a>
+<a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a>| Mode | Review Type | Task Execution | Checkpoints |
+<a id="__codelineno-5-65" name="__codelineno-5-65" href="#__codelineno-5-65"></a>|------|-------------|----------------|-------------|
+<a id="__codelineno-5-66" name="__codelineno-5-66" href="#__codelineno-5-66"></a>| <span class="sb">`batch`</span> (default) | Human-in-loop | Sequential inline | Between batches |
+<a id="__codelineno-5-67" name="__codelineno-5-67" href="#__codelineno-5-67"></a>| <span class="sb">`subagent`</span> | Automated two-stage | Fresh subagent per task | After each task |
+<a id="__codelineno-5-68" name="__codelineno-5-68" href="#__codelineno-5-68"></a>
+<a id="__codelineno-5-69" name="__codelineno-5-69" href="#__codelineno-5-69"></a>Use <span class="sb">`batch`</span> when: architect wants review between batches, tasks tightly coupled, plan needs active discussion.
+<a id="__codelineno-5-70" name="__codelineno-5-70" href="#__codelineno-5-70"></a>Use <span class="sb">`subagent`</span> when: tasks mostly independent, faster iteration desired, want automated spec+quality review.
+<a id="__codelineno-5-71" name="__codelineno-5-71" href="#__codelineno-5-71"></a>
+<a id="__codelineno-5-72" name="__codelineno-5-72" href="#__codelineno-5-72"></a><span class="gu">## Autonomous Mode</span>
 <a id="__codelineno-5-73" name="__codelineno-5-73" href="#__codelineno-5-73"></a>
-<a id="__codelineno-5-74" name="__codelineno-5-74" href="#__codelineno-5-74"></a><span class="gu">## OpenCode Agent Inheritance</span>
+<a id="__codelineno-5-74" name="__codelineno-5-74" href="#__codelineno-5-74"></a>Check for &quot;Mode: AUTONOMOUS&quot; or explicit autonomous instruction.
 <a id="__codelineno-5-75" name="__codelineno-5-75" href="#__codelineno-5-75"></a>
-<a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a>If running in OpenCode: propagate your agent type to all subagents.
-<a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a>
-<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a><span class="k">-</span><span class="w"> </span>&quot;operating in YOLO mode&quot; → <span class="sb">`CURRENT_AGENT_TYPE = &quot;yolo&quot;`</span>
-<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a><span class="k">-</span><span class="w"> </span>&quot;YOLO mode with a focus on precision&quot; → <span class="sb">`CURRENT_AGENT_TYPE = &quot;yolo-focused&quot;`</span>
-<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a><span class="k">-</span><span class="w"> </span>Neither → <span class="sb">`CURRENT_AGENT_TYPE = &quot;general&quot;`</span>
-<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a>
-<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a>All Task tool calls MUST use <span class="sb">`CURRENT_AGENT_TYPE`</span> as <span class="sb">`subagent_type`</span>.
-<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>
-<a id="__codelineno-5-86" name="__codelineno-5-86" href="#__codelineno-5-86"></a>---
-<a id="__codelineno-5-87" name="__codelineno-5-87" href="#__codelineno-5-87"></a>
-<a id="__codelineno-5-88" name="__codelineno-5-88" href="#__codelineno-5-88"></a><span class="gu">## Batch Mode Process</span>
-<a id="__codelineno-5-89" name="__codelineno-5-89" href="#__codelineno-5-89"></a>
-<a id="__codelineno-5-90" name="__codelineno-5-90" href="#__codelineno-5-90"></a><span class="gu">### Phase 1: Load and Review Plan</span>
-<a id="__codelineno-5-91" name="__codelineno-5-91" href="#__codelineno-5-91"></a>
-<a id="__codelineno-5-92" name="__codelineno-5-92" href="#__codelineno-5-92"></a>&lt;analysis&gt;
-<a id="__codelineno-5-93" name="__codelineno-5-93" href="#__codelineno-5-93"></a>Before starting:
-<a id="__codelineno-5-94" name="__codelineno-5-94" href="#__codelineno-5-94"></a><span class="k">-</span><span class="w"> </span>What are the plan&#39;s phases and dependencies?
-<a id="__codelineno-5-95" name="__codelineno-5-95" href="#__codelineno-5-95"></a><span class="k">-</span><span class="w"> </span>Any concerns worth raising?
-<a id="__codelineno-5-96" name="__codelineno-5-96" href="#__codelineno-5-96"></a><span class="k">-</span><span class="w"> </span>Are all referenced files/skills accessible?
-<a id="__codelineno-5-97" name="__codelineno-5-97" href="#__codelineno-5-97"></a>&lt;/analysis&gt;
-<a id="__codelineno-5-98" name="__codelineno-5-98" href="#__codelineno-5-98"></a>
-<a id="__codelineno-5-99" name="__codelineno-5-99" href="#__codelineno-5-99"></a><span class="k">1.</span> Read plan file
-<a id="__codelineno-5-100" name="__codelineno-5-100" href="#__codelineno-5-100"></a><span class="k">2.</span> Review critically - identify questions/concerns
-<a id="__codelineno-5-101" name="__codelineno-5-101" href="#__codelineno-5-101"></a><span class="k">3.</span> If concerns, ask user via AskUserQuestion with options: Discuss / Proceed anyway / Update plan first
-<a id="__codelineno-5-102" name="__codelineno-5-102" href="#__codelineno-5-102"></a><span class="k">4.</span> If no concerns: Create TodoWrite and proceed
-<a id="__codelineno-5-103" name="__codelineno-5-103" href="#__codelineno-5-103"></a>
-<a id="__codelineno-5-104" name="__codelineno-5-104" href="#__codelineno-5-104"></a><span class="gu">### Phase 2: Execute Batch</span>
-<a id="__codelineno-5-105" name="__codelineno-5-105" href="#__codelineno-5-105"></a>
-<a id="__codelineno-5-106" name="__codelineno-5-106" href="#__codelineno-5-106"></a>Default first 3 tasks. Per task:
-<a id="__codelineno-5-107" name="__codelineno-5-107" href="#__codelineno-5-107"></a><span class="k">1.</span> Mark as in_progress
-<a id="__codelineno-5-108" name="__codelineno-5-108" href="#__codelineno-5-108"></a><span class="k">2.</span> Follow each step exactly
-<a id="__codelineno-5-109" name="__codelineno-5-109" href="#__codelineno-5-109"></a><span class="k">3.</span> Run verifications as specified
-<a id="__codelineno-5-110" name="__codelineno-5-110" href="#__codelineno-5-110"></a><span class="k">4.</span> Mark as completed with evidence
-<a id="__codelineno-5-111" name="__codelineno-5-111" href="#__codelineno-5-111"></a>
-<a id="__codelineno-5-112" name="__codelineno-5-112" href="#__codelineno-5-112"></a><span class="gu">### Phase 3: Report</span>
+<a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a><span class="gs">**Skip:**</span> Plan concerns (log for later), &quot;ready for feedback&quot; checkpoints, completion confirmations.
+<a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a>
+<a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a><span class="gs">**Auto-decide:**</span> Batch size (default 3), implementation details (document choice), applying review fixes.
+<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a>
+<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a><span class="gs">**Circuit breakers (still pause in autonomous mode):**</span>
+<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a><span class="k">-</span><span class="w"> </span>Critical plan gaps preventing execution
+<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a><span class="k">-</span><span class="w"> </span>3+ consecutive test failures
+<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a><span class="k">-</span><span class="w"> </span>Security-sensitive operations not clearly specified
+<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a><span class="k">-</span><span class="w"> </span>Scope/requirements questions (affects what gets built)
+<a id="__codelineno-5-86" name="__codelineno-5-86" href="#__codelineno-5-86"></a><span class="k">-</span><span class="w"> </span>3+ review cycles on same issue
+<a id="__codelineno-5-87" name="__codelineno-5-87" href="#__codelineno-5-87"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-88" name="__codelineno-5-88" href="#__codelineno-5-88"></a>
+<a id="__codelineno-5-89" name="__codelineno-5-89" href="#__codelineno-5-89"></a>When subagent raises scope question in autonomous mode, MUST use AskUserQuestion:
+<a id="__codelineno-5-90" name="__codelineno-5-90" href="#__codelineno-5-90"></a>
+<a id="__codelineno-5-91" name="__codelineno-5-91" href="#__codelineno-5-91"></a><span class="sb">```javascript</span>
+<a id="__codelineno-5-92" name="__codelineno-5-92" href="#__codelineno-5-92"></a><span class="nx">AskUserQuestion</span><span class="p">({</span>
+<a id="__codelineno-5-93" name="__codelineno-5-93" href="#__codelineno-5-93"></a><span class="w">  </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
+<a id="__codelineno-5-94" name="__codelineno-5-94" href="#__codelineno-5-94"></a><span class="w">    </span><span class="nx">question</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Implementer asks: &#39;Should this also handle X case?&#39; This affects scope.&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-95" name="__codelineno-5-95" href="#__codelineno-5-95"></a><span class="w">    </span><span class="nx">header</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Scope&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-96" name="__codelineno-5-96" href="#__codelineno-5-96"></a><span class="w">    </span><span class="nx">options</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-5-97" name="__codelineno-5-97" href="#__codelineno-5-97"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Yes, include X&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Expand scope&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-5-98" name="__codelineno-5-98" href="#__codelineno-5-98"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;No, exclude X (Recommended)&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Keep minimal per YAGNI&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-5-99" name="__codelineno-5-99" href="#__codelineno-5-99"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Defer to future task&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Note for later&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-5-100" name="__codelineno-5-100" href="#__codelineno-5-100"></a><span class="w">    </span><span class="p">],</span>
+<a id="__codelineno-5-101" name="__codelineno-5-101" href="#__codelineno-5-101"></a><span class="w">  </span><span class="p">}],</span>
+<a id="__codelineno-5-102" name="__codelineno-5-102" href="#__codelineno-5-102"></a><span class="p">});</span>
+<a id="__codelineno-5-103" name="__codelineno-5-103" href="#__codelineno-5-103"></a><span class="sb">```</span>
+<a id="__codelineno-5-104" name="__codelineno-5-104" href="#__codelineno-5-104"></a>
+<a id="__codelineno-5-105" name="__codelineno-5-105" href="#__codelineno-5-105"></a><span class="gu">## OpenCode Agent Inheritance</span>
+<a id="__codelineno-5-106" name="__codelineno-5-106" href="#__codelineno-5-106"></a>
+<a id="__codelineno-5-107" name="__codelineno-5-107" href="#__codelineno-5-107"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-108" name="__codelineno-5-108" href="#__codelineno-5-108"></a>If running in OpenCode: propagate your agent type to all subagents.
+<a id="__codelineno-5-109" name="__codelineno-5-109" href="#__codelineno-5-109"></a>
+<a id="__codelineno-5-110" name="__codelineno-5-110" href="#__codelineno-5-110"></a><span class="k">-</span><span class="w"> </span>&quot;operating in YOLO mode&quot; → <span class="sb">`CURRENT_AGENT_TYPE = &quot;yolo&quot;`</span>
+<a id="__codelineno-5-111" name="__codelineno-5-111" href="#__codelineno-5-111"></a><span class="k">-</span><span class="w"> </span>&quot;YOLO mode with a focus on precision&quot; → <span class="sb">`CURRENT_AGENT_TYPE = &quot;yolo-focused&quot;`</span>
+<a id="__codelineno-5-112" name="__codelineno-5-112" href="#__codelineno-5-112"></a><span class="k">-</span><span class="w"> </span>Neither → <span class="sb">`CURRENT_AGENT_TYPE = &quot;general&quot;`</span>
 <a id="__codelineno-5-113" name="__codelineno-5-113" href="#__codelineno-5-113"></a>
-<a id="__codelineno-5-114" name="__codelineno-5-114" href="#__codelineno-5-114"></a>When batch complete: show what was implemented, show verification output, say &quot;Ready for feedback.&quot;
-<a id="__codelineno-5-115" name="__codelineno-5-115" href="#__codelineno-5-115"></a>
-<a id="__codelineno-5-116" name="__codelineno-5-116" href="#__codelineno-5-116"></a><span class="gu">### Phase 4: Continue</span>
-<a id="__codelineno-5-117" name="__codelineno-5-117" href="#__codelineno-5-117"></a>
-<a id="__codelineno-5-118" name="__codelineno-5-118" href="#__codelineno-5-118"></a>Based on feedback: apply changes if needed, execute next batch, repeat until complete.
-<a id="__codelineno-5-119" name="__codelineno-5-119" href="#__codelineno-5-119"></a>
-<a id="__codelineno-5-120" name="__codelineno-5-120" href="#__codelineno-5-120"></a><span class="gu">### Phase 5: Complete Development</span>
-<a id="__codelineno-5-121" name="__codelineno-5-121" href="#__codelineno-5-121"></a>
-<a id="__codelineno-5-122" name="__codelineno-5-122" href="#__codelineno-5-122"></a>&lt;reflection&gt;
-<a id="__codelineno-5-123" name="__codelineno-5-123" href="#__codelineno-5-123"></a>Before completing:
-<a id="__codelineno-5-124" name="__codelineno-5-124" href="#__codelineno-5-124"></a><span class="k">-</span><span class="w"> </span>Did every task show verification output?
-<a id="__codelineno-5-125" name="__codelineno-5-125" href="#__codelineno-5-125"></a><span class="k">-</span><span class="w"> </span>Did I mark anything complete without evidence?
-<a id="__codelineno-5-126" name="__codelineno-5-126" href="#__codelineno-5-126"></a><span class="k">-</span><span class="w"> </span>Did I deviate from plan without approval?
-<a id="__codelineno-5-127" name="__codelineno-5-127" href="#__codelineno-5-127"></a>IF YES to any bad pattern: STOP and fix.
-<a id="__codelineno-5-128" name="__codelineno-5-128" href="#__codelineno-5-128"></a>&lt;/reflection&gt;
+<a id="__codelineno-5-114" name="__codelineno-5-114" href="#__codelineno-5-114"></a>All Task tool calls MUST use <span class="sb">`CURRENT_AGENT_TYPE`</span> as <span class="sb">`subagent_type`</span>.
+<a id="__codelineno-5-115" name="__codelineno-5-115" href="#__codelineno-5-115"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-116" name="__codelineno-5-116" href="#__codelineno-5-116"></a>
+<a id="__codelineno-5-117" name="__codelineno-5-117" href="#__codelineno-5-117"></a>---
+<a id="__codelineno-5-118" name="__codelineno-5-118" href="#__codelineno-5-118"></a>
+<a id="__codelineno-5-119" name="__codelineno-5-119" href="#__codelineno-5-119"></a><span class="gu">## Batch Mode Process</span>
+<a id="__codelineno-5-120" name="__codelineno-5-120" href="#__codelineno-5-120"></a>
+<a id="__codelineno-5-121" name="__codelineno-5-121" href="#__codelineno-5-121"></a><span class="gu">### Phase 1: Load and Review Plan</span>
+<a id="__codelineno-5-122" name="__codelineno-5-122" href="#__codelineno-5-122"></a>
+<a id="__codelineno-5-123" name="__codelineno-5-123" href="#__codelineno-5-123"></a>&lt;analysis&gt;
+<a id="__codelineno-5-124" name="__codelineno-5-124" href="#__codelineno-5-124"></a>Before starting:
+<a id="__codelineno-5-125" name="__codelineno-5-125" href="#__codelineno-5-125"></a><span class="k">-</span><span class="w"> </span>What are the plan&#39;s phases and dependencies?
+<a id="__codelineno-5-126" name="__codelineno-5-126" href="#__codelineno-5-126"></a><span class="k">-</span><span class="w"> </span>Any concerns worth raising?
+<a id="__codelineno-5-127" name="__codelineno-5-127" href="#__codelineno-5-127"></a><span class="k">-</span><span class="w"> </span>Are all referenced files/skills accessible?
+<a id="__codelineno-5-128" name="__codelineno-5-128" href="#__codelineno-5-128"></a>&lt;/analysis&gt;
 <a id="__codelineno-5-129" name="__codelineno-5-129" href="#__codelineno-5-129"></a>
-<a id="__codelineno-5-130" name="__codelineno-5-130" href="#__codelineno-5-130"></a><span class="gs">**REQUIRED:**</span> Invoke <span class="sb">`finishing-a-development-branch`</span> skill.
-<a id="__codelineno-5-131" name="__codelineno-5-131" href="#__codelineno-5-131"></a>
-<a id="__codelineno-5-132" name="__codelineno-5-132" href="#__codelineno-5-132"></a>---
-<a id="__codelineno-5-133" name="__codelineno-5-133" href="#__codelineno-5-133"></a>
-<a id="__codelineno-5-134" name="__codelineno-5-134" href="#__codelineno-5-134"></a><span class="gu">## Subagent Mode Process</span>
-<a id="__codelineno-5-135" name="__codelineno-5-135" href="#__codelineno-5-135"></a>
-<a id="__codelineno-5-136" name="__codelineno-5-136" href="#__codelineno-5-136"></a>Fresh subagent per task + two-stage review (spec then quality).
-<a id="__codelineno-5-137" name="__codelineno-5-137" href="#__codelineno-5-137"></a>
-<a id="__codelineno-5-138" name="__codelineno-5-138" href="#__codelineno-5-138"></a><span class="gu">### Phase 1: Extract Tasks</span>
-<a id="__codelineno-5-139" name="__codelineno-5-139" href="#__codelineno-5-139"></a>
-<a id="__codelineno-5-140" name="__codelineno-5-140" href="#__codelineno-5-140"></a>Read plan once. Extract all tasks with full text and context. Create TodoWrite.
-<a id="__codelineno-5-141" name="__codelineno-5-141" href="#__codelineno-5-141"></a>
-<a id="__codelineno-5-142" name="__codelineno-5-142" href="#__codelineno-5-142"></a><span class="gu">### Phase 2: Per-Task Execution Loop</span>
-<a id="__codelineno-5-143" name="__codelineno-5-143" href="#__codelineno-5-143"></a>
-<a id="__codelineno-5-144" name="__codelineno-5-144" href="#__codelineno-5-144"></a>For each task:
-<a id="__codelineno-5-145" name="__codelineno-5-145" href="#__codelineno-5-145"></a><span class="k">1.</span> Dispatch implementer subagent (<span class="sb">`./implementer-prompt.md`</span>)
-<a id="__codelineno-5-146" name="__codelineno-5-146" href="#__codelineno-5-146"></a><span class="k">2.</span> Answer questions from implementer clearly and completely
-<a id="__codelineno-5-147" name="__codelineno-5-147" href="#__codelineno-5-147"></a><span class="k">3.</span> Implementer implements, tests, commits, self-reviews
-<a id="__codelineno-5-148" name="__codelineno-5-148" href="#__codelineno-5-148"></a><span class="k">4.</span> Dispatch spec reviewer (<span class="sb">`./spec-reviewer-prompt.md`</span>) - loop with fixes until spec compliant
-<a id="__codelineno-5-149" name="__codelineno-5-149" href="#__codelineno-5-149"></a><span class="k">5.</span> Dispatch code quality reviewer (<span class="sb">`./code-quality-reviewer-prompt.md`</span>) - loop with fixes until approved
-<a id="__codelineno-5-150" name="__codelineno-5-150" href="#__codelineno-5-150"></a><span class="k">6.</span> Mark task complete in TodoWrite
-<a id="__codelineno-5-151" name="__codelineno-5-151" href="#__codelineno-5-151"></a>
-<a id="__codelineno-5-152" name="__codelineno-5-152" href="#__codelineno-5-152"></a><span class="gu">### Phase 3: Final Review</span>
-<a id="__codelineno-5-153" name="__codelineno-5-153" href="#__codelineno-5-153"></a>
-<a id="__codelineno-5-154" name="__codelineno-5-154" href="#__codelineno-5-154"></a>Dispatch final code reviewer for entire implementation.
-<a id="__codelineno-5-155" name="__codelineno-5-155" href="#__codelineno-5-155"></a>
-<a id="__codelineno-5-156" name="__codelineno-5-156" href="#__codelineno-5-156"></a><span class="gu">### Phase 4: Complete Development</span>
-<a id="__codelineno-5-157" name="__codelineno-5-157" href="#__codelineno-5-157"></a>
-<a id="__codelineno-5-158" name="__codelineno-5-158" href="#__codelineno-5-158"></a><span class="gs">**REQUIRED:**</span> Invoke <span class="sb">`finishing-a-development-branch`</span> skill.
-<a id="__codelineno-5-159" name="__codelineno-5-159" href="#__codelineno-5-159"></a>
-<a id="__codelineno-5-160" name="__codelineno-5-160" href="#__codelineno-5-160"></a>---
-<a id="__codelineno-5-161" name="__codelineno-5-161" href="#__codelineno-5-161"></a>
-<a id="__codelineno-5-162" name="__codelineno-5-162" href="#__codelineno-5-162"></a><span class="gu">## Stop Conditions</span>
-<a id="__codelineno-5-163" name="__codelineno-5-163" href="#__codelineno-5-163"></a>
-<a id="__codelineno-5-164" name="__codelineno-5-164" href="#__codelineno-5-164"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-5-165" name="__codelineno-5-165" href="#__codelineno-5-165"></a><span class="gs">**STOP executing immediately when:**</span>
-<a id="__codelineno-5-166" name="__codelineno-5-166" href="#__codelineno-5-166"></a><span class="k">-</span><span class="w"> </span>Hit a blocker mid-task (missing dependency, test fails, instruction unclear)
-<a id="__codelineno-5-167" name="__codelineno-5-167" href="#__codelineno-5-167"></a><span class="k">-</span><span class="w"> </span>Plan has critical gaps preventing starting
-<a id="__codelineno-5-168" name="__codelineno-5-168" href="#__codelineno-5-168"></a><span class="k">-</span><span class="w"> </span>You don&#39;t understand an instruction
-<a id="__codelineno-5-169" name="__codelineno-5-169" href="#__codelineno-5-169"></a><span class="k">-</span><span class="w"> </span>Verification fails repeatedly
+<a id="__codelineno-5-130" name="__codelineno-5-130" href="#__codelineno-5-130"></a><span class="k">1.</span> Read plan file
+<a id="__codelineno-5-131" name="__codelineno-5-131" href="#__codelineno-5-131"></a><span class="k">2.</span> Review critically - identify questions/concerns
+<a id="__codelineno-5-132" name="__codelineno-5-132" href="#__codelineno-5-132"></a><span class="k">3.</span> If concerns, ask user via AskUserQuestion with options: Discuss / Proceed anyway / Update plan first
+<a id="__codelineno-5-133" name="__codelineno-5-133" href="#__codelineno-5-133"></a><span class="k">4.</span> If no concerns: Create TodoWrite and proceed
+<a id="__codelineno-5-134" name="__codelineno-5-134" href="#__codelineno-5-134"></a>
+<a id="__codelineno-5-135" name="__codelineno-5-135" href="#__codelineno-5-135"></a><span class="gu">### Phase 2: Execute Batch</span>
+<a id="__codelineno-5-136" name="__codelineno-5-136" href="#__codelineno-5-136"></a>
+<a id="__codelineno-5-137" name="__codelineno-5-137" href="#__codelineno-5-137"></a>Default first 3 tasks. Per task:
+<a id="__codelineno-5-138" name="__codelineno-5-138" href="#__codelineno-5-138"></a><span class="k">1.</span> Mark as in_progress
+<a id="__codelineno-5-139" name="__codelineno-5-139" href="#__codelineno-5-139"></a><span class="k">2.</span> Follow each step exactly
+<a id="__codelineno-5-140" name="__codelineno-5-140" href="#__codelineno-5-140"></a><span class="k">3.</span> Run verifications as specified
+<a id="__codelineno-5-141" name="__codelineno-5-141" href="#__codelineno-5-141"></a><span class="k">4.</span> Mark as completed with evidence
+<a id="__codelineno-5-142" name="__codelineno-5-142" href="#__codelineno-5-142"></a>
+<a id="__codelineno-5-143" name="__codelineno-5-143" href="#__codelineno-5-143"></a><span class="gu">### Phase 3: Report</span>
+<a id="__codelineno-5-144" name="__codelineno-5-144" href="#__codelineno-5-144"></a>
+<a id="__codelineno-5-145" name="__codelineno-5-145" href="#__codelineno-5-145"></a>When batch complete: show what was implemented, show verification output, say &quot;Ready for feedback.&quot;
+<a id="__codelineno-5-146" name="__codelineno-5-146" href="#__codelineno-5-146"></a>
+<a id="__codelineno-5-147" name="__codelineno-5-147" href="#__codelineno-5-147"></a><span class="gu">### Phase 4: Continue</span>
+<a id="__codelineno-5-148" name="__codelineno-5-148" href="#__codelineno-5-148"></a>
+<a id="__codelineno-5-149" name="__codelineno-5-149" href="#__codelineno-5-149"></a>Based on feedback: apply changes if needed, execute next batch, repeat until complete.
+<a id="__codelineno-5-150" name="__codelineno-5-150" href="#__codelineno-5-150"></a>
+<a id="__codelineno-5-151" name="__codelineno-5-151" href="#__codelineno-5-151"></a><span class="gu">### Phase 5: Complete Development</span>
+<a id="__codelineno-5-152" name="__codelineno-5-152" href="#__codelineno-5-152"></a>
+<a id="__codelineno-5-153" name="__codelineno-5-153" href="#__codelineno-5-153"></a>&lt;reflection&gt;
+<a id="__codelineno-5-154" name="__codelineno-5-154" href="#__codelineno-5-154"></a>Before completing:
+<a id="__codelineno-5-155" name="__codelineno-5-155" href="#__codelineno-5-155"></a><span class="k">-</span><span class="w"> </span>Did every task show verification output?
+<a id="__codelineno-5-156" name="__codelineno-5-156" href="#__codelineno-5-156"></a><span class="k">-</span><span class="w"> </span>Did I mark anything complete without evidence?
+<a id="__codelineno-5-157" name="__codelineno-5-157" href="#__codelineno-5-157"></a><span class="k">-</span><span class="w"> </span>Did I deviate from plan without approval?
+<a id="__codelineno-5-158" name="__codelineno-5-158" href="#__codelineno-5-158"></a>IF YES to any bad pattern: STOP and fix.
+<a id="__codelineno-5-159" name="__codelineno-5-159" href="#__codelineno-5-159"></a>&lt;/reflection&gt;
+<a id="__codelineno-5-160" name="__codelineno-5-160" href="#__codelineno-5-160"></a>
+<a id="__codelineno-5-161" name="__codelineno-5-161" href="#__codelineno-5-161"></a><span class="gs">**REQUIRED:**</span> Invoke <span class="sb">`finishing-a-development-branch`</span> skill.
+<a id="__codelineno-5-162" name="__codelineno-5-162" href="#__codelineno-5-162"></a>
+<a id="__codelineno-5-163" name="__codelineno-5-163" href="#__codelineno-5-163"></a>---
+<a id="__codelineno-5-164" name="__codelineno-5-164" href="#__codelineno-5-164"></a>
+<a id="__codelineno-5-165" name="__codelineno-5-165" href="#__codelineno-5-165"></a><span class="gu">## Subagent Mode Process</span>
+<a id="__codelineno-5-166" name="__codelineno-5-166" href="#__codelineno-5-166"></a>
+<a id="__codelineno-5-167" name="__codelineno-5-167" href="#__codelineno-5-167"></a>Fresh subagent per task + two-stage review (spec then quality).
+<a id="__codelineno-5-168" name="__codelineno-5-168" href="#__codelineno-5-168"></a>
+<a id="__codelineno-5-169" name="__codelineno-5-169" href="#__codelineno-5-169"></a><span class="gu">### Phase 1: Extract Tasks</span>
 <a id="__codelineno-5-170" name="__codelineno-5-170" href="#__codelineno-5-170"></a>
-<a id="__codelineno-5-171" name="__codelineno-5-171" href="#__codelineno-5-171"></a>Ask for clarification rather than guessing. The cost of asking is one exchange. The cost of guessing wrong is cascade failure.
-<a id="__codelineno-5-172" name="__codelineno-5-172" href="#__codelineno-5-172"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-5-173" name="__codelineno-5-173" href="#__codelineno-5-173"></a>
-<a id="__codelineno-5-174" name="__codelineno-5-174" href="#__codelineno-5-174"></a><span class="gu">## When to Revisit Phase 1</span>
-<a id="__codelineno-5-175" name="__codelineno-5-175" href="#__codelineno-5-175"></a>
-<a id="__codelineno-5-176" name="__codelineno-5-176" href="#__codelineno-5-176"></a>Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fundamental approach needs rethinking, critical gap discovered mid-execution. Don&#39;t force through blockers - stop and ask.
-<a id="__codelineno-5-177" name="__codelineno-5-177" href="#__codelineno-5-177"></a>
-<a id="__codelineno-5-178" name="__codelineno-5-178" href="#__codelineno-5-178"></a>---
-<a id="__codelineno-5-179" name="__codelineno-5-179" href="#__codelineno-5-179"></a>
-<a id="__codelineno-5-180" name="__codelineno-5-180" href="#__codelineno-5-180"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-5-181" name="__codelineno-5-181" href="#__codelineno-5-181"></a>
-<a id="__codelineno-5-182" name="__codelineno-5-182" href="#__codelineno-5-182"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-5-183" name="__codelineno-5-183" href="#__codelineno-5-183"></a><span class="k">-</span><span class="w"> </span>Skip reviews (spec OR quality)
-<a id="__codelineno-5-184" name="__codelineno-5-184" href="#__codelineno-5-184"></a><span class="k">-</span><span class="w"> </span>Proceed with unfixed issues
-<a id="__codelineno-5-185" name="__codelineno-5-185" href="#__codelineno-5-185"></a><span class="k">-</span><span class="w"> </span>Parallel implementation subagents (conflicts)
-<a id="__codelineno-5-186" name="__codelineno-5-186" href="#__codelineno-5-186"></a><span class="k">-</span><span class="w"> </span>Make subagent read plan file (provide full text instead)
-<a id="__codelineno-5-187" name="__codelineno-5-187" href="#__codelineno-5-187"></a><span class="k">-</span><span class="w"> </span>Skip scene-setting context for subagents
-<a id="__codelineno-5-188" name="__codelineno-5-188" href="#__codelineno-5-188"></a><span class="k">-</span><span class="w"> </span>Start code quality review before spec passes
-<a id="__codelineno-5-189" name="__codelineno-5-189" href="#__codelineno-5-189"></a><span class="k">-</span><span class="w"> </span>Move to next task with open review issues
-<a id="__codelineno-5-190" name="__codelineno-5-190" href="#__codelineno-5-190"></a><span class="k">-</span><span class="w"> </span>Mark task complete without verification evidence
-<a id="__codelineno-5-191" name="__codelineno-5-191" href="#__codelineno-5-191"></a><span class="k">-</span><span class="w"> </span>Deviate from plan steps without explicit approval
-<a id="__codelineno-5-192" name="__codelineno-5-192" href="#__codelineno-5-192"></a><span class="k">-</span><span class="w"> </span>Guess at unclear requirements instead of asking
-<a id="__codelineno-5-193" name="__codelineno-5-193" href="#__codelineno-5-193"></a><span class="k">-</span><span class="w"> </span>Accept &quot;close enough&quot; on spec compliance
-<a id="__codelineno-5-194" name="__codelineno-5-194" href="#__codelineno-5-194"></a><span class="k">-</span><span class="w"> </span>Let implementer self-review replace actual review (both needed)
-<a id="__codelineno-5-195" name="__codelineno-5-195" href="#__codelineno-5-195"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-5-196" name="__codelineno-5-196" href="#__codelineno-5-196"></a>
-<a id="__codelineno-5-197" name="__codelineno-5-197" href="#__codelineno-5-197"></a><span class="gu">### Handling Subagent Questions</span>
-<a id="__codelineno-5-198" name="__codelineno-5-198" href="#__codelineno-5-198"></a><span class="k">-</span><span class="w"> </span>Answer clearly and completely before letting them proceed
-<a id="__codelineno-5-199" name="__codelineno-5-199" href="#__codelineno-5-199"></a><span class="k">-</span><span class="w"> </span>If question affects scope: use AskUserQuestion (see circuit breakers)
-<a id="__codelineno-5-200" name="__codelineno-5-200" href="#__codelineno-5-200"></a><span class="k">-</span><span class="w"> </span>Don&#39;t rush; incomplete answers cause rework
+<a id="__codelineno-5-171" name="__codelineno-5-171" href="#__codelineno-5-171"></a>Read plan once. Extract all tasks with full text and context. Create TodoWrite.
+<a id="__codelineno-5-172" name="__codelineno-5-172" href="#__codelineno-5-172"></a>
+<a id="__codelineno-5-173" name="__codelineno-5-173" href="#__codelineno-5-173"></a><span class="gu">### Phase 2: Per-Task Execution Loop</span>
+<a id="__codelineno-5-174" name="__codelineno-5-174" href="#__codelineno-5-174"></a>
+<a id="__codelineno-5-175" name="__codelineno-5-175" href="#__codelineno-5-175"></a>For each task:
+<a id="__codelineno-5-176" name="__codelineno-5-176" href="#__codelineno-5-176"></a><span class="k">1.</span> Dispatch implementer subagent (<span class="sb">`./implementer-prompt.md`</span>)
+<a id="__codelineno-5-177" name="__codelineno-5-177" href="#__codelineno-5-177"></a><span class="k">2.</span> Answer questions from implementer clearly and completely
+<a id="__codelineno-5-178" name="__codelineno-5-178" href="#__codelineno-5-178"></a><span class="k">3.</span> Implementer implements, tests, commits, self-reviews
+<a id="__codelineno-5-179" name="__codelineno-5-179" href="#__codelineno-5-179"></a><span class="k">4.</span> Dispatch spec reviewer (<span class="sb">`./spec-reviewer-prompt.md`</span>) - loop with fixes until spec compliant
+<a id="__codelineno-5-180" name="__codelineno-5-180" href="#__codelineno-5-180"></a><span class="k">5.</span> Dispatch code quality reviewer (<span class="sb">`./code-quality-reviewer-prompt.md`</span>) - loop with fixes until approved
+<a id="__codelineno-5-181" name="__codelineno-5-181" href="#__codelineno-5-181"></a><span class="k">6.</span> Mark task complete in TodoWrite
+<a id="__codelineno-5-182" name="__codelineno-5-182" href="#__codelineno-5-182"></a>
+<a id="__codelineno-5-183" name="__codelineno-5-183" href="#__codelineno-5-183"></a><span class="gu">### Phase 3: Final Review</span>
+<a id="__codelineno-5-184" name="__codelineno-5-184" href="#__codelineno-5-184"></a>
+<a id="__codelineno-5-185" name="__codelineno-5-185" href="#__codelineno-5-185"></a>Dispatch final code reviewer for entire implementation.
+<a id="__codelineno-5-186" name="__codelineno-5-186" href="#__codelineno-5-186"></a>
+<a id="__codelineno-5-187" name="__codelineno-5-187" href="#__codelineno-5-187"></a><span class="gu">### Phase 4: Complete Development</span>
+<a id="__codelineno-5-188" name="__codelineno-5-188" href="#__codelineno-5-188"></a>
+<a id="__codelineno-5-189" name="__codelineno-5-189" href="#__codelineno-5-189"></a><span class="gs">**REQUIRED:**</span> Invoke <span class="sb">`finishing-a-development-branch`</span> skill.
+<a id="__codelineno-5-190" name="__codelineno-5-190" href="#__codelineno-5-190"></a>
+<a id="__codelineno-5-191" name="__codelineno-5-191" href="#__codelineno-5-191"></a>---
+<a id="__codelineno-5-192" name="__codelineno-5-192" href="#__codelineno-5-192"></a>
+<a id="__codelineno-5-193" name="__codelineno-5-193" href="#__codelineno-5-193"></a><span class="gu">## Stop Conditions</span>
+<a id="__codelineno-5-194" name="__codelineno-5-194" href="#__codelineno-5-194"></a>
+<a id="__codelineno-5-195" name="__codelineno-5-195" href="#__codelineno-5-195"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-196" name="__codelineno-5-196" href="#__codelineno-5-196"></a><span class="gs">**STOP executing immediately when:**</span>
+<a id="__codelineno-5-197" name="__codelineno-5-197" href="#__codelineno-5-197"></a><span class="k">-</span><span class="w"> </span>Hit a blocker mid-task (missing dependency, test fails, instruction unclear)
+<a id="__codelineno-5-198" name="__codelineno-5-198" href="#__codelineno-5-198"></a><span class="k">-</span><span class="w"> </span>Plan has critical gaps preventing starting
+<a id="__codelineno-5-199" name="__codelineno-5-199" href="#__codelineno-5-199"></a><span class="k">-</span><span class="w"> </span>You don&#39;t understand an instruction
+<a id="__codelineno-5-200" name="__codelineno-5-200" href="#__codelineno-5-200"></a><span class="k">-</span><span class="w"> </span>Verification fails repeatedly
 <a id="__codelineno-5-201" name="__codelineno-5-201" href="#__codelineno-5-201"></a>
-<a id="__codelineno-5-202" name="__codelineno-5-202" href="#__codelineno-5-202"></a><span class="gu">### Handling Review Issues</span>
-<a id="__codelineno-5-203" name="__codelineno-5-203" href="#__codelineno-5-203"></a><span class="k">-</span><span class="w"> </span>Implementer (same subagent) fixes issues; reviewer re-reviews (never skip re-review)
-<a id="__codelineno-5-204" name="__codelineno-5-204" href="#__codelineno-5-204"></a><span class="k">-</span><span class="w"> </span>Loop until approved; if 3+ cycles: escalate to user
-<a id="__codelineno-5-205" name="__codelineno-5-205" href="#__codelineno-5-205"></a>
-<a id="__codelineno-5-206" name="__codelineno-5-206" href="#__codelineno-5-206"></a><span class="gu">### Handling Subagent Failure</span>
-<a id="__codelineno-5-207" name="__codelineno-5-207" href="#__codelineno-5-207"></a><span class="k">-</span><span class="w"> </span>Dispatch fix subagent with specific instructions and failure context
-<a id="__codelineno-5-208" name="__codelineno-5-208" href="#__codelineno-5-208"></a><span class="k">-</span><span class="w"> </span>Don&#39;t fix manually (context pollution)
-<a id="__codelineno-5-209" name="__codelineno-5-209" href="#__codelineno-5-209"></a>
-<a id="__codelineno-5-210" name="__codelineno-5-210" href="#__codelineno-5-210"></a>---
-<a id="__codelineno-5-211" name="__codelineno-5-211" href="#__codelineno-5-211"></a>
-<a id="__codelineno-5-212" name="__codelineno-5-212" href="#__codelineno-5-212"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-5-213" name="__codelineno-5-213" href="#__codelineno-5-213"></a>
-<a id="__codelineno-5-214" name="__codelineno-5-214" href="#__codelineno-5-214"></a>Before marking execution complete:
-<a id="__codelineno-5-215" name="__codelineno-5-215" href="#__codelineno-5-215"></a>
-<a id="__codelineno-5-216" name="__codelineno-5-216" href="#__codelineno-5-216"></a><span class="k">- [ ]</span> Every task has verification output shown (tests, build, runtime)
-<a id="__codelineno-5-217" name="__codelineno-5-217" href="#__codelineno-5-217"></a><span class="k">- [ ]</span> No tasks marked complete without evidence
-<a id="__codelineno-5-218" name="__codelineno-5-218" href="#__codelineno-5-218"></a><span class="k">- [ ]</span> All review issues addressed (spec and code quality)
-<a id="__codelineno-5-219" name="__codelineno-5-219" href="#__codelineno-5-219"></a><span class="k">- [ ]</span> Plan followed exactly or deviations explicitly approved
-<a id="__codelineno-5-220" name="__codelineno-5-220" href="#__codelineno-5-220"></a><span class="k">- [ ]</span> <span class="sb">`finishing-a-development-branch`</span> invoked
-<a id="__codelineno-5-221" name="__codelineno-5-221" href="#__codelineno-5-221"></a>
-<a id="__codelineno-5-222" name="__codelineno-5-222" href="#__codelineno-5-222"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-5-223" name="__codelineno-5-223" href="#__codelineno-5-223"></a>If ANY unchecked: STOP and fix before declaring complete.
-<a id="__codelineno-5-224" name="__codelineno-5-224" href="#__codelineno-5-224"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-5-225" name="__codelineno-5-225" href="#__codelineno-5-225"></a>
-<a id="__codelineno-5-226" name="__codelineno-5-226" href="#__codelineno-5-226"></a><span class="gu">## Integration</span>
+<a id="__codelineno-5-202" name="__codelineno-5-202" href="#__codelineno-5-202"></a>Ask for clarification rather than guessing. The cost of asking is one exchange. The cost of guessing wrong is cascade failure.
+<a id="__codelineno-5-203" name="__codelineno-5-203" href="#__codelineno-5-203"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-204" name="__codelineno-5-204" href="#__codelineno-5-204"></a>
+<a id="__codelineno-5-205" name="__codelineno-5-205" href="#__codelineno-5-205"></a><span class="gu">## When to Revisit Phase 1</span>
+<a id="__codelineno-5-206" name="__codelineno-5-206" href="#__codelineno-5-206"></a>
+<a id="__codelineno-5-207" name="__codelineno-5-207" href="#__codelineno-5-207"></a>Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fundamental approach needs rethinking, critical gap discovered mid-execution. Don&#39;t force through blockers - stop and ask.
+<a id="__codelineno-5-208" name="__codelineno-5-208" href="#__codelineno-5-208"></a>
+<a id="__codelineno-5-209" name="__codelineno-5-209" href="#__codelineno-5-209"></a>---
+<a id="__codelineno-5-210" name="__codelineno-5-210" href="#__codelineno-5-210"></a>
+<a id="__codelineno-5-211" name="__codelineno-5-211" href="#__codelineno-5-211"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-5-212" name="__codelineno-5-212" href="#__codelineno-5-212"></a>
+<a id="__codelineno-5-213" name="__codelineno-5-213" href="#__codelineno-5-213"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-5-214" name="__codelineno-5-214" href="#__codelineno-5-214"></a><span class="k">-</span><span class="w"> </span>Skip reviews (spec OR quality)
+<a id="__codelineno-5-215" name="__codelineno-5-215" href="#__codelineno-5-215"></a><span class="k">-</span><span class="w"> </span>Proceed with unfixed issues
+<a id="__codelineno-5-216" name="__codelineno-5-216" href="#__codelineno-5-216"></a><span class="k">-</span><span class="w"> </span>Parallel implementation subagents (conflicts)
+<a id="__codelineno-5-217" name="__codelineno-5-217" href="#__codelineno-5-217"></a><span class="k">-</span><span class="w"> </span>Make subagent read plan file (provide full text instead)
+<a id="__codelineno-5-218" name="__codelineno-5-218" href="#__codelineno-5-218"></a><span class="k">-</span><span class="w"> </span>Skip scene-setting context for subagents
+<a id="__codelineno-5-219" name="__codelineno-5-219" href="#__codelineno-5-219"></a><span class="k">-</span><span class="w"> </span>Start code quality review before spec passes
+<a id="__codelineno-5-220" name="__codelineno-5-220" href="#__codelineno-5-220"></a><span class="k">-</span><span class="w"> </span>Move to next task with open review issues
+<a id="__codelineno-5-221" name="__codelineno-5-221" href="#__codelineno-5-221"></a><span class="k">-</span><span class="w"> </span>Mark task complete without verification evidence
+<a id="__codelineno-5-222" name="__codelineno-5-222" href="#__codelineno-5-222"></a><span class="k">-</span><span class="w"> </span>Deviate from plan steps without explicit approval
+<a id="__codelineno-5-223" name="__codelineno-5-223" href="#__codelineno-5-223"></a><span class="k">-</span><span class="w"> </span>Guess at unclear requirements instead of asking
+<a id="__codelineno-5-224" name="__codelineno-5-224" href="#__codelineno-5-224"></a><span class="k">-</span><span class="w"> </span>Accept &quot;close enough&quot; on spec compliance
+<a id="__codelineno-5-225" name="__codelineno-5-225" href="#__codelineno-5-225"></a><span class="k">-</span><span class="w"> </span>Let implementer self-review replace actual review (both needed)
+<a id="__codelineno-5-226" name="__codelineno-5-226" href="#__codelineno-5-226"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-5-227" name="__codelineno-5-227" href="#__codelineno-5-227"></a>
-<a id="__codelineno-5-228" name="__codelineno-5-228" href="#__codelineno-5-228"></a><span class="k">-</span><span class="w"> </span><span class="gs">**writing-plans**</span> - Creates the plan this skill executes
-<a id="__codelineno-5-229" name="__codelineno-5-229" href="#__codelineno-5-229"></a><span class="k">-</span><span class="w"> </span><span class="gs">**requesting-code-review**</span> - Code review template for reviewer subagents
-<a id="__codelineno-5-230" name="__codelineno-5-230" href="#__codelineno-5-230"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finishing-a-development-branch**</span> - Complete development after all tasks
-<a id="__codelineno-5-231" name="__codelineno-5-231" href="#__codelineno-5-231"></a><span class="k">-</span><span class="w"> </span><span class="gs">**test-driven-development**</span> - Subagents follow TDD for each task
+<a id="__codelineno-5-228" name="__codelineno-5-228" href="#__codelineno-5-228"></a><span class="gu">### Handling Subagent Questions</span>
+<a id="__codelineno-5-229" name="__codelineno-5-229" href="#__codelineno-5-229"></a><span class="k">-</span><span class="w"> </span>Answer clearly and completely before letting them proceed
+<a id="__codelineno-5-230" name="__codelineno-5-230" href="#__codelineno-5-230"></a><span class="k">-</span><span class="w"> </span>If question affects scope: use AskUserQuestion (see circuit breakers)
+<a id="__codelineno-5-231" name="__codelineno-5-231" href="#__codelineno-5-231"></a><span class="k">-</span><span class="w"> </span>Don&#39;t rush; incomplete answers cause rework
 <a id="__codelineno-5-232" name="__codelineno-5-232" href="#__codelineno-5-232"></a>
-<a id="__codelineno-5-233" name="__codelineno-5-233" href="#__codelineno-5-233"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-5-234" name="__codelineno-5-234" href="#__codelineno-5-234"></a>Plans are contracts. Evidence is required. Guessing is forbidden. Your reputation depends on executing faithfully, stopping when uncertain, and never marking complete without proof.
-<a id="__codelineno-5-235" name="__codelineno-5-235" href="#__codelineno-5-235"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-5-233" name="__codelineno-5-233" href="#__codelineno-5-233"></a><span class="gu">### Handling Review Issues</span>
+<a id="__codelineno-5-234" name="__codelineno-5-234" href="#__codelineno-5-234"></a><span class="k">-</span><span class="w"> </span>Implementer (same subagent) fixes issues; reviewer re-reviews (never skip re-review)
+<a id="__codelineno-5-235" name="__codelineno-5-235" href="#__codelineno-5-235"></a><span class="k">-</span><span class="w"> </span>Loop until approved; if 3+ cycles: escalate to user
+<a id="__codelineno-5-236" name="__codelineno-5-236" href="#__codelineno-5-236"></a>
+<a id="__codelineno-5-237" name="__codelineno-5-237" href="#__codelineno-5-237"></a><span class="gu">### Handling Subagent Failure</span>
+<a id="__codelineno-5-238" name="__codelineno-5-238" href="#__codelineno-5-238"></a><span class="k">-</span><span class="w"> </span>Dispatch fix subagent with specific instructions and failure context
+<a id="__codelineno-5-239" name="__codelineno-5-239" href="#__codelineno-5-239"></a><span class="k">-</span><span class="w"> </span>Don&#39;t fix manually (context pollution)
+<a id="__codelineno-5-240" name="__codelineno-5-240" href="#__codelineno-5-240"></a>
+<a id="__codelineno-5-241" name="__codelineno-5-241" href="#__codelineno-5-241"></a>---
+<a id="__codelineno-5-242" name="__codelineno-5-242" href="#__codelineno-5-242"></a>
+<a id="__codelineno-5-243" name="__codelineno-5-243" href="#__codelineno-5-243"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-5-244" name="__codelineno-5-244" href="#__codelineno-5-244"></a>
+<a id="__codelineno-5-245" name="__codelineno-5-245" href="#__codelineno-5-245"></a>Before marking execution complete:
+<a id="__codelineno-5-246" name="__codelineno-5-246" href="#__codelineno-5-246"></a>
+<a id="__codelineno-5-247" name="__codelineno-5-247" href="#__codelineno-5-247"></a><span class="k">- [ ]</span> Every task has verification output shown (tests, build, runtime)
+<a id="__codelineno-5-248" name="__codelineno-5-248" href="#__codelineno-5-248"></a><span class="k">- [ ]</span> No tasks marked complete without evidence
+<a id="__codelineno-5-249" name="__codelineno-5-249" href="#__codelineno-5-249"></a><span class="k">- [ ]</span> All review issues addressed (spec and code quality)
+<a id="__codelineno-5-250" name="__codelineno-5-250" href="#__codelineno-5-250"></a><span class="k">- [ ]</span> Plan followed exactly or deviations explicitly approved
+<a id="__codelineno-5-251" name="__codelineno-5-251" href="#__codelineno-5-251"></a><span class="k">- [ ]</span> <span class="sb">`finishing-a-development-branch`</span> invoked
+<a id="__codelineno-5-252" name="__codelineno-5-252" href="#__codelineno-5-252"></a>
+<a id="__codelineno-5-253" name="__codelineno-5-253" href="#__codelineno-5-253"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-5-254" name="__codelineno-5-254" href="#__codelineno-5-254"></a>If ANY unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-5-255" name="__codelineno-5-255" href="#__codelineno-5-255"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-5-256" name="__codelineno-5-256" href="#__codelineno-5-256"></a>
+<a id="__codelineno-5-257" name="__codelineno-5-257" href="#__codelineno-5-257"></a><span class="gu">## Integration</span>
+<a id="__codelineno-5-258" name="__codelineno-5-258" href="#__codelineno-5-258"></a>
+<a id="__codelineno-5-259" name="__codelineno-5-259" href="#__codelineno-5-259"></a><span class="k">-</span><span class="w"> </span><span class="gs">**writing-plans**</span> - Creates the plan this skill executes
+<a id="__codelineno-5-260" name="__codelineno-5-260" href="#__codelineno-5-260"></a><span class="k">-</span><span class="w"> </span><span class="gs">**requesting-code-review**</span> - Code review template for reviewer subagents
+<a id="__codelineno-5-261" name="__codelineno-5-261" href="#__codelineno-5-261"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finishing-a-development-branch**</span> - Complete development after all tasks
+<a id="__codelineno-5-262" name="__codelineno-5-262" href="#__codelineno-5-262"></a><span class="k">-</span><span class="w"> </span><span class="gs">**test-driven-development**</span> - Subagents follow TDD for each task
+<a id="__codelineno-5-263" name="__codelineno-5-263" href="#__codelineno-5-263"></a>
+<a id="__codelineno-5-264" name="__codelineno-5-264" href="#__codelineno-5-264"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-5-265" name="__codelineno-5-265" href="#__codelineno-5-265"></a>Plans are contracts. Evidence is required. Guessing is forbidden. Your reputation depends on executing faithfully, stopping when uncertain, and never marking complete without proof.
+<a id="__codelineno-5-266" name="__codelineno-5-266" href="#__codelineno-5-266"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
