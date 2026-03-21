@@ -69,7 +69,7 @@ def _extract_section(content: str, section_name: str) -> str | None:
 
 @mcp.tool()
 @inject_recovery_context
-def forge_iteration_start(
+async def forge_iteration_start(
     feature_name: str,
     starting_stage: str = "DISCOVER",
     preferences: dict = None,
@@ -96,7 +96,7 @@ def forge_iteration_start(
         - token: Workflow token for next operation
         - error: Error message if status is "error"
     """
-    return do_forge_iteration_start(
+    return await do_forge_iteration_start(
         feature_name=feature_name,
         starting_stage=starting_stage,
         preferences=preferences,
@@ -105,7 +105,7 @@ def forge_iteration_start(
 
 @mcp.tool()
 @inject_recovery_context
-def forge_iteration_advance(
+async def forge_iteration_advance(
     feature_name: str,
     current_token: str,
     evidence: dict = None,
@@ -131,7 +131,7 @@ def forge_iteration_advance(
         - token: New workflow token
         - error: Error message if status is "error"
     """
-    return do_forge_iteration_advance(
+    return await do_forge_iteration_advance(
         feature_name=feature_name,
         current_token=current_token,
         evidence=evidence,
@@ -140,7 +140,7 @@ def forge_iteration_advance(
 
 @mcp.tool()
 @inject_recovery_context
-def forge_iteration_return(
+async def forge_iteration_return(
     feature_name: str,
     current_token: str,
     return_to: str,
@@ -174,7 +174,7 @@ def forge_iteration_return(
         - token: New workflow token
         - error: Error message if status is "error"
     """
-    return do_forge_iteration_return(
+    return await do_forge_iteration_return(
         feature_name=feature_name,
         current_token=current_token,
         return_to=return_to,
@@ -399,7 +399,7 @@ def forge_roundtable_debate(
 
 @mcp.tool()
 @inject_recovery_context
-def forge_process_roundtable_response(
+async def forge_process_roundtable_response(
     response: str,
     stage: str,
     gate: str,
@@ -428,7 +428,7 @@ def forge_process_roundtable_response(
         - parsed_verdicts: List of parsed verdict details
         - gate: The gate being validated
     """
-    return do_process_roundtable_response(
+    return await do_process_roundtable_response(
         response=response,
         stage=stage,
         gate=gate,
@@ -439,7 +439,7 @@ def forge_process_roundtable_response(
 
 @mcp.tool()
 @inject_recovery_context
-def forge_record_gate_completion(
+async def forge_record_gate_completion(
     feature_name: str,
     gate: str,
     stage: str,
@@ -469,7 +469,7 @@ def forge_record_gate_completion(
         forge_record_gate_completion as do_record_gate,
     )
 
-    return do_record_gate(
+    return await do_record_gate(
         feature_name=feature_name,
         gate=gate,
         stage=stage,

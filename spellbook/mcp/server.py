@@ -77,39 +77,46 @@ def register_all_tools() -> None:
         logger.debug("spellbook.mcp.routes not yet available")
 
 
-def _cleanup_coordination(db_path: str) -> None:
-    """Clean up old swarm coordination data (>7 days)."""
+async def _cleanup_coordination() -> None:
+    """Clean up old swarm coordination data (>7 days) using ORM."""
     try:
         from spellbook.coordination.state import StateManager
+        from spellbook.db import get_coordination_session
 
-        sm = StateManager(db_path)
-        sm.cleanup_old_swarms(days=7)
+        async with get_coordination_session() as session:
+            sm = StateManager(session=session)
+            await sm.cleanup_old_swarms(days=7)
     except Exception:
         pass
 
 
-def _cleanup_forged() -> None:
-    """Clean up old forged workflow data (>90 days)."""
+async def _cleanup_forged() -> None:
+    """Clean up old forged workflow data (>90 days) using ORM."""
     try:
-        import sqlite3
         from datetime import datetime, timedelta, timezone
 
-        from spellbook.forged.schema import get_forged_connection
+        from sqlalchemy import delete
+        from spellbook.db import get_forged_session
+        from spellbook.db.forged_models import ForgeToken, ToolAnalytic, ForgeReflection
 
         cutoff_90d = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-        conn = get_forged_connection()
 
-        for sql in [
-            "DELETE FROM forge_tokens WHERE invalidated_at IS NOT NULL AND invalidated_at < ?",
-            "DELETE FROM tool_analytics WHERE called_at < ?",
-            "DELETE FROM reflections WHERE created_at < ? AND status = 'RESOLVED'",
-        ]:
-            try:
-                conn.execute(sql, (cutoff_90d,))
-            except sqlite3.OperationalError:
-                pass
-
-        conn.commit()
+        async with get_forged_session() as session:
+            for stmt in [
+                delete(ForgeToken).where(
+                    ForgeToken.invalidated_at.isnot(None),
+                    ForgeToken.invalidated_at < cutoff_90d,
+                ),
+                delete(ToolAnalytic).where(ToolAnalytic.called_at < cutoff_90d),
+                delete(ForgeReflection).where(
+                    ForgeReflection.created_at < cutoff_90d,
+                    ForgeReflection.status == "RESOLVED",
+                ),
+            ]:
+                try:
+                    await session.execute(stmt)
+                except Exception:
+                    pass
     except Exception:
         pass
 

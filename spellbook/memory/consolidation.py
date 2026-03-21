@@ -10,7 +10,14 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, TypedDict
 
-from spellbook.core.db import get_connection
+from sqlalchemy import func, select
+
+from spellbook.db.engines import get_sync_session
+from spellbook.db.spellbook_models import (
+    Memory,
+    MemoryCitation,
+    RawEvent,
+)
 from spellbook.memory.store import (
     get_unconsolidated_events,
     insert_memory,
@@ -429,12 +436,11 @@ def _strategy_temporal_clustering(
 
 def should_consolidate(db_path: str) -> bool:
     """Check if there are enough unconsolidated events to trigger consolidation."""
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT COUNT(*) FROM raw_events WHERE consolidated = 0"
-    )
-    count = cursor.fetchone()[0]
-    return count >= EVENT_THRESHOLD
+    with get_sync_session(db_path) as session:
+        count = session.scalar(
+            select(func.count()).select_from(RawEvent).where(RawEvent.consolidated == 0)
+        )
+        return count >= EVENT_THRESHOLD
 
 
 def build_consolidation_prompt(events: List[Dict[str, Any]]) -> str:
@@ -494,47 +500,51 @@ def compute_bibliographic_coupling(
     Returns list of {other_id, weight} where weight is Jaccard similarity
     of cited file paths.
     """
-    conn = get_connection(db_path)
+    with get_sync_session(db_path) as session:
+        # Get file paths cited by this memory
+        my_files_rows = session.execute(
+            select(MemoryCitation.file_path).where(
+                MemoryCitation.memory_id == memory_id
+            )
+        ).scalars().all()
+        my_files = set(my_files_rows)
+        if not my_files:
+            return []
 
-    # Get file paths cited by this memory
-    cursor = conn.execute(
-        "SELECT file_path FROM memory_citations WHERE memory_id = ?",
-        (memory_id,),
-    )
-    my_files = {r[0] for r in cursor.fetchall()}
-    if not my_files:
-        return []
-
-    # Find other memories citing any of the same files
-    placeholders = ",".join("?" for _ in my_files)
-    cursor = conn.execute(
-        f"SELECT DISTINCT mc.memory_id, mc.file_path "
-        f"FROM memory_citations mc "
-        f"JOIN memories m ON m.id = mc.memory_id "
-        f"WHERE mc.file_path IN ({placeholders}) "
-        f"AND mc.memory_id != ? AND m.status = 'active'",
-        list(my_files) + [memory_id],
-    )
-    # Group by other memory
-    other_files: Dict[str, set] = {}
-    for row in cursor.fetchall():
-        other_files.setdefault(row[0], set()).add(row[1])
-
-    links = []
-    for other_id, _their_shared_files in other_files.items():
-        # Get ALL files for the other memory (not just shared)
-        cursor2 = conn.execute(
-            "SELECT file_path FROM memory_citations WHERE memory_id = ?",
-            (other_id,),
+        # Find other memories citing any of the same files
+        stmt = (
+            select(MemoryCitation.memory_id, MemoryCitation.file_path)
+            .join(Memory, Memory.id == MemoryCitation.memory_id)
+            .where(
+                MemoryCitation.file_path.in_(my_files),
+                MemoryCitation.memory_id != memory_id,
+                Memory.status == "active",
+            )
+            .distinct()
         )
-        all_their_files = {r[0] for r in cursor2.fetchall()}
-        union = my_files | all_their_files
-        intersection = my_files & all_their_files
-        weight = len(intersection) / len(union) if union else 0
-        if weight > 0:
-            links.append({"other_id": other_id, "weight": weight})
+        rows = session.execute(stmt).all()
 
-    return links
+        # Group by other memory
+        other_files: Dict[str, set] = {}
+        for row in rows:
+            other_files.setdefault(row[0], set()).add(row[1])
+
+        links = []
+        for other_id, _their_shared_files in other_files.items():
+            # Get ALL files for the other memory (not just shared)
+            all_their_files_rows = session.execute(
+                select(MemoryCitation.file_path).where(
+                    MemoryCitation.memory_id == other_id
+                )
+            ).scalars().all()
+            all_their_files = set(all_their_files_rows)
+            union = my_files | all_their_files
+            intersection = my_files & all_their_files
+            weight = len(intersection) / len(union) if union else 0
+            if weight > 0:
+                links.append({"other_id": other_id, "weight": weight})
+
+        return links
 
 
 def consolidate_batch(

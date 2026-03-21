@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ErrorBoundary } from './components/shared/ErrorBoundary'
 import { AppShell } from './components/layout/AppShell'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -15,7 +15,8 @@ import { FractalExplorer } from './pages/FractalExplorer'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { HealthPage } from './pages/HealthPage'
 import { EventMonitorPage } from './pages/EventMonitorPage'
-import { FocusPage } from './pages/FocusPage'
+import { StacksPage } from './pages/StacksPage'
+import { CorrectionsPage } from './pages/CorrectionsPage'
 
 function AuthGate() {
   const { authenticated, checking } = useAuth()
@@ -48,7 +49,9 @@ function AuthGate() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/health" element={<HealthPage />} />
             <Route path="/events" element={<EventMonitorPage />} />
-            <Route path="/focus" element={<FocusPage />} />
+            <Route path="/stacks" element={<StacksPage />} />
+            <Route path="/corrections" element={<CorrectionsPage />} />
+            <Route path="/focus" element={<Navigate to="/stacks" replace />} />
             <Route path="/config" element={<ConfigEditor />} />
             <Route path="/fractal" element={<FractalExplorer />} />
             <Route path="/fractal/:graphId" element={<FractalExplorer />} />

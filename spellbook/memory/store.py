@@ -1,7 +1,8 @@
 """Memory storage module: CRUD operations for the memory system.
 
 All functions accept db_path as first argument to support testing with tmp_path.
-Uses the shared connection pool from spellbook.core.db.
+Uses SQLAlchemy ORM sessions via spellbook.db.engines.get_sync_session.
+FTS5 virtual table operations use text() queries within sessions.
 """
 
 import hashlib
@@ -10,7 +11,18 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from spellbook.core.db import get_connection
+from sqlalchemy import select, text
+from sqlalchemy.orm import Session
+
+from spellbook.db.engines import get_sync_session
+from spellbook.db.spellbook_models import (
+    Memory,
+    MemoryAuditLog,
+    MemoryBranch,
+    MemoryCitation,
+    MemoryLink,
+    RawEvent,
+)
 from spellbook.memory.secrets import scan_for_secrets
 
 
@@ -22,6 +34,33 @@ def _content_hash(content: str) -> str:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _insert_citation_in_session(
+    session: Session,
+    memory_id: str,
+    file_path: str,
+    line_range: Optional[str] = None,
+    snippet: Optional[str] = None,
+) -> None:
+    """Insert a citation within an existing session. Does NOT flush or commit.
+
+    Uses INSERT OR IGNORE via text() to handle the UNIQUE constraint on
+    (memory_id, file_path, line_range) without raising on duplicates.
+    """
+    session.execute(
+        text(
+            "INSERT OR IGNORE INTO memory_citations "
+            "(memory_id, file_path, line_range, content_snippet) "
+            "VALUES (:memory_id, :file_path, :line_range, :snippet)"
+        ),
+        {
+            "memory_id": memory_id,
+            "file_path": file_path,
+            "line_range": line_range,
+            "snippet": snippet,
+        },
+    )
 
 
 def insert_memory(
@@ -42,123 +81,151 @@ def insert_memory(
 
     Scans content for secrets and flags findings in meta (never blocks).
     """
-    conn = get_connection(db_path)
     c_hash = _content_hash(content)
 
-    # Dedup check
-    cursor = conn.execute(
-        "SELECT id FROM memories WHERE content_hash = ? AND namespace = ?",
-        (c_hash, namespace),
-    )
-    existing = cursor.fetchone()
-    if existing:
-        return existing[0]
+    with get_sync_session(db_path) as session:
+        # Dedup check
+        existing = session.execute(
+            select(Memory.id).where(
+                Memory.content_hash == c_hash,
+                Memory.namespace == namespace,
+            )
+        ).scalar_one_or_none()
+        if existing:
+            return existing
 
-    mem_id = str(uuid.uuid4())
-    now = _now_iso()
+        mem_id = str(uuid.uuid4())
+        now = _now_iso()
 
-    # Secret detection (flag, never block)
-    meta: Dict[str, Any] = {"tags": tags}
-    secret_findings = scan_for_secrets(content)
-    if secret_findings:
-        meta["secret_findings"] = secret_findings
+        # Secret detection (flag, never block)
+        meta: Dict[str, Any] = {"tags": tags}
+        secret_findings = scan_for_secrets(content)
+        if secret_findings:
+            meta["secret_findings"] = secret_findings
 
-    if extra_meta:
-        meta.update(extra_meta)
+        if extra_meta:
+            meta.update(extra_meta)
 
-    conn.execute(
-        "INSERT INTO memories (id, content, memory_type, namespace, branch, importance, "
-        "created_at, status, content_hash, meta) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)",
-        (mem_id, content, memory_type, namespace, branch, importance, now, c_hash,
-         json.dumps(meta)),
-    )
+        memory = Memory(
+            id=mem_id,
+            content=content,
+            memory_type=memory_type,
+            namespace=namespace,
+            branch=branch,
+            importance=importance,
+            created_at=now,
+            status="active",
+            content_hash=c_hash,
+            meta=json.dumps(meta),
+        )
+        session.add(memory)
+        session.flush()
 
-    # Get rowid for FTS5
-    cursor = conn.execute("SELECT rowid FROM memories WHERE id = ?", (mem_id,))
-    rowid = cursor.fetchone()[0]
+        # Get rowid for FTS5 (rowid is assigned by SQLite, need to query it)
+        rowid = session.execute(
+            text("SELECT rowid FROM memories WHERE id = :mem_id"),
+            {"mem_id": mem_id},
+        ).scalar_one()
 
-    # Insert into FTS5 (standalone table -- must be kept in sync manually)
-    citation_paths = " ".join(c.get("file_path", "") for c in citations)
-    conn.execute(
-        "INSERT INTO memories_fts (rowid, content, tags, citations) VALUES (?, ?, ?, ?)",
-        (rowid, content, " ".join(tags), citation_paths),
-    )
-
-    # Insert citations
-    for cit in citations:
-        insert_citation(
-            db_path, mem_id,
-            cit["file_path"],
-            cit.get("line_range"),
-            cit.get("snippet"),
+        # Insert into FTS5 (standalone table -- must be kept in sync manually)
+        citation_paths = " ".join(c.get("file_path", "") for c in citations)
+        session.execute(
+            text(
+                "INSERT INTO memories_fts (rowid, content, tags, citations) "
+                "VALUES (:rowid, :content, :tags, :citations)"
+            ),
+            {
+                "rowid": rowid,
+                "content": content,
+                "tags": " ".join(tags),
+                "citations": citation_paths,
+            },
         )
 
-    # Populate junction table with origin association
-    if branch:
-        conn.execute(
-            "INSERT OR IGNORE INTO memory_branches "
-            "(memory_id, branch_name, association_type, created_at) "
-            "VALUES (?, ?, 'origin', ?)",
-            (mem_id, branch, now),
-        )
+        # Insert citations
+        for cit in citations:
+            _insert_citation_in_session(
+                session, mem_id,
+                cit["file_path"],
+                cit.get("line_range"),
+                cit.get("snippet"),
+            )
 
-    conn.commit()
+        # Populate junction table with origin association
+        if branch:
+            branch_assoc = MemoryBranch(
+                memory_id=mem_id,
+                branch_name=branch,
+                association_type="origin",
+                created_at=now,
+            )
+            session.merge(branch_assoc)
+
+    # Audit log after successful commit (separate transaction)
     log_audit(db_path, "create", mem_id, {"memory_type": memory_type})
     return mem_id
 
 
 def get_memory(db_path: str, memory_id: str) -> Optional[Dict[str, Any]]:
     """Get a single memory by ID, including its citations. Returns None if not found."""
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT id, content, memory_type, namespace, branch, importance, created_at, "
-        "accessed_at, status, deleted_at, content_hash, meta "
-        "FROM memories WHERE id = ?",
-        (memory_id,),
-    )
-    row = cursor.fetchone()
-    if row is None:
-        return None
+    with get_sync_session(db_path) as session:
+        memory = session.get(Memory, memory_id)
+        if memory is None:
+            return None
 
-    mem = {
-        "id": row[0], "content": row[1], "memory_type": row[2],
-        "namespace": row[3], "branch": row[4], "importance": row[5],
-        "created_at": row[6], "accessed_at": row[7], "status": row[8],
-        "deleted_at": row[9], "content_hash": row[10], "meta": row[11],
-    }
+        mem = {
+            "id": memory.id,
+            "content": memory.content,
+            "memory_type": memory.memory_type,
+            "namespace": memory.namespace,
+            "branch": memory.branch,
+            "importance": memory.importance,
+            "created_at": memory.created_at,
+            "accessed_at": memory.accessed_at,
+            "status": memory.status,
+            "deleted_at": memory.deleted_at,
+            "content_hash": memory.content_hash,
+            "meta": memory.meta,
+        }
 
-    # Fetch citations
-    cit_cursor = conn.execute(
-        "SELECT file_path, line_range, content_snippet FROM memory_citations "
-        "WHERE memory_id = ?",
-        (memory_id,),
-    )
-    mem["citations"] = [
-        {"file_path": r[0], "line_range": r[1], "snippet": r[2]}
-        for r in cit_cursor.fetchall()
-    ]
-    return mem
+        # Fetch citations
+        cit_rows = session.execute(
+            select(
+                MemoryCitation.file_path,
+                MemoryCitation.line_range,
+                MemoryCitation.content_snippet,
+            ).where(MemoryCitation.memory_id == memory_id)
+        ).all()
+        mem["citations"] = [
+            {"file_path": r[0], "line_range": r[1], "snippet": r[2]}
+            for r in cit_rows
+        ]
+        return mem
 
 
 def soft_delete_memory(db_path: str, memory_id: str) -> None:
     """Soft-delete a memory (set status='deleted', deleted_at=now).
     Also removes from FTS5 index."""
-    conn = get_connection(db_path)
     now = _now_iso()
 
-    # Get rowid for FTS5 cleanup
-    cursor = conn.execute("SELECT rowid FROM memories WHERE id = ?", (memory_id,))
-    row = cursor.fetchone()
-    if row:
-        conn.execute(
-            "DELETE FROM memories_fts WHERE rowid = ?", (row[0],)
-        )
+    with get_sync_session(db_path) as session:
+        # Get rowid for FTS5 cleanup
+        rowid = session.execute(
+            text("SELECT rowid FROM memories WHERE id = :mem_id"),
+            {"mem_id": memory_id},
+        ).scalar_one_or_none()
 
-    conn.execute(
-        "UPDATE memories SET status = 'deleted', deleted_at = ? WHERE id = ?",
-        (now, memory_id),
-    )
-    conn.commit()
+        if rowid is not None:
+            session.execute(
+                text("DELETE FROM memories_fts WHERE rowid = :rowid"),
+                {"rowid": rowid},
+            )
+
+        memory = session.get(Memory, memory_id)
+        if memory is not None:
+            memory.status = "deleted"
+            memory.deleted_at = now
+
     log_audit(db_path, "delete", memory_id, {"soft": True})
 
 
@@ -171,16 +238,12 @@ def insert_citation(
 ) -> None:
     """Insert a citation for a memory. Ignores duplicates.
 
-    Note: Does NOT commit. The caller (insert_memory or consolidate_batch)
-    manages the transaction boundary. This prevents partial citation state
-    on crash and reduces I/O from per-citation commits.
+    Note: Uses its own session and commits on completion.
+    When called from insert_memory, the internal _insert_citation_in_session
+    helper is used instead to share the parent transaction.
     """
-    conn = get_connection(db_path)
-    conn.execute(
-        "INSERT OR IGNORE INTO memory_citations (memory_id, file_path, line_range, content_snippet) "
-        "VALUES (?, ?, ?, ?)",
-        (memory_id, file_path, line_range, snippet),
-    )
+    with get_sync_session(db_path) as session:
+        _insert_citation_in_session(session, memory_id, file_path, line_range, snippet)
 
 
 def insert_link(
@@ -191,18 +254,22 @@ def insert_link(
     weight: float = 1.0,
 ) -> None:
     """Insert or update a link between two memories."""
-    conn = get_connection(db_path)
     now = _now_iso()
     # Normalize order for consistency
     a, b = (memory_a, memory_b) if memory_a < memory_b else (memory_b, memory_a)
-    conn.execute(
-        "INSERT INTO memory_links (memory_a, memory_b, link_type, weight, last_seen) "
-        "VALUES (?, ?, ?, ?, ?) "
-        "ON CONFLICT(memory_a, memory_b, link_type) DO UPDATE SET "
-        "weight = excluded.weight, last_seen = excluded.last_seen",
-        (a, b, link_type, weight, now),
-    )
-    conn.commit()
+
+    with get_sync_session(db_path) as session:
+        # Use text() for ON CONFLICT upsert since ORM merge doesn't support
+        # the DO UPDATE SET pattern needed here
+        session.execute(
+            text(
+                "INSERT INTO memory_links (memory_a, memory_b, link_type, weight, last_seen) "
+                "VALUES (:a, :b, :link_type, :weight, :now) "
+                "ON CONFLICT(memory_a, memory_b, link_type) DO UPDATE SET "
+                "weight = excluded.weight, last_seen = excluded.last_seen"
+            ),
+            {"a": a, "b": b, "link_type": link_type, "weight": weight, "now": now},
+        )
 
 
 def log_raw_event(
@@ -217,15 +284,24 @@ def log_raw_event(
     branch: str = "",
 ) -> int:
     """Log a raw observation event. Returns the event ID."""
-    conn = get_connection(db_path)
     now = _now_iso()
-    cursor = conn.execute(
-        "INSERT INTO raw_events (session_id, timestamp, project, event_type, "
-        "tool_name, subject, summary, tags, branch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (session_id, now, project, event_type, tool_name, subject, summary, tags, branch),
-    )
-    conn.commit()
-    return cursor.lastrowid
+
+    with get_sync_session(db_path) as session:
+        event = RawEvent(
+            session_id=session_id,
+            timestamp=now,
+            project=project,
+            event_type=event_type,
+            tool_name=tool_name,
+            subject=subject,
+            summary=summary,
+            tags=tags,
+            branch=branch,
+            consolidated=0,
+        )
+        session.add(event)
+        session.flush()
+        return event.id
 
 
 def get_unconsolidated_events(
@@ -234,29 +310,22 @@ def get_unconsolidated_events(
     namespace: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Get unconsolidated raw events, optionally filtered by namespace (project)."""
-    conn = get_connection(db_path)
-    if namespace:
-        cursor = conn.execute(
-            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags, branch FROM raw_events "
-            "WHERE consolidated = 0 AND project = ? ORDER BY id ASC LIMIT ?",
-            (namespace, limit),
-        )
-    else:
-        cursor = conn.execute(
-            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags, branch FROM raw_events "
-            "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
-            (limit,),
-        )
-    return [
-        {
-            "id": r[0], "session_id": r[1], "timestamp": r[2],
-            "project": r[3], "event_type": r[4], "tool_name": r[5],
-            "subject": r[6], "summary": r[7], "tags": r[8], "branch": r[9],
-        }
-        for r in cursor.fetchall()
-    ]
+    with get_sync_session(db_path) as session:
+        stmt = select(RawEvent).where(RawEvent.consolidated == 0)
+        if namespace:
+            stmt = stmt.where(RawEvent.project == namespace)
+        stmt = stmt.order_by(RawEvent.id.asc()).limit(limit)
+
+        rows = session.execute(stmt).scalars().all()
+        return [
+            {
+                "id": r.id, "session_id": r.session_id, "timestamp": r.timestamp,
+                "project": r.project, "event_type": r.event_type,
+                "tool_name": r.tool_name, "subject": r.subject,
+                "summary": r.summary, "tags": r.tags, "branch": r.branch,
+            }
+            for r in rows
+        ]
 
 
 def get_recently_consolidated_events(
@@ -269,31 +338,28 @@ def get_recently_consolidated_events(
     Used by memory_get_unconsolidated with include_consolidated=True
     to allow client re-synthesis of recently consolidated events.
     """
-    conn = get_connection(db_path)
-    if namespace:
-        cursor = conn.execute(
+    with get_sync_session(db_path) as session:
+        # Use text() for SQLite datetime function
+        stmt = text(
             "SELECT id, session_id, timestamp, project, event_type, tool_name, "
             "subject, summary, tags, branch FROM raw_events "
             "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
-            "AND project = ? ORDER BY id ASC LIMIT ?",
-            (namespace, limit),
+            + ("AND project = :namespace " if namespace else "")
+            + "ORDER BY id ASC LIMIT :limit"
         )
-    else:
-        cursor = conn.execute(
-            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags, branch FROM raw_events "
-            "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
-            "ORDER BY id ASC LIMIT ?",
-            (limit,),
-        )
-    return [
-        {
-            "id": r[0], "session_id": r[1], "timestamp": r[2],
-            "project": r[3], "event_type": r[4], "tool_name": r[5],
-            "subject": r[6], "summary": r[7], "tags": r[8], "branch": r[9],
-        }
-        for r in cursor.fetchall()
-    ]
+        params: Dict[str, Any] = {"limit": limit}
+        if namespace:
+            params["namespace"] = namespace
+
+        rows = session.execute(stmt, params).all()
+        return [
+            {
+                "id": r[0], "session_id": r[1], "timestamp": r[2],
+                "project": r[3], "event_type": r[4], "tool_name": r[5],
+                "subject": r[6], "summary": r[7], "tags": r[8], "branch": r[9],
+            }
+            for r in rows
+        ]
 
 
 def mark_events_consolidated(
@@ -314,20 +380,24 @@ def mark_events_consolidated(
     """
     if not event_ids:
         return 0
-    conn = get_connection(db_path)
-    placeholders = ",".join("?" for _ in event_ids)
-    params: list = [batch_id]
-    query = (
-        f"UPDATE raw_events SET consolidated = 1, batch_id = ? "
-        f"WHERE id IN ({placeholders})"
-    )
-    params.extend(event_ids)
-    if namespace:
-        query += " AND project = ?"
-        params.append(namespace)
-    cursor = conn.execute(query, params)
-    conn.commit()
-    return cursor.rowcount
+
+    with get_sync_session(db_path) as session:
+        # Build parameterized IN clause for dynamic event_ids list
+        placeholders = ", ".join(f":id_{i}" for i in range(len(event_ids)))
+        query = (
+            f"UPDATE raw_events SET consolidated = 1, batch_id = :batch_id "
+            f"WHERE id IN ({placeholders})"
+        )
+        params: Dict[str, Any] = {"batch_id": batch_id}
+        for i, eid in enumerate(event_ids):
+            params[f"id_{i}"] = eid
+
+        if namespace:
+            query += " AND project = :namespace"
+            params["namespace"] = namespace
+
+        result = session.execute(text(query), params)
+        return result.rowcount
 
 
 def _apply_branch_scoring(
@@ -381,31 +451,36 @@ def recall_by_file_path(
     1. SQL phase: over-fetch candidates with base score (no branch multiplier)
     2. Python phase: apply ancestry-aware branch multiplier, re-sort, truncate
     """
-    conn = get_connection(db_path)
     fetch_limit = limit * 2 if branch else limit
 
-    cursor = conn.execute(
-        "SELECT m.id, m.content, m.memory_type, m.importance, m.status, m.meta, "
-        "m.created_at, m.accessed_at, m.branch, "
-        "m.importance * "
-        "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
-        "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
-        "FROM memories m "
-        "JOIN memory_citations mc ON m.id = mc.memory_id "
-        "WHERE mc.file_path = ? AND m.namespace = ? AND m.status != 'deleted' "
-        "ORDER BY _score DESC "
-        "LIMIT ?",
-        (file_path, namespace, fetch_limit),
-    )
-    results = [
-        {
-            "id": r[0], "content": r[1], "memory_type": r[2],
-            "importance": r[3], "status": r[4], "meta": r[5],
-            "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-            "_score": r[9],
-        }
-        for r in cursor.fetchall()
-    ]
+    with get_sync_session(db_path) as session:
+        # Use text() for SQLite-specific functions (julianday, exp)
+        rows = session.execute(
+            text(
+                "SELECT m.id, m.content, m.memory_type, m.importance, m.status, m.meta, "
+                "m.created_at, m.accessed_at, m.branch, "
+                "m.importance * "
+                "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
+                "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
+                "FROM memories m "
+                "JOIN memory_citations mc ON m.id = mc.memory_id "
+                "WHERE mc.file_path = :file_path AND m.namespace = :namespace "
+                "AND m.status != 'deleted' "
+                "ORDER BY _score DESC "
+                "LIMIT :limit"
+            ),
+            {"file_path": file_path, "namespace": namespace, "limit": fetch_limit},
+        ).all()
+
+        results = [
+            {
+                "id": r[0], "content": r[1], "memory_type": r[2],
+                "importance": r[3], "status": r[4], "meta": r[5],
+                "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                "_score": r[9],
+            }
+            for r in rows
+        ]
 
     if not branch or not repo_path:
         for r in results:
@@ -433,52 +508,61 @@ def recall_by_query(
 
     Escapes user input by wrapping in double-quotes to prevent FTS5 operator injection.
     """
-    conn = get_connection(db_path)
     fetch_limit = limit * 2 if branch else limit
 
-    if not query.strip():
-        cursor = conn.execute(
-            "SELECT id, content, memory_type, importance, status, meta, "
-            "created_at, accessed_at, branch "
-            "FROM memories WHERE namespace = ? AND status = 'active' "
-            "ORDER BY importance DESC, created_at DESC LIMIT ?",
-            (namespace, fetch_limit),
-        )
-        results = [
-            {
-                "id": r[0], "content": r[1], "memory_type": r[2],
-                "importance": r[3], "status": r[4], "meta": r[5],
-                "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-                "_score": r[3],  # importance as base score for empty query
-            }
-            for r in cursor.fetchall()
-        ]
-    else:
-        # Escape user input: wrap in double-quotes to force phrase matching
-        # and prevent FTS5 operator injection (e.g., OR, AND, NOT, NEAR).
-        safe_query = '"' + query.replace('"', '""') + '"'
-        cursor = conn.execute(
-            "SELECT m.id, m.content, m.memory_type, m.importance, m.status, "
-            "m.meta, m.created_at, m.accessed_at, m.branch, "
-            "(-bm25(memories_fts, 5.0, 2.0, 1.0)) * m.importance * "
-            "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
-            "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
-            "FROM memories_fts fts "
-            "JOIN memories m ON m.rowid = fts.rowid "
-            "WHERE memories_fts MATCH ? AND m.namespace = ? AND m.status != 'deleted' "
-            "ORDER BY _score DESC "
-            "LIMIT ?",
-            (safe_query, namespace, fetch_limit),
-        )
-        results = [
-            {
-                "id": r[0], "content": r[1], "memory_type": r[2],
-                "importance": r[3], "status": r[4], "meta": r[5],
-                "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-                "_score": r[9],
-            }
-            for r in cursor.fetchall()
-        ]
+    with get_sync_session(db_path) as session:
+        if not query.strip():
+            rows = session.execute(
+                select(
+                    Memory.id, Memory.content, Memory.memory_type,
+                    Memory.importance, Memory.status, Memory.meta,
+                    Memory.created_at, Memory.accessed_at, Memory.branch,
+                ).where(
+                    Memory.namespace == namespace,
+                    Memory.status == "active",
+                ).order_by(
+                    Memory.importance.desc(),
+                    Memory.created_at.desc(),
+                ).limit(fetch_limit)
+            ).all()
+            results = [
+                {
+                    "id": r[0], "content": r[1], "memory_type": r[2],
+                    "importance": r[3], "status": r[4], "meta": r[5],
+                    "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                    "_score": r[3],  # importance as base score for empty query
+                }
+                for r in rows
+            ]
+        else:
+            # Escape user input: wrap in double-quotes to force phrase matching
+            # and prevent FTS5 operator injection (e.g., OR, AND, NOT, NEAR).
+            safe_query = '"' + query.replace('"', '""') + '"'
+            rows = session.execute(
+                text(
+                    "SELECT m.id, m.content, m.memory_type, m.importance, m.status, "
+                    "m.meta, m.created_at, m.accessed_at, m.branch, "
+                    "(-bm25(memories_fts, 5.0, 2.0, 1.0)) * m.importance * "
+                    "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
+                    "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
+                    "FROM memories_fts fts "
+                    "JOIN memories m ON m.rowid = fts.rowid "
+                    "WHERE memories_fts MATCH :query AND m.namespace = :namespace "
+                    "AND m.status != 'deleted' "
+                    "ORDER BY _score DESC "
+                    "LIMIT :limit"
+                ),
+                {"query": safe_query, "namespace": namespace, "limit": fetch_limit},
+            ).all()
+            results = [
+                {
+                    "id": r[0], "content": r[1], "memory_type": r[2],
+                    "importance": r[3], "status": r[4], "meta": r[5],
+                    "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                    "_score": r[9],
+                }
+                for r in rows
+            ]
 
     if not branch or not repo_path:
         # Strip internal score before returning
@@ -492,39 +576,65 @@ def recall_by_query(
 
 def update_access(db_path: str, memory_id: str) -> None:
     """Update accessed_at and increment importance by +0.1 (capped at 10.0)."""
-    conn = get_connection(db_path)
     now = _now_iso()
-    conn.execute(
-        "UPDATE memories SET accessed_at = ?, "
-        "importance = MIN(importance + 0.1, 10.0) "
-        "WHERE id = ?",
-        (now, memory_id),
-    )
-    conn.commit()
+
+    with get_sync_session(db_path) as session:
+        # Use text() for SQLite MIN function in UPDATE
+        session.execute(
+            text(
+                "UPDATE memories SET accessed_at = :now, "
+                "importance = MIN(importance + 0.1, 10.0) "
+                "WHERE id = :mem_id"
+            ),
+            {"now": now, "mem_id": memory_id},
+        )
 
 
 def purge_deleted(db_path: str, retention_days: int = 30) -> int:
     """Hard-delete memories that were soft-deleted more than retention_days ago.
     Returns count of purged memories."""
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT id FROM memories WHERE status = 'deleted' "
-        "AND deleted_at < datetime('now', ? || ' days')",
-        (f"-{retention_days}",),
-    )
-    ids = [r[0] for r in cursor.fetchall()]
-    if not ids:
-        return 0
+    with get_sync_session(db_path) as session:
+        # Use text() for SQLite datetime arithmetic
+        rows = session.execute(
+            text(
+                "SELECT id FROM memories WHERE status = 'deleted' "
+                "AND deleted_at < datetime('now', :offset || ' days')"
+            ),
+            {"offset": f"-{retention_days}"},
+        ).all()
+        ids = [r[0] for r in rows]
+        if not ids:
+            return 0
 
-    placeholders = ",".join("?" for _ in ids)
-    conn.execute(f"DELETE FROM memory_citations WHERE memory_id IN ({placeholders})", ids)
-    conn.execute(
-        f"DELETE FROM memory_links WHERE memory_a IN ({placeholders}) OR memory_b IN ({placeholders})",
-        ids + ids,
-    )
-    conn.execute(f"DELETE FROM memory_branches WHERE memory_id IN ({placeholders})", ids)
-    conn.execute(f"DELETE FROM memories WHERE id IN ({placeholders})", ids)
-    conn.commit()
+        # Build parameterized IN clause
+        placeholders = ", ".join(f":id_{i}" for i in range(len(ids)))
+        id_params = {f"id_{i}": mid for i, mid in enumerate(ids)}
+
+        session.execute(
+            text(f"DELETE FROM memory_citations WHERE memory_id IN ({placeholders})"),
+            id_params,
+        )
+        # memory_links needs both memory_a and memory_b checked
+        # Build separate params for both sides to avoid ambiguity
+        a_params = {f"a_{i}": mid for i, mid in enumerate(ids)}
+        b_params = {f"b_{i}": mid for i, mid in enumerate(ids)}
+        a_placeholders = ", ".join(f":a_{i}" for i in range(len(ids)))
+        b_placeholders = ", ".join(f":b_{i}" for i in range(len(ids)))
+        session.execute(
+            text(
+                f"DELETE FROM memory_links WHERE memory_a IN ({a_placeholders}) "
+                f"OR memory_b IN ({b_placeholders})"
+            ),
+            {**a_params, **b_params},
+        )
+        session.execute(
+            text(f"DELETE FROM memory_branches WHERE memory_id IN ({placeholders})"),
+            id_params,
+        )
+        session.execute(
+            text(f"DELETE FROM memories WHERE id IN ({placeholders})"),
+            id_params,
+        )
 
     for mid in ids:
         log_audit(db_path, "purge", mid, {"retention_days": retention_days})
@@ -538,14 +648,16 @@ def log_audit(
     details: Optional[Dict] = None,
 ) -> None:
     """Write an entry to the memory audit log."""
-    conn = get_connection(db_path)
     now = _now_iso()
-    conn.execute(
-        "INSERT INTO memory_audit_log (timestamp, action, memory_id, details) "
-        "VALUES (?, ?, ?, ?)",
-        (now, action, memory_id, json.dumps(details) if details else None),
-    )
-    conn.commit()
+
+    with get_sync_session(db_path) as session:
+        audit = MemoryAuditLog(
+            timestamp=now,
+            action=action,
+            memory_id=memory_id,
+            details=json.dumps(details) if details else None,
+        )
+        session.add(audit)
 
 
 def insert_branch_association(
@@ -555,28 +667,38 @@ def insert_branch_association(
     association_type: str = "origin",
 ) -> None:
     """Insert a branch association for a memory. Idempotent (ignores duplicates)."""
-    conn = get_connection(db_path)
     now = _now_iso()
-    conn.execute(
-        "INSERT OR IGNORE INTO memory_branches "
-        "(memory_id, branch_name, association_type, created_at) "
-        "VALUES (?, ?, ?, ?)",
-        (memory_id, branch_name, association_type, now),
-    )
-    conn.commit()
+
+    with get_sync_session(db_path) as session:
+        # Use text() for INSERT OR IGNORE since ORM doesn't support it directly
+        session.execute(
+            text(
+                "INSERT OR IGNORE INTO memory_branches "
+                "(memory_id, branch_name, association_type, created_at) "
+                "VALUES (:memory_id, :branch_name, :association_type, :created_at)"
+            ),
+            {
+                "memory_id": memory_id,
+                "branch_name": branch_name,
+                "association_type": association_type,
+                "created_at": now,
+            },
+        )
 
 
 def get_branch_associations(
     db_path: str, memory_id: str
 ) -> List[Dict[str, str]]:
     """Get all branch associations for a memory."""
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT branch_name, association_type, created_at "
-        "FROM memory_branches WHERE memory_id = ?",
-        (memory_id,),
-    )
-    return [
-        {"branch": r[0], "type": r[1], "created_at": r[2]}
-        for r in cursor.fetchall()
-    ]
+    with get_sync_session(db_path) as session:
+        rows = session.execute(
+            select(
+                MemoryBranch.branch_name,
+                MemoryBranch.association_type,
+                MemoryBranch.created_at,
+            ).where(MemoryBranch.memory_id == memory_id)
+        ).all()
+        return [
+            {"branch": r[0], "type": r[1], "created_at": r[2]}
+            for r in rows
+        ]

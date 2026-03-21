@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { fetchApi } from '../api/client'
-import type { SecurityEventListResponse, SecurityDashboardResponse } from '../api/types'
+import type { ListResponse, SecurityDashboardResponse, SecurityEvent } from '../api/types'
 
 interface SecurityEventsParams {
   severity?: string
@@ -14,7 +14,7 @@ interface SecurityEventsParams {
 export function useSecurityEvents(params: SecurityEventsParams) {
   return useQuery({
     queryKey: ['security-events', params],
-    queryFn: () => fetchApi<SecurityEventListResponse>('/api/security/events', { params: params as Record<string, string | number | undefined> }),
+    queryFn: () => fetchApi<ListResponse<SecurityEvent>>('/api/security/events', { params: params as Record<string, string | number | undefined> }),
     placeholderData: keepPreviousData,
   })
 }

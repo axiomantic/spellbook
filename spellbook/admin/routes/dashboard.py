@@ -2,19 +2,24 @@
 
 import asyncio
 import time
+from datetime import datetime, timedelta, timezone
 from importlib.metadata import version as pkg_version
 from pathlib import Path
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 
 from spellbook.admin.auth import require_admin_auth
-from spellbook.admin.db import (
-    query_spellbook_db,
-    query_fractal_db,
-    query_coordination_db,
-)
 from spellbook.admin.events import event_bus
 from spellbook.admin.routes.schemas import DashboardResponse
+from spellbook.db import (
+    get_coordination_session,
+    get_fractal_session,
+    get_spellbook_session,
+)
+from spellbook.db.coordination_models import Swarm
+from spellbook.db.fractal_models import FractalGraph
+from spellbook.db.spellbook_models import Experiment, Memory, SecurityEvent
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -52,6 +57,84 @@ def _count_session_files() -> int:
     return count
 
 
+async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
+    """Query spellbook.db for dashboard counts and recent activity.
+
+    Returns (memories_count, security_count, experiments_count,
+             recent_security_events, recent_memories).
+    """
+    async with get_spellbook_session() as session:
+        # Count active memories
+        result = await session.execute(
+            select(func.count()).select_from(Memory).where(
+                Memory.status == "active"
+            )
+        )
+        memories_count = result.scalar_one()
+
+        # Count security events in last 24 hours
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
+        result = await session.execute(
+            select(func.count()).select_from(SecurityEvent).where(
+                SecurityEvent.created_at > cutoff_str
+            )
+        )
+        security_count = result.scalar_one()
+
+        # Count running/paused experiments
+        result = await session.execute(
+            select(func.count()).select_from(Experiment).where(
+                Experiment.status.in_(["running", "paused"])
+            )
+        )
+        experiments_count = result.scalar_one()
+
+        # Recent security events
+        result = await session.execute(
+            select(SecurityEvent)
+            .order_by(SecurityEvent.created_at.desc())
+            .limit(20)
+        )
+        recent_security = list(result.scalars().all())
+
+        # Recent memories
+        result = await session.execute(
+            select(Memory)
+            .order_by(Memory.created_at.desc())
+            .limit(20)
+        )
+        recent_memories = list(result.scalars().all())
+
+    return (
+        memories_count,
+        security_count,
+        experiments_count,
+        recent_security,
+        recent_memories,
+    )
+
+
+async def _query_coordination_counts() -> int:
+    """Query coordination.db for running swarm count."""
+    async with get_coordination_session() as session:
+        result = await session.execute(
+            select(func.count()).select_from(Swarm).where(
+                Swarm.status == "running"
+            )
+        )
+        return result.scalar_one()
+
+
+async def _query_fractal_counts() -> int:
+    """Query fractal.db for total graph count."""
+    async with get_fractal_session() as session:
+        result = await session.execute(
+            select(func.count()).select_from(FractalGraph)
+        )
+        return result.scalar_one()
+
+
 async def get_dashboard_data() -> dict:
     """Gather dashboard data from all databases in parallel."""
     version = pkg_version("spellbook")
@@ -60,61 +143,65 @@ async def get_dashboard_data() -> dict:
     # plus filesystem scan for session count (matches Sessions page data source)
     (
         session_count,
-        memories_result,
-        security_result,
-        experiments_result,
-        recent_security,
-        recent_memories,
+        spellbook_result,
         swarms_result,
         graphs_result,
     ) = await asyncio.gather(
         asyncio.to_thread(_count_session_files),
-        query_spellbook_db(
-            "SELECT COUNT(*) as cnt FROM memories WHERE status = 'active'"
-        ),
-        query_spellbook_db(
-            "SELECT COUNT(*) as cnt FROM security_events "
-            "WHERE created_at > datetime('now', '-24 hours')"
-        ),
-        query_spellbook_db(
-            "SELECT COUNT(*) as cnt FROM experiments "
-            "WHERE status IN ('running', 'paused')"
-        ),
-        query_spellbook_db(
-            "SELECT event_type as type, created_at as timestamp, "
-            "COALESCE(detail, event_type) as summary FROM security_events "
-            "ORDER BY created_at DESC LIMIT 20"
-        ),
-        query_spellbook_db(
-            "SELECT 'memory_created' as type, created_at as timestamp, "
-            "SUBSTR(content, 1, 80) as summary FROM memories "
-            "ORDER BY created_at DESC LIMIT 20"
-        ),
-        query_coordination_db(
-            "SELECT COUNT(*) as cnt FROM swarms WHERE status = 'running'"
-        ),
-        query_fractal_db("SELECT COUNT(*) as cnt FROM graphs"),
+        _query_spellbook_counts(),
+        _query_coordination_counts(),
+        _query_fractal_counts(),
         return_exceptions=True,
     )
 
-    def safe_count(result: object, default: int = 0) -> int:
-        if isinstance(result, Exception) or not result:
-            return default
-        return result[0].get("cnt", default)
+    # Unpack spellbook results (or defaults on error)
+    if isinstance(spellbook_result, Exception):
+        memories_count = 0
+        security_count = 0
+        experiments_count = 0
+        recent_security_events: list = []
+        recent_memories: list = []
+    else:
+        (
+            memories_count,
+            security_count,
+            experiments_count,
+            recent_security_events,
+            recent_memories,
+        ) = spellbook_result
 
-    def safe_list(result: object) -> list:
-        if isinstance(result, Exception) or not result:
-            return []
-        return result
+    # Transform ORM objects to activity dicts
+    security_activity = [
+        {
+            "type": ev.event_type,
+            "timestamp": ev.created_at,
+            "summary": ev.detail if ev.detail else ev.event_type,
+        }
+        for ev in recent_security_events
+    ]
+    memory_activity = [
+        {
+            "type": "memory_created",
+            "timestamp": mem.created_at,
+            "summary": mem.content[:80],
+        }
+        for mem in recent_memories
+    ]
 
     # Merge and sort recent activity by timestamp descending
     activity = sorted(
-        safe_list(recent_security) + safe_list(recent_memories),
+        security_activity + memory_activity,
         key=lambda x: x.get("timestamp", ""),
         reverse=True,
     )[:20]
 
     db_size = _get_db_size()
+
+    def safe_int(value: object, default: int = 0) -> int:
+        """Extract an int result, defaulting on exception."""
+        if isinstance(value, Exception):
+            return default
+        return value
 
     return {
         "health": {
@@ -126,12 +213,12 @@ async def get_dashboard_data() -> dict:
             "event_bus_dropped_events": event_bus.total_dropped_events,
         },
         "counts": {
-            "active_sessions": session_count if not isinstance(session_count, Exception) else 0,
-            "total_memories": safe_count(memories_result),
-            "security_events_24h": safe_count(security_result),
-            "running_swarms": safe_count(swarms_result),
-            "open_experiments": safe_count(experiments_result),
-            "fractal_graphs": safe_count(graphs_result),
+            "active_sessions": safe_int(session_count),
+            "total_memories": memories_count,
+            "security_events_24h": security_count,
+            "running_swarms": safe_int(swarms_result),
+            "open_experiments": experiments_count,
+            "fractal_graphs": safe_int(graphs_result),
         },
         "recent_activity": activity,
     }

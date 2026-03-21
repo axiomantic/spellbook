@@ -3,6 +3,10 @@
 Provides listing with FTS5 search, namespace/type/status filtering,
 pagination, detail view with citations, update, soft delete,
 consolidation trigger, namespace listing, and stats.
+
+Uses SQLAlchemy ORM for all database access. FTS5 queries use the
+text() escape hatch within ORM sessions (FTS5 virtual tables cannot
+be mapped to ORM models).
 """
 
 import asyncio
@@ -10,16 +14,21 @@ import hashlib
 import json
 import logging
 import math
-import sqlite3
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy import func, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
-from spellbook.admin.db import execute_spellbook_db, query_spellbook_db
 from spellbook.admin.events import Event, Subsystem, event_bus
+from spellbook.admin.routes.list_helpers import build_list_response
 from spellbook.core.db import get_db_path
+from spellbook.db import spellbook_db
+from spellbook.db.helpers import apply_pagination, apply_sorting
+from spellbook.db.spellbook_models import Memory, MemoryCitation
 from spellbook.memory.consolidation import consolidate_batch
 
 logger = logging.getLogger(__name__)
@@ -29,6 +38,9 @@ router = APIRouter(prefix="/memories", tags=["memory"])
 # Module-level flag for consolidation lock
 _consolidation_running = False
 
+# Sort whitelist for list endpoint
+_SORT_WHITELIST = {"created_at", "importance", "namespace", "memory_type", "accessed_at", "content"}
+
 
 def _error_response(code: str, message: str, status: int, details: list | None = None) -> JSONResponse:
     """Return a standardized ErrorResponse."""
@@ -36,16 +48,6 @@ def _error_response(code: str, message: str, status: int, details: list | None =
     if details is not None:
         body["error"]["details"] = details
     return JSONResponse(body, status_code=status)
-
-
-def _parse_meta(meta_str: str | None) -> dict:
-    """Parse meta JSON string, returning empty dict on failure."""
-    if not meta_str:
-        return {}
-    try:
-        return json.loads(meta_str)
-    except (json.JSONDecodeError, TypeError):
-        return {}
 
 
 def _escape_fts_query(q: str) -> str:
@@ -65,129 +67,214 @@ async def list_memories(
     order: str = Query("desc", description="Sort order: asc or desc"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """List memories with optional FTS search, filters, and pagination."""
-    where_clauses = ["m.status != 'deleted'"]
-    params: list = []
-
-    # FTS search
-    fts_join = ""
+    # When FTS search is active, we must use raw SQL with text() because
+    # FTS5 virtual tables cannot be mapped to SQLAlchemy ORM models.
     if q:
-        fts_join = "JOIN memories_fts ON memories_fts.rowid = m.rowid"
-        where_clauses.append("memories_fts MATCH ?")
-        params.append(_escape_fts_query(q))
+        return await _list_memories_fts(
+            db, q, namespace, memory_type, status, branch,
+            sort, order, page, per_page,
+        )
 
-    # Filters
+    # ORM query path (no FTS)
+    query = select(Memory)
+
+    # Default: exclude deleted
+    if status:
+        query = query.where(Memory.status == status)
+    else:
+        query = query.where(Memory.status != "deleted")
+
     if namespace:
-        where_clauses.append("m.namespace = ?")
-        params.append(namespace)
+        query = query.where(Memory.namespace == namespace)
     if memory_type:
-        where_clauses.append("m.memory_type = ?")
-        params.append(memory_type)
+        query = query.where(Memory.memory_type == memory_type)
+    if branch:
+        query = query.where(Memory.branch == branch)
+
+    # Count
+    count_q = select(func.count()).select_from(query.subquery())
+    count_result = await db.execute(count_q)
+    total = count_result.scalar_one()
+
+    # Sort and paginate
+    query = apply_sorting(query, Memory, sort, order, _SORT_WHITELIST)
+    query = apply_pagination(query, page, per_page)
+
+    result = await db.execute(query)
+    memories = list(result.scalars().all())
+
+    # Build items with citation_count
+    items = []
+    for mem in memories:
+        d = mem.to_dict()
+        # Get citation count for this memory
+        cite_q = select(func.count(MemoryCitation.id)).where(
+            MemoryCitation.memory_id == mem.id
+        )
+        cite_result = await db.execute(cite_q)
+        d["citation_count"] = cite_result.scalar_one()
+        items.append(d)
+
+    return build_list_response(items, total, page, per_page)
+
+
+async def _list_memories_fts(
+    db: AsyncSession,
+    q: str,
+    namespace: Optional[str],
+    memory_type: Optional[str],
+    status: Optional[str],
+    branch: Optional[str],
+    sort: str,
+    order: str,
+    page: int,
+    per_page: int,
+):
+    """List memories with FTS5 search using text() escape hatch."""
+    fts_escaped = _escape_fts_query(q)
+
+    where_clauses = ["m.status != 'deleted'"]
+    params: dict = {"fts_query": fts_escaped}
+
     if status:
         where_clauses = [c for c in where_clauses if "m.status != 'deleted'" not in c]
-        where_clauses.append("m.status = ?")
-        params.append(status)
+        where_clauses.append("m.status = :status")
+        params["status"] = status
+    if namespace:
+        where_clauses.append("m.namespace = :namespace")
+        params["namespace"] = namespace
+    if memory_type:
+        where_clauses.append("m.memory_type = :memory_type")
+        params["memory_type"] = memory_type
     if branch:
-        where_clauses.append("m.branch = ?")
-        params.append(branch)
+        where_clauses.append("m.branch = :branch")
+        params["branch"] = branch
 
     where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
 
     # Validate sort column
-    allowed_sorts = {"created_at", "importance", "namespace", "memory_type", "accessed_at", "content"}
-    if sort not in allowed_sorts:
+    if sort not in _SORT_WHITELIST:
         sort = "created_at"
     sort_order = "ASC" if order.lower() == "asc" else "DESC"
 
     # Count query
-    count_sql = f"""
+    count_sql = text(f"""
         SELECT COUNT(*) as cnt FROM memories m
-        {fts_join}
+        JOIN memories_fts ON memories_fts.rowid = m.rowid
         WHERE {where_sql}
-    """
+        AND memories_fts MATCH :fts_query
+    """)
+
     try:
-        count_result = await query_spellbook_db(count_sql, tuple(params))
-    except sqlite3.OperationalError as e:
+        count_result = await db.execute(count_sql, params)
+        total = count_result.scalar_one()
+    except Exception as e:
         if "fts" in str(e).lower() or "malformed" in str(e).lower():
             return _error_response("INVALID_FTS_QUERY", str(e), 400)
         raise
 
-    total = count_result[0]["cnt"] if count_result else 0
     pages = max(1, math.ceil(total / per_page))
     offset = (page - 1) * per_page
 
-    # Data query with LEFT JOIN for citation_count
-    data_sql = f"""
+    # Data query
+    data_sql = text(f"""
         SELECT m.id, m.content, m.memory_type, m.namespace, m.branch,
                m.importance, m.created_at, m.accessed_at, m.status, m.meta,
+               m.deleted_at, m.content_hash,
                COUNT(mc.id) as citation_count
         FROM memories m
         LEFT JOIN memory_citations mc ON m.id = mc.memory_id
-        {fts_join}
+        JOIN memories_fts ON memories_fts.rowid = m.rowid
         WHERE {where_sql}
+        AND memories_fts MATCH :fts_query
         GROUP BY m.id
         ORDER BY m.{sort} {sort_order}
-        LIMIT ? OFFSET ?
-    """
-    data_params = list(params) + [per_page, offset]
+        LIMIT :limit OFFSET :offset
+    """)
+    data_params = {**params, "limit": per_page, "offset": offset}
 
     try:
-        rows = await query_spellbook_db(data_sql, tuple(data_params))
-    except sqlite3.OperationalError as e:
+        result = await db.execute(data_sql, data_params)
+        rows = result.mappings().all()
+    except Exception as e:
         if "fts" in str(e).lower() or "malformed" in str(e).lower():
             return _error_response("INVALID_FTS_QUERY", str(e), 400)
         raise
 
-    memories = []
+    items = []
     for row in rows:
-        mem = dict(row)
-        mem["meta"] = _parse_meta(mem.get("meta"))
-        memories.append(mem)
+        d = dict(row)
+        # Parse meta JSON
+        meta_str = d.get("meta")
+        if meta_str:
+            try:
+                d["meta"] = json.loads(meta_str)
+            except (json.JSONDecodeError, TypeError):
+                d["meta"] = {}
+        else:
+            d["meta"] = {}
+        items.append(d)
 
-    return {
-        "memories": memories,
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": pages,
-    }
+    return build_list_response(items, total, page, per_page)
 
 
 @router.get("/namespaces")
 async def list_namespaces(
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """List distinct memory namespaces."""
-    rows = await query_spellbook_db(
-        "SELECT DISTINCT namespace FROM memories WHERE status != 'deleted' ORDER BY namespace"
+    query = (
+        select(Memory)
+        .where(Memory.status != "deleted")
+        .order_by(Memory.namespace)
     )
-    return {"namespaces": [r["namespace"] for r in rows]}
+    result = await db.execute(query)
+    memories = result.scalars().all()
+    # Deduplicate namespaces preserving order
+    seen = set()
+    namespaces = []
+    for m in memories:
+        if m.namespace not in seen:
+            seen.add(m.namespace)
+            namespaces.append(m.namespace)
+    return {"namespaces": namespaces}
 
 
 @router.get("/stats")
 async def memory_stats(
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """Get aggregated memory statistics."""
-    total_result = await query_spellbook_db("SELECT COUNT(*) as cnt FROM memories")
-    total = total_result[0]["cnt"] if total_result else 0
+    # Total count
+    total_result = await db.execute(select(func.count(Memory.id)))
+    total = total_result.scalar_one()
 
-    by_type_rows = await query_spellbook_db(
-        "SELECT memory_type, COUNT(*) as cnt FROM memories GROUP BY memory_type"
+    # By type
+    by_type_result = await db.execute(
+        select(Memory.memory_type, func.count(Memory.id))
+        .group_by(Memory.memory_type)
     )
-    by_type = {r["memory_type"] or "unknown": r["cnt"] for r in by_type_rows}
+    by_type = {(mt or "unknown"): cnt for mt, cnt in by_type_result.all()}
 
-    by_status_rows = await query_spellbook_db(
-        "SELECT status, COUNT(*) as cnt FROM memories GROUP BY status"
+    # By status
+    by_status_result = await db.execute(
+        select(Memory.status, func.count(Memory.id))
+        .group_by(Memory.status)
     )
-    by_status = {r["status"]: r["cnt"] for r in by_status_rows}
+    by_status = {s: cnt for s, cnt in by_status_result.all()}
 
-    by_namespace_rows = await query_spellbook_db(
-        "SELECT namespace, COUNT(*) as cnt FROM memories GROUP BY namespace"
+    # By namespace
+    by_ns_result = await db.execute(
+        select(Memory.namespace, func.count(Memory.id))
+        .group_by(Memory.namespace)
     )
-    by_namespace = {r["namespace"]: r["cnt"] for r in by_namespace_rows}
+    by_namespace = {ns: cnt for ns, cnt in by_ns_result.all()}
 
     return {
         "total": total,
@@ -200,76 +287,72 @@ async def memory_stats(
 @router.get("/{memory_id}")
 async def get_memory(
     memory_id: str,
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """Get a single memory with full content and citations."""
-    rows = await query_spellbook_db(
-        """
-        SELECT m.id, m.content, m.memory_type, m.namespace, m.branch,
-               m.importance, m.created_at, m.accessed_at, m.status, m.meta,
-               COUNT(mc.id) as citation_count
-        FROM memories m
-        LEFT JOIN memory_citations mc ON m.id = mc.memory_id
-        WHERE m.id = ?
-        GROUP BY m.id
-        """,
-        (memory_id,),
+    result = await db.execute(
+        select(Memory).where(Memory.id == memory_id)
     )
-    if not rows:
+    mem = result.scalar_one_or_none()
+    if mem is None:
         return _error_response("MEMORY_NOT_FOUND", f"Memory '{memory_id}' not found", 404)
 
-    mem = dict(rows[0])
-    mem["meta"] = _parse_meta(mem.get("meta"))
+    d = mem.to_dict()
+
+    # Get citation count
+    cite_count_result = await db.execute(
+        select(func.count(MemoryCitation.id)).where(
+            MemoryCitation.memory_id == memory_id
+        )
+    )
+    d["citation_count"] = cite_count_result.scalar_one()
 
     # Fetch citations
-    citations = await query_spellbook_db(
-        "SELECT id, memory_id, file_path, line_range, content_snippet FROM memory_citations WHERE memory_id = ?",
-        (memory_id,),
+    citations_result = await db.execute(
+        select(MemoryCitation).where(MemoryCitation.memory_id == memory_id)
     )
-    mem["citations"] = citations
+    citations = citations_result.scalars().all()
+    d["citations"] = [c.to_dict() for c in citations]
 
-    return mem
+    return d
 
 
 @router.put("/{memory_id}")
 async def update_memory(
     memory_id: str,
     body: dict,
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """Update a memory's content, importance, or metadata."""
     # Verify memory exists
-    existing = await query_spellbook_db(
-        "SELECT id, content, status FROM memories WHERE id = ?", (memory_id,)
+    result = await db.execute(
+        select(Memory).where(Memory.id == memory_id)
     )
-    if not existing:
+    mem = result.scalar_one_or_none()
+    if mem is None:
         return _error_response("MEMORY_NOT_FOUND", f"Memory '{memory_id}' not found", 404)
 
-    # Build SET clauses
-    set_clauses = []
-    params: list = []
+    updated = False
 
     if "content" in body and body["content"] is not None:
-        set_clauses.append("content = ?")
-        params.append(body["content"])
-        # Update content_hash when content changes
-        set_clauses.append("content_hash = ?")
-        params.append(hashlib.sha256(body["content"].encode()).hexdigest())
+        mem.content = body["content"]
+        mem.content_hash = hashlib.sha256(body["content"].encode()).hexdigest()
+        updated = True
 
     if "importance" in body and body["importance"] is not None:
-        set_clauses.append("importance = ?")
-        params.append(body["importance"])
+        mem.importance = body["importance"]
+        updated = True
 
     if "meta" in body and body["meta"] is not None:
-        set_clauses.append("meta = ?")
-        params.append(json.dumps(body["meta"]))
+        mem.meta = json.dumps(body["meta"])
+        updated = True
 
-    if not set_clauses:
+    if not updated:
         return _error_response("INVALID_REQUEST", "No valid fields to update", 400)
 
-    params.append(memory_id)
-    sql = f"UPDATE memories SET {', '.join(set_clauses)} WHERE id = ?"
-    await execute_spellbook_db(sql, tuple(params))
+    await db.flush()
 
     # Publish event
     await event_bus.publish(
@@ -286,15 +369,20 @@ async def update_memory(
 @router.delete("/{memory_id}")
 async def delete_memory(
     memory_id: str,
+    db: AsyncSession = Depends(spellbook_db),
     _session: str = Depends(require_admin_auth),
 ):
     """Soft-delete a memory by setting status to 'deleted'."""
-    rows_affected = await execute_spellbook_db(
-        "UPDATE memories SET status = 'deleted', deleted_at = datetime('now') WHERE id = ? AND status != 'deleted'",
-        (memory_id,),
+    result = await db.execute(
+        select(Memory).where(Memory.id == memory_id)
     )
-    if rows_affected == 0:
+    mem = result.scalar_one_or_none()
+    if mem is None or mem.status == "deleted":
         return _error_response("MEMORY_NOT_FOUND", f"Memory '{memory_id}' not found", 404)
+
+    mem.status = "deleted"
+    mem.deleted_at = datetime.now(timezone.utc).isoformat()
+    await db.flush()
 
     # Publish event
     await event_bus.publish(

@@ -1,7 +1,9 @@
 """Pydantic models for admin API request/response schemas."""
 
 from pydantic import BaseModel, Field
-from typing import Optional, Any
+from typing import Generic, Optional, TypeVar, Any
+
+T = TypeVar("T")
 
 
 # --- Pagination ---
@@ -11,6 +13,20 @@ class PaginatedRequest(BaseModel):
 
 
 class PaginatedResponse(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+class ListResponse(BaseModel, Generic[T]):
+    """Standard list response envelope for all admin list endpoints.
+
+    This is the unified response shape that replaces per-endpoint
+    response types (MemoryListResponse, SecurityEventListResponse, etc.)
+    """
+
+    items: list[T]
     total: int
     page: int
     per_page: int

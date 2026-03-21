@@ -458,8 +458,8 @@ def test_update_access_multiple_increments(db):
     assert abs(mem["importance"] - 1.3) < 0.001
 
 
-def test_insert_citation_no_commit(db):
-    """insert_citation does NOT commit -- caller manages transaction."""
+def test_insert_citation_standalone_commits(db):
+    """insert_citation commits its own transaction via session context manager."""
     mem_id = insert_memory(
         db_path=db,
         content="citation commit test",
@@ -468,17 +468,21 @@ def test_insert_citation_no_commit(db):
         tags=[],
         citations=[],
     )
-    conn = get_connection(db)
-    # Insert citation without committing
+    # Insert citation -- now uses get_sync_session which auto-commits
     insert_citation(db, mem_id, "new_file.py", "1-10", "snippet")
-    # Rollback to verify it wasn't auto-committed by insert_citation
-    conn.rollback()
-    # Citation should be gone after rollback
+    # Verify citation persisted (visible on a fresh connection)
+    conn = get_connection(db)
     cursor = conn.execute(
-        "SELECT COUNT(*) FROM memory_citations WHERE memory_id = ? AND file_path = 'new_file.py'",
+        "SELECT memory_id, file_path, line_range, content_snippet "
+        "FROM memory_citations WHERE memory_id = ? AND file_path = 'new_file.py'",
         (mem_id,),
     )
-    assert cursor.fetchone()[0] == 0
+    row = cursor.fetchone()
+    assert row is not None
+    assert row[0] == mem_id
+    assert row[1] == "new_file.py"
+    assert row[2] == "1-10"
+    assert row[3] == "snippet"
 
 
 def test_insert_citation_ignores_duplicates(db):

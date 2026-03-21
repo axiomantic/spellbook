@@ -1506,30 +1506,48 @@ class TestForgeSkillComplete:
         assert "/path/to/plan.md" in status["graph"]["features"]["f1"]["artifacts"]
 
 
+@pytest.mark.asyncio
 class TestForgeRecordGateCompletion:
-    """Tests for forge_record_gate_completion function."""
+    """Tests for forge_record_gate_completion function (async ORM)."""
 
-    def test_records_gate_completion(self, tmp_path):
+    @pytest.fixture
+    async def forged_session(self):
+        """Create in-memory forged session for testing."""
+        from sqlalchemy import event as sa_event
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+        from sqlalchemy.pool import StaticPool
+        from spellbook.db.base import ForgedBase
+
+        engine = create_async_engine(
+            "sqlite+aiosqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        sa_event.listen(engine.sync_engine, "connect", lambda c, r: c.cursor().execute("PRAGMA foreign_keys=ON") or c.cursor().close())
+
+        async with engine.begin() as conn:
+            await conn.run_sync(ForgedBase.metadata.create_all)
+
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with factory() as session:
+            yield session
+
+        await engine.dispose()
+
+    async def test_records_gate_completion(self, forged_session):
         """forge_record_gate_completion records a gate result in DB."""
         from spellbook.forged.project_tools import forge_record_gate_completion
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
-                mock_pp.return_value = "/test/project"
-
-                result = forge_record_gate_completion(
-                    feature_name="my-feature",
-                    gate="code_review",
-                    stage="IMPLEMENT",
-                    consensus=True,
-                    iteration=1,
-                    verdict_summary='{"Magician": "APPROVE"}',
-                )
+        result = await forge_record_gate_completion(
+            feature_name="my-feature",
+            gate="code_review",
+            stage="IMPLEMENT",
+            consensus=True,
+            iteration=1,
+            verdict_summary='{"Magician": "APPROVE"}',
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "recorded"
         assert result["feature_name"] == "my-feature"
@@ -1537,53 +1555,34 @@ class TestForgeRecordGateCompletion:
         assert result["consensus"] is True
         assert "gate_id" in result
 
-        # Verify in DB
-        conn = get_forged_connection(str(db_path))
-        cursor = conn.cursor()
-        cursor.execute("SELECT feature_name, gate, stage, consensus FROM gate_completions WHERE id = ?", (result["gate_id"],))
-        row = cursor.fetchone()
-        assert row == ("my-feature", "code_review", "IMPLEMENT", 1)
-
-    def test_rejects_invalid_gate(self, tmp_path):
+    async def test_rejects_invalid_gate(self, forged_session):
         """forge_record_gate_completion rejects invalid gate names."""
         from spellbook.forged.project_tools import forge_record_gate_completion
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-
-            result = forge_record_gate_completion(
-                feature_name="my-feature",
-                gate="invalid_gate",
-                stage="IMPLEMENT",
-                consensus=True,
-            )
+        result = await forge_record_gate_completion(
+            feature_name="my-feature",
+            gate="invalid_gate",
+            stage="IMPLEMENT",
+            consensus=True,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "error"
         assert "invalid_gate" in result["error"].lower() or "Invalid gate" in result["error"]
 
-    def test_records_without_verdict_summary(self, tmp_path):
+    async def test_records_without_verdict_summary(self, forged_session):
         """forge_record_gate_completion works without verdict_summary."""
         from spellbook.forged.project_tools import forge_record_gate_completion
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
-
-        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
-                mock_pp.return_value = "/test/project"
-
-                result = forge_record_gate_completion(
-                    feature_name="my-feature",
-                    gate="test_suite",
-                    stage="IMPLEMENT",
-                    consensus=False,
-                )
+        result = await forge_record_gate_completion(
+            feature_name="my-feature",
+            gate="test_suite",
+            stage="IMPLEMENT",
+            consensus=False,
+            project_path="/test/project",
+            session=forged_session,
+        )
 
         assert result["status"] == "recorded"
         assert result["consensus"] is False

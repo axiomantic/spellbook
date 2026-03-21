@@ -103,3 +103,12 @@ updates:
     labels:
       - "dependencies"
       - "admin"
+
+  - package-ecosystem: "npm"
+    directory: "/spellbook/admin/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "admin"

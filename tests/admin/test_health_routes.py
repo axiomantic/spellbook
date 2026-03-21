@@ -1,27 +1,90 @@
 """Tests for subsystem health matrix API routes."""
 
-from unittest.mock import AsyncMock, patch
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
+def _make_mock_session(side_effects):
+    """Create a mock async session that returns results from side_effects list.
+
+    Each call to session.execute() pops the next item from side_effects
+    and returns it wrapped in a mock Result with .mappings().all() behavior.
+    """
+    call_idx = [0]
+
+    async def mock_execute(query, params=None):
+        idx = call_idx[0]
+        call_idx[0] += 1
+        if idx >= len(side_effects):
+            raise RuntimeError(f"Unexpected execute call #{idx}")
+        data = side_effects[idx]
+        if isinstance(data, Exception):
+            raise data
+        result = MagicMock()
+        result.mappings.return_value.all.return_value = data
+        return result
+
+    session = AsyncMock()
+    session.execute = AsyncMock(side_effect=mock_execute)
+    return session
+
+
+def _make_session_factory(session):
+    """Wrap a mock session in an async context manager factory."""
+    @asynccontextmanager
+    async def factory():
+        yield session
+    return factory
+
+
 class TestHealthMatrix:
     def test_returns_all_databases(self, client):
+        mock_spellbook_session = _make_mock_session([
+            [{"name": "memories"}, {"name": "security_events"}],  # table list
+            [{"cnt": 100}],  # memories count
+            [{"latest": "2026-03-15T10:00:00"}],  # memories last activity
+            [{"cnt": 5000}],  # security_events count
+            [{"latest": "2026-03-15T10:30:00"}],  # security_events last activity
+        ])
+        mock_fractal_session = _make_mock_session([
+            [{"name": "graphs"}, {"name": "nodes"}],
+            [{"cnt": 3}],
+            [{"latest": "2026-03-15T09:00:00"}],
+            [{"cnt": 50}],
+            [{"latest": "2026-03-15T09:30:00"}],
+        ])
+        mock_forged_session = _make_mock_session([
+            [{"name": "projects"}],
+            [{"cnt": 2}],
+            [{"latest": "2026-03-14T15:00:00"}],
+        ])
+        mock_coord_session = _make_mock_session([
+            [{"name": "swarms"}],
+            [{"cnt": 1}],
+            [{"latest": None}],
+        ])
+
         with patch(
-            "spellbook.admin.routes.health.query_spellbook_db",
-            new_callable=AsyncMock,
-        ) as mock_spellbook, patch(
-            "spellbook.admin.routes.health.query_fractal_db",
-            new_callable=AsyncMock,
-        ) as mock_fractal, patch(
-            "spellbook.admin.routes.health.query_forged_db",
-            new_callable=AsyncMock,
-        ) as mock_forged, patch(
-            "spellbook.admin.routes.health.query_coordination_db",
-            new_callable=AsyncMock,
-        ) as mock_coord, patch(
+            "spellbook.admin.routes.health.get_spellbook_session",
+            new=_make_session_factory(mock_spellbook_session),
+        ), patch(
+            "spellbook.admin.routes.health.get_fractal_session",
+            new=_make_session_factory(mock_fractal_session),
+        ), patch(
+            "spellbook.admin.routes.health.get_forged_session",
+            new=_make_session_factory(mock_forged_session),
+        ), patch(
+            "spellbook.admin.routes.health.get_coordination_session",
+            new=_make_session_factory(mock_coord_session),
+        ), patch(
             "spellbook.admin.routes.health._get_db_paths",
-        ) as mock_paths:
+        ) as mock_paths, patch(
+            "os.path.getsize", return_value=1234567,
+        ), patch(
+            "os.path.exists", return_value=True,
+        ):
             mock_paths.return_value = {
                 "spellbook.db": "/tmp/spellbook.db",
                 "fractal.db": "/tmp/fractal.db",
@@ -29,110 +92,109 @@ class TestHealthMatrix:
                 "coordination.db": "/tmp/coordination.db",
             }
 
-            # spellbook.db: table list, then count+ts for each table
-            mock_spellbook.side_effect = [
-                [{"name": "memories"}, {"name": "security_events"}],  # table list
-                [{"cnt": 100}],  # memories count
-                [{"latest": "2026-03-15T10:00:00"}],  # memories last activity
-                [{"cnt": 5000}],  # security_events count
-                [{"latest": "2026-03-15T10:30:00"}],  # security_events last activity
-            ]
-            mock_fractal.side_effect = [
-                [{"name": "graphs"}, {"name": "nodes"}],
-                [{"cnt": 3}],
-                [{"latest": "2026-03-15T09:00:00"}],
-                [{"cnt": 50}],
-                [{"latest": "2026-03-15T09:30:00"}],
-            ]
-            mock_forged.side_effect = [
-                [{"name": "projects"}],
-                [{"cnt": 2}],
-                [{"latest": "2026-03-14T15:00:00"}],
-            ]
-            mock_coord.side_effect = [
-                [{"name": "swarms"}],
-                [{"cnt": 1}],
-                [{"latest": None}],
-            ]
+            response = client.get("/api/health/matrix")
 
-            with patch("os.path.getsize", return_value=1234567), \
-                 patch("os.path.exists", return_value=True):
-                response = client.get("/api/health/matrix")
+        assert response.status_code == 200
+        data = response.json()
+        assert "databases" in data
+        assert "generated_at" in data
+        db_names = [db["name"] for db in data["databases"]]
+        assert db_names == ["spellbook.db", "fractal.db", "forged.db", "coordination.db"]
+        assert len(data["databases"]) == 4
 
-            assert response.status_code == 200
-            data = response.json()
-            assert "databases" in data
-            assert "generated_at" in data
-            db_names = [db["name"] for db in data["databases"]]
-            assert db_names == ["spellbook.db", "fractal.db", "forged.db", "coordination.db"]
-            assert len(data["databases"]) == 4
+        # Verify spellbook.db details
+        spellbook_db = data["databases"][0]
+        assert spellbook_db["name"] == "spellbook.db"
+        assert spellbook_db["status"] in ("healthy", "idle")
+        assert spellbook_db["size_bytes"] == 1234567
+        table_names = [t["name"] for t in spellbook_db["tables"]]
+        assert table_names == ["memories", "security_events"]
+        assert spellbook_db["tables"][0]["row_count"] == 100
+        assert spellbook_db["tables"][0]["last_activity"] == "2026-03-15T10:00:00"
+        assert spellbook_db["tables"][1]["row_count"] == 5000
+        assert spellbook_db["tables"][1]["last_activity"] == "2026-03-15T10:30:00"
 
-            # Verify spellbook.db details
-            spellbook_db = data["databases"][0]
-            assert spellbook_db["name"] == "spellbook.db"
-            assert spellbook_db["size_bytes"] == 1234567
-            table_names = [t["name"] for t in spellbook_db["tables"]]
-            assert table_names == ["memories", "security_events"]
-            assert spellbook_db["tables"][0]["row_count"] == 100
-            assert spellbook_db["tables"][1]["row_count"] == 5000
+        # Verify fractal.db details
+        fractal_db = data["databases"][1]
+        assert fractal_db["name"] == "fractal.db"
+        assert fractal_db["size_bytes"] == 1234567
+        fractal_tables = [t["name"] for t in fractal_db["tables"]]
+        assert fractal_tables == ["graphs", "nodes"]
+        assert fractal_db["tables"][0]["row_count"] == 3
+        assert fractal_db["tables"][1]["row_count"] == 50
+
+        # Verify forged.db details
+        forged_db = data["databases"][2]
+        assert forged_db["name"] == "forged.db"
+        assert forged_db["tables"][0]["name"] == "projects"
+        assert forged_db["tables"][0]["row_count"] == 2
+
+        # Verify coordination.db details
+        coord_db = data["databases"][3]
+        assert coord_db["name"] == "coordination.db"
+        assert coord_db["tables"][0]["name"] == "swarms"
+        assert coord_db["tables"][0]["row_count"] == 1
+        assert coord_db["tables"][0]["last_activity"] is None
+
+        # Verify session.execute was called the expected number of times:
+        # 1 table list + (1 count + 1 timestamp) * 2 tables = 5 calls
+        assert mock_spellbook_session.execute.call_count == 5
 
     def test_missing_db_returns_missing_status(self, client):
         with patch(
             "spellbook.admin.routes.health._get_db_paths",
         ) as mock_paths, patch(
-            "spellbook.admin.routes.health._probe_database",
-            new_callable=AsyncMock,
-        ) as mock_probe:
+            "spellbook.admin.routes.health._get_session_factory",
+            return_value=_make_session_factory(_make_mock_session([])),
+        ), patch(
+            "os.path.exists", return_value=False,
+        ):
             mock_paths.return_value = {
                 "spellbook.db": "/tmp/nonexistent.db",
             }
-            mock_probe.return_value = {
-                "name": "spellbook.db",
-                "status": "missing",
-                "size_bytes": 0,
-                "tables": [],
-            }
 
             response = client.get("/api/health/matrix")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["databases"][0] == {
-                "name": "spellbook.db",
-                "status": "missing",
-                "size_bytes": 0,
-                "tables": [],
-            }
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["databases"][0] == {
+            "name": "spellbook.db",
+            "status": "missing",
+            "size_bytes": 0,
+            "tables": [],
+        }
 
     def test_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/health/matrix")
         assert response.status_code == 401
 
     def test_db_query_error_returns_error_status(self, client):
+        error_session = _make_mock_session([Exception("db locked")])
+
         with patch(
             "spellbook.admin.routes.health._get_db_paths",
         ) as mock_paths, patch(
-            "spellbook.admin.routes.health._probe_database",
-            new_callable=AsyncMock,
-        ) as mock_probe:
+            "spellbook.admin.routes.health._get_session_factory",
+            return_value=_make_session_factory(error_session),
+        ), patch(
+            "os.path.exists", return_value=True,
+        ), patch(
+            "os.path.getsize", return_value=999,
+        ):
             mock_paths.return_value = {
                 "spellbook.db": "/tmp/spellbook.db",
             }
-            mock_probe.return_value = {
-                "name": "spellbook.db",
-                "status": "error",
-                "size_bytes": 0,
-                "tables": [],
-            }
 
             response = client.get("/api/health/matrix")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["databases"][0] == {
-                "name": "spellbook.db",
-                "status": "error",
-                "size_bytes": 0,
-                "tables": [],
-            }
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["databases"][0] == {
+            "name": "spellbook.db",
+            "status": "error",
+            "size_bytes": 0,
+            "tables": [],
+        }
 
     def test_probe_missing_file(self, client):
         """_probe_database returns missing status when file does not exist."""
@@ -140,8 +202,9 @@ class TestHealthMatrix:
             from spellbook.admin.routes.health import _probe_database
 
             import asyncio
+            mock_factory = _make_session_factory(_make_mock_session([]))
             result = asyncio.run(
-                _probe_database("test.db", "/tmp/no_such_file.db", AsyncMock())
+                _probe_database("test.db", "/tmp/no_such_file.db", mock_factory)
             )
             assert result == {
                 "name": "test.db",
@@ -152,14 +215,18 @@ class TestHealthMatrix:
 
     def test_probe_exception_returns_error(self, client):
         """_probe_database returns error status when query raises."""
-        mock_query = AsyncMock(side_effect=Exception("db locked"))
+        error_session = _make_mock_session([Exception("db locked")])
         with patch("os.path.exists", return_value=True), \
              patch("os.path.getsize", return_value=999):
             from spellbook.admin.routes.health import _probe_database
 
             import asyncio
             result = asyncio.run(
-                _probe_database("broken.db", "/tmp/broken.db", mock_query)
+                _probe_database(
+                    "broken.db",
+                    "/tmp/broken.db",
+                    _make_session_factory(error_session),
+                )
             )
             assert result == {
                 "name": "broken.db",
@@ -167,3 +234,76 @@ class TestHealthMatrix:
                 "size_bytes": 0,
                 "tables": [],
             }
+
+    def test_probe_table_count_error_returns_negative_one(self, client):
+        """When COUNT(*) fails for a table, row_count is -1."""
+        session = _make_mock_session([
+            [{"name": "broken_table"}],  # table list
+            Exception("table corrupted"),  # count fails
+            # no timestamp queries attempted after count fails
+        ])
+
+        with patch("os.path.exists", return_value=True), \
+             patch("os.path.getsize", return_value=500):
+            from spellbook.admin.routes.health import _probe_database
+
+            import asyncio
+            result = asyncio.run(
+                _probe_database(
+                    "test.db",
+                    "/tmp/test.db",
+                    _make_session_factory(session),
+                )
+            )
+            assert result["tables"][0]["row_count"] == -1
+
+    def test_probe_no_recent_activity_returns_idle(self, client):
+        """When no table has activity within 24h, status is idle."""
+        session = _make_mock_session([
+            [{"name": "old_table"}],  # table list
+            [{"cnt": 10}],  # count
+            [{"latest": "2020-01-01T00:00:00"}],  # very old activity
+        ])
+
+        with patch("os.path.exists", return_value=True), \
+             patch("os.path.getsize", return_value=1000):
+            from spellbook.admin.routes.health import _probe_database
+
+            import asyncio
+            result = asyncio.run(
+                _probe_database(
+                    "test.db",
+                    "/tmp/test.db",
+                    _make_session_factory(session),
+                )
+            )
+            assert result["status"] == "idle"
+            assert result["tables"][0]["row_count"] == 10
+            assert result["tables"][0]["last_activity"] == "2020-01-01T00:00:00"
+
+    def test_probe_no_timestamp_columns(self, client):
+        """When no timestamp column exists, last_activity is None."""
+        # Session returns table list, count, then errors for all 4 timestamp columns
+        session = _make_mock_session([
+            [{"name": "data_table"}],  # table list
+            [{"cnt": 42}],  # count
+            Exception("no such column: created_at"),
+            Exception("no such column: updated_at"),
+            Exception("no such column: timestamp"),
+            Exception("no such column: last_activity"),
+        ])
+
+        with patch("os.path.exists", return_value=True), \
+             patch("os.path.getsize", return_value=2000):
+            from spellbook.admin.routes.health import _probe_database
+
+            import asyncio
+            result = asyncio.run(
+                _probe_database(
+                    "test.db",
+                    "/tmp/test.db",
+                    _make_session_factory(session),
+                )
+            )
+            assert result["tables"][0]["row_count"] == 42
+            assert result["tables"][0]["last_activity"] is None

@@ -2,12 +2,22 @@
 
 This module provides SQLite database initialization and connection management
 for the fractal thinking system, including schema versioning and WAL mode.
+Also provides async session factory helpers for ORM-based access.
 """
 
 import sqlite3
 import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import AsyncGenerator, Optional
+
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.pool import NullPool
 
 from spellbook.fractal.models import SCHEMA_VERSION
 
@@ -250,3 +260,89 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
     """)
 
     conn.commit()
+
+
+# Async session factory cache for test databases
+_async_session_factories: dict = {}
+_async_session_lock: threading.Lock = threading.Lock()
+
+
+def _setup_pragmas(dbapi_conn, connection_record):
+    """Enable WAL mode and recommended PRAGMAs on each new connection."""
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
+def _get_async_session_factory(db_path: Optional[str] = None) -> async_sessionmaker:
+    """Get or create an async session factory for the given db_path.
+
+    For None (default), returns the standard FractalSession from spellbook.db.
+    For explicit paths (used in tests), creates an ad-hoc engine and factory.
+
+    Args:
+        db_path: Path to database file, or None for default
+
+    Returns:
+        async_sessionmaker bound to the appropriate engine
+    """
+    if db_path is None:
+        from spellbook.db.engines import FractalSession
+        return FractalSession
+
+    with _async_session_lock:
+        if db_path in _async_session_factories:
+            return _async_session_factories[db_path]
+
+        engine = create_async_engine(
+            f"sqlite+aiosqlite:///{db_path}",
+            connect_args={"timeout": 5},
+            poolclass=NullPool,
+        )
+        event.listen(engine.sync_engine, "connect", _setup_pragmas)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        _async_session_factories[db_path] = factory
+        _async_engines[db_path] = engine
+        return factory
+
+
+@asynccontextmanager
+async def get_async_fractal_session(
+    db_path: Optional[str] = None,
+) -> AsyncGenerator[AsyncSession, None]:
+    """Async context manager for fractal database sessions.
+
+    Provides a session with auto-commit on success and rollback on error.
+    When db_path is None, uses the default fractal engine.
+    When db_path is provided (tests), creates an ad-hoc engine.
+
+    Args:
+        db_path: Path to database file, or None for default
+
+    Yields:
+        AsyncSession for the fractal database
+    """
+    factory = _get_async_session_factory(db_path)
+    async with factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+
+# Track engines for cleanup
+_async_engines: dict = {}
+
+
+async def dispose_async_fractal_engines() -> None:
+    """Dispose all ad-hoc async engines created for test databases."""
+    global _async_session_factories, _async_engines
+    with _async_session_lock:
+        for engine in _async_engines.values():
+            await engine.dispose()
+        _async_session_factories = {}
+        _async_engines = {}

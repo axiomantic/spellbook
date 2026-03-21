@@ -188,20 +188,59 @@ Previous chunks completed: <list or "none (this is the first chunk)">
 
 ## Execution
 
-Use the `develop` skill with these settings:
-- Escape hatch: impl plan at `<path to impl plan>`, treat as ready
-- Task range: Tasks <start>-<end>
-- Complexity tier: standard (each chunk is standard-sized)
-- Autonomous mode: fully autonomous
+**MANDATORY: You MUST invoke the `develop` skill using the Skill tool before doing ANY work.**
 
-The implementation plan is at:
-`<path to impl plan>`
+```
+Skill tool call:
+  skill: "develop"
+  args: "Escape hatch: impl plan at <path to impl plan>, treat as ready. Tasks <start>-<end>. Fully autonomous."
+```
 
-The design document is at:
-`<path to design doc>`
+**Key documents:**
+- Implementation plan: `<path to impl plan>`
+- Design document: `<path to design doc>`
 
-Execute Tasks <start> through <end> from the implementation plan.
-Follow TDD, code review, and quality gates per the develop skill workflow.
+## Subagent Dispatch Discipline
+
+<CRITICAL>
+The develop skill orchestrates via subagents. Every subagent that does
+substantive work MUST invoke the appropriate skill using the Skill tool.
+
+"Do TDD" is NOT the same as "invoke the test-driven-development skill."
+"Review the code" is NOT the same as "invoke the requesting-code-review skill."
+Doing the work without invoking the skill is a workflow violation.
+Skills contain specialized logic that ad-hoc execution cannot replicate.
+
+Every subagent prompt MUST begin with:
+  "First, invoke the [skill-name] skill using the Skill tool.
+   Then follow its complete workflow."
+
+After each subagent returns, verify its output contains
+"Launching skill: [name]". If not found, re-dispatch with explicit
+instruction to invoke the skill.
+</CRITICAL>
+
+### Per-Task Gate Sequence (mandatory, sequential, not batched)
+
+After EACH task, run these gates in order:
+
+1. **TDD** (4.3): Dispatch subagent → must invoke `test-driven-development` skill using the Skill tool
+2. **Completion verification** (4.4): Dispatch subagent with inline audit prompt (no skill invocation needed)
+3. **Code review** (4.5): Dispatch subagent → must invoke `requesting-code-review` skill using the Skill tool
+4. **Fact-checking** (4.5.1): Dispatch subagent → must invoke `fact-checking` skill using the Skill tool
+
+Do NOT batch gates across tasks. Each task completes all 4 gates before
+the next task begins.
+
+### Post-All-Tasks Gates (mandatory)
+
+After all tasks pass per-task gates:
+
+1. Comprehensive implementation audit (4.6.1)
+2. Full test suite (4.6.2)
+3. Green mirage audit (4.6.3) → must invoke `audit-green-mirage` skill using the Skill tool
+4. Comprehensive fact-checking (4.6.4) → must invoke `fact-checking` skill using the Skill tool
+5. Finishing (4.7) → must invoke `finishing-a-development-branch` skill using the Skill tool
 
 ## Pre-conditions
 
@@ -220,9 +259,25 @@ Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
 ```
 ````
 
-The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch`.
+The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch` using the Skill tool.
 
-**Quality gates are inherited from the develop skill.** Each chunk invokes develop, which enforces all 5 gates (implementation completion, code review, fact-checking, green mirage, test suite) per task. No separate gate checklist in prompt files is needed.
+**Quality gates are explicit in each chunk prompt.** The "Subagent Dispatch Discipline" section in each chunk enforces skill invocation, per-task sequential gating, and post-implementation gates. This redundancy is intentional: the develop skill has the full gate definitions, but chunks must also state the gate sequence explicitly to prevent orchestrator hand-waving.
+
+### 3.5.5 Chunk Prompt Quality Gate
+
+After generating chunk prompts, verify EVERY chunk contains these required elements:
+
+| Required Element | Check |
+|-----------------|-------|
+| `invoke the \`develop\` skill using the Skill tool` | Exact phrase in Execution section |
+| `Subagent Dispatch Discipline` section | Section header present |
+| Per-Task Gate Sequence | Numbered list with 4 gates |
+| Skill invocation verification | "Launching skill:" check pattern |
+| Pre-conditions section | Non-empty |
+| Exit criteria with "committed" | Present |
+| Next section (or Finishing for final chunk) | Present |
+
+If ANY chunk fails ANY check: fix before presenting to user.
 
 ### 3.6 Work Item Presentation
 

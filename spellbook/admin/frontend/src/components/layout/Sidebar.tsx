@@ -38,7 +38,8 @@ const navItems = [
   { to: '/analytics', label: '// ANALYTICS' },
   { to: '/health', label: '// HEALTH' },
   { to: '/events', label: '// EVENTS' },
-  { to: '/focus', label: '// FOCUS' },
+  { to: '/stacks', label: '// STACKS' },
+  { to: '/corrections', label: '// CORRECTIONS' },
   { to: '/config', label: '// CONFIG' },
   { to: '/fractal', label: '// FRACTAL' },
 ]

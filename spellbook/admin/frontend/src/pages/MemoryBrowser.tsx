@@ -1,116 +1,20 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback } from 'react'
+import { type ColumnDef } from '@tanstack/react-table'
+import { useListPage } from '../hooks/useListPage'
 import {
-  useMemories,
   useMemory,
   useUpdateMemory,
   useDeleteMemory,
   useConsolidate,
   useMemoryNamespaces,
-  type MemoryListParams,
   type MemoryDetail,
 } from '../hooks/useMemories'
-import { usePagination } from '../hooks/usePagination'
+import { DataTable } from '../components/shared/DataTable'
+import { SearchBar } from '../components/shared/SearchBar'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
-import { EmptyState } from '../components/shared/EmptyState'
 import { Badge } from '../components/shared/Badge'
-import { Pagination } from '../components/shared/Pagination'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { MemoryItem } from '../api/types'
-
-// -- Search bar with debounce --
-
-function MemorySearch({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (q: string) => void
-}) {
-  const [local, setLocal] = useState(value)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
-
-  useEffect(() => {
-    setLocal(value)
-  }, [value])
-
-  const handleChange = useCallback(
-    (v: string) => {
-      setLocal(v)
-      clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(() => onChange(v), 300)
-    },
-    [onChange],
-  )
-
-  useEffect(() => () => clearTimeout(timerRef.current), [])
-
-  return (
-    <input
-      type="text"
-      placeholder="Search memories (FTS)..."
-      value={local}
-      onChange={(e) => handleChange(e.target.value)}
-      className="flex-1 bg-bg-elevated border border-bg-border px-3 py-2 text-sm text-text-primary font-mono focus:outline-none focus:border-accent-green"
-    />
-  )
-}
-
-// -- Namespace filter dropdown --
-
-function NamespaceFilter({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (ns: string) => void
-}) {
-  const { data } = useMemoryNamespaces()
-  const namespaces = data?.namespaces ?? []
-
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="bg-bg-elevated border border-bg-border px-3 py-2 text-sm text-text-primary font-mono focus:outline-none focus:border-accent-green"
-    >
-      <option value="">All namespaces</option>
-      {namespaces.map((ns) => (
-        <option key={ns} value={ns}>
-          {ns}
-        </option>
-      ))}
-    </select>
-  )
-}
-
-// -- Sortable table header --
-
-function SortHeader({
-  label,
-  field,
-  currentSort,
-  currentOrder,
-  onSort,
-}: {
-  label: string
-  field: string
-  currentSort: string
-  currentOrder: string
-  onSort: (field: string) => void
-}) {
-  const isActive = currentSort === field
-  const arrow = isActive ? (currentOrder === 'asc' ? ' ^' : ' v') : ''
-
-  return (
-    <th
-      className="px-3 py-2 text-left cursor-pointer select-none hover:text-accent-cyan transition-colors"
-      onClick={() => onSort(field)}
-    >
-      {label}
-      <span className="text-accent-green">{arrow}</span>
-    </th>
-  )
-}
 
 // -- Citation list in detail panel --
 
@@ -415,54 +319,105 @@ function ConsolidatePanel() {
   )
 }
 
+// -- Column definitions --
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columns: ColumnDef<MemoryItem, any>[] = [
+  {
+    id: 'content',
+    header: 'Content',
+    accessorKey: 'content',
+    enableSorting: true,
+    cell: ({ getValue }) => {
+      const content = getValue() as string
+      return (
+        <span className="max-w-xs truncate block text-text-primary">
+          {content.length > 80 ? content.slice(0, 80) + '...' : content}
+        </span>
+      )
+    },
+  },
+  {
+    id: 'memory_type',
+    header: 'Type',
+    accessorKey: 'memory_type',
+    enableSorting: false,
+    cell: ({ getValue }) => {
+      const memType = getValue() as string | null
+      return memType ? <Badge label={memType} variant="info" /> : null
+    },
+  },
+  {
+    id: 'namespace',
+    header: 'Namespace',
+    accessorKey: 'namespace',
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="text-text-secondary">{getValue() as string}</span>
+    ),
+  },
+  {
+    id: 'importance',
+    header: 'Importance',
+    accessorKey: 'importance',
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="text-text-secondary">{getValue() as number}</span>
+    ),
+  },
+  {
+    id: 'created_at',
+    header: 'Created',
+    accessorKey: 'created_at',
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="text-text-secondary">
+        {new Date(getValue() as string).toLocaleDateString()}
+      </span>
+    ),
+  },
+  {
+    id: 'citation_count',
+    header: 'Citations',
+    accessorKey: 'citation_count',
+    enableSorting: false,
+    cell: ({ getValue }) => (
+      <span className="text-text-secondary text-center block">{getValue() as number}</span>
+    ),
+  },
+]
+
 // -- Main page --
 
 export function MemoryBrowser() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [namespace, setNamespace] = useState('')
-  const [sort, setSort] = useState('created_at')
-  const [order, setOrder] = useState('desc')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const pagination = usePagination(50)
 
-  const params: MemoryListParams = {
-    q: searchQuery || undefined,
-    namespace: namespace || undefined,
-    sort,
-    order,
-    page: pagination.page,
-    per_page: pagination.per_page,
-  }
+  const listPage = useListPage<MemoryItem>({
+    queryKey: ['memories'],
+    endpoint: '/api/memories',
+    defaultPerPage: 50,
+    defaultSort: { column: 'created_at', order: 'desc' },
+  })
 
-  const { data, isLoading, error } = useMemories(params)
+  const { data: nsData } = useMemoryNamespaces()
+  const namespaces = nsData?.namespaces ?? []
 
-  const handleSort = useCallback(
-    (field: string) => {
-      if (sort === field) {
-        setOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-      } else {
-        setSort(field)
-        setOrder('desc')
-      }
-      pagination.resetPage()
-    },
-    [sort, pagination],
-  )
-
-  const handleSearchChange = useCallback(
-    (q: string) => {
-      setSearchQuery(q)
-      pagination.resetPage()
-    },
-    [pagination],
-  )
+  const handleRowClick = useCallback((row: MemoryItem) => {
+    setSelectedId(row.id)
+  }, [])
 
   const handleNamespaceChange = useCallback(
-    (ns: string) => {
-      setNamespace(ns)
-      pagination.resetPage()
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const ns = e.target.value
+      if (ns) {
+        listPage.setFilters({ ...listPage.filters, namespace: ns })
+      } else {
+        // Remove namespace from filters
+        const { namespace: _, ...rest } = listPage.filters
+        listPage.setFilters(rest)
+      }
     },
-    [pagination],
+    [listPage],
   )
 
   return (
@@ -483,89 +438,44 @@ export function MemoryBrowser() {
         <div className="flex-1 flex flex-col overflow-hidden p-6 pt-4">
           {/* Search and filters */}
           <div className="flex gap-2 mb-4">
-            <MemorySearch value={searchQuery} onChange={handleSearchChange} />
-            <NamespaceFilter value={namespace} onChange={handleNamespaceChange} />
+            <div className="flex-1">
+              <SearchBar
+                value={listPage.search}
+                onChange={listPage.setSearch}
+                placeholder="Search memories (FTS)..."
+              />
+            </div>
+            <select
+              value={listPage.filters.namespace ?? ''}
+              onChange={handleNamespaceChange}
+              className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary focus:border-accent-green outline-none"
+            >
+              <option value="">All namespaces</option>
+              {namespaces.map((ns) => (
+                <option key={ns} value={ns}>
+                  {ns}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Error state */}
-          {error && (
+          {listPage.isError && (
             <div className="text-accent-red text-sm font-mono mb-4">
-              {(error as Error).message}
+              {(listPage.error as Error).message}
             </div>
           )}
 
-          {/* Loading */}
-          {isLoading && !data && <LoadingSpinner className="py-16" />}
-
-          {/* Empty */}
-          {data && data.memories.length === 0 && (
-            <EmptyState
-              title="No memories found"
-              message={searchQuery ? 'Try adjusting your search query.' : undefined}
+          {/* DataTable */}
+          <div className="flex-1 overflow-auto">
+            <DataTable
+              columns={columns}
+              {...listPage.tableProps}
+              emptyTitle="No memories found"
+              emptyMessage={listPage.search ? 'Try adjusting your search query.' : undefined}
+              onRowClick={handleRowClick}
             />
-          )}
-
-          {/* Table */}
-          {data && data.memories.length > 0 && (
-            <div className="flex-1 overflow-auto">
-              <table className="w-full text-sm">
-                <thead className="font-mono text-xs uppercase tracking-widest text-text-dim border-b border-bg-border sticky top-0 bg-bg-primary">
-                  <tr>
-                    <SortHeader label="Content" field="content" currentSort={sort} currentOrder={order} onSort={handleSort} />
-                    <th className="px-3 py-2 text-left">Type</th>
-                    <SortHeader label="Namespace" field="namespace" currentSort={sort} currentOrder={order} onSort={handleSort} />
-                    <SortHeader label="Importance" field="importance" currentSort={sort} currentOrder={order} onSort={handleSort} />
-                    <SortHeader label="Created" field="created_at" currentSort={sort} currentOrder={order} onSort={handleSort} />
-                    <th className="px-3 py-2 text-left">Citations</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.memories.map((mem: MemoryItem) => (
-                    <tr
-                      key={mem.id}
-                      onClick={() => setSelectedId(mem.id)}
-                      className={`border-b border-bg-border cursor-pointer transition-colors hover:bg-bg-elevated ${
-                        selectedId === mem.id ? 'bg-bg-elevated' : ''
-                      }`}
-                    >
-                      <td className="px-3 py-2 max-w-xs truncate text-text-primary">
-                        {mem.content.length > 80
-                          ? mem.content.slice(0, 80) + '...'
-                          : mem.content}
-                      </td>
-                      <td className="px-3 py-2">
-                        {mem.memory_type && (
-                          <Badge label={mem.memory_type} variant="info" />
-                        )}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-text-secondary text-xs">
-                        {mem.namespace}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-text-secondary">
-                        {mem.importance}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-text-secondary text-xs">
-                        {new Date(mem.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-text-secondary text-center">
-                        {mem.citation_count}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {data && data.pages > 1 && (
-            <Pagination
-              page={data.page}
-              pages={data.pages}
-              total={data.total}
-              onPageChange={pagination.setPage}
-            />
-          )}
+          </div>
         </div>
 
         {/* Detail panel */}

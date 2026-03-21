@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from spellbook.forged.artifacts import (
     get_project_encoded,
     read_artifact,
@@ -435,13 +437,15 @@ def _get_project_path_for_gates() -> str:
     return os.getcwd()
 
 
-def forge_record_gate_completion(
+async def forge_record_gate_completion(
     feature_name: str,
     gate: str,
     stage: str,
     consensus: bool,
     iteration: int = 1,
     verdict_summary: Optional[str] = None,
+    project_path: Optional[str] = None,
+    session: Optional[AsyncSession] = None,
 ) -> dict:
     """Record a gate completion result in the database.
 
@@ -454,36 +458,51 @@ def forge_record_gate_completion(
         consensus: Whether roundtable reached consensus
         iteration: Iteration number
         verdict_summary: JSON summary of verdicts
+        project_path: Project path (defaults to cwd)
+        session: Optional async session (injected for testing)
 
     Returns:
         Dict with status and gate_id
     """
+    from spellbook.db.forged_models import GateCompletion
+
     if gate not in VALID_GATES:
         return {
             "status": "error",
             "error": f"Invalid gate '{gate}'. Must be one of: {VALID_GATES}",
         }
 
-    conn = get_forged_connection()
-    init_forged_schema()
+    if project_path is None:
+        project_path = _get_project_path_for_gates()
 
-    project_path = _get_project_path_for_gates()
+    now = datetime.now(timezone.utc).isoformat()
 
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT INTO gate_completions
-        (project_path, feature_name, gate, stage, consensus, iteration, verdict_summary)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (project_path, feature_name, gate, stage, int(consensus), iteration, verdict_summary),
+    gate_completion = GateCompletion(
+        project_path=project_path,
+        feature_name=feature_name,
+        gate=gate,
+        stage=stage,
+        consensus=int(consensus),
+        iteration=iteration,
+        verdict_summary=verdict_summary,
+        completed_at=now,
     )
-    conn.commit()
 
-    return {
-        "status": "recorded",
-        "gate_id": cursor.lastrowid,
-        "feature_name": feature_name,
-        "gate": gate,
-        "consensus": consensus,
-    }
+    async def _insert(s: AsyncSession) -> dict:
+        s.add(gate_completion)
+        await s.flush()
+        return {
+            "status": "recorded",
+            "gate_id": gate_completion.id,
+            "feature_name": feature_name,
+            "gate": gate,
+            "consensus": consensus,
+        }
+
+    if session is not None:
+        return await _insert(session)
+
+    from spellbook.db import get_forged_session
+
+    async with get_forged_session() as s:
+        return await _insert(s)

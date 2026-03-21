@@ -12,13 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import text
 
 from spellbook.admin.auth import require_admin_auth
-from spellbook.admin.db import (
-    query_coordination_db,
-    query_forged_db,
-    query_fractal_db,
-    query_spellbook_db,
+from spellbook.db import (
+    get_coordination_session,
+    get_forged_session,
+    get_fractal_session,
+    get_spellbook_session,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,21 +42,21 @@ def _get_db_paths() -> dict[str, str]:
     }
 
 
-def _get_query_fn(db_name: str) -> Any:
-    """Get the query function for a database by name.
+def _get_session_factory(db_name: str) -> Any:
+    """Get the async session context manager factory for a database by name.
 
     Uses module-level references so patching works in tests.
     """
     return {
-        "spellbook.db": query_spellbook_db,
-        "fractal.db": query_fractal_db,
-        "forged.db": query_forged_db,
-        "coordination.db": query_coordination_db,
+        "spellbook.db": get_spellbook_session,
+        "fractal.db": get_fractal_session,
+        "forged.db": get_forged_session,
+        "coordination.db": get_coordination_session,
     }[db_name]
 
 
 async def _probe_database(
-    name: str, path: str, query_fn: Any
+    name: str, path: str, session_factory: Any
 ) -> dict[str, Any]:
     """Probe a single database and return its health info."""
     if not os.path.exists(path):
@@ -69,56 +70,62 @@ async def _probe_database(
     try:
         size_bytes = os.path.getsize(path)
 
-        # Get table list
-        table_rows = await query_fn(
-            "SELECT name FROM sqlite_master WHERE type='table' "
-            "AND name NOT LIKE 'sqlite_%' ORDER BY name"
-        )
-
-        tables = []
-        has_recent_activity = False
-        now = datetime.now(timezone.utc)
-
-        for table_row in table_rows:
-            table_name = table_row["name"]
-            table_info: dict[str, Any] = {
-                "name": table_name,
-                "row_count": 0,
-                "last_activity": None,
-                "error_count": None,
-            }
-
-            # Row count
-            try:
-                count_rows = await query_fn(
-                    f"SELECT COUNT(*) as cnt FROM [{table_name}]"
+        async with session_factory() as session:
+            # Get table list
+            result = await session.execute(
+                text(
+                    "SELECT name FROM sqlite_master WHERE type='table' "
+                    "AND name NOT LIKE 'sqlite_%' ORDER BY name"
                 )
-                table_info["row_count"] = count_rows[0]["cnt"] if count_rows else 0
-            except Exception:
-                table_info["row_count"] = -1
+            )
+            table_rows = result.mappings().all()
 
-            # Last activity (try common timestamp column names)
-            for ts_col in ("created_at", "updated_at", "timestamp", "last_activity"):
+            tables = []
+            has_recent_activity = False
+            now = datetime.now(timezone.utc)
+
+            for table_row in table_rows:
+                table_name = table_row["name"]
+                table_info: dict[str, Any] = {
+                    "name": table_name,
+                    "row_count": 0,
+                    "last_activity": None,
+                    "error_count": None,
+                }
+
+                # Row count
                 try:
-                    ts_rows = await query_fn(
-                        f"SELECT MAX([{ts_col}]) as latest FROM [{table_name}]"
+                    count_result = await session.execute(
+                        text(f"SELECT COUNT(*) as cnt FROM [{table_name}]")
                     )
-                    if ts_rows and ts_rows[0]["latest"]:
-                        table_info["last_activity"] = ts_rows[0]["latest"]
-                        # Check if recent (within 24h)
-                        try:
-                            ts = datetime.fromisoformat(
-                                ts_rows[0]["latest"].replace("Z", "+00:00")
-                            )
-                            if (now - ts).total_seconds() < 86400:
-                                has_recent_activity = True
-                        except (ValueError, TypeError):
-                            pass
-                        break
+                    count_rows = count_result.mappings().all()
+                    table_info["row_count"] = count_rows[0]["cnt"] if count_rows else 0
                 except Exception:
-                    continue
+                    table_info["row_count"] = -1
 
-            tables.append(table_info)
+                # Last activity (try common timestamp column names)
+                for ts_col in ("created_at", "updated_at", "timestamp", "last_activity"):
+                    try:
+                        ts_result = await session.execute(
+                            text(f"SELECT MAX([{ts_col}]) as latest FROM [{table_name}]")
+                        )
+                        ts_rows = ts_result.mappings().all()
+                        if ts_rows and ts_rows[0]["latest"]:
+                            table_info["last_activity"] = ts_rows[0]["latest"]
+                            # Check if recent (within 24h)
+                            try:
+                                ts = datetime.fromisoformat(
+                                    ts_rows[0]["latest"].replace("Z", "+00:00")
+                                )
+                                if (now - ts).total_seconds() < 86400:
+                                    has_recent_activity = True
+                            except (ValueError, TypeError):
+                                pass
+                            break
+                    except Exception:
+                        continue
+
+                tables.append(table_info)
 
         status = "healthy" if has_recent_activity else "idle"
 
@@ -148,8 +155,8 @@ async def health_matrix(
 
     tasks = []
     for db_name, db_path in db_paths.items():
-        query_fn = _get_query_fn(db_name)
-        tasks.append(_probe_database(db_name, db_path, query_fn))
+        session_factory = _get_session_factory(db_name)
+        tasks.append(_probe_database(db_name, db_path, session_factory))
 
     databases = await asyncio.gather(*tasks)
 

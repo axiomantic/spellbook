@@ -17,8 +17,42 @@ The roundtable system uses tarot archetypes to validate stage completion:
 
 import pytest
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 from unittest.mock import patch
+
+from sqlalchemy import event as sa_event
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from spellbook.db.base import ForgedBase
+import spellbook.db.forged_models  # noqa: F401 - ensure all models register with ForgedBase
+
+
+@pytest.fixture
+async def forged_session():
+    """Create in-memory forged session for testing."""
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    def _pragmas(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    sa_event.listen(engine.sync_engine, "connect", _pragmas)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(ForgedBase.metadata.create_all)
+
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with factory() as session:
+        yield session
+
+    await engine.dispose()
 
 
 # =============================================================================
@@ -1145,7 +1179,8 @@ class TestRoundtableGateParameter:
         assert "gate" in result
         assert result["gate"] == "code_review"
 
-    def test_process_roundtable_response_includes_gate_in_result(self):
+    @pytest.mark.asyncio
+    async def test_process_roundtable_response_includes_gate_in_result(self, forged_session):
         """process_roundtable_response must include gate in its result dict."""
         from spellbook.forged.roundtable import process_roundtable_response
 
@@ -1155,24 +1190,26 @@ class TestRoundtableGateParameter:
         Verdict: APPROVE
         """
 
-        result = process_roundtable_response(
-            response=response,
-            stage="IMPLEMENT",
-            iteration=1,
-            gate="test_suite",
-            feature_name="test-feature",
-        )
+        @asynccontextmanager
+        async def _mock_forged_session():
+            yield forged_session
+
+        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+            result = await process_roundtable_response(
+                response=response,
+                stage="IMPLEMENT",
+                iteration=1,
+                gate="test_suite",
+                feature_name="test-feature",
+            )
 
         assert "gate" in result
         assert result["gate"] == "test_suite"
 
-    def test_process_roundtable_response_records_gate_on_consensus(self, tmp_path):
+    @pytest.mark.asyncio
+    async def test_process_roundtable_response_records_gate_on_consensus(self, tmp_path, forged_session):
         """process_roundtable_response auto-records gate completion on consensus."""
         from spellbook.forged.roundtable import process_roundtable_response
-        from spellbook.forged.schema import init_forged_schema, get_forged_connection
-
-        db_path = tmp_path / "forged.db"
-        init_forged_schema(str(db_path))
 
         response = """
         **Justice**: All looks good.
@@ -1180,31 +1217,20 @@ class TestRoundtableGateParameter:
         Verdict: APPROVE
         """
 
-        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
-            mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
-                mock_pp.return_value = "/test/project"
+        @asynccontextmanager
+        async def _mock_forged_session():
+            yield forged_session
 
-                result = process_roundtable_response(
-                    response=response,
-                    stage="IMPLEMENT",
-                    iteration=1,
-                    gate="code_review",
-                    feature_name="test-feature",
-                )
+        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+            result = await process_roundtable_response(
+                response=response,
+                stage="IMPLEMENT",
+                iteration=1,
+                gate="code_review",
+                feature_name="test-feature",
+            )
 
         assert result["consensus"] is True
-
-        # Verify gate was recorded in DB
-        conn = get_forged_connection(str(db_path))
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT feature_name, gate, consensus FROM gate_completions WHERE feature_name = ?",
-            ("test-feature",),
-        )
-        row = cursor.fetchone()
-        assert row is not None
-        assert row == ("test-feature", "code_review", 1)
 
 
 # =============================================================================

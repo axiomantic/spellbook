@@ -52,9 +52,6 @@ export interface MemoryItem {
   citation_count: number
 }
 
-export interface MemoryListResponse extends PaginatedResponse {
-  memories: MemoryItem[]
-}
 
 export interface MemoryUpdateRequest {
   content?: string
@@ -73,10 +70,6 @@ export interface SecurityEvent {
   tool_name: string | null
   action_taken: string | null
   created_at: string
-}
-
-export interface SecurityEventListResponse extends PaginatedResponse {
-  events: SecurityEvent[]
 }
 
 export interface SecurityDashboardResponse {
@@ -98,10 +91,6 @@ export interface SessionItem {
   last_activity: string | null
   message_count: number
   size_bytes: number
-}
-
-export interface SessionListResponse extends PaginatedResponse {
-  sessions: SessionItem[]
 }
 
 // Session Detail
@@ -151,10 +140,6 @@ export interface FractalGraphSummary {
   created_at: string
   updated_at: string
   project_dir: string | null
-}
-
-export interface FractalGraphListResponse extends PaginatedResponse {
-  graphs: FractalGraphSummary[]
 }
 
 export interface CytoscapeNode {
@@ -326,6 +311,15 @@ export interface FocusSummary {
   llm_wrong_24h: number
   mcp_wrong_24h: number
   max_depth: number
+}
+
+// Generic list response for useListPage
+export interface ListResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
 }
 
 // Errors

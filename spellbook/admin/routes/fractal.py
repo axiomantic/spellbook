@@ -2,6 +2,9 @@
 
 Provides graph listing, detail, node/edge queries, and pre-formatted
 Cytoscape.js data for the interactive graph visualization.
+
+Uses SQLAlchemy ORM models for database access via the fractal_db
+dependency.
 """
 
 import asyncio
@@ -12,14 +15,21 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
-from spellbook.admin.db import query_fractal_db
 from spellbook.admin.events import Event, Subsystem, event_bus
+from spellbook.admin.routes.list_helpers import build_list_response, validate_sort_order
 from spellbook.admin.routes.schemas import GraphStatusUpdateRequest
+from spellbook.db import fractal_db
+from spellbook.db.fractal_models import FractalEdge, FractalGraph, FractalNode
+from spellbook.db.helpers import apply_sorting
 from spellbook.fractal.graph_ops import delete_graph, update_graph_status
 
 router = APIRouter(prefix="/fractal", tags=["fractal"])
+
+GRAPH_SORT_WHITELIST = {"created_at", "updated_at", "seed", "status"}
 
 
 def _error_response(code: str, message: str, status: int) -> JSONResponse:
@@ -31,106 +41,105 @@ async def list_graphs(
     status: Optional[str] = Query(None, description="Filter by graph status"),
     project_dir: Optional[str] = Query(None, description="Filter by project directory"),
     search: Optional[str] = Query(None, description="Search by seed text"),
-    sort_by: Optional[str] = Query(
+    sort: Optional[str] = Query(
         "created_at",
         description="Sort field",
-        regex="^(created_at|updated_at|seed|status)$",
     ),
-    sort_order: Optional[str] = Query(
+    order: Optional[str] = Query(
         "desc",
-        description="Sort order",
-        regex="^(asc|desc)$",
+        description="Sort order: asc or desc",
     ),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """List fractal graphs with pagination, filtering, and sorting."""
-    where_clauses = []
-    params: list = []
-
+    # Build filter conditions
+    filters = []
     if status:
-        where_clauses.append("g.status = ?")
-        params.append(status)
-
+        filters.append(FractalGraph.status == status)
     if project_dir:
-        where_clauses.append("g.project_dir = ?")
-        params.append(project_dir)
-
+        filters.append(FractalGraph.project_dir == project_dir)
     if search:
-        where_clauses.append("g.seed LIKE ?")
-        params.append(f"%{search}%")
+        filters.append(FractalGraph.seed.contains(search))
 
-    where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
-
-    # Validate sort_by against allowed columns (defense in depth beyond regex)
-    allowed_sort_columns = {"created_at", "updated_at", "seed", "status"}
-    if sort_by not in allowed_sort_columns:
-        sort_by = "created_at"
-    order_direction = "ASC" if sort_order == "asc" else "DESC"
-    order_sql = f"g.{sort_by} {order_direction}"
-
-    count_result = await query_fractal_db(
-        f"SELECT COUNT(*) as cnt FROM graphs g WHERE {where_sql}",
-        tuple(params),
-    )
-    total = count_result[0]["cnt"] if count_result else 0
+    # Count query
+    count_query = select(func.count()).select_from(FractalGraph)
+    for f in filters:
+        count_query = count_query.where(f)
+    count_result = await session.execute(count_query)
+    total = count_result.scalar_one()
     pages = max(1, math.ceil(total / per_page))
     offset = (page - 1) * per_page
 
-    rows = await query_fractal_db(
-        f"""
-        SELECT g.id, g.seed, g.intensity, g.status, g.created_at,
-               g.updated_at, g.project_dir,
-               COUNT(n.id) as total_nodes
-        FROM graphs g
-        LEFT JOIN nodes n ON g.id = n.graph_id
-        WHERE {where_sql}
-        GROUP BY g.id
-        ORDER BY {order_sql}
-        LIMIT ? OFFSET ?
-        """,
-        tuple(params + [per_page, offset]),
+    # Data query with LEFT JOIN for node count
+    node_count = func.count(FractalNode.id).label("node_count")
+    data_query = (
+        select(FractalGraph, node_count)
+        .outerjoin(FractalNode, FractalGraph.id == FractalNode.graph_id)
+        .group_by(FractalGraph.id)
     )
+    for f in filters:
+        data_query = data_query.where(f)
 
-    return {
-        "graphs": rows,
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": pages,
-    }
+    # Apply sorting
+    sort_order = validate_sort_order(order or "desc")
+    data_query = apply_sorting(
+        data_query,
+        FractalGraph,
+        sort or "created_at",
+        sort_order,
+        GRAPH_SORT_WHITELIST,
+    )
+    data_query = data_query.limit(per_page).offset(offset)
+
+    result = await session.execute(data_query)
+    rows = result.all()
+
+    items = []
+    for graph, node_count_val in rows:
+        d = graph.to_dict()
+        d["total_nodes"] = node_count_val
+        items.append(d)
+
+    return build_list_response(items, total, page, per_page)
 
 
 @router.get("/graphs/{graph_id}")
 async def get_graph(
     graph_id: str,
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get fractal graph detail with metadata and node count."""
-    rows = await query_fractal_db(
-        """
-        SELECT g.*, COUNT(n.id) as total_nodes
-        FROM graphs g
-        LEFT JOIN nodes n ON g.id = n.graph_id
-        WHERE g.id = ?
-        GROUP BY g.id
-        """,
-        (graph_id,),
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
-    if not rows:
+    graph = result.scalars().first()
+    if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
-    return rows[0]
+    # Get node count
+    count_result = await session.execute(
+        select(func.count()).select_from(FractalNode).where(
+            FractalNode.graph_id == graph_id
+        )
+    )
+    total_nodes = count_result.scalar_one()
+
+    d = graph.to_dict()
+    d["total_nodes"] = total_nodes
+    return d
 
 
 @router.delete("/graphs/{graph_id}")
 async def delete_graph_endpoint(
     graph_id: str,
-    _session: str = Depends(require_admin_auth),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Delete a fractal graph and all its nodes/edges."""
-    result = await asyncio.to_thread(delete_graph, graph_id)
+    result = await delete_graph(graph_id)
 
     if "error" in result:
         return _error_response("GRAPH_NOT_FOUND", "Graph not found", 404)
@@ -150,10 +159,10 @@ async def delete_graph_endpoint(
 async def update_graph_status_endpoint(
     graph_id: str,
     body: GraphStatusUpdateRequest,
-    _session: str = Depends(require_admin_auth),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Update the status of a fractal graph."""
-    result = await asyncio.to_thread(update_graph_status, graph_id, body.status, body.reason)
+    result = await update_graph_status(graph_id, body.status, body.reason)
 
     if "error" in result:
         error_msg = result["error"]
@@ -176,61 +185,54 @@ async def update_graph_status_endpoint(
 async def get_graph_nodes(
     graph_id: str,
     max_depth: Optional[int] = Query(None, ge=0, description="Maximum depth to return"),
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get nodes for a fractal graph, optionally depth-limited."""
     # Verify graph exists
-    graph = await query_fractal_db(
-        "SELECT id FROM graphs WHERE id = ?", (graph_id,)
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
+    graph = result.scalars().first()
     if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
-    params: list = [graph_id]
-    depth_clause = ""
-    if max_depth is not None:
-        depth_clause = " AND n.depth <= ?"
-        params.append(max_depth)
-
-    nodes = await query_fractal_db(
-        f"""
-        SELECT n.id, n.node_type, n.text, n.owner, n.depth, n.status,
-               n.parent_id, n.metadata_json, n.created_at,
-               n.session_id, n.claimed_at, n.answered_at, n.synthesized_at
-        FROM nodes n
-        WHERE n.graph_id = ?{depth_clause}
-        ORDER BY n.depth, n.created_at
-        """,
-        tuple(params),
+    query = (
+        select(FractalNode)
+        .where(FractalNode.graph_id == graph_id)
+        .order_by(FractalNode.depth, FractalNode.created_at)
     )
+    if max_depth is not None:
+        query = query.where(FractalNode.depth <= max_depth)
 
-    return {"nodes": nodes, "count": len(nodes)}
+    result = await session.execute(query)
+    nodes = result.scalars().all()
+
+    return {"nodes": [n.to_dict() for n in nodes], "count": len(nodes)}
 
 
 @router.get("/graphs/{graph_id}/edges")
 async def get_graph_edges(
     graph_id: str,
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get edges for a fractal graph."""
-    graph = await query_fractal_db(
-        "SELECT id FROM graphs WHERE id = ?", (graph_id,)
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
+    graph = result.scalars().first()
     if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
-    edges = await query_fractal_db(
-        """
-        SELECT e.id, e.from_node as source, e.to_node as target,
-               e.edge_type, e.metadata_json, e.created_at
-        FROM edges e
-        WHERE e.graph_id = ?
-        ORDER BY e.created_at
-        """,
-        (graph_id,),
+    result = await session.execute(
+        select(FractalEdge)
+        .where(FractalEdge.graph_id == graph_id)
+        .order_by(FractalEdge.created_at)
     )
+    edges = result.scalars().all()
 
-    return {"edges": edges, "count": len(edges)}
+    return {"edges": [e.to_dict() for e in edges], "count": len(edges)}
 
 
 def _make_node_label(text: str | None) -> str:
@@ -249,7 +251,8 @@ def _make_node_label(text: str | None) -> str:
 async def get_cytoscape_data(
     graph_id: str,
     max_depth: Optional[int] = Query(None, ge=0, description="Maximum depth"),
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get pre-formatted Cytoscape.js data for graph visualization.
 
@@ -257,43 +260,33 @@ async def get_cytoscape_data(
     Nodes and edges include `data` and `classes` fields for Cytoscape.
     """
     # Verify graph exists
-    graph = await query_fractal_db(
-        "SELECT id FROM graphs WHERE id = ?", (graph_id,)
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
+    graph = result.scalars().first()
     if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
     # Fetch nodes
-    node_params: list = [graph_id]
-    depth_clause = ""
+    node_query = (
+        select(FractalNode)
+        .where(FractalNode.graph_id == graph_id)
+        .order_by(FractalNode.depth, FractalNode.created_at)
+    )
     if max_depth is not None:
-        depth_clause = " AND n.depth <= ?"
-        node_params.append(max_depth)
+        node_query = node_query.where(FractalNode.depth <= max_depth)
 
-    raw_nodes = await query_fractal_db(
-        f"""
-        SELECT n.id, n.node_type, n.text, n.depth, n.status,
-               n.parent_id, n.owner,
-               n.session_id, n.claimed_at, n.answered_at, n.synthesized_at
-        FROM nodes n
-        WHERE n.graph_id = ?{depth_clause}
-        ORDER BY n.depth, n.created_at
-        """,
-        tuple(node_params),
-    )
+    result = await session.execute(node_query)
+    raw_nodes = result.scalars().all()
 
-    # Fetch edges (only between nodes we have)
-    raw_edges = await query_fractal_db(
-        """
-        SELECT e.from_node as source, e.to_node as target, e.edge_type
-        FROM edges e
-        WHERE e.graph_id = ?
-        """,
-        (graph_id,),
+    # Fetch edges
+    result = await session.execute(
+        select(FractalEdge).where(FractalEdge.graph_id == graph_id)
     )
+    raw_edges = result.scalars().all()
 
     # Build node set for filtering edges
-    node_ids = {n["id"] for n in raw_nodes}
+    node_ids = {n.id for n in raw_nodes}
 
     # Transform to Cytoscape format
     cyto_nodes = []
@@ -301,38 +294,37 @@ async def get_cytoscape_data(
     max_node_depth = 0
 
     for n in raw_nodes:
-        status = n["status"]
-        node_type = n["node_type"]
+        node_status = n.status
+        node_type = n.node_type
 
         # Build classes string for styling
-        classes_parts = [node_type, status]
-        classes = " ".join(classes_parts)
+        classes = f"{node_type} {node_status}"
 
         cyto_nodes.append({
             "data": {
-                "id": n["id"],
-                "label": _make_node_label(n["text"]),
-                "text": n["text"] or "",
+                "id": n.id,
+                "label": _make_node_label(n.text),
+                "text": n.text or "",
                 "type": node_type,
-                "status": status,
-                "depth": n["depth"],
-                "parent_id": n["parent_id"],
-                "owner": n["owner"],
-                "session_id": n["session_id"],
-                "claimed_at": n["claimed_at"],
-                "answered_at": n["answered_at"],
-                "synthesized_at": n["synthesized_at"],
+                "status": node_status,
+                "depth": n.depth,
+                "parent_id": n.parent_id,
+                "owner": n.owner,
+                "session_id": n.session_id,
+                "claimed_at": n.claimed_at,
+                "answered_at": n.answered_at,
+                "synthesized_at": n.synthesized_at,
             },
             "classes": classes,
         })
 
-        if status == "saturated":
+        if node_status == "saturated":
             status_counts["saturated"] += 1
-        elif status in ("open", "claimed"):
+        elif node_status in ("open", "claimed"):
             status_counts["pending"] += 1
 
-        if n["depth"] > max_node_depth:
-            max_node_depth = n["depth"]
+        if n.depth > max_node_depth:
+            max_node_depth = n.depth
 
     cyto_edges = []
     convergence_count = 0
@@ -340,12 +332,12 @@ async def get_cytoscape_data(
 
     for e in raw_edges:
         # Only include edges where both endpoints are in our node set
-        if e["source"] in node_ids and e["target"] in node_ids:
-            edge_type = e["edge_type"]
+        if e.from_node in node_ids and e.to_node in node_ids:
+            edge_type = e.edge_type
             cyto_edges.append({
                 "data": {
-                    "source": e["source"],
-                    "target": e["target"],
+                    "source": e.from_node,
+                    "target": e.to_node,
                     "type": edge_type,
                 },
                 "classes": edge_type,
@@ -374,36 +366,45 @@ async def get_cytoscape_data(
 @router.get("/graphs/{graph_id}/convergence")
 async def get_convergence(
     graph_id: str,
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get convergence clusters for a fractal graph."""
-    graph = await query_fractal_db(
-        "SELECT id FROM graphs WHERE id = ?", (graph_id,)
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
+    graph = result.scalars().first()
     if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
+    # Alias for the two node joins
+    from_node = FractalNode.__table__.alias("n1")
+    to_node = FractalNode.__table__.alias("n2")
+
     # Find convergence edges and their connected nodes
-    edges = await query_fractal_db(
-        """
-        SELECT e.from_node, e.to_node, e.metadata_json,
-               n1.text as from_text, n1.depth as from_depth,
-               n2.text as to_text, n2.depth as to_depth
-        FROM edges e
-        JOIN nodes n1 ON e.from_node = n1.id
-        JOIN nodes n2 ON e.to_node = n2.id
-        WHERE e.graph_id = ? AND e.edge_type = 'convergence'
-        """,
-        (graph_id,),
+    conv_query = (
+        select(
+            FractalEdge,
+            from_node.c.text.label("from_text"),
+            from_node.c.depth.label("from_depth"),
+            to_node.c.text.label("to_text"),
+            to_node.c.depth.label("to_depth"),
+        )
+        .join(from_node, FractalEdge.from_node == from_node.c.id)
+        .join(to_node, FractalEdge.to_node == to_node.c.id)
+        .where(FractalEdge.graph_id == graph_id)
+        .where(FractalEdge.edge_type == "convergence")
     )
 
-    # Group convergence edges into clusters (simplified: each edge is a cluster)
+    result = await session.execute(conv_query)
+    rows = result.all()
+
     clusters = []
-    for edge in edges:
+    for edge, from_text, from_depth, to_text, to_depth in rows:
         clusters.append({
             "nodes": [
-                {"node_id": edge["from_node"], "text": edge["from_text"], "depth": edge["from_depth"]},
-                {"node_id": edge["to_node"], "text": edge["to_text"], "depth": edge["to_depth"]},
+                {"node_id": edge.from_node, "text": from_text, "depth": from_depth},
+                {"node_id": edge.to_node, "text": to_text, "depth": to_depth},
             ],
             "insight": "",
             "edge_count": 1,
@@ -415,32 +416,40 @@ async def get_convergence(
 @router.get("/graphs/{graph_id}/contradictions")
 async def get_contradictions(
     graph_id: str,
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get contradiction pairs for a fractal graph."""
-    graph = await query_fractal_db(
-        "SELECT id FROM graphs WHERE id = ?", (graph_id,)
+    result = await session.execute(
+        select(FractalGraph).where(FractalGraph.id == graph_id)
     )
+    graph = result.scalars().first()
     if not graph:
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
-    edges = await query_fractal_db(
-        """
-        SELECT e.from_node, e.to_node, e.metadata_json,
-               n1.text as from_text, n2.text as to_text
-        FROM edges e
-        JOIN nodes n1 ON e.from_node = n1.id
-        JOIN nodes n2 ON e.to_node = n2.id
-        WHERE e.graph_id = ? AND e.edge_type = 'contradiction'
-        """,
-        (graph_id,),
+    from_node = FractalNode.__table__.alias("n1")
+    to_node = FractalNode.__table__.alias("n2")
+
+    contra_query = (
+        select(
+            FractalEdge,
+            from_node.c.text.label("from_text"),
+            to_node.c.text.label("to_text"),
+        )
+        .join(from_node, FractalEdge.from_node == from_node.c.id)
+        .join(to_node, FractalEdge.to_node == to_node.c.id)
+        .where(FractalEdge.graph_id == graph_id)
+        .where(FractalEdge.edge_type == "contradiction")
     )
 
+    result = await session.execute(contra_query)
+    rows = result.all()
+
     pairs = []
-    for edge in edges:
+    for edge, from_text, to_text in rows:
         pairs.append({
-            "node_a": {"node_id": edge["from_node"], "text": edge["from_text"]},
-            "node_b": {"node_id": edge["to_node"], "text": edge["to_text"]},
+            "node_a": {"node_id": edge.from_node, "text": from_text},
+            "node_b": {"node_id": edge.to_node, "text": to_text},
             "tension": "",
         })
 
@@ -562,27 +571,32 @@ def _parse_jsonl_messages(
 async def get_node_chat_log(
     graph_id: str,
     node_id: str,
-    _session: str = Depends(require_admin_auth),
+    session: AsyncSession = Depends(fractal_db),
+    _auth: str = Depends(require_admin_auth),
 ):
     """Get the chat log for a fractal node's work session."""
-    rows = await query_fractal_db(
-        "SELECT session_id, claimed_at, answered_at, synthesized_at FROM nodes WHERE id = ? AND graph_id = ?",
-        (node_id, graph_id),
-    )
-    if not rows:
-        # Fallback: try without graph_id constraint (handles stale frontend state)
-        rows = await query_fractal_db(
-            "SELECT session_id, claimed_at, answered_at, synthesized_at FROM nodes WHERE id = ?",
-            (node_id,),
+    result = await session.execute(
+        select(FractalNode).where(
+            FractalNode.id == node_id,
+            FractalNode.graph_id == graph_id,
         )
-    if not rows:
+    )
+    node = result.scalars().first()
+
+    if not node:
+        # Fallback: try without graph_id constraint (handles stale frontend state)
+        result = await session.execute(
+            select(FractalNode).where(FractalNode.id == node_id)
+        )
+        node = result.scalars().first()
+
+    if not node:
         return _error_response("NODE_NOT_FOUND", f"Node '{node_id}' not found", 404)
 
-    node = rows[0]
-    session_id = node["session_id"]
-    claimed_at = node["claimed_at"]
-    answered_at = node["answered_at"]
-    synthesized_at = node["synthesized_at"]
+    session_id = node.session_id
+    claimed_at = node.claimed_at
+    answered_at = node.answered_at
+    synthesized_at = node.synthesized_at
 
     if not session_id:
         return {

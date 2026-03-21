@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-implement.md","source_hash": "sha256:a1dba3b8a686e26a27c7b7fc1d7da61cc978e77f4706bb1eeb0c33fb9331bba8","generated_at": "2026-03-19T06:26:44Z","generator": "generate_diagrams.py","method": "patch"} -->
+<!-- diagram-meta: {"source": "commands/feature-implement.md", "source_hash": "sha256:ecc2aeeacb18701ae6340fdfbbfe69efccb2e2769953b398424f6c29b7973b6a", "generated_at": "2026-03-19T06:26:44Z", "generator": "generate_diagrams.py", "method": "patch", "stamped_at": "2026-03-20T21:29:23Z"} -->
 # Diagram: feature-implement
 
 The diagrams in the provided document are **already consistent with the diff changes**. They already reflect:

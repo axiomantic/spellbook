@@ -514,7 +514,7 @@ def roundtable_debate(
     }
 
 
-def process_roundtable_response(
+async def process_roundtable_response(
     response: str,
     stage: str,
     gate: str,
@@ -567,7 +567,7 @@ def process_roundtable_response(
     if consensus:
         from spellbook.forged.project_tools import forge_record_gate_completion
 
-        result = forge_record_gate_completion(
+        result = await forge_record_gate_completion(
             feature_name=feature_name,
             gate=gate,
             stage=stage,
