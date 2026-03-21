@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **SQLAlchemy async database layer** (`spellbook/db/`): 4 async engines, session factories, and query helpers for all databases
+- **36 ORM models** across 4 databases (spellbook, fractal, forged, coordination) with `to_dict()` methods
+- **Alembic multi-database migration infrastructure** for schema versioning across all 4 databases
+- **Sync engine infrastructure** (`get_sync_session`) for modules with synchronous API surfaces
+- **Admin list endpoint helpers**: `validate_sort_order`, `compute_pagination`, `build_list_response` for standardized list APIs
+- **Generic `ListResponse[T]` Pydantic schema** for standardized API response envelopes
+- **Frontend `DataTable` component** using @tanstack/react-table with server-side sort and pagination
+- **Frontend `SearchBar` component** with debounced input
+- **Frontend `FilterBar` component** with chip and select filter types
+- **Frontend `useListPage` hook** combining pagination, sorting, search, and filtering with React Query
+- **Frontend `ListResponse<T>` TypeScript type** for typed API responses
+- **`CorrectionsPage`** with proper server-side pagination (split from FocusPage)
+- **`StacksPage`** with card layout (split from FocusPage)
+- **FK orphan-data audit script** (`scripts/audit_fk_orphans.py`)
+
+### Changed
+- All 8 admin route files migrated from raw SQL to SQLAlchemy ORM
+- All core modules migrated from raw SQL to SQLAlchemy ORM (config, memory, security, sessions, fractal, forged, coordination)
+- All admin list API endpoints standardized to `{items, total, page, per_page, pages}` response envelope
+- All admin list endpoints support backend sorting via column whitelists
+- Enhanced `Pagination` component with page buttons, size selector, jump-to-page (backward compatible)
+- SecurityLog, Sessions, GraphTable, MemoryBrowser pages migrated to DataTable + useListPage
+- Sidebar updated: "Focus" replaced with "Stacks" and "Corrections"
+- `/focus` route redirects to `/stacks`
+
+### Fixed
+- Correction log now has proper pagination (removed hardcoded `LIMIT 200`)
+
 ## [0.34.0] - 2026-03-20
 
 ### Added
