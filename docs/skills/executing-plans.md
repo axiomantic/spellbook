@@ -11,362 +11,233 @@ Executes implementation plans task by task, dispatching subagents for each step 
 
 ## Workflow Diagram
 
-# Executing Plans - Skill Diagrams
+# Executing Plans - Skill Diagram
 
-## Overview Diagram
-
-High-level flow showing mode selection, two execution paths, and shared completion gate.
+## Overview
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-        L5{{Quality Gate}}
+    subgraph legend[" Legend "]
+        direction LR
+        l1[Process]
+        l2{Decision}
+        l3([Terminal])
+        l4[/"Subagent Dispatch"/]:::subagent
+        l5[[Quality Gate]]:::gate
+        l6([Success]):::success
     end
 
-    START([Plan Document Received]) --> ANNOUNCE["Announce:<br>Using executing-plans skill"]
-    ANNOUNCE --> MODE_CHECK{Mode selection:<br>batch vs subagent}
+    START([Plan Document Received]) --> WD[Verify Working Directory]
+    WD --> WD_OK{Directory &<br>branch correct?}
+    WD_OK -->|No| WD_FAIL([STOP: Fix directory]):::gate
+    WD_OK -->|Yes| MODE{Mode Selection}
 
-    MODE_CHECK -->|"batch (default)"| BATCH_P1["Batch Phase 1:<br>Load and Review Plan"]
-    MODE_CHECK -->|subagent| SUB_P1["Subagent Phase 1:<br>Extract Tasks"]
+    MODE -->|batch| BATCH[Batch Mode<br>see Detail A]
+    MODE -->|subagent| SUB[Subagent Mode<br>see Detail B]
 
-    BATCH_P1 --> BATCH_P2["Batch Phase 2:<br>Execute Batch"]
-    BATCH_P2 --> BATCH_P3["Batch Phase 3:<br>Report"]
-    BATCH_P3 --> BATCH_P4["Batch Phase 4:<br>Continue"]
-    BATCH_P4 -->|More tasks| BATCH_P2
-    BATCH_P4 -->|All tasks done| BATCH_P5["Batch Phase 5:<br>Complete Development"]
+    BATCH --> SELF[[Self-Check Gate]]:::gate
+    SUB --> SELF
 
-    SUB_P1 --> SUB_P2["Subagent Phase 2:<br>Per-Task Execution Loop"]
-    SUB_P2 -->|More tasks| SUB_P2
-    SUB_P2 -->|All tasks done| SUB_P3["Subagent Phase 3:<br>Final Review"]
-    SUB_P3 --> SUB_P4["Subagent Phase 4:<br>Complete Development"]
+    SELF --> SELF_OK{All checks pass?}
+    SELF_OK -->|No| FIX[Fix unchecked items] --> SELF
+    SELF_OK -->|Yes| FINISH[Invoke<br>finishing-a-development-branch]
+    FINISH --> DONE([Implementation Complete]):::success
 
-    BATCH_P5 --> SELFCHECK{{Self-Check Gate}}
-    SUB_P4 --> SELFCHECK
-
-    SELFCHECK -->|All checked| FINISH(["Invoke finishing-a-development-branch"])
-    SELFCHECK -->|Unchecked items| FIX["Stop and fix"] --> SELFCHECK
-
-    BATCH_P2 -.->|"Stop condition"| CB_STOP([STOP: Circuit breaker])
-    SUB_P2 -.->|"Stop condition"| CB_STOP
-    BATCH_P1 -.->|"Critical plan gap"| CB_STOP
-
-    style L4 fill:#4a9eff,color:#fff
-    style L5 fill:#ff6b6b,color:#fff
-    style FINISH fill:#51cf66,color:#fff
-    style SELFCHECK fill:#ff6b6b,color:#fff
-    style CB_STOP fill:#ff6b6b,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 ```
 
-### Cross-Reference Table
+## Cross-Reference
 
 | Overview Node | Detail Diagram |
-|---|---|
-| Batch Phase 1: Load and Review Plan | [Batch Mode Detail](#batch-mode-detail) |
-| Batch Phase 2: Execute Batch | [Batch Mode Detail](#batch-mode-detail) |
-| Batch Phase 3: Report | [Batch Mode Detail](#batch-mode-detail) |
-| Batch Phase 4: Continue | [Batch Mode Detail](#batch-mode-detail) |
-| Batch Phase 5: Complete Development | [Batch Mode Detail](#batch-mode-detail) |
-| Subagent Phase 1: Extract Tasks | [Subagent Mode Detail](#subagent-mode-detail) |
-| Subagent Phase 2: Per-Task Execution Loop | [Subagent Mode Detail](#subagent-mode-detail) |
-| Subagent Phase 3: Final Review | [Subagent Mode Detail](#subagent-mode-detail) |
-| Subagent Phase 4: Complete Development | [Subagent Mode Detail](#subagent-mode-detail) |
-| Self-Check Gate | [Self-Check Gate Detail](#self-check-gate-detail) |
-| STOP: Circuit breaker | [Stop Conditions and Circuit Breakers](#stop-conditions-and-circuit-breakers) |
+|---------------|----------------|
+| Batch Mode | Detail A: Batch Mode Process |
+| Subagent Mode | Detail B: Subagent Mode Process |
+| Self-Check Gate | Shared across both modes (shown inline) |
 
 ---
 
-## Batch Mode Detail
+## Detail A: Batch Mode Process
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5{{Quality Gate}}
+    subgraph legend[" Legend "]
+        direction LR
+        l1[Process]
+        l2{Decision}
+        l4[/"Subagent Dispatch"/]:::subagent
+        l5[[Quality Gate]]:::gate
+        l6([Terminal]):::success
     end
 
-    subgraph "Phase 1: Load and Review Plan"
-        B1_READ["Read plan file"]
-        B1_REVIEW["Review critically:<br>identify questions/concerns"]
-        B1_CONCERNS{Concerns found?}
-        B1_ASK["AskUserQuestion:<br>Discuss / Proceed / Update plan"]
-        B1_RESPONSE{User response}
-        B1_TODO["Create TodoWrite<br>with plan tasks"]
+    P1[Phase 1: Load & Review Plan] --> ANALYZE[Analyze phases,<br>dependencies, concerns]
+    ANALYZE --> CONCERNS{Concerns found?}
 
-        B1_READ --> B1_REVIEW --> B1_CONCERNS
-        B1_CONCERNS -->|Yes| B1_ASK --> B1_RESPONSE
-        B1_CONCERNS -->|No| B1_TODO
-        B1_RESPONSE -->|Discuss| B1_ASK
-        B1_RESPONSE -->|Update plan| B1_READ
-        B1_RESPONSE -->|Proceed| B1_TODO
+    CONCERNS -->|Yes| ASK[AskUserQuestion:<br>Discuss / Proceed / Update]
+    ASK --> ASK_R{User response}
+    ASK_R -->|Discuss| ASK
+    ASK_R -->|Update plan| P1
+    ASK_R -->|Proceed| TODO[Create TodoWrite<br>with all tasks]
+
+    CONCERNS -->|No| TODO
+
+    TODO --> P2[Phase 2: Execute Batch<br>default 3 tasks]
+
+    subgraph batch_loop["Batch Execution Loop"]
+        P2 --> TASK[Mark task in_progress]
+        TASK --> EXEC[Follow plan steps exactly]
+        EXEC --> VERIFY[Run verifications]
+        VERIFY --> V_OK{Verification passes?}
+        V_OK -->|No| STOP_CHECK{Circuit breaker:<br>3+ consecutive failures?}
+        STOP_CHECK -->|Yes| HALT([STOP: Escalate to user]):::gate
+        STOP_CHECK -->|No| EXEC
+        V_OK -->|Yes| MARK[Mark completed<br>with evidence]
+        MARK --> MORE_IN_BATCH{More tasks<br>in batch?}
+        MORE_IN_BATCH -->|Yes| TASK
+        MORE_IN_BATCH -->|No| P3
     end
 
-    subgraph "Phase 2: Execute Batch"
-        B2_SELECT["Select next batch<br>(default 3 tasks)"]
-        B2_MARK_IP["Mark task as in_progress"]
-        B2_EXECUTE["Follow each step exactly"]
-        B2_VERIFY["Run verifications as specified"]
-        B2_EVIDENCE{Verification passed?}
-        B2_MARK_DONE["Mark task completed<br>with evidence"]
-        B2_MORE_IN_BATCH{More tasks<br>in batch?}
-        B2_STOP["STOP: Hit blocker<br>Ask for clarification"]
+    P3[Phase 3: Report<br>Show implementation + evidence]
+    P3 --> FEEDBACK[Say 'Ready for feedback']
 
-        B2_SELECT --> B2_MARK_IP --> B2_EXECUTE --> B2_VERIFY
-        B2_VERIFY --> B2_EVIDENCE
-        B2_EVIDENCE -->|Yes| B2_MARK_DONE --> B2_MORE_IN_BATCH
-        B2_EVIDENCE -->|No| B2_STOP
-        B2_STOP -->|"Clarification received"| B2_EXECUTE
-        B2_MORE_IN_BATCH -->|Yes| B2_MARK_IP
-        B2_MORE_IN_BATCH -->|No| B3_REPORT
-    end
+    FEEDBACK --> P4{Phase 4: User Feedback}
+    P4 -->|Changes needed| APPLY[Apply changes] --> P2_NEXT[Execute next batch]
+    P4 -->|Approved| MORE{More tasks<br>remaining?}
+    P2_NEXT --> batch_loop
 
-    subgraph "Phase 3: Report"
-        B3_REPORT["Show what was implemented"]
-        B3_SHOW["Show verification output"]
-        B3_READY["Say: Ready for feedback"]
+    MORE -->|Yes| P2
+    MORE -->|No| P5[[Phase 5: Completion<br>Reflection Gate]]:::gate
 
-        B3_REPORT --> B3_SHOW --> B3_READY
-    end
+    P5 --> REFLECT{Evidence for<br>every task?<br>No unapproved deviations?}
+    REFLECT -->|No| FIX_IT[STOP and fix] --> P5
+    REFLECT -->|Yes| DONE([To Self-Check]):::success
 
-    subgraph "Phase 4: Continue"
-        B4_FEEDBACK{User feedback}
-        B4_APPLY["Apply requested changes"]
-        B4_MORE{More tasks<br>in plan?}
-
-        B4_FEEDBACK -->|Changes needed| B4_APPLY --> B2_SELECT
-        B4_FEEDBACK -->|Approved| B4_MORE
-        B4_MORE -->|Yes| B2_SELECT
-        B4_MORE -->|No| B5_REFLECT
-    end
-
-    subgraph "Phase 5: Complete Development"
-        B5_REFLECT{{"Reflection gate:<br>Evidence for all tasks?<br>No unapproved deviations?"}}
-        B5_FIX["STOP and fix"]
-        B5_FINISH(["Invoke finishing-a-development-branch"])
-
-        B5_REFLECT -->|Issues found| B5_FIX --> B5_REFLECT
-        B5_REFLECT -->|All clean| B5_FINISH
-    end
-
-    B1_TODO --> B2_SELECT
-    B3_READY --> B4_FEEDBACK
-
-    style L5 fill:#ff6b6b,color:#fff
-    style B5_REFLECT fill:#ff6b6b,color:#fff
-    style B5_FINISH fill:#51cf66,color:#fff
-    style B2_STOP fill:#ff6b6b,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 ```
 
 ---
 
-## Subagent Mode Detail
+## Detail B: Subagent Mode Process
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-        L5{{Quality Gate}}
+    subgraph legend[" Legend "]
+        direction LR
+        l1[Process]
+        l2{Decision}
+        l4[/"Subagent Dispatch"/]:::subagent
+        l5[[Quality Gate]]:::gate
+        l6([Terminal]):::success
     end
 
-    subgraph "Phase 1: Extract Tasks"
-        S1_READ["Read plan once"]
-        S1_EXTRACT["Extract all tasks<br>with full text and context"]
-        S1_TODO["Create TodoWrite"]
+    P1[Phase 1: Extract Tasks<br>Read plan, extract full text] --> TODO[Create TodoWrite<br>with all tasks]
+    TODO --> P2[Phase 2: Per-Task Loop]
 
-        S1_READ --> S1_EXTRACT --> S1_TODO
+    subgraph task_loop["Per-Task Execution Loop (sequential only)"]
+        P2 --> IMPL[/"Dispatch Implementer<br>subagent"/]:::subagent
+        IMPL --> Q{Implementer<br>has questions?}
+        Q -->|Yes| SCOPE{Affects scope?}
+        SCOPE -->|Yes| ASK_USER[AskUserQuestion<br>with options]
+        SCOPE -->|No| ANSWER[Answer clearly<br>and completely]
+        ASK_USER --> IMPL
+        ANSWER --> IMPL
+        Q -->|No| IMPL_DONE[Implementer: implement,<br>test, commit, self-review]
+
+        IMPL_DONE --> SPEC[/"Dispatch Spec Reviewer<br>subagent"/]:::subagent
+
+        subgraph spec_loop["Spec Review Loop"]
+            SPEC --> SPEC_OK{Spec compliant?}
+            SPEC_OK -->|No| SPEC_CYCLE{3+ review<br>cycles?}
+            SPEC_CYCLE -->|Yes| ESCALATE([Escalate to user]):::gate
+            SPEC_CYCLE -->|No| SPEC_FIX[/"Dispatch fix subagent<br>with failure context"/]:::subagent
+            SPEC_FIX --> SPEC
+        end
+
+        SPEC_OK -->|Yes| QUAL[/"Dispatch Code Quality<br>Reviewer subagent"/]:::subagent
+
+        subgraph qual_loop["Quality Review Loop"]
+            QUAL --> QUAL_OK{Quality approved?}
+            QUAL_OK -->|No| QUAL_CYCLE{3+ review<br>cycles?}
+            QUAL_CYCLE -->|Yes| ESCALATE2([Escalate to user]):::gate
+            QUAL_CYCLE -->|No| QUAL_FIX[/"Dispatch fix subagent<br>with failure context"/]:::subagent
+            QUAL_FIX --> QUAL
+        end
+
+        QUAL_OK -->|Yes| COMPLETE[Mark task complete<br>in TodoWrite]
+        COMPLETE --> NEXT{More tasks?}
+        NEXT -->|Yes| P2
     end
 
-    subgraph "Phase 2: Per-Task Execution Loop"
-        S2_NEXT["Select next task"]
-        S2_IMPL[/"Dispatch implementer subagent<br>(implementer-prompt.md)"/]
-        S2_QUESTIONS{Implementer<br>has questions?}
-        S2_SCOPE{Affects scope?}
-        S2_ANSWER["Answer clearly<br>and completely"]
-        S2_ASK_USER["AskUserQuestion:<br>Include / Exclude / Defer"]
-        S2_IMPL_DONE["Implementer: implement,<br>test, commit, self-review"]
+    NEXT -->|No| P3[/"Phase 3: Dispatch Final<br>Code Reviewer for<br>entire implementation"/]:::subagent
+    P3 --> P4([Phase 4: To Self-Check]):::success
 
-        S2_SPEC[/"Dispatch spec reviewer<br>(spec-reviewer-prompt.md)"/]
-        S2_SPEC_PASS{{Spec compliant?}}
-        S2_SPEC_FIX[/"Dispatch fix subagent<br>with failure context"/]
-        S2_SPEC_CYCLES{3+ review<br>cycles?}
-        S2_ESCALATE["Escalate to user"]
-
-        S2_QUALITY[/"Dispatch code quality reviewer<br>(code-quality-reviewer-prompt.md)"/]
-        S2_QUAL_PASS{{Quality approved?}}
-        S2_QUAL_FIX[/"Dispatch fix subagent<br>with failure context"/]
-        S2_QUAL_CYCLES{3+ review<br>cycles?}
-        S2_QUAL_ESCALATE["Escalate to user"]
-
-        S2_MARK["Mark task complete<br>in TodoWrite"]
-        S2_MORE{More tasks?}
-
-        S2_NEXT --> S2_IMPL
-        S2_IMPL --> S2_QUESTIONS
-        S2_QUESTIONS -->|Yes| S2_SCOPE
-        S2_QUESTIONS -->|No| S2_IMPL_DONE
-        S2_SCOPE -->|Yes| S2_ASK_USER --> S2_IMPL_DONE
-        S2_SCOPE -->|No| S2_ANSWER --> S2_IMPL_DONE
-
-        S2_IMPL_DONE --> S2_SPEC
-        S2_SPEC --> S2_SPEC_PASS
-        S2_SPEC_PASS -->|Pass| S2_QUALITY
-        S2_SPEC_PASS -->|Issues| S2_SPEC_CYCLES
-        S2_SPEC_CYCLES -->|No| S2_SPEC_FIX --> S2_SPEC
-        S2_SPEC_CYCLES -->|Yes| S2_ESCALATE --> S2_SPEC_FIX
-
-        S2_QUALITY --> S2_QUAL_PASS
-        S2_QUAL_PASS -->|Pass| S2_MARK
-        S2_QUAL_PASS -->|Issues| S2_QUAL_CYCLES
-        S2_QUAL_CYCLES -->|No| S2_QUAL_FIX --> S2_QUALITY
-        S2_QUAL_CYCLES -->|Yes| S2_QUAL_ESCALATE --> S2_QUAL_FIX
-
-        S2_MARK --> S2_MORE
-        S2_MORE -->|Yes| S2_NEXT
-    end
-
-    subgraph "Phase 3: Final Review"
-        S3_REVIEW[/"Dispatch final code reviewer<br>for entire implementation"/]
-        S3_PASS{{Approved?}}
-        S3_FIX[/"Dispatch fix subagent"/]
-
-        S3_REVIEW --> S3_PASS
-        S3_PASS -->|Issues| S3_FIX --> S3_REVIEW
-        S3_PASS -->|Pass| S4_FINISH
-    end
-
-    subgraph "Phase 4: Complete Development"
-        S4_FINISH(["Invoke finishing-a-development-branch"])
-    end
-
-    S1_TODO --> S2_NEXT
-    S2_MORE -->|No| S3_REVIEW
-
-    style L4 fill:#4a9eff,color:#fff
-    style L5 fill:#ff6b6b,color:#fff
-    style S2_IMPL fill:#4a9eff,color:#fff
-    style S2_SPEC fill:#4a9eff,color:#fff
-    style S2_QUALITY fill:#4a9eff,color:#fff
-    style S2_SPEC_FIX fill:#4a9eff,color:#fff
-    style S2_QUAL_FIX fill:#4a9eff,color:#fff
-    style S3_REVIEW fill:#4a9eff,color:#fff
-    style S3_FIX fill:#4a9eff,color:#fff
-    style S4_FINISH fill:#51cf66,color:#fff
-    style S2_SPEC_PASS fill:#ff6b6b,color:#fff
-    style S2_QUAL_PASS fill:#ff6b6b,color:#fff
-    style S3_PASS fill:#ff6b6b,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#2b7de9,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
+    classDef success fill:#51cf66,stroke:#3ab554,color:#fff
 ```
 
 ---
 
-## Self-Check Gate Detail
-
-Five sequential gates that must all pass before declaring execution complete.
+## Stop Conditions & Circuit Breakers
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L3([Terminal])
-        L5{{Quality Gate}}
+    subgraph legend[" Legend "]
+        direction LR
+        l5[[Circuit Breaker]]:::gate
+        l6([Action])
     end
 
-    ENTER([Enter Self-Check]) --> C1{{"Every task has<br>verification output?"}}
-    C1 -->|No| FIX1["STOP: Collect missing evidence"]
-    FIX1 --> C1
-    C1 -->|Yes| C2{{"No tasks marked complete<br>without evidence?"}}
-    C2 -->|No| FIX2["STOP: Fix false completions"]
-    FIX2 --> C2
-    C2 -->|Yes| C3{{"All review issues<br>addressed?"}}
-    C3 -->|No| FIX3["STOP: Address open reviews"]
-    FIX3 --> C3
-    C3 -->|Yes| C4{{"Plan followed exactly or<br>deviations approved?"}}
-    C4 -->|No| FIX4["STOP: Reconcile deviations"]
-    FIX4 --> C4
-    C4 -->|Yes| C5{{"finishing-a-development-branch<br>invoked?"}}
-    C5 -->|No| FIX5["Invoke skill now"]
-    FIX5 --> C5
-    C5 -->|Yes| PASS([All Gates Passed])
+    ANY[Any point during execution] --> CHECK{Stop condition<br>detected?}
 
-    style L5 fill:#ff6b6b,color:#fff
-    style C1 fill:#ff6b6b,color:#fff
-    style C2 fill:#ff6b6b,color:#fff
-    style C3 fill:#ff6b6b,color:#fff
-    style C4 fill:#ff6b6b,color:#fff
-    style C5 fill:#ff6b6b,color:#fff
-    style PASS fill:#51cf66,color:#fff
+    CHECK -->|Blocker mid-task| STOP([STOP: Ask for clarification]):::gate
+    CHECK -->|Critical plan gap| STOP
+    CHECK -->|Unclear instruction| STOP
+    CHECK -->|Repeated verification failure| CB1[[3+ consecutive<br>test failures]]:::gate --> STOP
+    CHECK -->|Security-sensitive op<br>not in plan| STOP
+    CHECK -->|Scope question| ASK[AskUserQuestion<br>with scope options]
+    CHECK -->|3+ review cycles<br>same issue| STOP
+
+    STOP --> RESUME{User provides<br>resolution}
+    RESUME -->|Update plan| RELOAD[Return to Phase 1:<br>Reload Plan]
+    RESUME -->|Clarification| CONTINUE[Resume execution]
+    RESUME -->|Fundamental rethink| RELOAD
+
+    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
 ```
 
 ---
 
-## Stop Conditions and Circuit Breakers
-
-Conditions that halt execution, including those that pause even in autonomous mode.
+## Autonomous Mode Behavior
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
+    subgraph legend[" Legend "]
+        direction LR
+        l1[Auto-decided]:::auto
+        l5[[Still pauses]]:::gate
     end
 
-    EXECUTING["Executing task"] --> CHECK{Stop condition<br>triggered?}
+    AUTO{Autonomous Mode<br>active?}
+    AUTO -->|No| NORMAL[Normal interactive flow]
+    AUTO -->|Yes| SKIP[Skip: plan concerns log,<br>feedback checkpoints,<br>completion confirmations]
 
-    CHECK -->|No| CONTINUE["Continue execution"]
+    SKIP --> DECIDE[Auto-decide:<br>batch size = 3,<br>impl details documented,<br>apply review fixes]:::auto
 
-    CHECK -->|Yes| CLASSIFY{Condition type}
+    DECIDE --> CB{Circuit breaker<br>triggered?}
+    CB -->|Critical plan gap| PAUSE[[PAUSE: Ask user]]:::gate
+    CB -->|3+ test failures| PAUSE
+    CB -->|Security-sensitive op| PAUSE
+    CB -->|Scope question| PAUSE
+    CB -->|3+ review cycles| PAUSE
+    CB -->|No breaker| CONTINUE[Continue autonomous<br>execution]
 
-    CLASSIFY -->|"Blocker mid-task<br>(missing dep, test fail,<br>unclear instruction)"| HALT_ASK["HALT:<br>Ask for clarification"]
-    CLASSIFY -->|"Critical plan gaps"| HALT_PLAN["HALT:<br>Return to Phase 1"]
-    CLASSIFY -->|"Don't understand<br>instruction"| HALT_ASK
-
-    CLASSIFY -->|"3+ consecutive<br>test failures"| CIRCUIT_BREAK["CIRCUIT BREAKER:<br>Pause even in<br>autonomous mode"]
-    CLASSIFY -->|"Security-sensitive ops<br>not clearly specified"| CIRCUIT_BREAK
-    CLASSIFY -->|"Scope/requirements<br>question"| SCOPE_ASK["AskUserQuestion:<br>Include / Exclude / Defer"]
-    CLASSIFY -->|"3+ review cycles<br>on same issue"| CIRCUIT_BREAK
-
-    HALT_ASK -->|"Clarification received"| EXECUTING
-    HALT_PLAN -->|"Plan updated"| EXECUTING
-    CIRCUIT_BREAK -->|"User resolves"| EXECUTING
-    SCOPE_ASK -->|"Decision made"| EXECUTING
-
-    style CIRCUIT_BREAK fill:#ff6b6b,color:#fff
-    style HALT_ASK fill:#ff6b6b,color:#fff
-    style HALT_PLAN fill:#ff6b6b,color:#fff
+    classDef auto fill:#4a9eff,stroke:#2b7de9,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#e05252,color:#fff
 ```
-
----
-
-## Source Cross-Reference
-
-| Diagram Node | Source Location (SKILL.md) |
-|---|---|
-| Mode selection (batch/subagent) | Mode Selection table (lines 38-47) |
-| Autonomous mode / circuit breakers | Autonomous Mode (lines 48-79) |
-| Batch Phase 1: Load and review plan | Batch Mode Phase 1 (lines 97-110) |
-| Batch Phase 2: Execute batch | Batch Mode Phase 2 (lines 112-118) |
-| Batch Phase 3: Report | Batch Mode Phase 3 (lines 120-122) |
-| Batch Phase 4: Continue | Batch Mode Phase 4 (lines 124-126) |
-| Batch Phase 5: Complete / reflection gate | Batch Mode Phase 5 (lines 128-138) |
-| Subagent Phase 1: Extract tasks | Subagent Mode Phase 1 (lines 146-148) |
-| Subagent Phase 2: Per-task loop | Subagent Mode Phase 2 (lines 150-158) |
-| Spec reviewer dispatch + loop | Phase 2 step 4 (line 155), Handling Review Issues (lines 210-211) |
-| Quality reviewer dispatch + loop | Phase 2 step 5 (line 156), Handling Review Issues (lines 210-211) |
-| 3+ review cycle escalation | Handling Review Issues (line 211) |
-| Subagent Phase 3: Final review | Subagent Mode Phase 3 (line 160) |
-| finishing-a-development-branch | Batch Phase 5 (line 138), Subagent Phase 4 (line 166) |
-| Self-check gate (5 items) | Self-Check section (lines 220-231) |
-| Stop conditions | Stop Conditions (lines 170-179) |
-| Revisit Phase 1 | When to Revisit Phase 1 (line 183) |
-| Handling subagent failure | Handling Subagent Failure (lines 214-216) |
 
 ## Skill Content
 
@@ -387,6 +258,36 @@ Implementation Lead executing architect-approved plans. Reputation depends on fa
 4. **Review Before Proceed**: No task advances past unaddressed review findings. Spec compliance precedes code quality.
 5. **Context Completeness**: Subagents receive full task text, never file references. Fresh contexts lack your accumulated knowledge.
 
+## Working Directory Verification
+
+<CRITICAL>
+When executing in a worktree or specific directory, ALL work must happen in that directory.
+</CRITICAL>
+
+Before executing any plan tasks, verify the working directory:
+
+```bash
+cd <WORKING_DIRECTORY> && pwd && git branch --show-current
+```
+
+If a working directory was specified in the dispatch context:
+1. Verify you are in the correct directory
+2. Verify the branch matches expectations
+3. ALL file paths must be absolute, rooted at the working directory
+4. ALL git commands must run from the working directory
+5. Do NOT create new branches. Work on the existing branch.
+
+When dispatching implementer subagents, include the working directory verification in their prompts:
+
+```
+BEFORE ANY WORK:
+1. cd <WORKING_DIRECTORY> && pwd && git branch --show-current
+2. Verify the branch is <EXPECTED_BRANCH>
+3. ALL file paths must be absolute, rooted at <WORKING_DIRECTORY>
+4. ALL git commands must run from <WORKING_DIRECTORY>
+5. Do NOT create new branches. Work on the existing branch.
+```
+
 ## Inputs / Outputs
 
 | Input | Required | Description |
@@ -394,6 +295,7 @@ Implementation Lead executing architect-approved plans. Reputation depends on fa
 | Plan document | Yes | Implementation plan from `writing-plans` with numbered tasks |
 | Mode preference | No | `batch` (default) or `subagent` |
 | Batch size | No | Tasks per batch in batch mode (default: 3) |
+| Working directory | No | Absolute path to worktree or project root. If provided, all work happens here. |
 
 | Output | Type | Description |
 |--------|------|-------------|

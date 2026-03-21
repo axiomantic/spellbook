@@ -21,6 +21,36 @@ Implementation Lead executing architect-approved plans. Reputation depends on fa
 4. **Review Before Proceed**: No task advances past unaddressed review findings. Spec compliance precedes code quality.
 5. **Context Completeness**: Subagents receive full task text, never file references. Fresh contexts lack your accumulated knowledge.
 
+## Working Directory Verification
+
+<CRITICAL>
+When executing in a worktree or specific directory, ALL work must happen in that directory.
+</CRITICAL>
+
+Before executing any plan tasks, verify the working directory:
+
+```bash
+cd <WORKING_DIRECTORY> && pwd && git branch --show-current
+```
+
+If a working directory was specified in the dispatch context:
+1. Verify you are in the correct directory
+2. Verify the branch matches expectations
+3. ALL file paths must be absolute, rooted at the working directory
+4. ALL git commands must run from the working directory
+5. Do NOT create new branches. Work on the existing branch.
+
+When dispatching implementer subagents, include the working directory verification in their prompts:
+
+```
+BEFORE ANY WORK:
+1. cd <WORKING_DIRECTORY> && pwd && git branch --show-current
+2. Verify the branch is <EXPECTED_BRANCH>
+3. ALL file paths must be absolute, rooted at <WORKING_DIRECTORY>
+4. ALL git commands must run from <WORKING_DIRECTORY>
+5. Do NOT create new branches. Work on the existing branch.
+```
+
 ## Inputs / Outputs
 
 | Input | Required | Description |
@@ -28,6 +58,7 @@ Implementation Lead executing architect-approved plans. Reputation depends on fa
 | Plan document | Yes | Implementation plan from `writing-plans` with numbered tasks |
 | Mode preference | No | `batch` (default) or `subagent` |
 | Batch size | No | Tasks per batch in batch mode (default: 3) |
+| Working directory | No | Absolute path to worktree or project root. If provided, all work happens here. |
 
 | Output | Type | Description |
 |--------|------|-------------|

@@ -463,6 +463,9 @@ REVIEW MODE INSTRUCTIONS:
 - Parallel dispatch when failures might be related
 - Dispatching a branch review subagent with file paths instead of diffs (subagent cannot distinguish branch changes from pre-existing code)
 - Dispatching a worktree subagent without the verification preamble (subagent may operate in the wrong directory)
+- Dispatching subagents to worktrees without the Worktree Dispatch Preamble
+- Using `isolation: "worktree"` for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
+- Dispatching subagents without specifying which branch to base worktrees on
 </FORBIDDEN>
 
 ---
@@ -581,6 +584,30 @@ Do NOT read files from `<main-repo-path>` -- that is a DIFFERENT branch.
 ```
 
 This prevents the silent wrong-directory failure where a subagent reads files or runs git commands from the main repo (which is on a different branch) and produces wrong results with high confidence.
+
+### Mandatory Worktree Dispatch Preamble
+
+<CRITICAL>
+When dispatching ANY subagent to work in a worktree, the subagent prompt MUST include this verification preamble. No exceptions.
+</CRITICAL>
+
+Every subagent prompt targeting a worktree MUST begin with:
+
+```
+BEFORE ANY WORK:
+1. cd <WORKTREE_PATH> && pwd && git branch --show-current
+2. Verify the branch is <EXPECTED_BRANCH>
+3. ALL file paths must be absolute, rooted at <WORKTREE_PATH>
+4. ALL git commands must run from <WORKTREE_PATH>
+5. Do NOT create new branches. Work on the existing branch.
+```
+
+**Why this matters:** Without explicit path and branch verification, agents will:
+- Work in the main repo directory instead of the worktree
+- Create duplicate infrastructure by branching from main instead of the feature branch
+- Run git commands that reflect a different branch's state
+
+**When using `isolation: "worktree"`:** The worktree branches from the CURRENT branch at dispatch time. If prior work items' commits aren't on the current branch yet, the isolated worktree won't have them. For sequential dependencies, commit and stay on the same branch rather than using isolated worktrees.
 
 ### WRONG vs RIGHT Examples
 
