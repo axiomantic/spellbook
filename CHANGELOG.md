@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Auto-memory bridge hook**: Intercepts Claude Code Write tool calls to `~/.claude/projects/*/memory/` paths and mirrors content into spellbook's structured memory via new `/api/memory/bridge-content` endpoint
+- **Bridge content endpoint** (`/api/memory/bridge-content`): Dual-event storage with brief summary for consolidation pipeline + full content for audit trail
+- **MEMORY.md bootstrap regenerator** (`spellbook/memory/bootstrap.py`): Generates static redirect template instructing the model to use spellbook MCP memory tools
+- **Session init memory integration**: Refreshes MEMORY.md on every new session start via `spellbook_session_init`
+- **Memory System section** in `AGENTS.spellbook.md` supplementing Claude Code auto-memory with spellbook MCP tool preferences
+- **ErrorBoundary** component wrapping all admin page routes to catch render crashes with error display and retry
+- **ErrorDisplay** component for admin data fetch failures with retry button
+- **`--stamp` flag** for `generate_diagrams.py` to skip diagram generation and just update hashes
+- **Worktree Dispatch Preamble** in dispatching-parallel-agents skill enforcing 5-step verification for subagent worktree work
 - **SQLAlchemy async database layer** (`spellbook/db/`): 4 async engines, session factories, and query helpers for all databases
 - **36 ORM models** across 4 databases (spellbook, fractal, forged, coordination) with `to_dict()` methods
 - **Alembic multi-database migration infrastructure** for schema versioning across all 4 databases
@@ -34,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/focus` route redirects to `/stacks`
 
 ### Fixed
+- **Stacks page blank render**: Hook extracted `.stacks` instead of `.items` from API response
+- **Config nav position**: Moved to second item (right after Dashboard)
+- **Corrections header height**: Filter buttons moved from header to content area for consistent header sizing across pages
+- **Worktree dispatch instructions**: Subagent prompts now require explicit path/branch verification before any work
 - Correction log now has proper pagination (removed hardcoded `LIMIT 200`)
 
 ## [0.34.0] - 2026-03-20
