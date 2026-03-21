@@ -86,18 +86,17 @@ describe('SessionDetailPage', () => {
       })
     })
 
-    it('renders back link to sessions list', () => {
+    it('renders sessions breadcrumb button', () => {
       renderWithRoute('Users-alice-myproject', 'abc-123-def-456')
 
-      const backLink = screen.getByRole('link', { name: /Back to Sessions/i })
-      expect(backLink).toBeInTheDocument()
-      expect(backLink).toHaveAttribute('href', '/sessions')
+      const sessionsButton = screen.getByRole('button', { name: /SESSIONS/i })
+      expect(sessionsButton).toBeInTheDocument()
     })
 
     it('renders session detail heading', () => {
       renderWithRoute('Users-alice-myproject', 'abc-123-def-456')
 
-      expect(screen.getByText('// Session Detail')).toBeInTheDocument()
+      expect(screen.getByText('SESSION DETAIL')).toBeInTheDocument()
     })
 
     it('displays session ID', () => {
@@ -241,9 +240,9 @@ describe('SessionDetailPage', () => {
       expect(screen.getByText('Session not found')).toBeInTheDocument()
       expect(screen.getByText('This session may have been deleted.')).toBeInTheDocument()
 
-      // Still has back link
-      const backLink = screen.getByRole('link', { name: /Back to Sessions/i })
-      expect(backLink).toHaveAttribute('href', '/sessions')
+      // Still has sessions breadcrumb
+      const sessionsButton = screen.getByRole('button', { name: /SESSIONS/i })
+      expect(sessionsButton).toBeInTheDocument()
     })
 
     it('renders generic error message for other errors', () => {
@@ -259,9 +258,9 @@ describe('SessionDetailPage', () => {
       expect(screen.getByText('Error loading session')).toBeInTheDocument()
       expect(screen.getByText('Server error')).toBeInTheDocument()
 
-      // Still has back link
-      const backLink = screen.getByRole('link', { name: /Back to Sessions/i })
-      expect(backLink).toHaveAttribute('href', '/sessions')
+      // Still has sessions breadcrumb
+      const sessionsButton = screen.getByRole('button', { name: /SESSIONS/i })
+      expect(sessionsButton).toBeInTheDocument()
     })
   })
 

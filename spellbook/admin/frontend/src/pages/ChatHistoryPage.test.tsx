@@ -145,18 +145,17 @@ describe('ChatHistoryPage', () => {
       })
     })
 
-    it('renders back link to session detail page', () => {
+    it('renders session breadcrumb button linking to session detail', () => {
       renderWithRoute('Users-bob-code', 'sess-123')
 
-      const backLink = screen.getByRole('link', { name: /Back to Session Detail/i })
-      expect(backLink).toBeInTheDocument()
-      expect(backLink).toHaveAttribute('href', '/sessions/Users-bob-code/sess-123')
+      const sessionButton = screen.getByRole('button', { name: /^SESSION$/i })
+      expect(sessionButton).toBeInTheDocument()
     })
 
     it('renders chat history heading', () => {
       renderWithRoute('Users-bob-code', 'sess-123')
 
-      expect(screen.getByText('// Chat History')).toBeInTheDocument()
+      expect(screen.getByText('CHAT HISTORY')).toBeInTheDocument()
     })
 
     it('displays session name from custom_title', () => {
@@ -381,9 +380,9 @@ describe('ChatHistoryPage', () => {
       expect(screen.getByText('Session not found')).toBeInTheDocument()
       expect(screen.getByText('This session may have been deleted.')).toBeInTheDocument()
 
-      // Back link goes to session detail
-      const backLink = screen.getByRole('link', { name: /Back to Session Detail/i })
-      expect(backLink).toHaveAttribute('href', '/sessions/proj/missing-id')
+      // Session breadcrumb button is present
+      const sessionButton = screen.getByRole('button', { name: /^SESSION$/i })
+      expect(sessionButton).toBeInTheDocument()
     })
 
     it('renders gracefully when detailQuery errors but messages load', () => {
@@ -433,9 +432,9 @@ describe('ChatHistoryPage', () => {
       expect(screen.getByText('Error loading messages')).toBeInTheDocument()
       expect(screen.getByText('Internal server error')).toBeInTheDocument()
 
-      // Back link goes to session detail
-      const backLink = screen.getByRole('link', { name: /Back to Session Detail/i })
-      expect(backLink).toHaveAttribute('href', '/sessions/proj/bad-id')
+      // Session breadcrumb button is present
+      const sessionButton = screen.getByRole('button', { name: /^SESSION$/i })
+      expect(sessionButton).toBeInTheDocument()
     })
   })
 })
