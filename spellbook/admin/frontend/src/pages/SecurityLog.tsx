@@ -24,6 +24,11 @@ const severityCardColor: Record<string, string> = {
 
 function SummaryCards({ summary }: { summary: Record<string, number> }) {
   const levels = ['critical', 'warning', 'info']
+  // Normalize keys to lowercase (backend returns uppercase: INFO, WARNING, CRITICAL)
+  const normalized: Record<string, number> = {}
+  for (const [k, v] of Object.entries(summary)) {
+    normalized[k.toLowerCase()] = (normalized[k.toLowerCase()] || 0) + v
+  }
   const total = Object.values(summary).reduce((a, b) => a + b, 0)
 
   return (
@@ -36,7 +41,7 @@ function SummaryCards({ summary }: { summary: Record<string, number> }) {
         <div key={level} className="card">
           <div className="section-header mb-1">{level}</div>
           <div className={`font-mono text-2xl ${severityCardColor[level] || 'text-text-dim'}`}>
-            {summary[level] || 0}
+            {normalized[level] || 0}
           </div>
         </div>
       ))}
