@@ -72,10 +72,6 @@ export interface SecurityEvent {
   created_at: string
 }
 
-export interface SecurityEventListResponse extends PaginatedResponse {
-  events: SecurityEvent[]
-}
-
 export interface SecurityDashboardResponse {
   mode: string
   events_24h: Record<string, number>
@@ -95,10 +91,6 @@ export interface SessionItem {
   last_activity: string | null
   message_count: number
   size_bytes: number
-}
-
-export interface SessionListResponse extends PaginatedResponse {
-  sessions: SessionItem[]
 }
 
 // Session Detail
@@ -148,10 +140,6 @@ export interface FractalGraphSummary {
   created_at: string
   updated_at: string
   project_dir: string | null
-}
-
-export interface FractalGraphListResponse extends PaginatedResponse {
-  graphs: FractalGraphSummary[]
 }
 
 export interface CytoscapeNode {

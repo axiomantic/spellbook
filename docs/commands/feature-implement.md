@@ -224,10 +224,10 @@ instruction to invoke the skill.
 
 After EACH task, run these gates in order:
 
-1. **TDD** (4.3): Dispatch subagent → invokes `test-driven-development` skill
-2. **Completion verification** (4.4): Dispatch subagent with inline audit prompt
-3. **Code review** (4.5): Dispatch subagent → invokes `requesting-code-review` skill
-4. **Fact-checking** (4.5.1): Dispatch subagent → invokes `fact-checking` skill
+1. **TDD** (4.3): Dispatch subagent → must invoke `test-driven-development` skill using the Skill tool
+2. **Completion verification** (4.4): Dispatch subagent with inline audit prompt (no skill invocation needed)
+3. **Code review** (4.5): Dispatch subagent → must invoke `requesting-code-review` skill using the Skill tool
+4. **Fact-checking** (4.5.1): Dispatch subagent → must invoke `fact-checking` skill using the Skill tool
 
 Do NOT batch gates across tasks. Each task completes all 4 gates before
 the next task begins.
@@ -238,9 +238,9 @@ After all tasks pass per-task gates:
 
 1. Comprehensive implementation audit (4.6.1)
 2. Full test suite (4.6.2)
-3. Green mirage audit (4.6.3) → invokes `audit-green-mirage` skill
-4. Comprehensive fact-checking (4.6.4) → invokes `fact-checking` skill
-5. Finishing (4.7) → invokes `finishing-a-development-branch` skill
+3. Green mirage audit (4.6.3) → must invoke `audit-green-mirage` skill using the Skill tool
+4. Comprehensive fact-checking (4.6.4) → must invoke `fact-checking` skill using the Skill tool
+5. Finishing (4.7) → must invoke `finishing-a-development-branch` skill using the Skill tool
 
 ## Pre-conditions
 

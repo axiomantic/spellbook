@@ -10,6 +10,9 @@ These tests verify the complete workflow integration:
 """
 
 import json
+from contextlib import asynccontextmanager
+from unittest.mock import patch
+
 import pytest
 from pathlib import Path
 
@@ -18,6 +21,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from spellbook.db.base import ForgedBase
+import spellbook.db.forged_models  # noqa: F401 - ensure all models register with ForgedBase
 
 
 @pytest.fixture
@@ -306,7 +310,7 @@ class TestRoundtableEndToEnd:
         assert "archetypes" in result
         assert len(result["archetypes"]) > 0
 
-    async def test_process_roundtable_response_all_approve(self, tmp_path):
+    async def test_process_roundtable_response_all_approve(self, tmp_path, forged_session):
         """Processing response with all APPROVE verdicts returns consensus True."""
         from spellbook.forged.roundtable import process_roundtable_response
 
@@ -330,13 +334,19 @@ class TestRoundtableEndToEnd:
         Verdict: APPROVE
         """
 
-        result = await process_roundtable_response(
-            response=response,
-            stage="IMPLEMENT",
-            gate="test_suite",
-            feature_name="test-feature",
-            iteration=1,
-        )
+        # Mock get_forged_session to use the test fixture session
+        @asynccontextmanager
+        async def _mock_forged_session():
+            yield forged_session
+
+        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+            result = await process_roundtable_response(
+                response=response,
+                stage="IMPLEMENT",
+                gate="test_suite",
+                feature_name="test-feature",
+                iteration=1,
+            )
 
         assert result["consensus"] is True
         assert result["return_to"] is None

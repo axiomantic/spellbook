@@ -22,36 +22,48 @@ from spellbook.admin.events import Event, EventBus, Subsystem
 class TestMemorySearchPerformance:
     def test_memory_fts_response_time(self, client):
         """Memory FTS search should respond within 200ms."""
-        with patch(
-            "spellbook.admin.routes.memory.query_spellbook_db",
-            new_callable=AsyncMock,
-        ) as mock:
-            mock.side_effect = [
-                [{"cnt": 100}],  # count query
-                [
-                    {
-                        "id": f"mem-{i}",
-                        "content": f"test memory {i}",
-                        "memory_type": "fact",
-                        "namespace": "test",
-                        "branch": "main",
-                        "importance": 1.0,
-                        "created_at": "2026-03-14T10:00:00Z",
-                        "accessed_at": None,
-                        "status": "active",
-                        "meta": "{}",
-                        "citation_count": 0,
-                    }
-                    for i in range(50)
-                ],
-            ]
+        # Build mock rows for the FTS text() queries (count + data)
+        mock_count_result = MagicMock()
+        mock_count_result.scalar_one.return_value = 100
 
+        mock_rows = [
+            {
+                "id": f"mem-{i}",
+                "content": f"test memory {i}",
+                "memory_type": "fact",
+                "namespace": "test",
+                "branch": "main",
+                "importance": 1.0,
+                "created_at": "2026-03-14T10:00:00Z",
+                "accessed_at": None,
+                "status": "active",
+                "meta": "{}",
+                "deleted_at": None,
+                "content_hash": None,
+                "citation_count": 0,
+            }
+            for i in range(50)
+        ]
+        mock_data_result = MagicMock()
+        mock_data_result.mappings.return_value.all.return_value = mock_rows
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(
+            side_effect=[mock_count_result, mock_data_result]
+        )
+
+        from spellbook.db import spellbook_db
+
+        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        try:
             start = time.monotonic()
             response = client.get("/api/memories?q=test")
             elapsed_ms = (time.monotonic() - start) * 1000
 
             assert response.status_code == 200
             assert elapsed_ms < 200, f"Memory FTS took {elapsed_ms:.0f}ms, budget is 200ms"
+        finally:
+            client.app.dependency_overrides.pop(spellbook_db, None)
 
 
 @pytest.mark.slow
