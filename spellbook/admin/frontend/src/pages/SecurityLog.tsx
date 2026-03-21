@@ -4,6 +4,7 @@ import { useListPage } from '../hooks/useListPage'
 import { DataTable } from '../components/shared/DataTable'
 import { FilterBar } from '../components/shared/FilterBar'
 import { Badge } from '../components/shared/Badge'
+import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { SecurityEvent } from '../api/types'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -134,6 +135,11 @@ export function SecurityLog() {
           onChange={handleSeverityChange}
         />
       </div>
+
+      {/* Error state */}
+      {listPage.isError && (
+        <ErrorDisplay error={listPage.error} title="Failed to load security events" />
+      )}
 
       {/* Event table */}
       <DataTable<SecurityEvent>

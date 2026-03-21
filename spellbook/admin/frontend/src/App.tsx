@@ -40,23 +40,23 @@ function AuthGate() {
       <BrowserRouter basename="/admin">
         <AppShell>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/memory" element={<MemoryBrowser />} />
-            <Route path="/security" element={<SecurityLog />} />
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/sessions/:project/:id" element={<SessionDetailPage />} />
-            <Route path="/sessions/:project/:id/chat" element={<ChatHistoryPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/health" element={<HealthPage />} />
-            <Route path="/events" element={<EventMonitorPage />} />
-            <Route path="/stacks" element={<StacksPage />} />
-            <Route path="/corrections" element={<CorrectionsPage />} />
+            <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/memory" element={<ErrorBoundary><MemoryBrowser /></ErrorBoundary>} />
+            <Route path="/security" element={<ErrorBoundary><SecurityLog /></ErrorBoundary>} />
+            <Route path="/sessions" element={<ErrorBoundary><Sessions /></ErrorBoundary>} />
+            <Route path="/sessions/:project/:id" element={<ErrorBoundary><SessionDetailPage /></ErrorBoundary>} />
+            <Route path="/sessions/:project/:id/chat" element={<ErrorBoundary><ChatHistoryPage /></ErrorBoundary>} />
+            <Route path="/analytics" element={<ErrorBoundary><AnalyticsPage /></ErrorBoundary>} />
+            <Route path="/health" element={<ErrorBoundary><HealthPage /></ErrorBoundary>} />
+            <Route path="/events" element={<ErrorBoundary><EventMonitorPage /></ErrorBoundary>} />
+            <Route path="/stacks" element={<ErrorBoundary><StacksPage /></ErrorBoundary>} />
+            <Route path="/corrections" element={<ErrorBoundary><CorrectionsPage /></ErrorBoundary>} />
             <Route path="/focus" element={<Navigate to="/stacks" replace />} />
-            <Route path="/config" element={<ConfigEditor />} />
-            <Route path="/fractal" element={<FractalExplorer />} />
-            <Route path="/fractal/:graphId" element={<FractalExplorer />} />
-            <Route path="/fractal/:graphId/:nodeId" element={<FractalExplorer />} />
-            <Route path="/fractal/:graphId/:nodeId/chat" element={<FractalExplorer />} />
+            <Route path="/config" element={<ErrorBoundary><ConfigEditor /></ErrorBoundary>} />
+            <Route path="/fractal" element={<ErrorBoundary><FractalExplorer /></ErrorBoundary>} />
+            <Route path="/fractal/:graphId" element={<ErrorBoundary><FractalExplorer /></ErrorBoundary>} />
+            <Route path="/fractal/:graphId/:nodeId" element={<ErrorBoundary><FractalExplorer /></ErrorBoundary>} />
+            <Route path="/fractal/:graphId/:nodeId/chat" element={<ErrorBoundary><FractalExplorer /></ErrorBoundary>} />
           </Routes>
         </AppShell>
       </BrowserRouter>

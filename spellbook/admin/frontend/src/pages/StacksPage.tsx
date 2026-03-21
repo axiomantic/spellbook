@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStintStacks } from '../hooks/useFocus'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
+import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { StintStack, StintEntry } from '../api/types'
 
@@ -132,11 +133,15 @@ function StackCard({ stack }: { stack: StintStack }) {
 }
 
 export function StacksPage() {
-  const { data: stacks, isLoading } = useStintStacks()
+  const { data: stacks, isLoading, error, refetch } = useStintStacks()
 
   return (
     <PageLayout segments={[{ label: 'ACTIVE STACKS' }]}>
       {isLoading && !stacks && <LoadingSpinner className="py-16" />}
+
+      {error && (
+        <ErrorDisplay error={error} title="Failed to load stacks" onRetry={refetch} />
+      )}
 
       {stacks && stacks.length === 0 && (
         <EmptyState
