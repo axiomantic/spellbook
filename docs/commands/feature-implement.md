@@ -180,6 +180,17 @@ Each work item prompt file follows this structure:
 ````markdown
 # <Feature Name> - Chunk <N>/<Total>: <Chunk Title>
 
+## Working Directory
+
+**Path:** <WORKTREE_PATH>
+**Branch:** <BRANCH_NAME>
+
+BEFORE ANY WORK:
+1. `cd <WORKTREE_PATH> && pwd && git branch --show-current`
+2. Verify output shows `<BRANCH_NAME>`
+3. ALL file paths must be absolute, rooted at `<WORKTREE_PATH>`
+4. Do NOT create new branches or switch branches
+
 ## Context
 
 <Brief description of what this chunk accomplishes>
@@ -389,6 +400,13 @@ Before creating parallel worktrees, setup/skeleton work MUST be completed and co
 This ensures all worktrees start with shared interfaces.
 </CRITICAL>
 
+<CRITICAL>
+After creating the worktree, record the EXACT path and branch name. ALL subsequent subagent dispatches MUST include:
+- Absolute worktree path
+- Expected branch name
+- Verification preamble (see dispatching-parallel-agents skill)
+</CRITICAL>
+
 1. Identify setup/skeleton tasks from impl plan
 2. Execute setup tasks in main branch, commit
 3. Create worktree per parallel group
@@ -409,6 +427,13 @@ For each worktree:
   Task (run_in_background: true):
     description: "Execute tasks in [worktree.path]"
     prompt: |
+      BEFORE ANY WORK:
+      1. cd <worktree_path> && pwd && git branch --show-current
+      2. Verify the branch is <branch_name>
+      3. ALL file paths must be absolute, rooted at <worktree_path>
+      4. ALL git commands must run from <worktree_path>
+      5. Do NOT create new branches. Work on the existing branch.
+
       First, invoke the executing-plans skill using the Skill tool.
       Execute assigned tasks in this worktree.
 
@@ -496,6 +521,15 @@ Task:
     Every assertion must be Level 4+ on the Assertion Strength Ladder.
     Do NOT take shortcuts on assertions. Do NOT use partial assertions
     as a substitute for computing the complete expected value.
+
+    ## Working Directory
+
+    BEFORE ANY WORK, verify your working directory:
+    ```bash
+    cd <WORKTREE_OR_CWD> && pwd && git branch --show-current
+    ```
+    Expected branch: <BRANCH_NAME>
+    All file operations must use absolute paths rooted at: <WORKTREE_OR_CWD>
 
     ## Context for the Skill
 
@@ -1094,6 +1128,7 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 - **Skipping quality gates because "the next chunk will catch it"** - each chunk must pass all gates
 - **Work items without pre-conditions or exit criteria** - every prompt file needs both
 - **Missing the "Next" link between sequential items** - each chunk (except last) must link to the next
+- Dispatching subagents to isolated worktrees without specifying which branch to base them on. Isolated worktrees default to the current branch at dispatch time, which may not have prior chunks' work.
 </FORBIDDEN>
 
 ---

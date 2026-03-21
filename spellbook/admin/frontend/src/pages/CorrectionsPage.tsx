@@ -3,6 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { useListPage } from '../hooks/useListPage'
 import { DataTable } from '../components/shared/DataTable'
 import { FilterBar } from '../components/shared/FilterBar'
+import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { CorrectionEvent } from '../api/types'
 
@@ -175,23 +176,24 @@ export function CorrectionsPage() {
   return (
     <PageLayout
       segments={[{ label: 'CORRECTION LOG' }]}
-      headerRight={
-        <div className="flex gap-3">
-          <FilterBar
-            type="chips"
-            options={CORRECTION_TYPE_OPTIONS}
-            value={correctionTypeValue}
-            onChange={handleCorrectionTypeChange}
-          />
-          <FilterBar
-            type="chips"
-            options={PERIOD_OPTIONS}
-            value={periodValue}
-            onChange={handlePeriodChange}
-          />
-        </div>
-      }
     >
+      <div className="flex gap-3 mb-4">
+        <FilterBar
+          type="chips"
+          options={CORRECTION_TYPE_OPTIONS}
+          value={correctionTypeValue}
+          onChange={handleCorrectionTypeChange}
+        />
+        <FilterBar
+          type="chips"
+          options={PERIOD_OPTIONS}
+          value={periodValue}
+          onChange={handlePeriodChange}
+        />
+      </div>
+      {listPage.isError && (
+        <ErrorDisplay error={listPage.error} title="Failed to load corrections" />
+      )}
       <DataTable
         columns={columns}
         {...listPage.tableProps}

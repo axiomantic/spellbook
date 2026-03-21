@@ -6,7 +6,7 @@ export function useStintStacks() {
   return useQuery({
     queryKey: ['focus', 'stacks'],
     queryFn: () =>
-      fetchApi<{ stacks: StintStack[] }>('/api/focus/stacks').then((r) => r.stacks),
+      fetchApi<{ items: StintStack[] }>('/api/focus/stacks').then((r) => r.items),
     refetchInterval: 30_000,
   })
 }

@@ -4,6 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { useListPage } from '../hooks/useListPage'
 import { DataTable } from '../components/shared/DataTable'
 import { SearchBar } from '../components/shared/SearchBar'
+import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 import type { SessionItem } from '../api/types'
 
@@ -219,6 +220,11 @@ export function Sessions() {
           </button>
         )}
       </div>
+
+      {/* Error state */}
+      {listPage.isError && (
+        <ErrorDisplay error={listPage.error} title="Failed to load sessions" />
+      )}
 
       {/* Session table */}
       <DataTable

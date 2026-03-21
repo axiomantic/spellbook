@@ -544,6 +544,86 @@ def _memory_capture(tool_name: str, data: dict) -> None:
     )
 
 
+def _is_auto_memory_path(file_path: str) -> bool:
+    """Detect writes to Claude Code's auto-memory directory.
+
+    Matches: ~/.claude/projects/<anything>/memory/<anything>.md
+    """
+    normalized = file_path.replace("\\", "/")
+    return (
+        "/.claude/projects/" in normalized
+        and "/memory/" in normalized
+        and normalized.endswith(".md")
+    )
+
+
+def _memory_bridge(tool_name: str, data: dict) -> None:
+    """Bridge: capture auto-memory writes to spellbook. FAIL-OPEN."""
+    if tool_name != "Write":
+        return
+
+    tool_input = data.get("tool_input") or {}
+    file_path = tool_input.get("file_path", "")
+
+    if not _is_auto_memory_path(file_path):
+        return
+
+    content = tool_input.get("content", "")
+    if not content:
+        return
+
+    # Skip re-capturing spellbook-generated content (design doc Section 8.3).
+    # Bootstrap content will be re-captured when the model updates MEMORY.md,
+    # which is accepted by design. This lightweight filter avoids the most
+    # common echo: the regenerated header written by session init.
+    if content.lstrip().startswith("# Spellbook Memory System"):
+        return
+
+    cwd = data.get("cwd", "")
+    session_id = data.get("session_id", "")
+    resolved_cwd, branch = _resolve_git_context(cwd)
+    namespace = (
+        resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-")
+        if resolved_cwd else "unknown"
+    )
+
+    # Determine if this is MEMORY.md or a topic file
+    normalized = file_path.replace("\\", "/")
+    filename = normalized.rsplit("/", 1)[-1] if "/" in normalized else normalized
+    is_primary = filename == "MEMORY.md"
+
+    # 1. Audit trail (existing endpoint, lightweight)
+    _http_post(
+        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/event",
+        {
+            "session_id": session_id,
+            "project": namespace,
+            "tool_name": "Write",
+            "subject": file_path,
+            "summary": f"auto-memory {'primary' if is_primary else 'topic'}: {filename}",
+            "tags": "auto-memory,bridge," + filename.lower().replace(".md", ""),
+            "event_type": "auto_memory_bridge",
+            "branch": branch,
+        },
+        timeout=5,
+    )
+
+    # 2. Full content capture (new endpoint)
+    _http_post(
+        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/bridge-content",
+        {
+            "session_id": session_id,
+            "project": namespace,
+            "file_path": file_path,
+            "filename": filename,
+            "content": content[:50000],  # Safety cap: 50KB
+            "is_primary": is_primary,
+            "branch": branch,
+        },
+        timeout=10,
+    )
+
+
 def _stint_auto_push(data: dict) -> None:
     """Auto-push a stint when a Skill tool is invoked.
 
@@ -759,6 +839,10 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
 
     # Memory capture (catch-all, non-blocking)
     _fire_and_forget(_memory_capture, tool_name, data)
+
+    # Auto-memory bridge (specific matcher: Write to auto-memory paths)
+    if tool_name == "Write":
+        _fire_and_forget(_memory_bridge, tool_name, data)
 
     return outputs
 

@@ -879,6 +879,11 @@ def main() -> int:
         action="store_true",
         help="Show Claude invocation details",
     )
+    parser.add_argument(
+        "--stamp",
+        action="store_true",
+        help="Stamp stale diagrams as fresh without regenerating (just update hash)",
+    )
     args = parser.parse_args()
 
     # Discover all items
@@ -924,6 +929,16 @@ def main() -> int:
     if not work_items:
         print()
         print("All diagrams are fresh. Nothing to generate.")
+        return 0
+
+    # --stamp: just update hashes, no Claude calls, no generation
+    if args.stamp:
+        print()
+        print(f"Stamping {len(work_items)} stale diagrams as fresh...")
+        for item, current_hash in work_items:
+            stamp_as_fresh(item, current_hash)
+            print(f"  Stamped: {item.name}")
+        print(f"Done: {len(work_items)} stamped")
         return 0
 
     print()

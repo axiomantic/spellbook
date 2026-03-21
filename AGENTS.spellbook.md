@@ -543,6 +543,19 @@ When compacting, follow `/handoff` command exactly. MUST retain all remaining wo
 
 Load `dispatching-parallel-agents` skill for task output storage locations and subagent decision heuristics.
 
+## Memory System
+
+Prefer spellbook MCP memory tools over direct MEMORY.md edits:
+- `memory_recall`: Search existing memories by keyword or file path before re-discovering
+- `memory_store_memories`: Store structured facts, rules, conventions, decisions
+- `memory_get_unconsolidated`: Review pending raw events for synthesis
+
+Direct writes to MEMORY.md are captured by spellbook's bridge hook and
+fed into the consolidation pipeline, but MCP tools provide better
+structure, deduplication, and cross-session retrieval. Use `memory_recall`
+with specific queries rather than re-reading MEMORY.md when looking for
+past context.
+
 ## Glossary
 
 | Term | Definition |
