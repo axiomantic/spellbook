@@ -23,34 +23,35 @@ def main():
         sys.exit(1)
 
     conn = sqlite3.connect(str(db_path))
-    conn.execute("PRAGMA journal_mode=WAL")
-    cursor = conn.cursor()
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT project_path, stack_json FROM stint_stack")
-    rows = cursor.fetchall()
+        cursor.execute("SELECT project_path, stack_json FROM stint_stack")
+        rows = cursor.fetchall()
 
-    reset_count = 0
-    for project_path, stack_json in rows:
-        try:
-            stack = json.loads(stack_json)
-        except (json.JSONDecodeError, TypeError):
-            stack = []
+        reset_count = 0
+        for project_path, stack_json in rows:
+            try:
+                stack = json.loads(stack_json)
+            except (json.JSONDecodeError, TypeError):
+                stack = []
 
-        if len(stack) > 6:
-            reset_count += 1
-            print(f"{'[DRY RUN] ' if dry_run else ''}Reset: {project_path} (depth {len(stack)} -> 0)")
-            if not dry_run:
-                cursor.execute(
-                    "UPDATE stint_stack SET stack_json = '[]', updated_at = CURRENT_TIMESTAMP WHERE project_path = ?",
-                    (project_path,),
-                )
+            if len(stack) > 6:
+                reset_count += 1
+                print(f"{'[DRY RUN] ' if dry_run else ''}Reset: {project_path} (depth {len(stack)} -> 0)")
+                if not dry_run:
+                    cursor.execute(
+                        "UPDATE stint_stack SET stack_json = '[]', updated_at = CURRENT_TIMESTAMP WHERE project_path = ?",
+                        (project_path,),
+                    )
 
-    if not dry_run and reset_count > 0:
-        conn.commit()
+        if not dry_run and reset_count > 0:
+            conn.commit()
 
-    conn.close()
-
-    print(f"\n{'[DRY RUN] ' if dry_run else ''}Reset {reset_count} bloated stacks (of {len(rows)} total).")
+        print(f"\n{'[DRY RUN] ' if dry_run else ''}Reset {reset_count} bloated stacks (of {len(rows)} total).")
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":
