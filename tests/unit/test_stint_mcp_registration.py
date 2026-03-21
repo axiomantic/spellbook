@@ -135,7 +135,6 @@ class TestStintPushBehavioralMode:
                 type="custom",
                 purpose="testing",
                 behavioral_mode="ORCHESTRATOR: dispatch subagents",
-                success_criteria="all tests pass",
                 metadata=None,
             )
             mock_push.assert_called_once_with(
@@ -144,7 +143,24 @@ class TestStintPushBehavioralMode:
                 stint_type="custom",
                 purpose="testing",
                 behavioral_mode="ORCHESTRATOR: dispatch subagents",
-                success_criteria="all tests pass",
                 metadata=None,
             )
             assert result == {"success": True, "depth": 1, "stack": []}
+
+    def test_stint_push_still_accepts_type_parameter(self):
+        """type parameter should still be accepted for backward compatibility."""
+        tool = _get_stint_push_tool()
+        sig = inspect.signature(tool.fn)
+        assert "type" in sig.parameters, (
+            f"stint_push must still accept 'type' for backward compatibility. "
+            f"Parameters: {list(sig.parameters.keys())}"
+        )
+
+    def test_stint_push_no_success_criteria_parameter(self):
+        """success_criteria parameter should no longer exist."""
+        tool = _get_stint_push_tool()
+        sig = inspect.signature(tool.fn)
+        assert "success_criteria" not in sig.parameters, (
+            f"stint_push should not have 'success_criteria' parameter. "
+            f"Parameters: {list(sig.parameters.keys())}"
+        )

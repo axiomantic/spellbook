@@ -275,15 +275,16 @@ export interface HealthMatrixResponse {
 
 // Zeigarnik Focus Tracking
 export interface StintEntry {
-  type: string
   name: string
-  parent: string | null
   purpose: string
   behavioral_mode: string
-  success_criteria: string
   metadata: Record<string, unknown>
   entered_at: string
-  exited_at: string | null
+  // Legacy fields (may exist on old entries, not used by new code)
+  type?: string
+  parent?: string | null
+  exited_at?: string | null
+  success_criteria?: string
 }
 
 export interface StintStack {

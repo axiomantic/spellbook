@@ -192,6 +192,19 @@ When working in a project, maintain awareness of AGENTS.md as the canonical loca
 **Offer to create** (if not exists): "This project doesn't have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?"
 **User declines:** Proceed without. Do not ask again this session.
 
+## Focus Tracking (Stints)
+
+Spellbook tracks your focus context via a stint stack. You own this state.
+
+**When to push:** Starting a distinct work context (new feature, debugging session, code review).
+**When to pop:** Completing or abandoning a work context.
+**When to replace:** Correcting a stale or wrong stack.
+
+Tools: `stint_push`, `stint_pop`, `stint_check`, `stint_replace`
+
+Keep the stack shallow (2-3 typical, max 6). An empty stack is fine.
+The system will nudge you once if your stack is empty, and warn about stale entries (>4h old).
+
 <CRITICAL>
 ## Inviolable Rules
 
