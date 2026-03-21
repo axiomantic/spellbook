@@ -7,12 +7,9 @@ The stint stack is stored as a JSON array in a single SQLite row
 per project. All read-modify-write operations use BEGIN IMMEDIATE
 transactions for atomicity.
 
-Design note: The design doc defines a @dataclass StintEntry, but this
-implementation uses plain dicts instead. This is intentional: stint
-entries are serialized to/from JSON in SQLite, and plain dicts avoid
-the serialization overhead. The dict keys match the StintEntry fields
-exactly: type, name, parent, purpose, success_criteria, metadata,
-entered_at, exited_at.
+Entry schema: name, purpose, behavioral_mode, metadata, entered_at.
+Old entries with extra fields (type, parent, exited_at, success_criteria)
+are read fine -- Python dict access ignores extra keys.
 """
 
 import json
@@ -22,6 +19,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from spellbook.core.db import get_connection
+
+MAX_STINT_DEPTH = 6
 
 
 def _is_ordered_subsequence(shorter: list[str], longer: list[str]) -> bool:
@@ -80,8 +79,8 @@ def classify_correction(old_stack: list, new_stack: list) -> str:
 def _validate_stint_entry(entry: dict) -> tuple[bool, str]:
     """Validate a stint entry for injection patterns.
 
-    Checks name, purpose, success_criteria, and behavioral_mode fields
-    against injection detection rules from spellbook.sessions.injection.
+    Checks name, purpose, and behavioral_mode fields against injection
+    detection rules from spellbook.sessions.injection.
 
     Side effect: truncated values from _sanitize_field are persisted
     back into the entry dict, so the stored entry respects length limits.
@@ -91,7 +90,7 @@ def _validate_stint_entry(entry: dict) -> tuple[bool, str]:
     """
     from spellbook.sessions.injection import _sanitize_field
 
-    for field in ("name", "purpose", "success_criteria", "behavioral_mode"):
+    for field in ("name", "purpose", "behavioral_mode"):
         value = entry.get(field, "")
         if value:
             sanitized = _sanitize_field(field, value, max_length=500)
@@ -217,29 +216,26 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
 def push_stint(
     project_path: str,
     name: str,
-    stint_type: str = "custom",
     purpose: str = "",
     behavioral_mode: str = "",
-    success_criteria: str = "",
     metadata: Optional[dict] = None,
     db_path: str = None,
+    # Deprecated parameters (accepted but ignored for backward compatibility)
+    stint_type: str = "",
+    success_criteria: str = "",
 ) -> dict:
     """Push a new stint onto the focus stack.
 
     Returns:
         {"success": True, "depth": int, "stack": list} on success.
-        {"success": False, "error": str} on validation failure.
+        {"success": False, "error": str} on validation failure or depth cap.
     """
     entry = {
-        "type": stint_type,
         "name": name,
-        "parent": None,  # Set below
         "purpose": purpose,
         "behavioral_mode": behavioral_mode,
-        "success_criteria": success_criteria,
         "metadata": metadata or {},
         "entered_at": datetime.now(timezone.utc).isoformat(),
-        "exited_at": None,
     }
 
     # Validate for injection
@@ -248,7 +244,11 @@ def push_stint(
         return {"success": False, "error": msg}
 
     def mutate(stack: list, cursor) -> tuple[dict, list]:
-        entry["parent"] = stack[-1]["name"] if stack else None
+        if len(stack) >= MAX_STINT_DEPTH:
+            return {
+                "success": False,
+                "error": f"Depth cap ({MAX_STINT_DEPTH}) reached. Use stint_replace to restructure, or stint_pop to close completed work.",
+            }, None
         stack.append(entry)
         return {"success": True, "depth": len(stack), "stack": list(stack)}, stack
 
@@ -278,7 +278,6 @@ def pop_stint(
         if name is not None and top["name"] != name:
             mismatch = True
 
-        top["exited_at"] = datetime.now(timezone.utc).isoformat()
         popped = stack.pop()
         return {
             "success": True,

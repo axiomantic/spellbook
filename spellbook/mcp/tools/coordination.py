@@ -210,10 +210,9 @@ async def mcp_curator_track_prune(
 def stint_push(
     project_path: str,
     name: str,
-    type: str = "custom",
+    type: str = "",
     purpose: str = "",
     behavioral_mode: str = "",
-    success_criteria: str = "",
     metadata: dict | None = None,
 ) -> dict:
     """Push a new stint onto the focus stack.
@@ -224,11 +223,10 @@ def stint_push(
 
     Args:
         project_path: Absolute path to project directory
-        name: Identifier for this stint (e.g., skill name, task description)
-        type: "skill" | "subagent" | "custom"
+        name: Identifier for this stint (e.g., task description, work context)
+        type: Deprecated. Accepted but ignored for backward compatibility.
         purpose: Why this stint is being entered
         behavioral_mode: HOW the session should operate (e.g., "ORCHESTRATOR: ...")
-        success_criteria: What "done" looks like for this stint
         metadata: Optional key-value pairs for additional context
 
     Returns:
@@ -241,7 +239,6 @@ def stint_push(
         stint_type=type,
         purpose=purpose,
         behavioral_mode=behavioral_mode,
-        success_criteria=success_criteria,
         metadata=metadata,
     )
     try:
@@ -254,7 +251,6 @@ def stint_push(
                 data={
                     "project_path": project_path,
                     "name": name,
-                    "type": type,
                     "depth": result.get("depth"),
                 },
             )

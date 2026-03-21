@@ -730,315 +730,6 @@ class TestDepthReminderFormat:
             spellbook_hook._get_config_value = original_config
 
 
-# ---------------------------------------------------------------------------
-# Phase 3, Task 10: Auto-push on Skill invocation tests
-# ---------------------------------------------------------------------------
-
-
-class TestAutoPushOnSkill:
-    """Test auto-push when Skill tool is invoked."""
-
-    def test_auto_push_calls_stint_push(self):
-        """Skill invocation with name and cwd fetches behavioral_mode then pushes a stint."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args)) or {"success": True}
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "develop"},
-                "cwd": "/test/project",
-            })
-            assert len(calls) == 2
-            assert calls[0] == ("skill_instructions_get", {
-                "skill_name": "develop",
-                "sections": ["BEHAVIORAL_MODE"],
-            })
-            assert calls[1] == ("stint_push", {
-                "project_path": "/test/project",
-                "name": "develop",
-                "type": "skill",
-                "purpose": "Skill invocation: develop",
-                "behavioral_mode": "",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_with_args(self):
-        """Skill invocation with args still pushes correctly."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args)) or {"success": True}
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "code-review", "args": "--give"},
-                "cwd": "/my/project",
-            })
-            assert len(calls) == 2
-            assert calls[0] == ("skill_instructions_get", {
-                "skill_name": "code-review",
-                "sections": ["BEHAVIORAL_MODE"],
-            })
-            assert calls[1] == ("stint_push", {
-                "project_path": "/my/project",
-                "name": "code-review",
-                "type": "skill",
-                "purpose": "Skill invocation: code-review",
-                "behavioral_mode": "",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_no_skill_name_does_nothing(self):
-        """Empty tool_input with no skill key does not push."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
-
-        try:
-            _stint_auto_push({"tool_input": {}, "cwd": "/test/project"})
-            assert calls == []
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_no_cwd_does_nothing(self):
-        """Missing cwd does not push."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
-
-        try:
-            _stint_auto_push({"tool_input": {"skill": "debug"}})
-            assert calls == []
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_empty_skill_name_does_nothing(self):
-        """Empty string skill name does not push."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
-
-        try:
-            _stint_auto_push({"tool_input": {"skill": ""}, "cwd": "/test/project"})
-            assert calls == []
-        finally:
-            spellbook_hook._mcp_call = original
-
-
-# ---------------------------------------------------------------------------
-# Task 3: Behavioral mode tests for hook functions
-# ---------------------------------------------------------------------------
-
-
-class TestAutoPushBehavioralMode:
-    """Test behavioral_mode fetch and pass-through in _stint_auto_push."""
-
-    def test_auto_push_fetches_behavioral_mode_from_sections(self):
-        """Auto-push fetches BEHAVIORAL_MODE section and passes it to stint_push."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-
-        def mock_mcp(tool, args=None):
-            calls.append((tool, args))
-            if tool == "skill_instructions_get":
-                return {
-                    "success": True,
-                    "sections": {"BEHAVIORAL_MODE": "ORCHESTRATOR: Dispatch subagents"},
-                    "content": "full skill content...",
-                }
-            return {"success": True}
-
-        spellbook_hook._mcp_call = mock_mcp
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "develop"},
-                "cwd": "/test/project",
-            })
-            assert len(calls) == 2
-            assert calls[0] == ("skill_instructions_get", {
-                "skill_name": "develop",
-                "sections": ["BEHAVIORAL_MODE"],
-            })
-            assert calls[1] == ("stint_push", {
-                "project_path": "/test/project",
-                "name": "develop",
-                "type": "skill",
-                "purpose": "Skill invocation: develop",
-                "behavioral_mode": "ORCHESTRATOR: Dispatch subagents",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_fallback_extracts_from_raw_content(self):
-        """When sections key is missing, extract behavioral_mode from raw content XML tags."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-
-        def mock_mcp(tool, args=None):
-            calls.append((tool, args))
-            if tool == "skill_instructions_get":
-                return {
-                    "success": True,
-                    "content": "some text <BEHAVIORAL_MODE>ORCHESTRATOR: Use tasks</BEHAVIORAL_MODE> more text",
-                }
-            return {"success": True}
-
-        spellbook_hook._mcp_call = mock_mcp
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "my-skill"},
-                "cwd": "/test/project",
-            })
-            assert len(calls) == 2
-            assert calls[1] == ("stint_push", {
-                "project_path": "/test/project",
-                "name": "my-skill",
-                "type": "skill",
-                "purpose": "Skill invocation: my-skill",
-                "behavioral_mode": "ORCHESTRATOR: Use tasks",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_fail_open_on_fetch_failure(self):
-        """If skill_instructions_get fails, push with empty behavioral_mode."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-
-        def mock_mcp(tool, args=None):
-            calls.append((tool, args))
-            if tool == "skill_instructions_get":
-                return None  # MCP unreachable
-            return {"success": True}
-
-        spellbook_hook._mcp_call = mock_mcp
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "debug"},
-                "cwd": "/test/project",
-            })
-            assert len(calls) == 2
-            assert calls[1] == ("stint_push", {
-                "project_path": "/test/project",
-                "name": "debug",
-                "type": "skill",
-                "purpose": "Skill invocation: debug",
-                "behavioral_mode": "",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_auto_push_empty_sections_behavioral_mode(self):
-        """When sections returns empty BEHAVIORAL_MODE and no XML tags in content, push empty."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-
-        def mock_mcp(tool, args=None):
-            calls.append((tool, args))
-            if tool == "skill_instructions_get":
-                return {
-                    "success": True,
-                    "sections": {"BEHAVIORAL_MODE": ""},
-                    "content": "no behavioral mode tags here",
-                }
-            return {"success": True}
-
-        spellbook_hook._mcp_call = mock_mcp
-
-        try:
-            _stint_auto_push({
-                "tool_input": {"skill": "simple-skill"},
-                "cwd": "/test/project",
-            })
-            assert len(calls) == 2
-            assert calls[1] == ("stint_push", {
-                "project_path": "/test/project",
-                "name": "simple-skill",
-                "type": "skill",
-                "purpose": "Skill invocation: simple-skill",
-                "behavioral_mode": "",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-    def test_content_none_does_not_crash(self):
-        """When skill_instructions_get returns content=None, should not crash."""
-        from spellbook_hook import _stint_auto_push
-
-        import spellbook_hook
-        calls = []
-        original = spellbook_hook._mcp_call
-
-        def mock_mcp(tool, args=None):
-            calls.append((tool, args))
-            if tool == "skill_instructions_get":
-                return {
-                    "success": True,
-                    "sections": {},
-                    "content": None,
-                }
-            return {"success": True, "depth": 1, "stack": []}
-
-        spellbook_hook._mcp_call = mock_mcp
-
-        try:
-            # Should not raise TypeError
-            _stint_auto_push({
-                "tool_input": {"skill": "some-skill"},
-                "cwd": "/tmp/test-project",
-            })
-            assert len(calls) == 2
-            # Verify stint_push was called with empty behavioral_mode
-            assert calls[1] == ("stint_push", {
-                "project_path": "/tmp/test-project",
-                "name": "some-skill",
-                "type": "skill",
-                "purpose": "Skill invocation: some-skill",
-                "behavioral_mode": "",
-                "success_criteria": "Skill workflow complete",
-            })
-        finally:
-            spellbook_hook._mcp_call = original
-
-
 class TestDepthCheckBehavioralMode:
     """Test behavioral_mode one-liner in _stint_depth_check (not depth-gated)."""
 
@@ -1172,8 +863,8 @@ class TestDepthCheckBehavioralMode:
             spellbook_hook._mcp_call = original_mcp
             spellbook_hook._get_config_value = original_config
 
-    def test_empty_stack_returns_none(self):
-        """Empty stack returns None even with new behavioral_mode logic."""
+    def test_empty_stack_returns_nudge(self):
+        """Empty stack returns empty-stack nudge."""
         from spellbook_hook import _stint_depth_check
 
         import spellbook_hook
@@ -1189,9 +880,115 @@ class TestDepthCheckBehavioralMode:
                 "tool_name": "Read",
                 "cwd": "/test/project",
             })
-            assert result is None
+            assert result == '<stint-empty>No active focus declared. Use stint_push to declare what you\'re working on.</stint-empty>'
         finally:
             spellbook_hook._mcp_call = original_mcp
+
+
+class TestDepthCheckStaleness:
+    """Test staleness warning in _stint_depth_check."""
+
+    def test_stale_entry_warning_at_threshold(self):
+        """Entries >4h old should get a staleness warning when depth >= threshold."""
+        from spellbook_hook import _stint_depth_check
+        from datetime import datetime, timezone, timedelta
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        old_time = (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+        recent_time = datetime.now(timezone.utc).isoformat()
+
+        stack = [
+            {"name": "stale-stint", "purpose": "old work", "behavioral_mode": "", "entered_at": old_time},
+            {"name": "s2", "purpose": "p2", "behavioral_mode": "", "entered_at": recent_time},
+            {"name": "s3", "purpose": "p3", "behavioral_mode": "", "entered_at": recent_time},
+            {"name": "s4", "purpose": "p4", "behavioral_mode": "", "entered_at": recent_time},
+            {"name": "s5", "purpose": "p5", "behavioral_mode": "", "entered_at": recent_time},
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            assert 'Stale entry: "stale-stint" entered' in result
+            assert "h ago. Still active?" in result
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+    def test_no_staleness_warning_for_recent_entries(self):
+        """Recent entries (<4h) should not get a staleness warning."""
+        from spellbook_hook import _stint_depth_check
+        from datetime import datetime, timezone
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        recent_time = datetime.now(timezone.utc).isoformat()
+        stack = [
+            {"name": f"s{i}", "purpose": f"p{i}", "behavioral_mode": "", "entered_at": recent_time}
+            for i in range(5)
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            assert "Stale entry" not in result
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+    def test_malformed_entered_at_silently_skipped(self):
+        """Malformed entered_at should not crash, just skip staleness for that entry."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        stack = [
+            {"name": "bad-ts", "purpose": "p1", "behavioral_mode": "", "entered_at": "not-a-timestamp"},
+            {"name": "s2", "purpose": "p2", "behavioral_mode": "", "entered_at": "also-bad"},
+            {"name": "s3", "purpose": "p3", "behavioral_mode": "", "entered_at": "nope"},
+            {"name": "s4", "purpose": "p4", "behavioral_mode": "", "entered_at": "invalid"},
+            {"name": "s5", "purpose": "p5", "behavioral_mode": "", "entered_at": "broken"},
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            # Should render the tree without crashing, with no staleness warnings
+            assert '<stint-check depth="5">' in result
+            assert "Stale entry" not in result
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
 
 
 class TestBuildRecoveryDirectiveBugFixes:

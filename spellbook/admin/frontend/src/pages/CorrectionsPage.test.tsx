@@ -18,15 +18,11 @@ const mockUseListPage = useListPage as Mock
 
 function makeStintEntry(overrides: Partial<StintEntry> = {}): StintEntry {
   return {
-    type: 'skill',
     name: 'develop',
-    parent: null,
     purpose: 'Build feature',
     behavioral_mode: 'autonomous',
-    success_criteria: 'Tests pass',
     metadata: {},
     entered_at: '2026-03-15T10:00:00Z',
-    exited_at: null,
     ...overrides,
   }
 }

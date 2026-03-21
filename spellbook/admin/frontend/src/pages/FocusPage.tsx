@@ -42,22 +42,6 @@ function depthTextColor(depth: number): string {
   return 'text-accent-red'
 }
 
-function TypeBadge({ type }: { type: string }) {
-  const colorMap: Record<string, string> = {
-    skill: 'text-accent-cyan border-accent-cyan',
-    subagent: 'text-accent-amber border-accent-amber',
-    custom: 'text-accent-purple border-accent-purple',
-  }
-  const colors = colorMap[type] || 'text-text-secondary border-text-secondary'
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 border font-mono text-xs uppercase tracking-widest ${colors}`}
-    >
-      {type}
-    </span>
-  )
-}
-
 function CorrectionTypeBadge({ type }: { type: 'llm_wrong' | 'mcp_wrong' }) {
   const colors =
     type === 'llm_wrong'
@@ -76,9 +60,6 @@ function StintRow({ stint }: { stint: StintEntry }) {
   return (
     <tr className="border-b border-bg-border">
       <td className="px-3 py-1.5 font-mono text-xs text-text-primary">{stint.name}</td>
-      <td className="px-3 py-1.5">
-        <TypeBadge type={stint.type} />
-      </td>
       <td className="px-3 py-1.5 font-mono text-xs text-text-secondary">{stint.behavioral_mode}</td>
       <td className="px-3 py-1.5 font-mono text-xs text-text-dim">{formatTime(stint.entered_at)}</td>
     </tr>
@@ -88,7 +69,7 @@ function StintRow({ stint }: { stint: StintEntry }) {
 function StackCard({ stack }: { stack: StintStack }) {
   const [expanded, setExpanded] = useState(false)
   const topStint = stack.stack[stack.stack.length - 1]
-  const maxDepth = 8
+  const maxDepth = 6
   const depthPct = Math.min((stack.depth / maxDepth) * 100, 100)
 
   return (
@@ -123,7 +104,6 @@ function StackCard({ stack }: { stack: StintStack }) {
       {/* Top stint summary */}
       {topStint && (
         <div className="flex items-center gap-2 mb-1">
-          <TypeBadge type={topStint.type} />
           <span className="font-mono text-xs text-text-primary">{topStint.name}</span>
           {topStint.purpose && (
             <span className="font-mono text-xs text-text-dim truncate">
@@ -140,7 +120,6 @@ function StackCard({ stack }: { stack: StintStack }) {
             <thead className="font-mono text-xs uppercase tracking-widest text-text-dim border-b border-bg-border">
               <tr>
                 <th className="px-3 py-1.5 text-left">Name</th>
-                <th className="px-3 py-1.5 text-left w-24">Type</th>
                 <th className="px-3 py-1.5 text-left w-32">Mode</th>
                 <th className="px-3 py-1.5 text-left w-44">Entered</th>
               </tr>

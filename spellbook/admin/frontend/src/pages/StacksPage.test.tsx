@@ -20,22 +20,18 @@ const mockStack = {
   session_id: 'sess-001',
   stack: [
     {
-      type: 'skill',
       name: 'develop',
-      parent: null,
       purpose: 'Building feature X',
       behavioral_mode: 'tdd',
+      metadata: {},
       entered_at: '2026-03-20T10:00:00Z',
-      exited_at: null,
     },
     {
-      type: 'subagent',
       name: 'test-runner',
-      parent: 'develop',
       purpose: 'Running tests',
       behavioral_mode: 'execute',
+      metadata: {},
       entered_at: '2026-03-20T10:05:00Z',
-      exited_at: null,
     },
   ],
   depth: 2,
@@ -122,7 +118,7 @@ describe('StacksPage', () => {
       expect(screen.getByText('depth 2')).toBeInTheDocument()
     })
 
-    it('shows the top stint name and type badge', () => {
+    it('shows the top stint name', () => {
       mockUseStintStacks.mockReturnValue({
         data: [mockStack],
         isLoading: false,
@@ -132,7 +128,6 @@ describe('StacksPage', () => {
 
       // Top stint is the last in the array (test-runner)
       expect(screen.getByText('test-runner')).toBeInTheDocument()
-      expect(screen.getByText('subagent')).toBeInTheDocument()
     })
 
     it('shows collapsed state by default with [+] indicator', () => {
@@ -164,11 +159,11 @@ describe('StacksPage', () => {
       // Should show [-] when expanded
       expect(screen.getByText('[-]')).toBeInTheDocument()
 
-      // Table headers visible
+      // Table headers visible (no Type column)
       expect(screen.getByText('Name')).toBeInTheDocument()
-      expect(screen.getByText('Type')).toBeInTheDocument()
       expect(screen.getByText('Mode')).toBeInTheDocument()
       expect(screen.getByText('Entered')).toBeInTheDocument()
+      expect(screen.queryByText('Type')).not.toBeInTheDocument()
 
       // Both stints shown in the table (reversed order: top of stack first)
       const rows = screen.getAllByRole('row')
@@ -206,13 +201,11 @@ describe('StacksPage', () => {
         depth: 5,
         stack: [
           {
-            type: 'custom',
             name: 'review',
-            parent: null,
             purpose: 'Code review',
             behavioral_mode: 'careful',
+            metadata: {},
             entered_at: '2026-03-20T09:00:00Z',
-            exited_at: null,
           },
         ],
       }

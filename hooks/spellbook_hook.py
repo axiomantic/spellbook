@@ -20,6 +20,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -624,59 +625,15 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
     )
 
 
-def _stint_auto_push(data: dict) -> None:
-    """Auto-push a stint when a Skill tool is invoked.
-
-    Fetches behavioral mode from the skill's SKILL.md <BEHAVIORAL_MODE>
-    tag via skill_instructions_get. If the fetch fails, pushes with an
-    empty behavioral_mode (fail-open).
-
-    Best-effort (fail-open). If MCP is unreachable, silently skips.
-    """
-    tool_input = data.get("tool_input", {})
-    skill_name = tool_input.get("skill", "")
-    if not skill_name:
-        return
-
-    project_path = data.get("cwd", "")
-    if not project_path:
-        return
-
-    # Fetch behavioral mode from SKILL.md (fail-open)
-    behavioral_mode = ""
-    skill_info = _mcp_call("skill_instructions_get", {
-        "skill_name": skill_name,
-        "sections": ["BEHAVIORAL_MODE"],
-    })
-    if skill_info and skill_info.get("success"):
-        sections = skill_info.get("sections", {})
-        behavioral_mode = (sections.get("BEHAVIORAL_MODE", "") or "").strip()
-        # Fallback: if sections key missing (MCP serialization edge case),
-        # try extracting from raw content via _mcp_call response
-        if not behavioral_mode:
-            content = skill_info.get("content") or ""
-            if "<BEHAVIORAL_MODE>" in content and "</BEHAVIORAL_MODE>" in content:
-                start = content.index("<BEHAVIORAL_MODE>") + len("<BEHAVIORAL_MODE>")
-                end = content.index("</BEHAVIORAL_MODE>")
-                behavioral_mode = content[start:end].strip()
-
-    _mcp_call("stint_push", {
-        "project_path": project_path,
-        "name": skill_name,
-        "type": "skill",
-        "purpose": f"Skill invocation: {skill_name}",
-        "behavioral_mode": behavioral_mode,
-        "success_criteria": "Skill workflow complete",
-    })
-
-
 def _stint_depth_check(data: dict) -> str | None:
     """Check stint stack depth and emit behavioral mode + optional tree.
 
-    Two independent outputs:
-    1. Behavioral mode one-liner: ALWAYS returned if the top-of-stack
+    Three independent outputs:
+    1. Empty-stack nudge: emitted when stack is empty.
+    2. Behavioral mode one-liner: ALWAYS returned if the top-of-stack
        stint has a non-empty behavioral_mode, regardless of depth.
-    2. Full stack tree: only returned when depth >= threshold (default 5).
+    3. Full stack tree: only returned when depth >= threshold (default 5).
+       Includes staleness warnings for entries >4h old.
 
     FAIL-OPEN: returns None on any error.
     """
@@ -694,8 +651,9 @@ def _stint_depth_check(data: dict) -> str | None:
 
     entries = stack.get("stack", [])
     depth = len(entries)
+
     if depth == 0:
-        return None
+        return '<stint-empty>No active focus declared. Use stint_push to declare what you\'re working on.</stint-empty>'
 
     parts = []
 
@@ -720,6 +678,30 @@ def _stint_depth_check(data: dict) -> str | None:
         lines.append("")
         lines.append("  Verify this matches your current work.")
         lines.append("  Close completed stints with stint_pop.")
+
+        # Staleness warnings for entries >4h old
+        staleness_lines = []
+        for entry in entries:
+            entered_at = entry.get("entered_at", "")
+            if not entered_at:
+                continue
+            try:
+                entered_dt = datetime.fromisoformat(entered_at)
+                now = datetime.now(timezone.utc)
+                # Ensure both are tz-aware for comparison
+                if entered_dt.tzinfo is None:
+                    entered_dt = entered_dt.replace(tzinfo=timezone.utc)
+                age_hours = (now - entered_dt).total_seconds() / 3600
+                if age_hours > 4:
+                    staleness_lines.append(
+                        f'  Stale entry: "{entry["name"]}" entered {age_hours:.0f}h ago. Still active?'
+                    )
+            except (ValueError, TypeError, OverflowError):
+                continue  # Malformed timestamp, skip silently
+
+        if staleness_lines:
+            lines.extend(staleness_lines)
+
         lines.append("</stint-check>")
         parts.append("\n".join(lines))
 
@@ -795,13 +777,6 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
         _gate_spawn(data)
     elif tool_name == "mcp__spellbook__workflow_state_save":
         _gate_state_sanitize(data)
-
-    # Stint auto-push (catch-all, non-blocking)
-    if tool_name == "Skill":
-        try:
-            _stint_auto_push(data)
-        except Exception:
-            pass  # fail-open: auto-push errors never block tool execution
 
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
