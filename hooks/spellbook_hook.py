@@ -576,7 +576,7 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
     # Bootstrap content will be re-captured when the model updates MEMORY.md,
     # which is accepted by design. This lightweight filter avoids the most
     # common echo: the regenerated header written by session init.
-    if content.lstrip().startswith("# Project Memory (spellbook-managed)"):
+    if content.lstrip().startswith("# Spellbook Memory System"):
         return
 
     cwd = data.get("cwd", "")

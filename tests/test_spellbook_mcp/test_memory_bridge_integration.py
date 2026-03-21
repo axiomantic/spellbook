@@ -107,46 +107,34 @@ class TestMemoryBridgeIntegration:
         assert should_consolidate(db) is True
 
     def test_session_init_regenerates_memory_md(self, db, auto_memory_dir, tmp_path):
-        """Session init regenerates MEMORY.md from structured store.
+        """Session init regenerates MEMORY.md with the static template.
 
-        Creates a temp directory structure mimicking auto-memory, stores
-        memories in DB, calls regenerate_memory_md_for_project, and
-        verifies the MEMORY.md was written with the bootstrap header.
+        Creates a temp directory structure mimicking auto-memory, calls
+        regenerate_memory_md_for_project, and verifies the MEMORY.md
+        was written with the redirect template header.
         """
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
-
-        insert_memory(
-            db_path=db,
-            content="Project uses microservices architecture",
-            memory_type="fact",
-            namespace="tmp-test",
-            tags=["architecture"],
-            citations=[],
-        )
 
         with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir",
                     return_value=auto_memory_dir), \
              patch("spellbook.memory.bootstrap.get_db_path",
                     return_value=Path(db)), \
              patch("spellbook.memory.bootstrap.encode_cwd",
-                    return_value="tmp-test"), \
-             patch("spellbook.memory.bootstrap.resolve_repo_root",
-                    return_value="/tmp/test"), \
-             patch("spellbook.memory.bootstrap.get_current_branch",
-                    return_value="main"):
+                    return_value="tmp-test"):
             regenerate_memory_md_for_project("/tmp/test")
 
         memory_md = auto_memory_dir / "MEMORY.md"
         assert memory_md.exists()
         content = memory_md.read_text(encoding="utf-8")
-        assert "spellbook-managed" in content
+        assert "# Spellbook Memory System" in content
         assert "memory_store_memories" in content
+        assert "memory_recall" in content
 
-    def test_regenerated_md_contains_stored_memories(self, db):
-        """Regenerated MEMORY.md includes memories from the structured store.
+    def test_regenerated_md_is_static_template(self, db):
+        """Regenerated MEMORY.md is the static redirect template.
 
-        Stores specific memories with known content, generates MEMORY.md,
-        and verifies those memories appear in the output.
+        Memories are stored in the DB but do NOT appear in the
+        generated MEMORY.md (they are accessed via memory_recall).
         """
         from spellbook.memory.bootstrap import generate_memory_md
 
@@ -167,14 +155,14 @@ class TestMemoryBridgeIntegration:
             citations=[],
         )
 
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/tmp/test",
-            namespace="tmp-test",
-        )
+        result = generate_memory_md()
 
-        assert "tests with -x flag" in result
-        assert "PostgreSQL" in result
+        # Template is present
+        assert "# Spellbook Memory System" in result
+        assert "memory_recall" in result
+        # DB content does NOT appear in the template
+        assert "tests with -x flag" not in result
+        assert "PostgreSQL" not in result
 
     def test_full_cycle(self, db, auto_memory_dir):
         """Full cycle: write -> capture -> consolidate -> regenerate -> verify.
@@ -184,7 +172,7 @@ class TestMemoryBridgeIntegration:
         2. Endpoint stores events in DB
         3. Memories are consolidated into structured store (simulated via insert_memory)
         4. Session init regenerates MEMORY.md
-        5. Regenerated file contains the original content (transformed)
+        5. Regenerated file contains the redirect template (not captured content)
         """
         from spellbook.memory.bootstrap import generate_memory_md
 
@@ -212,13 +200,11 @@ class TestMemoryBridgeIntegration:
         )
 
         # Step 4: Regenerate MEMORY.md
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/tmp/test",
-            namespace="tmp-test",
-        )
+        result = generate_memory_md()
 
-        # Step 5: Verify content
-        assert "spellbook-managed" in result
-        assert "RabbitMQ" in result
+        # Step 5: Verify template content (not DB content)
+        assert "# Spellbook Memory System" in result
         assert "memory_store_memories" in result
+        assert "memory_recall" in result
+        # DB content is accessed via MCP tools, not rendered in the file
+        assert "RabbitMQ" not in result

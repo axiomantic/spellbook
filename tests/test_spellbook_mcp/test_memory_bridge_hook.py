@@ -98,7 +98,7 @@ class TestMemoryBridge:
 
         data = self._make_data(
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
-            content="# Project Memory (spellbook-managed)\n\n## How to Use Memory\n...",
+            content="# Spellbook Memory System\n\nThe contents of this file are managed...",
         )
         with patch("hooks.spellbook_hook._http_post") as mock_post:
             _memory_bridge("Write", data)

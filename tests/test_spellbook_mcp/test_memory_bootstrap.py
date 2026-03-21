@@ -1,6 +1,6 @@
 """Tests for MEMORY.md regenerator (spellbook/memory/bootstrap.py).
 
-Tests the generate_memory_md function (content generation), _resolve_auto_memory_dir
+Tests the generate_memory_md function (static template), _resolve_auto_memory_dir
 (path resolution), _bootstrap_existing_memory_md (first-run capture), and
 regenerate_memory_md_for_project (orchestrator).
 """
@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from spellbook.core.db import init_db, close_all_connections
-from spellbook.memory.store import insert_memory, get_unconsolidated_events
+from spellbook.memory.store import get_unconsolidated_events
 
 
 @pytest.fixture
@@ -30,132 +30,48 @@ def auto_memory_dir(tmp_path):
 
 
 class TestGenerateMemoryMd:
-    """generate_memory_md produces valid hybrid MEMORY.md content."""
+    """generate_memory_md returns a static redirect template."""
 
-    def test_with_memories(self, db):
-        """Generates markdown with instruction header and memory summary."""
+    def test_returns_string(self):
+        """Returns a non-empty string."""
         from spellbook.memory.bootstrap import generate_memory_md
 
-        insert_memory(
-            db_path=db,
-            content="Project uses FastAPI for REST endpoints",
-            memory_type="fact",
-            namespace="Users-alice-project",
-            tags=["fastapi"],
-            citations=[],
-        )
-        insert_memory(
-            db_path=db,
-            content="Always run pytest with -x flag",
-            memory_type="convention",
-            namespace="Users-alice-project",
-            tags=["testing"],
-            citations=[],
-        )
+        result = generate_memory_md()
+        assert isinstance(result, str)
+        assert len(result) > 0
 
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/Users/alice/project",
-            namespace="Users-alice-project",
-        )
+    def test_contains_expected_sections(self):
+        """Template contains all key sections and tool references."""
+        from spellbook.memory.bootstrap import generate_memory_md
 
-        # Must contain the spellbook-managed header
-        assert result.startswith("# Project Memory (spellbook-managed)")
-        # Must contain MCP tool references in instructions
-        assert "memory_store_memories" in result
+        result = generate_memory_md()
+        assert "# Spellbook Memory System" in result
+        assert "## Retrieving Knowledge" in result
+        assert "## Storing Knowledge" in result
+        assert "## How It Works" in result
         assert "memory_recall" in result
-        # Must contain the actual memories
-        assert "FastAPI" in result
-        assert "pytest" in result
-        # Must have Key Memories section
-        assert "## Key Memories" in result
-
-    def test_empty_store(self, db):
-        """Generates instructions-only MEMORY.md when no memories exist."""
-        from spellbook.memory.bootstrap import generate_memory_md
-
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/Users/alice/project",
-            namespace="Users-alice-project",
-        )
-
-        assert result.startswith("# Project Memory (spellbook-managed)")
         assert "memory_store_memories" in result
-        # No Key Memories section when empty
-        assert "## Key Memories" not in result
-        lines = result.strip().split("\n")
-        assert len(lines) < 30
 
-    def test_respects_200_line_limit(self, db):
-        """Output stays within 200 lines even with many memories."""
-        from spellbook.memory.bootstrap import generate_memory_md
-
-        for i in range(50):
-            insert_memory(
-                db_path=db,
-                content=f"Memory fact number {i}: this is a detailed description of something important about the project that spans multiple words and provides context",
-                memory_type="fact",
-                namespace="Users-alice-project",
-                tags=[f"tag{i}"],
-                citations=[],
-            )
-
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/Users/alice/project",
-            namespace="Users-alice-project",
-        )
-
-        line_count = len(result.split("\n"))
-        assert line_count <= 200, f"MEMORY.md has {line_count} lines, exceeds 200 limit"
-
-    def test_groups_by_memory_type(self, db):
-        """Memories are grouped by memory_type in the output."""
-        from spellbook.memory.bootstrap import generate_memory_md
-
-        insert_memory(
-            db_path=db,
-            content="Always use type hints",
-            memory_type="convention",
-            namespace="Users-alice-project",
-            tags=[],
-            citations=[],
-        )
-        insert_memory(
-            db_path=db,
-            content="Database uses PostgreSQL",
-            memory_type="fact",
-            namespace="Users-alice-project",
-            tags=[],
-            citations=[],
-        )
-
-        result = generate_memory_md(
-            db_path=db,
-            project_path="/Users/alice/project",
-            namespace="Users-alice-project",
-        )
-
-        # Both types should appear as subsection headers (### Fact, ### Convention)
-        assert "### Fact" in result
-        assert "### Convention" in result
-        # Content from each type is present under correct grouping
-        assert "- Database uses PostgreSQL" in result
-        assert "- Always use type hints" in result
-
-    def test_bootstrap_header_exact(self, db):
-        """Bootstrap header starts with exact expected marker."""
+    def test_accepts_kwargs_for_backward_compat(self):
+        """Accepts arbitrary kwargs without error (backward compatibility)."""
         from spellbook.memory.bootstrap import generate_memory_md
 
         result = generate_memory_md(
-            db_path=db,
-            project_path="/Users/alice/project",
-            namespace="Users-alice-project",
+            db_path="/fake/path",
+            project_path="/fake/project",
+            namespace="fake-namespace",
+            branch="main",
+            max_summary_lines=100,
         )
+        assert "# Spellbook Memory System" in result
 
+    def test_header_exact(self):
+        """Template starts with exact expected header."""
+        from spellbook.memory.bootstrap import generate_memory_md
+
+        result = generate_memory_md()
         first_line = result.split("\n")[0]
-        assert first_line == "# Project Memory (spellbook-managed)"
+        assert first_line == "# Spellbook Memory System"
 
 
 class TestResolveAutoMemoryDir:
@@ -221,30 +137,20 @@ class TestResolveAutoMemoryDir:
 class TestRegenerateMemoryMdForProject:
     """regenerate_memory_md_for_project writes MEMORY.md to auto-memory dir."""
 
-    def test_writes_file_with_content(self, db, auto_memory_dir):
+    def test_writes_file_with_template(self, db, auto_memory_dir):
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
-
-        insert_memory(
-            db_path=db,
-            content="Test memory content",
-            memory_type="fact",
-            namespace="tmp-test",
-            tags=[],
-            citations=[],
-        )
 
         with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", return_value=auto_memory_dir), \
              patch("spellbook.memory.bootstrap.get_db_path", return_value=Path(db)), \
-             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"), \
-             patch("spellbook.memory.bootstrap.resolve_repo_root", return_value="/tmp/test"), \
-             patch("spellbook.memory.bootstrap.get_current_branch", return_value="main"):
+             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"):
             regenerate_memory_md_for_project("/tmp/test")
 
         memory_md = auto_memory_dir / "MEMORY.md"
         assert memory_md.exists()
         content = memory_md.read_text(encoding="utf-8")
-        assert content.startswith("# Project Memory (spellbook-managed)")
-        assert "Test memory content" in content
+        assert content.startswith("# Spellbook Memory System")
+        assert "memory_recall" in content
+        assert "memory_store_memories" in content
 
     def test_returns_silently_when_no_memory_dir(self):
         """No auto-memory directory means nothing to do."""
@@ -268,9 +174,7 @@ class TestRegenerateMemoryMdForProject:
 
         with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", return_value=auto_memory_dir), \
              patch("spellbook.memory.bootstrap.get_db_path", return_value=Path(db)), \
-             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"), \
-             patch("spellbook.memory.bootstrap.resolve_repo_root", return_value="/tmp/test"), \
-             patch("spellbook.memory.bootstrap.get_current_branch", return_value="main"):
+             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"):
             regenerate_memory_md_for_project("/tmp/test")
 
         marker = auto_memory_dir / ".spellbook-bridge-initialized"
