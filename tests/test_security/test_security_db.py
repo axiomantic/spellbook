@@ -74,6 +74,10 @@ class TestTrustRegistryTable:
             "registered_at",
             "expires_at",
             "registered_by",
+            "signature",
+            "signing_key_id",
+            "analysis_status",
+            "analysis_at",
         }
         assert set(cols.keys()) == expected
 

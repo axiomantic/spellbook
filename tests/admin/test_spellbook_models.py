@@ -1,6 +1,6 @@
 """Tests for spellbook.db ORM model definitions.
 
-Verifies that all 25 spellbook.db SQLAlchemy models match the actual
+Verifies that all 29 spellbook.db SQLAlchemy models match the actual
 CREATE TABLE schemas defined in spellbook/core/db.py and
 spellbook/coordination/curator.py.
 """
@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 from spellbook.db.base import SpellbookBase
 
 
-# All 25 expected tables and their exact column definitions.
-# Derived from spellbook/core/db.py lines 102-640 and
-# spellbook/coordination/curator.py lines 17-26.
+# All 29 expected tables and their exact column definitions.
+# Derived from spellbook/core/db.py and
+# spellbook/coordination/curator.py.
 EXPECTED_TABLES = {
     "souls": [
         "id", "project_path", "session_id", "bound_at", "persona",
@@ -65,6 +65,7 @@ EXPECTED_TABLES = {
     "trust_registry": [
         "id", "content_hash", "source", "trust_level",
         "registered_at", "expires_at", "registered_by",
+        "signature", "signing_key_id", "analysis_status", "analysis_at",
     ],
     "security_events": [
         "id", "event_type", "severity", "source", "detail",
@@ -114,6 +115,22 @@ EXPECTED_TABLES = {
         "id", "session_id", "tool_ids", "tokens_saved", "strategy",
         "timestamp",
     ],
+    "intent_checks": [
+        "id", "session_id", "content_hash", "source_tool",
+        "classification", "confidence", "evidence",
+        "checked_at", "latency_ms", "cached",
+    ],
+    "session_content_accumulator": [
+        "id", "session_id", "content_hash", "source_tool",
+        "content_summary", "content_size", "received_at", "expires_at",
+    ],
+    "sleuth_budget": [
+        "id", "session_id", "calls_remaining", "reset_at",
+    ],
+    "sleuth_cache": [
+        "id", "content_hash", "classification", "confidence",
+        "cached_at", "expires_at",
+    ],
 }
 
 
@@ -128,6 +145,7 @@ def engine():
         SecurityMode, SpawnRateLimit, Memory, MemoryCitation,
         MemoryLink, MemoryBranch, RawEvent, MemoryAuditLog,
         StintStack, StintCorrectionEvent, CuratorEvent,
+        IntentCheck, SessionContentAccumulator, SleuthBudget, SleuthCache,
     )
     engine = create_engine("sqlite:///:memory:")
     SpellbookBase.metadata.create_all(engine)
@@ -135,10 +153,10 @@ def engine():
 
 
 class TestAllTablesExist:
-    """Verify all 25 expected tables are created by the ORM models."""
+    """Verify all 29 expected tables are created by the ORM models."""
 
-    def test_all_25_tables_created(self, engine):
-        """All 25 spellbook.db tables must exist after create_all."""
+    def test_all_29_tables_created(self, engine):
+        """All 29 spellbook.db tables must exist after create_all."""
         inspector = inspect(engine)
         table_names = set(inspector.get_table_names())
         expected = set(EXPECTED_TABLES.keys())
@@ -538,6 +556,10 @@ class TestTrustRegistryModel:
             "registered_at": "2026-01-15T10:00:00",
             "expires_at": "2026-06-15T10:00:00",
             "registered_by": "user-1",
+            "signature": None,
+            "signing_key_id": None,
+            "analysis_status": None,
+            "analysis_at": None,
         }
         assert "entity" not in d
         assert "reason" not in d
