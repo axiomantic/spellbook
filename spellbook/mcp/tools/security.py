@@ -11,6 +11,7 @@ __all__ = [
     "security_check_trust",
     "security_check_output",
     "security_check_intent",
+    "security_sleuth_reset_budget",
     "security_dashboard",
     "security_accumulator_write",
     "security_accumulator_status",
@@ -337,6 +338,7 @@ async def security_check_intent(
     content: str,
     source_tool: str = "unknown",
     force: bool = False,
+    session_id: str = "unknown",
 ) -> dict:
     """Analyze content for injected directive intent using semantic classification.
 
@@ -361,6 +363,8 @@ async def security_check_intent(
         _check_budget,
         _truncate_content,
         content_hash,
+        decrement_budget,
+        get_session_budget,
         get_sleuth_cache,
         parse_classification,
         write_intent_check,
@@ -385,6 +389,19 @@ async def security_check_intent(
         if cached:
             return {**cached, "cached": True, "budget_remaining": -1}
 
+    # Check budget
+    default_calls = config_get("security.sleuth.calls_per_session") or 50
+    budget = await get_session_budget(session_id, default_calls=default_calls)
+    if not force and not _check_budget(budget):
+        fallback = config_get("security.sleuth.fallback_on_budget_exceeded") or "warn"
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": f"Budget exhausted ({fallback} mode)",
+            "cached": False,
+            "budget_remaining": 0,
+        }
+
     # Check API key
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -395,7 +412,7 @@ async def security_check_intent(
             "confidence": 0.0,
             "evidence": "No Anthropic API key configured",
             "cached": False,
-            "budget_remaining": -1,
+            "budget_remaining": budget.get("calls_remaining", -1),
         }
 
     # Truncate content
@@ -426,16 +443,22 @@ async def security_check_intent(
 
         result = parse_classification(response)
         await write_sleuth_cache(c_hash, result)
-        await write_intent_check(c_hash, source_tool, result, latency_ms=latency_ms)
+        await write_intent_check(
+            c_hash, source_tool, result,
+            session_id=session_id, latency_ms=latency_ms,
+        )
 
-        return {**result, "cached": False, "budget_remaining": -1}
+        # Decrement budget after successful non-cached call
+        remaining = await decrement_budget(session_id)
+
+        return {**result, "cached": False, "budget_remaining": remaining}
     except ImportError:
         return {
             "classification": "UNKNOWN",
             "confidence": 0.0,
             "evidence": "anthropic package not installed. Install with: uv pip install 'spellbook[sleuth]'",
             "cached": False,
-            "budget_remaining": -1,
+            "budget_remaining": budget.get("calls_remaining", -1),
         }
     except Exception as e:
         return {
@@ -443,8 +466,33 @@ async def security_check_intent(
             "confidence": 0.0,
             "evidence": f"Classification failed: {type(e).__name__}",
             "cached": False,
-            "budget_remaining": -1,
+            "budget_remaining": budget.get("calls_remaining", -1),
         }
+
+
+@mcp.tool()
+@inject_recovery_context
+async def security_sleuth_reset_budget(
+    session_id: str = "unknown",
+    calls: int = 50,
+) -> dict:
+    """Reset the PromptSleuth budget for a session.
+
+    Restores the number of allowed PromptSleuth API calls for the
+    given session. Useful when a session needs additional analysis
+    beyond the default budget.
+
+    Args:
+        session_id: Session identifier to reset budget for.
+        calls: Number of calls to grant (default 50).
+
+    Returns:
+        {"success": True, "calls_remaining": int, "session_id": str}
+    """
+    from spellbook.security.sleuth import reset_session_budget
+
+    result = await reset_session_budget(session_id, calls=calls)
+    return {"success": True, **result}
 
 
 @mcp.tool()
@@ -487,7 +535,7 @@ def security_accumulator_write(
     source_tool: str,
     content_summary: str = "",
     content_size: int = 0,
-    **kwargs,
+    session_id: str = "unknown",
 ) -> dict:
     """Write content entry to the session accumulator for split injection tracking.
 
@@ -500,14 +548,14 @@ def security_accumulator_write(
         source_tool: Tool that produced the content.
         content_summary: First 500 chars of content (optional).
         content_size: Total content size in bytes (optional).
+        session_id: Session identifier (optional).
 
     Returns:
         {"success": True, "entries_count": int} on success.
     """
     from spellbook.security.accumulator import do_accumulator_write
-    sid = kwargs.get("session_id", "unknown")
     return do_accumulator_write(
-        session_id=sid,
+        session_id=session_id,
         content_hash=content_hash,
         source_tool=source_tool,
         content_summary=content_summary,
@@ -518,20 +566,22 @@ def security_accumulator_write(
 @mcp.tool()
 @inject_recovery_context
 def security_accumulator_status(
-    **kwargs,
+    session_id: str = "unknown",
 ) -> dict:
     """Check session content accumulator state for split injection detection.
 
     Returns the number of tracked content entries, total bytes, source
     distribution, and any alerts (repeated source, burst patterns).
 
+    Args:
+        session_id: Session identifier (optional).
+
     Returns:
         {"entries": int, "total_content_bytes": int, "sources": {...},
          "alerts": [...], "last_analysis": str or null}
     """
     from spellbook.security.accumulator import do_accumulator_status
-    sid = kwargs.get("session_id", "unknown")
-    return do_accumulator_status(session_id=sid)
+    return do_accumulator_status(session_id=session_id)
 
 
 def security_sign_content(
