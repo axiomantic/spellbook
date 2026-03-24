@@ -1017,6 +1017,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             show_post_install_instructions as _show_post_install,
             LiveProgressDisplay as _LiveProgressDisplay,
             render_completion_summary as _render_completion_summary,
+            render_admin_info as _show_admin_info_rich,
+            render_post_install_notes as _render_post_install_notes,
         )
         if _supports_rich():
             from rich.console import Console as _Console
@@ -1141,7 +1143,15 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         _live_display.stop()
     _flush_results()
 
-    print_report(session, show_details=False, timer=_install_timer)
+    if _tui_available:
+        _render_completion_summary(
+            _tui_console,
+            platforms_installed=session.platforms_installed,
+            platforms_failed=session.platforms_failed,
+            elapsed_seconds=_install_timer.elapsed(),
+        )
+    else:
+        print_report(session, show_details=False, timer=_install_timer)
 
     # Admin interface config
     admin_enabled = True
@@ -1166,7 +1176,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         except (ImportError, Exception) as e:
             print(f"\nWarning: Could not configure admin interface: {e}")
 
-    show_admin_info(admin_enabled)
+    if _tui_available:
+        _show_admin_info_rich(_tui_console, admin_enabled)
+    else:
+        show_admin_info(admin_enabled)
 
     # Show what's new on upgrade
     if not args.dry_run:
@@ -1182,7 +1195,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Show post-install instructions
     if not args.dry_run:
         if _tui_available:
-            _show_post_install(session.platforms_installed)
+            _render_post_install_notes(_tui_console, session.platforms_installed)
         elif is_interactive():
             try:
                 from installer.tui import show_post_install_instructions

@@ -305,10 +305,10 @@ class LiveProgressDisplay:
         self._live.start()
 
     def stop(self) -> None:
-        """Exit the Live context."""
+        """Exit the Live context, keeping final output visible."""
         if self._live is not None:
-            # Final render before stopping
-            self._update_display()
+            # Push final renderable so it persists after stop (transient=False)
+            self._live.update(self._render())
             self._live.stop()
             self._live = None
 
@@ -465,6 +465,51 @@ def render_completion_summary(
 
     panel = Panel(body, title=title, border_style=border, padding=(1, 2))
     console.print(panel)
+
+
+def render_admin_info(console: "Any", admin_enabled: bool) -> None:
+    """Render admin web interface info as a Rich panel."""
+    from rich.panel import Panel
+
+    if admin_enabled:
+        body = (
+            "Status:  [green]enabled[/green]\n"
+            "URL:     http://localhost:8765/admin\n"
+            "Open:    [cyan]spellbook admin open[/cyan]\n"
+            "Disable: set admin_enabled=false or reinstall with --no-admin"
+        )
+        panel = Panel(body, title="Admin Web Interface", border_style="blue", padding=(0, 2))
+    else:
+        body = (
+            "Status:  [yellow]disabled[/yellow]\n"
+            "Enable:  set admin_enabled=true or reinstall without --no-admin"
+        )
+        panel = Panel(body, title="Admin Web Interface", border_style="dim", padding=(0, 2))
+    console.print(panel)
+
+
+def render_post_install_notes(
+    console: "Any",
+    platforms: List[str],
+) -> None:
+    """Render post-install notes as a Rich panel."""
+    from rich.panel import Panel
+
+    lines: List[str] = []
+
+    if "gemini" in platforms:
+        lines.append("[cyan]Gemini CLI[/cyan]: Restart to load extension. Verify: /extensions list")
+    if "opencode" in platforms:
+        lines.append("[cyan]OpenCode[/cyan]: Restart to reload skill cache")
+    if "codex" in platforms:
+        lines.append("[cyan]Codex[/cyan]: AGENTS.md installed. Skills auto-trigger by intent")
+    if "claude_code" in platforms:
+        lines.append("[cyan]Claude Code[/cyan]: MCP server registered. Verify: /mcp")
+
+    if lines:
+        body = "\n".join(lines)
+        panel = Panel(body, title="Next Steps", border_style="dim", padding=(0, 2))
+        console.print(panel)
 
 
 @dataclass
