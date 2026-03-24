@@ -3,6 +3,7 @@
 import pytest
 import yaml
 from pathlib import Path
+from unittest.mock import patch
 
 
 REGISTRY_PATH = str(
@@ -67,3 +68,113 @@ class TestRegistryLoader:
         data1 = _load_registry(REGISTRY_PATH)
         data2 = _load_registry(REGISTRY_PATH)
         assert data1 is data2  # Same object = cached
+
+
+class TestKeywordMatching:
+    def test_exact_domain_match(self):
+        """'jira' matches the jira domain."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["jira"], registry_path=REGISTRY_PATH)
+        assert result["detection_summary"]["registry_matches"] > 0
+        tool_names = [t["name"] for t in result["tools"]]
+        assert "Atlassian MCP Server" in tool_names
+
+    def test_partial_keyword_match(self):
+        """'project-management' matches domains with that keyword."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["project-management"], registry_path=REGISTRY_PATH)
+        assert result["detection_summary"]["registry_matches"] > 0
+
+    def test_no_match(self):
+        """'nonexistent-thing-xyz' returns empty results."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["nonexistent-thing-xyz"], registry_path=REGISTRY_PATH)
+        assert result["detection_summary"]["registry_matches"] == 0
+        assert len(result["tools"]) == 0
+
+    def test_trust_tier_sorting(self):
+        """Results are sorted by trust tier (lowest first)."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+        tiers = [t["trust_tier"] for t in result["tools"]]
+        assert tiers == sorted(tiers)
+
+    def test_trust_label_included(self):
+        """Each tool has a trust_label field."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+        for tool in result["tools"]:
+            assert "trust_label" in tool
+            assert isinstance(tool["trust_label"], str)
+
+
+class TestCLIDetection:
+    @patch("shutil.which")
+    def test_cli_detected_when_available(self, mock_which):
+        """CLI tool marked available when shutil.which returns a path."""
+        from spellbook.tooling.discovery import discover_tools
+
+        mock_which.side_effect = lambda name: "/usr/bin/gh" if name == "gh" else None
+        result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+        gh_tools = [t for t in result["tools"] if "GitHub CLI" in t["name"]]
+        assert len(gh_tools) == 1
+        assert gh_tools[0]["available"] is True
+        assert "cli_available" in gh_tools[0]["detection_methods"]
+
+    @patch("shutil.which", return_value=None)
+    def test_cli_not_detected_when_missing(self, mock_which):
+        """CLI tool not marked available when binary not found."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+        docker_tools = [t for t in result["tools"] if "Docker CLI" in t["name"]]
+        assert len(docker_tools) == 1
+        assert docker_tools[0]["available"] is False
+
+
+class TestDepScanning:
+    def test_dep_scanning_pyproject_toml(self, tmp_path):
+        """Detects Python deps from pyproject.toml."""
+        from spellbook.tooling.discovery import discover_tools
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\ndependencies = ["boto3>=1.26", "requests"]\n'
+        )
+
+        with patch("shutil.which", return_value=None):
+            result = discover_tools(
+                ["aws"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
+            )
+
+        aws_tools = [t for t in result["tools"] if "AWS CLI" in t["name"]]
+        assert len(aws_tools) == 1
+        assert aws_tools[0]["available"] is True
+        assert "dep_detected" in aws_tools[0]["detection_methods"]
+
+    def test_dep_scanning_package_json(self, tmp_path):
+        """Detects npm deps from package.json."""
+        import json as json_mod
+
+        from spellbook.tooling.discovery import discover_tools
+
+        pkg = tmp_path / "package.json"
+        pkg.write_text(json_mod.dumps({
+            "dependencies": {"stripe": "^12.0.0"},
+            "devDependencies": {},
+        }))
+
+        with patch("shutil.which", return_value=None):
+            result = discover_tools(
+                ["stripe"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
+            )
+
+        stripe_tools = [t for t in result["tools"] if "Stripe CLI" in t["name"]]
+        assert len(stripe_tools) == 1
+        assert stripe_tools[0]["available"] is True
+        assert "dep_detected" in stripe_tools[0]["detection_methods"]
