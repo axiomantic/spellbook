@@ -42,7 +42,20 @@ def pr_fetch(pr_identifier: str) -> dict:
         PRDistillError for authentication, network, or not-found errors
     """
     parsed = parse_pr_identifier(pr_identifier)
-    return do_fetch_pr(parsed)
+    result = do_fetch_pr(parsed)
+
+    # Spotlight-wrap the diff (external content from GitHub)
+    try:
+        from spellbook.core.config import config_get
+        from spellbook.security.spotlight import spotlight_wrap
+        if config_get("security.spotlighting.enabled"):
+            diff = result.get("diff", "")
+            if diff:
+                result["diff"] = spotlight_wrap(diff, "pr_fetch", tier="standard")
+    except ImportError:
+        pass  # Fail-open: spotlighting module not available
+
+    return result
 
 
 @mcp.tool()
