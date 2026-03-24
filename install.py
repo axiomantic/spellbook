@@ -760,7 +760,7 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
-def _install_tts_deps(spellbook_dir: Path) -> bool:
+def _install_tts_deps(spellbook_dir: Path, quiet: bool = False) -> bool:
     """Install TTS dependencies into the daemon venv.
 
     Installs:
@@ -771,27 +771,32 @@ def _install_tts_deps(spellbook_dir: Path) -> bool:
 
     Returns True if installation succeeded and kokoro is now importable.
     """
-    print_step("Installing TTS dependencies into daemon venv...")
-    print_info("Packages: kokoro, soundfile, sounddevice, spacy, misaki")
+    if not quiet:
+        print_step("Installing TTS dependencies into daemon venv...")
+        print_info("Packages: kokoro, soundfile, sounddevice, spacy, misaki")
     try:
         from installer.components.mcp import install_tts_to_daemon_venv
 
         success, msg = install_tts_to_daemon_venv(spellbook_dir)
         if not success:
-            print_error(f"TTS dependency installation failed: {msg}")
+            if not quiet:
+                print_error(f"TTS dependency installation failed: {msg}")
             return False
-        print_success("TTS packages and spacy model installed")
+        if not quiet:
+            print_success("TTS packages and spacy model installed")
         # Verify kokoro is now importable in the daemon venv
         return check_tts_available()
     except ImportError:
-        print_error("Could not import installer components for daemon venv TTS install")
+        if not quiet:
+            print_error("Could not import installer components for daemon venv TTS install")
         return False
     except Exception as e:
-        print_error(f"TTS dependency installation failed: {e}")
+        if not quiet:
+            print_error(f"TTS dependency installation failed: {e}")
         return False
 
 
-def _preload_tts_model(spellbook_dir: Path) -> bool:
+def _preload_tts_model(spellbook_dir: Path, quiet: bool = False) -> bool:
     """Pre-download Kokoro TTS model so first speak() call is instant.
 
     Checks if model is already cached before downloading.
@@ -800,22 +805,24 @@ def _preload_tts_model(spellbook_dir: Path) -> bool:
     try:
         from installer.components.mcp import get_daemon_python
     except ImportError:
-        print_warning("Could not import daemon venv helpers, skipping model preload")
+        if not quiet:
+            print_warning("Could not import daemon venv helpers, skipping model preload")
         return False
 
     daemon_python = get_daemon_python()
     if not daemon_python.exists():
-        print_warning("Daemon venv not found, skipping model preload")
+        if not quiet:
+            print_warning("Daemon venv not found, skipping model preload")
         return False
 
     # Check if model is already cached
     cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
     if cache_dir.exists() and any(cache_dir.glob("models--hexgrad--Kokoro*")):
-        print_info("Kokoro model already cached, skipping download")
         return True
 
-    print_step("Pre-downloading Kokoro TTS model (~500MB)...")
-    print_info("This is a one-time download. Future installs will use the cached model.")
+    if not quiet:
+        print_step("Pre-downloading Kokoro TTS model (~500MB)...")
+        print_info("This is a one-time download. Future installs will use the cached model.")
 
     try:
         result = subprocess.run(
@@ -828,15 +835,18 @@ def _preload_tts_model(spellbook_dir: Path) -> bool:
             timeout=600,  # 10 minutes for large model download
         )
         if result.returncode == 0:
-            print_success("Kokoro model downloaded and cached")
+            if not quiet:
+                print_success("Kokoro model downloaded and cached")
             return True
         else:
-            print_warning(f"Model pre-download failed: {result.stderr[:200]}")
-            print_info("The model will be downloaded on first TTS use instead.")
+            if not quiet:
+                print_warning(f"Model pre-download failed: {result.stderr[:200]}")
+                print_info("The model will be downloaded on first TTS use instead.")
             return False
     except subprocess.TimeoutExpired:
-        print_warning("Model download timed out (>10 minutes)")
-        print_info("The model will be downloaded on first TTS use instead.")
+        if not quiet:
+            print_warning("Model download timed out (>10 minutes)")
+            print_info("The model will be downloaded on first TTS use instead.")
         return False
 
 
@@ -920,6 +930,70 @@ def setup_tts(
         else:
             _set_tts_config(False)
             print_info("TTS skipped. Install later via installer.components.mcp.install_tts_to_daemon_venv()")
+
+
+def _run_tts_setup(
+    dry_run: bool,
+    auto_yes: bool,
+    spellbook_dir: Path,
+    live_display=None,
+) -> bool:
+    """TTS setup integrated with LiveProgressDisplay.
+
+    Returns True if any TTS steps were added to the display.
+    """
+    if dry_run:
+        return False
+
+    try:
+        from spellbook.core.config import config_get as _cfg_get
+        existing = _cfg_get("tts_enabled")
+    except (ImportError, Exception):
+        existing = None
+
+    if existing is None:
+        # First install: TTS choice handled by interactive setup_tts after progress
+        if live_display:
+            live_display.add_step("TTS: not yet configured (skip)")
+            live_display.complete_step(success=True)
+        return True
+
+    if existing is False:
+        if live_display:
+            live_display.add_step("TTS: disabled by user")
+            live_display.complete_step(success=True)
+        return True
+
+    # TTS is enabled - check if deps are available
+    if check_tts_available():
+        if live_display:
+            live_display.add_step("TTS: available")
+            live_display.complete_step(success=True)
+        else:
+            print_info("TTS already configured (enabled=True)")
+        return True
+
+    # TTS enabled but deps missing - reinstall
+    if live_display:
+        live_display.add_step("TTS: reinstalling dependencies...")
+    else:
+        print_step("TTS was enabled but dependencies are missing. Reinstalling...")
+
+    quiet = live_display is not None
+    if spellbook_dir and _install_tts_deps(spellbook_dir, quiet=quiet):
+        _preload_tts_model(spellbook_dir, quiet=quiet)
+        if live_display:
+            live_display.complete_step(success=True)
+            live_display.add_step("TTS: dependencies restored")
+            live_display.complete_step(success=True)
+        else:
+            print_success("TTS dependencies reinstalled")
+    else:
+        if live_display:
+            live_display.complete_step(success=False)
+        else:
+            print_warning("TTS reinstall failed")
+    return True
 
 
 # =============================================================================
@@ -1033,7 +1107,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         pass
 
     if _tui_available:
-        _render_welcome(_tui_console, version=installer.version)
+        _render_welcome(_tui_console, version=installer.version, auto_yes=args.yes)
     else:
         print_installer_header(installer.version)
 
@@ -1155,6 +1229,21 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
     )
 
+    # TTS setup runs INSIDE the live progress so it appears before "Complete"
+    if not args.dry_run:
+        if _live_display:
+            _live_display.begin_section("TTS")
+        tts_result = _run_tts_setup(
+            dry_run=args.dry_run,
+            auto_yes=getattr(args, "yes", False),
+            spellbook_dir=spellbook_dir,
+            live_display=_live_display,
+        )
+        if _live_display and not tts_result:
+            # No TTS steps were added; remove the empty section
+            if _live_display._sections and not _live_display._sections[-1].steps:
+                _live_display._sections.pop()
+
     # Stop live display and flush remaining plain-text results
     if _live_display:
         _live_display.stop()
@@ -1201,13 +1290,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Show what's new on upgrade
     if not args.dry_run:
         show_whats_new(spellbook_dir, session.previous_version, session.version)
-
-    # TTS setup (optional)
-    setup_tts(
-        dry_run=args.dry_run,
-        auto_yes=getattr(args, "yes", False),
-        spellbook_dir=spellbook_dir,
-    )
 
     # Show post-install instructions
     if not args.dry_run:
@@ -1341,10 +1423,10 @@ Examples:
     if not is_interactive():
         args.yes = True
 
-    # Only show bootstrap banner on initial invocation (not after re-exec).
-    # After re-exec, run_installation() shows the Rich welcome panel.
+    # Show a minimal bootstrap status line on initial invocation only.
+    # The Rich welcome panel in run_installation() is the real header.
     if not args.bootstrapped:
-        print_header()
+        print_step("Spellbook: bootstrapping...")
 
     # Bootstrap phase
     if args.update_only:

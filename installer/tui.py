@@ -41,6 +41,7 @@ def supports_rich() -> bool:
 def render_welcome_panel(
     console: "Any" = None,
     version: Optional[str] = None,
+    auto_yes: bool = False,
 ) -> None:
     """Render the Rich welcome panel with spellbook branding.
 
@@ -49,6 +50,7 @@ def render_welcome_panel(
             Console writing to stdout is created.
         version: Spellbook version string to display. If None, attempts
             to read from the ``.version`` file.
+        auto_yes: If True, adjust text for non-interactive mode.
     """
     from rich.panel import Panel
     from rich.text import Text
@@ -71,7 +73,6 @@ def render_welcome_panel(
         f"Version: {version}",
         "",
         "Defense-in-depth security for AI coding assistants.",
-        "Configure platforms and security features below.",
     ]
     body = Text("\n".join(body_parts))
     panel = Panel(body, title=title_text, border_style="cyan", padding=(1, 2))
