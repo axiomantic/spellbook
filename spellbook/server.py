@@ -40,7 +40,8 @@ from spellbook.coordination.curator import init_curator_tables  # noqa: F401
 from spellbook.mcp.tools.misc import _deep_merge  # noqa: F401
 from spellbook.mcp.tools.sessions import _validate_working_directory  # noqa: F401
 from spellbook.mcp.tools.forged import _extract_section  # noqa: F401
-from spellbook.mcp.tools.health import _get_tool_names, _get_version  # noqa: F401
+from spellbook.mcp.tools.health import get_tool_names, _get_version  # noqa: F401
+_get_tool_names = get_tool_names  # backward compat for tests importing old name
 
 # Function aliases for backward compat
 _shutdown_cleanup = shutdown

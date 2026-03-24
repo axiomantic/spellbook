@@ -59,7 +59,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
             for key in ("dependencies", "devDependencies"):
                 if key in data and isinstance(data[key], dict):
                     names.update(k.lower() for k in data[key].keys())
-        except Exception:
+        except (json.JSONDecodeError, OSError, KeyError, TypeError):
             pass
 
     # pyproject.toml
@@ -74,7 +74,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
                 name = re.split(r"[><=!~;\s\[]", dep)[0].strip()
                 if name:
                     names.add(name.lower())
-        except Exception:
+        except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError):
             pass
 
     # requirements.txt
@@ -88,7 +88,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
                 name = re.split(r"[><=!~;\s\[]", line)[0].strip()
                 if name:
                     names.add(name.lower())
-        except Exception:
+        except OSError:
             pass
 
     # Cargo.toml
@@ -101,7 +101,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
             deps = data.get("dependencies", {})
             if isinstance(deps, dict):
                 names.update(k.lower() for k in deps.keys())
-        except Exception:
+        except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError):
             pass
 
     # Gemfile
@@ -112,7 +112,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
                 m = re.match(r"""gem\s+['"]([^'"]+)['"]""", line.strip())
                 if m:
                     names.add(m.group(1).lower())
-        except Exception:
+        except OSError:
             pass
 
     return names
@@ -150,10 +150,10 @@ def discover_tools(
     # Check MCP tool availability
     available_mcp_tools: Set[str] = set()
     try:
-        from spellbook.mcp.tools.health import _get_tool_names
+        from spellbook.mcp.tools.health import get_tool_names
 
-        available_mcp_tools = set(_get_tool_names())
-    except Exception:
+        available_mcp_tools = set(get_tool_names())
+    except (ImportError, RuntimeError, AttributeError):
         pass
 
     dep_names = _parse_dep_names(project_path) if project_path else set()
