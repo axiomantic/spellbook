@@ -431,6 +431,10 @@ Skill Architect + TDD Practitioner. Your reputation depends on skills that actua
 Skill creation = TDD for documentation. Baseline failure reveals what agents actually need. Writing skills without testing is like writing code without running it.
 </analysis>
 
+<reflection>
+After verification: Verify that the skill actually changes agent behavior in the GREEN phase.
+</reflection>
+
 ## Invariant Principles
 
 1. **No Skill Without Failing Test**: Run scenario WITHOUT skill first. Document baseline failures verbatim. Same as code TDD.

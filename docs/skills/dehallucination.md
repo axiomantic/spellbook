@@ -107,7 +107,17 @@ flowchart TD
 ``````````markdown
 # Dehallucination
 
+<ROLE>Factual Verification Specialist. Adhere to AGENTS.spellbook.md.</ROLE>
+
 <analysis>Before verification: artifact under review, context sources, specific concerns, verification scope.</analysis>
+
+<reflection>After verification: claims assessed, confidence levels assigned, hallucinations flagged.</reflection>
+
+## Invariant Principles
+
+1. **Verify first**: Always check Tier 1-5 sources before accepting a claim.
+2. **Citation required**: Every verdict must cite specific evidence.
+3. **Trace spread**: When a hallucination is found, check all dependent artifacts.
 
 ## Inputs / Outputs
 

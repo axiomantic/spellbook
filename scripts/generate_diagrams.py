@@ -329,12 +329,18 @@ def generate_diagram(
     item: SourceItem,
     current_hash: str,
     *,
+    provider: str = "claude",
+    model: str = "sonnet",
+    provider_args: list[str] | None = None,
     verbose: bool = False,
     write: bool = True,
 ) -> tuple[GenerationResult, str | None]:
-    """Generate a diagram for a single item via Claude headless.
+    """Generate a diagram for a single item via an LLM provider.
 
     Args:
+        provider: "claude" or "gemini"
+        model: model name to pass to the provider
+        provider_args: extra arguments for the provider CLI
         write: If True, write the diagram file. If False, return the content
                without writing (for interactive mode).
 
@@ -344,22 +350,41 @@ def generate_diagram(
     prompt = build_prompt(item)
     source_rel = str(item.source_path.relative_to(REPO_ROOT))
 
-    cmd = [
-        "claude",
-        "--print",
-        "--dangerously-skip-permissions",
-        prompt,
-    ]
+    if provider == "claude":
+        cmd = [
+            "claude",
+            "--print",
+            "--model", model,
+            "--dangerously-skip-permissions",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
+    elif provider == "gemini":
+        cmd = [
+            "gemini",
+            "--prompt", prompt,
+            "--model", model,
+            "--yolo",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+    else:
+        return GenerationResult(
+            item=item,
+            status="failed",
+            message=f"Unknown provider: {provider}",
+        ), None
 
     if verbose:
-        print(f"  Command: {' '.join(cmd[:3])} [prompt truncated]")
+        print(f"  Command: {' '.join(cmd[:4])} [prompt truncated]")
         print(f"  Stdin: {item.source_path}")
 
-    # Unset CLAUDECODE to allow spawning Claude subprocesses from within
-    # an active Claude Code session (e.g., when run via pre-commit hooks).
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    # Unset CLAUDECODE and GEMINI_CLI to allow spawning subprocesses from within
+    # an active session (e.g., when run via pre-commit hooks).
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
 
-    print(f"  Generating diagram for {item.source_path.name}...", end="", flush=True)
+    print(f"  Generating diagram for {item.source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         result = subprocess.run(
@@ -376,14 +401,14 @@ def generate_diagram(
         return GenerationResult(
             item=item,
             status="failed",
-            message=f"Claude timed out after {CLAUDE_TIMEOUT_SECONDS}s",
+            message=f"{provider.capitalize()} timed out after {CLAUDE_TIMEOUT_SECONDS}s",
         ), None
     except FileNotFoundError:
         print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
-            message="'claude' command not found. Is Claude Code installed and on PATH?",
+            message=f"'{cmd[0]}' command not found. Is it installed and on PATH?",
         ), None
 
     if result.returncode != 0:
@@ -392,7 +417,7 @@ def generate_diagram(
         return GenerationResult(
             item=item,
             status="failed",
-            message=f"Claude exited with code {result.returncode}: {stderr_snippet}",
+            message=f"{cmd[0]} exited with code {result.returncode}: {stderr_snippet}",
         ), None
 
     diagram_content = result.stdout.strip()
@@ -594,10 +619,17 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
-def classify_change(source_path: Path, diagram_path: Path) -> str:
+def classify_change(
+    source_path: Path,
+    diagram_path: Path,
+    *,
+    provider: str = "claude",
+    model: str = "haiku",
+    provider_args: list[str] | None = None,
+) -> str:
     """Classify a source file change as STAMP, PATCH, or REGENERATE.
 
-    Uses git diff to get the change, then sends it to Claude for classification.
+    Uses git diff to get the change, then sends it to an LLM for classification.
     Falls back to REGENERATE on any error.
     """
     diff = get_source_diff(source_path)
@@ -606,13 +638,35 @@ def classify_change(source_path: Path, diagram_path: Path) -> str:
 
     prompt = CLASSIFICATION_PROMPT.format(diff=diff)
 
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    if provider == "claude":
+        cmd = [
+            "claude",
+            "--print",
+            "--model", model,
+            "--dangerously-skip-permissions",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
+    elif provider == "gemini":
+        cmd = [
+            "gemini",
+            "--prompt", prompt,
+            "--model", model,
+            "--yolo",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+    else:
+        return "REGENERATE"
 
-    print(f"  Classifying change for {source_path.name}...", end="", flush=True)
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
+
+    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         result = subprocess.run(
-            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
+            cmd,
             stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
@@ -638,10 +692,18 @@ def classify_change(source_path: Path, diagram_path: Path) -> str:
     return "REGENERATE"
 
 
-def patch_diagram(source_path: Path, diagram_path: Path, diff: str) -> str | None:
-    """Surgically patch an existing diagram based on a source diff.
+def patch_diagram(
+    source_path: Path,
+    diagram_path: Path,
+    diff: str,
+    *,
+    provider: str = "claude",
+    model: str = "haiku",
+    provider_args: list[str] | None = None,
+) -> str | None:
+    """Surgically patch an existing diagram based on a source diff via an LLM.
 
-    Sends the existing diagram content and diff to Claude for a minimal patch.
+    Sends the existing diagram content and diff to the LLM for a minimal patch.
     Returns the patched diagram content (mermaid code blocks), or None on failure.
     """
     if not diagram_path.exists():
@@ -650,13 +712,35 @@ def patch_diagram(source_path: Path, diagram_path: Path, diff: str) -> str | Non
     existing_diagram = diagram_path.read_text(encoding="utf-8")
     prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
 
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    if provider == "claude":
+        cmd = [
+            "claude",
+            "--print",
+            "--model", model,
+            "--dangerously-skip-permissions",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
+    elif provider == "gemini":
+        cmd = [
+            "gemini",
+            "--prompt", prompt,
+            "--model", model,
+            "--yolo",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+    else:
+        return None
 
-    print(f"  Patching diagram for {source_path.name}...", end="", flush=True)
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
+
+    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         result = subprocess.run(
-            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
+            cmd,
             stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
@@ -841,7 +925,23 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate diagrams for skills and commands via Claude headless",
+        description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
+    )
+    parser.add_argument(
+        "--provider",
+        choices=["claude", "gemini"],
+        default="claude",
+        help="LLM provider to use (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Model name to pass to the provider (default: 'sonnet' for claude, 'gemini-2.0-flash' for gemini)",
+    )
+    parser.add_argument(
+        "--provider-args",
+        nargs="*",
+        help="Additional arguments to pass to the provider CLI",
     )
     parser.add_argument(
         "--dry-run",
@@ -903,6 +1003,24 @@ def main() -> int:
     print(f"Found {len(all_commands)} commands ({cmds_mandatory} mandatory, {cmds_optional} optional)")
     print(f"Found {len(all_agents)} agents ({agents_mandatory} mandatory, {agents_optional} optional)")
 
+    # Set default model based on provider
+    provider = args.provider
+    model = args.model
+    if model is None:
+        if provider == "claude":
+            model = "sonnet"
+        elif provider == "gemini":
+            model = "gemini-2.0-flash"
+    
+    # Fast model for utility tasks (classification, patching)
+    # Use the specified model if provided, otherwise default to a fast one
+    fast_model = args.model
+    if fast_model is None:
+        if provider == "claude":
+            fast_model = "haiku"
+        elif provider == "gemini":
+            fast_model = "gemini-2.0-flash"
+
     # Merge and filter
     all_items = all_skills + all_commands + all_agents
     filtered_items = apply_filters(
@@ -943,9 +1061,9 @@ def main() -> int:
 
     print()
     if args.force:
-        print(f"Force mode: regenerating all {len(work_items)} diagrams")
+        print(f"Force mode: regenerating all {len(work_items)} diagrams via {provider} ({model})")
     else:
-        print(f"Stale/missing diagrams: {len(work_items)}")
+        print(f"Stale/missing diagrams: {len(work_items)} (using {provider})")
     print()
 
     # Ensure output directories exist
@@ -980,7 +1098,11 @@ def main() -> int:
 
             # Smart classification for interactive mode
             if use_smart and item.diagram_path.exists():
-                classification = classify_change(item.source_path, item.diagram_path)
+                classification = classify_change(
+                    item.source_path, item.diagram_path,
+                    provider=provider, model=fast_model,
+                    provider_args=args.provider_args,
+                )
                 print(f"  Smart classification: {classification}")
 
                 if classification == "STAMP":
@@ -1053,7 +1175,7 @@ def main() -> int:
 
         total_work = len(to_generate) + len(to_patch)
         print(f"\n{'=' * 60}")
-        print(f"  Processing {total_work} diagrams (batch mode, no further input needed)")
+        print(f"  Processing {total_work} diagrams (batch mode, using {provider})")
         print(f"{'=' * 60}\n")
 
         generated_count = 0
@@ -1063,7 +1185,11 @@ def main() -> int:
         # Process patches first
         for item, current_hash, diff in to_patch:
             print(f"Patching: {item.name}...", end="", flush=True)
-            patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+            patched_content = patch_diagram(
+                item.source_path, item.diagram_path, diff,
+                provider=provider, model=fast_model,
+                provider_args=args.provider_args,
+            )
             if patched_content is not None:
                 # Build output with metadata header
                 source_rel = str(item.source_path.relative_to(REPO_ROOT))
@@ -1074,6 +1200,8 @@ def main() -> int:
                     "generated_at": now,
                     "generator": "generate_diagrams.py",
                     "method": "patch",
+                    "provider": provider,
+                    "model": fast_model,
                 }
                 meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
                 output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
@@ -1085,7 +1213,10 @@ def main() -> int:
                 # Fall back to full generation
                 print(f" patch failed, regenerating...", end="", flush=True)
                 result, output_content = generate_diagram(
-                    item, current_hash, verbose=args.verbose, write=False,
+                    item, current_hash,
+                    provider=provider, model=model,
+                    provider_args=args.provider_args,
+                    verbose=args.verbose, write=False,
                 )
                 if result.status == "generated" and output_content is not None:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1100,7 +1231,10 @@ def main() -> int:
         for i, (item, current_hash) in enumerate(to_generate, 1):
             print(f"[{i}/{len(to_generate)}] Generating: {item.name}...", end="", flush=True)
             result, output_content = generate_diagram(
-                item, current_hash, verbose=args.verbose, write=False,
+                item, current_hash,
+                provider=provider, model=model,
+                provider_args=args.provider_args,
+                verbose=args.verbose, write=False,
             )
             if result.status == "generated" and output_content is not None:
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1147,7 +1281,11 @@ def main() -> int:
     for i, (item, current_hash) in enumerate(work_items, 1):
         # Smart classification (if enabled and diagram exists)
         if use_smart and item.diagram_path.exists():
-            classification = classify_change(item.source_path, item.diagram_path)
+            classification = classify_change(
+                item.source_path, item.diagram_path,
+                provider=provider, model=fast_model,
+                provider_args=args.provider_args,
+            )
 
             if classification == "STAMP":
                 stamp_as_fresh(item, current_hash)
@@ -1158,7 +1296,11 @@ def main() -> int:
             if classification == "PATCH":
                 print(f"[{i}/{len(work_items)}] Patching: {item.name}...", end="", flush=True)
                 diff = get_source_diff(item.source_path)
-                patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+                patched_content = patch_diagram(
+                    item.source_path, item.diagram_path, diff,
+                    provider=provider, model=fast_model,
+                    provider_args=args.provider_args,
+                )
                 if patched_content is not None:
                     source_rel = str(item.source_path.relative_to(REPO_ROOT))
                     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1168,6 +1310,8 @@ def main() -> int:
                         "generated_at": now,
                         "generator": "generate_diagrams.py",
                         "method": "patch",
+                        "provider": provider,
+                        "model": fast_model,
                     }
                     meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
                     output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
@@ -1182,10 +1326,13 @@ def main() -> int:
 
             # classification == "REGENERATE" or patch failed: fall through
 
-        print(f"[{i}/{len(work_items)}] Generating: {item.name}...", end="", flush=True)
+        print(f"[{i}/{len(work_items)}] Generating: {item.name} via {provider} ({model})...", end="", flush=True)
 
         result, output_content = generate_diagram(
             item, current_hash,
+            provider=provider,
+            model=model,
+            provider_args=args.provider_args,
             verbose=args.verbose,
             write=True,
         )
