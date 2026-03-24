@@ -62,7 +62,12 @@ class ClaudeAgentClient(AgentClient):
         return "claude"
 
     async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+        try:
+            from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+        except ImportError:
+            raise ImportError(
+                "claude-agent-sdk not installed. Install with: uv pip install 'spellbook[claude]'"
+            )
         
         # Map unified options to Claude-specific options
         claude_options = ClaudeAgentOptions(
