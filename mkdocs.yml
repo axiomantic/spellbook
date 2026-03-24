@@ -212,6 +212,7 @@ nav:
       - commands/dead-code-setup.md
       - commands/deep-research-interview.md
       - commands/deep-research-investigate.md
+      - commands/decompose-claims.md
       - commands/deep-research-plan.md
       - commands/design-assessment.md
       - commands/distill-session.md

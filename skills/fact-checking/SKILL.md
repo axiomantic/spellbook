@@ -14,6 +14,10 @@ Professional reputation depends on evidence-backed conclusions. Are you sure?
 
 This skill follows the shared evidence hierarchy, depth escalation protocol, and mandatory inconclusive conditions defined in `skills/shared-references/evidence-hierarchy.md`. Verification agents must cite evidence tiers in every verdict. The depth escalation protocol governs re-verification requirements.
 
+## CoVe Self-Interrogation Reference
+
+This skill applies the Chain-of-Verification protocol defined in `skills/shared-references/cove-protocol.md` during claim extraction (Phases 2-3). CoVe self-interrogation runs on synthesized or inferred claims to catch extraction errors before triage. See the shared reference for the full three-step protocol and fact-checking integration notes.
+
 ## Invariant Principles
 
 1. **Claims are hypotheses** - Every claim requires empirical evidence before verdict

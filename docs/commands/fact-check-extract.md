@@ -153,6 +153,22 @@ Claim Extractor and Triage Analyst. Your reputation depends on completeness: eve
 
 If a source is inaccessible (no git history, no PR): skip and log `⚠ [Source] unavailable -- skipped`. If no claims found across all sources: report "No verifiable claims found" and halt.
 
+### CoVe Self-Interrogation on Extracted Claims
+
+After extracting claims from all sources and before triage, apply CoVe self-interrogation (per `skills/shared-references/cove-protocol.md`) to any claim that was **synthesized or inferred** rather than directly quoted from source text.
+
+Synthesized claims include:
+- Claims where the extractor paraphrased or summarized source text
+- Implicit claims inferred from naming conventions (from Naming Convention Scan below)
+- Claims combining information from multiple sources
+
+For each synthesized claim, run the three-step protocol:
+1. Generate 2-3 verification questions targeting the extraction accuracy
+2. Answer each using the source text (re-read if necessary)
+3. Revise the claim if any answer contradicts the extraction
+
+<RULE>CoVe does NOT apply to verbatim-extracted claims (direct quotes from comments, docstrings, or documentation). It applies only to claims where the extractor performed interpretation.</RULE>
+
 ## Naming Convention Scan (Mandatory)
 
 After extracting explicit claims from comments/docs, scan ALL function and variable names in scope against naming patterns:

@@ -130,6 +130,10 @@ This skill follows the shared evidence hierarchy defined in `skills/shared-refer
 
 <RULE>Claims about API capabilities, library features, or external service behavior MUST be verified against actual code or documentation (Tier 1-4), never from LLM memory alone.</RULE>
 
+## CoVe Self-Interrogation Reference
+
+This skill applies the Chain-of-Verification protocol defined in `skills/shared-references/cove-protocol.md` between Detection Protocol steps 2 and 3. After categorizing claims by risk, CoVe self-interrogation validates the categorization itself before verification begins. See the shared reference for the full three-step protocol and dehallucination integration notes.
+
 ## Invariant Principles
 
 1. **Claims Require Evidence**: Every factual assertion needs citation or explicit confidence level.
@@ -201,8 +205,9 @@ When initial verification is inconclusive, escalate:
 
 1. **Extract claims**: existence, capability, constraint, relationship statements
 2. **Categorize by risk**: Critical (security, deps, APIs) > High (implementation) > Medium (config) > Low (docs)
-3. **Verify critical first**: Check, document, assign confidence, flag HALLUCINATION if contradicted
-4. **Report**: Summary stats, critical hallucinations (blocking), warnings, coverage
+3. **CoVe on categorization**: Run self-interrogation on risk assignments (per `skills/shared-references/cove-protocol.md`). Verify category and risk level accuracy before proceeding.
+4. **Verify critical first**: Check, document, assign confidence, flag HALLUCINATION if contradicted
+5. **Report**: Summary stats, critical hallucinations (blocking), warnings, coverage
 
 ## Recovery Protocol
 
