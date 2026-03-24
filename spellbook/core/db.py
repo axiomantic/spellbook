@@ -87,6 +87,19 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
         return conn
 
 
+def _migrate_trust_registry_v2(cursor):
+    """Add crypto provenance columns to trust_registry (idempotent)."""
+    existing = {row[1] for row in cursor.execute("PRAGMA table_info(trust_registry)").fetchall()}
+    for col, typedef in [
+        ("signature", "TEXT"),
+        ("signing_key_id", "TEXT"),
+        ("analysis_status", "TEXT"),
+        ("analysis_at", "TEXT"),
+    ]:
+        if col not in existing:
+            cursor.execute(f"ALTER TABLE trust_registry ADD COLUMN {col} {typedef}")
+
+
 def init_db(db_path: str = None) -> None:
     """Initialize database schema.
 
@@ -637,6 +650,71 @@ def init_db(db_path: str = None) -> None:
         CREATE INDEX IF NOT EXISTS idx_stint_corrections_type
         ON stint_correction_events(correction_type)
     """)
+
+    # --- Injection Defense Tables (v2) ---
+
+    # Intent checks (PromptSleuth results)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS intent_checks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            source_tool TEXT NOT NULL,
+            classification TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            evidence TEXT,
+            checked_at TEXT DEFAULT (datetime('now')),
+            latency_ms INTEGER,
+            cached INTEGER DEFAULT 0
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_intent_session ON intent_checks(session_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_intent_hash ON intent_checks(content_hash)")
+
+    # Session content accumulator (split injection detection)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS session_content_accumulator (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            source_tool TEXT NOT NULL,
+            content_summary TEXT,
+            content_size INTEGER NOT NULL,
+            received_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT DEFAULT (datetime('now', '+1 hour'))
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_session ON session_content_accumulator(session_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_session_time ON session_content_accumulator(session_id, received_at)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_expires ON session_content_accumulator(expires_at)")
+
+    # PromptSleuth budget tracking
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sleuth_budget (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL UNIQUE,
+            calls_remaining INTEGER NOT NULL DEFAULT 50,
+            reset_at TEXT NOT NULL
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_budget_session ON sleuth_budget(session_id)")
+
+    # PromptSleuth classification cache
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sleuth_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_hash TEXT NOT NULL UNIQUE,
+            classification TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            cached_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT DEFAULT (datetime('now', '+1 hour'))
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_hash ON sleuth_cache(content_hash)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_expires ON sleuth_cache(expires_at)")
+
+    # Migrate trust_registry: add signature columns if missing
+    _migrate_trust_registry_v2(cursor)
 
     conn.commit()
 
