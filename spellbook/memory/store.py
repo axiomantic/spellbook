@@ -73,6 +73,7 @@ def insert_memory(
     importance: float = 1.0,
     extra_meta: Optional[Dict[str, Any]] = None,
     branch: str = "",
+    scope: str = "project",
 ) -> str:
     """Insert a memory, deduplicating by content_hash. Returns memory ID.
 
@@ -89,6 +90,7 @@ def insert_memory(
             select(Memory.id).where(
                 Memory.content_hash == c_hash,
                 Memory.namespace == namespace,
+                Memory.scope == scope,
             )
         ).scalar_one_or_none()
         if existing:
@@ -112,6 +114,7 @@ def insert_memory(
             memory_type=memory_type,
             namespace=namespace,
             branch=branch,
+            scope=scope,
             importance=importance,
             created_at=now,
             status="active",

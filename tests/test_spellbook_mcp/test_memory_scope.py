@@ -83,3 +83,82 @@ class TestSchemaMigration:
         row = conn.execute("SELECT scope FROM memories WHERE id = 'old1'").fetchone()
         assert row[0] == "project"
         close_all_connections()
+
+
+class TestInsertMemoryScope:
+    def test_store_project_scope_default(self, db_path):
+        """Store without scope kwarg defaults to scope='project'."""
+        mem_id = insert_memory(
+            db_path=db_path,
+            content="Project-scoped memory",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+        )
+        conn = get_connection(db_path)
+        row = conn.execute(
+            "SELECT scope FROM memories WHERE id = ?", (mem_id,)
+        ).fetchone()
+        assert row[0] == "project"
+
+    def test_store_global_scope(self, db_path):
+        """Store with scope='global' sets scope column to 'global'."""
+        mem_id = insert_memory(
+            db_path=db_path,
+            content="Global memory",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="global",
+        )
+        conn = get_connection(db_path)
+        row = conn.execute(
+            "SELECT scope FROM memories WHERE id = ?", (mem_id,)
+        ).fetchone()
+        assert row[0] == "global"
+
+    def test_dedup_within_scope(self, db_path):
+        """Same content + namespace + scope deduplicates (returns existing ID)."""
+        id1 = insert_memory(
+            db_path=db_path,
+            content="Duplicate content",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="global",
+        )
+        id2 = insert_memory(
+            db_path=db_path,
+            content="Duplicate content",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="global",
+        )
+        assert id1 == id2
+
+    def test_dedup_across_scopes_allows_duplicates(self, db_path):
+        """Same content in different scopes creates separate memories."""
+        id1 = insert_memory(
+            db_path=db_path,
+            content="Cross-scope content",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="project",
+        )
+        id2 = insert_memory(
+            db_path=db_path,
+            content="Cross-scope content",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="global",
+        )
+        assert id1 != id2
