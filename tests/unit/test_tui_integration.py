@@ -4,6 +4,13 @@ Exercises the complete TUI workflow: welcome panel, feature groups,
 security config panel, progress steps, and dry-run banner, all
 rendering to a captured StringIO console.
 """
+import sys
+
+import pytest
+
+if sys.platform == "win32":
+    pytest.skip("TUI depends on termios (Unix-only)", allow_module_level=True)
+
 from io import StringIO
 
 from rich.console import Console
