@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/fact-check-extract.md","source_hash": "sha256:25be795c8996a6a14b487c3bf092a60a93242d66ce880bf40c59614be1f2e70f","generated_at": "2026-03-09T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-extract.md", "source_hash": "sha256:e1e8c9b7527c2d1041a01bc3d95e227ae675ff2bd492a100940250e32658d8ed", "generated_at": "2026-03-09T00:00:00Z", "generator": "generate_diagrams.py", "stamped_at": "2026-03-24T02:51:39Z"} -->
 # Diagram: fact-check-extract
 
 Extract all claims from code, comments, docstrings, commits, and naming conventions (including mandatory naming convention scan and LLM-content escalation), then triage by category and verification depth before proceeding to verification.

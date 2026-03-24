@@ -95,6 +95,16 @@ Hypothesis MUST have:
    - CONFIRMED hypotheses: memory_type = "fact"
    - DISPROVEN hypotheses: memory_type = "antipattern" (prevents future re-investigation)
 
+### CoVe on Confirmed Hypotheses
+
+Before marking a hypothesis CONFIRMED, apply CoVe self-interrogation (per `skills/shared-references/cove-protocol.md`):
+
+1. Generate verification questions: "Does the test result uniquely prove this hypothesis? Could an alternative explanation produce the same test outcome? Did I control for confounding variables?"
+2. Answer each question using test output and code traces (Tier 1-2 evidence only)
+3. If any answer suggests alternative explanations: hypothesis remains TESTING, not CONFIRMED. Document the alternative and design a discriminating test.
+
+<RULE>A hypothesis requires both a matching prediction AND CoVe clearance to reach CONFIRMED status. A matching prediction alone is necessary but not sufficient.</RULE>
+
 ### Pre-Claim Checklist
 
 ```
@@ -103,6 +113,7 @@ Hypothesis MUST have:
 □ Falsification criteria defined
 □ At least ONE test performed
 □ Prediction matched actual
+□ CoVe self-interrogation passed (no unresolved alternative explanations)
 □ Alternatives considered
 
 ANY unchecked = still a hypothesis, not a finding.

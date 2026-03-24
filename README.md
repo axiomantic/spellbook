@@ -119,6 +119,8 @@ The system is designed to distrust its own outputs. [Fact-checking][fact-checkin
 
 Test-driven development is treated as an epistemic practice: tests written before implementation answer "what should this do?" while tests written after answer "what does this do?" That distinction matters at every level.
 
+Hallucination prevention draws on peer-reviewed research. [Chain-of-Verification][cove-protocol] self-interrogation (Dhuliawala et al., 2023) requires verification skills to generate and answer questions about their own claims before finalizing verdicts. [Atomic claim decomposition][decompose-claims] (Min et al., FActScore, EMNLP 2023) breaks compound statements into independently verifiable units. API hallucination detection checklists in [code review][code-review] and [quality enforcement][enforcing-code-quality] catch the specific pattern where LLMs generate syntactically valid but non-existent API calls.
+
 ### Named failure modes
 
 LLMs fail in predictable ways, and Spellbook names those patterns so it can build mechanical countermeasures. Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as incomplete.
@@ -249,6 +251,8 @@ Reusable workflows for structured development:
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 [fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
+[cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
+[decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
 ### Commands (91 total)
 
@@ -258,6 +262,7 @@ Reusable workflows for structured development:
 | [/create-pr] | Create a pull request with proper template discovery and population |
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
 | [/crystallize-verify] | Structurally isolated adversarial review of crystallized output |
+| [/decompose-claims] | Decompose text into atomic, independently verifiable claims |
 | [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
