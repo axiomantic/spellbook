@@ -84,6 +84,7 @@ def do_memory_recall(
     file_path: Optional[str] = None,
     branch: str = "",
     repo_path: str = "",
+    scope: str = "project",
 ) -> Dict[str, Any]:
     """Recall memories by query or file path.
 
@@ -102,12 +103,12 @@ def do_memory_recall(
     if file_path:
         results = recall_by_file_path(
             db_path, file_path, namespace, limit,
-            branch=branch, repo_path=repo_path,
+            branch=branch, repo_path=repo_path, scope=scope,
         )
     else:
         results = recall_by_query(
             db_path, query, namespace, limit,
-            branch=branch, repo_path=repo_path,
+            branch=branch, repo_path=repo_path, scope=scope,
         )
 
     # Update access for returned memories
@@ -244,6 +245,7 @@ def do_store_memories(
     event_ids_str: str = "",
     namespace: str = "",
     branch: str = "",
+    scope: str = "project",
 ) -> Dict[str, Any]:
     """Store client-synthesized memories and mark source events consolidated.
 
@@ -311,6 +313,7 @@ def do_store_memories(
             citations=mem["citations"],
             extra_meta={"source": "client_llm"},
             branch=branch,
+            scope=scope,
         )
         created_ids.append(mem_id)
 

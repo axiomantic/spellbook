@@ -1288,6 +1288,7 @@ class TestMemoryToolsServerRegistration:
                 event_ids_str="1,2",
                 namespace="test-ns",
                 branch="",
+                scope="project",
             )
             assert result == {
                 "status": "success",
@@ -1331,6 +1332,7 @@ class TestMemoryToolsServerRegistration:
                 event_ids_str="",
                 namespace=expected_namespace,
                 branch="main",
+                scope="project",
             )
 
     @pytest.mark.asyncio

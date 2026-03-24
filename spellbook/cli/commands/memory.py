@@ -38,6 +38,12 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default="default",
         help="Project namespace for scoping (default: default)",
     )
+    search_parser.add_argument(
+        "--scope",
+        choices=["project", "global", "all"],
+        default="project",
+        help="Memory scope: project (default), global, or all",
+    )
     search_parser.set_defaults(func=_run_search)
 
     # memory export
@@ -74,6 +80,7 @@ def _run_search(args: argparse.Namespace) -> None:
             query=args.query,
             namespace=args.namespace,
             limit=args.limit,
+            scope=getattr(args, "scope", "project"),
         )
     except (sqlite3.OperationalError, SAOperationalError, FileNotFoundError, OSError):
         result = {"memories": [], "count": 0, "query": args.query}

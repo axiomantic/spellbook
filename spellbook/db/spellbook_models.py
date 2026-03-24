@@ -474,6 +474,9 @@ class Memory(SpellbookBase):
     memory_type: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     namespace: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     branch: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="", index=True)
+    scope: Mapped[str] = mapped_column(
+        Text, nullable=False, default="project", index=True,
+    )
     importance: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=1.0)
     created_at: Mapped[str] = mapped_column(Text, nullable=False)
     accessed_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -492,6 +495,7 @@ class Memory(SpellbookBase):
             "memory_type": self.memory_type,
             "namespace": self.namespace,
             "branch": self.branch,
+            "scope": self.scope,
             "importance": self.importance,
             "created_at": self.created_at,
             "accessed_at": self.accessed_at,

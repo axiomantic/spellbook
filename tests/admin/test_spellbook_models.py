@@ -82,7 +82,7 @@ EXPECTED_TABLES = {
     ],
     "memories": [
         "id", "content", "memory_type", "namespace", "branch",
-        "importance", "created_at", "accessed_at", "status",
+        "scope", "importance", "created_at", "accessed_at", "status",
         "deleted_at", "content_hash", "meta",
     ],
     "memory_citations": [
@@ -678,6 +678,7 @@ class TestMemoryModel:
             "memory_type": "insight",
             "namespace": "project-a",
             "branch": "main",
+            "scope": None,
             "importance": 0.9,
             "created_at": "2026-01-15T10:00:00",
             "accessed_at": "2026-01-15T11:00:00",
@@ -702,6 +703,7 @@ class TestMemoryModel:
             "memory_type": None,
             "namespace": "ns",
             "branch": None,
+            "scope": None,
             "importance": None,
             "created_at": "2026-01-15",
             "accessed_at": None,

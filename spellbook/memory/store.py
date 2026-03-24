@@ -73,6 +73,7 @@ def insert_memory(
     importance: float = 1.0,
     extra_meta: Optional[Dict[str, Any]] = None,
     branch: str = "",
+    scope: str = "project",
 ) -> str:
     """Insert a memory, deduplicating by content_hash. Returns memory ID.
 
@@ -89,6 +90,7 @@ def insert_memory(
             select(Memory.id).where(
                 Memory.content_hash == c_hash,
                 Memory.namespace == namespace,
+                Memory.scope == scope,
             )
         ).scalar_one_or_none()
         if existing:
@@ -112,6 +114,7 @@ def insert_memory(
             memory_type=memory_type,
             namespace=namespace,
             branch=branch,
+            scope=scope,
             importance=importance,
             created_at=now,
             status="active",
@@ -443,6 +446,7 @@ def recall_by_file_path(
     limit: int = 5,
     branch: str = "",
     repo_path: str = "",
+    scope: str = "project",
 ) -> List[Dict[str, Any]]:
     """Recall memories by cited file path (inverted index lookup).
 
@@ -454,17 +458,27 @@ def recall_by_file_path(
     fetch_limit = limit * 2 if branch else limit
 
     with get_sync_session(db_path) as session:
+        # Build scope filter for SQL
+        if scope == "project":
+            scope_filter = "AND m.namespace = :namespace AND m.scope = 'project'"
+        elif scope == "global":
+            scope_filter = "AND m.scope = 'global'"
+        elif scope == "all":
+            scope_filter = "AND (m.namespace = :namespace OR m.scope = 'global')"
+        else:
+            scope_filter = "AND m.namespace = :namespace"
+
         # Use text() for SQLite-specific functions (julianday, exp)
         rows = session.execute(
             text(
                 "SELECT m.id, m.content, m.memory_type, m.importance, m.status, m.meta, "
-                "m.created_at, m.accessed_at, m.branch, "
+                "m.created_at, m.accessed_at, m.branch, m.scope, "
                 "m.importance * "
                 "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
                 "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
                 "FROM memories m "
                 "JOIN memory_citations mc ON m.id = mc.memory_id "
-                "WHERE mc.file_path = :file_path AND m.namespace = :namespace "
+                f"WHERE mc.file_path = :file_path {scope_filter} "
                 "AND m.status != 'deleted' "
                 "ORDER BY _score DESC "
                 "LIMIT :limit"
@@ -477,7 +491,7 @@ def recall_by_file_path(
                 "id": r[0], "content": r[1], "memory_type": r[2],
                 "importance": r[3], "status": r[4], "meta": r[5],
                 "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-                "_score": r[9],
+                "scope": r[9], "_score": r[10],
             }
             for r in rows
         ]
@@ -498,6 +512,7 @@ def recall_by_query(
     limit: int = 10,
     branch: str = "",
     repo_path: str = "",
+    scope: str = "project",
 ) -> List[Dict[str, Any]]:
     """Recall memories by FTS5 query. Empty query returns recent+important.
 
@@ -512,24 +527,49 @@ def recall_by_query(
 
     with get_sync_session(db_path) as session:
         if not query.strip():
-            rows = session.execute(
-                select(
-                    Memory.id, Memory.content, Memory.memory_type,
-                    Memory.importance, Memory.status, Memory.meta,
-                    Memory.created_at, Memory.accessed_at, Memory.branch,
-                ).where(
+            from sqlalchemy import or_
+
+            stmt = select(
+                Memory.id, Memory.content, Memory.memory_type,
+                Memory.importance, Memory.status, Memory.meta,
+                Memory.created_at, Memory.accessed_at, Memory.branch,
+                Memory.scope,
+            )
+            if scope == "project":
+                stmt = stmt.where(
+                    Memory.namespace == namespace,
+                    Memory.scope == "project",
+                    Memory.status == "active",
+                )
+            elif scope == "global":
+                stmt = stmt.where(
+                    Memory.scope == "global",
+                    Memory.status == "active",
+                )
+            elif scope == "all":
+                stmt = stmt.where(
+                    or_(
+                        Memory.namespace == namespace,
+                        Memory.scope == "global",
+                    ),
+                    Memory.status == "active",
+                )
+            else:
+                stmt = stmt.where(
                     Memory.namespace == namespace,
                     Memory.status == "active",
-                ).order_by(
-                    Memory.importance.desc(),
-                    Memory.created_at.desc(),
-                ).limit(fetch_limit)
-            ).all()
+                )
+            stmt = stmt.order_by(
+                Memory.importance.desc(),
+                Memory.created_at.desc(),
+            ).limit(fetch_limit)
+            rows = session.execute(stmt).all()
             results = [
                 {
                     "id": r[0], "content": r[1], "memory_type": r[2],
                     "importance": r[3], "status": r[4], "meta": r[5],
                     "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                    "scope": r[9],
                     "_score": r[3],  # importance as base score for empty query
                 }
                 for r in rows
@@ -538,16 +578,26 @@ def recall_by_query(
             # Escape user input: wrap in double-quotes to force phrase matching
             # and prevent FTS5 operator injection (e.g., OR, AND, NOT, NEAR).
             safe_query = '"' + query.replace('"', '""') + '"'
+
+            if scope == "project":
+                scope_filter = "AND m.namespace = :namespace AND m.scope = 'project'"
+            elif scope == "global":
+                scope_filter = "AND m.scope = 'global'"
+            elif scope == "all":
+                scope_filter = "AND (m.namespace = :namespace OR m.scope = 'global')"
+            else:
+                scope_filter = "AND m.namespace = :namespace"
+
             rows = session.execute(
                 text(
                     "SELECT m.id, m.content, m.memory_type, m.importance, m.status, "
-                    "m.meta, m.created_at, m.accessed_at, m.branch, "
+                    "m.meta, m.created_at, m.accessed_at, m.branch, m.scope, "
                     "(-bm25(memories_fts, 5.0, 2.0, 1.0)) * m.importance * "
                     "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
                     "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
                     "FROM memories_fts fts "
                     "JOIN memories m ON m.rowid = fts.rowid "
-                    "WHERE memories_fts MATCH :query AND m.namespace = :namespace "
+                    f"WHERE memories_fts MATCH :query {scope_filter} "
                     "AND m.status != 'deleted' "
                     "ORDER BY _score DESC "
                     "LIMIT :limit"
@@ -559,7 +609,7 @@ def recall_by_query(
                     "id": r[0], "content": r[1], "memory_type": r[2],
                     "importance": r[3], "status": r[4], "meta": r[5],
                     "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-                    "_score": r[9],
+                    "scope": r[9], "_score": r[10],
                 }
                 for r in rows
             ]

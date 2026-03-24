@@ -69,7 +69,7 @@ def _get_version() -> str:
         return "unknown"
 
 
-def _get_tool_names() -> List[str]:
+def get_tool_names() -> List[str]:
     """Get list of registered MCP tool names.
 
     Supports both FastMCP v2 and v3:
@@ -236,7 +236,7 @@ def spellbook_health_check(full: bool = False) -> dict:
             skills_dir=skills_dir,
             server_uptime=time.time() - _server_start_time,
             version=_get_version(),
-            tools_available=_get_tool_names(),
+            tools_available=get_tool_names(),
             quick=not run_full,  # run_full=True means quick=False
         )
 

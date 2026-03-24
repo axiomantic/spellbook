@@ -700,6 +700,18 @@ def _add_update_notification(result: dict) -> None:
         )
 
 
+def _get_admin_url() -> Optional[str]:
+    """Return the admin interface URL if admin is enabled, else None."""
+    try:
+        admin_enabled = config_get("admin_enabled")
+        if admin_enabled is None or admin_enabled:
+            from spellbook.daemon._paths import get_host, get_port
+            return f"http://{get_host()}:{get_port()}/admin"
+    except Exception:
+        pass
+    return None
+
+
 def _get_repairs() -> list[dict]:
     """Check for known fixable issues and return repair suggestions.
 
@@ -875,6 +887,11 @@ def session_init(
 
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
+
+    # Add admin URL if admin interface is enabled
+    admin_url = _get_admin_url()
+    if admin_url:
+        result["admin_url"] = admin_url
 
     # Add repair suggestions
     repairs = _get_repairs()
