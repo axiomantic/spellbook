@@ -13,6 +13,7 @@ dependencies = [
     "alembic>=1.13.0,<1.19",
     "cryptography>=43.0",
     "rich>=13.0",
+    "claude-agent-sdk",
 ]
 
 [project.optional-dependencies]

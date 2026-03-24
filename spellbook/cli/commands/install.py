@@ -108,44 +108,6 @@ def _create_renderer():
         return None
 
 
-def _try_import_tui():
-    """Try to import TUI components. Returns (available, components) tuple.
-
-    The TUI module uses ``tty``/``termios`` which are Unix-only, and requires
-    Rich for rendering.  Returns a dict of callables when available, or an
-    empty dict when not.
-
-    .. deprecated::
-        Prefer ``_create_renderer()`` for new code.  This function is kept
-        for the ``interactive_platform_select`` TUI widget which has no
-        renderer equivalent yet.
-    """
-    try:
-        from installer.tui import (
-            supports_rich,
-            render_welcome_panel,
-            render_progress_steps,
-            render_dry_run_banner,
-            show_post_install_instructions,
-        )
-
-        if not supports_rich():
-            return False, {}
-
-        from rich.console import Console
-
-        console = Console()
-        return True, {
-            "console": console,
-            "render_welcome_panel": render_welcome_panel,
-            "render_progress_steps": render_progress_steps,
-            "render_dry_run_banner": render_dry_run_banner,
-            "show_post_install_instructions": show_post_install_instructions,
-        }
-    except Exception:
-        return False, {}
-
-
 def run(args: argparse.Namespace) -> None:
     """Execute the install command."""
     from installer.core import Installer

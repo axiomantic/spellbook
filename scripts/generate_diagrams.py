@@ -22,15 +22,19 @@ Usage:
     python3 scripts/generate_diagrams.py --verbose
 """
 
+import asyncio
 import argparse
 import fnmatch
 import json
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple
+from typing import Optional, Union
+
+from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
 
 from diagram_config import (
     AGENTS_DIR,
@@ -49,13 +53,16 @@ from diagram_config import (
 
 # Timeout for each Claude headless invocation (5 minutes)
 CLAUDE_TIMEOUT_SECONDS = 300
+CLASSIFY_TIMEOUT_SECONDS = 60
+PATCH_TIMEOUT_SECONDS = 120
 
 # ---------------------------------------------------------------------------
 # Data types
 # ---------------------------------------------------------------------------
 
 
-class SourceItem(NamedTuple):
+@dataclass
+class SourceItem:
     """A discovered source file with its tier classification."""
     name: str
     kind: str          # "skill", "command", or "agent"
@@ -64,11 +71,12 @@ class SourceItem(NamedTuple):
     mandatory: bool
 
 
-class GenerationResult(NamedTuple):
+@dataclass
+class GenerationResult:
     """Result of a diagram generation attempt."""
     item: SourceItem
     status: str        # "generated", "skipped", "failed", "fresh"
-    message: str
+    message: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -620,7 +628,7 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
-def classify_change(
+async def classify_change(
     source_path: Path,
     diagram_path: Path,
     *,
@@ -628,63 +636,28 @@ def classify_change(
     model: str = "haiku",
     provider_args: list[str] | None = None,
 ) -> str:
-    """Classify a source file change as STAMP, PATCH, or REGENERATE.
-
-    Uses git diff to get the change, then sends it to an LLM for classification.
-    Falls back to REGENERATE on any error.
-    """
+    """Classify a source file change via Unified SDK."""
     diff = get_source_diff(source_path)
     if not diff:
         return "REGENERATE"
 
     prompt = CLASSIFICATION_PROMPT.format(diff=diff)
-
-    if provider == "claude":
-        cmd = [
-            "claude",
-            "--print",
-            "--model", model,
-            "--dangerously-skip-permissions",
-        ]
-        if provider_args:
-            cmd.extend(provider_args)
-        cmd.append(prompt)
-    elif provider == "gemini":
-        cmd = [
-            "gemini",
-            "--prompt", prompt,
-            "--model", model,
-            "--yolo",
-            "-o", "text",
-        ]
-        if provider_args:
-            cmd.extend(provider_args)
-    else:
-        return "REGENERATE"
-
-    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
     print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
-        result = subprocess.run(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=CLASSIFY_TIMEOUT_SECONDS,
-            cwd=REPO_ROOT,
-            env=env,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        classification = await client.run(prompt)
+        classification = classification.strip().upper()
+    except Exception:
         print(" REGENERATE")
         return "REGENERATE"
-
-    if result.returncode != 0:
-        print(" REGENERATE")
-        return "REGENERATE"
-
-    classification = result.stdout.strip().upper()
 
     if classification in ("STAMP", "PATCH", "REGENERATE"):
         print(f" {classification}")
@@ -694,7 +667,7 @@ def classify_change(
     return "REGENERATE"
 
 
-def patch_diagram(
+async def patch_diagram(
     source_path: Path,
     diagram_path: Path,
     diff: str,
@@ -703,63 +676,29 @@ def patch_diagram(
     model: str = "haiku",
     provider_args: list[str] | None = None,
 ) -> str | None:
-    """Surgically patch an existing diagram based on a source diff via an LLM.
-
-    Sends the existing diagram content and diff to the LLM for a minimal patch.
-    Returns the patched diagram content (mermaid code blocks), or None on failure.
-    """
+    """Surgically patch an existing diagram via Unified SDK."""
     if not diagram_path.exists():
         return None
 
     existing_diagram = diagram_path.read_text(encoding="utf-8")
     prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
-
-    if provider == "claude":
-        cmd = [
-            "claude",
-            "--print",
-            "--model", model,
-            "--dangerously-skip-permissions",
-        ]
-        if provider_args:
-            cmd.extend(provider_args)
-        cmd.append(prompt)
-    elif provider == "gemini":
-        cmd = [
-            "gemini",
-            "--prompt", prompt,
-            "--model", model,
-            "--yolo",
-            "-o", "text",
-        ]
-        if provider_args:
-            cmd.extend(provider_args)
-    else:
-        return None
-
-    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
     print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
-        result = subprocess.run(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=PATCH_TIMEOUT_SECONDS,
-            cwd=REPO_ROOT,
-            env=env,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        output = await client.run(prompt)
+        output = output.strip()
+    except Exception:
         print(" failed, falling back to regeneration")
         return None
 
-    if result.returncode != 0:
-        print(" failed, falling back to regeneration")
-        return None
-
-    output = result.stdout.strip()
     if not output or output == "CANNOT_PATCH":
         print(" failed, falling back to regeneration")
         return None
@@ -926,7 +865,7 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 
-def main() -> int:
+async def main_async() -> int:
     parser = argparse.ArgumentParser(
         description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
     )
@@ -1101,7 +1040,7 @@ def main() -> int:
 
             # Smart classification for interactive mode
             if use_smart and item.diagram_path.exists():
-                classification = classify_change(
+                classification = await classify_change(
                     item.source_path, item.diagram_path,
                     provider=provider, model=fast_model,
                     provider_args=args.provider_args,
@@ -1187,8 +1126,7 @@ def main() -> int:
 
         # Process patches first
         for item, current_hash, diff in to_patch:
-            print(f"Patching: {item.name}...", end="", flush=True)
-            patched_content = patch_diagram(
+            patched_content = await patch_diagram(
                 item.source_path, item.diagram_path, diff,
                 provider=provider, model=fast_model,
                 provider_args=args.provider_args,
@@ -1211,11 +1149,11 @@ def main() -> int:
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                 item.diagram_path.write_text(output, encoding="utf-8")
                 patched_count += 1
-                print(f" done (patched)")
+                print(f"  {item.name}: done (patched)")
             else:
                 # Fall back to full generation
-                print(f" patch failed, regenerating...", end="", flush=True)
-                result, output_content = generate_diagram(
+                print(f"  {item.name}: patch failed, regenerating...", end="", flush=True)
+                result, output_content = await generate_diagram(
                     item, current_hash,
                     provider=provider, model=model,
                     provider_args=args.provider_args,
@@ -1232,8 +1170,7 @@ def main() -> int:
 
         # Process full generations
         for i, (item, current_hash) in enumerate(to_generate, 1):
-            print(f"[{i}/{len(to_generate)}] Generating: {item.name}...", end="", flush=True)
-            result, output_content = generate_diagram(
+            result, output_content = await generate_diagram(
                 item, current_hash,
                 provider=provider, model=model,
                 provider_args=args.provider_args,
@@ -1284,7 +1221,7 @@ def main() -> int:
     for i, (item, current_hash) in enumerate(work_items, 1):
         # Smart classification (if enabled and diagram exists)
         if use_smart and item.diagram_path.exists():
-            classification = classify_change(
+            classification = await classify_change(
                 item.source_path, item.diagram_path,
                 provider=provider, model=fast_model,
                 provider_args=args.provider_args,
@@ -1297,9 +1234,8 @@ def main() -> int:
                 continue
 
             if classification == "PATCH":
-                print(f"[{i}/{len(work_items)}] Patching: {item.name}...", end="", flush=True)
                 diff = get_source_diff(item.source_path)
-                patched_content = patch_diagram(
+                patched_content = await patch_diagram(
                     item.source_path, item.diagram_path, diff,
                     provider=provider, model=fast_model,
                     provider_args=args.provider_args,
@@ -1321,17 +1257,15 @@ def main() -> int:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                     item.diagram_path.write_text(output, encoding="utf-8")
                     patched_count += 1
-                    print(f" done (surgical update)")
+                    print(f"[{i}/{len(work_items)}] Patched diagram: {item.name} (surgical update)")
                     continue
                 else:
-                    print(f" patch failed, falling back to full generation")
                     # Fall through to full generation below
+                    pass
 
             # classification == "REGENERATE" or patch failed: fall through
 
-        print(f"[{i}/{len(work_items)}] Generating: {item.name} via {provider} ({model})...", end="", flush=True)
-
-        result, output_content = generate_diagram(
+        result, output_content = await generate_diagram(
             item, current_hash,
             provider=provider,
             model=model,
@@ -1370,4 +1304,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(asyncio.run(main_async()))

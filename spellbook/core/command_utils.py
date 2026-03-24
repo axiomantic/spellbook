@@ -59,36 +59,46 @@ def read_json_safe(path: str) -> dict:
             time.sleep(0.1)
     raise ValueError(f"Could not read valid JSON from {path}")
 
+from spellbook.sdk.unified import get_agent_client, AgentOptions
+
 def invoke_skill(skill_name: str, context: dict = None) -> dict:
     """
-    Invoke a skill - PLACEHOLDER.
+    Invoke a skill via the Unified Agent SDK.
 
-    NOTE: This function's implementation depends on how skills are
-    actually invoked in the spellbook system. Update this once
-    the actual mechanism is determined.
-
-    In the spellbook system, skills are invoked via Claude Code's
-    Skill tool during interactive sessions. For automated execution:
-    - Option 1: Shell out to `claude-code` CLI (if it supports non-interactive skill invocation)
-    - Option 2: Use spellbook MCP's use_spellbook_skill tool
-    - Option 3: Directly spawn a Claude Code agent with skill invocation instructions
+    In the spellbook system, skills are invoked via an assistant's
+    Skill tool. This function programmatically triggers that by
+    sending a directive to the agent.
 
     Args:
         skill_name: Name of the skill to invoke (e.g., 'test-driven-development')
         context: Optional context dictionary to pass to the skill
 
     Returns:
-        dict: Result from skill execution
-
-    Raises:
-        NotImplementedError: Always, until the actual mechanism is implemented
+        dict: Result from skill execution (wrapped in a status dict)
     """
-    raise NotImplementedError(
-        f"invoke_skill('{skill_name}') not yet implemented. "
-        "The actual skill invocation mechanism needs to be determined. "
-        "Skills are invoked via Claude Code's Skill tool in interactive sessions. "
-        "For automated execution, we need to determine the correct approach."
-    )
+    import asyncio
+    
+    async def _invoke():
+        options = AgentOptions()
+        client = get_agent_client(options=options)
+        
+        ctx_str = f" with context: {json.dumps(context)}" if context else ""
+        prompt = f"Invoke the skill '{skill_name}'{ctx_str}. Follow its instructions to completion."
+        
+        try:
+            result = await client.run(prompt)
+            return {"status": "success", "output": result}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    # Since this is a synchronous wrapper for potentially async SDK calls
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+    return loop.run_until_complete(_invoke())
 
 def parse_packet_file(packet_file: Path) -> dict:
     """Parse packet markdown file with YAML frontmatter."""
