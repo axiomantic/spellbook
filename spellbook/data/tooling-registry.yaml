@@ -1,0 +1,365 @@
+# Tooling Discovery Registry
+# Maps technology domains to known tools with trust classification.
+#
+# Trust Tiers:
+#   1: First-party official (vendor-maintained, well-known)
+#   2: Established ecosystem (widely adopted, community-vetted)
+#   3: Community standard (popular, active maintenance)
+#   4: Niche/specialized (smaller audience, less vetting)
+#   5: Experimental (new, unproven, but promising)
+#   6: Unknown provenance (no vetting, use at own risk)
+
+version: 1
+
+domains:
+  jira:
+    keywords: ["jira", "atlassian", "issue-tracking"]
+    tools:
+      - name: "Atlassian MCP Server"
+        type: mcp_server
+        trust_tier: 1
+        source: "https://github.com/atlassian/mcp-server"
+        description: "Official Atlassian MCP server for Jira, Confluence"
+        mcp_tool_prefix: "mcp__atlassian__"
+        dep_signals:
+          npm: ["@atlassian/mcp-server"]
+        cli_names: []
+
+      - name: "jira-cli"
+        type: cli
+        trust_tier: 2
+        source: "https://github.com/ankitpokhrel/jira-cli"
+        description: "Interactive Jira CLI"
+        dep_signals: {}
+        cli_names: ["jira"]
+
+  linear:
+    keywords: ["linear", "issue-tracking", "project-management"]
+    tools:
+      - name: "Linear MCP Server"
+        type: mcp_server
+        trust_tier: 1
+        source: "https://github.com/linear/linear-mcp-server"
+        description: "Official Linear MCP integration"
+        mcp_tool_prefix: "mcp__linear__"
+        dep_signals: {}
+        cli_names: []
+
+  asana:
+    keywords: ["asana", "project-management", "task-management"]
+    tools:
+      - name: "Asana API"
+        type: api
+        trust_tier: 1
+        source: "https://developers.asana.com"
+        description: "Official Asana REST API"
+        dep_signals:
+          pypi: ["asana"]
+          npm: ["asana"]
+        cli_names: []
+
+  github:
+    keywords: ["github", "gh", "pull-request", "pr", "git-hosting"]
+    tools:
+      - name: "GitHub CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://cli.github.com"
+        description: "Official GitHub CLI"
+        dep_signals: {}
+        cli_names: ["gh"]
+
+      - name: "GitHub MCP Server"
+        type: mcp_server
+        trust_tier: 1
+        source: "https://github.com/github/github-mcp-server"
+        description: "Official GitHub MCP integration"
+        mcp_tool_prefix: "mcp__github__"
+        dep_signals:
+          npm: ["@github/mcp-server"]
+        cli_names: []
+
+  gitlab:
+    keywords: ["gitlab", "git-hosting", "merge-request"]
+    tools:
+      - name: "GitLab CLI (glab)"
+        type: cli
+        trust_tier: 1
+        source: "https://gitlab.com/gitlab-org/cli"
+        description: "Official GitLab CLI"
+        dep_signals: {}
+        cli_names: ["glab"]
+
+  figma:
+    keywords: ["figma", "design", "ui-design", "prototyping"]
+    tools:
+      - name: "Figma MCP Server"
+        type: mcp_server
+        trust_tier: 2
+        source: "https://github.com/nicekid1/Figma-MCP-Server"
+        description: "Figma design file access via MCP"
+        mcp_tool_prefix: "mcp__figma__"
+        dep_signals: {}
+        cli_names: []
+
+  sketch:
+    keywords: ["sketch", "design", "ui-design", "mac"]
+    tools:
+      - name: "Sketch API"
+        type: api
+        trust_tier: 1
+        source: "https://developer.sketch.com"
+        description: "Official Sketch Cloud API"
+        dep_signals: {}
+        cli_names: ["sketchtool"]
+
+  slack:
+    keywords: ["slack", "messaging", "communication", "chat"]
+    tools:
+      - name: "Slack MCP Server"
+        type: mcp_server
+        trust_tier: 1
+        source: "https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-slack"
+        description: "Slack integration via MCP"
+        mcp_tool_prefix: "mcp__slack__"
+        dep_signals: {}
+        cli_names: []
+
+  discord:
+    keywords: ["discord", "messaging", "communication", "chat"]
+    tools:
+      - name: "Discord.py"
+        type: library
+        trust_tier: 2
+        source: "https://github.com/Rapptz/discord.py"
+        description: "Python library for Discord API"
+        dep_signals:
+          pypi: ["discord.py", "discord"]
+        cli_names: []
+
+  docker:
+    keywords: ["docker", "container", "dockerfile", "compose"]
+    tools:
+      - name: "Docker CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://docs.docker.com/engine/reference/commandline/cli/"
+        description: "Docker container management"
+        dep_signals: {}
+        cli_names: ["docker", "docker-compose"]
+
+  aws:
+    keywords: ["aws", "amazon", "cloud", "s3", "lambda", "ec2"]
+    tools:
+      - name: "AWS CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://aws.amazon.com/cli/"
+        description: "Official AWS CLI"
+        dep_signals:
+          pypi: ["boto3", "awscli"]
+        cli_names: ["aws"]
+
+  gcp:
+    keywords: ["gcp", "google-cloud", "gcloud", "bigquery"]
+    tools:
+      - name: "Google Cloud CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://cloud.google.com/sdk/gcloud"
+        description: "Official Google Cloud CLI"
+        dep_signals:
+          pypi: ["google-cloud-storage", "google-cloud-bigquery"]
+        cli_names: ["gcloud"]
+
+  azure:
+    keywords: ["azure", "microsoft-cloud", "az"]
+    tools:
+      - name: "Azure CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://learn.microsoft.com/en-us/cli/azure/"
+        description: "Official Azure CLI"
+        dep_signals:
+          pypi: ["azure-storage-blob", "azure-identity"]
+        cli_names: ["az"]
+
+  postgres:
+    keywords: ["postgres", "postgresql", "sql", "database"]
+    tools:
+      - name: "PostgreSQL CLI (psql)"
+        type: cli
+        trust_tier: 1
+        source: "https://www.postgresql.org/docs/current/app-psql.html"
+        description: "Official PostgreSQL interactive terminal"
+        dep_signals:
+          pypi: ["psycopg2", "psycopg2-binary", "asyncpg"]
+          npm: ["pg"]
+        cli_names: ["psql"]
+
+  mongodb:
+    keywords: ["mongodb", "mongo", "nosql", "document-database"]
+    tools:
+      - name: "MongoDB Shell (mongosh)"
+        type: cli
+        trust_tier: 1
+        source: "https://www.mongodb.com/docs/mongodb-shell/"
+        description: "Official MongoDB interactive shell"
+        dep_signals:
+          pypi: ["pymongo", "motor"]
+          npm: ["mongodb", "mongoose"]
+        cli_names: ["mongosh", "mongo"]
+
+  redis:
+    keywords: ["redis", "cache", "key-value", "in-memory"]
+    tools:
+      - name: "Redis CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://redis.io/docs/ui/cli/"
+        description: "Official Redis CLI"
+        dep_signals:
+          pypi: ["redis"]
+          npm: ["redis", "ioredis"]
+        cli_names: ["redis-cli"]
+
+  terraform:
+    keywords: ["terraform", "infrastructure-as-code", "iac", "hcl"]
+    tools:
+      - name: "Terraform CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://developer.hashicorp.com/terraform/cli"
+        description: "Official Terraform CLI"
+        dep_signals: {}
+        cli_names: ["terraform"]
+
+  kubernetes:
+    keywords: ["kubernetes", "k8s", "kubectl", "container-orchestration"]
+    tools:
+      - name: "kubectl"
+        type: cli
+        trust_tier: 1
+        source: "https://kubernetes.io/docs/reference/kubectl/"
+        description: "Official Kubernetes CLI"
+        dep_signals: {}
+        cli_names: ["kubectl"]
+
+  python:
+    keywords: ["python", "pip", "pypi", "virtualenv"]
+    tools:
+      - name: "Python"
+        type: cli
+        trust_tier: 1
+        source: "https://www.python.org"
+        description: "Python interpreter"
+        dep_signals: {}
+        cli_names: ["python3", "python"]
+
+      - name: "uv"
+        type: cli
+        trust_tier: 2
+        source: "https://github.com/astral-sh/uv"
+        description: "Fast Python package installer and resolver"
+        dep_signals: {}
+        cli_names: ["uv"]
+
+  node:
+    keywords: ["node", "nodejs", "npm", "javascript", "typescript"]
+    tools:
+      - name: "Node.js"
+        type: cli
+        trust_tier: 1
+        source: "https://nodejs.org"
+        description: "Node.js JavaScript runtime"
+        dep_signals: {}
+        cli_names: ["node", "npm", "npx"]
+
+  rust:
+    keywords: ["rust", "cargo", "crate"]
+    tools:
+      - name: "Cargo"
+        type: cli
+        trust_tier: 1
+        source: "https://doc.rust-lang.org/cargo/"
+        description: "Official Rust package manager"
+        dep_signals: {}
+        cli_names: ["cargo", "rustc"]
+
+  datadog:
+    keywords: ["datadog", "monitoring", "observability", "apm"]
+    tools:
+      - name: "Datadog CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://docs.datadoghq.com/developers/datadog-cli/"
+        description: "Datadog CLI for CI/CD integration"
+        dep_signals:
+          pypi: ["datadog"]
+          npm: ["datadog-lambda-js"]
+        cli_names: ["datadog-ci"]
+
+  sentry:
+    keywords: ["sentry", "error-tracking", "monitoring"]
+    tools:
+      - name: "Sentry CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://docs.sentry.io/cli/"
+        description: "Official Sentry CLI for release management"
+        dep_signals:
+          pypi: ["sentry-sdk"]
+          npm: ["@sentry/node", "@sentry/browser"]
+        cli_names: ["sentry-cli"]
+
+  stripe:
+    keywords: ["stripe", "payment", "billing", "subscription"]
+    tools:
+      - name: "Stripe CLI"
+        type: cli
+        trust_tier: 1
+        source: "https://stripe.com/docs/stripe-cli"
+        description: "Official Stripe CLI for testing and webhooks"
+        dep_signals:
+          pypi: ["stripe"]
+          npm: ["stripe"]
+        cli_names: ["stripe"]
+
+  playwright:
+    keywords: ["playwright", "e2e-testing", "browser-testing"]
+    tools:
+      - name: "Playwright"
+        type: library
+        trust_tier: 1
+        source: "https://playwright.dev"
+        description: "Microsoft's browser testing framework"
+        dep_signals:
+          pypi: ["playwright"]
+          npm: ["@playwright/test", "playwright"]
+        cli_names: ["playwright"]
+
+  openai:
+    keywords: ["openai", "gpt", "ai", "llm", "chatgpt"]
+    tools:
+      - name: "OpenAI API"
+        type: api
+        trust_tier: 1
+        source: "https://platform.openai.com"
+        description: "Official OpenAI API"
+        dep_signals:
+          pypi: ["openai"]
+          npm: ["openai"]
+        cli_names: []
+
+  anthropic:
+    keywords: ["anthropic", "claude", "ai", "llm"]
+    tools:
+      - name: "Anthropic API"
+        type: api
+        trust_tier: 1
+        source: "https://docs.anthropic.com"
+        description: "Official Anthropic API"
+        dep_signals:
+          pypi: ["anthropic"]
+          npm: ["@anthropic-ai/sdk"]
+        cli_names: []
