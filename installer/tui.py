@@ -296,10 +296,11 @@ class LiveProgressDisplay:
             self._console = Console()
 
         self._live = Live(
-            "",
+            self._render(),
             console=self._console,
-            refresh_per_second=10,
+            refresh_per_second=4,
             transient=False,
+            get_renderable=self._render,
         )
         self._live.start()
 
@@ -348,10 +349,10 @@ class LiveProgressDisplay:
         self._update_display()
 
     def _update_display(self) -> None:
-        """Rebuild and push the renderable to Live."""
+        """Force an immediate refresh of the Live display."""
         if self._live is None:
             return
-        self._live.update(self._render())
+        self._live.refresh()
 
     def _render(self) -> "Any":
         """Build a Rich renderable for the current state."""
