@@ -1,0 +1,125 @@
+"""Integration test: full TUI in dry-run mode.
+
+Exercises the complete TUI workflow: welcome panel, feature groups,
+security config panel, progress steps, and dry-run banner, all
+rendering to a captured StringIO console.
+"""
+from io import StringIO
+
+from rich.console import Console
+
+from installer.tui import (
+    get_feature_groups,
+    render_dry_run_banner,
+    render_feature_table,
+    render_progress_steps,
+    render_security_config_panel,
+    render_welcome_panel,
+    supports_rich,
+)
+from installer.components.security import (
+    apply_security_config,
+    get_default_security_config,
+    get_security_config_keys,
+    get_security_summary,
+)
+
+
+def test_full_tui_dry_run_workflow():
+    """Complete dry-run TUI workflow must render without errors."""
+    console = Console(file=StringIO(), force_terminal=True, width=100)
+
+    # Step 1: Welcome panel
+    render_welcome_panel(console, version="0.35.0")
+
+    # Step 2: Dry-run banner
+    render_dry_run_banner(console)
+
+    # Step 3: Feature groups
+    groups = get_feature_groups()
+    render_feature_table(console, groups)
+
+    # Step 4: User selects features (simulated)
+    selections = {"spotlighting": True, "crypto": True, "sleuth": False, "lodo": True}
+
+    # Step 5: Security config panel
+    render_security_config_panel(console, selections)
+
+    # Step 6: Progress steps
+    steps = [
+        {"name": "Install MCP daemon", "status": "done"},
+        {"name": "Configure security features", "status": "done"},
+        {"name": "Install Claude Code hooks", "status": "done"},
+        {"name": "Generate signing keys", "status": "done"},
+    ]
+    render_progress_steps(console, steps)
+
+    output = console.file.getvalue()
+
+    # Verify key content is present
+    assert "Spellbook" in output
+    assert "0.35.0" in output
+    assert "DRY RUN" in output.upper()
+    assert "Spotlighting" in output
+    assert "Install MCP daemon" in output
+
+
+def test_security_config_keys_complete():
+    """All security config keys must have defaults and be enumerable."""
+    keys = get_security_config_keys()
+    defaults = get_default_security_config()
+
+    # All keys must have a default
+    for key in keys:
+        assert key in defaults, f"Key {key} missing from defaults"
+
+    # Verify minimum key count (4 features x at least 2 keys each)
+    assert len(keys) >= 8
+
+    # Verify all feature prefixes are present
+    prefixes = {k.rsplit(".", 1)[0] for k in keys}
+    assert "security.spotlighting" in {p.rsplit(".", 1)[0] for p in prefixes} or \
+           any(k.startswith("security.spotlighting.") for k in keys)
+    assert any(k.startswith("security.crypto.") for k in keys)
+    assert any(k.startswith("security.sleuth.") for k in keys)
+    assert any(k.startswith("security.lodo.") for k in keys)
+
+
+def test_dry_run_apply_returns_all_selected_keys():
+    """Dry-run apply must return the keys it would write."""
+    from unittest.mock import patch
+
+    selections = {"spotlighting": True, "crypto": True, "sleuth": False, "lodo": True}
+
+    def mock_config_set(key, value):
+        raise AssertionError("Should not write in dry-run mode")
+
+    with patch("installer.components.security._config_set", mock_config_set):
+        keys = apply_security_config(selections, dry_run=True)
+
+    assert len(keys) > 0
+    # Should include keys for all selected features
+    assert any(k.startswith("security.spotlighting.") for k in keys)
+    assert any(k.startswith("security.crypto.") for k in keys)
+    assert any(k.startswith("security.sleuth.") for k in keys)
+    assert any(k.startswith("security.lodo.") for k in keys)
+
+
+def test_security_summary_readable():
+    """Security summary must be human-readable for all combinations."""
+    selections_variants = [
+        {"spotlighting": True, "crypto": True, "sleuth": True, "lodo": True},
+        {"spotlighting": False, "crypto": False, "sleuth": False, "lodo": False},
+        {"spotlighting": True, "crypto": False, "sleuth": False, "lodo": True},
+    ]
+    for selections in selections_variants:
+        summary = get_security_summary(selections)
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+        # Should mention each feature by name
+        for feat_id in selections:
+            # At least the feature ID concept should be referenced
+            assert any(
+                word in summary.lower()
+                for word in [feat_id, feat_id.replace("_", " ")]
+            ), f"Feature {feat_id} not mentioned in summary: {summary}"

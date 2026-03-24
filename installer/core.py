@@ -100,6 +100,7 @@ class InstallSession:
     results: List[InstallResult] = field(default_factory=list)
     start_time: datetime = field(default_factory=datetime.now)
     dry_run: bool = False
+    security_config: Optional[Dict[str, Any]] = None
 
     @property
     def success(self) -> bool:
@@ -194,6 +195,7 @@ class Installer:
         dry_run: bool = False,
         on_progress=None,
         config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
+        security_selections: Optional[Dict[str, bool]] = None,
     ) -> InstallSession:
         """
         Execute installation workflow.
@@ -235,6 +237,32 @@ class Installer:
             previous_version=previous_version,
             dry_run=dry_run,
         )
+
+        # Apply security feature configuration if selections provided
+        if security_selections is not None:
+            from .components.security import apply_security_config, get_default_security_config
+
+            written_keys = apply_security_config(security_selections, dry_run=dry_run)
+            # Store the resolved config on the session for downstream use
+            defaults = get_default_security_config()
+            resolved = dict(defaults)
+            for feat_id, enabled in security_selections.items():
+                prefix = f"security.{feat_id}."
+                for key in resolved:
+                    if key == f"{prefix}enabled":
+                        resolved[key] = enabled
+            session.security_config = resolved
+
+            security_result = InstallResult(
+                component="security_config",
+                platform="system",
+                success=True,
+                action="installed" if not dry_run else "skipped",
+                message=f"Security config: {len(written_keys)} keys {'written' if not dry_run else 'would be written'}",
+            )
+            session.results.append(security_result)
+            if on_progress:
+                on_progress("result", {"result": security_result})
 
         # Check if upgrade is needed
         needs_upgrade, upgrade_reason = check_upgrade_needed(
