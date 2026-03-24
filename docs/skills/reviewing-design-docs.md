@@ -318,6 +318,8 @@ Evaluate every category for specification completeness. Detect vague language, a
 
 **Optional deep audit:** For specs with 3+ VAGUE items, run `/sharpen-audit` on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
 
+**Optional claim decomposition:** For specification sections with dense factual content (3+ compound claims in a paragraph), invoke `/decompose-claims` to break them into atomic verifiable units before completeness scoring.
+
 ---
 
 ## Phases 4-5: Interface Verification + Implementation Simulation
