@@ -789,7 +789,7 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     outputs = []
 
     # Security (specific matchers)
-    security_tools = {"Bash", "Read", "WebFetch", "Grep"}
+    security_tools = {"Bash", "Read", "WebFetch", "WebSearch", "Grep"}
     is_mcp = tool_name.startswith("mcp__")
     if tool_name in security_tools or is_mcp:
         _fire_and_forget(_audit_log, tool_name, data)
