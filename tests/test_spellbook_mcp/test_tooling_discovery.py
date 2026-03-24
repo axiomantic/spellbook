@@ -76,7 +76,7 @@ class TestKeywordMatching:
         from spellbook.tooling.discovery import discover_tools
 
         result = discover_tools(["jira"], registry_path=REGISTRY_PATH)
-        assert result["detection_summary"]["registry_matches"] > 0
+        assert result["detection_summary"]["registry_matches"] == 2
         tool_names = [t["name"] for t in result["tools"]]
         assert "Atlassian MCP Server" in tool_names
 
@@ -85,7 +85,7 @@ class TestKeywordMatching:
         from spellbook.tooling.discovery import discover_tools
 
         result = discover_tools(["project-management"], registry_path=REGISTRY_PATH)
-        assert result["detection_summary"]["registry_matches"] > 0
+        assert result["detection_summary"]["registry_matches"] == 2
 
     def test_no_match(self):
         """'nonexistent-thing-xyz' returns empty results."""
@@ -101,6 +101,7 @@ class TestKeywordMatching:
 
         result = discover_tools(["github"], registry_path=REGISTRY_PATH)
         tiers = [t["trust_tier"] for t in result["tools"]]
+        assert len(tiers) >= 1
         assert tiers == sorted(tiers)
 
     def test_trust_label_included(self):
@@ -110,7 +111,15 @@ class TestKeywordMatching:
         result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
         for tool in result["tools"]:
             assert "trust_label" in tool
-            assert isinstance(tool["trust_label"], str)
+            expected_label = {
+                1: "First-party official",
+                2: "Established ecosystem",
+                3: "Community standard",
+                4: "Niche/specialized",
+                5: "Experimental",
+                6: "Unknown provenance",
+            }[tool["trust_tier"]]
+            assert tool["trust_label"] == expected_label
 
 
 class TestCLIDetection:
@@ -121,7 +130,7 @@ class TestCLIDetection:
 
         mock_which.side_effect = lambda name: "/usr/bin/gh" if name == "gh" else None
         result = discover_tools(["github"], registry_path=REGISTRY_PATH)
-        gh_tools = [t for t in result["tools"] if "GitHub CLI" in t["name"]]
+        gh_tools = [t for t in result["tools"] if t["name"] == "GitHub CLI"]
         assert len(gh_tools) == 1
         assert gh_tools[0]["available"] is True
         assert "cli_available" in gh_tools[0]["detection_methods"]
@@ -132,7 +141,7 @@ class TestCLIDetection:
         from spellbook.tooling.discovery import discover_tools
 
         result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
-        docker_tools = [t for t in result["tools"] if "Docker CLI" in t["name"]]
+        docker_tools = [t for t in result["tools"] if t["name"] == "Docker CLI"]
         assert len(docker_tools) == 1
         assert docker_tools[0]["available"] is False
 
@@ -152,7 +161,7 @@ class TestDepScanning:
                 ["aws"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
 
-        aws_tools = [t for t in result["tools"] if "AWS CLI" in t["name"]]
+        aws_tools = [t for t in result["tools"] if t["name"] == "AWS CLI"]
         assert len(aws_tools) == 1
         assert aws_tools[0]["available"] is True
         assert "dep_detected" in aws_tools[0]["detection_methods"]
@@ -174,7 +183,7 @@ class TestDepScanning:
                 ["stripe"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
 
-        stripe_tools = [t for t in result["tools"] if "Stripe CLI" in t["name"]]
+        stripe_tools = [t for t in result["tools"] if t["name"] == "Stripe CLI"]
         assert len(stripe_tools) == 1
         assert stripe_tools[0]["available"] is True
         assert "dep_detected" in stripe_tools[0]["detection_methods"]
@@ -211,7 +220,8 @@ class TestToolingDiscoverIntegration:
 
         result = discover_tools(["jira"], registry_path=REGISTRY_PATH)
         tier_1 = [t for t in result["tools"] if t["trust_tier"] == 1]
-        assert any("Atlassian" in t["name"] for t in tier_1)
+        tier_1_names = {t["name"] for t in tier_1}
+        assert "Atlassian MCP Server" in tier_1_names
 
     def test_tooling_discover_multiple_keywords(self):
         """Multiple keywords match across domains."""
@@ -232,7 +242,7 @@ class TestToolingDiscoverIntegration:
         assert "mcp_available" in summary
         assert "cli_available" in summary
         assert "dep_detected" in summary
-        assert summary["registry_matches"] >= 1
+        assert summary["registry_matches"] == 2
 
     def test_feature_research_includes_tooling_section(self):
         """feature-research.md includes the tooling discovery subagent dispatch."""
@@ -240,6 +250,7 @@ class TestToolingDiscoverIntegration:
             Path(__file__).parent.parent.parent / "commands" / "feature-research.md"
         )
         content = feature_research_path.read_text()
-        assert "### 1.2b Parallel Tooling Discovery" in content
-        assert "tooling-discovery" in content
-        assert "Available Tooling" in content
+        lines = content.splitlines()
+        assert "### 1.2b Parallel Tooling Discovery (Subagent)" in lines
+        assert any("tooling-discovery" in line for line in lines)
+        assert any(line.strip().startswith("**Result Handling:**") and "Available Tooling" in line for line in lines)

@@ -251,6 +251,8 @@ class TestRecallByQueryScope:
         )
         contents = {r["content"] for r in results}
         assert "SQLite WAL is single-writer" not in contents
+        assert len(results) == 1
+        assert contents == {"SQLAlchemy uses session pattern"}
 
     def test_recall_global_excludes_project(self, db_path):
         """scope='global' does not return project memories."""
@@ -264,6 +266,8 @@ class TestRecallByQueryScope:
         )
         contents = {r["content"] for r in results}
         assert "SQLAlchemy uses session pattern" not in contents
+        assert len(results) == 1
+        assert contents == {"SQLite WAL is single-writer"}
 
     def test_cross_namespace_global_recall(self, db_path):
         """Global memories are visible from any namespace with scope='all'."""
@@ -293,7 +297,9 @@ class TestRecallByQueryScope:
             scope="all",
         )
         # "SQLAlchemy uses session pattern" (project) should match
-        assert len(results) >= 1
+        assert len(results) == 1
+        assert results[0]["content"] == "SQLAlchemy uses session pattern"
+        assert results[0]["scope"] == "project"
 
     def test_scope_field_in_results(self, db_path):
         """Returned memory dicts include the scope field."""
@@ -305,9 +311,11 @@ class TestRecallByQueryScope:
             namespace="proj-a",
             scope="all",
         )
-        for r in results:
-            assert "scope" in r
-            assert r["scope"] in ("project", "global")
+        scope_map = {r["content"]: r["scope"] for r in results}
+        assert scope_map == {
+            "SQLAlchemy uses session pattern": "project",
+            "SQLite WAL is single-writer": "global",
+        }
 
 
 class TestRecallByFilePathScope:
@@ -373,9 +381,11 @@ class TestRecallByFilePathScope:
             namespace="proj-a",
             scope="all",
         )
-        for r in results:
-            assert "scope" in r
-            assert r["scope"] in ("project", "global")
+        scope_map = {r["content"]: r["scope"] for r in results}
+        assert scope_map == {
+            "Config patterns for auth module": "project",
+            "Global auth best practices": "global",
+        }
 
 
 class TestDoMemoryRecallScope:
@@ -485,8 +495,9 @@ class TestMCPToolScopeValidation:
             namespace="proj-a",
             scope="invalid_value",
         )
-        # Should still return results (fallback to namespace filter)
-        assert len(results) >= 0  # Does not crash
+        # Invalid scope falls back to namespace filter, returning the memory
+        assert len(results) == 1
+        assert results[0]["content"] == "Fallback test"
 
 
 class TestCLIScopeFlag:
@@ -579,8 +590,8 @@ class TestGlobalMemoryCrossProject:
             namespace="proj-b",
             scope="all",
         )
-        assert recall_result["count"] >= 1
-        assert "SQLite WAL" in recall_result["memories"][0]["content"]
+        assert recall_result["count"] == 1
+        assert recall_result["memories"][0]["content"] == "SQLite WAL is single-writer"
         assert recall_result["memories"][0]["scope"] == "global"
 
     def test_global_memory_invisible_with_project_scope(self, db_path):
