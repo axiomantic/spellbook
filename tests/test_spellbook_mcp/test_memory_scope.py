@@ -487,3 +487,67 @@ class TestMCPToolScopeValidation:
         )
         # Should still return results (fallback to namespace filter)
         assert len(results) >= 0  # Does not crash
+
+
+class TestCLIScopeFlag:
+    def test_search_with_scope_flag(self, db_path, monkeypatch):
+        """CLI search passes --scope through to do_memory_recall."""
+        import argparse
+        from unittest.mock import patch
+
+        from spellbook.cli.commands import memory as mem_cli
+
+        monkeypatch.setattr(
+            "spellbook.cli.commands.memory.get_db_path",
+            lambda: type("P", (), {"__str__": lambda s: db_path, "exists": lambda s: True})(),
+        )
+
+        args = argparse.Namespace(
+            query="CLI test",
+            limit=10,
+            namespace="default",
+            scope="global",
+            json=True,
+        )
+
+        with patch("spellbook.memory.tools.do_memory_recall") as mock_recall:
+            mock_recall.return_value = {"count": 0, "memories": []}
+            mem_cli._run_search(args)
+            mock_recall.assert_called_once_with(
+                db_path=db_path,
+                query="CLI test",
+                namespace="default",
+                limit=10,
+                scope="global",
+            )
+
+    def test_search_scope_default_is_project(self, db_path, monkeypatch):
+        """CLI search defaults to scope='project' when --scope not provided."""
+        import argparse
+        from unittest.mock import patch
+
+        from spellbook.cli.commands import memory as mem_cli
+
+        monkeypatch.setattr(
+            "spellbook.cli.commands.memory.get_db_path",
+            lambda: type("P", (), {"__str__": lambda s: db_path, "exists": lambda s: True})(),
+        )
+
+        args = argparse.Namespace(
+            query="test",
+            limit=10,
+            namespace="default",
+            scope="project",
+            json=True,
+        )
+
+        with patch("spellbook.memory.tools.do_memory_recall") as mock_recall:
+            mock_recall.return_value = {"count": 0, "memories": []}
+            mem_cli._run_search(args)
+            mock_recall.assert_called_once_with(
+                db_path=db_path,
+                query="test",
+                namespace="default",
+                limit=10,
+                scope="project",
+            )
