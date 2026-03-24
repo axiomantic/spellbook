@@ -1084,30 +1084,21 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     installer = Installer(spellbook_dir)
 
-    # Try to use Rich TUI for enhanced display
-    _tui_available = False
-    _tui_console = None
+    # Create renderer (Rich for TTY, plain text otherwise)
     try:
-        from installer.tui import (
-            supports_rich as _supports_rich,
-            render_welcome_panel as _render_welcome,
-            render_progress_steps as _render_progress,
-            render_dry_run_banner as _render_dry_run,
-            show_post_install_instructions as _show_post_install,
-            LiveProgressDisplay as _LiveProgressDisplay,
-            render_completion_summary as _render_completion_summary,
-            render_admin_info as _show_admin_info_rich,
-            render_post_install_notes as _render_post_install_notes,
-        )
-        if _supports_rich():
-            from rich.console import Console as _Console
-            _tui_console = _Console()
-            _tui_available = True
-    except Exception:
-        pass
+        from installer.renderer import PlainTextRenderer, RichRenderer
+        if sys.stdout.isatty():
+            renderer = RichRenderer(auto_yes=args.yes)
+        else:
+            renderer = PlainTextRenderer(auto_yes=args.yes)
+    except ImportError:
+        # Fallback: renderer module not available (should not happen normally)
+        renderer = None
 
-    if _tui_available:
-        _render_welcome(_tui_console, version=installer.version, auto_yes=args.yes)
+    is_upgrade = False  # Will be refined after installer.run() returns
+
+    if renderer is not None:
+        renderer.render_welcome(version=installer.version, is_upgrade=is_upgrade)
     else:
         print_installer_header(installer.version)
 
@@ -1123,13 +1114,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         platforms = args.platforms.split(",")
     elif args.yes or args.no_interactive:
         platforms = installer.detect_platforms()
-        if _tui_available:
-            from installer.config import PLATFORM_CONFIG as _PC
-            names = [_PC.get(p, {}).get("name", p) for p in platforms]
-            _tui_console.print(f"  [dim]Platforms:[/dim] {', '.join(names)}")
-        else:
-            installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
-            print()
+        installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
+        print()
     else:
         try:
             from installer.tui import interactive_platform_select
@@ -1149,77 +1135,64 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             platforms = installer.detect_platforms()
 
     # Show directory configuration
-    if _tui_available:
-        from installer.ui import shorten_home
-        from installer.config import get_spellbook_config_dir
-        _tui_console.print(f"  [dim]Source:[/dim]    {spellbook_dir}")
-        _tui_console.print(f"  [dim]Config:[/dim]    {shorten_home(get_spellbook_config_dir())}")
-        _tui_console.print()
-    else:
-        print_directory_config(spellbook_dir, platforms)
+    print_directory_config(spellbook_dir, platforms)
 
     if args.dry_run:
-        if _tui_available:
-            _render_dry_run(_tui_console)
+        if renderer is not None:
+            renderer.render_warning("DRY RUN - no changes will be made")
         else:
             installer_print_warning("DRY RUN - no changes will be made")
 
-    # Track pending results per section for tree-drawing (is_last detection)
+    # Track pending results per section for tree-drawing (plain-text fallback
+    # when renderer is unavailable)
     _pending_results: list = []
     _install_timer = InstallTimer()
 
-    # Live animated display (Rich) or None for plain-text fallback
-    _live_display = None
-    if _tui_available:
-        _live_display = _LiveProgressDisplay(
-            console=_tui_console, dry_run=args.dry_run
-        )
-        _live_display.start()
-
     def _flush_results():
-        """Flush pending results for plain-text mode."""
-        if not _live_display:
+        """Flush pending results for plain-text fallback mode (no renderer)."""
+        if renderer is None:
             for i, r in enumerate(_pending_results):
                 print_result(r, is_last=(i == len(_pending_results) - 1))
         _pending_results.clear()
 
     def _on_progress(event, data):
+        """Fallback progress callback used only when renderer is unavailable."""
+        if renderer is not None:
+            # Renderer handles all display; just collect results for the report
+            if event == "result":
+                _pending_results.append(data["result"])
+            return
         if event == "daemon_start":
             _flush_results()
-            if _live_display:
-                _live_display.begin_section("MCP Daemon")
-            else:
-                print_platform_section("MCP Daemon")
+            print_platform_section("MCP Daemon")
         elif event == "health_start":
             _flush_results()
-            if _live_display:
-                _live_display.begin_section("Health Check")
-            else:
-                print_platform_section("Health Check")
+            print_platform_section("Health Check")
         elif event == "platform_start":
             _flush_results()
             name = data["name"]
             idx = data["index"]
             total = data["total"]
-            if _live_display:
-                _live_display.begin_section(name, index=idx, total=total)
-            else:
-                print_platform_section(name, index=idx, total=total)
+            print_platform_section(name, index=idx, total=total)
         elif event == "platform_skip":
             _flush_results()
-            if _live_display:
-                _live_display.skip_section(data["message"])
-            else:
-                installer_print_info(data["message"])
+            installer_print_info(data["message"])
         elif event == "step":
             # Suppress step messages; results contain all needed info
             pass
         elif event == "result":
             result = data["result"]
             _pending_results.append(result)
-            if _live_display:
-                _live_display.add_step(result.message)
-                _live_display.complete_step(result.success)
+
+    # Convert --security-level to security_selections dict
+    security_selections = None
+    if getattr(args, "security_level", None):
+        try:
+            from installer.components.security import security_level_to_selections
+            security_selections = security_level_to_selections(args.security_level)
+        except (ImportError, ValueError) as e:
+            print_error(f"Invalid security level: {e}")
+            return 1
 
     session = installer.run(
         platforms=platforms,
@@ -1227,35 +1200,32 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         dry_run=args.dry_run,
         on_progress=_on_progress,
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
+        security_selections=security_selections,
+        renderer=renderer,
     )
 
-    # TTS setup runs INSIDE the live progress so it appears before "Complete"
-    if not args.dry_run:
-        if _live_display:
-            _live_display.begin_section("TTS")
-        tts_result = _run_tts_setup(
-            dry_run=args.dry_run,
-            auto_yes=getattr(args, "yes", False),
-            spellbook_dir=spellbook_dir,
-            live_display=_live_display,
-        )
-        if _live_display and not tts_result:
-            # No TTS steps were added; remove the empty section
-            if _live_display._sections and not _live_display._sections[-1].steps:
-                _live_display._sections.pop()
+    # TTS setup runs after the install loop completes
+    if not args.dry_run and not getattr(args, "no_tts", False):
+        if renderer is not None:
+            tts_config = renderer.render_tts_wizard()
+            if tts_config.get("tts_enabled") is not None:
+                _set_tts_config(tts_config["tts_enabled"])
+            if tts_config.get("tts_install"):
+                if _install_tts_deps(spellbook_dir):
+                    _preload_tts_model(spellbook_dir)
+                    _set_tts_config(True)
+        else:
+            setup_tts(
+                dry_run=args.dry_run,
+                auto_yes=getattr(args, "yes", False),
+                spellbook_dir=spellbook_dir,
+            )
 
-    # Stop live display and flush remaining plain-text results
-    if _live_display:
-        _live_display.stop()
+    # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()
 
-    if _tui_available:
-        _render_completion_summary(
-            _tui_console,
-            platforms_installed=session.platforms_installed,
-            platforms_failed=session.platforms_failed,
-            elapsed_seconds=_install_timer.elapsed(),
-        )
+    if renderer is not None:
+        renderer.render_completion(session, elapsed=_install_timer.elapsed())
     else:
         print_report(session, show_details=False, timer=_install_timer)
 
@@ -1282,8 +1252,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         except (ImportError, Exception) as e:
             print(f"\nWarning: Could not configure admin interface: {e}")
 
-    if _tui_available:
-        _show_admin_info_rich(_tui_console, admin_enabled)
+    if renderer is not None:
+        admin_url = "http://localhost:8765/admin" if admin_enabled else ""
+        renderer.render_admin_info(admin_url, show_token=admin_enabled)
     else:
         show_admin_info(admin_enabled)
 
@@ -1293,8 +1264,19 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     # Show post-install instructions
     if not args.dry_run:
-        if _tui_available:
-            _render_post_install_notes(_tui_console, session.platforms_installed)
+        if renderer is not None:
+            # Build notes list from installed platforms
+            _post_notes: list[str] = []
+            for p in session.platforms_installed:
+                if p == "gemini":
+                    _post_notes.append("Gemini CLI: Restart to load extension. Verify: /extensions list")
+                elif p == "opencode":
+                    _post_notes.append("OpenCode: Restart to reload skill cache")
+                elif p == "codex":
+                    _post_notes.append("Codex: AGENTS.md installed. Skills auto-trigger by intent")
+                elif p == "claude_code":
+                    _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
+            renderer.render_post_install(_post_notes)
         elif is_interactive():
             try:
                 from installer.tui import show_post_install_instructions
@@ -1386,6 +1368,24 @@ Examples:
         "--bootstrapped",
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
+    )
+    parser.add_argument(
+        "--security-level",
+        choices=["minimal", "standard", "strict"],
+        default=None,
+        help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
+    )
+    parser.add_argument(
+        "--no-tts",
+        action="store_true",
+        default=False,
+        help="Disable TTS, skipping the TTS setup wizard",
+    )
+    parser.add_argument(
+        "--reconfigure",
+        action="store_true",
+        default=False,
+        help="Re-run the configuration wizard for any unset config keys",
     )
 
     # Per-platform config dir overrides (repeatable)

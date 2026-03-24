@@ -291,6 +291,18 @@ Changelogs, PR titles, PR descriptions, commit messages, and code comments descr
 - NEVER cherry-pick only "relevant" parts or claim context limits prevent full execution
 - If a skill output is truncated, use the Task tool to have an explore agent read the full content
 
+### Shared Skill Principles
+
+<CRITICAL>
+All skills MUST adhere to these efficiency and quality standards to prevent context bloat and rate limiting.
+</CRITICAL>
+
+1. **Implicit Role Inheritance**: Skills do NOT need to repeat "Senior Architect" or "Rigor" boilerplate. Adhere to the global `<ROLE>` and `Core Philosophy` defined here.
+2. **No Deep-Loading**: Never reference external `.md` files that force the platform to inject large amounts of text into the prompt. Inline compact summaries instead.
+3. **Mandatory Summarization**: Tools returning structured data (Figma, DevTools, verbose logs) MUST be wrapped in a summarization step before returning to the main orchestrator.
+4. **Subagent Strict Schema**: Dispatches via the `Task` tool MUST specify a strict JSON schema for results. Conversational subagent leak is forbidden.
+5. **Phase-Implementation Separation**: Coordination logic lives in the skill; implementation details belong in subagent prompts or phase-specific commands.
+
 ### YOLO Mode and Skill Workflows
 
 YOLO mode grants permission to ACT without asking. It does NOT grant permission to SKIP skill phases, subagent dispatch, or quality gates. The SKILL defines WHAT to do. YOLO defines WHETHER to ask before doing it.

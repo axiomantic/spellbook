@@ -41,6 +41,24 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         default=False,
         help="Show what would be done without making changes",
     )
+    parser.add_argument(
+        "--security-level",
+        choices=["minimal", "standard", "strict"],
+        default=None,
+        help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
+    )
+    parser.add_argument(
+        "--no-tts",
+        action="store_true",
+        default=False,
+        help="Disable TTS, skipping the TTS setup wizard",
+    )
+    parser.add_argument(
+        "--reconfigure",
+        action="store_true",
+        default=False,
+        help="Re-run the configuration wizard for any unset config keys",
+    )
     parser.set_defaults(func=run)
 
 
@@ -74,12 +92,33 @@ def _find_spellbook_dir() -> Path:
     sys.exit(1)
 
 
+def _create_renderer():
+    """Create an appropriate renderer for the current environment.
+
+    Returns a ``RichRenderer`` when stdout is a TTY and Rich is available,
+    otherwise a ``PlainTextRenderer``.  Returns ``None`` if the renderer
+    module cannot be imported at all (should not happen in practice).
+    """
+    try:
+        from installer.renderer import PlainTextRenderer, RichRenderer
+        if sys.stdout.isatty():
+            return RichRenderer()
+        return PlainTextRenderer()
+    except ImportError:
+        return None
+
+
 def _try_import_tui():
     """Try to import TUI components. Returns (available, components) tuple.
 
     The TUI module uses ``tty``/``termios`` which are Unix-only, and requires
     Rich for rendering.  Returns a dict of callables when available, or an
     empty dict when not.
+
+    .. deprecated::
+        Prefer ``_create_renderer()`` for new code.  This function is kept
+        for the ``interactive_platform_select`` TUI widget which has no
+        renderer equivalent yet.
     """
     try:
         from installer.tui import (
@@ -114,83 +153,34 @@ def run(args: argparse.Namespace) -> None:
     spellbook_dir = _find_spellbook_dir()
     installer = Installer(spellbook_dir)
 
-    tui_available, tui = _try_import_tui()
+    renderer = _create_renderer()
 
     # Show welcome panel
-    if tui_available:
-        tui["render_welcome_panel"](tui["console"], version=getattr(installer, "version", None))
+    if renderer is not None:
+        renderer.render_welcome(
+            version=getattr(installer, "version", "unknown"),
+            is_upgrade=False,
+        )
         if getattr(args, "dry_run", False):
-            tui["render_dry_run_banner"](tui["console"])
+            renderer.render_warning("DRY RUN - no changes will be made")
 
-    # Accumulated steps for TUI progress rendering
-    tui_steps: list = []
-
-    def on_progress(event: str, data: dict) -> None:
-        if tui_available:
-            _on_progress_tui(event, data)
-        else:
-            _on_progress_plain(event, data)
-
-    def _on_progress_plain(event: str, data: dict) -> None:
-        if event == "step":
-            print(f"  {data.get('message', '')}")
-        elif event == "platform_start":
-            name = data.get("name", "")
-            idx = data.get("index", 0)
-            total = data.get("total", 0)
-            print(f"\n[{idx}/{total}] {name}")
-        elif event == "platform_skip":
-            print(f"  Skipped: {data.get('message', '')}")
-        elif event == "result":
-            result = data.get("result")
-            if result:
-                status = "OK" if result.success else "FAIL"
-                print(f"  [{status}] {result.message}")
-
-    def _flush_tui_steps() -> None:
-        if tui_steps:
-            tui["render_progress_steps"](tui["console"], list(tui_steps))
-
-    def _on_progress_tui(event: str, data: dict) -> None:
-        console = tui["console"]
-        if event == "platform_start":
-            _flush_tui_steps()
-            tui_steps.clear()
-            name = data.get("name", "")
-            idx = data.get("index", 0)
-            total = data.get("total", 0)
-            console.print()
-            console.print(f"[bold cyan][{idx}/{total}] {name}[/bold cyan]")
-        elif event == "daemon_start":
-            _flush_tui_steps()
-            tui_steps.clear()
-            console.print()
-            console.print("[bold cyan]MCP Daemon[/bold cyan]")
-        elif event == "health_start":
-            _flush_tui_steps()
-            tui_steps.clear()
-            console.print()
-            console.print("[bold cyan]Health Check[/bold cyan]")
-        elif event == "platform_skip":
-            tui_steps.append({"name": data.get("message", "Skipped"), "status": "failed"})
-        elif event == "step":
-            pass  # Suppressed; results carry the info
-        elif event == "result":
-            result = data.get("result")
-            if result:
-                status = "done" if result.success else "failed"
-                tui_steps.append({"name": result.message, "status": status})
+    # Convert --security-level to security_selections dict if provided
+    security_selections = None
+    if getattr(args, "security_level", None):
+        try:
+            from installer.components.security import security_level_to_selections
+            security_selections = security_level_to_selections(args.security_level)
+        except (ImportError, ValueError) as e:
+            print(f"Error: Invalid security level: {e}", file=sys.stderr)
+            sys.exit(1)
 
     session = installer.run(
         platforms=getattr(args, "platforms", None),
         force=getattr(args, "force", False),
         dry_run=getattr(args, "dry_run", False),
-        on_progress=on_progress,
+        security_selections=security_selections,
+        renderer=renderer,
     )
-
-    # Flush any remaining TUI steps
-    if tui_available:
-        _flush_tui_steps()
 
     json_mode = getattr(args, "json", False)
     if json_mode:
@@ -210,9 +200,19 @@ def run(args: argparse.Namespace) -> None:
         }
         output(data, json_mode=True)
     else:
-        # Show post-install instructions via TUI if available
-        if tui_available and not getattr(args, "dry_run", False):
-            tui["show_post_install_instructions"](session.platforms_installed)
+        # Show post-install notes via renderer
+        if renderer is not None and not getattr(args, "dry_run", False):
+            _post_notes: list[str] = []
+            for p in session.platforms_installed:
+                if p == "gemini":
+                    _post_notes.append("Gemini CLI: Restart to load extension. Verify: /extensions list")
+                elif p == "opencode":
+                    _post_notes.append("OpenCode: Restart to reload skill cache")
+                elif p == "codex":
+                    _post_notes.append("Codex: AGENTS.md installed. Skills auto-trigger by intent")
+                elif p == "claude_code":
+                    _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
+            renderer.render_post_install(_post_notes)
 
         print()
         if session.success:

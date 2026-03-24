@@ -244,27 +244,6 @@ Task:
 - Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
 - **TIMEOUT:** 120 seconds per subagent
 
-### 1.2b Parallel Tooling Discovery (Subagent)
-
-**SUBAGENT DISPATCH:** YES (PARALLEL with 1.2 codebase research)
-**REASON:** Discover available tools for the feature's technology domain. Zero additional latency when run in parallel.
-
-```
-Task:
-  description: "Tooling Scout - Available Tools"
-  prompt: |
-    Invoke the `tooling-discovery` skill.
-    Domain keywords: [extract from feature description and project context]
-    Project path: [project root]
-
-    Return a brief summary of:
-    1. Available tools (detected on this system)
-    2. Relevant registry tools (not detected but potentially useful)
-    3. Any trust warnings for tier 4+ tools
-```
-
-**Result Handling:** Include tooling discovery results in research findings under an "Available Tooling" section. During design (Phase 2), consider whether any discovered tools should be leveraged in the implementation.
-
 ### 1.3 Ambiguity Extraction
 
 **INPUT:** Research findings from subagent

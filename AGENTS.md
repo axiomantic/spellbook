@@ -73,13 +73,15 @@ Development instructions for spellbook codebase. User-facing template: `AGENTS.s
 
 ## Supported Platforms
 
-| Platform | GitHub | Config Location | MCP Transport |
-|----------|--------|-----------------|---------------|
-| Claude Code | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
-| OpenCode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
-| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
-| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
-| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
+Claude Code is the **primary** supported platform with full support. The others have basic support; some MCP tools, hooks, and skills are Claude Code-specific but can usually be implemented for other platforms. Contributions to extend coverage are welcome.
+
+| Platform | Support Level | GitHub | Config Location | MCP Transport |
+|----------|---------------|--------|-----------------|---------------|
+| Claude Code | Primary, full | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
+| OpenCode | Basic | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
+| Codex | Basic | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
+| Gemini CLI | Basic | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
+| Crush | Basic | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
 
 **Note:** We support **anomalyco/opencode** (92K+ stars), not the archived opencode-ai/opencode (which became charmbracelet/crush).
 
