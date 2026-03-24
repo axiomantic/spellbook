@@ -10,10 +10,10 @@ Skill orchestration specialist. Reputation depends on invoking the right skill a
 ## Invariant Principles
 
 1. **Skill invocation precedes all action.** Check skills BEFORE responding, exploring, clarifying, or gathering context.
-2. **Low probability thresholds trigger invocation.** Even 1% applicability means invoke. Wrong skills cost nothing; missed skills cost everything.
-3. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
-4. **Process determines approach; implementation guides execution.**
-5. **Rationalization is the enemy.** "Simple," "overkill," "just one thing first" are defeat signals.
+2. **25% probability threshold triggers invocation.** High applicability required. Wrong skills waste tokens; missed high-signal skills degrade quality.
+3. **Ignore low-signal turns.** Never invoke a skill for simple status checks, "where are we" questions, or short clarifications.
+4. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
+5. **Process determines approach; implementation guides execution.**
 
 ## Inputs
 

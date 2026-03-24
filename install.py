@@ -1221,16 +1221,27 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 _live_display.add_step(result.message)
                 _live_display.complete_step(result.success)
 
+    # Convert --security-level to security_selections dict
+    security_selections = None
+    if getattr(args, "security_level", None):
+        try:
+            from installer.components.security import security_level_to_selections
+            security_selections = security_level_to_selections(args.security_level)
+        except (ImportError, ValueError) as e:
+            print_error(f"Invalid security level: {e}")
+            return 1
+
     session = installer.run(
         platforms=platforms,
         force=args.force,
         dry_run=args.dry_run,
         on_progress=_on_progress,
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
+        security_selections=security_selections,
     )
 
     # TTS setup runs INSIDE the live progress so it appears before "Complete"
-    if not args.dry_run:
+    if not args.dry_run and not getattr(args, "no_tts", False):
         if _live_display:
             _live_display.begin_section("TTS")
         tts_result = _run_tts_setup(
@@ -1386,6 +1397,24 @@ Examples:
         "--bootstrapped",
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
+    )
+    parser.add_argument(
+        "--security-level",
+        choices=["minimal", "standard", "strict"],
+        default=None,
+        help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
+    )
+    parser.add_argument(
+        "--no-tts",
+        action="store_true",
+        default=False,
+        help="Disable TTS, skipping the TTS setup wizard",
+    )
+    parser.add_argument(
+        "--reconfigure",
+        action="store_true",
+        default=False,
+        help="Re-run the configuration wizard for any unset config keys",
     )
 
     # Per-platform config dir overrides (repeatable)

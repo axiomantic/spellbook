@@ -212,6 +212,8 @@ def _send_os_notification(title: str, body: str) -> None:
 _EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
+    "Read", "Grep", "Glob", "list_directory", "ls", "cat",
+    "file_history_snapshot", "get_file_contents",
 })
 
 
@@ -1050,6 +1052,10 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
 
     Returns stdout content (for injection into LLM context) or None.
     """
+    # Allow platform lifecycle events to bypass tool-based exclusion
+    if event_name not in ("PreCompact", "SessionStart") and tool_name in _EXCLUDED_TOOLS:
+        return None
+
     outputs = []
 
     if event_name == "PreToolUse":

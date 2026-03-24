@@ -1,12 +1,12 @@
 # Platform Support
 
-Spellbook works across multiple AI coding assistants with varying levels of integration.
+Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and Crush have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.
 
 ## Claude Code
 
-**Status:** Full Support
+**Status:** Primary platform, full support
 
-Claude Code is the primary platform with native support for all features.
+Claude Code receives full support for all Spellbook features.
 
 ### Setup
 
@@ -20,12 +20,13 @@ python3 install.py
 - TodoWrite for task management
 - Task tool for subagent orchestration
 - MCP server for skill discovery and session management
+- Full hook system (PreToolUse, PostToolUse, Stop, Notification)
 
 ## OpenCode
 
-**Status:** Full Support
+**Status:** Basic support
 
-OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents.
+OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents. Some Claude Code-specific MCP tools and hooks are not available on OpenCode, but can usually be implemented using OpenCode's own extension points.
 
 ### Setup
 
@@ -62,9 +63,9 @@ OpenCode natively reads skills from `~/.claude/skills/*`, which is where the Cla
 
 ## Codex
 
-**Status:** Full Support
+**Status:** Basic support
 
-Codex integration via MCP server and bootstrap context.
+Codex integration via MCP server and bootstrap context. Skills and MCP tools work, but subagent orchestration is unavailable.
 
 ### Setup
 
@@ -79,13 +80,13 @@ Skills auto-trigger based on your intent. For example, saying "debug this issue"
 ### Limitations
 
 - No subagent support (Task tool unavailable)
-- Skills requiring subagents will inform user to use Claude Code
+- Skills requiring subagents will inform the user to use Claude Code
 
 ## Gemini CLI
 
-**Status:** Full Support
+**Status:** Basic support
 
-Gemini CLI integration via native extension system.
+Gemini CLI integration via native extension system. Skills and MCP tools work, but subagent orchestration is unavailable.
 
 ### Setup
 
@@ -102,14 +103,14 @@ Gemini CLI integration via native extension system.
 
 ### Limitations
 
-- No `Task` tool for subagent orchestration (same as Codex). Skills requiring subagents will inform the user to use Claude Code.
+- No `Task` tool for subagent orchestration. Skills requiring subagents will inform the user to use Claude Code.
 - Native skill discovery is pending upstream support ([gemini-cli#15327](https://github.com/google-gemini/gemini-cli/issues/15327)). Until then, skills are loaded via the MCP server.
 
 ## Crush
 
-**Status:** Full Support
+**Status:** Basic support
 
-Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills.
+Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills. Crush supports the same Agent Skills format as Claude Code, so skills work natively. Some hooks may not be available.
 
 ### Setup
 
@@ -149,3 +150,7 @@ Crush stores its configuration in `~/.local/share/crush/crush.json`. The install
   }
 }
 ```
+
+## Contributing Platform Support
+
+If you use OpenCode, Codex, Gemini CLI, or Crush and want fuller Spellbook coverage, contributions are welcome. See the [Porting Guide](../contributing/porting-to-your-assistant.md) for how to add or extend platform support.

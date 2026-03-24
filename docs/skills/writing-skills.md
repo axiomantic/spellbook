@@ -625,59 +625,6 @@ Example:
 NO SKILL WITHOUT FAILING TEST FIRST
 ```
 
-<reflection>
-This applies to NEW skills AND EDITS to existing skills.
-
-Write skill before testing? Delete it. Start over.
-Edit skill without testing? Same violation.
-
-**No exceptions:**
-- Not for "simple additions"
-- Not for "just adding a section"
-- Not for "documentation updates"
-- Don't keep untested changes as "reference"
-- Don't "adapt" while running tests
-- Delete means delete
-
-**If GREEN phase fails** (behavior unchanged after verification): The skill is not addressing the actual failure mode. Document what the agent did, identify the gap, revise, and re-run GREEN. After 2 revisions without change, switch to a discipline-style approach with explicit pressure scenarios and rationalization counters.
-</reflection>
-
-## RED-GREEN-REFACTOR
-
-Full implementation in the `write-skill-test` command. Dispatch a subagent to execute it.
-
-1. **RED** - Run pressure scenarios WITHOUT skill. Document baseline failures and rationalizations verbatim.
-2. **GREEN** - Write minimal skill addressing specific baseline failures. Verify compliance with same scenarios.
-3. **REFACTOR** - Close new loopholes. Build rationalization table. Re-test until bulletproof.
-
-**Dispatch template:**
-```
-Task(
-  description: "RED-GREEN-REFACTOR skill testing",
-  prompt: """
-First, invoke the write-skill-test command using the Skill tool.
-Then follow its complete workflow.
-
-## Context
-
-Skill purpose: [what the skill should do]
-Skill type: [discipline/technique/pattern/reference]
-Target location: skills/<name>/SKILL.md
-Pressure scenarios to test: [describe scenarios]
-"""
-)
-```
-
-## Token Efficiency
-
-**Targets:** Frequently-loaded or startup skills: <200 words. All other skills: <500 words.
-
-**Techniques:**
-- Reference `--help` instead of documenting all flags
-- Cross-reference other skills: `**REQUIRED BACKGROUND:** test-driven-development`
-- One excellent example, not multi-language
-- No `@` links (force-loads files, burns context)
-
 ## File Organization
 
 | Pattern | When | Example |

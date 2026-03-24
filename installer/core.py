@@ -206,6 +206,7 @@ class Installer:
         on_progress=None,
         config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
         security_selections: Optional[Dict[str, bool]] = None,
+        renderer=None,
     ) -> InstallSession:
         """
         Execute installation workflow.
@@ -222,9 +223,18 @@ class Installer:
                 "result" - data: {"result": InstallResult}
             config_dir_overrides: Per-platform list of config dirs from CLI
                 flags. Keys are platform IDs, values are lists of Path.
+            renderer: InstallerRenderer instance for progress rendering.
+                If None, auto-detects: RichRenderer when stdout is a TTY,
+                PlainTextRenderer otherwise.
 
         Returns InstallSession with all results.
         """
+        import sys as _sys
+
+        if renderer is None:
+            from .renderer import PlainTextRenderer, RichRenderer
+
+            renderer = RichRenderer() if _sys.stdout.isatty() else PlainTextRenderer()
         if platforms is None:
             platforms = self.detect_platforms()
 
@@ -291,6 +301,7 @@ class Installer:
         # All platforms connect to this shared daemon via HTTP.
         from .components.mcp import install_daemon
 
+        renderer.render_step("daemon_start", {})
         if on_progress:
             on_progress("daemon_start", {})
 
@@ -318,6 +329,7 @@ class Installer:
             )
 
         session.results.append(daemon_result)
+        renderer.render_step("result", {"result": daemon_result})
         if on_progress:
             on_progress("result", {"result": daemon_result})
 
@@ -329,6 +341,8 @@ class Installer:
             dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
             platform_dirs.append((platform, dirs))
             total += max(len(dirs), 1)  # Count at least 1 for skip message
+
+        renderer.render_progress_start(total)
 
         install_index = 0
         for platform, dirs in platform_dirs:
@@ -343,6 +357,10 @@ class Installer:
                     message=f"{platform}: no valid config directories",
                 )
                 session.results.append(skip_result)
+                renderer.render_step("platform_skip", {
+                    "name": platform,
+                    "message": skip_result.message,
+                })
                 if on_progress:
                     on_progress("platform_skip", {
                         "name": platform,
@@ -361,13 +379,15 @@ class Installer:
                     context=shared_context,
                 )
 
+                _dir_display = shorten_home(config_dir)
+                _start_data = {
+                    "name": f"{installer.platform_name} ({_dir_display})",
+                    "index": install_index,
+                    "total": total,
+                }
+                renderer.render_step("platform_start", _start_data)
                 if on_progress:
-                    _dir_display = shorten_home(config_dir)
-                    on_progress("platform_start", {
-                        "name": f"{installer.platform_name} ({_dir_display})",
-                        "index": install_index,
-                        "total": total,
-                    })
+                    on_progress("platform_start", _start_data)
 
                 # Check platform status
                 status = installer.detect()
@@ -381,11 +401,13 @@ class Installer:
                         message=f"{installer.platform_name} not available at {config_dir}",
                     )
                     session.results.append(skip_result)
+                    _skip_data = {
+                        "name": installer.platform_name,
+                        "message": skip_result.message,
+                    }
+                    renderer.render_step("platform_skip", _skip_data)
                     if on_progress:
-                        on_progress("platform_skip", {
-                            "name": installer.platform_name,
-                            "message": skip_result.message,
-                        })
+                        on_progress("platform_skip", _skip_data)
                     continue
 
                 # Install with error isolation per dir
@@ -394,8 +416,10 @@ class Installer:
                         force=force, skip_global_steps=skip_global,
                     )
                     for result in results:
+                        _result_data = {"result": result}
+                        renderer.render_step("result", _result_data)
                         if on_progress:
-                            on_progress("result", {"result": result})
+                            on_progress("result", _result_data)
                     session.results.extend(results)
                 except Exception as e:
                     fail_result = InstallResult(
@@ -406,13 +430,16 @@ class Installer:
                         message=f"Installation to {config_dir} failed: {e}",
                     )
                     session.results.append(fail_result)
+                    _fail_data = {"result": fail_result}
+                    renderer.render_step("result", _fail_data)
                     if on_progress:
-                        on_progress("result", {"result": fail_result})
+                        on_progress("result", _fail_data)
 
         # Health check: verify the daemon is actually responding to MCP requests
         if not dry_run and daemon_success:
             from .components.mcp import check_daemon_health
 
+            renderer.render_step("health_start", {})
             if on_progress:
                 on_progress("health_start", {})
 
@@ -426,9 +453,11 @@ class Installer:
                 message=f"MCP health: {health_msg}",
             )
             session.results.append(health_result)
+            renderer.render_step("result", {"result": health_result})
             if on_progress:
                 on_progress("result", {"result": health_result})
 
+        renderer.render_progress_end()
         return session
 
 
