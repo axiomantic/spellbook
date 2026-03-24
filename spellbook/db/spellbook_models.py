@@ -355,6 +355,11 @@ class TrustRegistry(SpellbookBase):
     registered_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     expires_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     registered_by: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Crypto provenance columns (v2)
+    signature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    signing_key_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    analysis_status: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    analysis_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     def to_dict(self) -> dict:
         return {
@@ -365,6 +370,10 @@ class TrustRegistry(SpellbookBase):
             "registered_at": self.registered_at,
             "expires_at": self.expires_at,
             "registered_by": self.registered_by,
+            "signature": self.signature,
+            "signing_key_id": self.signing_key_id,
+            "analysis_status": self.analysis_status,
+            "analysis_at": self.analysis_at,
         }
 
 
@@ -701,4 +710,104 @@ class CuratorEvent(SpellbookBase):
             "tokens_saved": self.tokens_saved,
             "strategy": self.strategy,
             "timestamp": self.timestamp,
+        }
+
+
+# ---- 26. intent_checks ----
+
+class IntentCheck(SpellbookBase):
+    __tablename__ = "intent_checks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    source_tool: Mapped[str] = mapped_column(Text, nullable=False)
+    classification: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    evidence: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    checked_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    cached: Mapped[int] = mapped_column(Integer, default=0)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "content_hash": self.content_hash,
+            "source_tool": self.source_tool,
+            "classification": self.classification,
+            "confidence": self.confidence,
+            "evidence": self.evidence,
+            "checked_at": self.checked_at,
+            "latency_ms": self.latency_ms,
+            "cached": self.cached,
+        }
+
+
+# ---- 27. session_content_accumulator ----
+
+class SessionContentAccumulator(SpellbookBase):
+    __tablename__ = "session_content_accumulator"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    source_tool: Mapped[str] = mapped_column(Text, nullable=False)
+    content_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    content_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    received_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "content_hash": self.content_hash,
+            "source_tool": self.source_tool,
+            "content_summary": self.content_summary,
+            "content_size": self.content_size,
+            "received_at": self.received_at,
+            "expires_at": self.expires_at,
+        }
+
+
+# ---- 28. sleuth_budget ----
+
+class SleuthBudget(SpellbookBase):
+    __tablename__ = "sleuth_budget"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
+    calls_remaining: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    reset_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "calls_remaining": self.calls_remaining,
+            "reset_at": self.reset_at,
+        }
+
+
+# ---- 29. sleuth_cache ----
+
+class SleuthCache(SpellbookBase):
+    __tablename__ = "sleuth_cache"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content_hash: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
+    classification: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    cached_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "content_hash": self.content_hash,
+            "classification": self.classification,
+            "confidence": self.confidence,
+            "cached_at": self.cached_at,
+            "expires_at": self.expires_at,
         }
