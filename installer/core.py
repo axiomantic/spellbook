@@ -116,6 +116,16 @@ class InstallSession:
                 platforms.add(r.platform)
         return list(platforms)
 
+    @property
+    def platforms_failed(self) -> List[str]:
+        """Get list of platforms that had failures."""
+        failed = set()
+        for r in self.results:
+            if not r.success:
+                failed.add(r.platform)
+        # Exclude platforms that also had successes (partial success = installed)
+        return list(failed - set(self.platforms_installed))
+
 
 def get_platform_installer(
     platform: str,

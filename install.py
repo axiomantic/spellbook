@@ -631,11 +631,15 @@ def bootstrap(args: argparse.Namespace) -> Path:
     spellbook_dir = find_spellbook_dir()
 
     if spellbook_dir:
-        print_success(f"Found spellbook at {spellbook_dir}")
+        # After re-exec, suppress status noise (Rich welcome panel will show)
+        _quiet = args.bootstrapped
+        if not _quiet:
+            print_success(f"Found spellbook at {spellbook_dir}")
 
         # Check if the found repo needs updating
         if (spellbook_dir / ".git").is_dir():
-            print_step("Checking for updates...")
+            if not _quiet:
+                print_step("Checking for updates...")
             needs_update, reason = check_repo_needs_update(spellbook_dir)
 
             if needs_update is None:
@@ -676,7 +680,8 @@ def bootstrap(args: argparse.Namespace) -> Path:
                     except subprocess.CalledProcessError:
                         print_warning("Could not fast-forward. Using existing version.")
             else:
-                print_info("Already at latest version")
+                if not _quiet:
+                    print_info("Already at latest version")
     else:
         # Need to clone
         install_dir = Path(args.install_dir) if args.install_dir else DEFAULT_INSTALL_DIR
@@ -1044,8 +1049,13 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         platforms = args.platforms.split(",")
     elif args.yes or args.no_interactive:
         platforms = installer.detect_platforms()
-        installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
-        print()
+        if _tui_available:
+            from installer.config import PLATFORM_CONFIG as _PC
+            names = [_PC.get(p, {}).get("name", p) for p in platforms]
+            _tui_console.print(f"  [dim]Platforms:[/dim] {', '.join(names)}")
+        else:
+            installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
+            print()
     else:
         try:
             from installer.tui import interactive_platform_select
@@ -1065,7 +1075,14 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             platforms = installer.detect_platforms()
 
     # Show directory configuration
-    print_directory_config(spellbook_dir, platforms)
+    if _tui_available:
+        from installer.ui import shorten_home
+        from installer.config import get_spellbook_config_dir
+        _tui_console.print(f"  [dim]Source:[/dim]    {spellbook_dir}")
+        _tui_console.print(f"  [dim]Config:[/dim]    {shorten_home(get_spellbook_config_dir())}")
+        _tui_console.print()
+    else:
+        print_directory_config(spellbook_dir, platforms)
 
     if args.dry_run:
         if _tui_available:
@@ -1324,9 +1341,9 @@ Examples:
     if not is_interactive():
         args.yes = True
 
-    # Only show bootstrap banner if not re-executed after bootstrap.
-    # The versioned banner in run_installation() will always print.
-    if "--bootstrapped" not in sys.argv:
+    # Only show bootstrap banner on initial invocation (not after re-exec).
+    # After re-exec, run_installation() shows the Rich welcome panel.
+    if not args.bootstrapped:
         print_header()
 
     # Bootstrap phase
@@ -1338,8 +1355,9 @@ Examples:
             return 1
         print_success(f"Update-only mode: using {spellbook_dir}")
     else:
-        print_step("Checking prerequisites...")
-        print()
+        if not args.bootstrapped:
+            print_step("Checking prerequisites...")
+            print()
         spellbook_dir = bootstrap(args)
 
     # Installation phase
