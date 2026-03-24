@@ -521,7 +521,11 @@ def security_dashboard(
          "top_blocked_rules": [["rule_id", count], ...],
          "honeypot_triggers": int,
          "recent_alerts": [{"event_type": str, "severity": str,
-         "timestamp": str, "detail": str}, ...]}
+         "timestamp": str, "detail": str}, ...],
+         "intent_checks": {"total": int, "classifications": {"DIRECTIVE": int, ...}},
+         "accumulator_alerts": {"active_sessions": int, "total_alerts": int},
+         "sleuth_budget": {"active_budgets": int, "total_remaining": int},
+         "spotlighting_config": {"enabled": bool, "default_tier": str}}
     """
     from spellbook.security.tools import do_dashboard
 

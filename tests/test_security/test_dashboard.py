@@ -116,6 +116,10 @@ class TestDashboardEmpty:
             "top_blocked_rules",
             "honeypot_triggers",
             "recent_alerts",
+            "intent_checks",
+            "accumulator_alerts",
+            "sleuth_budget",
+            "spotlighting_config",
         }
         assert set(result.keys()) == expected_keys
 
