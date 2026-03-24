@@ -10,6 +10,8 @@ import base64
 import hashlib
 import logging
 import os
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
@@ -155,3 +157,91 @@ def get_key_fingerprint(keys_dir: str) -> str | None:
         return None
     pub_bytes = pub_path.read_bytes()
     return hashlib.sha256(pub_bytes).hexdigest()
+
+
+def rotate_keys(keys_dir: str) -> dict:
+    """Rotate the Ed25519 keypair, archiving the old public key.
+
+    Archives the old public key to keys_dir/archive/ with a timestamp
+    suffix so old signatures can still be verified. Generates a new
+    keypair to replace the current one.
+
+    Args:
+        keys_dir: Directory containing the keypair.
+
+    Returns:
+        Dict with rotated (bool), archive_dir, old_fingerprint, new_fingerprint.
+    """
+    keys_path = Path(keys_dir)
+    priv_path = keys_path / _PRIVATE_KEY_FILE
+    pub_path = keys_path / _PUBLIC_KEY_FILE
+
+    if not priv_path.exists() or not pub_path.exists():
+        return {
+            "rotated": False,
+            "archive_dir": None,
+            "old_fingerprint": None,
+            "new_fingerprint": None,
+            "reason": "No existing keypair to rotate",
+        }
+
+    # Archive old public key
+    archive_dir = keys_path / "archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    old_fingerprint = get_key_fingerprint(keys_dir)
+    archive_name = f"signing.pub.{timestamp}"
+    shutil.copy2(str(pub_path), str(archive_dir / archive_name))
+
+    # Remove old keys so generate_keypair creates new ones
+    priv_path.unlink()
+    pub_path.unlink()
+
+    # Generate new keypair
+    generate_keypair(keys_dir)
+    new_fingerprint = get_key_fingerprint(keys_dir)
+
+    logger.info(
+        "Key rotation complete. Old fingerprint: %s, New fingerprint: %s",
+        old_fingerprint,
+        new_fingerprint,
+    )
+
+    return {
+        "rotated": True,
+        "archive_dir": str(archive_dir),
+        "old_fingerprint": old_fingerprint,
+        "new_fingerprint": new_fingerprint,
+    }
+
+
+def verify_signature_with_key_file(
+    content_hash: str,
+    signature_b64: str,
+    pub_key_path: str,
+) -> bool:
+    """Verify a signature using a specific public key file.
+
+    Used for verifying signatures against archived (rotated) keys.
+
+    Args:
+        content_hash: SHA-256 hash string that was signed.
+        signature_b64: Base64-encoded signature to verify.
+        pub_key_path: Path to a PEM-encoded Ed25519 public key file.
+
+    Returns:
+        True if signature is valid, False otherwise.
+    """
+    key_path = Path(pub_key_path)
+    if not key_path.exists():
+        return False
+    try:
+        key = serialization.load_pem_public_key(key_path.read_bytes())
+        if not isinstance(key, Ed25519PublicKey):
+            return False
+        signature = base64.b64decode(signature_b64)
+        key.verify(signature, content_hash.encode())
+        return True
+    except (InvalidSignature, Exception):
+        return False
