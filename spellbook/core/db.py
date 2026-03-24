@@ -445,6 +445,7 @@ def init_db(db_path: str = None) -> None:
             memory_type TEXT,
             namespace TEXT NOT NULL,
             branch TEXT DEFAULT '',
+            scope TEXT NOT NULL DEFAULT 'project',
             importance REAL DEFAULT 1.0,
             created_at TEXT NOT NULL,
             accessed_at TEXT,
@@ -467,9 +468,18 @@ def init_db(db_path: str = None) -> None:
     if "branch" not in existing_cols:
         cursor.execute("ALTER TABLE memories ADD COLUMN branch TEXT DEFAULT ''")
 
+    # Migration: add scope column to existing memories tables
+    if "scope" not in existing_cols:
+        cursor.execute("ALTER TABLE memories ADD COLUMN scope TEXT NOT NULL DEFAULT 'project'")
+
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_memories_branch
         ON memories(branch)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memories_scope
+        ON memories(scope)
     """)
 
     cursor.execute("""
