@@ -42,7 +42,7 @@ graph LR
 
 ## Security Architecture
 
-Spellbook employs a three-layer defense model:
+Spellbook employs a multi-layer defense model:
 
 ### Layer 1: Transport Authentication
 
@@ -75,6 +75,12 @@ Persisted workflow state undergoes schema validation on both save and load:
 - Invalid state marked as hostile in the trust registry with full audit trail
 
 Relevant source: `spellbook/resume.py`
+
+### Layer 4: Runtime Injection Defense
+
+A defense-in-depth system with 5 concentric layers protects against prompt injection via external content (WebFetch, WebSearch, MCP tool output). The layers are: spotlighting (boundary marking), session content accumulator (split injection detection), LODO-evaluated regex patterns, PromptSleuth semantic intent classification (Anthropic haiku), and Ed25519 cryptographic content provenance. Each layer operates independently. See [docs/security.md](docs/security.md) for full technical details.
+
+Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.py`, `spellbook/security/crypto.py`, `spellbook/security/accumulator.py`
 
 ## Auth Flow
 
