@@ -178,3 +178,27 @@ class TestDepScanning:
         assert len(stripe_tools) == 1
         assert stripe_tools[0]["available"] is True
         assert "dep_detected" in stripe_tools[0]["detection_methods"]
+
+
+class TestMCPToolWrapper:
+    def test_tooling_discover_function_importable(self):
+        """The tooling_discover MCP tool function is importable."""
+        from spellbook.mcp.tools.tooling import tooling_discover
+
+        assert callable(tooling_discover)
+
+    def test_tooling_module_has_all_export(self):
+        """The tooling module defines __all__ with tooling_discover."""
+        from spellbook.mcp.tools import tooling
+
+        assert hasattr(tooling, "__all__")
+        assert "tooling_discover" in tooling.__all__
+
+    def test_tooling_registered_in_init(self):
+        """The tooling module is imported in spellbook.mcp.tools.__init__."""
+        import spellbook.mcp.tools as tools_pkg
+        import spellbook.mcp.tools.tooling as tooling_mod
+
+        # Verify the tooling submodule is accessible via the package
+        assert hasattr(tools_pkg, "tooling")
+        assert tools_pkg.tooling is tooling_mod
