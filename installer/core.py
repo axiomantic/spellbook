@@ -247,10 +247,9 @@ class Installer:
             defaults = get_default_security_config()
             resolved = dict(defaults)
             for feat_id, enabled in security_selections.items():
-                prefix = f"security.{feat_id}."
-                for key in resolved:
-                    if key == f"{prefix}enabled":
-                        resolved[key] = enabled
+                enabled_key = f"security.{feat_id}.enabled"
+                if enabled_key in resolved:
+                    resolved[enabled_key] = enabled
             session.security_config = resolved
 
             security_result = InstallResult(

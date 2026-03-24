@@ -332,7 +332,7 @@ def _crypto_gate(tool_name: str, data: dict) -> None:
     # Compute hash of the relevant content
     if tool_name == "spawn_claude_session":
         content = tool_input.get("prompt", "")
-    elif tool_name in ("mcp__spellbook__workflow_state_save", "workflow_state_save"):
+    elif tool_name == "mcp__spellbook__workflow_state_save":
         content = json.dumps(tool_input.get("state", {}), sort_keys=True)
     else:
         return
