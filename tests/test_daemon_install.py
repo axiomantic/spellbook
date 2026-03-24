@@ -845,7 +845,7 @@ class TestInstallDaemonTtsInclusion:
         sb_dir.mkdir()
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.is_daemon_running", return_value=True), \
+             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
              patch("spellbook.daemon.manager.install_service"), \
              patch("spellbook.core.config.config_get", return_value=True):
             install_daemon(sb_dir, dry_run=False)
@@ -864,7 +864,7 @@ class TestInstallDaemonTtsInclusion:
 
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.is_daemon_running", return_value=True), \
+             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
              patch("spellbook.daemon.manager.install_service"), \
              patch("spellbook.core.config.config_get", return_value=False):
             install_daemon(sb_dir, dry_run=False)
@@ -883,7 +883,7 @@ class TestInstallDaemonTtsInclusion:
         # Make config_get raise ImportError by patching the import
         with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
              patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.is_daemon_running", return_value=True), \
+             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
              patch("spellbook.daemon.manager.install_service"), \
              patch.dict("sys.modules", {"spellbook.core.config": None}):
             install_daemon(sb_dir, dry_run=False)
