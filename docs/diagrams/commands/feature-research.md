@@ -1,7 +1,7 @@
-<!-- diagram-meta: {"source": "commands/feature-research.md","source_hash": "sha256:26b944ed9044b4500b7aa4af6b3b60d9604582fc7f4ad9ec22227dc97c189f4f","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-research.md","source_hash": "sha256:3d9a2ed12d04d6af44574664a7736d6b50ab44a0c2ad826e1ba010b62a8c947f","generated_at": "2026-03-23T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: feature-research
 
-Phase 1 of develop: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.
+Phase 1 of develop: Research strategy planning, codebase exploration via subagent, parallel tooling discovery, ambiguity extraction, and quality scoring with a 100% threshold gate.
 
 ```mermaid
 flowchart TD
@@ -14,10 +14,12 @@ flowchart TD
     IdentifyGaps[Identify knowledge gaps]
 
     DispatchAgent[Dispatch research subagent]
+    DispatchTooling[Dispatch tooling scout<br>PARALLEL]
     AgentSearch[Subagent: systematic search]
     AgentRead[Subagent: read files]
     AgentExtract[Subagent: extract patterns]
     AgentReturn[Subagent: return findings]
+    ToolingReturn[Tooling: return available tools]
     AgentFail{Subagent failed?}
     RetryAgent[Retry once]
     RetryFail{Retry failed?}
@@ -50,6 +52,7 @@ flowchart TD
     PlanStrategy --> GenQuestions
     GenQuestions --> IdentifyGaps
     IdentifyGaps --> DispatchAgent
+    IdentifyGaps --> DispatchTooling
 
     DispatchAgent --> AgentSearch
     AgentSearch --> AgentRead
@@ -63,6 +66,8 @@ flowchart TD
     MarkUnknown --> ExtractAmb
     RetryFail -->|No| ExtractAmb
     AgentFail -->|No| ExtractAmb
+    DispatchTooling --> ToolingReturn
+    ToolingReturn --> ExtractAmb
 
     ExtractAmb --> FilterLow
     FilterLow --> Categorize
@@ -89,6 +94,7 @@ flowchart TD
     style Phase1Done fill:#2196F3,color:#fff
     style PrereqFail fill:#2196F3,color:#fff
     style DispatchAgent fill:#4CAF50,color:#fff
+    style DispatchTooling fill:#4CAF50,color:#fff
     style PrereqCheck fill:#FF9800,color:#fff
     style AgentFail fill:#FF9800,color:#fff
     style RetryFail fill:#FF9800,color:#fff

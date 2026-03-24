@@ -2,7 +2,7 @@
 
 ## Workflow Diagram
 
-Phase 1 of develop: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.
+Phase 1 of develop: Research strategy planning, codebase exploration via subagent, parallel tooling discovery, ambiguity extraction, and quality scoring with a 100% threshold gate.
 
 ```mermaid
 flowchart TD
@@ -15,10 +15,12 @@ flowchart TD
     IdentifyGaps[Identify knowledge gaps]
 
     DispatchAgent[Dispatch research subagent]
+    DispatchTooling[Dispatch tooling scout<br>PARALLEL]
     AgentSearch[Subagent: systematic search]
     AgentRead[Subagent: read files]
     AgentExtract[Subagent: extract patterns]
     AgentReturn[Subagent: return findings]
+    ToolingReturn[Tooling: return available tools]
     AgentFail{Subagent failed?}
     RetryAgent[Retry once]
     RetryFail{Retry failed?}
@@ -51,6 +53,7 @@ flowchart TD
     PlanStrategy --> GenQuestions
     GenQuestions --> IdentifyGaps
     IdentifyGaps --> DispatchAgent
+    IdentifyGaps --> DispatchTooling
 
     DispatchAgent --> AgentSearch
     AgentSearch --> AgentRead
@@ -64,6 +67,8 @@ flowchart TD
     MarkUnknown --> ExtractAmb
     RetryFail -->|No| ExtractAmb
     AgentFail -->|No| ExtractAmb
+    DispatchTooling --> ToolingReturn
+    ToolingReturn --> ExtractAmb
 
     ExtractAmb --> FilterLow
     FilterLow --> Categorize
@@ -90,6 +95,7 @@ flowchart TD
     style Phase1Done fill:#2196F3,color:#fff
     style PrereqFail fill:#2196F3,color:#fff
     style DispatchAgent fill:#4CAF50,color:#fff
+    style DispatchTooling fill:#4CAF50,color:#fff
     style PrereqCheck fill:#FF9800,color:#fff
     style AgentFail fill:#FF9800,color:#fff
     style RetryFail fill:#FF9800,color:#fff
@@ -237,6 +243,27 @@ Task:
 - Subagent fails: retry once with same instructions
 - Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
 - **TIMEOUT:** 120 seconds per subagent
+
+### 1.2b Parallel Tooling Discovery (Subagent)
+
+**SUBAGENT DISPATCH:** YES (PARALLEL with 1.2 codebase research)
+**REASON:** Discover available tools for the feature's technology domain. Zero additional latency when run in parallel.
+
+```
+Task:
+  description: "Tooling Scout - Available Tools"
+  prompt: |
+    Invoke the `tooling-discovery` skill.
+    Domain keywords: [extract from feature description and project context]
+    Project path: [project root]
+
+    Return a brief summary of:
+    1. Available tools (detected on this system)
+    2. Relevant registry tools (not detected but potentially useful)
+    3. Any trust warnings for tier 4+ tools
+```
+
+**Result Handling:** Include tooling discovery results in research findings under an "Available Tooling" section. During design (Phase 2), consider whether any discovered tools should be leveraged in the implementation.
 
 ### 1.3 Ambiguity Extraction
 

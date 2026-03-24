@@ -202,3 +202,44 @@ class TestMCPToolWrapper:
         # Verify the tooling submodule is accessible via the package
         assert hasattr(tools_pkg, "tooling")
         assert tools_pkg.tooling is tooling_mod
+
+
+class TestToolingDiscoverIntegration:
+    def test_tooling_discover_jira_returns_tier_1(self):
+        """tooling_discover('jira') returns Atlassian MCP with Tier 1."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["jira"], registry_path=REGISTRY_PATH)
+        tier_1 = [t for t in result["tools"] if t["trust_tier"] == 1]
+        assert any("Atlassian" in t["name"] for t in tier_1)
+
+    def test_tooling_discover_multiple_keywords(self):
+        """Multiple keywords match across domains."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["docker", "kubernetes"], registry_path=REGISTRY_PATH)
+        tool_names = {t["name"] for t in result["tools"]}
+        assert "Docker CLI" in tool_names
+        assert "kubectl" in tool_names
+
+    def test_detection_summary_counts(self):
+        """Detection summary has correct count fields."""
+        from spellbook.tooling.discovery import discover_tools
+
+        result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+        summary = result["detection_summary"]
+        assert "registry_matches" in summary
+        assert "mcp_available" in summary
+        assert "cli_available" in summary
+        assert "dep_detected" in summary
+        assert summary["registry_matches"] >= 1
+
+    def test_feature_research_includes_tooling_section(self):
+        """feature-research.md includes the tooling discovery subagent dispatch."""
+        feature_research_path = (
+            Path(__file__).parent.parent.parent / "commands" / "feature-research.md"
+        )
+        content = feature_research_path.read_text()
+        assert "### 1.2b Parallel Tooling Discovery" in content
+        assert "tooling-discovery" in content
+        assert "Available Tooling" in content

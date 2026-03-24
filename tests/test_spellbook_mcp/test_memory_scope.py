@@ -376,3 +376,88 @@ class TestRecallByFilePathScope:
         for r in results:
             assert "scope" in r
             assert r["scope"] in ("project", "global")
+
+
+class TestDoMemoryRecallScope:
+    def test_do_recall_passes_scope(self, db_path):
+        """do_memory_recall passes scope to recall_by_query."""
+        from spellbook.memory.tools import do_memory_recall
+
+        insert_memory(
+            db_path=db_path,
+            content="Global fact about testing",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["testing"],
+            citations=[],
+            scope="global",
+        )
+        result = do_memory_recall(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="global",
+        )
+        assert result["count"] == 1
+        assert result["memories"][0]["scope"] == "global"
+
+    def test_do_recall_default_scope_is_project(self, db_path):
+        """do_memory_recall defaults to scope='project'."""
+        from spellbook.memory.tools import do_memory_recall
+
+        insert_memory(
+            db_path=db_path,
+            content="Project fact",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="project",
+        )
+        insert_memory(
+            db_path=db_path,
+            content="Global fact",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["test"],
+            citations=[],
+            scope="global",
+        )
+        result = do_memory_recall(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+        )
+        # Default scope=project should exclude global
+        assert result["count"] == 1
+        assert result["memories"][0]["content"] == "Project fact"
+
+
+class TestDoStoreMemoriesScope:
+    def test_store_with_global_scope(self, db_path):
+        """do_store_memories passes scope through to insert_memory."""
+        import json
+
+        from spellbook.memory.tools import do_memory_recall, do_store_memories
+
+        memories = json.dumps({
+            "memories": [{"content": "Global convention", "memory_type": "rule"}]
+        })
+        result = do_store_memories(
+            db_path=db_path,
+            memories_json=memories,
+            namespace="proj-a",
+            scope="global",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+
+        # Verify it was stored with global scope
+        recall = do_memory_recall(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="global",
+        )
+        assert recall["count"] == 1
+        assert recall["memories"][0]["scope"] == "global"
