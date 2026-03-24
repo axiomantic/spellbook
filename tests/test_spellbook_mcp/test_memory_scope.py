@@ -551,3 +551,84 @@ class TestCLIScopeFlag:
                 limit=10,
                 scope="project",
             )
+
+
+class TestGlobalMemoryCrossProject:
+    """Integration: store global in project A, recall from project B."""
+
+    def test_global_memory_cross_project(self, db_path):
+        """memory_store(scope='global') in project A, recall(scope='all') in project B."""
+        import json
+
+        from spellbook.memory.tools import do_memory_recall, do_store_memories
+
+        memories = json.dumps({
+            "memories": [{"content": "SQLite WAL is single-writer", "memory_type": "fact"}]
+        })
+        store_result = do_store_memories(
+            db_path=db_path,
+            memories_json=memories,
+            namespace="proj-a",
+            scope="global",
+        )
+        assert store_result["status"] == "success"
+
+        recall_result = do_memory_recall(
+            db_path=db_path,
+            query="SQLite WAL",
+            namespace="proj-b",
+            scope="all",
+        )
+        assert recall_result["count"] >= 1
+        assert "SQLite WAL" in recall_result["memories"][0]["content"]
+        assert recall_result["memories"][0]["scope"] == "global"
+
+    def test_global_memory_invisible_with_project_scope(self, db_path):
+        """Global memory from proj-a is NOT visible with scope='project' in proj-b."""
+        import json
+
+        from spellbook.memory.tools import do_memory_recall, do_store_memories
+
+        memories = json.dumps({
+            "memories": [{"content": "Cross project invisible test", "memory_type": "fact"}]
+        })
+        do_store_memories(
+            db_path=db_path,
+            memories_json=memories,
+            namespace="proj-a",
+            scope="global",
+        )
+        recall_result = do_memory_recall(
+            db_path=db_path,
+            query="invisible test",
+            namespace="proj-b",
+            scope="project",
+        )
+        assert recall_result["count"] == 0
+
+
+class TestForgetGlobalMemory:
+    def test_forget_global_memory(self, db_path):
+        """Soft-delete a global memory by ID."""
+        from spellbook.memory.tools import do_memory_forget, do_memory_recall
+
+        mem_id = insert_memory(
+            db_path=db_path,
+            content="Global to forget",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["forget"],
+            citations=[],
+            scope="global",
+        )
+        result = do_memory_forget(db_path=db_path, memory_id=mem_id)
+        assert result["status"] == "deleted"
+
+        # Verify it's gone from recall
+        recall = do_memory_recall(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="global",
+        )
+        assert recall["count"] == 0
