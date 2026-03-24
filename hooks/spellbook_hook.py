@@ -34,12 +34,26 @@ TOKEN_FILE = Path.home() / ".local" / "spellbook" / ".mcp-token"
 CONFIG_PATH = Path.home() / ".config" / "spellbook" / "spellbook.json"
 
 
+def _detect_platform() -> str:
+    """Detect which AI coding assistant platform is running."""
+    if os.environ.get("OPENCODE") == "1":
+        return "opencode"
+    if os.environ.get("CODEX_SANDBOX") or os.environ.get("CODEX_SANDBOX_NETWORK_DISABLED"):
+        return "codex"
+    if os.environ.get("GEMINI_CLI") == "1":
+        return "gemini-cli"
+    if os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("CLAUDE_ENV_FILE"):
+        return "claude-code"
+    return "unknown"
+
+
 def _mcp_call(tool_name: str, arguments: dict | None = None) -> dict | None:
     """Call an MCP tool via HTTP. Returns parsed result or None on failure."""
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
     }
+    headers["X-Spellbook-Client"] = _detect_platform()
     if TOKEN_FILE.exists():
         try:
             headers["Authorization"] = f"Bearer {TOKEN_FILE.read_text().strip()}"
@@ -286,6 +300,59 @@ def _gate_state_sanitize(data: dict) -> None:
         reasons = "; ".join(f["message"] for f in result["findings"])
         print(json.dumps({"error": f"Security check failed: {reasons}"}))
         sys.exit(2)
+
+
+def _crypto_gate(tool_name: str, data: dict) -> None:
+    """Crypto verification gate for privileged operations. CONFIGURABLE.
+
+    Checks crypto signature for high-risk operations. Blocks unsigned
+    content with exit 2.
+    """
+    import hashlib
+
+    gate_config = {
+        "spawn_claude_session": ("security.crypto.gate_spawn_session", True),
+        "mcp__spellbook__workflow_state_save": ("security.crypto.gate_workflow_save", True),
+    }
+
+    config_entry = gate_config.get(tool_name)
+    if not config_entry:
+        return
+
+    config_key, default_enabled = config_entry
+    gate_enabled = _get_config_value(config_key, default_enabled)
+    if not gate_enabled:
+        return
+
+    # Get content to verify
+    tool_input = data.get("tool_input", {})
+    if not tool_input:
+        return
+
+    # Compute hash of the relevant content
+    if tool_name == "spawn_claude_session":
+        content = tool_input.get("prompt", "")
+    elif tool_name == "mcp__spellbook__workflow_state_save":
+        content = json.dumps(tool_input.get("state", {}), sort_keys=True)
+    else:
+        return
+
+    if not content:
+        return
+
+    content_hash = hashlib.sha256(content.encode()).hexdigest()
+
+    # Check with MCP daemon for verified signature
+    result = _mcp_call("security_verify_signature", {"content_hash": content_hash})
+    if result and result.get("verified"):
+        return  # Signature valid, proceed
+
+    # Not verified -- block
+    print(json.dumps({
+        "error": f"BLOCKED: {tool_name} requires verified content provenance. "
+                 f"Content hash {content_hash[:16]}... is not signed."
+    }))
+    sys.exit(2)
 
 
 # ---------------------------------------------------------------------------
@@ -625,6 +692,62 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
     )
 
 
+def _spotlight_wrap(tool_name: str, data: dict) -> str | None:
+    """Generate spotlighting wrapper for external content. FAIL-OPEN."""
+    try:
+        from spellbook.security.spotlight import spotlight_wrap, determine_spotlight_tier
+        from spellbook.security.rules import (
+            INJECTION_RULES, EXFILTRATION_RULES, ESCALATION_RULES,
+            OBFUSCATION_RULES, check_patterns,
+        )
+    except ImportError:
+        return None
+
+    # Get tool output content
+    tool_result = data.get("tool_result", "")
+    if isinstance(tool_result, dict):
+        tool_result = str(tool_result.get("stdout", "") or tool_result.get("output", ""))
+    if not tool_result or not isinstance(tool_result, str):
+        return None
+
+    # Run ALL primary rule sets for tier selection (not just INJECTION_RULES)
+    security_mode = _get_config_value("security.mode", "standard") or "standard"
+    ALL_PRIMARY_RULES = INJECTION_RULES + EXFILTRATION_RULES + ESCALATION_RULES + OBFUSCATION_RULES
+    findings = check_patterns(tool_result, ALL_PRIMARY_RULES, security_mode)
+
+    # Determine tier (no sleuth result available synchronously in hook)
+    tier = determine_spotlight_tier(tool_name, findings, None)
+
+    # Check minimum tier from config
+    min_tier = _get_config_value("security.spotlighting.tier", "standard") or "standard"
+    tier_order = {"standard": 0, "elevated": 1, "critical": 2}
+    if tier_order.get(min_tier, 0) > tier_order.get(tier, 0):
+        tier = min_tier
+
+    return spotlight_wrap(tool_result, tool_name, tier=tier)
+
+
+def _accumulator_write(tool_name: str, data: dict) -> None:
+    """Write external content to session accumulator. FAIL-OPEN."""
+    tool_result = data.get("tool_result", "")
+    if isinstance(tool_result, dict):
+        tool_result = str(tool_result.get("stdout", "") or tool_result.get("output", ""))
+    if not tool_result or not isinstance(tool_result, str):
+        return
+
+    import hashlib
+    content_hash = hashlib.sha256(tool_result.encode()).hexdigest()
+    summary = tool_result[:500]
+
+    _mcp_call("security_accumulator_write", {
+        "session_id": data.get("session_id", "unknown"),
+        "content_hash": content_hash,
+        "source_tool": tool_name,
+        "content_summary": summary,
+        "content_size": len(tool_result),
+    })
+
+
 def _stint_depth_check(data: dict) -> str | None:
     """Check stint stack depth and emit behavioral mode + optional tree.
 
@@ -778,6 +901,11 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
     elif tool_name == "mcp__spellbook__workflow_state_save":
         _gate_state_sanitize(data)
 
+    # Crypto verification gate for privileged operations
+    crypto_enabled = _get_config_value("security.crypto.enabled", False)
+    if crypto_enabled:
+        _crypto_gate(tool_name, data)
+
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
 
@@ -789,13 +917,27 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     outputs = []
 
     # Security (specific matchers)
-    security_tools = {"Bash", "Read", "WebFetch", "Grep"}
+    security_tools = {"Bash", "Read", "WebFetch", "WebSearch", "Grep"}
     is_mcp = tool_name.startswith("mcp__")
     if tool_name in security_tools or is_mcp:
         _fire_and_forget(_audit_log, tool_name, data)
         out = _canary_check(tool_name, data)
         if out:
             outputs.append(out)
+
+    # Spotlighting (external content wrapping)
+    external_tools = {"WebFetch", "WebSearch"}
+    is_external = tool_name in external_tools or tool_name.startswith("mcp__")
+    if is_external:
+        spotlight_enabled = _get_config_value("security.spotlighting.enabled", True)
+        if spotlight_enabled:
+            out = _spotlight_wrap(tool_name, data)
+            if out:
+                outputs.append(out)
+
+    # Content accumulator (split injection detection, fire-and-forget)
+    if is_external:
+        _fire_and_forget(_accumulator_write, tool_name, data)
 
     # Memory injection (specific matchers)
     if tool_name in {"Read", "Edit", "Grep", "Glob"}:

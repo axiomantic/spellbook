@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] - 2026-03-24
+
+### Added
+- **Runtime injection defense**: 5 concentric defense layers for external content: spotlighting boundary marking, session content accumulator, LODO-evaluated regex detection, PromptSleuth semantic intent classification, and Ed25519 cryptographic content provenance
+- **Rich TUI installer** (`installer/tui.py`): Interactive terminal UI with platform selection checkboxes, security feature configuration, and key generation progress display
+- **6 new MCP security tools**: `security_check_intent`, `security_sign_content`, `security_verify_signature`, `security_accumulator_write`, `security_accumulator_status`, `security_sleuth_reset_budget`
+- **4 new database tables**: `intent_checks`, `session_content_accumulator`, `sleuth_budget`, `sleuth_cache`
+- **LODO evaluation framework**: Leave-One-Dataset-Out testing for regex detectors with 4 curated attack datasets (AdvBench, BIPIA, HarmBench, InjecAgent)
+- **Ed25519 key management**: Key generation, rotation with archive support, auto-signing of trusted files during installation
+- **Spotlighting integration**: PostToolUse hook auto-wraps external content; `pr_fetch` wraps PR diffs
+- **Content accumulator hook**: PostToolUse auto-records external content fragments for split injection detection
+- **`cryptography` and `rich` dependencies** for crypto provenance and TUI
+
+### Fixed
+- **WebSearch missing from security_tools set**: PostToolUse security scanning now covers WebSearch results
+
+### Changed
+- **Crypto provenance defaults to opt-in**: Disabled by default, enabled by the TUI installer after successful key generation
+
 ## [0.35.2] - 2026-03-21
 
 ### Fixed

@@ -30,8 +30,11 @@ from spellbook.core.db import get_db_path
 from spellbook.db.engines import get_sync_session
 from spellbook.db.spellbook_models import (
     CanaryToken,
+    IntentCheck,
     SecurityEvent,
     SecurityMode,
+    SessionContentAccumulator,
+    SleuthBudget,
     TrustRegistry,
 )
 from spellbook.security.rules import (
@@ -854,6 +857,10 @@ def do_dashboard(
             top_blocked_rules: List of [rule_id, count] pairs, limit 10.
             honeypot_triggers: Count of honeypot_triggered events.
             recent_alerts: List of recent CRITICAL/HIGH event dicts.
+            intent_checks: Dict with total count and classification breakdown.
+            accumulator_alerts: Dict with active sessions and alert count.
+            sleuth_budget: Dict with active budgets and total remaining calls.
+            spotlighting_config: Dict with enabled status and default tier.
     """
     from spellbook.security.check import get_current_mode
 
@@ -875,6 +882,10 @@ def do_dashboard(
         "top_blocked_rules": [],
         "honeypot_triggers": 0,
         "recent_alerts": [],
+        "intent_checks": {"total": 0, "classifications": {}},
+        "accumulator_alerts": {"active_sessions": 0, "total_alerts": 0},
+        "sleuth_budget": {"active_budgets": 0, "total_remaining": 0},
+        "spotlighting_config": {"enabled": False, "default_tier": "standard"},
     }
 
     from sqlalchemy import func, text
@@ -987,8 +998,85 @@ def do_dashboard(
                 result["recent_alerts"] = alerts
             except Exception:
                 pass
+
+            # Intent checks (injection defense)
+            try:
+                ic_total = session.execute(
+                    select(func.count()).select_from(IntentCheck).where(
+                        IntentCheck.checked_at >= func.datetime("now", time_param)
+                    )
+                ).scalar() or 0
+                ic_rows = session.execute(
+                    select(IntentCheck.classification, func.count())
+                    .where(IntentCheck.checked_at >= func.datetime("now", time_param))
+                    .group_by(IntentCheck.classification)
+                ).all()
+                result["intent_checks"] = {
+                    "total": ic_total,
+                    "classifications": {row[0]: row[1] for row in ic_rows},
+                }
+            except Exception:
+                pass
+
+            # Accumulator alerts (injection defense)
+            try:
+                active_sessions = session.execute(
+                    select(func.count(func.distinct(SessionContentAccumulator.session_id)))
+                    .where(SessionContentAccumulator.expires_at >= func.datetime("now"))
+                ).scalar() or 0
+                # Count sessions with repeated_source pattern (3+ from same tool)
+                alert_rows = session.execute(
+                    select(func.count())
+                    .select_from(
+                        select(
+                            SessionContentAccumulator.session_id,
+                            SessionContentAccumulator.source_tool,
+                            func.count().label("cnt"),
+                        )
+                        .where(SessionContentAccumulator.expires_at >= func.datetime("now"))
+                        .group_by(
+                            SessionContentAccumulator.session_id,
+                            SessionContentAccumulator.source_tool,
+                        )
+                        .having(func.count() >= 3)
+                        .subquery()
+                    )
+                ).scalar() or 0
+                result["accumulator_alerts"] = {
+                    "active_sessions": active_sessions,
+                    "total_alerts": alert_rows,
+                }
+            except Exception:
+                pass
+
+            # Sleuth budget status (injection defense)
+            try:
+                budget_rows = session.execute(
+                    select(
+                        func.count(),
+                        func.coalesce(func.sum(SleuthBudget.calls_remaining), 0),
+                    ).select_from(SleuthBudget)
+                ).one()
+                result["sleuth_budget"] = {
+                    "active_budgets": budget_rows[0] or 0,
+                    "total_remaining": budget_rows[1] or 0,
+                }
+            except Exception:
+                pass
+
     except Exception:
         # DB unavailable - return defaults
+        pass
+
+    # Spotlighting config (from config store, not DB)
+    try:
+        from spellbook.core.config import config_get
+
+        result["spotlighting_config"] = {
+            "enabled": bool(config_get("security.spotlighting.enabled") or False),
+            "default_tier": config_get("security.spotlighting.default_tier") or "standard",
+        }
+    except Exception:
         pass
 
     return result

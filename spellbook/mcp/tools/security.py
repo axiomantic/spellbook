@@ -10,15 +10,23 @@ __all__ = [
     "security_set_trust",
     "security_check_trust",
     "security_check_output",
+    "security_check_intent",
+    "security_sleuth_reset_budget",
     "security_dashboard",
+    "security_accumulator_write",
+    "security_accumulator_status",
+    "security_sign_content",
+    "security_verify_signature",
     "security_disable_all_checks",
     "system_prompt_dump",
     "credential_export",
 ]
 
-from spellbook.mcp.server import mcp
+from pathlib import Path
+
+from spellbook.core.config import config_get
 from spellbook.core.db import get_db_path
-from spellbook.sessions.injection import inject_recovery_context
+from spellbook.mcp.server import mcp
 from spellbook.security.tools import (
     do_canary_check,
     do_canary_create,
@@ -30,6 +38,7 @@ from spellbook.security.tools import (
     do_set_security_mode,
     do_set_trust,
 )
+from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()
@@ -325,6 +334,169 @@ def security_check_output(
 
 @mcp.tool()
 @inject_recovery_context
+async def security_check_intent(
+    content: str,
+    source_tool: str = "unknown",
+    force: bool = False,
+    session_id: str = "unknown",
+) -> dict:
+    """Analyze content for injected directive intent using semantic classification.
+
+    Uses PromptSleuth to determine if content contains instructions intended
+    to change AI behavior (DIRECTIVE) vs. pure data (DATA).
+
+    Requires PromptSleuth to be enabled and an Anthropic API key configured.
+    Results are cached (SHA-256 hash of content) for 1 hour.
+
+    Args:
+        content: The content to analyze.
+        source_tool: Tool that produced this content.
+        force: Bypass cache and budget checks.
+
+    Returns:
+        Dict with classification, confidence, evidence, cached status, budget_remaining.
+    """
+    import os
+
+    from spellbook.security.sleuth import (
+        CLASSIFICATION_PROMPT,
+        _check_budget,
+        _truncate_content,
+        content_hash,
+        decrement_budget,
+        get_session_budget,
+        get_sleuth_cache,
+        parse_classification,
+        write_intent_check,
+        write_sleuth_cache,
+    )
+
+    # Check if enabled
+    enabled = config_get("security.sleuth.enabled") or False
+    if not enabled and not force:
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": "PromptSleuth is disabled",
+            "cached": False,
+            "budget_remaining": -1,
+        }
+
+    # Check cache
+    c_hash = content_hash(content)
+    if not force:
+        cached = await get_sleuth_cache(c_hash)
+        if cached:
+            return {**cached, "cached": True, "budget_remaining": -1}
+
+    # Check budget
+    default_calls = config_get("security.sleuth.calls_per_session") or 50
+    budget = await get_session_budget(session_id, default_calls=default_calls)
+    if not force and not _check_budget(budget):
+        fallback = config_get("security.sleuth.fallback_on_budget_exceeded") or "warn"
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": f"Budget exhausted ({fallback} mode)",
+            "cached": False,
+            "budget_remaining": 0,
+        }
+
+    # Check API key
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        api_key = config_get("security.sleuth.api_key")
+    if not api_key:
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": "No Anthropic API key configured",
+            "cached": False,
+            "budget_remaining": budget.get("calls_remaining", -1),
+        }
+
+    # Truncate content
+    max_bytes = config_get("security.sleuth.max_content_bytes") or 50000
+    truncated = _truncate_content(content, max_bytes=max_bytes)
+
+    # Call Anthropic API
+    try:
+        import asyncio
+        import time
+
+        from anthropic import AsyncAnthropic
+
+        client = AsyncAnthropic(api_key=api_key)
+        timeout = config_get("security.sleuth.timeout_seconds") or 5
+        max_tokens = config_get("security.sleuth.max_tokens_per_check") or 1024
+
+        start = time.monotonic()
+        response = await asyncio.wait_for(
+            client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": CLASSIFICATION_PROMPT.format(content=truncated)}],
+            ),
+            timeout=float(timeout),
+        )
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        result = parse_classification(response)
+        await write_sleuth_cache(c_hash, result)
+        await write_intent_check(
+            c_hash, source_tool, result,
+            session_id=session_id, latency_ms=latency_ms,
+        )
+
+        # Decrement budget after successful non-cached call
+        remaining = await decrement_budget(session_id)
+
+        return {**result, "cached": False, "budget_remaining": remaining}
+    except ImportError:
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": "anthropic package not installed. Install with: uv pip install 'spellbook[sleuth]'",
+            "cached": False,
+            "budget_remaining": budget.get("calls_remaining", -1),
+        }
+    except Exception as e:
+        return {
+            "classification": "UNKNOWN",
+            "confidence": 0.0,
+            "evidence": f"Classification failed: {type(e).__name__}",
+            "cached": False,
+            "budget_remaining": budget.get("calls_remaining", -1),
+        }
+
+
+@mcp.tool()
+@inject_recovery_context
+async def security_sleuth_reset_budget(
+    session_id: str = "unknown",
+    calls: int = 50,
+) -> dict:
+    """Reset the PromptSleuth budget for a session.
+
+    Restores the number of allowed PromptSleuth API calls for the
+    given session. Useful when a session needs additional analysis
+    beyond the default budget.
+
+    Args:
+        session_id: Session identifier to reset budget for.
+        calls: Number of calls to grant (default 50).
+
+    Returns:
+        {"success": True, "calls_remaining": int, "session_id": str}
+    """
+    from spellbook.security.sleuth import reset_session_budget
+
+    result = await reset_session_budget(session_id, calls=calls)
+    return {"success": True, **result}
+
+
+@mcp.tool()
+@inject_recovery_context
 def security_dashboard(
     since_hours: float = 24,
 ) -> dict:
@@ -349,11 +521,226 @@ def security_dashboard(
          "top_blocked_rules": [["rule_id", count], ...],
          "honeypot_triggers": int,
          "recent_alerts": [{"event_type": str, "severity": str,
-         "timestamp": str, "detail": str}, ...]}
+         "timestamp": str, "detail": str}, ...],
+         "intent_checks": {"total": int, "classifications": {"DIRECTIVE": int, ...}},
+         "accumulator_alerts": {"active_sessions": int, "total_alerts": int},
+         "sleuth_budget": {"active_budgets": int, "total_remaining": int},
+         "spotlighting_config": {"enabled": bool, "default_tier": str}}
     """
     from spellbook.security.tools import do_dashboard
 
     return do_dashboard(since_hours=since_hours)
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_accumulator_write(
+    content_hash: str,
+    source_tool: str,
+    content_summary: str = "",
+    content_size: int = 0,
+    session_id: str = "unknown",
+) -> dict:
+    """Write content entry to the session accumulator for split injection tracking.
+
+    Records a content fragment from an external source in the session
+    accumulator table. Used by PostToolUse hooks to track content across
+    tool calls for split injection detection.
+
+    Args:
+        content_hash: SHA-256 hash of the content.
+        source_tool: Tool that produced the content.
+        content_summary: First 500 chars of content (optional).
+        content_size: Total content size in bytes (optional).
+        session_id: Session identifier (optional).
+
+    Returns:
+        {"success": True, "entries_count": int} on success.
+    """
+    from spellbook.security.accumulator import do_accumulator_write
+    return do_accumulator_write(
+        session_id=session_id,
+        content_hash=content_hash,
+        source_tool=source_tool,
+        content_summary=content_summary,
+        content_size=content_size,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_accumulator_status(
+    session_id: str = "unknown",
+) -> dict:
+    """Check session content accumulator state for split injection detection.
+
+    Returns the number of tracked content entries, total bytes, source
+    distribution, and any alerts (repeated source, burst patterns).
+
+    Args:
+        session_id: Session identifier (optional).
+
+    Returns:
+        {"entries": int, "total_content_bytes": int, "sources": {...},
+         "alerts": [...], "last_analysis": str or null}
+    """
+    from spellbook.security.accumulator import do_accumulator_status
+    return do_accumulator_status(session_id=session_id)
+
+
+def security_sign_content(
+    content_hash: str,
+    source: str,
+) -> dict:
+    """Sign a content hash and register in trust_registry. INTERNAL ONLY.
+
+    NOT exposed as an MCP tool. Runs the full analysis pipeline (regex
+    scan) before signing. Content that fails analysis is registered as
+    'untrusted' without a signature.
+
+    Args:
+        content_hash: SHA-256 hash of the content to sign.
+        source: Description of the content source.
+
+    Returns:
+        Dict with signed status, signature, signing_key_id, analysis_status.
+    """
+    from spellbook.security.crypto import get_key_fingerprint, sign_content
+
+    keys_dir = config_get("security.crypto.keys_dir") or str(
+        Path.home() / ".local" / "spellbook" / "keys"
+    )
+
+    fingerprint = get_key_fingerprint(keys_dir)
+    if not fingerprint:
+        return {
+            "signed": False,
+            "signature": None,
+            "signing_key_id": None,
+            "analysis_status": "skipped",
+            "reason": "No signing key found. Run installer to generate keys.",
+        }
+
+    # Run analysis pipeline before signing: regex scan all primary rule sets
+    from spellbook.security.rules import (
+        ESCALATION_RULES,
+        EXFILTRATION_RULES,
+        INJECTION_RULES,
+        OBFUSCATION_RULES,
+        check_patterns,
+    )
+
+    all_primary_rules = (
+        INJECTION_RULES + EXFILTRATION_RULES + ESCALATION_RULES + OBFUSCATION_RULES
+    )
+    security_mode = config_get("security.mode") or "standard"
+    findings = check_patterns(content_hash, all_primary_rules, security_mode)
+
+    if findings:
+        # Content with findings is registered as untrusted, no signature
+        do_set_trust(
+            content_hash=content_hash,
+            source=source,
+            trust_level="untrusted",
+        )
+        return {
+            "signed": False,
+            "signature": None,
+            "signing_key_id": fingerprint,
+            "analysis_status": "failed",
+            "reason": f"Analysis detected {len(findings)} issue(s)",
+        }
+
+    signature = sign_content(content_hash, keys_dir)
+    if not signature:
+        return {
+            "signed": False,
+            "signature": None,
+            "signing_key_id": fingerprint,
+            "analysis_status": "passed",
+            "reason": "Signing failed",
+        }
+
+    # Register in trust_registry with signature
+    do_set_trust(
+        content_hash=content_hash,
+        source=source,
+        trust_level="signed",
+    )
+
+    return {
+        "signed": True,
+        "signature": signature,
+        "signing_key_id": fingerprint,
+        "analysis_status": "passed",
+        "reason": None,
+    }
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_verify_signature(
+    content_hash: str,
+) -> dict:
+    """Verify the cryptographic signature for a content hash.
+
+    Looks up the content hash in the trust_registry and verifies
+    the Ed25519 signature if present.
+
+    Args:
+        content_hash: SHA-256 hash of content to verify.
+
+    Returns:
+        Dict with verified status, trust_level, signing_key_id, signed_at.
+    """
+    from spellbook.security.crypto import verify_signature
+
+    keys_dir = config_get("security.crypto.keys_dir") or str(
+        Path.home() / ".local" / "spellbook" / "keys"
+    )
+
+    # Look up in trust registry
+    trust_result = do_check_trust(content_hash, "untrusted")
+
+    if not trust_result.get("trust_level"):
+        return {
+            "verified": False,
+            "trust_level": None,
+            "signing_key_id": None,
+            "signed_at": None,
+            "reason": "Content hash not found in trust registry",
+        }
+
+    # Get the signature from trust registry
+    db_path_str = str(get_db_path())
+    from sqlalchemy import select
+
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import TrustRegistry
+
+    with get_sync_session(db_path_str) as session:
+        row = session.execute(
+            select(TrustRegistry).where(TrustRegistry.content_hash == content_hash)
+        ).scalars().first()
+
+    if not row or not row.signature:
+        return {
+            "verified": False,
+            "trust_level": row.trust_level if row else None,
+            "signing_key_id": None,
+            "signed_at": row.registered_at if row else None,
+            "reason": "No signature found for this content hash",
+        }
+
+    verified = verify_signature(content_hash, row.signature, keys_dir)
+
+    return {
+        "verified": verified,
+        "trust_level": row.trust_level,
+        "signing_key_id": row.signing_key_id,
+        "signed_at": row.registered_at,
+        "reason": None if verified else "Signature verification failed",
+    }
 
 
 @mcp.tool()

@@ -154,6 +154,159 @@ To revert all security hardening:
 git revert --no-commit ab83dc2..HEAD
 ```
 
+## Runtime Injection Defense
+
+Spellbook 0.36.0 introduces a defense-in-depth injection defense system with 5 concentric layers. Each layer operates independently; an attacker must defeat all of them to succeed.
+
+```mermaid
+graph TD
+    External["External Content<br>(WebFetch, WebSearch, MCP tools)"] --> Spotlight["Layer 1: Spotlighting<br>(boundary marking)"]
+    Spotlight --> Accumulator["Layer 2: Content Accumulator<br>(split injection detection)"]
+    Accumulator --> LODO["Layer 3: LODO-Evaluated Regex<br>(pattern matching)"]
+    LODO --> Sleuth["Layer 4: PromptSleuth<br>(semantic intent classification)"]
+    Sleuth --> Crypto["Layer 5: Cryptographic Provenance<br>(Ed25519 signing/verification)"]
+
+    style Spotlight fill:#e1f5fe
+    style Accumulator fill:#e8f5e9
+    style LODO fill:#fff3e0
+    style Sleuth fill:#fce4ec
+    style Crypto fill:#f3e5f5
+```
+
+### Layer 1: Spotlighting
+
+Spotlighting wraps external content in distinctive delimiters that help the LLM distinguish data from directives. Three tiers are available:
+
+| Tier | Delimiter | Use Case |
+|---|---|---|
+| `standard` | `[EXTERNAL_DATA_BEGIN source=...]` | Default for WebFetch, WebSearch, MCP tool output |
+| `elevated` | `[UNTRUSTED_CONTENT_BEGIN source=...]` | Content from unknown or low-trust sources |
+| `critical` | `[HOSTILE_CONTENT source=... confidence=N]` | Content flagged by PromptSleuth as containing directive intent |
+
+Content containing spotlight delimiter prefixes is escaped (bracket doubling) to prevent delimiter injection. Spotlighting is integrated into the PostToolUse hook for automatic wrapping of external content and into `pr_fetch` for PR diff content.
+
+Configuration:
+
+| Key | Default | Description |
+|---|---|---|
+| `security.spotlighting.enabled` | `true` | Master switch for spotlight wrapping |
+| `security.spotlighting.tier` | `"standard"` | Default tier for external content |
+
+Source: `spellbook/security/spotlight.py`
+
+### Layer 2: Content Accumulator
+
+The session content accumulator tracks content fragments from external sources across tool calls within a session. This detects split injection attacks where malicious payloads are distributed across multiple tool outputs.
+
+Each content entry records the SHA-256 hash, source tool, a 500-character summary, and size in bytes. Entries auto-expire and are capped at 500 per session.
+
+Alerts are generated when:
+
+- A single source tool contributes 3+ entries (repeated source)
+- A single source contributes 3+ entries within a 5-minute window (burst source)
+
+The accumulator is written to automatically by the PostToolUse hook whenever external content is received.
+
+Source: `spellbook/security/accumulator.py`
+
+### Layer 3: LODO Evaluation
+
+The LODO (Leave-One-Dataset-Out) evaluation framework provides rigorous coverage testing for the regex-based injection detectors in `rules.py`. Four curated attack datasets are used:
+
+| Dataset | Source | Attack Type |
+|---|---|---|
+| AdvBench | Zou et al. 2023 | Direct injection attacks |
+| BIPIA | Yi et al. 2023 | Indirect/embedded injection attacks |
+| HarmBench | Mazeika et al. 2024 | Jailbreak and override attacks |
+| InjecAgent | Zhan et al. 2024 | Agent-targeted injection attacks |
+
+A benign corpus provides false positive measurement. The LODO methodology tests each rule set with one dataset held out to verify that detection generalizes across attack distributions rather than overfitting to known samples.
+
+The evaluation runner generates a markdown coverage report:
+
+```bash
+python scripts/run_lodo_eval.py [--output docs/security/lodo-report.md]
+```
+
+Source: `scripts/run_lodo_eval.py`, `tests/test_security/test_lodo.py`
+
+### Layer 4: PromptSleuth
+
+PromptSleuth is a semantic intent classifier that uses the Anthropic SDK (claude-3-haiku) to determine whether content contains directive intent (injection) vs. pure data. It serves as a deeper analysis layer for content that passes regex detection.
+
+Key properties:
+
+- **Budget-controlled**: Each session gets a configurable number of API calls (default 50). When the budget is exhausted, the system falls back to regex-only detection or warns depending on configuration.
+- **DB-backed cache**: Classification results are cached by content hash with configurable TTL, avoiding redundant API calls for duplicate content.
+- **Claude Code gating**: PromptSleuth is designed for use with Claude Code sessions. The Anthropic API key must be configured.
+- **Content truncation**: Large content is truncated to 50KB (preserving UTF-8 boundaries) before classification.
+
+Configuration:
+
+| Key | Default | Description |
+|---|---|---|
+| `security.sleuth.enabled` | `false` | Master switch for PromptSleuth |
+| `security.sleuth.api_key` | (none) | Anthropic API key for haiku calls |
+| `security.sleuth.calls_per_session` | `50` | Budget: max API calls per session |
+| `security.sleuth.fallback_on_budget_exceeded` | `"warn"` | Behavior when budget is exhausted: `"warn"` or `"block"` |
+| `security.sleuth.timeout_seconds` | `5` | API call timeout |
+| `security.sleuth.max_tokens_per_check` | `1024` | Max tokens for classification response |
+| `security.sleuth.max_content_bytes` | `50000` | Content truncation threshold |
+
+Source: `spellbook/security/sleuth.py`, `spellbook/mcp/tools/security.py`
+
+### Layer 5: Cryptographic Content Provenance
+
+Ed25519 signing and verification provides tamper detection for trusted content. The installer generates a keypair on first run and stores it at `~/.local/spellbook/keys/`.
+
+**Signing**: Content is hashed (SHA-256) and signed with the private key. Trusted files (AGENTS.md, skills, commands) are auto-signed during installation.
+
+**Verification**: A PreToolUse gate checks signatures before allowing privileged operations (`spawn_claude_session`, `workflow_state_save`). Content without a valid signature is flagged.
+
+**Key rotation**: `rotate_keypair()` archives the current public key and generates a new pair. Archived keys are retained for verifying previously-signed content.
+
+Crypto provenance defaults to **opt-in** (disabled). The TUI installer enables it after successful key generation.
+
+Configuration:
+
+| Key | Default | Description |
+|---|---|---|
+| `security.crypto.enabled` | `false` | Master switch (enabled by installer after key generation) |
+| `security.crypto.keys_dir` | `~/.local/spellbook/keys` | Directory for Ed25519 keypair storage |
+| `security.crypto.gate_spawn_session` | `true` | Require signature verification for spawn_claude_session |
+| `security.crypto.gate_workflow_save` | `true` | Require signature verification for workflow_state_save |
+
+Source: `spellbook/security/crypto.py`, `spellbook/security/crypto_config.py`
+
+### TUI Installer
+
+The Rich-based terminal UI (`installer/tui.py`) provides interactive security feature configuration during installation. It handles:
+
+- Platform selection with checkboxes
+- Security feature opt-in (spotlighting, PromptSleuth, crypto provenance)
+- Ed25519 key generation progress display
+- Graceful fallback when Rich is not installed or the terminal is non-interactive
+
+### New MCP Tools
+
+| Tool | Description |
+|---|---|
+| `security_check_intent` | Classify content as DIRECTIVE or DATA using PromptSleuth |
+| `security_sign_content` | Sign content with the Ed25519 private key |
+| `security_verify_signature` | Verify an Ed25519 signature against content |
+| `security_accumulator_write` | Write a content entry to the session accumulator |
+| `security_accumulator_status` | Check session accumulator state and alerts |
+| `security_sleuth_reset_budget` | Reset the PromptSleuth budget for a session |
+
+### New Database Tables
+
+| Table | Purpose |
+|---|---|
+| `intent_checks` | PromptSleuth classification results (audit trail) |
+| `session_content_accumulator` | Content fragment tracking per session |
+| `sleuth_budget` | Per-session API call budget tracking |
+| `sleuth_cache` | Content hash to classification result cache |
+
 ## Source Citations
 
 The security audit and hardening drew from 45 sources. The top references:
