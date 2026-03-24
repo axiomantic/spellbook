@@ -4837,6 +4837,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/decompose-claims/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /decompose-claims
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/deep-research-plan/" class="md-nav__link">
         
   
@@ -7819,31 +7847,43 @@
 <a id="__codelineno-7-94" name="__codelineno-7-94" href="#__codelineno-7-94"></a>
 <a id="__codelineno-7-95" name="__codelineno-7-95" href="#__codelineno-7-95"></a><span class="gs">**Passes:**</span> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases
 <a id="__codelineno-7-96" name="__codelineno-7-96" href="#__codelineno-7-96"></a>
-<a id="__codelineno-7-97" name="__codelineno-7-97" href="#__codelineno-7-97"></a>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
+<a id="__codelineno-7-97" name="__codelineno-7-97" href="#__codelineno-7-97"></a><span class="gs">**API Hallucination Detection (Correctness Pass):**</span>
 <a id="__codelineno-7-98" name="__codelineno-7-98" href="#__codelineno-7-98"></a>
-<a id="__codelineno-7-99" name="__codelineno-7-99" href="#__codelineno-7-99"></a><span class="gs">**Persist Review Findings:**</span> After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.
+<a id="__codelineno-7-99" name="__codelineno-7-99" href="#__codelineno-7-99"></a>During the Correctness pass, check for API hallucination patterns:
 <a id="__codelineno-7-100" name="__codelineno-7-100" href="#__codelineno-7-100"></a>
-<a id="__codelineno-7-101" name="__codelineno-7-101" href="#__codelineno-7-101"></a>---
-<a id="__codelineno-7-102" name="__codelineno-7-102" href="#__codelineno-7-102"></a>
-<a id="__codelineno-7-103" name="__codelineno-7-103" href="#__codelineno-7-103"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-7-104" name="__codelineno-7-104" href="#__codelineno-7-104"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
-<a id="__codelineno-7-105" name="__codelineno-7-105" href="#__codelineno-7-105"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
-<a id="__codelineno-7-106" name="__codelineno-7-106" href="#__codelineno-7-106"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
-<a id="__codelineno-7-107" name="__codelineno-7-107" href="#__codelineno-7-107"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
-<a id="__codelineno-7-108" name="__codelineno-7-108" href="#__codelineno-7-108"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
-<a id="__codelineno-7-109" name="__codelineno-7-109" href="#__codelineno-7-109"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
-<a id="__codelineno-7-110" name="__codelineno-7-110" href="#__codelineno-7-110"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-7-111" name="__codelineno-7-111" href="#__codelineno-7-111"></a>
-<a id="__codelineno-7-112" name="__codelineno-7-112" href="#__codelineno-7-112"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-7-113" name="__codelineno-7-113" href="#__codelineno-7-113"></a>
-<a id="__codelineno-7-114" name="__codelineno-7-114" href="#__codelineno-7-114"></a><span class="k">- [ ]</span> Correct mode identified
-<a id="__codelineno-7-115" name="__codelineno-7-115" href="#__codelineno-7-115"></a><span class="k">- [ ]</span> All findings have file:line
-<a id="__codelineno-7-116" name="__codelineno-7-116" href="#__codelineno-7-116"></a><span class="k">- [ ]</span> Severity based on impact, not effort
-<a id="__codelineno-7-117" name="__codelineno-7-117" href="#__codelineno-7-117"></a><span class="k">- [ ]</span> Output matches mode spec
-<a id="__codelineno-7-118" name="__codelineno-7-118" href="#__codelineno-7-118"></a>
-<a id="__codelineno-7-119" name="__codelineno-7-119" href="#__codelineno-7-119"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-7-120" name="__codelineno-7-120" href="#__codelineno-7-120"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
-<a id="__codelineno-7-121" name="__codelineno-7-121" href="#__codelineno-7-121"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-7-101" name="__codelineno-7-101" href="#__codelineno-7-101"></a><span class="k">- [ ]</span> Method calls use APIs that exist in the imported library version (not invented methods)
+<a id="__codelineno-7-102" name="__codelineno-7-102" href="#__codelineno-7-102"></a><span class="k">- [ ]</span> Function signatures match actual library definitions (parameter names, types, order)
+<a id="__codelineno-7-103" name="__codelineno-7-103" href="#__codelineno-7-103"></a><span class="k">- [ ]</span> Configuration keys and environment variables are real (not plausible-sounding inventions)
+<a id="__codelineno-7-104" name="__codelineno-7-104" href="#__codelineno-7-104"></a><span class="k">- [ ]</span> Import paths resolve to actual modules (not hallucinated package structures)
+<a id="__codelineno-7-105" name="__codelineno-7-105" href="#__codelineno-7-105"></a><span class="k">- [ ]</span> Return types match actual API contracts (not assumed shapes)
+<a id="__codelineno-7-106" name="__codelineno-7-106" href="#__codelineno-7-106"></a>
+<a id="__codelineno-7-107" name="__codelineno-7-107" href="#__codelineno-7-107"></a>When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
+<a id="__codelineno-7-108" name="__codelineno-7-108" href="#__codelineno-7-108"></a>
+<a id="__codelineno-7-109" name="__codelineno-7-109" href="#__codelineno-7-109"></a>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
+<a id="__codelineno-7-110" name="__codelineno-7-110" href="#__codelineno-7-110"></a>
+<a id="__codelineno-7-111" name="__codelineno-7-111" href="#__codelineno-7-111"></a><span class="gs">**Persist Review Findings:**</span> After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.
+<a id="__codelineno-7-112" name="__codelineno-7-112" href="#__codelineno-7-112"></a>
+<a id="__codelineno-7-113" name="__codelineno-7-113" href="#__codelineno-7-113"></a>---
+<a id="__codelineno-7-114" name="__codelineno-7-114" href="#__codelineno-7-114"></a>
+<a id="__codelineno-7-115" name="__codelineno-7-115" href="#__codelineno-7-115"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-7-116" name="__codelineno-7-116" href="#__codelineno-7-116"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
+<a id="__codelineno-7-117" name="__codelineno-7-117" href="#__codelineno-7-117"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
+<a id="__codelineno-7-118" name="__codelineno-7-118" href="#__codelineno-7-118"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
+<a id="__codelineno-7-119" name="__codelineno-7-119" href="#__codelineno-7-119"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
+<a id="__codelineno-7-120" name="__codelineno-7-120" href="#__codelineno-7-120"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
+<a id="__codelineno-7-121" name="__codelineno-7-121" href="#__codelineno-7-121"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
+<a id="__codelineno-7-122" name="__codelineno-7-122" href="#__codelineno-7-122"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-7-123" name="__codelineno-7-123" href="#__codelineno-7-123"></a>
+<a id="__codelineno-7-124" name="__codelineno-7-124" href="#__codelineno-7-124"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-7-125" name="__codelineno-7-125" href="#__codelineno-7-125"></a>
+<a id="__codelineno-7-126" name="__codelineno-7-126" href="#__codelineno-7-126"></a><span class="k">- [ ]</span> Correct mode identified
+<a id="__codelineno-7-127" name="__codelineno-7-127" href="#__codelineno-7-127"></a><span class="k">- [ ]</span> All findings have file:line
+<a id="__codelineno-7-128" name="__codelineno-7-128" href="#__codelineno-7-128"></a><span class="k">- [ ]</span> Severity based on impact, not effort
+<a id="__codelineno-7-129" name="__codelineno-7-129" href="#__codelineno-7-129"></a><span class="k">- [ ]</span> Output matches mode spec
+<a id="__codelineno-7-130" name="__codelineno-7-130" href="#__codelineno-7-130"></a>
+<a id="__codelineno-7-131" name="__codelineno-7-131" href="#__codelineno-7-131"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-7-132" name="__codelineno-7-132" href="#__codelineno-7-132"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
+<a id="__codelineno-7-133" name="__codelineno-7-133" href="#__codelineno-7-133"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

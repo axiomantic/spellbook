@@ -4837,6 +4837,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/decompose-claims/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /decompose-claims
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/deep-research-plan/" class="md-nav__link">
         
   
@@ -7727,58 +7755,60 @@
 <a id="__codelineno-6-66" name="__codelineno-6-66" href="#__codelineno-6-66"></a>
 <a id="__codelineno-6-67" name="__codelineno-6-67" href="#__codelineno-6-67"></a><span class="gs">**Optional deep audit:**</span> For specs with 3+ VAGUE items, run <span class="sb">`/sharpen-audit`</span> on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
 <a id="__codelineno-6-68" name="__codelineno-6-68" href="#__codelineno-6-68"></a>
-<a id="__codelineno-6-69" name="__codelineno-6-69" href="#__codelineno-6-69"></a>---
+<a id="__codelineno-6-69" name="__codelineno-6-69" href="#__codelineno-6-69"></a><span class="gs">**Optional claim decomposition:**</span> For specification sections with dense factual content (3+ compound claims in a paragraph), invoke <span class="sb">`/decompose-claims`</span> to break them into atomic verifiable units before completeness scoring.
 <a id="__codelineno-6-70" name="__codelineno-6-70" href="#__codelineno-6-70"></a>
-<a id="__codelineno-6-71" name="__codelineno-6-71" href="#__codelineno-6-71"></a><span class="gu">## Phases 4-5: Interface Verification + Implementation Simulation</span>
+<a id="__codelineno-6-71" name="__codelineno-6-71" href="#__codelineno-6-71"></a>---
 <a id="__codelineno-6-72" name="__codelineno-6-72" href="#__codelineno-6-72"></a>
-<a id="__codelineno-6-73" name="__codelineno-6-73" href="#__codelineno-6-73"></a>Verify all interface claims against source code. Escalate unverifiable claims to factchecker. Simulate implementation per component to surface gaps.
+<a id="__codelineno-6-73" name="__codelineno-6-73" href="#__codelineno-6-73"></a><span class="gu">## Phases 4-5: Interface Verification + Implementation Simulation</span>
 <a id="__codelineno-6-74" name="__codelineno-6-74" href="#__codelineno-6-74"></a>
-<a id="__codelineno-6-75" name="__codelineno-6-75" href="#__codelineno-6-75"></a><span class="gs">**Execute:**</span> <span class="sb">`/review-design-verify`</span>
+<a id="__codelineno-6-75" name="__codelineno-6-75" href="#__codelineno-6-75"></a>Verify all interface claims against source code. Escalate unverifiable claims to factchecker. Simulate implementation per component to surface gaps.
 <a id="__codelineno-6-76" name="__codelineno-6-76" href="#__codelineno-6-76"></a>
-<a id="__codelineno-6-77" name="__codelineno-6-77" href="#__codelineno-6-77"></a><span class="gs">**Outputs:**</span> Verification table, factchecker escalations, per-component implementation simulation
+<a id="__codelineno-6-77" name="__codelineno-6-77" href="#__codelineno-6-77"></a><span class="gs">**Execute:**</span> <span class="sb">`/review-design-verify`</span>
 <a id="__codelineno-6-78" name="__codelineno-6-78" href="#__codelineno-6-78"></a>
-<a id="__codelineno-6-79" name="__codelineno-6-79" href="#__codelineno-6-79"></a>---
+<a id="__codelineno-6-79" name="__codelineno-6-79" href="#__codelineno-6-79"></a><span class="gs">**Outputs:**</span> Verification table, factchecker escalations, per-component implementation simulation
 <a id="__codelineno-6-80" name="__codelineno-6-80" href="#__codelineno-6-80"></a>
-<a id="__codelineno-6-81" name="__codelineno-6-81" href="#__codelineno-6-81"></a><span class="gu">## Phases 6-7: Findings Report + Remediation Plan</span>
+<a id="__codelineno-6-81" name="__codelineno-6-81" href="#__codelineno-6-81"></a>---
 <a id="__codelineno-6-82" name="__codelineno-6-82" href="#__codelineno-6-82"></a>
-<a id="__codelineno-6-83" name="__codelineno-6-83" href="#__codelineno-6-83"></a>Compile scored findings report and prioritized remediation plan.
+<a id="__codelineno-6-83" name="__codelineno-6-83" href="#__codelineno-6-83"></a><span class="gu">## Phases 6-7: Findings Report + Remediation Plan</span>
 <a id="__codelineno-6-84" name="__codelineno-6-84" href="#__codelineno-6-84"></a>
-<a id="__codelineno-6-85" name="__codelineno-6-85" href="#__codelineno-6-85"></a><span class="gs">**Execute:**</span> <span class="sb">`/review-design-report`</span>
+<a id="__codelineno-6-85" name="__codelineno-6-85" href="#__codelineno-6-85"></a>Compile scored findings report and prioritized remediation plan.
 <a id="__codelineno-6-86" name="__codelineno-6-86" href="#__codelineno-6-86"></a>
-<a id="__codelineno-6-87" name="__codelineno-6-87" href="#__codelineno-6-87"></a><span class="gs">**Outputs:**</span> Score table, numbered findings with location and remediation, P1/P2/P3 remediation plan with factcheck and additions sections
+<a id="__codelineno-6-87" name="__codelineno-6-87" href="#__codelineno-6-87"></a><span class="gs">**Execute:**</span> <span class="sb">`/review-design-report`</span>
 <a id="__codelineno-6-88" name="__codelineno-6-88" href="#__codelineno-6-88"></a>
-<a id="__codelineno-6-89" name="__codelineno-6-89" href="#__codelineno-6-89"></a>---
+<a id="__codelineno-6-89" name="__codelineno-6-89" href="#__codelineno-6-89"></a><span class="gs">**Outputs:**</span> Score table, numbered findings with location and remediation, P1/P2/P3 remediation plan with factcheck and additions sections
 <a id="__codelineno-6-90" name="__codelineno-6-90" href="#__codelineno-6-90"></a>
-<a id="__codelineno-6-91" name="__codelineno-6-91" href="#__codelineno-6-91"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-6-92" name="__codelineno-6-92" href="#__codelineno-6-92"></a><span class="k">-</span><span class="w"> </span>Approving documents with unresolved TBD/TODO markers
-<a id="__codelineno-6-93" name="__codelineno-6-93" href="#__codelineno-6-93"></a><span class="k">-</span><span class="w"> </span>Inferring interface behavior from method names without reading source
-<a id="__codelineno-6-94" name="__codelineno-6-94" href="#__codelineno-6-94"></a><span class="k">-</span><span class="w"> </span>Marking items SPECIFIED when implementation details would require guessing
-<a id="__codelineno-6-95" name="__codelineno-6-95" href="#__codelineno-6-95"></a><span class="k">-</span><span class="w"> </span>Skipping factcheck escalation for security, performance, or concurrency claims
-<a id="__codelineno-6-96" name="__codelineno-6-96" href="#__codelineno-6-96"></a><span class="k">-</span><span class="w"> </span>Accepting &quot;standard approach&quot; or &quot;as needed&quot; as specifications
-<a id="__codelineno-6-97" name="__codelineno-6-97" href="#__codelineno-6-97"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-6-98" name="__codelineno-6-98" href="#__codelineno-6-98"></a>
-<a id="__codelineno-6-99" name="__codelineno-6-99" href="#__codelineno-6-99"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-6-91" name="__codelineno-6-91" href="#__codelineno-6-91"></a>---
+<a id="__codelineno-6-92" name="__codelineno-6-92" href="#__codelineno-6-92"></a>
+<a id="__codelineno-6-93" name="__codelineno-6-93" href="#__codelineno-6-93"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-6-94" name="__codelineno-6-94" href="#__codelineno-6-94"></a><span class="k">-</span><span class="w"> </span>Approving documents with unresolved TBD/TODO markers
+<a id="__codelineno-6-95" name="__codelineno-6-95" href="#__codelineno-6-95"></a><span class="k">-</span><span class="w"> </span>Inferring interface behavior from method names without reading source
+<a id="__codelineno-6-96" name="__codelineno-6-96" href="#__codelineno-6-96"></a><span class="k">-</span><span class="w"> </span>Marking items SPECIFIED when implementation details would require guessing
+<a id="__codelineno-6-97" name="__codelineno-6-97" href="#__codelineno-6-97"></a><span class="k">-</span><span class="w"> </span>Skipping factcheck escalation for security, performance, or concurrency claims
+<a id="__codelineno-6-98" name="__codelineno-6-98" href="#__codelineno-6-98"></a><span class="k">-</span><span class="w"> </span>Accepting &quot;standard approach&quot; or &quot;as needed&quot; as specifications
+<a id="__codelineno-6-99" name="__codelineno-6-99" href="#__codelineno-6-99"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-6-100" name="__codelineno-6-100" href="#__codelineno-6-100"></a>
-<a id="__codelineno-6-101" name="__codelineno-6-101" href="#__codelineno-6-101"></a><span class="sb">```</span>
-<a id="__codelineno-6-102" name="__codelineno-6-102" href="#__codelineno-6-102"></a><span class="sb">[ ] Full document inventory</span>
-<a id="__codelineno-6-103" name="__codelineno-6-103" href="#__codelineno-6-103"></a><span class="sb">[ ] Every checklist item marked</span>
-<a id="__codelineno-6-104" name="__codelineno-6-104" href="#__codelineno-6-104"></a><span class="sb">[ ] All vague language flagged</span>
-<a id="__codelineno-6-105" name="__codelineno-6-105" href="#__codelineno-6-105"></a><span class="sb">[ ] Interfaces verified (source read, not assumed)</span>
-<a id="__codelineno-6-106" name="__codelineno-6-106" href="#__codelineno-6-106"></a><span class="sb">[ ] Claims escalated to factchecker</span>
-<a id="__codelineno-6-107" name="__codelineno-6-107" href="#__codelineno-6-107"></a><span class="sb">[ ] Implementation simulated per component</span>
-<a id="__codelineno-6-108" name="__codelineno-6-108" href="#__codelineno-6-108"></a><span class="sb">[ ] Every finding has location + remediation</span>
-<a id="__codelineno-6-109" name="__codelineno-6-109" href="#__codelineno-6-109"></a><span class="sb">[ ] Prioritized remediation complete</span>
-<a id="__codelineno-6-110" name="__codelineno-6-110" href="#__codelineno-6-110"></a><span class="sb">```</span>
-<a id="__codelineno-6-111" name="__codelineno-6-111" href="#__codelineno-6-111"></a>
-<a id="__codelineno-6-112" name="__codelineno-6-112" href="#__codelineno-6-112"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-6-113" name="__codelineno-6-113" href="#__codelineno-6-113"></a>NOT &quot;does this sound reasonable?&quot;
-<a id="__codelineno-6-114" name="__codelineno-6-114" href="#__codelineno-6-114"></a>
-<a id="__codelineno-6-115" name="__codelineno-6-115" href="#__codelineno-6-115"></a><span class="gs">**&quot;Could someone create a COMPLETE implementation plan WITHOUT guessing design decisions?&quot;**</span>
+<a id="__codelineno-6-101" name="__codelineno-6-101" href="#__codelineno-6-101"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-6-102" name="__codelineno-6-102" href="#__codelineno-6-102"></a>
+<a id="__codelineno-6-103" name="__codelineno-6-103" href="#__codelineno-6-103"></a><span class="sb">```</span>
+<a id="__codelineno-6-104" name="__codelineno-6-104" href="#__codelineno-6-104"></a><span class="sb">[ ] Full document inventory</span>
+<a id="__codelineno-6-105" name="__codelineno-6-105" href="#__codelineno-6-105"></a><span class="sb">[ ] Every checklist item marked</span>
+<a id="__codelineno-6-106" name="__codelineno-6-106" href="#__codelineno-6-106"></a><span class="sb">[ ] All vague language flagged</span>
+<a id="__codelineno-6-107" name="__codelineno-6-107" href="#__codelineno-6-107"></a><span class="sb">[ ] Interfaces verified (source read, not assumed)</span>
+<a id="__codelineno-6-108" name="__codelineno-6-108" href="#__codelineno-6-108"></a><span class="sb">[ ] Claims escalated to factchecker</span>
+<a id="__codelineno-6-109" name="__codelineno-6-109" href="#__codelineno-6-109"></a><span class="sb">[ ] Implementation simulated per component</span>
+<a id="__codelineno-6-110" name="__codelineno-6-110" href="#__codelineno-6-110"></a><span class="sb">[ ] Every finding has location + remediation</span>
+<a id="__codelineno-6-111" name="__codelineno-6-111" href="#__codelineno-6-111"></a><span class="sb">[ ] Prioritized remediation complete</span>
+<a id="__codelineno-6-112" name="__codelineno-6-112" href="#__codelineno-6-112"></a><span class="sb">```</span>
+<a id="__codelineno-6-113" name="__codelineno-6-113" href="#__codelineno-6-113"></a>
+<a id="__codelineno-6-114" name="__codelineno-6-114" href="#__codelineno-6-114"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-6-115" name="__codelineno-6-115" href="#__codelineno-6-115"></a>NOT &quot;does this sound reasonable?&quot;
 <a id="__codelineno-6-116" name="__codelineno-6-116" href="#__codelineno-6-116"></a>
-<a id="__codelineno-6-117" name="__codelineno-6-117" href="#__codelineno-6-117"></a>For EVERY specification: &quot;Is this precise enough to code against?&quot;
+<a id="__codelineno-6-117" name="__codelineno-6-117" href="#__codelineno-6-117"></a><span class="gs">**&quot;Could someone create a COMPLETE implementation plan WITHOUT guessing design decisions?&quot;**</span>
 <a id="__codelineno-6-118" name="__codelineno-6-118" href="#__codelineno-6-118"></a>
-<a id="__codelineno-6-119" name="__codelineno-6-119" href="#__codelineno-6-119"></a>If uncertain: under-specified. Find it. Flag it.
-<a id="__codelineno-6-120" name="__codelineno-6-120" href="#__codelineno-6-120"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-6-119" name="__codelineno-6-119" href="#__codelineno-6-119"></a>For EVERY specification: &quot;Is this precise enough to code against?&quot;
+<a id="__codelineno-6-120" name="__codelineno-6-120" href="#__codelineno-6-120"></a>
+<a id="__codelineno-6-121" name="__codelineno-6-121" href="#__codelineno-6-121"></a>If uncertain: under-specified. Find it. Flag it.
+<a id="__codelineno-6-122" name="__codelineno-6-122" href="#__codelineno-6-122"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

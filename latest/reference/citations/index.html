@@ -4721,6 +4721,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/decompose-claims/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /decompose-claims
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/deep-research-plan/" class="md-nav__link">
         
   
@@ -7118,6 +7146,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hallucination-prevention-and-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hallucination Prevention and Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#additional-reading" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7381,6 +7420,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hallucination-prevention-and-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hallucination Prevention and Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#additional-reading" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7476,6 +7526,50 @@
 <li><strong>Key finding</strong>: Persona-assigned LLMs can exhibit implicit reasoning biases that affect downstream task performance.</li>
 <li><strong>Relevance</strong>: Additional support for restricting personas to non-critical outputs.</li>
 </ul>
+<h2 id="hallucination-prevention-and-detection">Hallucination Prevention and Detection<a class="headerlink" href="#hallucination-prevention-and-detection" title="Permanent link">&para;</a></h2>
+<p><strong>Dhuliawala, S., Komeili, M., Xu, J., Raileanu, R., Li, X., Celikyilmaz, A., &amp; Weston, J.</strong> (2023). Chain-of-Verification Reduces Hallucination in Large Language Models. <em>arXiv preprint arXiv:2309.11495</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2309.11495">https://arxiv.org/abs/2309.11495</a></li>
+<li><strong>Key finding</strong>: A multi-step self-correction protocol where the LLM generates verification questions about its own claims, answers them independently, and revises based on contradictions. Reduces hallucination across multiple tasks.</li>
+<li><strong>Relevance</strong>: Foundation for the CoVe self-interrogation protocol used in fact-checking, dehallucination, and verifying-hunches skills.</li>
+</ul>
+<p><strong>Min, S., Krishna, K., Lyu, X., Lewis, M., Yih, W., Koh, P. W., Iyyer, M., Zettlemoyer, L., &amp; Hajishirzi, H.</strong> (2023). FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation. <em>Proceedings of EMNLP 2023</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://aclanthology.org/2023.emnlp-main.741/">https://aclanthology.org/2023.emnlp-main.741/</a></li>
+<li><strong>Key finding</strong>: Breaking text into atomic, independently verifiable claims enables fine-grained factual evaluation. The atomic decomposition approach reveals errors hidden in compound statements.</li>
+<li><strong>Relevance</strong>: Foundation for the <code>/decompose-claims</code> protocol command used during fact-checking extraction and design document review.</li>
+</ul>
+<p><strong>Tambon, F., Nikanjam, A., An, L., Khomh, F., &amp; Bhatt, G.</strong> (2025). Detecting and Correcting Hallucinations in LLM-Generated Code via Deterministic AST Analysis. <em>arXiv preprint arXiv:2601.19106</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2601.19106">https://arxiv.org/abs/2601.19106</a></li>
+<li><strong>Key finding</strong>: AST-based analysis can deterministically detect code hallucinations including non-existent API calls, incorrect parameter usage, and fabricated import paths.</li>
+<li><strong>Relevance</strong>: Informs the API hallucination detection checklists in code-review and enforcing-code-quality skills.</li>
+</ul>
+<p><strong>Pomian, R., Santu, S. K. K., Guha, A., &amp; Ahmed, T.</strong> (2025). HalluJudge: A Reference-Free Hallucination Detection for Context Misalignment in Code Review Automation. <em>arXiv preprint arXiv:2601.19072</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2601.19072">https://arxiv.org/abs/2601.19072</a></li>
+<li><strong>Key finding</strong>: Reference-free hallucination detection can identify context misalignment in automated code review, where review comments address code that does not exist or mischaracterize actual behavior.</li>
+<li><strong>Relevance</strong>: Supports the API hallucination detection approach in code-review audit mode, specifically checking that review findings reference real code structures.</li>
+</ul>
+<p><strong>De Langis, K., &amp; Zheng, R.</strong> (2026). Reasoning Improves Accuracy but Hurts Recall at Strict False Positive Rates. <em>Proceedings of EACL 2026</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://aclanthology.org/2026.eacl-long.190.pdf">https://aclanthology.org/2026.eacl-long.190.pdf</a></li>
+<li><strong>Implementation note</strong>: This URL was provided from user source research and should be verified during implementation (confirm the ACL Anthology URL resolves correctly).</li>
+<li><strong>Key finding</strong>: Chain-of-thought reasoning improves accuracy but can reduce recall at strict false positive thresholds. Verification systems must balance thoroughness against over-flagging.</li>
+<li><strong>Relevance</strong>: Calibrates expectations for CoVe protocol: self-interrogation improves precision but should not be used to suppress genuine findings.</li>
+</ul>
+<p><strong>Gekhman, Z., Yona, G., Aharoni, R., Eyal, M., Feder, A., Reichart, R., &amp; Herzig, J.</strong> (2025). The Law of Knowledge Overshadowing: Towards Understanding, Predicting, and Preventing LLM Hallucination. <em>Findings of ACL 2025</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://aclanthology.org/2025.findings-acl.1199.pdf">https://aclanthology.org/2025.findings-acl.1199.pdf</a></li>
+<li><strong>Key finding</strong>: LLMs hallucinate when "popular" knowledge overshadows less common but correct facts. The model's confidence in a hallucination correlates with the dominance of the overshadowing knowledge.</li>
+<li><strong>Relevance</strong>: Explains why API hallucinations are common (popular API patterns overshadow less-used but correct alternatives) and supports the evidence hierarchy's prohibition on Tier 6 (parametric knowledge) as sole evidence.</li>
+</ul>
+<p><strong>Yaldiz, A., Su, H., Deshpande, A., Kumar, V., &amp; Awadallah, A. H.</strong> (2025). Uncertainty Quantification for Hallucination Detection in Large Language Models. <em>arXiv preprint arXiv:2510.12040</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2510.12040">https://arxiv.org/abs/2510.12040</a></li>
+<li><strong>Key finding</strong>: Uncertainty quantification metrics can predict hallucination likelihood. High model uncertainty on a claim correlates with hallucination risk, suggesting verification effort should be concentrated on uncertain outputs.</li>
+<li><strong>Relevance</strong>: Theoretical support for the depth escalation protocol: claims where the model expresses uncertainty should be escalated to deeper verification, not accepted at face value.</li>
+</ul>
 <h2 id="additional-reading">Additional Reading<a class="headerlink" href="#additional-reading" title="Permanent link">&para;</a></h2>
 <p><strong>Kong, A., et al.</strong> (2024). Better Zero-Shot Reasoning with Role-Play Prompting. <em>Proceedings of NAACL 2024</em>, pages 4099-4113.</p>
 <ul>
@@ -7515,6 +7609,24 @@
 <td>Park (Generative Agents)</td>
 <td>Long-form interaction</td>
 <td>fun-mode session persistence</td>
+</tr>
+<tr>
+<td>CoVe self-interrogation</td>
+<td>Dhuliawala et al. (2023)</td>
+<td>Verification, claim checking</td>
+<td>fact-checking, dehallucination, verifying-hunches</td>
+</tr>
+<tr>
+<td>Atomic claim decomposition</td>
+<td>Min et al. (FActScore, EMNLP 2023)</td>
+<td>Claim extraction, verification</td>
+<td>decompose-claims command</td>
+</tr>
+<tr>
+<td>API hallucination detection</td>
+<td>Tambon et al. (2025), Pomian et al. (2025)</td>
+<td>Code review, quality</td>
+<td>code-review, enforcing-code-quality</td>
 </tr>
 </tbody>
 </table>

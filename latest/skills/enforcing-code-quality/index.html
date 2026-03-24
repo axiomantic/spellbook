@@ -4903,6 +4903,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/decompose-claims/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /decompose-claims
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/deep-research-plan/" class="md-nav__link">
         
   
@@ -7680,32 +7708,34 @@ Invoked automatically by develop and test-driven-development.</p>
 <a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">- [ ]</span> Every mock call asserted with ALL args; call count verified
 <a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">- [ ]</span> No length/existence-only assertions
 <a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">- [ ]</span> No partial-to-partial upgrades (Pattern 10: replacing one BANNED assertion with another is not a fix)
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">- [ ]</span> Pre-existing issues addressed or explicitly tracked
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> Would confidently deploy this
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">- [ ]</span> No hallucinated APIs: method calls, imports, and config keys verified against actual library/framework
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> AI-generated code has had API signatures spot-checked against source or documentation
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> Pre-existing issues addressed or explicitly tracked
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">- [ ]</span> Would confidently deploy this
 <a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>Before completing implementation - if ANY unchecked: fix before proceeding.
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">- [ ]</span> Every error path handled explicitly
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">- [ ]</span> No <span class="sb">`any`</span> types introduced
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">- [ ]</span> No try-catch swallowing errors
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">- [ ]</span> Tests verify behavior, not just run
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">- [ ]</span> Test assertions are Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">- [ ]</span> ALL output tested with exact equality (<span class="sb">`assert result == expected_complete_output`</span>); for dynamic output, construct full expected value dynamically
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert &quot;X&quot; in result`</span> is BANNED -- static or dynamic)
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">- [ ]</span> No mock.ANY in call assertions (BANNED -- construct expected argument dynamically)
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">- [ ]</span> Every mock call asserted with ALL args; call count verified
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">- [ ]</span> No length/existence-only assertions
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">- [ ]</span> No tautological assertions (<span class="sb">`assert result == func(same_input)`</span>)
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> Pre-existing issues flagged to user
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">- [ ]</span> Code matches existing patterns
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>Zero shortcuts. Zero swallowed errors. Zero skipped assertions. Code that ships must be code you would defend at 3am. If any checklist item is unchecked, it is not done.
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>Before completing implementation - if ANY unchecked: fix before proceeding.
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">- [ ]</span> Every error path handled explicitly
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">- [ ]</span> No <span class="sb">`any`</span> types introduced
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">- [ ]</span> No try-catch swallowing errors
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">- [ ]</span> Tests verify behavior, not just run
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">- [ ]</span> Test assertions are Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">- [ ]</span> ALL output tested with exact equality (<span class="sb">`assert result == expected_complete_output`</span>); for dynamic output, construct full expected value dynamically
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert &quot;X&quot; in result`</span> is BANNED -- static or dynamic)
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">- [ ]</span> No mock.ANY in call assertions (BANNED -- construct expected argument dynamically)
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">- [ ]</span> Every mock call asserted with ALL args; call count verified
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> No length/existence-only assertions
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">- [ ]</span> No tautological assertions (<span class="sb">`assert result == func(same_input)`</span>)
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">- [ ]</span> Pre-existing issues flagged to user
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">- [ ]</span> Code matches existing patterns
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>Zero shortcuts. Zero swallowed errors. Zero skipped assertions. Code that ships must be code you would defend at 3am. If any checklist item is unchecked, it is not done.
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
