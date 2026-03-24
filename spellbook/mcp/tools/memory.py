@@ -38,8 +38,9 @@ async def memory_recall(
     namespace: str = "",
     limit: int = 10,
     file_path: str = "",
+    scope: str = "project",
 ) -> dict:
-    """Search and retrieve project memories.
+    """Search and retrieve memories.
 
     Query memories by keyword search or file path. Empty query returns
     the most recent and important memories.
@@ -49,10 +50,18 @@ async def memory_recall(
         namespace: Project namespace. Auto-detected if empty.
         limit: Maximum memories to return (default 10).
         file_path: If provided, find memories citing this file path.
+        scope: Memory scope to search. "project" (default) searches
+            current project only. "global" searches cross-project
+            memories only. "all" searches both.
 
     Returns:
         Dict with 'memories' list, count, query, and namespace.
     """
+    # Validate scope
+    valid_scopes = {"project", "global", "all"}
+    if scope not in valid_scopes:
+        return {"error": f"Invalid scope '{scope}'. Must be one of: {', '.join(sorted(valid_scopes))}"}
+
     db_path = str(get_db_path())
     project_path = await get_project_path_from_context(ctx)
     if not namespace:
@@ -73,16 +82,19 @@ async def memory_recall(
         file_path=file_path if file_path else None,
         branch=branch,
         repo_path=repo_path,
+        scope=scope,
     )
 
 
 @mcp.tool()
 @inject_recovery_context
-async def memory_forget(ctx: Context, memory_id: str) -> dict:
+async def memory_forget(ctx: Context, memory_id: str, scope: str = "") -> dict:
     """Soft-delete a memory by ID. Memory is recoverable for 30 days.
 
     Args:
         memory_id: The UUID of the memory to forget.
+        scope: Optional hint. If "global", confirms intent to delete a
+            global memory. Not functionally required (deletion is by UUID).
 
     Returns:
         Dict with status ('deleted' or 'not_found').
@@ -96,7 +108,7 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
             Event(
                 subsystem=Subsystem.MEMORY,
                 event_type="memory.deleted",
-                data={"memory_id": memory_id},
+                data={"memory_id": memory_id, "scope_hint": scope},
             )
         )
     except Exception:
@@ -184,6 +196,7 @@ async def memory_store_memories(
     memories: str,
     event_ids: str = "",
     namespace: str = "",
+    scope: str = "project",
 ) -> dict:
     """Store client-synthesized memories from raw events.
 
@@ -195,10 +208,16 @@ async def memory_store_memories(
             {"memories": [{"content": "...", "memory_type": "fact", "tags": [...]}]}
         event_ids: Comma-separated event IDs to mark as consolidated.
         namespace: Project namespace. Auto-detected if empty.
+        scope: Memory scope. "project" (default) stores as project-local.
+            "global" stores as cross-project (accessible from any project).
 
     Returns:
         Dict with status, memories_created, events_consolidated, memory_ids.
     """
+    # Validate scope for store (no "all")
+    if scope not in ("project", "global"):
+        return {"error": f"Invalid scope for store. Must be 'project' or 'global', got '{scope}'"}
+
     db_path = str(get_db_path())
     project_path = await get_project_path_from_context(ctx)
     if not namespace:
@@ -216,6 +235,7 @@ async def memory_store_memories(
         event_ids_str=event_ids,
         namespace=namespace,
         branch=branch,
+        scope=scope,
     )
     try:
         from spellbook.admin.events import Event, Subsystem, event_bus
