@@ -31,7 +31,7 @@ After drafting a claim or verdict, generate 2-3 targeted questions that would ex
 
 ### Step 2: Answer Each Question Independently
 
-Answer each verification question using only Tier 1-5 evidence (per evidence-hierarchy.md). Do NOT re-derive answers from the original claim. Each answer must cite a specific evidence source.
+Answer each verification question using only Tier 1-5 evidence (per skills/shared-references/evidence-hierarchy.md). Do NOT re-derive answers from the original claim. Each answer must cite a specific evidence source.
 
 If any answer relies on Tier 6 (LLM parametric knowledge): the claim requires escalation or must be marked with reduced confidence.
 
