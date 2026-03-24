@@ -639,6 +639,41 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
     )
 
 
+def _spotlight_wrap(tool_name: str, data: dict) -> str | None:
+    """Generate spotlighting wrapper for external content. FAIL-OPEN."""
+    try:
+        from spellbook.security.spotlight import spotlight_wrap, determine_spotlight_tier
+        from spellbook.security.rules import (
+            INJECTION_RULES, EXFILTRATION_RULES, ESCALATION_RULES,
+            OBFUSCATION_RULES, check_patterns,
+        )
+    except ImportError:
+        return None
+
+    # Get tool output content
+    tool_result = data.get("tool_result", "")
+    if isinstance(tool_result, dict):
+        tool_result = str(tool_result.get("stdout", "") or tool_result.get("output", ""))
+    if not tool_result or not isinstance(tool_result, str):
+        return None
+
+    # Run ALL primary rule sets for tier selection (not just INJECTION_RULES)
+    security_mode = _get_config_value("security.mode", "standard") or "standard"
+    ALL_PRIMARY_RULES = INJECTION_RULES + EXFILTRATION_RULES + ESCALATION_RULES + OBFUSCATION_RULES
+    findings = check_patterns(tool_result, ALL_PRIMARY_RULES, security_mode)
+
+    # Determine tier (no sleuth result available synchronously in hook)
+    tier = determine_spotlight_tier(tool_name, findings, None)
+
+    # Check minimum tier from config
+    min_tier = _get_config_value("security.spotlighting.tier", "standard") or "standard"
+    tier_order = {"standard": 0, "elevated": 1, "critical": 2}
+    if tier_order.get(min_tier, 0) > tier_order.get(tier, 0):
+        tier = min_tier
+
+    return spotlight_wrap(tool_result, tool_name, tier=tier)
+
+
 def _stint_depth_check(data: dict) -> str | None:
     """Check stint stack depth and emit behavioral mode + optional tree.
 
@@ -810,6 +845,16 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
         out = _canary_check(tool_name, data)
         if out:
             outputs.append(out)
+
+    # Spotlighting (external content wrapping)
+    external_tools = {"WebFetch", "WebSearch"}
+    is_external = tool_name in external_tools or tool_name.startswith("mcp__")
+    if is_external:
+        spotlight_enabled = _get_config_value("security.spotlighting.enabled", True)
+        if spotlight_enabled:
+            out = _spotlight_wrap(tool_name, data)
+            if out:
+                outputs.append(out)
 
     # Memory injection (specific matchers)
     if tool_name in {"Read", "Edit", "Grep", "Glob"}:
