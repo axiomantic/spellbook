@@ -88,7 +88,7 @@ def check_gemini_cli_available() -> bool:
     """Check if gemini CLI is available."""
     try:
         result = subprocess.run(
-            ["gemini", "--version"], capture_output=True, text=True, timeout=5
+            ["gemini", "--version"], capture_output=True, text=True, timeout=60
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
@@ -102,7 +102,7 @@ def get_linked_extensions() -> List[str]:
             ["gemini", "extensions", "list"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=60,
         )
         if result.returncode == 0:
             # Parse output to find linked extensions
@@ -130,20 +130,34 @@ def link_extension(extension_path: Path, dry_run: bool = False) -> Tuple[bool, s
         return (True, f"would link extension from {extension_path}")
 
     try:
+        # Check if already linked and where it points
+        # Use name 'spellbook' as defined in extension metadata
+        linked_path = Path.home() / ".gemini" / "extensions" / "spellbook"
+        
+        if linked_path.exists():
+            if linked_path.is_symlink():
+                target = linked_path.resolve()
+                if str(target) == str(extension_path.resolve()):
+                    return (True, "extension already correctly linked")
+            
+            # If it's a directory or points elsewhere, we should unlink first
+            # But we'll let the caller decide or just try to link (which might fail)
+            # gemini extensions link should handle overwriting if it's a symlink
+
         result = subprocess.run(
             ["gemini", "extensions", "link", str(extension_path)],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=60,
         )
 
         if result.returncode == 0:
             return (True, "extension linked")
         else:
             error = result.stderr.strip() or result.stdout.strip()
-            # Check if already linked
+            # If link failed because it exists, we need to be explicit
             if "already" in error.lower() or "exists" in error.lower():
-                return (True, "extension already linked")
+                return (False, f"already linked to a different location: {error}")
             return (False, f"link failed: {error}")
 
     except subprocess.TimeoutExpired:
@@ -152,29 +166,29 @@ def link_extension(extension_path: Path, dry_run: bool = False) -> Tuple[bool, s
         return (False, str(e))
 
 
-def unlink_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
-    """Unlink a Gemini extension using `gemini extensions unlink`."""
+def uninstall_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
+    """Uninstall a Gemini extension using `gemini extensions uninstall`."""
     if not check_gemini_cli_available():
         return (False, "gemini CLI not available")
 
     if dry_run:
-        return (True, f"would unlink extension {name}")
+        return (True, f"would uninstall extension {name}")
 
     try:
         result = subprocess.run(
-            ["gemini", "extensions", "unlink", name],
+            ["gemini", "extensions", "uninstall", name],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=60,
         )
 
         if result.returncode == 0:
-            return (True, "extension unlinked")
+            return (True, "extension uninstalled")
         else:
             error = result.stderr.strip() or result.stdout.strip()
-            if "not found" in error.lower() or "not linked" in error.lower():
-                return (True, "extension was not linked")
-            return (False, f"unlink failed: {error}")
+            if "not found" in error.lower() or "not linked" in error.lower() or "not installed" in error.lower():
+                return (True, "extension was not installed")
+            return (False, f"uninstall failed: {error}")
 
     except subprocess.TimeoutExpired:
         return (False, "command timed out")
@@ -339,7 +353,20 @@ class GeminiInstaller(PlatformInstaller):
 
             # Link the extension
             self._step("Linking extension")
+            
+            # If force is True, we should try to unlink first
+            if force:
+                self._step("Unlinking existing extension (force)")
+                uninstall_extension("spellbook", dry_run=self.dry_run)
+            
             success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
+            
+            # If link failed because already linked to a different place, try unlinking and linking again
+            if not success and "already linked" in msg and not force:
+                self._step("Unlinking conflicting extension")
+                uninstall_extension("spellbook", dry_run=self.dry_run)
+                success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
+
             results.append(
                 InstallResult(
                     component="extension",
@@ -410,7 +437,7 @@ class GeminiInstaller(PlatformInstaller):
                             )
             else:
                 # Unlink using CLI
-                success, msg = unlink_extension("spellbook", dry_run=self.dry_run)
+                success, msg = uninstall_extension("spellbook", dry_run=self.dry_run)
                 results.append(
                     InstallResult(
                         component="extension",
