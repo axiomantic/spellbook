@@ -302,6 +302,59 @@ def _gate_state_sanitize(data: dict) -> None:
         sys.exit(2)
 
 
+def _crypto_gate(tool_name: str, data: dict) -> None:
+    """Crypto verification gate for privileged operations. CONFIGURABLE.
+
+    Checks crypto signature for high-risk operations. Blocks unsigned
+    content with exit 2.
+    """
+    import hashlib
+
+    gate_config = {
+        "spawn_claude_session": ("security.crypto.gate_spawn_session", True),
+        "mcp__spellbook__workflow_state_save": ("security.crypto.gate_workflow_save", True),
+    }
+
+    config_entry = gate_config.get(tool_name)
+    if not config_entry:
+        return
+
+    config_key, default_enabled = config_entry
+    gate_enabled = _get_config_value(config_key, default_enabled)
+    if not gate_enabled:
+        return
+
+    # Get content to verify
+    tool_input = data.get("tool_input", {})
+    if not tool_input:
+        return
+
+    # Compute hash of the relevant content
+    if tool_name == "spawn_claude_session":
+        content = tool_input.get("prompt", "")
+    elif tool_name in ("mcp__spellbook__workflow_state_save", "workflow_state_save"):
+        content = json.dumps(tool_input.get("state", {}), sort_keys=True)
+    else:
+        return
+
+    if not content:
+        return
+
+    content_hash = hashlib.sha256(content.encode()).hexdigest()
+
+    # Check with MCP daemon for verified signature
+    result = _mcp_call("security_verify_signature", {"content_hash": content_hash})
+    if result and result.get("verified"):
+        return  # Signature valid, proceed
+
+    # Not verified -- block
+    print(json.dumps({
+        "error": f"BLOCKED: {tool_name} requires verified content provenance. "
+                 f"Content hash {content_hash[:16]}... is not signed."
+    }))
+    sys.exit(2)
+
+
 # ---------------------------------------------------------------------------
 # Handlers: FAIL-OPEN (never block)
 # ---------------------------------------------------------------------------
@@ -847,6 +900,11 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
         _gate_spawn(data)
     elif tool_name == "mcp__spellbook__workflow_state_save":
         _gate_state_sanitize(data)
+
+    # Crypto verification gate for privileged operations
+    crypto_enabled = _get_config_value("security.crypto.enabled", True)
+    if crypto_enabled:
+        _crypto_gate(tool_name, data)
 
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
