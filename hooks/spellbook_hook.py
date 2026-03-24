@@ -34,12 +34,26 @@ TOKEN_FILE = Path.home() / ".local" / "spellbook" / ".mcp-token"
 CONFIG_PATH = Path.home() / ".config" / "spellbook" / "spellbook.json"
 
 
+def _detect_platform() -> str:
+    """Detect which AI coding assistant platform is running."""
+    if os.environ.get("OPENCODE") == "1":
+        return "opencode"
+    if os.environ.get("CODEX_SANDBOX") or os.environ.get("CODEX_SANDBOX_NETWORK_DISABLED"):
+        return "codex"
+    if os.environ.get("GEMINI_CLI") == "1":
+        return "gemini-cli"
+    if os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("CLAUDE_ENV_FILE"):
+        return "claude-code"
+    return "unknown"
+
+
 def _mcp_call(tool_name: str, arguments: dict | None = None) -> dict | None:
     """Call an MCP tool via HTTP. Returns parsed result or None on failure."""
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
     }
+    headers["X-Spellbook-Client"] = _detect_platform()
     if TOKEN_FILE.exists():
         try:
             headers["Authorization"] = f"Bearer {TOKEN_FILE.read_text().strip()}"
