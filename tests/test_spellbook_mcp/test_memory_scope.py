@@ -162,3 +162,149 @@ class TestInsertMemoryScope:
             scope="global",
         )
         assert id1 != id2
+
+
+class TestRecallByQueryScope:
+    @pytest.fixture(autouse=True)
+    def seed_memories(self, db_path):
+        """Seed DB with project and global memories for recall tests."""
+        insert_memory(
+            db_path=db_path,
+            content="SQLAlchemy uses session pattern",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["sqlalchemy", "orm"],
+            citations=[],
+            scope="project",
+        )
+        insert_memory(
+            db_path=db_path,
+            content="SQLite WAL is single-writer",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["sqlite", "wal"],
+            citations=[],
+            scope="global",
+        )
+        insert_memory(
+            db_path=db_path,
+            content="Redis caching pattern",
+            memory_type="fact",
+            namespace="proj-b",
+            tags=["redis", "cache"],
+            citations=[],
+            scope="project",
+        )
+
+    def test_recall_project_scope_default(self, db_path):
+        """scope='project' returns only project-scoped memories in namespace."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="project",
+        )
+        assert len(results) == 1
+        assert results[0]["content"] == "SQLAlchemy uses session pattern"
+
+    def test_recall_global_scope(self, db_path):
+        """scope='global' returns only global-scoped memories (any namespace)."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="global",
+        )
+        assert len(results) == 1
+        assert results[0]["content"] == "SQLite WAL is single-writer"
+
+    def test_recall_all_scope(self, db_path):
+        """scope='all' returns project memories + global memories."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="all",
+        )
+        assert len(results) == 2
+        contents = {r["content"] for r in results}
+        assert contents == {
+            "SQLAlchemy uses session pattern",
+            "SQLite WAL is single-writer",
+        }
+
+    def test_recall_project_excludes_global(self, db_path):
+        """scope='project' does not return global memories."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="project",
+        )
+        contents = {r["content"] for r in results}
+        assert "SQLite WAL is single-writer" not in contents
+
+    def test_recall_global_excludes_project(self, db_path):
+        """scope='global' does not return project memories."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="global",
+        )
+        contents = {r["content"] for r in results}
+        assert "SQLAlchemy uses session pattern" not in contents
+
+    def test_cross_namespace_global_recall(self, db_path):
+        """Global memories are visible from any namespace with scope='all'."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-b",
+            scope="all",
+        )
+        contents = {r["content"] for r in results}
+        # proj-b project memory + global memory
+        assert contents == {
+            "Redis caching pattern",
+            "SQLite WAL is single-writer",
+        }
+
+    def test_fts5_recall_with_scope_all(self, db_path):
+        """FTS5 query with scope='all' returns both project and global matches."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="pattern",
+            namespace="proj-a",
+            scope="all",
+        )
+        # "SQLAlchemy uses session pattern" (project) should match
+        assert len(results) >= 1
+
+    def test_scope_field_in_results(self, db_path):
+        """Returned memory dicts include the scope field."""
+        from spellbook.memory.store import recall_by_query
+
+        results = recall_by_query(
+            db_path=db_path,
+            query="",
+            namespace="proj-a",
+            scope="all",
+        )
+        for r in results:
+            assert "scope" in r
+            assert r["scope"] in ("project", "global")
