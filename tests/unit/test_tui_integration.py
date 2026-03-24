@@ -16,7 +16,9 @@ from io import StringIO
 from rich.console import Console
 
 from installer.tui import (
+    LiveProgressDisplay,
     get_feature_groups,
+    render_completion_summary,
     render_dry_run_banner,
     render_feature_table,
     render_progress_steps,
@@ -130,3 +132,79 @@ def test_security_summary_readable():
                 word in summary.lower()
                 for word in [feat_id, feat_id.replace("_", " ")]
             ), f"Feature {feat_id} not mentioned in summary: {summary}"
+
+
+def test_live_progress_display_lifecycle():
+    """LiveProgressDisplay must start, accept events, and stop without errors."""
+    console = Console(file=StringIO(), force_terminal=True, width=100)
+    display = LiveProgressDisplay(console=console, dry_run=False)
+    display.start()
+
+    display.begin_section("MCP Daemon")
+    display.add_step("Starting daemon")
+    display.complete_step(success=True)
+    display.add_step("Checking health")
+    display.complete_step(success=False)
+
+    display.begin_section("Claude Code", index=1, total=2)
+    display.add_step("Installing hooks")
+    display.complete_step(success=True)
+
+    display.skip_section("Platform not found")
+
+    display.stop()
+
+
+def test_live_progress_display_renders_sections():
+    """LiveProgressDisplay output must contain section headers and step text."""
+    buf = StringIO()
+    console = Console(file=buf, force_terminal=True, width=100)
+    display = LiveProgressDisplay(console=console, dry_run=False)
+    display.start()
+
+    display.begin_section("Test Platform", index=1, total=3)
+    display.add_step("Step one")
+    display.complete_step(success=True)
+    display.add_step("Step two")
+    display.complete_step(success=False)
+
+    display.stop()
+
+    output = buf.getvalue()
+    assert "Test Platform" in output
+    assert "Step one" in output
+    assert "Step two" in output
+    assert "Elapsed" in output
+
+
+def test_completion_summary_success():
+    """Completion summary for all-success must show checkmarks and 'Complete'."""
+    buf = StringIO()
+    console = Console(file=buf, force_terminal=True, width=100)
+    render_completion_summary(
+        console,
+        platforms_installed=["claude_code", "opencode"],
+        platforms_failed=[],
+        elapsed_seconds=42.5,
+    )
+    output = buf.getvalue()
+    assert "Complete" in output
+    assert "42s" in output
+    # Checkmark character
+    assert "\u2713" in output
+
+
+def test_completion_summary_with_failures():
+    """Completion summary with failures must show X marks and 'Failed'."""
+    buf = StringIO()
+    console = Console(file=buf, force_terminal=True, width=100)
+    render_completion_summary(
+        console,
+        platforms_installed=["claude_code"],
+        platforms_failed=["gemini"],
+        elapsed_seconds=15.0,
+    )
+    output = buf.getvalue()
+    assert "Failed" in output
+    # X mark character
+    assert "\u2717" in output

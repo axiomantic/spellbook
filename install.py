@@ -1015,6 +1015,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             render_progress_steps as _render_progress,
             render_dry_run_banner as _render_dry_run,
             show_post_install_instructions as _show_post_install,
+            LiveProgressDisplay as _LiveProgressDisplay,
+            render_completion_summary as _render_completion_summary,
         )
         if _supports_rich():
             from rich.console import Console as _Console
@@ -1038,7 +1040,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Determine platforms to install
     if args.platforms:
         platforms = args.platforms.split(",")
-    elif args.yes or args.no_interactive or not is_interactive():
+    elif args.yes or args.no_interactive:
         platforms = installer.detect_platforms()
         installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
         print()
@@ -1072,15 +1074,18 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Track pending results per section for tree-drawing (is_last detection)
     _pending_results: list = []
     _install_timer = InstallTimer()
-    _tui_steps: list = []  # Accumulated steps for TUI progress display
+
+    # Live animated display (Rich) or None for plain-text fallback
+    _live_display = None
+    if _tui_available:
+        _live_display = _LiveProgressDisplay(
+            console=_tui_console, dry_run=args.dry_run
+        )
+        _live_display.start()
 
     def _flush_results():
-        """Flush pending results with correct tree characters."""
-        if _tui_available:
-            # TUI mode: render accumulated steps as a progress table
-            if _tui_steps:
-                _render_progress(_tui_console, list(_tui_steps))
-        else:
+        """Flush pending results for plain-text mode."""
+        if not _live_display:
             for i, r in enumerate(_pending_results):
                 print_result(r, is_last=(i == len(_pending_results) - 1))
         _pending_results.clear()
@@ -1088,18 +1093,14 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     def _on_progress(event, data):
         if event == "daemon_start":
             _flush_results()
-            if _tui_available:
-                _tui_steps.clear()
-                _tui_console.print()
-                _tui_console.print("[bold cyan]MCP Daemon[/bold cyan]")
+            if _live_display:
+                _live_display.begin_section("MCP Daemon")
             else:
                 print_platform_section("MCP Daemon")
         elif event == "health_start":
             _flush_results()
-            if _tui_available:
-                _tui_steps.clear()
-                _tui_console.print()
-                _tui_console.print("[bold cyan]Health Check[/bold cyan]")
+            if _live_display:
+                _live_display.begin_section("Health Check")
             else:
                 print_platform_section("Health Check")
         elif event == "platform_start":
@@ -1107,27 +1108,25 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             name = data["name"]
             idx = data["index"]
             total = data["total"]
-            if _tui_available:
-                _tui_steps.clear()
-                _tui_console.print()
-                _tui_console.print(f"[bold cyan][{idx}/{total}] {name}[/bold cyan]")
+            if _live_display:
+                _live_display.begin_section(name, index=idx, total=total)
             else:
                 print_platform_section(name, index=idx, total=total)
         elif event == "platform_skip":
             _flush_results()
-            if _tui_available:
-                _tui_steps.append({"name": data["message"], "status": "failed"})
+            if _live_display:
+                _live_display.skip_section(data["message"])
             else:
                 installer_print_info(data["message"])
         elif event == "step":
             # Suppress step messages; results contain all needed info
             pass
         elif event == "result":
-            _pending_results.append(data["result"])
-            if _tui_available:
-                result = data["result"]
-                status = "done" if result.success else "failed"
-                _tui_steps.append({"name": result.message, "status": status})
+            result = data["result"]
+            _pending_results.append(result)
+            if _live_display:
+                _live_display.add_step(result.message)
+                _live_display.complete_step(result.success)
 
     session = installer.run(
         platforms=platforms,
@@ -1137,7 +1136,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
     )
 
-    # Flush any remaining results from the last section
+    # Stop live display and flush remaining plain-text results
+    if _live_display:
+        _live_display.stop()
     _flush_results()
 
     print_report(session, show_details=False, timer=_install_timer)

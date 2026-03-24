@@ -240,6 +240,232 @@ def render_progress_steps(
     console.print(table)
 
 
+# ---------------------------------------------------------------------------
+# Live progress display (animated spinners)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _StepState:
+    """Internal state for a single installation step."""
+
+    name: str
+    status: str  # "pending", "running", "done", "failed"
+
+
+@dataclass
+class _SectionState:
+    """Internal state for a section (platform or phase)."""
+
+    name: str
+    index: int
+    total: int
+    steps: List["_StepState"]
+
+
+class LiveProgressDisplay:
+    """Animated progress display using Rich Live.
+
+    Shows spinners for active steps, checkmarks for completed, and X marks
+    for failures.  Falls back to no-op when Rich is unavailable.
+    """
+
+    def __init__(
+        self,
+        console: "Any" = None,
+        dry_run: bool = False,
+    ) -> None:
+        import time as _time
+
+        self._time = _time
+        self._start_time = _time.time()
+        self._dry_run = dry_run
+        self._sections: List[_SectionState] = []
+        self._live: Optional["Any"] = None
+        self._console = console
+        self._rich_available = supports_rich()
+
+    def start(self) -> None:
+        """Enter the Live context and begin rendering."""
+        if not self._rich_available:
+            return
+        from rich.live import Live
+
+        if self._console is None:
+            from rich.console import Console
+            self._console = Console()
+
+        self._live = Live(
+            "",
+            console=self._console,
+            refresh_per_second=10,
+            transient=False,
+        )
+        self._live.start()
+
+    def stop(self) -> None:
+        """Exit the Live context."""
+        if self._live is not None:
+            # Final render before stopping
+            self._update_display()
+            self._live.stop()
+            self._live = None
+
+    def begin_section(
+        self, name: str, index: int = 0, total: int = 0
+    ) -> None:
+        """Start a new section (platform or phase)."""
+        section = _SectionState(
+            name=name, index=index, total=total, steps=[]
+        )
+        self._sections.append(section)
+        self._update_display()
+
+    def add_step(self, name: str) -> None:
+        """Add a step as 'running' with a spinner."""
+        if not self._sections:
+            self.begin_section("Installation")
+        self._sections[-1].steps.append(_StepState(name=name, status="running"))
+        self._update_display()
+
+    def complete_step(self, success: bool = True) -> None:
+        """Mark the most recent running step as done or failed."""
+        if not self._sections:
+            return
+        for step in reversed(self._sections[-1].steps):
+            if step.status == "running":
+                step.status = "done" if success else "failed"
+                break
+        self._update_display()
+
+    def skip_section(self, message: str) -> None:
+        """Add a skipped/failed entry to the current section."""
+        if not self._sections:
+            self.begin_section("Installation")
+        self._sections[-1].steps.append(
+            _StepState(name=message, status="failed")
+        )
+        self._update_display()
+
+    def _update_display(self) -> None:
+        """Rebuild and push the renderable to Live."""
+        if self._live is None:
+            return
+        self._live.update(self._render())
+
+    def _render(self) -> "Any":
+        """Build a Rich renderable for the current state."""
+        from rich.console import Group
+        from rich.spinner import Spinner
+        from rich.table import Table
+        from rich.text import Text
+
+        renderables: list = []
+
+        for section in self._sections:
+            # Section header
+            if section.index and section.total:
+                header = Text(
+                    f"[{section.index}/{section.total}] {section.name}",
+                    style="bold cyan",
+                )
+            else:
+                header = Text(section.name, style="bold cyan")
+            renderables.append(Text(""))  # blank line
+            renderables.append(header)
+
+            # Steps table
+            if section.steps:
+                table = Table(show_header=False, box=None, padding=(0, 1))
+                table.add_column("Status", min_width=4, justify="center")
+                table.add_column("Step")
+
+                for step in section.steps:
+                    if step.status == "done":
+                        icon = Text("\u2713", style="green")
+                    elif step.status == "failed":
+                        icon = Text("\u2717", style="red")
+                    elif step.status == "running":
+                        icon = Spinner("dots", style="cyan")
+                    else:
+                        icon = Text("\u2022", style="dim")
+                    table.add_row(icon, step.name)
+
+                renderables.append(table)
+
+        # Elapsed time footer
+        elapsed = self._time.time() - self._start_time
+        minutes, seconds = divmod(int(elapsed), 60)
+        if minutes:
+            time_str = f"{minutes}m {seconds}s"
+        else:
+            time_str = f"{seconds}s"
+        renderables.append(Text(""))
+        renderables.append(Text(f"Elapsed: {time_str}", style="dim"))
+
+        return Group(*renderables)
+
+
+def render_completion_summary(
+    console: "Any",
+    platforms_installed: List[str],
+    platforms_failed: Optional[List[str]] = None,
+    elapsed_seconds: float = 0.0,
+) -> None:
+    """Render a styled completion summary panel.
+
+    Args:
+        console: A ``rich.console.Console`` instance.
+        platforms_installed: List of platform IDs that installed successfully.
+        platforms_failed: List of platform IDs that failed (if any).
+        elapsed_seconds: Total elapsed time in seconds.
+    """
+    from rich.panel import Panel
+    from rich.text import Text
+
+    if platforms_failed is None:
+        platforms_failed = []
+
+    has_failures = len(platforms_failed) > 0
+
+    # Build body lines
+    lines: List[str] = []
+
+    # Time
+    minutes, seconds = divmod(int(elapsed_seconds), 60)
+    if minutes:
+        time_str = f"{minutes}m {seconds}s"
+    else:
+        time_str = f"{seconds}s"
+    lines.append(f"Total time: {time_str}")
+    lines.append("")
+
+    # Installed platforms
+    if platforms_installed:
+        for p in platforms_installed:
+            name = PLATFORM_CONFIG.get(p, {}).get("name", p)
+            lines.append(f"  [green]\u2713[/green] {name}")
+
+    # Failed platforms
+    if platforms_failed:
+        lines.append("")
+        for p in platforms_failed:
+            name = PLATFORM_CONFIG.get(p, {}).get("name", p)
+            lines.append(f"  [red]\u2717[/red] {name}")
+
+    body = "\n".join(lines)
+
+    if has_failures:
+        title = "[bold red]Installation Failed[/bold red]"
+        border = "red"
+    else:
+        title = "[bold green]Installation Complete[/bold green]"
+        border = "green"
+
+    panel = Panel(body, title=title, border_style=border, padding=(1, 2))
+    console.print(panel)
+
+
 @dataclass
 class PlatformOption:
     """A platform option for the checkbox selector."""
