@@ -114,6 +114,8 @@ Before marking code complete:
 - [ ] Every mock call asserted with ALL args; call count verified
 - [ ] No length/existence-only assertions
 - [ ] No partial-to-partial upgrades (Pattern 10: replacing one BANNED assertion with another is not a fix)
+- [ ] No hallucinated APIs: method calls, imports, and config keys verified against actual library/framework
+- [ ] AI-generated code has had API signatures spot-checked against source or documentation
 - [ ] Pre-existing issues addressed or explicitly tracked
 - [ ] Would confidently deploy this
 

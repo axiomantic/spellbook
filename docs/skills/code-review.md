@@ -485,6 +485,18 @@ Scopes: (none)=branch changes, file.py, dir/, security, all
 
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
+**API Hallucination Detection (Correctness Pass):**
+
+During the Correctness pass, check for API hallucination patterns:
+
+- [ ] Method calls use APIs that exist in the imported library version (not invented methods)
+- [ ] Function signatures match actual library definitions (parameter names, types, order)
+- [ ] Configuration keys and environment variables are real (not plausible-sounding inventions)
+- [ ] Import paths resolve to actual modules (not hallucinated package structures)
+- [ ] Return types match actual API contracts (not assumed shapes)
+
+When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
+
 Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
 
 **Persist Review Findings:** After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.
