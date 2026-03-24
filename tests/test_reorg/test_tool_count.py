@@ -41,14 +41,14 @@ class TestToolRegistrationCount:
             f"Missing tools need to be added to the appropriate tool module."
         )
 
-    def test_tool_count_exact_102(self):
-        """102 tools: 101 from original monolith + forge_record_gate_completion."""
+    def test_tool_count_exact_103(self):
+        """103 tools: 101 from original monolith + forge_record_gate_completion + tooling_discover."""
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 102, (
-            f"Expected exactly 102 tools, got {len(tool_names)}."
+        assert len(tool_names) == 103, (
+            f"Expected exactly 103 tools, got {len(tool_names)}."
         )
 
     def test_key_tools_present(self):
@@ -58,7 +58,7 @@ class TestToolRegistrationCount:
         register_all_tools()
         tool_names = set(_get_tool_names(mcp))
 
-        # One tool from each of the 13 modules
+        # One tool from each of the 14 modules
         expected_tools = [
             "find_session",          # sessions
             "spellbook_config_get",  # config
@@ -73,6 +73,7 @@ class TestToolRegistrationCount:
             "kokoro_speak",          # notifications
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
+            "tooling_discover",      # tooling
         ]
 
         for tool_name in expected_tools:
