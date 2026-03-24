@@ -674,6 +674,27 @@ def _spotlight_wrap(tool_name: str, data: dict) -> str | None:
     return spotlight_wrap(tool_result, tool_name, tier=tier)
 
 
+def _accumulator_write(tool_name: str, data: dict) -> None:
+    """Write external content to session accumulator. FAIL-OPEN."""
+    tool_result = data.get("tool_result", "")
+    if isinstance(tool_result, dict):
+        tool_result = str(tool_result.get("stdout", "") or tool_result.get("output", ""))
+    if not tool_result or not isinstance(tool_result, str):
+        return
+
+    import hashlib
+    content_hash = hashlib.sha256(tool_result.encode()).hexdigest()
+    summary = tool_result[:500]
+
+    _mcp_call("security_accumulator_write", {
+        "session_id": data.get("session_id", "unknown"),
+        "content_hash": content_hash,
+        "source_tool": tool_name,
+        "content_summary": summary,
+        "content_size": len(tool_result),
+    })
+
+
 def _stint_depth_check(data: dict) -> str | None:
     """Check stint stack depth and emit behavioral mode + optional tree.
 
@@ -855,6 +876,10 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
             out = _spotlight_wrap(tool_name, data)
             if out:
                 outputs.append(out)
+
+    # Content accumulator (split injection detection, fire-and-forget)
+    if is_external:
+        _fire_and_forget(_accumulator_write, tool_name, data)
 
     # Memory injection (specific matchers)
     if tool_name in {"Read", "Edit", "Grep", "Glob"}:
