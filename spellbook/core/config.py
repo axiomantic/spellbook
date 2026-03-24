@@ -18,6 +18,15 @@ from spellbook.core.compat import CrossPlatformLock, LockHeldError, get_config_d
 
 logger = logging.getLogger(__name__)
 
+# Built-in defaults for config keys. config_get returns these when a key is
+# absent from the user's spellbook.json config file. Adding an entry here
+# means the key has a well-known default that callers can rely on.
+CONFIG_DEFAULTS: dict[str, Any] = {
+    "security.spotlighting.enabled": True,
+    "security.spotlighting.tier": "standard",
+}
+
+
 # Session-specific state keyed by session_id (in-memory, resets on MCP server restart)
 # This allows session-only mode changes that don't persist to config
 # Each session gets its own state dict to support multi-session HTTP daemon mode
@@ -208,26 +217,27 @@ def config_get(key: str) -> Optional[Any]:
         key: The config key to read
 
     Returns:
-        The value for the key, or None if not set or file missing
+        The value for the key, built-in default from CONFIG_DEFAULTS, or None
     """
+    default = CONFIG_DEFAULTS.get(key)
     config_path = get_config_path()
     if not config_path.exists():
-        return None
+        return default
 
     try:
         with CrossPlatformLock(CONFIG_LOCK_PATH, shared=True, blocking=True):
             config = json.loads(config_path.read_text(encoding="utf-8"))
-            return config.get(key)
+            return config.get(key, default)
     except LockHeldError:
         # Fall back to unlocked read
         logger.warning("Could not acquire config read lock. Falling back to unlocked read.")
         try:
             config = json.loads(config_path.read_text(encoding="utf-8"))
-            return config.get(key)
+            return config.get(key, default)
         except (json.JSONDecodeError, OSError):
-            return None
+            return default
     except (json.JSONDecodeError, OSError):
-        return None
+        return default
 
 
 def config_set(key: str, value: Any) -> dict:
