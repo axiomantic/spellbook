@@ -902,7 +902,7 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
         _gate_state_sanitize(data)
 
     # Crypto verification gate for privileged operations
-    crypto_enabled = _get_config_value("security.crypto.enabled", True)
+    crypto_enabled = _get_config_value("security.crypto.enabled", False)
     if crypto_enabled:
         _crypto_gate(tool_name, data)
 

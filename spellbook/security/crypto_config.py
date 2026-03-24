@@ -11,7 +11,7 @@ from pathlib import Path
 
 CRYPTO_CONFIG_DEFAULTS: dict[str, object] = {
     # Master switch for crypto provenance checking
-    "security.crypto.enabled": True,
+    "security.crypto.enabled": False,  # Opt-in: enabled by installer after key generation
     # Directory for Ed25519 keypair storage
     "security.crypto.keys_dir": str(Path.home() / ".local" / "spellbook" / "keys"),
     # Per-operation gate switches

@@ -41,14 +41,14 @@ class TestToolRegistrationCount:
             f"Missing tools need to be added to the appropriate tool module."
         )
 
-    def test_tool_count_exact_102(self):
-        """102 tools: 101 from original monolith + forge_record_gate_completion."""
+    def test_tool_count_exact_107(self):
+        """107 tools: 102 prior + 5 injection defense (check_intent, sleuth_reset_budget, accumulator_write, accumulator_status, verify_signature)."""
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 102, (
-            f"Expected exactly 102 tools, got {len(tool_names)}."
+        assert len(tool_names) == 107, (
+            f"Expected exactly 107 tools, got {len(tool_names)}."
         )
 
     def test_key_tools_present(self):

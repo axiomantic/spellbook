@@ -9,9 +9,9 @@ def test_crypto_config_defaults_exist():
 
 
 def test_crypto_enabled_default():
-    """security.crypto.enabled must default to True."""
+    """security.crypto.enabled must default to False (opt-in after install)."""
     from spellbook.security.crypto_config import CRYPTO_CONFIG_DEFAULTS
-    assert CRYPTO_CONFIG_DEFAULTS["security.crypto.enabled"] is True
+    assert CRYPTO_CONFIG_DEFAULTS["security.crypto.enabled"] is False
 
 
 def test_crypto_keys_dir_default():
