@@ -878,13 +878,18 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
         with contextlib.redirect_stdout(io.StringIO()):
             install_service()
 
-        # Wait for daemon to start
-        for _ in range(10):
+        # Wait for daemon to start and become healthy
+        for _ in range(30):
             time.sleep(1)
-            if is_daemon_running():
+            healthy, msg = check_daemon_health(timeout=2)
+            if healthy:
                 return (True, f"Daemon installed and running on {get_spellbook_server_url()}")
 
-        return (False, "Daemon installed but not responding")
+        # Final check with longer timeout
+        healthy, msg = check_daemon_health(timeout=5)
+        if healthy:
+            return (True, f"Daemon installed and running on {get_spellbook_server_url()}")
+        return (False, f"Daemon installed but not responding ({msg})")
 
     except SystemExit:
         return (False, "Install failed (service install exited with error)")
