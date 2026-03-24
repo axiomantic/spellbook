@@ -308,3 +308,71 @@ class TestRecallByQueryScope:
         for r in results:
             assert "scope" in r
             assert r["scope"] in ("project", "global")
+
+
+class TestRecallByFilePathScope:
+    @pytest.fixture(autouse=True)
+    def seed_memories(self, db_path):
+        """Seed DB with cited memories in different scopes."""
+        insert_memory(
+            db_path=db_path,
+            content="Config patterns for auth module",
+            memory_type="fact",
+            namespace="proj-a",
+            tags=["config"],
+            citations=[{"file_path": "/src/auth.py"}],
+            scope="project",
+        )
+        insert_memory(
+            db_path=db_path,
+            content="Global auth best practices",
+            memory_type="rule",
+            namespace="proj-a",
+            tags=["auth"],
+            citations=[{"file_path": "/src/auth.py"}],
+            scope="global",
+        )
+
+    def test_file_path_recall_project_scope(self, db_path):
+        """scope='project' only returns project-scoped file citations."""
+        from spellbook.memory.store import recall_by_file_path
+
+        results = recall_by_file_path(
+            db_path=db_path,
+            file_path="/src/auth.py",
+            namespace="proj-a",
+            scope="project",
+        )
+        assert len(results) == 1
+        assert results[0]["content"] == "Config patterns for auth module"
+
+    def test_file_path_recall_all_scope(self, db_path):
+        """scope='all' returns both project and global citations."""
+        from spellbook.memory.store import recall_by_file_path
+
+        results = recall_by_file_path(
+            db_path=db_path,
+            file_path="/src/auth.py",
+            namespace="proj-a",
+            scope="all",
+        )
+        assert len(results) == 2
+        contents = {r["content"] for r in results}
+        assert contents == {
+            "Config patterns for auth module",
+            "Global auth best practices",
+        }
+
+    def test_file_path_recall_scope_in_results(self, db_path):
+        """File path recall results include scope field."""
+        from spellbook.memory.store import recall_by_file_path
+
+        results = recall_by_file_path(
+            db_path=db_path,
+            file_path="/src/auth.py",
+            namespace="proj-a",
+            scope="all",
+        )
+        for r in results:
+            assert "scope" in r
+            assert r["scope"] in ("project", "global")

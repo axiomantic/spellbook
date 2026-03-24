@@ -446,6 +446,7 @@ def recall_by_file_path(
     limit: int = 5,
     branch: str = "",
     repo_path: str = "",
+    scope: str = "project",
 ) -> List[Dict[str, Any]]:
     """Recall memories by cited file path (inverted index lookup).
 
@@ -457,17 +458,27 @@ def recall_by_file_path(
     fetch_limit = limit * 2 if branch else limit
 
     with get_sync_session(db_path) as session:
+        # Build scope filter for SQL
+        if scope == "project":
+            scope_filter = "AND m.namespace = :namespace AND m.scope = 'project'"
+        elif scope == "global":
+            scope_filter = "AND m.scope = 'global'"
+        elif scope == "all":
+            scope_filter = "AND (m.namespace = :namespace OR m.scope = 'global')"
+        else:
+            scope_filter = "AND m.namespace = :namespace"
+
         # Use text() for SQLite-specific functions (julianday, exp)
         rows = session.execute(
             text(
                 "SELECT m.id, m.content, m.memory_type, m.importance, m.status, m.meta, "
-                "m.created_at, m.accessed_at, m.branch, "
+                "m.created_at, m.accessed_at, m.branch, m.scope, "
                 "m.importance * "
                 "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
                 "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
                 "FROM memories m "
                 "JOIN memory_citations mc ON m.id = mc.memory_id "
-                "WHERE mc.file_path = :file_path AND m.namespace = :namespace "
+                f"WHERE mc.file_path = :file_path {scope_filter} "
                 "AND m.status != 'deleted' "
                 "ORDER BY _score DESC "
                 "LIMIT :limit"
@@ -480,7 +491,7 @@ def recall_by_file_path(
                 "id": r[0], "content": r[1], "memory_type": r[2],
                 "importance": r[3], "status": r[4], "meta": r[5],
                 "created_at": r[6], "accessed_at": r[7], "branch": r[8],
-                "_score": r[9],
+                "scope": r[9], "_score": r[10],
             }
             for r in rows
         ]

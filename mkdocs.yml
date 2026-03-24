@@ -116,6 +116,7 @@ nav:
       - skills/polish-repo.md
       - skills/enforcing-code-quality.md
       - skills/generating-diagrams.md
+      - skills/tooling-discovery.md
   - Admin Interface:
     - Overview: admin/index.md
     - Dashboard: admin/dashboard.md
@@ -179,6 +180,7 @@ nav:
       - skills/smart-reading.md
       - skills/tarot-mode.md
       - skills/test-driven-development.md
+      - skills/tooling-discovery.md
       - skills/using-git-worktrees.md
       - skills/using-lsp-tools.md
       - skills/using-skills.md

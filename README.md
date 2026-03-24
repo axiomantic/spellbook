@@ -187,7 +187,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -221,6 +221,7 @@ Reusable workflows for structured development:
 [security-auditing]: https://axiomantic.github.io/spellbook/latest/skills/security-auditing/
 [generating-diagrams]: https://axiomantic.github.io/spellbook/latest/skills/generating-diagrams/
 [shared-references]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/
+[tooling-discovery]: https://axiomantic.github.io/spellbook/latest/skills/tooling-discovery/
 [code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -1024,6 +1025,7 @@ Spellbook includes content derived from [obra/superpowers](https://github.com/ob
 | Skill | finishing-a-development-branch | finishing-a-development-branch |
 | Skill | requesting-code-review | requesting-code-review |
 | Skill | test-driven-development | test-driven-development |
+| Skill | tooling-discovery | tooling-discovery |
 | Skill | using-git-worktrees | using-git-worktrees |
 | Skill | using-skills | using-superpowers |
 | Skill | writing-plans | writing-plans |
