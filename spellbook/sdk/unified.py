@@ -108,23 +108,37 @@ class ClaudeAgentClient(AgentClient):
         )
 
 class GeminiAgentClient(AgentClient):
-    """Client for Gemini CLI, emulating the Claude SDK interface."""
+    """Client for Gemini CLI, emulating the Claude SDK interface via subprocess."""
 
     @property
     def provider(self) -> str:
         return "gemini"
 
     async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        """Run gemini CLI and yield a single response message (CLI doesn't stream JSON yet)."""
+        """Run gemini CLI and yield a single response message."""
         import subprocess
         
-        # Emulate CLI call similar to our previous GeminiSDK but mapping options
-        cmd = ["gemini", "--prompt", prompt, "--yolo", "-o", "text"]
+        # Build command based on Unified AgentOptions
+        cmd = ["gemini", "--prompt", prompt, "-o", "text"]
+        
+        # Map permission modes
+        if self.options.permission_mode == "dontAsk":
+            cmd.append("--yolo")
+        elif self.options.permission_mode == "acceptEdits":
+            cmd.extend(["--approval-mode", "auto_edit"])
+        
         if self.options.model:
             cmd.extend(["--model", self.options.model])
+            
+        # If a system prompt is provided, we prepend it to the prompt 
+        # (Gemini CLI doesn't have a direct --system-prompt flag yet)
+        if self.options.system_prompt:
+            cmd[2] = f"{self.options.system_prompt}\n\n{prompt}"
+
         if self.options.extra_args:
             cmd.extend(self.options.extra_args)
 
+        # Handle environment and prevent recursive CLI detection
         env = self.options.env.copy()
         if "GEMINI_CLI" in env:
             del env["GEMINI_CLI"]
@@ -133,12 +147,12 @@ class GeminiAgentClient(AgentClient):
             cmd,
             capture_output=True,
             text=True,
-            cwd=self.options.cwd,
+            cwd=str(self.options.cwd),
             env=env
         )
         
         if process.returncode != 0:
-            raise RuntimeError(f"Gemini CLI failed: {process.stderr}")
+            raise RuntimeError(f"Gemini CLI failed (code {process.returncode}): {process.stderr}")
             
         yield AgentMessage(
             role="assistant",

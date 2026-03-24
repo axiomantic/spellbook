@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 claude = ["claude-agent-sdk"]
-gemini = ["google-generativeai"]
+gemini = []
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -25,6 +25,7 @@ dev = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.2.0",
     "httpx>=0.25.0",
+    "bigfoot>=0.15.0",
 ]
 docs = [
     "mkdocs>=1.5.0",
@@ -65,3 +66,6 @@ markers = [
     "slow: marks tests with deliberate sleeps > 0.5s (skipped locally, runs in CI)",
     "external: marks tests requiring external tools like Claude CLI (skipped locally)",
 ]
+
+[tool.bigfoot]
+guard = "error"

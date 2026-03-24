@@ -61,8 +61,13 @@ async def test_claude_agent_client_run():
         assert result == "final result"
 
 @pytest.mark.asyncio
+@pytest.mark.allow("subprocess")
 async def test_gemini_agent_client_run():
-    options = AgentOptions(model="gemini-2.5-flash")
+    options = AgentOptions(
+        model="gemini-2.5-flash",
+        system_prompt="be concise",
+        permission_mode="dontAsk"
+    )
     client = GeminiAgentClient(options)
     
     mock_result = MagicMock()
@@ -73,13 +78,17 @@ async def test_gemini_agent_client_run():
         result = await client.run("hi")
         
         assert result == "hello from gemini"
+        
         # Check if correct command was built
         args, kwargs = mock_run.call_args
         cmd = args[0]
         assert "gemini" in cmd
         assert "--prompt" in cmd
-        assert "hi" in cmd
+        # Verify system prompt prepending
+        assert "be concise\n\nhi" in cmd
+        assert "--model" in cmd
         assert "gemini-2.5-flash" in cmd
+        assert "--yolo" in cmd
 
 def test_get_agent_client_factory():
     # Test auto-detection
@@ -99,6 +108,7 @@ def test_get_agent_client_factory():
     assert isinstance(client, ClaudeAgentClient)
 
 @pytest.mark.asyncio
+@pytest.mark.allow("subprocess")
 async def test_gemini_spawn_session():
     client = GeminiAgentClient()
     
