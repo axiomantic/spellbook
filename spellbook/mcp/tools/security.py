@@ -480,6 +480,60 @@ def security_dashboard(
     return do_dashboard(since_hours=since_hours)
 
 
+@mcp.tool()
+@inject_recovery_context
+def security_accumulator_write(
+    content_hash: str,
+    source_tool: str,
+    content_summary: str = "",
+    content_size: int = 0,
+    **kwargs,
+) -> dict:
+    """Write content entry to the session accumulator for split injection tracking.
+
+    Records a content fragment from an external source in the session
+    accumulator table. Used by PostToolUse hooks to track content across
+    tool calls for split injection detection.
+
+    Args:
+        content_hash: SHA-256 hash of the content.
+        source_tool: Tool that produced the content.
+        content_summary: First 500 chars of content (optional).
+        content_size: Total content size in bytes (optional).
+
+    Returns:
+        {"success": True, "entries_count": int} on success.
+    """
+    from spellbook.security.accumulator import do_accumulator_write
+    sid = kwargs.get("session_id", "unknown")
+    return do_accumulator_write(
+        session_id=sid,
+        content_hash=content_hash,
+        source_tool=source_tool,
+        content_summary=content_summary,
+        content_size=content_size,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_accumulator_status(
+    **kwargs,
+) -> dict:
+    """Check session content accumulator state for split injection detection.
+
+    Returns the number of tracked content entries, total bytes, source
+    distribution, and any alerts (repeated source, burst patterns).
+
+    Returns:
+        {"entries": int, "total_content_bytes": int, "sources": {...},
+         "alerts": [...], "last_analysis": str or null}
+    """
+    from spellbook.security.accumulator import do_accumulator_status
+    sid = kwargs.get("session_id", "unknown")
+    return do_accumulator_status(session_id=sid)
+
+
 def security_sign_content(
     content_hash: str,
     source: str,
