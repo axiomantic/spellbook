@@ -366,6 +366,7 @@ def generate_diagram(
             "--prompt", prompt,
             "--model", model,
             "--yolo",
+            "-o", "text",
         ]
         if provider_args:
             cmd.extend(provider_args)
@@ -654,6 +655,7 @@ def classify_change(
             "--prompt", prompt,
             "--model", model,
             "--yolo",
+            "-o", "text",
         ]
         if provider_args:
             cmd.extend(provider_args)
@@ -728,6 +730,7 @@ def patch_diagram(
             "--prompt", prompt,
             "--model", model,
             "--yolo",
+            "-o", "text",
         ]
         if provider_args:
             cmd.extend(provider_args)
@@ -936,7 +939,7 @@ def main() -> int:
     parser.add_argument(
         "--model",
         default=None,
-        help="Model name to pass to the provider (default: 'sonnet' for claude, 'gemini-2.0-flash' for gemini)",
+        help="Model name to pass to the provider (default: 'sonnet' for claude, 'gemini-2.5-flash' for gemini)",
     )
     parser.add_argument(
         "--provider-args",
@@ -1010,7 +1013,7 @@ def main() -> int:
         if provider == "claude":
             model = "sonnet"
         elif provider == "gemini":
-            model = "gemini-2.0-flash"
+            model = "gemini-2.5-flash"
     
     # Fast model for utility tasks (classification, patching)
     # Use the specified model if provided, otherwise default to a fast one
@@ -1019,7 +1022,7 @@ def main() -> int:
         if provider == "claude":
             fast_model = "haiku"
         elif provider == "gemini":
-            fast_model = "gemini-2.0-flash"
+            fast_model = "gemini-2.5-flash"
 
     # Merge and filter
     all_items = all_skills + all_commands + all_agents
