@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - 2026-03-24
+
+### Added
+- **Installer renderer abstraction** (`installer/renderer.py`): `InstallerRenderer` ABC with `RichRenderer` (wraps existing TUI) and `PlainTextRenderer` (no Rich dependency) implementations, enabling non-TTY and CI environments
+- **Installer CLI flags**: `--security-level {minimal,standard,strict}`, `--no-tts`, and `--reconfigure` for non-interactive and upgrade workflows
+- **Config introspection helpers** (`spellbook/core/config.py`): `config_is_explicitly_set()` and `get_unset_config_keys()` for flat dotted-key config lookup
+- **Unified Agent SDK** (`spellbook/sdk/unified.py`): Single programmatic interface for Claude and Gemini agents, built on `claude-agent-sdk`
+- **Tooling discovery registry** (`spellbook/tooling/index_registry.py`): Indexed MCP tool registry for faster lookups
+- **Multi-provider diagram generation**: `generate_diagrams.py` updated to produce architecture diagrams for all supported platforms
+- **Installer renderer and config helper tests**: 24 new tests across `test_installer_renderer.py` and `test_installer_config_helpers.py`
+- **Unified SDK tests**: Unit tests in `tests/unit/test_unified_sdk.py`
+
+### Changed
+- **Installer entry points wired through renderer**: Both `install.py` and `spellbook/cli/commands/install.py` now create a renderer (auto-detecting TTY) and pass it to `Installer.run()` instead of calling `tui.py` directly
+- **Platform support documentation**: Claude Code marked as primary platform; OpenCode, Codex, Gemini CLI, Crush marked as basic support across README, AGENTS.md, and platform docs
+- **Skill documentation optimized**: Reduced token usage in dehallucination, writing-skills, and using-skills skill docs
+- **Tooling discovery refactored**: Enhanced `spellbook/tooling/discovery.py` with registry-backed lookups
+
+### Fixed
+- **AsyncMock test failures**: 4 tests in `test_diagram_update.py` used `MagicMock` for async `generate_diagram()`, causing `TypeError` on `await`
+
 ## [0.36.0] - 2026-03-24
 
 ### Added
