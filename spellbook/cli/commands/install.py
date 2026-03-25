@@ -117,6 +117,16 @@ def run(args: argparse.Namespace) -> None:
 
     renderer = _create_renderer()
 
+    # Handle --reconfigure: run config wizard for unset keys only
+    if getattr(args, "reconfigure", False):
+        from spellbook.core.config import get_unset_config_keys
+        unset_keys = get_unset_config_keys()
+        if unset_keys and renderer is not None:
+            renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
+        elif not unset_keys:
+            print("All config keys are already set.")
+        return
+
     # Show welcome panel
     if renderer is not None:
         renderer.render_welcome(
@@ -143,6 +153,26 @@ def run(args: argparse.Namespace) -> None:
         security_selections=security_selections,
         renderer=renderer,
     )
+
+    # TTS setup runs after the install loop completes
+    if not getattr(args, "dry_run", False) and not getattr(args, "no_tts", False):
+        if renderer is not None:
+            tts_config = renderer.render_tts_wizard()
+            if tts_config.get("tts_enabled") is not None:
+                try:
+                    from spellbook.core.config import config_set as _cfg_set
+                    _cfg_set("tts_enabled", tts_config["tts_enabled"])
+                except ImportError:
+                    pass
+            if tts_config.get("tts_install"):
+                try:
+                    from installer.components.mcp import install_tts_to_daemon_venv
+                    success, _msg = install_tts_to_daemon_venv(spellbook_dir)
+                    if success:
+                        from spellbook.core.config import config_set as _cfg_set
+                        _cfg_set("tts_enabled", True)
+                except (ImportError, Exception):
+                    pass
 
     json_mode = getattr(args, "json", False)
     if json_mode:

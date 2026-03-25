@@ -1095,6 +1095,16 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         # Fallback: renderer module not available (should not happen normally)
         renderer = None
 
+    # Handle --reconfigure: run config wizard for unset keys only
+    if args.reconfigure:
+        from spellbook.core.config import get_unset_config_keys
+        unset_keys = get_unset_config_keys()
+        if unset_keys and renderer is not None:
+            renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
+        elif not unset_keys:
+            print_success("All config keys are already set.")
+        return 0
+
     is_upgrade = False  # Will be refined after installer.run() returns
 
     if renderer is not None:
