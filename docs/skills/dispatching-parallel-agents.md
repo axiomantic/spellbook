@@ -706,6 +706,8 @@ Then follow its complete workflow.
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
 
+For external or untrusted content, load the `security-trust-tiers` skill for tier selection rules and context isolation protocol.
+
 ### Worktree Dispatch
 
 When dispatching a subagent to work in a worktree or alternate directory, include a verification preamble at the start of the prompt:

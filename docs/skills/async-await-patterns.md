@@ -307,6 +307,17 @@ async function updateUserProfile(userId: string, updates: ProfileUpdates): Promi
 }
 ```
 
+## Recommended: Python Asyncio Pipeline Architecture
+
+For Python scripts with multiple network requests or I/O operations, consider using asyncio with pipeline queues. This is not mandatory, but works well when a script naturally decomposes into producer/consumer stages:
+
+- **Network I/O**: 3-5 parallel workers
+- **File I/O**: 2-3 parallel workers
+- **Rate-limited APIs**: Single worker with delays
+- **Shared state**: Single worker or locks
+
+This pattern shines when you have distinct stages (fetch, transform, write) that can overlap. For simple scripts with a handful of sequential requests, `asyncio.gather` or `Promise.all` is sufficient.
+
 ## Self-Check
 
 <reflection>

@@ -2,115 +2,75 @@
 
 ## Workflow Diagram
 
-Phase 1 of develop: Research strategy planning, codebase exploration via subagent, parallel tooling discovery, ambiguity extraction, and quality scoring with a 100% threshold gate.
+I will generate a Mermaid diagram to visualize the `feature-research` command by following these steps:
 
+1. **Analyze `commands/feature-research.md`**: I'll read the markdown file to understand the process, its steps, decision points, and any referenced commands or skills. This will help determine the overall structure and complexity, and confirm that Mermaid is the appropriate diagramming tool.
+2. **Extract Content**: I will systematically go through the markdown file, identifying all key actions, decisions, inputs, outputs, and any conditional logic. I will look for calls to other agents, skills, or commands, and note success/failure conditions.
+3. **Generate Diagram**: Based on the extracted information, I will construct a Mermaid diagram. I'll use standard flow chart elements:
+    * Rectangles for processes/steps.
+    * Diamonds for decision points.
+    * Stadium shapes for start/end points.
+    * Blue for subagent dispatches (`#4a9eff`).
+    * Red for quality gates/critical checks (`#ff6b6b`).
+    * Green for successful terminal conditions (`#51cf66`).
+    I will also include a legend within the diagram.
+4. **Verify Diagram**: I will check the Mermaid code for syntax errors and ensure that the diagram accurately reflects the `feature-research` command as described in the markdown file, covering all branches and outcomes.
 ```mermaid
-flowchart TD
-    Start([Phase 1 Start])
-    PrereqCheck{Prerequisites met?}
-    PrereqFail([STOP: Return to Phase 0])
+graph TD
+    %% Node Definitions
+    start((Start))
+    stop((Stop))
+    prereq_check{Prerequisite Verification}
+    prereq_fail_stop[Stop: Prerequisite Failed]:::red_stop
+    strategy_plan[1.1 Research Strategy Planning]
+    dispatch_subagent[1.2 Execute Research (Subagent)]:::blue_subagent
+    subagent_retry_check{Subagent First Failure?}
+    subagent_fail_2nd_stop[Subagent Failed Twice: Return UNKNOWN Findings]
+    extract_ambiguities[1.3 Ambiguity Extraction]
+    calc_quality_score[1.4 Research Quality Score Calculation]
+    quality_gate{Research Quality Score >= 100%?}
+    user_choice[User Chooses Action]
+    phase1_complete_check{Phase 1 Complete Verification}
+    phase1_fail_stop[Stop: Phase 1 Incomplete]:::red_stop
+    proceed_to_1_5[/Proceed to Phase 1.5 (feature-discover)/]:::green_success
 
-    PlanStrategy[Plan research strategy]
-    GenQuestions[Generate codebase questions]
-    IdentifyGaps[Identify knowledge gaps]
+    %% Graph Connections
+    start --> prereq_check
+    prereq_check -- Any Check Fails --> prereq_fail_stop
+    prereq_check -- All Checks Pass --> strategy_plan
+    strategy_plan --> dispatch_subagent
+    dispatch_subagent -- 1st Failure --> subagent_retry_check
+    subagent_retry_check -- Yes --> dispatch_subagent
+    subagent_retry_check -- No (2nd Failure) --> subagent_fail_2nd_stop
+    subagent_fail_2nd_stop --> extract_ambiguities
+    dispatch_subagent -- Success --> extract_ambiguities
+    extract_ambiguities --> calc_quality_score
+    calc_quality_score --> quality_gate
+    quality_gate -- No (<100%) --> user_choice
+    user_choice -- Continue Anyway / Iterate / Skip --> phase1_complete_check
+    quality_gate -- Yes (100%) --> phase1_complete_check
+    phase1_complete_check -- Any Unchecked --> phase1_fail_stop
+    phase1_complete_check -- All Checked --> proceed_to_1_5
 
-    DispatchAgent[Dispatch research subagent]
-    DispatchTooling[Dispatch tooling scout<br>PARALLEL]
-    AgentSearch[Subagent: systematic search]
-    AgentRead[Subagent: read files]
-    AgentExtract[Subagent: extract patterns]
-    AgentReturn[Subagent: return findings]
-    ToolingReturn[Tooling: return available tools]
-    AgentFail{Subagent failed?}
-    RetryAgent[Retry once]
-    RetryFail{Retry failed?}
-    MarkUnknown[Mark all UNKNOWN]
+    proceed_to_1_5 --> stop
+    prereq_fail_stop --> stop
+    phase1_fail_stop --> stop
 
-    ExtractAmb[Extract ambiguities]
-    FilterLow[Filter MEDIUM/LOW/UNKNOWN]
-    Categorize[Categorize by type]
-    Prioritize[Prioritize by impact]
 
-    CalcCoverage[Calculate coverage score]
-    CalcAmbRes[Calculate ambiguity resolution]
-    CalcEvidence[Calculate evidence quality]
-    CalcUnknown[Calculate unknown detection]
-    CalcOverall[Compute overall score]
+    %% Styling
+    classDef red_stop fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff;
+    classDef green_success fill:#51cf66,stroke:#333,stroke-width:2px,color:#fff;
+    classDef blue_subagent fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff;
 
-    QualityGate{Score = 100%?}
-    ShowOptions[Show bypass options]
-    UserChoice{User choice?}
-    Iterate[Add more questions]
-    ReduceScope[Reduce scope]
-    Bypass[Bypass gate]
-
-    Phase1Done([Phase 1 Complete])
-
-    Start --> PrereqCheck
-    PrereqCheck -->|No| PrereqFail
-    PrereqCheck -->|Yes| PlanStrategy
-
-    PlanStrategy --> GenQuestions
-    GenQuestions --> IdentifyGaps
-    IdentifyGaps --> DispatchAgent
-    IdentifyGaps --> DispatchTooling
-
-    DispatchAgent --> AgentSearch
-    AgentSearch --> AgentRead
-    AgentRead --> AgentExtract
-    AgentExtract --> AgentReturn
-    AgentReturn --> AgentFail
-
-    AgentFail -->|Yes| RetryAgent
-    RetryAgent --> RetryFail
-    RetryFail -->|Yes| MarkUnknown
-    MarkUnknown --> ExtractAmb
-    RetryFail -->|No| ExtractAmb
-    AgentFail -->|No| ExtractAmb
-    DispatchTooling --> ToolingReturn
-    ToolingReturn --> ExtractAmb
-
-    ExtractAmb --> FilterLow
-    FilterLow --> Categorize
-    Categorize --> Prioritize
-
-    Prioritize --> CalcCoverage
-    CalcCoverage --> CalcAmbRes
-    CalcAmbRes --> CalcEvidence
-    CalcEvidence --> CalcUnknown
-    CalcUnknown --> CalcOverall
-
-    CalcOverall --> QualityGate
-    QualityGate -->|Yes| Phase1Done
-    QualityGate -->|No| ShowOptions
-    ShowOptions --> UserChoice
-    UserChoice -->|Iterate| Iterate
-    Iterate --> DispatchAgent
-    UserChoice -->|Reduce scope| ReduceScope
-    ReduceScope --> CalcOverall
-    UserChoice -->|Bypass| Bypass
-    Bypass --> Phase1Done
-
-    style Start fill:#2196F3,color:#fff
-    style Phase1Done fill:#2196F3,color:#fff
-    style PrereqFail fill:#2196F3,color:#fff
-    style DispatchAgent fill:#4CAF50,color:#fff
-    style DispatchTooling fill:#4CAF50,color:#fff
-    style PrereqCheck fill:#FF9800,color:#fff
-    style AgentFail fill:#FF9800,color:#fff
-    style RetryFail fill:#FF9800,color:#fff
-    style QualityGate fill:#f44336,color:#fff
-    style UserChoice fill:#FF9800,color:#fff
+    %% Legend
+    subgraph Legend
+        direction LR
+        A[Process] --> B{Decision}
+        C[Stop/Failure]:::red_stop
+        D[Subagent Dispatch]:::blue_subagent
+        E[Success]:::green_success
+    end
 ```
-
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
 
 ## Command Content
 

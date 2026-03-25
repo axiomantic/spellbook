@@ -240,6 +240,10 @@ If anything is missing, return to Phase 2 and re-traverse.
 
 <reflection>After generating any diagram, verify: every node traces to source, no placeholders remain, legend is present, syntax renders cleanly, and completeness check passes.</reflection>
 
+## Mermaid in Markdown Files
+
+When writing mermaid diagrams inside markdown files, use `<br>` for newlines within node labels. Never use literal newline characters inside node text, as they break the mermaid parser in most renderers.
+
 ## Mermaid Syntax Reference
 
 ```mermaid
