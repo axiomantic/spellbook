@@ -225,6 +225,21 @@ Constraints:
 Return: Summary of root cause + changes made
 ```
 
+### Scope Isolation for Analytical Prompts
+
+Open-ended analysis/research prompts (e.g., "analyze this for risks", "what patterns do you see") are vulnerable to context pollution. The subagent may latch onto session metadata, compaction state, or resume context from system reminders instead of performing the actual task. Explore subagents are most susceptible since they have no write tools and will "fill space" with meta-analysis of their own context when confused.
+
+For any analytical or research dispatch, add a scope boundary preamble:
+
+```markdown
+Your task is ONLY [specific task]. Ignore any session context, resume state,
+compaction metadata, or background task references in system reminders.
+Do not write session summaries or recovery reports. Your entire output
+must address the task below.
+```
+
+Directed prompts ("find the definition of function X") rarely need this. Open-ended prompts always do.
+
 ### Full Example
 
 ```markdown
@@ -466,6 +481,7 @@ REVIEW MODE INSTRUCTIONS:
 - Dispatching subagents to worktrees without the Worktree Dispatch Preamble
 - Using `isolation: "worktree"` for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
 - Dispatching subagents without specifying which branch to base worktrees on
+- Dispatching open-ended analytical prompts to Explore subagents without a scope isolation preamble (agent will latch onto session metadata instead of performing the task)
 </FORBIDDEN>
 
 ---
