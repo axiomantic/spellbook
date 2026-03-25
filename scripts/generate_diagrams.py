@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
 """
 Generate diagrams for skills and commands by invoking Claude Code in headless mode.
 
@@ -51,10 +47,8 @@ from diagram_config import (
     compute_structure_hash,
 )
 
-# Timeout for each Claude headless invocation (5 minutes)
-CLAUDE_TIMEOUT_SECONDS = 300
-CLASSIFY_TIMEOUT_SECONDS = 60
-PATCH_TIMEOUT_SECONDS = 120
+# No timeouts on LLM invocations -- let them run to completion
+# (Classification and patching timeouts are also unused since those use the SDK now)
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -399,19 +393,12 @@ def generate_diagram(
         result = subprocess.run(
             cmd,
             stdin=subprocess.DEVNULL,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=None,  # inherit parent stderr so errors are visible
             text=True,
-            timeout=CLAUDE_TIMEOUT_SECONDS,
             cwd=REPO_ROOT,
             env=env,
         )
-    except subprocess.TimeoutExpired:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message=f"{provider.capitalize()} timed out after {CLAUDE_TIMEOUT_SECONDS}s",
-        ), None
     except FileNotFoundError:
         print(" failed")
         return GenerationResult(
@@ -422,11 +409,10 @@ def generate_diagram(
 
     if result.returncode != 0:
         print(" failed")
-        stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
         return GenerationResult(
             item=item,
             status="failed",
-            message=f"{cmd[0]} exited with code {result.returncode}: {stderr_snippet}",
+            message=f"{cmd[0]} exited with code {result.returncode} (stderr was printed above)",
         ), None
 
     diagram_content = result.stdout.strip()
@@ -540,9 +526,7 @@ def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
 # Smart update: diff retrieval, classification, and patching
 # ---------------------------------------------------------------------------
 
-# Timeout for classification/patch Claude calls (60 seconds -- much shorter than full gen)
-CLASSIFY_TIMEOUT_SECONDS = 30
-PATCH_TIMEOUT_SECONDS = 120
+# Classification and patching now use the Unified SDK (no subprocess timeouts needed)
 
 CLASSIFICATION_PROMPT = """\
 You are classifying whether a source file change affects its workflow diagram.
@@ -712,6 +696,38 @@ async def patch_diagram(
 # ---------------------------------------------------------------------------
 
 
+def _is_tracked_by_git(source_rel: Union[str, Path]) -> bool:
+    """Check whether a file is tracked by git."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", str(source_rel)],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        return result.returncode == 0
+    except OSError:
+        return False
+
+
+def _strip_diff_headers(lines: list[str]) -> list[str]:
+    """Strip git diff header lines (diff --git, index, ---/+++ lines)."""
+    content_lines = []
+    for line in lines:
+        stripped = line.lstrip("\x1b[0123456789;m")
+        if stripped.startswith(("diff --git", "index ", "--- ", "+++ ")):
+            continue
+        content_lines.append(line)
+    return content_lines
+
+
+def _print_diff_lines(lines: list[str], max_lines: int = 100) -> bool:
+    """Print diff lines with indentation. Returns True if any lines were printed."""
+    for line in lines[:max_lines]:
+        print(f"  {line}")
+    if len(lines) > max_lines:
+        print(f"  ... ({len(lines) - max_lines} more lines)")
+    return bool(lines)
+
+
 def show_source_changes(item: SourceItem) -> None:
     """Show a single combined diff of source changes since the diagram was last generated."""
     import shutil
@@ -722,6 +738,23 @@ def show_source_changes(item: SourceItem) -> None:
     print("-" * min(term_width, 80))
     print(f"  Source changes: {source_rel}")
     print("-" * min(term_width, 80))
+
+    # Check if the source file is tracked by git at all
+    if not _is_tracked_by_git(source_rel):
+        print("  (new file, not yet tracked by git)")
+        print()
+        # Show first 60 lines of the file content as a preview
+        try:
+            content = item.source_path.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            for line in lines[:60]:
+                print(f"  + {line}")
+            if len(lines) > 60:
+                print(f"  ... ({len(lines) - 60} more lines)")
+        except OSError:
+            print("  (could not read file)")
+        print()
+        return
 
     # Find the commit where the diagram was last generated/stamped
     base_commit = None
@@ -738,59 +771,93 @@ def show_source_changes(item: SourceItem) -> None:
                 )
                 commits = result.stdout.strip().splitlines()
                 if commits:
-                    base_commit = commits[0] + "~1"
+                    # Verify the parent commit exists (first commit has no parent)
+                    parent_check = subprocess.run(
+                        ["git", "rev-parse", "--verify", commits[0] + "~1"],
+                        capture_output=True, text=True, cwd=REPO_ROOT,
+                    )
+                    if parent_check.returncode == 0:
+                        base_commit = commits[0] + "~1"
+                    else:
+                        # First commit in repo; diff against empty tree
+                        base_commit = "4b825dc642cb6eb9a060e54bf899d15f7fb7c488"
             except OSError:
                 pass
 
-    # Single combined diff: base_commit..HEAD (or last 3 commits if no base)
-    if base_commit:
-        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
-                     base_commit, "HEAD", "--", str(source_rel)]
-    else:
-        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
-                     "HEAD~3", "HEAD", "--", str(source_rel)]
-
     shown = False
-    try:
-        diff_result = subprocess.run(
-            diff_cmd, capture_output=True, text=True, cwd=REPO_ROOT,
-        )
-        if diff_result.stdout.strip():
-            lines = diff_result.stdout.splitlines()
-            # Skip git diff header lines (diff --git, index, ---/+++ lines)
-            content_lines = []
-            for line in lines:
-                stripped = line.lstrip("\x1b[0123456789;m")
-                if stripped.startswith(("diff --git", "index ", "--- ", "+++ ")):
-                    continue
-                content_lines.append(line)
-            for line in content_lines[:100]:
-                print(f"  {line}")
-            if len(content_lines) > 100:
-                print(f"  ... ({len(content_lines) - 100} more lines)")
-            shown = bool(content_lines)
-    except OSError:
-        pass
 
-    # Fall back to uncommitted changes if nothing from git history
-    if not shown:
+    # Strategy 1: Combined diff from base_commit to working tree (includes uncommitted)
+    if base_commit:
         try:
-            unstaged = subprocess.run(
-                ["git", "diff", "--color=always", "--", str(source_rel)],
+            diff_result = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 base_commit, "--", str(source_rel)],
                 capture_output=True, text=True, cwd=REPO_ROOT,
             )
+            if diff_result.stdout.strip():
+                content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                shown = _print_diff_lines(content_lines)
+        except OSError:
+            pass
+
+    # Strategy 2: Uncommitted changes (staged + unstaged)
+    if not shown:
+        try:
             staged = subprocess.run(
-                ["git", "diff", "--cached", "--color=always", "--", str(source_rel)],
+                ["git", "diff", "--cached", "--color=always", "--no-ext-diff",
+                 "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            unstaged = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 "--", str(source_rel)],
                 capture_output=True, text=True, cwd=REPO_ROOT,
             )
             combined = (staged.stdout.strip() + "\n" + unstaged.stdout.strip()).strip()
             if combined:
-                for line in combined.splitlines()[:100]:
-                    print(f"  {line}")
-            else:
-                print("  (no diff available)")
+                content_lines = _strip_diff_headers(combined.splitlines())
+                shown = _print_diff_lines(content_lines)
         except OSError:
-            print("  (git not available)")
+            pass
+
+    # Strategy 3: Diff across recent history (widen the search)
+    if not shown:
+        # The source hash changed but we couldn't find a diff above. This typically
+        # means the change was committed and we failed to locate the base commit.
+        # Walk back through history to find where the file last matched.
+        for depth in ("HEAD~5", "HEAD~10", "HEAD~25"):
+            try:
+                diff_result = subprocess.run(
+                    ["git", "diff", "--color=always", "--no-ext-diff",
+                     depth, "HEAD", "--", str(source_rel)],
+                    capture_output=True, text=True, cwd=REPO_ROOT,
+                )
+                if diff_result.stdout.strip():
+                    content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                    shown = _print_diff_lines(content_lines)
+                    break
+            except OSError:
+                break
+
+    # Strategy 4: Show the full file diff against empty tree (file exists but
+    # all git diff strategies failed, e.g., very old change or unusual history)
+    if not shown:
+        try:
+            diff_result = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 "4b825dc642cb6eb9a060e54bf899d15f7fb7c488",
+                 "HEAD", "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            if diff_result.stdout.strip():
+                content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                print("  (showing full file content; could not isolate specific changes)")
+                shown = _print_diff_lines(content_lines)
+        except OSError:
+            pass
+
+    if not shown:
+        print("  (no diff available - git may not be accessible)")
 
     print()
 
