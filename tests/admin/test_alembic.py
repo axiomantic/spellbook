@@ -44,6 +44,7 @@ class TestAlembicIni:
 
 @pytest.mark.allow("asyncio")
 @pytest.mark.allow("subprocess")
+@pytest.mark.allow("popen")
 class TestEnvPyStructure:
     """Verify env.py has correct DB_CONFIGS and imports."""
 
