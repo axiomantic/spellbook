@@ -53,9 +53,11 @@ class TestEnvPyStructure:
         """Import env.py as a module without executing migration logic.
 
         We patch alembic.context to avoid runtime errors from Alembic
-        expecting to be run inside a migration context.
+        expecting to be run inside a migration context.  The mock's
+        is_offline_mode returns True so the module-level code takes the
+        offline branch (whose calls are all no-ops on the MagicMock),
+        avoiding asyncio.run() which would try to connect to real databases.
         """
-        import types
         from unittest.mock import MagicMock
 
         # Create a mock alembic.context module so env.py can import it
@@ -80,8 +82,13 @@ class TestEnvPyStructure:
             )
             module = importlib.util.module_from_spec(spec)
 
-            # Patch context at module level before exec
-            # env.py does `from alembic import context` which resolves to our mock
+            # env.py has module-level code that calls run_migrations_online()
+            # which invokes asyncio.run(run_async_migrations()).  Mock
+            # is_offline_mode to return True so env.py takes the offline
+            # branch instead, and mock run_migrations_offline via context
+            # to be a no-op (context.configure/begin_transaction/run_migrations
+            # are already mocked).
+            mock_context.is_offline_mode.return_value = True
             spec.loader.exec_module(module)
             yield module
         finally:

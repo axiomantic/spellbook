@@ -5,6 +5,15 @@ from pathlib import Path
 
 import pytest
 
+# On Windows, use SelectorEventLoop to avoid ProactorEventLoop issues:
+# - aiosqlite is incompatible with ProactorEventLoop
+# - ProactorEventLoop.close() hangs on teardown (GetQueuedCompletionStatus)
+# - TestClient (anyio) interactions fail with ProactorEventLoop
+if sys.platform == "win32":
+    import asyncio
+
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 # Add project root to path so spellbook can be imported
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
