@@ -136,10 +136,12 @@ nav:
       - skills/analyzing-domains.md
       - skills/analyzing-skill-usage.md
       - skills/assembling-context.md
+      - skills/audio-notifications.md
       - skills/async-await-patterns.md
       - skills/auditing-green-mirage.md
       - skills/autonomous-roundtable.md
       - skills/brainstorming.md
+      - skills/branch-context.md
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
       - skills/debugging.md
@@ -166,6 +168,7 @@ nav:
       - skills/isolated-testing.md
       - skills/managing-artifacts.md
       - skills/merging-worktrees.md
+      - skills/opportunity-awareness.md
       - skills/optimizing-instructions.md
       - skills/polish-repo.md
       - skills/project-encyclopedia.md
@@ -176,10 +179,14 @@ nav:
       - skills/reviewing-impl-plans.md
       - skills/reviewing-prs.md
       - skills/security-auditing.md
+      - skills/security-trust-tiers.md
+      - skills/session-mode-init.md
+      - skills/session-resume.md
       - skills/sharpening-prompts.md
       - skills/smart-reading.md
       - skills/tarot-mode.md
       - skills/test-driven-development.md
+      - skills/testing-strategy.md
       - skills/tooling-discovery.md
       - skills/using-git-worktrees.md
       - skills/using-lsp-tools.md

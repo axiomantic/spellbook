@@ -190,9 +190,9 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
-| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [security-trust-tiers], [generating-diagrams], [shared-references], [tooling-discovery] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [testing-strategy], [opportunity-awareness], [branch-context] |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -242,6 +242,13 @@ Reusable workflows for structured development:
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
+[session-mode-init]: https://axiomantic.github.io/spellbook/latest/skills/session-mode-init/
+[session-resume]: https://axiomantic.github.io/spellbook/latest/skills/session-resume/
+[audio-notifications]: https://axiomantic.github.io/spellbook/latest/skills/audio-notifications/
+[security-trust-tiers]: https://axiomantic.github.io/spellbook/latest/skills/security-trust-tiers/
+[testing-strategy]: https://axiomantic.github.io/spellbook/latest/skills/testing-strategy/
+[opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
+[branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
