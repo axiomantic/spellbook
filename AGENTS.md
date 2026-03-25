@@ -208,6 +208,22 @@ commands/
 
 Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.
 
+### Sandbox & Security (Bigfoot)
+
+This project uses **bigfoot** to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
+
+**How to permit specific actions:**
+- **Subprocesses**: Use the `@pytest.mark.allow("subprocess")` marker on your test function.
+- **Network**: Use `@pytest.mark.allow("network")`.
+
+Example:
+```python
+@pytest.mark.allow("subprocess")
+def test_cli_invocation():
+    # This test is now allowed to use subprocess.run/Popen
+    ...
+```
+
 **Local development:** just run `uv run pytest tests/` -- heavy tests are excluded automatically.
 
 **To opt in to specific markers locally:**

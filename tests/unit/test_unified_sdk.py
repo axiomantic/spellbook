@@ -61,6 +61,7 @@ async def test_claude_agent_client_run():
         assert result == "final result"
 
 @pytest.mark.asyncio
+@pytest.mark.allow("asyncio")
 @pytest.mark.allow("subprocess")
 async def test_gemini_agent_client_run():
     options = AgentOptions(
@@ -70,18 +71,19 @@ async def test_gemini_agent_client_run():
     )
     client = GeminiAgentClient(options)
     
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    mock_result.stdout = "hello from gemini"
+    mock_process = AsyncMock()
+    mock_process.returncode = 0
+    mock_process.communicate.return_value = (b"hello from gemini", b"")
     
-    with patch("subprocess.run", return_value=mock_result) as mock_run:
+    with patch("asyncio.create_subprocess_exec", return_value=mock_process) as mock_exec:
         result = await client.run("hi")
         
         assert result == "hello from gemini"
         
         # Check if correct command was built
-        args, kwargs = mock_run.call_args
-        cmd = args[0]
+        args, kwargs = mock_exec.call_args
+        # args[0] is 'gemini', args[1] is '--prompt', etc.
+        cmd = list(args)
         assert "gemini" in cmd
         assert "--prompt" in cmd
         # Verify system prompt prepending

@@ -670,6 +670,105 @@ class TestRichRendererConfigWizard:
         assert renderer.render_config_wizard([], {}, is_upgrade=False) == {}
 
 
+# ---------------------------------------------------------------------------
+# PlainTextRenderer upgrade tests
+# ---------------------------------------------------------------------------
+
+
+class TestPlainTextRendererUpgrade:
+    def test_plain_text_render_welcome_upgrade(self, capsys):
+        """render_welcome with is_upgrade=True prints 'Upgrading' and version."""
+        from installer.renderer import PlainTextRenderer
+
+        renderer = PlainTextRenderer()
+        renderer.render_welcome("3.1.0", is_upgrade=True)
+
+        captured = capsys.readouterr()
+        assert "Upgrading" in captured.out
+        assert "3.1.0" in captured.out
+
+    def test_plain_text_render_config_wizard_upgrade_shows_existing(self, monkeypatch, capsys):
+        """When is_upgrade=True and existing_config has entries, existing config is printed before prompts."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "y")
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["sleuth"],
+            existing_config={"spotlighting": True, "crypto": True, "lodo": True},
+            is_upgrade=True,
+        )
+        captured = capsys.readouterr()
+        # Existing config should be displayed
+        assert "Existing configuration" in captured.out
+        assert "spotlighting" in captured.out
+        assert "crypto" in captured.out
+        assert "lodo" in captured.out
+        # The unset key should have been prompted and collected
+        assert result == {"sleuth": True}
+
+    def test_plain_text_render_config_wizard_upgrade_only_prompts_unset(self, monkeypatch, capsys):
+        """When unset_keys has 1 of 4 keys, only that key is prompted."""
+        from installer.renderer import PlainTextRenderer
+
+        call_count = 0
+
+        def counting_input(prompt):
+            nonlocal call_count
+            call_count += 1
+            return "n"
+
+        monkeypatch.setattr("builtins.input", counting_input)
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["crypto"],
+            existing_config={"spotlighting": True, "sleuth": False, "lodo": True},
+            is_upgrade=True,
+        )
+        # Only one prompt should have been issued (for the single unset key)
+        assert call_count == 1
+        assert result == {"crypto": False}
+        # The existing keys should not appear as prompts
+        captured = capsys.readouterr()
+        assert "Existing configuration" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# RichRenderer upgrade smoke tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not _has_rich, reason="Rich not installed")
+class TestRichRendererUpgrade:
+    def _make_renderer(self):
+        from rich.console import Console
+        from installer.renderer import RichRenderer
+
+        console = Console(file=__import__("io").StringIO(), force_terminal=True)
+        return RichRenderer(console=console), console
+
+    def test_rich_render_welcome_upgrade(self):
+        """render_welcome with is_upgrade=True renders upgrade panel without error."""
+        renderer, console = self._make_renderer()
+        renderer.render_welcome("3.0.0", is_upgrade=True)
+        output = console.file.getvalue()
+        assert "Upgrade" in output or "3.0.0" in output
+
+    def test_rich_render_config_wizard_upgrade_shows_existing(self):
+        """render_config_wizard with is_upgrade=True and existing_config does not raise."""
+        from installer.renderer import RichRenderer
+
+        renderer, console = self._make_renderer()
+        renderer_auto = RichRenderer(auto_yes=True, console=console)
+        # auto_yes=True skips prompts; we just verify no exception with upgrade args
+        result = renderer_auto.render_config_wizard(
+            unset_keys=["sleuth"],
+            existing_config={"spotlighting": True, "crypto": True},
+            is_upgrade=True,
+        )
+        assert result == {}
+
+
 @pytest.mark.skipif(not _has_rich, reason="Rich not installed")
 class TestRichRendererPostInstall:
     def _make_renderer(self):

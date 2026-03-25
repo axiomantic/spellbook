@@ -24,6 +24,7 @@ After verification: Verify that the skill actually changes agent behavior in the
 3. **One Excellent Example Beats Many**: Single complete, runnable example in relevant language.
 4. **Keywords Enable Discovery**: Error messages, symptoms, synonyms throughout. Future Claude must FIND this.
 5. **Close Every Loophole Explicitly**: Agents rationalize under pressure. Each excuse needs explicit counter.
+6. **Model Versioning Strategy**: Prefer general model aliases (e.g. `sonnet`, `flash`, `pro`) over hardcoded version numbers (e.g. `claude-3-5-sonnet`, `gemini-2.5-flash`). Hardcoded versions are permitted ONLY when a specific behavior is required that differs between versions.
 
 ## Inputs
 

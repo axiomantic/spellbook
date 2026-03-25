@@ -72,7 +72,7 @@ class ClaudeAgentClient(AgentClient):
         # Map unified options to Claude-specific options
         claude_options = ClaudeAgentOptions(
             system_prompt=self.options.system_prompt,
-            cwd=str(self.options.options.cwd) if hasattr(self.options, 'options') else str(self.options.cwd),
+            cwd=str(self.options.cwd),
             model=self.options.model,
             max_turns=self.options.max_turns,
             permission_mode=self.options.permission_mode,
@@ -108,15 +108,15 @@ class ClaudeAgentClient(AgentClient):
         )
 
 class GeminiAgentClient(AgentClient):
-    """Client for Gemini CLI, emulating the Claude SDK interface via subprocess."""
+    """Client for Gemini CLI, emulating the Claude SDK interface via async subprocess."""
 
     @property
     def provider(self) -> str:
         return "gemini"
 
     async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        """Run gemini CLI and yield a single response message."""
-        import subprocess
+        """Run gemini CLI asynchronously and yield a single response message."""
+        import asyncio
         
         # Build command based on Unified AgentOptions
         cmd = ["gemini", "--prompt", prompt, "-o", "text"]
@@ -131,7 +131,6 @@ class GeminiAgentClient(AgentClient):
             cmd.extend(["--model", self.options.model])
             
         # If a system prompt is provided, we prepend it to the prompt 
-        # (Gemini CLI doesn't have a direct --system-prompt flag yet)
         if self.options.system_prompt:
             cmd[2] = f"{self.options.system_prompt}\n\n{prompt}"
 
@@ -143,20 +142,23 @@ class GeminiAgentClient(AgentClient):
         if "GEMINI_CLI" in env:
             del env["GEMINI_CLI"]
 
-        process = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
             cwd=str(self.options.cwd),
             env=env
         )
         
+        stdout, stderr = await process.communicate()
+        
         if process.returncode != 0:
-            raise RuntimeError(f"Gemini CLI failed (code {process.returncode}): {process.stderr}")
+            err_text = stderr.decode().strip()
+            raise RuntimeError(f"Gemini CLI failed (code {process.returncode}): {err_text}")
             
         yield AgentMessage(
             role="assistant",
-            content=process.stdout.strip()
+            content=stdout.decode().strip()
         )
 
     async def run(self, prompt: str) -> str:

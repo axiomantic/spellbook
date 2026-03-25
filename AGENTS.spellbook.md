@@ -279,6 +279,38 @@ When the user describes something they want:
 - NEVER reference GitHub issue numbers (e.g., `#123`, `fixes #123`) in commit messages, PR titles, or PR descriptions. GitHub auto-links these and sends notifications to issue subscribers. Only the user should add issue references manually.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
 
+### Branch Context: "The Work on This Branch"
+
+When referring to "the work on this branch," "what this branch does," "the changes here," or
+similar, this means the **full diff between the merge base and the current working tree state**,
+which includes committed, staged, and unstaged changes.
+
+- **Merge target**: The branch this one will merge into. Detected via PR base ref
+  (`gh pr view`), NOT assumed to be `master`. For stacked branches
+  (`master -> branch-A -> branch-B`), branch-B's merge target is branch-A.
+- **Merge base**: The most recent common ancestor between the current branch and its
+  merge target (`git merge-base`).
+- **Branch diff**: `git diff <merge-base>` (working tree), not just `git diff <merge-base>..HEAD`.
+  This captures everything: committed changes, staged changes, and unstaged changes.
+
+Use `$SPELLBOOK_DIR/scripts/branch-context.sh` to detect these automatically:
+```
+branch-context.sh              # summary: target, base, stats, uncommitted state
+branch-context.sh diff         # full diff (merge base to working tree)
+branch-context.sh diff-committed   # committed only (merge base to HEAD)
+branch-context.sh diff-uncommitted # uncommitted only (staged + unstaged vs HEAD)
+branch-context.sh log          # commit log since merge base
+branch-context.sh files        # changed file list
+branch-context.sh json         # machine-readable JSON
+```
+
+This matters for stacked branches: if `master -> branch-A -> branch-B`, the work on
+branch-B is only what branch-B added on top of branch-A. The script auto-detects
+stacking via PR base refs.
+
+In worktrees, run this script FROM the worktree directory. It detects worktree context
+automatically.
+
 ### Branch-Relative Documentation
 
 Changelogs, PR titles, PR descriptions, commit messages, and code comments describe the merge-base delta only. No historical narratives in code comments. Full policy in `finishing-a-development-branch` skill.
