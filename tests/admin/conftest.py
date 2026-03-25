@@ -1,6 +1,71 @@
+import socket
+import sqlite3
+
 import pytest
 from unittest.mock import patch
 import secrets
+
+
+@pytest.fixture(autouse=True)
+def _restore_io_patches():
+    """Restore original socket and sqlite3 methods during admin tests.
+
+    bigfoot's plugins patch socket.send/recv/etc. and sqlite3.connect at the
+    class/module level and use ContextVars to decide whether to intercept or
+    pass through. TestClient runs an asyncio event loop in a background thread
+    that uses socket operations (self-pipe) for cross-thread signaling, and
+    aiosqlite creates connections in a background thread. Since ContextVars
+    do not propagate to background threads, bigfoot's interceptors raise
+    SandboxNotActiveError in those threads, breaking TestClient and async DB
+    operations.
+
+    This fixture saves the patched methods, restores originals for the test
+    duration, then re-applies the patches so bigfoot works for non-admin tests.
+    """
+    saved_socket_patches = {}
+    saved_db_connect = None
+
+    # Restore socket patches
+    try:
+        from bigfoot.plugins.socket_plugin import (
+            _SOCKET_SEND_ORIGINAL,
+            _SOCKET_RECV_ORIGINAL,
+            _SOCKET_CONNECT_ORIGINAL,
+            _SOCKET_SENDALL_ORIGINAL,
+            _SOCKET_CLOSE_ORIGINAL,
+        )
+        bf_socket_originals = {
+            "send": _SOCKET_SEND_ORIGINAL,
+            "recv": _SOCKET_RECV_ORIGINAL,
+            "connect": _SOCKET_CONNECT_ORIGINAL,
+            "sendall": _SOCKET_SENDALL_ORIGINAL,
+            "close": _SOCKET_CLOSE_ORIGINAL,
+        }
+        for name, original in bf_socket_originals.items():
+            current = getattr(socket.socket, name)
+            if current is not original:
+                saved_socket_patches[name] = current
+                setattr(socket.socket, name, original)
+    except ImportError:
+        pass
+
+    # Restore sqlite3.connect patch
+    try:
+        from bigfoot.plugins.database_plugin import DatabasePlugin
+        bf_db_original = DatabasePlugin._original_connect
+        if bf_db_original is not None and sqlite3.connect is not bf_db_original:
+            saved_db_connect = sqlite3.connect
+            sqlite3.connect = bf_db_original
+    except (ImportError, AttributeError):
+        pass
+
+    yield
+
+    # Re-apply bigfoot's patches
+    for name, bf_patch in saved_socket_patches.items():
+        setattr(socket.socket, name, bf_patch)
+    if saved_db_connect is not None:
+        sqlite3.connect = saved_db_connect
 
 
 @pytest.fixture(autouse=True)
