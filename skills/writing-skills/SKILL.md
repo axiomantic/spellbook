@@ -125,7 +125,13 @@ description: Use when executing implementation plans with independent tasks
 
 ## Writing Effective Skill Descriptions
 
-The `description` field matches user requests to skills. Bad descriptions cause the skill to never fire, or fire as a false positive.
+The `description` field is the most important line in your skill. At startup, only the name and description from every skill are pre-loaded into the system prompt. The skill body is NOT loaded until the agent decides it's relevant. That decision is made entirely from the description.
+
+This makes the description an instruction engineering problem, not just a search optimization problem. You are writing a micro-prompt that tells the agent: "when you see these conditions, load me." Every token in the description competes with 100+ other skill descriptions for the agent's attention. A vague description drowns in the noise. A precise one acts as a reliable classifier.
+
+**The mental model:** Think of descriptions as `if` conditions in the agent's routing logic. The agent scans all descriptions on every user message and asks "does this apply right now?" Your description must answer that question unambiguously in one pass.
+
+Bad descriptions cause the skill to never fire, or fire as a false positive.
 
 ### Description Anatomy
 

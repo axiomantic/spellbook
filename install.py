@@ -882,7 +882,7 @@ def setup_tts(
                     print_warning(
                         "TTS reinstall failed. Run manually: "
                         "uv pip install --python ~/.local/spellbook/daemon-venv/bin/python "
-                        "-r daemon/requirements-tts.txt"
+                        "--requirement pyproject.toml --group tts"
                     )
                 return
             else:
