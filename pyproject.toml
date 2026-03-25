@@ -41,6 +41,7 @@ dev = [
     "httpx>=0.25.0",
     "bigfoot>=0.17.0",
     "fastmcp>=0.4.1",
+    "fastapi>=0.115.0",
     "pyyaml>=6.0",
 ]
 docs = [
