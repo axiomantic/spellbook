@@ -97,7 +97,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
     pkg_json = root / "package.json"
     if pkg_json.exists():
         try:
-            data = json.loads(pkg_json.read_text())
+            data = json.loads(pkg_json.read_text(encoding="utf-8"))
             for key in ("dependencies", "devDependencies"):
                 if key in data and isinstance(data[key], dict):
                     names.update(k.lower() for k in data[key].keys())
@@ -110,7 +110,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
         try:
             import tomllib
 
-            data = tomllib.loads(pyproject.read_text())
+            data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
             deps = data.get("project", {}).get("dependencies", [])
             for dep in deps:
                 name = re.split(r"[><=!~;\s\[]", dep)[0].strip()
@@ -123,7 +123,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
     req_txt = root / "requirements.txt"
     if req_txt.exists():
         try:
-            for line in req_txt.read_text().splitlines():
+            for line in req_txt.read_text(encoding="utf-8").splitlines():
                 line = line.split("#")[0].strip()
                 if not line or line.startswith("-"):
                     continue
@@ -139,7 +139,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
         try:
             import tomllib
 
-            data = tomllib.loads(cargo.read_text())
+            data = tomllib.loads(cargo.read_text(encoding="utf-8"))
             deps = data.get("dependencies", {})
             if isinstance(deps, dict):
                 names.update(k.lower() for k in deps.keys())
@@ -150,7 +150,7 @@ def _parse_dep_names(project_path: str) -> Set[str]:
     gemfile = root / "Gemfile"
     if gemfile.exists():
         try:
-            for line in gemfile.read_text().splitlines():
+            for line in gemfile.read_text(encoding="utf-8").splitlines():
                 m = re.match(r"""gem\s+['"]([^'"]+)['"]""", line.strip())
                 if m:
                     names.add(m.group(1).lower())

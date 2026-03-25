@@ -14,7 +14,7 @@ REGISTRY_PATH = str(
 class TestRegistryLoads:
     def test_registry_yaml_loads_without_error(self):
         """YAML registry file loads and parses successfully."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         assert data is not None
         assert "version" in data
@@ -22,14 +22,14 @@ class TestRegistryLoads:
 
     def test_registry_has_minimum_domains(self):
         """Registry contains at least 15 fully-vetted domains."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         domains = data.get("domains", {})
         assert len(domains) >= 15, f"Expected >= 15 domains, got {len(domains)}"
 
     def test_registry_schema_validation(self):
         """Every tool entry has required fields."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         required_fields = {"name", "type", "trust_tier", "source", "description"}
         valid_types = {"mcp_server", "cli", "api", "library", "service"}

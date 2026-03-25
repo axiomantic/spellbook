@@ -1,5 +1,6 @@
 """Tests for Ed25519 key management and signing."""
 import base64
+import sys
 
 import pytest
 from pathlib import Path
@@ -18,6 +19,10 @@ class TestKeyGeneration:
         assert (keys_dir / "signing.key").exists()
         assert (keys_dir / "signing.pub").exists()
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Windows does not support POSIX file permissions",
+    )
     def test_private_key_permissions(self, keys_dir):
         from spellbook.security.crypto import generate_keypair
         generate_keypair(str(keys_dir))

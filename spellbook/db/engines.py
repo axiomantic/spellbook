@@ -28,7 +28,10 @@ from sqlalchemy.pool import NullPool
 
 DB_DIR = Path.home() / ".local" / "spellbook"
 DB_DIR.mkdir(parents=True, exist_ok=True)
-os.chmod(str(DB_DIR), 0o700)
+try:
+    os.chmod(str(DB_DIR), 0o700)
+except OSError:
+    pass  # May fail on Windows or special filesystems
 
 
 def _sqlite_url(name: str) -> str:

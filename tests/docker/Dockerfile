@@ -16,8 +16,8 @@ WORKDIR /app
 # Copy project
 COPY . .
 
-# Install project dependencies
-RUN uv pip install --system -e ".[dev]"
+# Install project with dev dependency group
+RUN uv sync --group dev --no-editable
 
 # Default command: run integration tests
-CMD ["pytest", "tests/docker/", "-v", "--tb=short"]
+CMD ["uv", "run", "pytest", "tests/docker/", "-v", "--tb=short"]

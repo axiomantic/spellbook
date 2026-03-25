@@ -54,7 +54,10 @@ def generate_keypair(keys_dir: str) -> None:
         encryption_algorithm=serialization.NoEncryption(),
     )
     priv_path.write_bytes(priv_bytes)
-    os.chmod(str(priv_path), 0o600)
+    try:
+        os.chmod(str(priv_path), 0o600)
+    except OSError:
+        pass  # May fail on Windows or special filesystems
 
     # Write public key
     pub_bytes = private_key.public_key().public_bytes(

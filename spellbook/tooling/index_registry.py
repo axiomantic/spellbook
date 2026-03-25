@@ -10,7 +10,7 @@ def index_registry(yaml_path: str, db_path: str):
         print(f"Error: {yaml_path} not found.")
         return
 
-    with open(yaml_path, 'r') as f:
+    with open(yaml_path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
 
     # Delete existing DB if it exists to ensure clean state
