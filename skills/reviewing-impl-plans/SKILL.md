@@ -1,6 +1,6 @@
 ---
 name: reviewing-impl-plans
-description: "Use when reviewing implementation plans before execution, especially plans derived from design documents"
+description: "Use when reviewing implementation plans before execution. Triggers: 'is this plan solid', 'review the plan', 'check before I start building', 'anything missing from this plan', 'will this plan work', 'audit the implementation plan'. NOT for: reviewing design documents (use reviewing-design-docs) or creating plans (use writing-plans)."
 intro: |
   Audits implementation plans for missing tasks, incorrect ordering, interface mismatches, and scope gaps before execution begins. Compares plans against their parent design documents and verifies that parallel work streams have explicitly specified contracts. This core spellbook skill prevents costly integration failures from underspecified plans.
 ---

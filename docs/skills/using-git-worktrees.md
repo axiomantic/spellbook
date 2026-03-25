@@ -4,7 +4,7 @@ Creates isolated git worktrees for parallel feature development without branch s
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when starting feature work that needs isolation from current workspace, setting up parallel development tracks, or before executing implementation plans. Triggers: 'worktree', 'separate branch', 'isolate this work', 'don't mess up current work', 'work on two things at once', 'parallel workstreams', 'sandboxed workspace'.
+> Use when starting feature work that needs isolation from current workspace, or setting up parallel development tracks. Triggers: 'worktree', 'separate branch', 'isolate this work', 'don't mess up current work', 'work on two things at once', 'parallel workstreams', 'new branch for this', 'keep my current work safe'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

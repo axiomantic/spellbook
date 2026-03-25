@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/writing-skills/SKILL.md", "source_hash": "sha256:b3aaae7f8cfb02cdaf3763362e9809cd7b40658152753e0956bfb95d88ae2887", "generated_at": "2026-03-24T21:46:42Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/writing-skills/SKILL.md", "source_hash": "sha256:603c35edf3e84d69968ac7927fcf74a91d9e37acf3e446fab960f9b137b39bb4", "generated_at": "2026-03-24T21:46:42Z", "generator": "generate_diagrams.py", "stamped_at": "2026-03-25T09:11:15Z"} -->
 # Diagram: writing-skills
 
 ```mermaid

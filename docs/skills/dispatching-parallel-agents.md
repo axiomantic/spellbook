@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'.
+> Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'run these at the same time', 'split this up', 'do both at once', 'dispatch template', 'context minimization'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

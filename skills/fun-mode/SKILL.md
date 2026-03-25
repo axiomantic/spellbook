@@ -1,6 +1,6 @@
 ---
 name: fun-mode
-description: "Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona"
+description: "Use when starting a session and wanting creative engagement. Triggers: '/fun', 'use a persona', 'be creative', 'make this fun', 'use a character', 'spice it up'. Session-level mode, not task-level."
 ---
 
 # Fun Mode

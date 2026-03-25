@@ -1,6 +1,6 @@
 ---
 name: distilling-prs
-description: "Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. Uses heuristic pattern matching to classify changes by review priority. For deep code analysis, use advanced-code-review instead."
+description: "Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. NOT for: deep code analysis (use advanced-code-review) or quick review (use code-review)."
 intro: |
   PR triage and categorization that extracts patterns from pull request diffs for fast review prioritization. Uses heuristic pattern matching to classify changes as safe-to-skip, needs-review, or uncertain, so human reviewers can focus their time on what matters. This core spellbook skill is useful when facing a backlog of PRs or when you need a quick summary of what changed.
 ---

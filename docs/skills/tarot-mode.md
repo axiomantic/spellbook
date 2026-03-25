@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when session returns mode.type='tarot', user says '/tarot', or requests roundtable dialogue with archetypes. Ten tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable with instruction-engineering embedded.
+> Use when session returns mode.type='tarot', user says '/tarot', or requests roundtable dialogue with archetypes. Triggers: '/tarot', 'use tarot mode', 'roundtable with archetypes', 'tarot personas'. Session-level mode, not task-level.
 
 ## Workflow Diagram
 

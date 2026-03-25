@@ -1,6 +1,6 @@
 ---
 name: assembling-context
-description: "Prepare tiered context packages for subagents and manage token budgets. Triggered by 'prepare context for', 'assemble context', 'token budget', or invoked by develop Phase 3.5/4.2."
+description: "Use when preparing context for subagent dispatch or managing token budgets. Triggers: 'prepare context for', 'assemble context', 'token budget', 'context package', 'what context does the subagent need'. Also invoked by develop during planning and execution phases."
 ---
 
 # Context Assembly

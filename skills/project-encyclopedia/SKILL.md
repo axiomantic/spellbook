@@ -1,6 +1,6 @@
 ---
 name: project-encyclopedia
-description: "[DEPRECATED] <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia."
+description: "[DEPRECATED] Use project-level AGENTS.md files instead. Previously used for first-session codebase onboarding and persistent glossary creation."
 ---
 
 > **DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This skill will be removed in a future version.

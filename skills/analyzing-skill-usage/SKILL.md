@@ -1,6 +1,6 @@
 ---
 name: analyzing-skill-usage
-description: "Analyze session transcripts to extract skill invocation patterns, score invocations, and produce comparative metrics for skill improvement decisions."
+description: "Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. Also invoked by skill improvement workflows."
 ---
 
 # Analyzing Skill Usage

@@ -1153,7 +1153,8 @@ async def main_async() -> int:
             else:
                 # Fall back to full generation
                 print(f"  {item.name}: patch failed, regenerating...", end="", flush=True)
-                result, output_content = await generate_diagram(
+                result, output_content = await asyncio.to_thread(
+                    generate_diagram,
                     item, current_hash,
                     provider=provider, model=model,
                     provider_args=args.provider_args,
@@ -1170,7 +1171,8 @@ async def main_async() -> int:
 
         # Process full generations
         for i, (item, current_hash) in enumerate(to_generate, 1):
-            result, output_content = await generate_diagram(
+            result, output_content = await asyncio.to_thread(
+                generate_diagram,
                 item, current_hash,
                 provider=provider, model=model,
                 provider_args=args.provider_args,
@@ -1265,7 +1267,8 @@ async def main_async() -> int:
 
             # classification == "REGENERATE" or patch failed: fall through
 
-        result, output_content = await generate_diagram(
+        result, output_content = await asyncio.to_thread(
+            generate_diagram,
             item, current_hash,
             provider=provider,
             model=model,

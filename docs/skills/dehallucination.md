@@ -4,7 +4,7 @@ Verifies that claims, file references, and assertions in documents are grounded 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, develop workflow, and after deep-research verification.
+> Use when verifying that AI-generated claims, references, or assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by develop and deep-research. NOT for: verifying technical claims in code (use fact-checking).
 
 ## Workflow Diagram
 

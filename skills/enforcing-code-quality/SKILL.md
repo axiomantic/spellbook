@@ -1,9 +1,6 @@
 ---
 name: enforcing-code-quality
-description: |
-  Use when writing or modifying code. Enforces production-quality standards,
-  prohibits common shortcuts, and ensures pre-existing issues are addressed.
-  Invoked automatically by develop and test-driven-development.
+description: "Behavioral protocol for all code changes. Invoked automatically by develop and test-driven-development. Triggers: 'code quality', 'no shortcuts', 'production quality', 'enforce standards'. NOT for: reviewing others' code (use code-review) or test quality (use fixing-tests)."
 intro: |
   Production code quality standards enforcement covering prohibited patterns like `any` types, blanket try-catch, resource leaks, and non-null assertions without validation. Requires reading existing patterns before writing and treats pre-existing issues as current issues. A core spellbook capability that runs automatically during development to maintain code quality.
 version: 1.0.0

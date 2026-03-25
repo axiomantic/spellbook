@@ -1,14 +1,6 @@
 ---
 name: fractal-thinking
-description: |
-  Adaptive recursive thought engine for deep exploration. Invoked by other skills
-  (brainstorming, fact-checking, debugging, deep-research) when they need to
-  deeply explore uncertainty, systematically decompose complex questions, or gain
-  certainty about multi-faceted problems. Triggers: "think deeply about",
-  "explore this recursively", "I need certainty about", "decompose this question",
-  "what am I missing". Also invoked programmatically with a seed, intensity, and
-  checkpoint mode. NOT for: simple questions with known answers, linear task
-  execution, or file-by-file code review.
+description: "Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by brainstorming, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution."
 intro: |
   Recursive question decomposition that builds a persistent graph of questions and answers, exploring topics at configurable depth with parallel workers. Breaks complex questions into sub-questions, answers them bottom-up, and synthesizes findings into coherent conclusions. This core spellbook skill is invoked by other skills when they need deep certainty about multi-faceted problems.
 ---

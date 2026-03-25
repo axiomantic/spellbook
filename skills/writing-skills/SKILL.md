@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: "Use when creating new skills, editing existing skills, or verifying skills work before deployment. Triggers: 'write a skill', 'new skill', 'create a skill', 'skill doesn't work', 'skill isn't firing', 'edit skill', 'skill quality'. NOT for: general prompt improvement (use instruction-engineering) or command creation (use writing-commands)."
 ---
 
 # Writing Skills
@@ -103,26 +103,6 @@ What goes wrong + fixes
 
 Name by what you DO, not generic category: `root-cause-tracing` > `debugging-techniques`, `using-skills` not `skill-usage`.
 
-## Claude Search Optimization (CSO)
-
-<CRITICAL>
-Description = WHEN to load, NEVER what it does. Workflow in description causes agents to follow description instead of reading skill body.
-</CRITICAL>
-
-```yaml
-# BAD: Workflow summary - agents skip body
-description: Use when executing plans - dispatches subagent per task with code review
-
-# GOOD: Triggers only - forces reading body
-description: Use when executing implementation plans with independent tasks
-```
-
-**Keyword coverage:**
-- Error messages: "Hook timed out", "ENOTEMPTY", "race condition"
-- Symptoms: "flaky", "hanging", "zombie", "pollution"
-- Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
-- Tools: Actual commands, library names, file types
-
 ## Writing Effective Skill Descriptions
 
 The `description` field is the most important line in your skill. At startup, only the name and description from every skill are pre-loaded into the system prompt. The skill body is NOT loaded until the agent decides it's relevant. That decision is made entirely from the description.
@@ -131,7 +111,9 @@ This makes the description an instruction engineering problem, not just a search
 
 **The mental model:** Think of descriptions as `if` conditions in the agent's routing logic. The agent scans all descriptions on every user message and asks "does this apply right now?" Your description must answer that question unambiguously in one pass.
 
-Bad descriptions cause the skill to never fire, or fire as a false positive.
+<CRITICAL>
+Description = WHEN to load, NEVER what it does. Workflow in description causes agents to follow the description instead of reading the skill body. If the agent can extract a plan of action from the description alone, it will skip loading the skill entirely.
+</CRITICAL>
 
 ### Description Anatomy
 
@@ -143,13 +125,16 @@ Bad descriptions cause the skill to never fire, or fire as a false positive.
 ### The Golden Rule: User Phrasings, Not Abstract Situations
 
 <CRITICAL>
-Descriptions must contain the words users actually say, not abstract descriptions of situations.
-
-BAD: "Use when debugging bugs or unexpected behavior"
-GOOD: "Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this is broken', 'getting an error', 'stopped working', 'regression', 'crash', 'flaky test', or when user pastes a stack trace."
-
-Users say "this is broken" far more often than "I need to debug." Write for the words they use, not the situation you observe.
+Descriptions must contain the words users actually say, not abstract descriptions of situations. Users say "this is broken" far more often than "I need to debug." Write for the words they use, not the situation you observe.
 </CRITICAL>
+
+### Keyword Coverage
+
+Spread discoverable terms across the description to maximize match surface:
+- **Error messages**: "Hook timed out", "ENOTEMPTY", "race condition"
+- **Symptoms**: "flaky", "hanging", "zombie", "pollution"
+- **Synonyms**: "timeout/hang/freeze", "cleanup/teardown/afterEach"
+- **Tools**: Actual commands, library names, file types
 
 ### Checklist for Every Description
 
@@ -159,6 +144,70 @@ Users say "this is broken" far more often than "I need to debug." Write for the 
 - [ ] **Notes invocation path** if primarily called by other skills ("Also invoked by X")
 - [ ] **Avoids being too broad** ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the develop workflow")
 - [ ] **No internal jargon** that only spellbook developers would know
+- [ ] **No workflow leakage**: description contains zero information about what the skill does internally
+
+### BAD vs. GOOD: Real Examples
+
+**Workflow leakage (agent skips body because description contains the plan):**
+```yaml
+# BAD: Leaks internal structure. Agent reads "5-phase process: strategic planning,
+# context analysis, deep review, verification, report generation" and executes
+# that plan directly without loading the skill.
+description: >
+  Use when performing thorough multi-phase code review. 5-phase process:
+  strategic planning, context analysis, deep review, verification, report
+  generation. More heavyweight than code-review.
+
+# GOOD: Triggers only. Agent knows WHEN to load but must read body to learn HOW.
+description: >
+  Use when performing thorough code review with historical context tracking.
+  Triggers: 'thorough review', 'deep review', 'review this branch in detail',
+  'full code review with report'. More heavyweight than code-review; for quick
+  review, use code-review instead.
+```
+
+**Abstract situation vs. user phrasings:**
+```yaml
+# BAD: No trigger phrases. Matches "debug" but misses "this is broken",
+# "getting an error", "why isn't this working" - what users actually say.
+description: Use when debugging bugs or unexpected behavior
+
+# GOOD: Packed with the exact words users type.
+description: >
+  Use when debugging bugs, test failures, or unexpected behavior. Triggers:
+  'why isn't this working', 'this doesn't work', 'X is broken', 'getting an
+  error', 'stopped working', 'regression', 'crash', 'flaky test', or when
+  user pastes a stack trace. NOT for: test quality issues (use fixing-tests),
+  adding new behavior (use develop).
+```
+
+**Too thin (no trigger surface):**
+```yaml
+# BAD: Only matches if user literally says "execute implementation plan."
+# Misses "run the plan", "start building", "implement the tasks", "next step."
+description: Use when you have a written implementation plan to execute
+
+# GOOD: Covers the ways this situation actually arises.
+description: >
+  Use when you have an implementation plan ready to execute. Triggers: 'run
+  the plan', 'start building from the plan', 'execute tasks', 'implement
+  the steps', 'next task'. Also invoked by develop after planning phase.
+```
+
+**Pure workflow summary with zero triggers:**
+```yaml
+# BAD: Describes what the skill does internally. Zero user-facing phrases.
+# An agent will never match this to a user saying "how are my skills performing?"
+description: >
+  Analyze session transcripts to extract skill invocation patterns, score
+  invocations, and produce comparative metrics for skill improvement decisions.
+
+# GOOD: Leads with when/why, includes what users actually ask.
+description: >
+  Use when evaluating skill effectiveness or comparing skill versions.
+  Triggers: 'how are skills performing', 'skill metrics', 'which skills fire
+  correctly', 'skill invocation analysis', 'compare skill versions'.
+```
 
 ### Model Descriptions
 
@@ -184,12 +233,13 @@ Covers direct commands ("implement X") and wish-phrasing ("Would be great to..."
 Triggers: 'let me try', 'maybe if I', 'quick test', rapid context switching,
 multiple changes without isolation."
 ```
-Includes behavioral patterns (rapid context switching, multiple changes without isolation) detectable in LLM's own actions, not just user text.
+Includes behavioral patterns (rapid context switching, multiple changes without isolation) detectable in the agent's own actions, not just user text.
 
 ### Common Description Anti-Patterns
 
 | Anti-Pattern | Example | Problem |
 |-------------|---------|---------|
+| **Workflow leakage** | "3-phase process: plan, execute, verify" | Agent extracts a plan from description and skips loading the skill body entirely. |
 | **Abstract-only** | "Use when reviewing code" | No trigger phrases. "Review code" matches but "look at my changes" doesn't. |
 | **Jargon-first** | "Use when roundtable returns ITERATE verdict" | Users never say this. Internal workflow trigger with no user-facing phrases. |
 | **Too broad** | "Use when writing or modifying code" | Matches every coding task. Will fire constantly as a false positive. |

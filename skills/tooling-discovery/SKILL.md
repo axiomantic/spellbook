@@ -1,9 +1,6 @@
 ---
 name: tooling-discovery
-description: |
-  Discover available MCP servers, CLI tools, and APIs for a technology domain.
-  Searches a curated registry, introspects active MCP tools, scans project
-  dependencies, and checks CLI availability. Results classified by trust tier.
+description: "Use when looking for available tools, MCP servers, or CLI utilities for a task. Triggers: 'what tools do I have', 'is there an MCP for this', 'what's available', 'find a tool for', 'discover tooling', 'what CLI tools exist'. NOT for: documenting existing tools (use documenting-tools)."
 ---
 
 # Tooling Discovery

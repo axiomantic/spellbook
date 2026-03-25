@@ -4,7 +4,7 @@ Audits skills, commands, hooks, and MCP tools for injection risks, privilege esc
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review.
+> Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools', 'is this safe', 'check for injection', 'OWASP'. NOT for: general code review (use code-review --audit).
 
 ## Workflow Diagram
 

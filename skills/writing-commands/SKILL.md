@@ -1,6 +1,6 @@
 ---
 name: writing-commands
-description: Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command"
+description: "Use when creating new commands, editing existing commands, or reviewing command quality. Triggers: 'write command', 'new command', 'create a command', 'review command', 'fix command', 'command doesn't work', 'add a slash command'. NOT for: skill creation (use writing-skills)."
 ---
 
 # Writing Commands

@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path"
+> Use when generating documents, reports, plans, audits, or deciding where to save output files. Triggers: 'save report', 'write plan', 'where should I put this', 'where does this go', 'output directory', 'save this somewhere'.
 
 ## Workflow Diagram
 

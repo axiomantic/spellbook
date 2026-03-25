@@ -1,8 +1,6 @@
 ---
 name: optimizing-instructions
-description: |
-  Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability.
-  Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
+description: "Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability. Triggers: 'optimize instructions', 'reduce tokens', 'compress skill', 'make this shorter', 'too verbose', 'this skill is too big', 'over the line limit', 'trim this down'."
 version: 1.0.0
 ---
 

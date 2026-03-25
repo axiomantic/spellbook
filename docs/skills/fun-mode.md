@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
+> Use when starting a session and wanting creative engagement. Triggers: '/fun', 'use a persona', 'be creative', 'make this fun', 'use a character', 'spice it up'. Session-level mode, not task-level.
 
 ## Workflow Diagram
 

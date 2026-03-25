@@ -4,7 +4,7 @@ Safety layer for PR review that determines whether to analyze diffs only or read
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL_FILES mode selection based on branch state and worktree presence. Prevents the silent wrong-verdict failure where local files on a different branch produce confidently incorrect REFUTED findings.
+> System skill loaded before dispatching any PR review subagent. Ensures correct file version selection based on branch and worktree state. Not invoked directly by users. Required by: code-review, advanced-code-review, distilling-prs when reviewing PRs.
 ## Skill Content
 
 ``````````markdown

@@ -2,8 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability.
-Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
+> Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability. Triggers: 'optimize instructions', 'reduce tokens', 'compress skill', 'make this shorter', 'too verbose', 'this skill is too big', 'over the line limit', 'trim this down'.
 
 ## Workflow Diagram
 

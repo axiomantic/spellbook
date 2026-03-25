@@ -4,7 +4,7 @@ Red-green-refactor TDD workflow that writes failing tests first, implements the 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by develop and executing-plans for each implementation task. NOT a replacement for develop for full feature work.
+> Use when user explicitly requests test-driven development. Triggers: 'TDD', 'write tests first', 'red green refactor', 'test-first', 'start with the test'. Also invoked by develop and executing-plans for implementation tasks. NOT for: full feature work (use develop, which includes TDD internally).
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

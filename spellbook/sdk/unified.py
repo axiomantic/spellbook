@@ -61,16 +61,9 @@ class ClaudeAgentClient(AgentClient):
     def provider(self) -> str:
         return "claude"
 
-    async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        try:
-            from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
-        except ImportError:
-            raise ImportError(
-                "claude-agent-sdk not installed. Install with: uv pip install 'spellbook[claude]'"
-            )
-        
-        # Map unified options to Claude-specific options
-        claude_options = ClaudeAgentOptions(
+    def _make_claude_options(self):
+        from claude_agent_sdk import ClaudeAgentOptions
+        return ClaudeAgentOptions(
             system_prompt=self.options.system_prompt,
             cwd=str(self.options.cwd),
             model=self.options.model,
@@ -79,19 +72,45 @@ class ClaudeAgentClient(AgentClient):
             allowed_tools=self.options.allowed_tools,
             disallowed_tools=self.options.disallowed_tools,
         )
-        
-        async with ClaudeSDKClient(claude_options) as client:
-            async for msg in client.query(prompt):
-                # Map SDK message to our unified AgentMessage
-                yield AgentMessage(
-                    role=getattr(msg, 'role', 'assistant'),
-                    content=getattr(msg, 'content', str(msg)),
-                    usage=getattr(msg, 'usage', {})
-                )
+
+    async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
+        # Collect all messages inside the async with block to avoid yielding
+        # through anyio cancel scopes (which breaks on cross-task finalization).
+        try:
+            from claude_agent_sdk import ClaudeSDKClient
+        except ImportError:
+            raise ImportError(
+                "claude-agent-sdk not installed. Install with: uv pip install 'spellbook[claude]'"
+            )
+
+        messages: list[AgentMessage] = []
+        async with ClaudeSDKClient(self._make_claude_options()) as client:
+            await client.query(prompt)
+            async for msg in client.receive_messages():
+                msg_type = type(msg).__name__
+                if msg_type == "AssistantMessage":
+                    messages.append(AgentMessage(
+                        role="assistant",
+                        content=getattr(msg, 'content', ''),
+                        usage=getattr(msg, 'usage', {})
+                    ))
+                elif msg_type == "ResultMessage":
+                    result = getattr(msg, 'result', '')
+                    if result:
+                        messages.append(AgentMessage(
+                            role="result",
+                            content=result,
+                            usage=getattr(msg, 'usage', {})
+                        ))
+
+        for msg in messages:
+            yield msg
 
     async def run(self, prompt: str) -> str:
         final_text = ""
         async for msg in self.query(prompt):
+            if msg.role == "result":
+                return msg.content
             if msg.role == "assistant":
                 final_text = msg.content
         return final_text

@@ -4,7 +4,7 @@ Designs systems with explicit states, transitions, and multi-step processes usin
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when develop Phase 2.1 detects workflow patterns.
+> Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: 'design a workflow', 'state machine', 'approval flow', 'pipeline stages', 'what states does X have', 'how does X transition'. Also invoked by develop when workflow patterns are detected.
 
 ## Workflow Diagram
 

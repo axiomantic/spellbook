@@ -4,7 +4,7 @@ Audits implementation plans for missing tasks, incorrect ordering, interface mis
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when reviewing implementation plans before execution, especially plans derived from design documents
+> Use when reviewing implementation plans before execution. Triggers: 'is this plan solid', 'review the plan', 'check before I start building', 'anything missing from this plan', 'will this plan work', 'audit the implementation plan'. NOT for: reviewing design documents (use reviewing-design-docs) or creating plans (use writing-plans).
 
 ## Workflow Diagram
 

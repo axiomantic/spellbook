@@ -1,8 +1,6 @@
 ---
 name: finding-dead-code
-description: >
-  Use when reviewing code changes, auditing new features, cleaning up PRs, or user says
-  "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
+description: "Use when reviewing code changes, auditing new features, or cleaning up. Triggers: 'find dead code', 'find unused code', 'check for unnecessary additions', 'what can I remove', 'is this used anywhere', 'can I delete this', 'orphaned code', 'unused imports'."
 intro: |
   Identifies unused code through static analysis, import tracing, and usage verification across the codebase. Treats all code as dead until proven alive, requiring concrete evidence of usage before issuing a verdict. A core spellbook capability for cleaning up unnecessary additions and keeping the codebase lean.
 ---

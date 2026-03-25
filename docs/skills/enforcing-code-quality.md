@@ -4,9 +4,7 @@ Production code quality standards enforcement covering prohibited patterns like 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when writing or modifying code. Enforces production-quality standards,
-prohibits common shortcuts, and ensures pre-existing issues are addressed.
-Invoked automatically by develop and test-driven-development.
+> Behavioral protocol for all code changes. Invoked automatically by develop and test-driven-development. Triggers: 'code quality', 'no shortcuts', 'production quality', 'enforce standards'. NOT for: reviewing others' code (use code-review) or test quality (use fixing-tests).
 
 ## Workflow Diagram
 

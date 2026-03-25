@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: "Use when you have a written implementation plan to execute"
+description: "Use when you have an implementation plan ready to execute. Triggers: 'run the plan', 'start building', 'execute the tasks', 'implement the steps', 'next task in the plan', 'work through the plan'. Also invoked by develop after planning phase completes. NOT for: creating plans (use writing-plans)."
 intro: |
   Executes implementation plans task by task, dispatching subagents for each step and verifying results before advancing. Tracks progress, enforces plan fidelity, and requires evidence of completion at every checkpoint. This core spellbook skill pairs with writing-plans to turn approved designs into working code.
 ---

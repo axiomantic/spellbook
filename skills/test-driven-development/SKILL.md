@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: "Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by develop and executing-plans for each implementation task. NOT a replacement for develop for full feature work."
+description: "Use when user explicitly requests test-driven development. Triggers: 'TDD', 'write tests first', 'red green refactor', 'test-first', 'start with the test'. Also invoked by develop and executing-plans for implementation tasks. NOT for: full feature work (use develop, which includes TDD internally)."
 intro: |
   Red-green-refactor TDD workflow that writes failing tests first, implements the minimum code to pass, then refactors. Enforces strict test-first discipline where every test must be observed failing before implementation begins. Invocable with `/test-driven-development` or triggered automatically when you say "TDD" or "write tests first".
 ---

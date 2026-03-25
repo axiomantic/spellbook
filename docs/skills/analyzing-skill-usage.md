@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Analyze session transcripts to extract skill invocation patterns, score invocations, and produce comparative metrics for skill improvement decisions.
+> Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. Also invoked by skill improvement workflows.
 
 ## Workflow Diagram
 

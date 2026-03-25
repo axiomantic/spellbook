@@ -4,7 +4,7 @@ Identifies unused code through static analysis, import tracing, and usage verifi
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when reviewing code changes, auditing new features, cleaning up PRs, or user says "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
+> Use when reviewing code changes, auditing new features, or cleaning up. Triggers: 'find dead code', 'find unused code', 'check for unnecessary additions', 'what can I remove', 'is this used anywhere', 'can I delete this', 'orphaned code', 'unused imports'.
 
 ## Workflow Diagram
 
