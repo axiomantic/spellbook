@@ -42,6 +42,8 @@ class TestAlembicIni:
         assert parser.get("alembic", "script_location") == "."
 
 
+@pytest.mark.allow("asyncio")
+@pytest.mark.allow("subprocess")
 class TestEnvPyStructure:
     """Verify env.py has correct DB_CONFIGS and imports."""
 
