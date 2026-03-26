@@ -430,19 +430,7 @@ class RichRenderer(InstallerRenderer):
         except (ImportError, Exception):
             existing = None
 
-        # Lazy import of check_tts_available from install.py
-        try:
-            from install import check_tts_available
-        except ImportError:
-            try:
-                import sys as _sys
-                import os as _os
-                _root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
-                if _root not in _sys.path:
-                    _sys.path.insert(0, _root)
-                from install import check_tts_available  # type: ignore[import]
-            except ImportError:
-                return {}
+        from installer.utils import check_tts_available
 
         if existing is not None:
             if check_tts_available():
@@ -718,18 +706,7 @@ class PlainTextRenderer(InstallerRenderer):
         except (ImportError, Exception):
             existing = None
 
-        try:
-            from install import check_tts_available
-        except ImportError:
-            try:
-                import sys as _sys
-                import os as _os
-                _root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
-                if _root not in _sys.path:
-                    _sys.path.insert(0, _root)
-                from install import check_tts_available  # type: ignore[import]
-            except ImportError:
-                return {}
+        from installer.utils import check_tts_available
 
         if existing is not None:
             if check_tts_available():

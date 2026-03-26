@@ -91,14 +91,7 @@ def invoke_skill(skill_name: str, context: dict = None) -> dict:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
-    # Since this is a synchronous wrapper for potentially async SDK calls
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-    return loop.run_until_complete(_invoke())
+    return asyncio.run(_invoke())
 
 def parse_packet_file(packet_file: Path) -> dict:
     """Parse packet markdown file with YAML frontmatter."""

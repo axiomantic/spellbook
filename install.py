@@ -735,20 +735,15 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
 
 def check_tts_available() -> bool:
-    """Check if kokoro TTS is installed in the daemon venv."""
-    try:
-        from installer.components.mcp import get_daemon_python
-        daemon_python = get_daemon_python()
-        if not daemon_python.exists():
-            return False
-        result = subprocess.run(
-            [str(daemon_python), "-c", "import kokoro"],
-            capture_output=True,
-            timeout=30,
-        )
-        return result.returncode == 0
-    except Exception:
-        return False
+    """Check if kokoro TTS is installed in the daemon venv.
+
+    Delegates to ``installer.utils.check_tts_available`` so that installer
+    sub-modules can import the function without ``sys.path`` manipulation.
+    Re-exported here for backward compatibility with existing callers and
+    test patches that reference ``install.check_tts_available``.
+    """
+    from installer.utils import check_tts_available as _check
+    return _check()
 
 
 def _set_tts_config(enabled: bool) -> None:
