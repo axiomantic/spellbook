@@ -10,22 +10,14 @@ import secrets
 def _restore_io_patches():
     """Restore original socket and sqlite3 methods during admin tests.
 
-    bigfoot's plugins patch socket.send/recv/etc. and sqlite3.connect at the
-    class/module level and use ContextVars to decide whether to intercept or
-    pass through. TestClient runs an asyncio event loop in a background thread
-    that uses socket operations (self-pipe) for cross-thread signaling, and
-    aiosqlite creates connections in a background thread. Since ContextVars
-    do not propagate to background threads, bigfoot's interceptors raise
-    SandboxNotActiveError in those threads, breaking TestClient and async DB
-    operations.
-
-    This fixture saves the patched methods, restores originals for the test
-    duration, then re-applies the patches so bigfoot works for non-admin tests.
+    bigfoot patches socket.send/recv/etc. and sqlite3.connect at the class/module
+    level. TestClient runs in a background thread where bigfoot's interceptors
+    raise GuardedCallError (no active sandbox). This fixture temporarily restores
+    the originals for test duration.
     """
     saved_socket_patches = {}
     saved_db_connect = None
 
-    # Restore socket patches
     try:
         from bigfoot.plugins.socket_plugin import (
             _SOCKET_SEND_ORIGINAL,
@@ -49,7 +41,6 @@ def _restore_io_patches():
     except ImportError:
         pass
 
-    # Restore sqlite3.connect patch
     try:
         from bigfoot.plugins.database_plugin import DatabasePlugin
         bf_db_original = DatabasePlugin._original_connect
@@ -61,7 +52,6 @@ def _restore_io_patches():
 
     yield
 
-    # Re-apply bigfoot's patches
     for name, bf_patch in saved_socket_patches.items():
         setattr(socket.socket, name, bf_patch)
     if saved_db_connect is not None:
