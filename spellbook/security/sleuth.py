@@ -1,6 +1,6 @@
 """PromptSleuth semantic intent classifier.
 
-Uses the Anthropic Python SDK to classify content as containing
+Uses the unified SDK to classify content as containing
 directive intent (injection) vs. pure data. Results are cached
 and budget-controlled.
 """
@@ -10,7 +10,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 import sqlite3
 import time
 from typing import Optional
@@ -41,24 +40,23 @@ def _truncate_content(content: str, max_bytes: int = 50000) -> str:
     return encoded[:max_bytes].decode("utf-8", errors="ignore")
 
 
-def parse_classification(response) -> dict:
-    """Parse classification result from Anthropic API response.
+def parse_classification(text: str) -> dict:
+    """Parse classification result from plain text JSON response.
 
     Args:
-        response: Anthropic Messages API response object.
+        text: JSON string from the unified SDK's run() method.
 
     Returns:
         Dict with classification, confidence, evidence keys.
     """
     try:
-        text = response.content[0].text
         parsed = json.loads(text)
         return {
             "classification": parsed.get("classification", "UNKNOWN"),
             "confidence": float(parsed.get("confidence", 0.0)),
             "evidence": parsed.get("evidence", ""),
         }
-    except (json.JSONDecodeError, IndexError, KeyError, TypeError, ValueError):
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
         return {
             "classification": "UNKNOWN",
             "confidence": 0.0,

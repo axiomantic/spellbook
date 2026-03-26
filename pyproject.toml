@@ -49,8 +49,6 @@ docs = [
     "mkdocs-material>=9.0.0",
     "mike>=2.0.0",
 ]
-sleuth = ["anthropic>=0.40"]
-
 [project.scripts]
 spellbook = "spellbook.cli.main:main"
 

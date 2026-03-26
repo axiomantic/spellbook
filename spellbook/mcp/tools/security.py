@@ -345,7 +345,7 @@ async def security_check_intent(
     Uses PromptSleuth to determine if content contains instructions intended
     to change AI behavior (DIRECTIVE) vs. pure data (DATA).
 
-    Requires PromptSleuth to be enabled and an Anthropic API key configured.
+    Requires PromptSleuth to be enabled and the unified SDK configured.
     Results are cached (SHA-256 hash of content) for 1 hour.
 
     Args:
@@ -356,8 +356,6 @@ async def security_check_intent(
     Returns:
         Dict with classification, confidence, evidence, cached status, budget_remaining.
     """
-    import os
-
     from spellbook.security.sleuth import (
         CLASSIFICATION_PROMPT,
         _check_budget,
@@ -402,46 +400,34 @@ async def security_check_intent(
             "budget_remaining": 0,
         }
 
-    # Check API key
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        api_key = config_get("security.sleuth.api_key")
-    if not api_key:
-        return {
-            "classification": "UNKNOWN",
-            "confidence": 0.0,
-            "evidence": "No Anthropic API key configured",
-            "cached": False,
-            "budget_remaining": budget.get("calls_remaining", -1),
-        }
-
     # Truncate content
     max_bytes = config_get("security.sleuth.max_content_bytes") or 50000
     truncated = _truncate_content(content, max_bytes=max_bytes)
 
-    # Call Anthropic API
+    # Call unified SDK
     try:
         import asyncio
         import time
 
-        from anthropic import AsyncAnthropic
+        from spellbook.sdk.unified import AgentOptions, get_agent_client
 
-        client = AsyncAnthropic(api_key=api_key)
         timeout = config_get("security.sleuth.timeout_seconds") or 5
-        max_tokens = config_get("security.sleuth.max_tokens_per_check") or 1024
+        model = config_get("security.sleuth.model") or None
+        options = AgentOptions(
+            model=model,
+            max_turns=1,
+        )
+        client = get_agent_client(options=options)
 
         start = time.monotonic()
-        response = await asyncio.wait_for(
-            client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=max_tokens,
-                messages=[{"role": "user", "content": CLASSIFICATION_PROMPT.format(content=truncated)}],
-            ),
+        prompt = CLASSIFICATION_PROMPT.format(content=truncated)
+        response_text = await asyncio.wait_for(
+            client.run(prompt),
             timeout=float(timeout),
         )
         latency_ms = int((time.monotonic() - start) * 1000)
 
-        result = parse_classification(response)
+        result = parse_classification(response_text)
         await write_sleuth_cache(c_hash, result)
         await write_intent_check(
             c_hash, source_tool, result,
@@ -456,7 +442,7 @@ async def security_check_intent(
         return {
             "classification": "UNKNOWN",
             "confidence": 0.0,
-            "evidence": "anthropic package not installed. Install with: uv pip install 'spellbook[sleuth]'",
+            "evidence": "Unified SDK not available. Install with: uv pip install 'spellbook[claude]'",
             "cached": False,
             "budget_remaining": budget.get("calls_remaining", -1),
         }
