@@ -2,8 +2,6 @@ import pytest
 import sqlite3
 from unittest.mock import patch, MagicMock
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 
 def _make_test_db(tmp_path):
     """Create a test DB and return a cross-thread-safe connection."""

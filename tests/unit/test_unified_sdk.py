@@ -109,7 +109,6 @@ def test_get_agent_client_factory():
     assert isinstance(client, ClaudeAgentClient)
 
 @pytest.mark.asyncio
-@pytest.mark.allow("subprocess")
 async def test_gemini_spawn_session():
     client = GeminiAgentClient()
     

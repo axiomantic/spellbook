@@ -632,17 +632,17 @@ class TestEnsureDaemonVenvHashDetection:
     """Test the hash comparison logic in ensure_daemon_venv()."""
 
     def test_hash_matches_skips_rebuild(self, tmp_path, monkeypatch):
-        """When lockfile hash matches stored hash, venv is not rebuilt."""
+        """When pyproject hash matches stored hash, venv is not rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\nuvicorn==0.30\n")
+        # Create pyproject.toml (production uses this, not requirements.txt)
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         # Create venv dir with matching hash file and a python binary
         venv_dir = tmp_path / "config" / "daemon-venv"
@@ -651,7 +651,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(
@@ -669,14 +669,14 @@ class TestEnsureDaemonVenvHashDetection:
         assert "up to date" in msg
 
     def test_hash_mismatch_triggers_rebuild(self, tmp_path, monkeypatch):
-        """When lockfile hash differs from stored hash, venv is rebuilt."""
+        """When pyproject hash differs from stored hash, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==2.0\nuvicorn==0.31\n")
+        # Create pyproject.toml
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\nversion = '2.0'\n")
 
         # Create venv dir with mismatched hash
         venv_dir = tmp_path / "config" / "daemon-venv"
@@ -685,7 +685,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text("stale_hash_value")
 
         monkeypatch.setattr(
@@ -710,14 +710,14 @@ class TestEnsureDaemonVenvHashDetection:
         """force=True always triggers rebuild even when hash matches."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        # Create pyproject.toml
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute matching hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_bin = venv_dir / "bin"
@@ -725,7 +725,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(
@@ -746,13 +746,13 @@ class TestEnsureDaemonVenvHashDetection:
         assert mock_run.called
 
     def test_missing_hash_file_triggers_rebuild(self, tmp_path, monkeypatch):
-        """When no .lockfile-hash exists, venv is rebuilt."""
+        """When no .pyproject-hash exists, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_bin = venv_dir / "bin"
@@ -760,7 +760,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        # No .lockfile-hash file exists
+        # No .pyproject-hash file exists
 
         monkeypatch.setattr(
             "installer.components.mcp.get_daemon_venv_dir",
@@ -778,13 +778,13 @@ class TestEnsureDaemonVenvHashDetection:
 
         assert mock_run.called
 
-    def test_missing_lockfile_returns_failure(self, tmp_path):
-        """Returns (False, message) when lockfile doesn't exist."""
+    def test_missing_pyproject_returns_failure(self, tmp_path):
+        """Returns (False, message) when pyproject.toml doesn't exist."""
         from installer.components.mcp import ensure_daemon_venv
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        # No daemon/requirements.txt
+        # No pyproject.toml
 
         success, msg = ensure_daemon_venv(sb_dir)
 
@@ -795,13 +795,13 @@ class TestEnsureDaemonVenvHashDetection:
         """When daemon python binary doesn't exist, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute matching hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_dir.mkdir(parents=True)
@@ -809,7 +809,7 @@ class TestEnsureDaemonVenvHashDetection:
         # Python binary does NOT exist
         python_path = venv_dir / "bin" / "python"
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(

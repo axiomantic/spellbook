@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 
 def _make_mock_session(side_effects):
     """Create a mock async session that returns results from side_effects list.

@@ -16,6 +16,8 @@ from unittest.mock import patch
 import pytest
 from pathlib import Path
 
+pytestmark = pytest.mark.asyncio
+
 from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -48,9 +50,6 @@ async def forged_session():
         yield session
 
     await engine.dispose()
-
-
-pytestmark = pytest.mark.asyncio
 
 
 class TestSchemaIntegration:

@@ -16,8 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 ROUTE_MODULE = "spellbook.admin.routes.memory"
 
 

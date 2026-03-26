@@ -7,8 +7,6 @@ import pytest
 
 from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 
 @pytest.mark.asyncio
 async def test_publish_reaches_subscriber():

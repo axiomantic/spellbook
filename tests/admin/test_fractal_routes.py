@@ -4,8 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 
 def _mock_graph(**overrides):
     """Create a mock FractalGraph ORM object with to_dict()."""

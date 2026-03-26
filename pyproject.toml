@@ -80,3 +80,4 @@ markers = [
 
 [tool.bigfoot]
 guard = "error"
+guard_allow = ["socket", "database", "subprocess"]

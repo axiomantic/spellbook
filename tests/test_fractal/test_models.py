@@ -1,4 +1,5 @@
 """Tests for fractal thinking data models."""
+import pytest
 
 
 class TestConstants:

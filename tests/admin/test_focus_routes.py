@@ -18,8 +18,6 @@ from sqlalchemy.pool import StaticPool
 from spellbook.db.base import SpellbookBase
 from spellbook.db.spellbook_models import StintStack, StintCorrectionEvent
 
-pytestmark = pytest.mark.allow("socket", "database")
-
 
 @pytest.fixture
 async def async_engine():
