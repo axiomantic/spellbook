@@ -428,7 +428,7 @@ class TestForceRegenFlag:
 
         with (
             mock.patch("generate_diagrams.classify_change") as mock_classify,
-            mock.patch("generate_diagrams.generate_diagram", new_callable=mock.AsyncMock, return_value=gen_result) as mock_generate,
+            mock.patch("generate_diagrams.generate_diagram", return_value=gen_result) as mock_generate,
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),
             mock.patch("generate_diagrams.discover_agents", return_value=[]),
@@ -518,7 +518,7 @@ class TestProcessingLoopIntegration:
         with (
             mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="REGENERATE")),
             mock.patch("generate_diagrams.stamp_as_fresh") as mock_stamp,
-            mock.patch("generate_diagrams.generate_diagram", new_callable=mock.AsyncMock) as mock_generate,
+            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),
             mock.patch("generate_diagrams.discover_agents", return_value=[]),
@@ -545,7 +545,7 @@ class TestProcessingLoopIntegration:
             mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="PATCH")),
             mock.patch("generate_diagrams.get_source_diff", return_value="- old\n+ new"),
             mock.patch("generate_diagrams.patch_diagram", mock.AsyncMock(return_value=None)),
-            mock.patch("generate_diagrams.generate_diagram", new_callable=mock.AsyncMock) as mock_generate,
+            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),
             mock.patch("generate_diagrams.discover_agents", return_value=[]),
@@ -570,7 +570,7 @@ class TestProcessingLoopIntegration:
 
         with (
             mock.patch("generate_diagrams.classify_change") as mock_classify,
-            mock.patch("generate_diagrams.generate_diagram", new_callable=mock.AsyncMock) as mock_generate,
+            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),
             mock.patch("generate_diagrams.discover_agents", return_value=[]),
@@ -646,7 +646,7 @@ class TestInteractiveSmartClassification:
         with (
             mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="REGENERATE")),
             mock.patch("generate_diagrams.show_source_changes"),
-            mock.patch("generate_diagrams.generate_diagram", new_callable=mock.AsyncMock) as mock_generate,
+            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),
             mock.patch("generate_diagrams.discover_agents", return_value=[]),

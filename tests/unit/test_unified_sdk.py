@@ -16,12 +16,14 @@ async def test_claude_agent_client_query():
     options = AgentOptions(system_prompt="test prompt", model="sonnet")
     client = ClaudeAgentClient(options)
     
-    mock_msg = MagicMock()
-    mock_msg.role = "assistant"
-    mock_msg.content = "hello from claude"
-    mock_msg.usage = {"input_tokens": 10}
-    
-    # Mock the ClaudeSDKClient and its query method
+    # Create a mock message whose type().__name__ == "AssistantMessage"
+    class AssistantMessage:
+        def __init__(self):
+            self.content = "hello from claude"
+            self.usage = {"input_tokens": 10}
+    mock_msg = AssistantMessage()
+
+    # Mock the ClaudeSDKClient and its query/receive_messages methods
     mock_sdk_client_instance = MagicMock()
     # Create an async iterator helper
     class AsyncIter:
@@ -33,9 +35,10 @@ async def test_claude_agent_client_query():
             if not self.items:
                 raise StopAsyncIteration
             return self.items.pop(0)
-            
-    mock_sdk_client_instance.query.return_value = AsyncIter([mock_msg])
-    mock_sdk_client_instance.__aenter__.return_value = mock_sdk_client_instance
+
+    mock_sdk_client_instance.query = AsyncMock()
+    mock_sdk_client_instance.receive_messages.return_value = AsyncIter([mock_msg])
+    mock_sdk_client_instance.__aenter__ = AsyncMock(return_value=mock_sdk_client_instance)
     mock_sdk_client_instance.__aexit__ = AsyncMock()
     
     with patch("claude_agent_sdk.ClaudeSDKClient", return_value=mock_sdk_client_instance):

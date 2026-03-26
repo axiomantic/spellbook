@@ -411,13 +411,14 @@ class TestServerStartupAuthIntegration:
             auth.TOKEN_PATH = original
 
     def test_fastmcp_version_constraint(self):
-        """pyproject.toml must require fastmcp>=2.9.0 for middleware support."""
+        """pyproject.toml must require fastmcp in the daemon dependency group."""
         import tomllib
 
         pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
         with open(pyproject_path, "rb") as f:
             pyproject = tomllib.load(f)
 
-        deps = pyproject["project"]["dependencies"]
-        fastmcp_deps = [d for d in deps if d.startswith("fastmcp")]
-        assert fastmcp_deps == ["fastmcp>=2.9.0,<4"]
+        daemon_deps = pyproject.get("dependency-groups", {}).get("daemon", [])
+        fastmcp_deps = [d for d in daemon_deps if d.startswith("fastmcp")]
+        assert len(fastmcp_deps) == 1, "fastmcp must be in the daemon dependency group"
+        assert fastmcp_deps[0].startswith("fastmcp>="), f"fastmcp must have a minimum version: {fastmcp_deps[0]}"

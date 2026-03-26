@@ -1,87 +1,71 @@
-"""Tests for TTS Configuration section in AGENTS.spellbook.md.
+"""Tests for Audio and Notification Configuration section in AGENTS.spellbook.md.
 
-Task 17: The installable template should include a TTS Configuration section
-between Session Resume and Encyclopedia, documenting available MCP tools
-and usage patterns.
+Task 17: The installable template should include an Audio and Notification
+Configuration section between Session Resume and Project Knowledge, referencing
+the audio-notifications skill for TTS (kokoro) and OS notification details.
 """
 
 from pathlib import Path
 
 TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "AGENTS.spellbook.md"
 
+SECTION_HEADING = "## Audio and Notification Configuration"
 
-class TestTtsConfigurationSection:
-    """AGENTS.spellbook.md should contain a TTS Configuration section."""
+
+class TestAudioNotificationSection:
+    """AGENTS.spellbook.md should contain an Audio and Notification Configuration section."""
 
     def _read_template(self) -> str:
         return TEMPLATE_PATH.read_text(encoding="utf-8")
 
+    def _get_section(self, content: str) -> str:
+        """Extract the Audio and Notification Configuration section text."""
+        start = content.index(SECTION_HEADING)
+        next_section = content.index("\n## ", start + 1)
+        return content[start:next_section]
+
     def test_section_exists(self):
-        """The template should have a '## TTS Configuration' section."""
+        """The template should have an Audio and Notification Configuration section."""
         content = self._read_template()
-        assert "## TTS Configuration" in content
+        assert SECTION_HEADING in content
 
     def test_section_after_session_resume(self):
-        """TTS Configuration should appear after Session Resume."""
+        """Audio and Notification Configuration should appear after Session Resume."""
         content = self._read_template()
         resume_pos = content.index("## Session Resume")
-        tts_pos = content.index("## TTS Configuration")
-        assert tts_pos > resume_pos
+        section_pos = content.index(SECTION_HEADING)
+        assert section_pos > resume_pos
 
     def test_section_before_project_knowledge(self):
-        """TTS Configuration should appear before Project Knowledge."""
+        """Audio and Notification Configuration should appear before Project Knowledge."""
         content = self._read_template()
-        tts_pos = content.index("## TTS Configuration")
+        section_pos = content.index(SECTION_HEADING)
         project_knowledge_pos = content.index("## Project Knowledge (AGENTS.md)")
-        assert tts_pos < project_knowledge_pos
+        assert section_pos < project_knowledge_pos
 
-    def test_documents_kokoro_speak(self):
-        """The section should document the kokoro_speak tool."""
+    def test_references_audio_notifications_skill(self):
+        """The section should reference the audio-notifications skill."""
         content = self._read_template()
-        # Extract the TTS section
-        tts_start = content.index("## TTS Configuration")
-        # Find next h2 section
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section]
-        assert "kokoro_speak" in tts_section
+        section = self._get_section(content)
+        assert "audio-notifications" in section
 
-    def test_documents_kokoro_status(self):
-        """The section should document the kokoro_status tool."""
+    def test_mentions_tts_kokoro(self):
+        """The section should mention TTS and kokoro."""
         content = self._read_template()
-        tts_start = content.index("## TTS Configuration")
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section]
-        assert "kokoro_status" in tts_section
+        section = self._get_section(content)
+        assert "TTS" in section
+        assert "kokoro" in section
 
-    def test_documents_tts_session_set(self):
-        """The section should document the tts_session_set tool."""
+    def test_mentions_os_notifications(self):
+        """The section should mention OS notification configuration."""
         content = self._read_template()
-        tts_start = content.index("## TTS Configuration")
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section]
-        assert "tts_session_set" in tts_section
+        section = self._get_section(content)
+        assert "notification" in section.lower()
 
-    def test_documents_tts_config_set(self):
-        """The section should document the tts_config_set tool."""
+    def test_skill_listed_in_key_references(self):
+        """The audio-notifications skill should appear in the Key Skill References."""
         content = self._read_template()
-        tts_start = content.index("## TTS Configuration")
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section]
-        assert "tts_config_set" in tts_section
-
-    def test_mentions_session_mute_unmute(self):
-        """The section should explain per-session mute/unmute."""
-        content = self._read_template()
-        tts_start = content.index("## TTS Configuration")
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section].lower()
-        assert "session" in tts_section
-        assert "mute" in tts_section or "enabled=false" in tts_section
-
-    def test_mentions_auto_notifications(self):
-        """The section should describe auto-notification behavior."""
-        content = self._read_template()
-        tts_start = content.index("## TTS Configuration")
-        next_section = content.index("\n## ", tts_start + 1)
-        tts_section = content[tts_start:next_section].lower()
-        assert "pretooluse" in tts_section or "posttooluse" in tts_section or "hook" in tts_section
+        refs_start = content.index("## Key Skill References")
+        next_section = content.index("\n## ", refs_start + 1)
+        refs_section = content[refs_start:next_section]
+        assert "audio-notifications" in refs_section
