@@ -5,6 +5,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 class TestConfigGet:
     """GET /api/config returns all config as a dict."""

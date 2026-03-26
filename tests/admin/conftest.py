@@ -4,19 +4,6 @@ import secrets
 
 
 @pytest.fixture(autouse=True)
-def _allow_io():
-    """Allow real socket and database calls in admin tests.
-
-    Admin tests make real I/O through FastAPI TestClient (socket) and
-    aiosqlite (database). bigfoot's guard mode blocks these by default.
-    """
-    import bigfoot
-
-    with bigfoot.allow("socket", "database"):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def mock_mcp_token(tmp_path):
     """Mock the MCP token for all admin tests."""
     token = secrets.token_urlsafe(32)

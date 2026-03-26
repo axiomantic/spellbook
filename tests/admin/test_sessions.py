@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 def _write_session_file(project_dir: Path, session_id: str, messages: list[dict]) -> Path:
     """Write a JSONL session file for testing."""

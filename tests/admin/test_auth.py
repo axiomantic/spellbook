@@ -3,6 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 class TestExchangeToken:
     def test_create_exchange_token_returns_string(self, mock_mcp_token):

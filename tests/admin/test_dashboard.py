@@ -6,6 +6,8 @@ import pytest
 
 from spellbook.db.spellbook_models import SecurityEvent, Memory
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 def test_dashboard_returns_200(client):
     """Dashboard endpoint returns health, counts, and activity."""

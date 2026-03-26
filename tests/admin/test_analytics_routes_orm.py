@@ -4,9 +4,13 @@ Verifies the routes correctly use get_spellbook_session() and process
 query results into the expected API response format.
 """
 
+import pytest
+
 from collections import namedtuple
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
+
+pytestmark = pytest.mark.allow("socket", "database")
 
 
 def _make_session_mock(execute_return):

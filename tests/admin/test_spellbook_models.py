@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 
 from spellbook.db.base import SpellbookBase
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 # All 29 expected tables and their exact column definitions.
 # Derived from spellbook/core/db.py and

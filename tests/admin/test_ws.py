@@ -9,6 +9,8 @@ from starlette.websockets import WebSocketDisconnect
 from spellbook.admin.auth import create_ws_ticket
 from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 def test_ws_rejects_missing_ticket(admin_app):
     client = TestClient(admin_app)

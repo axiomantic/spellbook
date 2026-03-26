@@ -3,6 +3,8 @@
 import pytest
 from pathlib import Path
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 class TestEngineCreation:
     def test_engines_importable(self):

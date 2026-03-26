@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.allow("socket", "database")
+
 
 class TestSecurityEvents:
     def _mock_session_with_events(self, events, total):
