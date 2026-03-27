@@ -1,9 +1,8 @@
 """Tests for spellbook doctor command."""
 
 import json
-import sys
-from unittest.mock import patch
 
+import bigfoot
 import pytest
 
 from spellbook.cli.commands.doctor import register, run
@@ -71,7 +70,7 @@ class TestDoctorRun:
             assert "status" in check
             assert check["status"] in ("pass", "fail", "warn")
 
-    def test_exit_code_zero_when_all_pass(self, capsys, monkeypatch):
+    def test_exit_code_zero_when_all_pass(self, capsys):
         """doctor should exit 0 when all checks pass."""
         from spellbook.health import doctor
 
@@ -80,14 +79,16 @@ class TestDoctorRun:
                 doctor.CheckResult("test", "pass", "ok"),
             ]
 
-        monkeypatch.setattr(
-            "spellbook.cli.commands.doctor.run_checks", fake_checks
-        )
+        proxy = bigfoot.mock("spellbook.cli.commands.doctor:run_checks")
+        proxy.calls(fake_checks)
+
         import argparse
 
         args = argparse.Namespace(json=False)
-        run(args)
+        with bigfoot:
+            run(args)
         # If we get here without SystemExit, exit code is 0
+        proxy.assert_call(args=(), kwargs={})
 
 
 class TestDoctorChecks:
