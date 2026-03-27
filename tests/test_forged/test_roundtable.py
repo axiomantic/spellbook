@@ -17,9 +17,9 @@ The roundtable system uses tarot archetypes to validate stage completion:
 
 import pytest
 import json
+import bigfoot
 from contextlib import asynccontextmanager
 from pathlib import Path
-from unittest.mock import patch
 
 from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -1194,7 +1194,10 @@ class TestRoundtableGateParameter:
         async def _mock_forged_session():
             yield forged_session
 
-        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+        mock_get_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_get_session.calls(_mock_forged_session)
+
+        async with bigfoot:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",
@@ -1202,6 +1205,8 @@ class TestRoundtableGateParameter:
                 gate="test_suite",
                 feature_name="test-feature",
             )
+
+        mock_get_session.assert_call()
 
         assert "gate" in result
         assert result["gate"] == "test_suite"
@@ -1221,7 +1226,10 @@ class TestRoundtableGateParameter:
         async def _mock_forged_session():
             yield forged_session
 
-        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+        mock_get_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_get_session.calls(_mock_forged_session)
+
+        async with bigfoot:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",
@@ -1229,6 +1237,8 @@ class TestRoundtableGateParameter:
                 gate="code_review",
                 feature_name="test-feature",
             )
+
+        mock_get_session.assert_call()
 
         assert result["consensus"] is True
 

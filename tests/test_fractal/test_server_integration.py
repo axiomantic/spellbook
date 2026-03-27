@@ -7,6 +7,7 @@ Tests that:
 4. init_fractal_schema is imported and called during server init
 """
 
+import bigfoot
 import pytest
 import json
 
@@ -484,18 +485,26 @@ class TestFractalGetSaturationStatusDelegation:
 # ---------------------------------------------------------------------------
 
 
+def _async_returns(value):
+    """Create an async callable that returns value, for mocking async functions."""
+    async def _fn(*args, **kwargs):
+        return value
+    return _fn
+
+
 class TestServerToolParameterMapping:
     """Test that server tool wrappers correctly map metadata -> metadata_json."""
 
-    async def test_fractal_create_graph_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_create_graph_wrapper_delegates(self, fractal_db):
         """fractal_create_graph wrapper should pass metadata as metadata_json."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_create_graph") as mock_create:
-            mock_create.return_value = {"graph_id": "test", "status": "active"}
+        mock_create = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_create_graph"
+        )
+        mock_create.calls(_async_returns({"graph_id": "test", "status": "active"}))
 
-            # Call the wrapper's underlying function
+        async with bigfoot:
             await server.fractal_create_graph.fn(
                 seed="test question",
                 intensity="pulse",
@@ -503,21 +512,26 @@ class TestServerToolParameterMapping:
                 metadata='{"key": "value"}',
             )
 
-            mock_create.assert_called_once_with(
-                seed="test question",
-                intensity="pulse",
-                checkpoint_mode="autonomous",
-                metadata_json='{"key": "value"}',
-            )
+        mock_create.assert_call(
+            args=(),
+            kwargs={
+                "seed": "test question",
+                "intensity": "pulse",
+                "checkpoint_mode": "autonomous",
+                "metadata_json": '{"key": "value"}',
+            },
+        )
 
-    async def test_fractal_add_node_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_add_node_wrapper_delegates(self, fractal_db):
         """fractal_add_node wrapper should pass metadata as metadata_json."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_add_node") as mock_add:
-            mock_add.return_value = {"node_id": "test", "status": "open"}
+        mock_add = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_add_node"
+        )
+        mock_add.calls(_async_returns({"node_id": "test", "status": "open"}))
 
+        async with bigfoot:
             await server.fractal_add_node.fn(
                 graph_id="g1",
                 parent_id="p1",
@@ -527,167 +541,225 @@ class TestServerToolParameterMapping:
                 metadata='{"conf": 0.9}',
             )
 
-            mock_add.assert_called_once_with(
-                graph_id="g1",
-                parent_id="p1",
-                node_type="answer",
-                text="test answer",
-                owner="agent-1",
-                metadata_json='{"conf": 0.9}',
-            )
+        mock_add.assert_call(
+            args=(),
+            kwargs={
+                "graph_id": "g1",
+                "parent_id": "p1",
+                "node_type": "answer",
+                "text": "test answer",
+                "owner": "agent-1",
+                "metadata_json": '{"conf": 0.9}',
+            },
+        )
 
-    async def test_fractal_update_node_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_update_node_wrapper_delegates(self, fractal_db):
         """fractal_update_node wrapper should pass metadata as metadata_json."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_update_node") as mock_update:
-            mock_update.return_value = {"node_id": "n1", "metadata": {}}
+        mock_update = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_update_node"
+        )
+        mock_update.calls(_async_returns({"node_id": "n1", "metadata": {}}))
 
+        async with bigfoot:
             await server.fractal_update_node.fn(
                 graph_id="g1",
                 node_id="n1",
                 metadata='{"score": 42}',
             )
 
-            mock_update.assert_called_once_with(
-                graph_id="g1",
-                node_id="n1",
-                metadata_json='{"score": 42}',
-            )
+        mock_update.assert_call(
+            args=(),
+            kwargs={
+                "graph_id": "g1",
+                "node_id": "n1",
+                "metadata_json": '{"score": 42}',
+            },
+        )
 
-    async def test_fractal_resume_graph_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_resume_graph_wrapper_delegates(self, fractal_db):
         """fractal_resume_graph wrapper should pass graph_id directly."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_resume_graph") as mock_resume:
-            mock_resume.return_value = {"graph_id": "g1", "status": "active"}
+        mock_resume = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_resume_graph"
+        )
+        mock_resume.calls(_async_returns({"graph_id": "g1", "status": "active"}))
 
+        async with bigfoot:
             await server.fractal_resume_graph.fn(graph_id="g1")
 
-            mock_resume.assert_called_once_with(graph_id="g1")
+        mock_resume.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_delete_graph_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_delete_graph_wrapper_delegates(self, fractal_db):
         """fractal_delete_graph wrapper should pass graph_id directly."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_delete_graph") as mock_delete:
-            mock_delete.return_value = {"deleted": True}
+        mock_delete = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_delete_graph"
+        )
+        mock_delete.calls(_async_returns({"deleted": True}))
 
+        async with bigfoot:
             await server.fractal_delete_graph.fn(graph_id="g1")
 
-            mock_delete.assert_called_once_with(graph_id="g1")
+        mock_delete.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_update_graph_status_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_update_graph_status_wrapper_delegates(self, fractal_db):
         """fractal_update_graph_status wrapper should pass all params."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_update_graph_status") as mock_status:
-            mock_status.return_value = {"status": "completed"}
+        mock_status = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_update_graph_status"
+        )
+        mock_status.calls(_async_returns({"status": "completed"}))
 
+        async with bigfoot:
             await server.fractal_update_graph_status.fn(
                 graph_id="g1",
                 status="completed",
                 reason="done",
             )
 
-            mock_status.assert_called_once_with(
-                graph_id="g1",
-                status="completed",
-                reason="done",
-            )
+        mock_status.assert_call(
+            args=(),
+            kwargs={
+                "graph_id": "g1",
+                "status": "completed",
+                "reason": "done",
+            },
+        )
 
-    async def test_fractal_mark_saturated_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_mark_saturated_wrapper_delegates(self, fractal_db):
         """fractal_mark_saturated wrapper should pass all params."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_mark_saturated") as mock_sat:
-            mock_sat.return_value = {"status": "saturated"}
+        mock_sat = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_mark_saturated"
+        )
+        mock_sat.calls(_async_returns({"status": "saturated"}))
 
+        async with bigfoot:
             await server.fractal_mark_saturated.fn(
                 graph_id="g1",
                 node_id="n1",
                 reason="semantic_overlap",
             )
 
-            mock_sat.assert_called_once_with(
-                graph_id="g1",
-                node_id="n1",
-                reason="semantic_overlap",
-            )
+        mock_sat.assert_call(
+            args=(),
+            kwargs={
+                "graph_id": "g1",
+                "node_id": "n1",
+                "reason": "semantic_overlap",
+            },
+        )
 
-    async def test_fractal_get_snapshot_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_get_snapshot_wrapper_delegates(self, fractal_db):
         """fractal_get_snapshot wrapper should pass graph_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_get_snapshot") as mock_snap:
-            mock_snap.return_value = {"graph_id": "g1", "nodes": []}
+        mock_snap = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_get_snapshot"
+        )
+        mock_snap.calls(_async_returns({"graph_id": "g1", "nodes": []}))
 
+        async with bigfoot:
             await server.fractal_get_snapshot.fn(graph_id="g1")
 
-            mock_snap.assert_called_once_with(graph_id="g1")
+        mock_snap.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_get_branch_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_get_branch_wrapper_delegates(self, fractal_db):
         """fractal_get_branch wrapper should pass graph_id and node_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_get_branch") as mock_branch:
-            mock_branch.return_value = {"graph_id": "g1", "nodes": []}
+        mock_branch = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_get_branch"
+        )
+        mock_branch.calls(_async_returns({"graph_id": "g1", "nodes": []}))
 
+        async with bigfoot:
             await server.fractal_get_branch.fn(graph_id="g1", node_id="n1")
 
-            mock_branch.assert_called_once_with(graph_id="g1", node_id="n1")
+        mock_branch.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1", "node_id": "n1"},
+        )
 
-    async def test_fractal_get_open_questions_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_get_open_questions_wrapper_delegates(self, fractal_db):
         """fractal_get_open_questions wrapper should pass graph_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_get_open_questions") as mock_oq:
-            mock_oq.return_value = {"graph_id": "g1", "open_questions": []}
+        mock_oq = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_get_open_questions"
+        )
+        mock_oq.calls(_async_returns({"graph_id": "g1", "open_questions": []}))
 
+        async with bigfoot:
             await server.fractal_get_open_questions.fn(graph_id="g1")
 
-            mock_oq.assert_called_once_with(graph_id="g1")
+        mock_oq.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_query_convergence_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_query_convergence_wrapper_delegates(self, fractal_db):
         """fractal_query_convergence wrapper should pass graph_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_query_convergence") as mock_conv:
-            mock_conv.return_value = {"graph_id": "g1", "convergence_points": []}
+        mock_conv = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_query_convergence"
+        )
+        mock_conv.calls(_async_returns({"graph_id": "g1", "convergence_points": []}))
 
+        async with bigfoot:
             await server.fractal_query_convergence.fn(graph_id="g1")
 
-            mock_conv.assert_called_once_with(graph_id="g1")
+        mock_conv.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_query_contradictions_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_query_contradictions_wrapper_delegates(self, fractal_db):
         """fractal_query_contradictions wrapper should pass graph_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_query_contradictions") as mock_cont:
-            mock_cont.return_value = {"graph_id": "g1", "contradictions": []}
+        mock_cont = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_query_contradictions"
+        )
+        mock_cont.calls(_async_returns({"graph_id": "g1", "contradictions": []}))
 
+        async with bigfoot:
             await server.fractal_query_contradictions.fn(graph_id="g1")
 
-            mock_cont.assert_called_once_with(graph_id="g1")
+        mock_cont.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )
 
-    async def test_fractal_get_saturation_status_wrapper_delegates(self, fractal_db, monkeypatch):
+    async def test_fractal_get_saturation_status_wrapper_delegates(self, fractal_db):
         """fractal_get_saturation_status wrapper should pass graph_id."""
         from spellbook import server
-        from unittest.mock import patch
 
-        with patch("spellbook.mcp.tools.fractal.do_fractal_get_saturation_status") as mock_ss:
-            mock_ss.return_value = {"graph_id": "g1", "branches": []}
+        mock_ss = bigfoot.mock(
+            "spellbook.mcp.tools.fractal:do_fractal_get_saturation_status"
+        )
+        mock_ss.calls(_async_returns({"graph_id": "g1", "branches": []}))
 
+        async with bigfoot:
             await server.fractal_get_saturation_status.fn(graph_id="g1")
 
-            mock_ss.assert_called_once_with(graph_id="g1")
+        mock_ss.assert_call(
+            args=(),
+            kwargs={"graph_id": "g1"},
+        )

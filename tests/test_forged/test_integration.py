@@ -11,7 +11,8 @@ These tests verify the complete workflow integration:
 
 import json
 from contextlib import asynccontextmanager
-from unittest.mock import patch
+
+import bigfoot
 
 import pytest
 from pathlib import Path
@@ -338,7 +339,10 @@ class TestRoundtableEndToEnd:
         async def _mock_forged_session():
             yield forged_session
 
-        with patch("spellbook.db.get_forged_session", _mock_forged_session):
+        mock_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_session.calls(_mock_forged_session)
+
+        async with bigfoot:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",
@@ -347,6 +351,7 @@ class TestRoundtableEndToEnd:
                 iteration=1,
             )
 
+        mock_session.assert_call()
         assert result["consensus"] is True
         assert result["return_to"] is None
         assert len(result["feedback"]) == 0
