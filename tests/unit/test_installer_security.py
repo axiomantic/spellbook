@@ -42,44 +42,69 @@ def test_default_config_covers_all_keys():
 
 def test_apply_security_config_writes_to_store(tmp_path):
     """apply_security_config must write config values."""
-    from unittest.mock import patch, call
-    from installer.components.security import apply_security_config
+    import bigfoot
+    from installer.components.security import (
+        apply_security_config,
+        get_default_security_config,
+    )
 
     selections = {"spotlighting": True, "crypto": False, "sleuth": False}
-    calls_made = []
 
-    def mock_config_set(key, value):
-        calls_made.append((key, value))
+    # Build the expected (key, value) pairs the function should write
+    defaults = get_default_security_config()
+    prefixes = {
+        "spotlighting": "security.spotlighting.",
+        "crypto": "security.crypto.",
+        "sleuth": "security.sleuth.",
+    }
+    expected_calls = []
+    for feature_id, enabled in selections.items():
+        pfx = prefixes[feature_id]
+        for key, default_value in defaults.items():
+            if not key.startswith(pfx):
+                continue
+            value = enabled if key.endswith(".enabled") else default_value
+            expected_calls.append((key, value))
 
-    with patch("installer.components.security._config_set", mock_config_set):
+    proxy = bigfoot.mock("installer.components.security:_config_set")
+    method = proxy.__call__
+    for _ in expected_calls:
+        method = method.returns(None)
+
+    with bigfoot:
         apply_security_config(selections, dry_run=False)
 
-    written_keys = {k for k, v in calls_made}
+    # Assert every interaction in order
+    call_proxy = proxy.__call__
+    for key, value in expected_calls:
+        call_proxy.assert_call(args=(key, value))
+
+    # Extra semantic checks from the original test
+    written_keys = {k for k, _ in expected_calls}
     assert "security.spotlighting.enabled" in written_keys
     assert "security.crypto.enabled" in written_keys
-
-    # Verify spotlighting is enabled and crypto is disabled
-    spot_val = next(v for k, v in calls_made if k == "security.spotlighting.enabled")
-    crypto_val = next(v for k, v in calls_made if k == "security.crypto.enabled")
+    spot_val = next(v for k, v in expected_calls if k == "security.spotlighting.enabled")
+    crypto_val = next(v for k, v in expected_calls if k == "security.crypto.enabled")
     assert spot_val is True
     assert crypto_val is False
 
 
 def test_apply_security_config_dry_run_writes_nothing():
     """Dry run must not write any config values."""
-    from unittest.mock import patch
+    import bigfoot
     from installer.components.security import apply_security_config
 
     selections = {"spotlighting": True, "crypto": True, "sleuth": True}
-    calls_made = []
 
-    def mock_config_set(key, value):
-        calls_made.append((key, value))
+    proxy = bigfoot.mock("installer.components.security:_config_set")
+    proxy.__call__.required(False).returns(None)
 
-    with patch("installer.components.security._config_set", mock_config_set):
-        apply_security_config(selections, dry_run=True)
+    with bigfoot:
+        result = apply_security_config(selections, dry_run=True)
 
-    assert len(calls_made) == 0
+    # dry_run returns keys that *would* be written, but _config_set is never called
+    assert len(result) > 0  # keys are planned
+    # No assert_call needed -- the mock was never invoked (required=False)
 
 
 def test_get_security_summary():

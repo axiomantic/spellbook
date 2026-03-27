@@ -3,9 +3,10 @@
 import json
 import os
 import threading
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 from pathlib import Path
-from unittest.mock import patch
 
 try:
     import fcntl
@@ -25,21 +26,19 @@ class TestConfigFileLocking:
         monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
         monkeypatch.setattr("spellbook.core.config.CONFIG_LOCK_PATH", lock_path)
 
-        # Patch CrossPlatformLock to verify it's used as a context manager
+        # Spy on CrossPlatformLock.__enter__ to verify it's used as a context manager
         from spellbook.core.compat import CrossPlatformLock
 
-        original_enter = CrossPlatformLock.__enter__
-        lock_entered = {"value": False}
+        enter_spy = bigfoot.spy.object(CrossPlatformLock, "__enter__")
 
-        def tracking_enter(self):
-            lock_entered["value"] = True
-            return original_enter(self)
-
-        with patch.object(CrossPlatformLock, "__enter__", tracking_enter):
+        with bigfoot:
             config_set("test_key", "test_value")
 
-        # Verify lock was actually entered as a context manager
-        assert lock_entered["value"], "CrossPlatformLock was not used as context manager"
+        enter_spy.assert_call(
+            args=(IsInstance(CrossPlatformLock),),
+            kwargs={},
+            returned=IsInstance(CrossPlatformLock),
+        )
 
         # Config file should exist with the value
         config = json.loads(config_path.read_text())

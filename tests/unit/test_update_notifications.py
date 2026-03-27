@@ -1,9 +1,7 @@
 """Tests for update notifications in session_init()."""
 
-import json
+import bigfoot
 import pytest
-from pathlib import Path
-from unittest.mock import patch
 
 
 class TestSessionGreetingNotifications:
@@ -27,9 +25,14 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        # Mock resume context
-        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
+        # Mock resume context (register before sandbox)
+        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume.returns({"resume_available": False})
+
+        with bigfoot:
             result = session_init()
+
+        mock_resume.assert_call(args=(None, None), kwargs={})
 
         assert "update_notification" in result
         assert result["update_notification"]["type"] == "applied"
@@ -50,8 +53,13 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
+        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume.returns({"resume_available": False})
+
+        with bigfoot:
             result = session_init()
+
+        mock_resume.assert_call(args=(None, None), kwargs={})
 
         assert "update_notification" in result
         assert result["update_notification"]["type"] == "major_pending"
@@ -74,8 +82,13 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
+        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume.returns({"resume_available": False})
+
+        with bigfoot:
             session_init()
+
+        mock_resume.assert_call(args=(None, None), kwargs={})
 
         # last_auto_update should be cleared
         assert config_get("last_auto_update") is None
@@ -92,8 +105,13 @@ class TestSessionGreetingNotifications:
         config_set("auto_update_paused", True)
         config_set("session_mode", "none")
 
-        with patch("spellbook.core.config._get_resume_context", return_value={"resume_available": False}):
+        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume.returns({"resume_available": False})
+
+        with bigfoot:
             result = session_init()
+
+        mock_resume.assert_call(args=(None, None), kwargs={})
 
         assert "update_notification" in result
         assert result["update_notification"].get("paused") is True

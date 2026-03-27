@@ -10,8 +10,21 @@ import logging
 import os
 import sys
 import pytest
+import bigfoot
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
+
+class _IsInstance:
+    """Matcher that compares equal to any instance of the given type."""
+
+    def __init__(self, cls):
+        self._cls = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self._cls)
+
+    def __repr__(self):
+        return f"_IsInstance({self._cls.__name__})"
 
 
 # ---------------------------------------------------------------------------
@@ -52,30 +65,53 @@ class TestGetPlatform:
         result = get_platform()
         assert isinstance(result, Platform)
 
-    @patch("installer.compat.platform.system", return_value="Darwin")
-    def test_darwin_returns_macos(self, _mock):
+    def test_darwin_returns_macos(self):
         from installer.compat import Platform, get_platform
 
-        assert get_platform() == Platform.MACOS
+        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system.returns("Darwin")
 
-    @patch("installer.compat.platform.system", return_value="Linux")
-    def test_linux_returns_linux(self, _mock):
+        with bigfoot:
+            result = get_platform()
+
+        assert result == Platform.MACOS
+        mock_system.assert_call(args=(), kwargs={})
+
+    def test_linux_returns_linux(self):
         from installer.compat import Platform, get_platform
 
-        assert get_platform() == Platform.LINUX
+        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system.returns("Linux")
 
-    @patch("installer.compat.platform.system", return_value="Windows")
-    def test_windows_returns_windows(self, _mock):
+        with bigfoot:
+            result = get_platform()
+
+        assert result == Platform.LINUX
+        mock_system.assert_call(args=(), kwargs={})
+
+    def test_windows_returns_windows(self):
         from installer.compat import Platform, get_platform
 
-        assert get_platform() == Platform.WINDOWS
+        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system.returns("Windows")
 
-    @patch("installer.compat.platform.system", return_value="FreeBSD")
-    def test_unsupported_raises_error(self, _mock):
+        with bigfoot:
+            result = get_platform()
+
+        assert result == Platform.WINDOWS
+        mock_system.assert_call(args=(), kwargs={})
+
+    def test_unsupported_raises_error(self):
         from installer.compat import UnsupportedPlatformError, get_platform
 
-        with pytest.raises(UnsupportedPlatformError, match="(?i)freebsd"):
-            get_platform()
+        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system.returns("FreeBSD")
+
+        with bigfoot:
+            with pytest.raises(UnsupportedPlatformError, match="(?i)freebsd"):
+                get_platform()
+
+        mock_system.assert_call(args=(), kwargs={})
 
 
 class TestExceptions:
@@ -265,91 +301,133 @@ class TestCreateLink:
 class TestCreateLinkWindowsFallback:
     """create_link() Windows fallback chain: symlink -> junction -> copy."""
 
-    @patch("installer.compat.get_platform")
-    @patch("installer.compat.is_junction", return_value=False)
-    def test_copy_fallback_for_files(self, _mock_junction, mock_plat, tmp_path):
+    def test_copy_fallback_for_files(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat.return_value = Platform.WINDOWS
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction.returns(False)
+        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
+
         source = tmp_path / "source.txt"
         source.write_text("content")
         target = tmp_path / "link.txt"
 
-        with patch.object(Path, "symlink_to", side_effect=OSError(errno.EPERM, "Not permitted")):
+        with bigfoot:
             result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "copy"
         assert target.read_text() == "content"
+        with bigfoot.in_any_order():
+            mock_junction.assert_call(args=(target,), kwargs={})
+            mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
+            mock_plat.assert_call(args=(), kwargs={})
 
-    @patch("installer.compat.get_platform")
-    @patch("installer.compat.is_junction", return_value=False)
-    def test_copy_fallback_for_directories(self, _mock_junction, mock_plat, tmp_path):
+    def test_copy_fallback_for_directories(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat.return_value = Platform.WINDOWS
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction.returns(False)
+        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
+        mock_create_junction = bigfoot.mock("installer.compat:_create_junction")
+        mock_create_junction.returns(False)
+
         source = tmp_path / "source"
         source.mkdir()
         (source / "file.txt").write_text("hello")
         target = tmp_path / "link"
 
-        with patch.object(Path, "symlink_to", side_effect=OSError(errno.EPERM, "Not permitted")):
-            with patch("installer.compat._create_junction", return_value=False):
-                result = create_link(source, target)
+        with bigfoot:
+            result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "copy"
         assert (target / "file.txt").read_text() == "hello"
+        with bigfoot.in_any_order():
+            mock_junction.assert_call(args=(target,), kwargs={})
+            mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
+            mock_plat.assert_call(args=(), kwargs={})
+            mock_create_junction.assert_call(args=(source, target), kwargs={})
 
-    @patch("installer.compat.get_platform")
-    @patch("installer.compat.is_junction", return_value=False)
-    def test_junction_fallback_for_directories(self, _mock_junction, mock_plat, tmp_path):
+    def test_junction_fallback_for_directories(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat.return_value = Platform.WINDOWS
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction.returns(False)
+        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
+        mock_create_junction = bigfoot.mock("installer.compat:_create_junction")
+        mock_create_junction.returns(True)
+
         source = tmp_path / "source"
         source.mkdir()
         target = tmp_path / "link"
 
-        with patch.object(Path, "symlink_to", side_effect=OSError(errno.EPERM, "Not permitted")):
-            with patch("installer.compat._create_junction", return_value=True):
-                result = create_link(source, target)
+        with bigfoot:
+            result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "junction"
+        with bigfoot.in_any_order():
+            mock_junction.assert_call(args=(target,), kwargs={})
+            mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
+            mock_plat.assert_call(args=(), kwargs={})
+            mock_create_junction.assert_call(args=(source, target), kwargs={})
 
-    @patch("installer.compat.get_platform")
-    def test_unix_symlink_failure_is_not_caught(self, mock_plat, tmp_path):
+    def test_unix_symlink_failure_is_not_caught(self, tmp_path):
         """On Unix, symlink OSError is re-raised (no fallback chain)."""
         from installer.compat import Platform, create_link
 
-        mock_plat.return_value = Platform.LINUX
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.LINUX)
+        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink.raises(OSError(errno.EIO, "IO error"))
+
         source = tmp_path / "source"
         source.mkdir()
         target = tmp_path / "link"
 
-        with patch.object(Path, "symlink_to", side_effect=OSError(errno.EIO, "IO error")):
+        with bigfoot:
             result = create_link(source, target)
 
         # On Unix, non-EPERM errors propagate and get caught by outer handler
         assert not result.success
         assert result.action == "failed"
+        with bigfoot.in_any_order():
+            mock_plat.assert_call(args=(), kwargs={})
+            mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
 
-    @patch("installer.compat.get_platform")
-    @patch("installer.compat.is_junction", return_value=False)
-    def test_copy_mode_message_mentions_re_run(self, _mock_junction, mock_plat, tmp_path):
+    def test_copy_mode_message_mentions_re_run(self, tmp_path):
         """Copy mode result message should warn about re-running installer."""
         from installer.compat import Platform, create_link
 
-        mock_plat.return_value = Platform.WINDOWS
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction.returns(False)
+        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
+
         source = tmp_path / "source.txt"
         source.write_text("content")
         target = tmp_path / "link.txt"
 
-        with patch.object(Path, "symlink_to", side_effect=OSError(errno.EPERM, "Not permitted")):
+        with bigfoot:
             result = create_link(source, target)
 
         assert "re-running" in result.message.lower() or "re-running" in result.message
+        with bigfoot.in_any_order():
+            mock_junction.assert_call(args=(target,), kwargs={})
+            mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
+            mock_plat.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -441,22 +519,30 @@ class TestNormalizePathForComparison:
         result = normalize_path_for_comparison(tmp_path)
         assert isinstance(result, str)
 
-    @patch("installer.compat.get_platform")
-    def test_windows_casefolds(self, mock_plat, tmp_path):
+    def test_windows_casefolds(self, tmp_path):
         from installer.compat import Platform, normalize_path_for_comparison
 
-        mock_plat.return_value = Platform.WINDOWS
-        result = normalize_path_for_comparison(tmp_path)
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+
+        with bigfoot:
+            result = normalize_path_for_comparison(tmp_path)
+
         # On Windows normalization, result should be case-folded
         assert result == result.casefold()
+        mock_plat.assert_call(args=(), kwargs={})
 
-    @patch("installer.compat.get_platform")
-    def test_windows_uses_forward_slashes(self, mock_plat, tmp_path):
+    def test_windows_uses_forward_slashes(self, tmp_path):
         from installer.compat import Platform, normalize_path_for_comparison
 
-        mock_plat.return_value = Platform.WINDOWS
-        result = normalize_path_for_comparison(tmp_path)
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+
+        with bigfoot:
+            result = normalize_path_for_comparison(tmp_path)
+
         assert "\\" not in result
+        mock_plat.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -503,10 +589,15 @@ class TestCrossPlatformLock:
         try:
             # Mock acquire to return False, simulating a held lock
             lock2 = CrossPlatformLock(lock_path)
-            with patch.object(lock2, "acquire", return_value=False):
+            mock_acquire = bigfoot.mock.object(lock2, "acquire")
+            mock_acquire.returns(False)
+
+            with bigfoot:
                 with pytest.raises(LockHeldError):
                     with lock2:
                         pass  # Should not reach here
+
+            mock_acquire.assert_call(args=(), kwargs={})
         finally:
             lock1.release()
 
@@ -561,27 +652,32 @@ class TestCrossPlatformLock:
         assert lock.acquire() is True
         lock.release()
 
-    def test_shared_lock_windows_logs_debug(self, tmp_path, caplog):
+    def test_shared_lock_windows_logs_debug(self, tmp_path, monkeypatch, caplog):
         """On Windows, shared=True should log a debug message about degradation."""
+        import installer.compat as compat_mod
         from installer.compat import CrossPlatformLock
 
-        mock_msvcrt = MagicMock()
-        mock_msvcrt.LK_NBLCK = 2
-        mock_msvcrt.LK_LOCK = 1
-        mock_msvcrt.LK_UNLCK = 0
+        class FakeMsvcrt:
+            LK_NBLCK = 2
+            LK_LOCK = 1
+            LK_UNLCK = 0
+            @staticmethod
+            def locking(fd, mode, nbytes):
+                pass
 
-        with patch("installer.compat.sys") as mock_sys, \
-             patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
-            mock_sys.platform = "win32"
-            mock_sys.executable = sys.executable
+        monkeypatch.setattr(compat_mod, "sys", type("FakeSys", (), {
+            "platform": "win32",
+            "executable": sys.executable,
+        })())
+        monkeypatch.setitem(sys.modules, "msvcrt", FakeMsvcrt())
 
-            lock = CrossPlatformLock(tmp_path / "test.lock", shared=True)
-            assert lock.shared is True
+        lock = CrossPlatformLock(tmp_path / "test.lock", shared=True)
+        assert lock.shared is True
 
-            with caplog.at_level(logging.DEBUG, logger="installer.compat"):
-                lock.acquire()
+        with caplog.at_level(logging.DEBUG, logger="installer.compat"):
+            lock.acquire()
 
-            lock.release()
+        lock.release()
 
         assert any("shared lock degrades" in r.message.lower() for r in caplog.records)
 
@@ -611,13 +707,18 @@ class TestCrossPlatformLock:
             flock_calls.append(flag)
             return original_flock(fd, flag)
 
-        with patch.object(real_fcntl, "flock", side_effect=tracking_flock):
+        mock_flock = bigfoot.mock.object(real_fcntl, "flock")
+        mock_flock.calls(tracking_flock)
+
+        with bigfoot:
             lock.acquire()
 
         # Verify flock was called WITHOUT LOCK_NB (blocking mode)
         assert len(flock_calls) >= 1
         assert flock_calls[0] == real_fcntl.LOCK_EX  # No LOCK_NB bit
         lock.release()
+        # flock may be called multiple times (acquire + release); assert at least one
+        mock_flock.assert_call(args=(_IsInstance(int), real_fcntl.LOCK_EX), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -653,27 +754,39 @@ class TestServiceManager:
         assert ServiceManager.LAUNCHD_LABEL == "com.spellbook.mcp"
         assert ServiceManager.SERVICE_NAME == "spellbook-mcp"
 
-    @patch("installer.compat.get_platform")
-    def test_is_installed_macos_checks_plist(self, mock_plat, tmp_path):
+    def test_is_installed_macos_checks_plist(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
-        mock_plat.return_value = Platform.MACOS
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
-        # Use a tmp_path-based plist path so we don't depend on system state
+
         fake_plist = tmp_path / "com.spellbook.mcp.plist"
-        with patch.object(mgr, "_launchd_plist_path", return_value=fake_plist):
-            assert mgr.is_installed() is False
+        mock_plist = bigfoot.mock.object(mgr, "_launchd_plist_path")
+        mock_plist.returns(fake_plist)
 
-    @patch("installer.compat.get_platform")
-    def test_is_installed_linux_checks_service_file(self, mock_plat, tmp_path):
+        with bigfoot:
+            result = mgr.is_installed()
+
+        assert result is False
+        mock_plist.assert_call(args=(), kwargs={})
+
+    def test_is_installed_linux_checks_service_file(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
-        mock_plat.return_value = Platform.LINUX
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
-        # Use a tmp_path-based service path so we don't depend on system state
+
         fake_service = tmp_path / "spellbook-mcp.service"
-        with patch.object(mgr, "_systemd_service_path", return_value=fake_service):
-            assert mgr.is_installed() is False
+        mock_service = bigfoot.mock.object(mgr, "_systemd_service_path")
+        mock_service.returns(fake_service)
+
+        with bigfoot:
+            result = mgr.is_installed()
+
+        assert result is False
+        mock_service.assert_call(args=(), kwargs={})
 
     def test_is_running_checks_port(self, tmp_path):
         """is_running() should try to connect to host:port."""
@@ -683,35 +796,38 @@ class TestServiceManager:
         # Port 9 on a non-routable IP should not be running
         assert mgr.is_running() is False
 
-    @patch("installer.compat.get_platform")
-    def test_generate_task_xml_format(self, mock_plat, tmp_path):
+    def test_generate_task_xml_format(self, tmp_path, monkeypatch):
         """Windows task XML should contain required elements."""
+        import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
-        mock_plat.return_value = Platform.WINDOWS
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.WINDOWS)
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
         xml = mgr._generate_task_xml()
+
         assert "LogonTrigger" in xml
         assert "spellbook-watchdog.py" in xml
         assert str(tmp_path) in xml
 
-    @patch("installer.compat.get_platform")
-    def test_launchd_plist_path(self, mock_plat, tmp_path):
+    def test_launchd_plist_path(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
-        mock_plat.return_value = Platform.MACOS
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
         plist_path = mgr._launchd_plist_path()
+
         assert "LaunchAgents" in str(plist_path)
         assert "com.spellbook.mcp.plist" in str(plist_path)
 
-    @patch("installer.compat.get_platform")
-    def test_systemd_service_path(self, mock_plat, tmp_path):
+    def test_systemd_service_path(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
-        mock_plat.return_value = Platform.LINUX
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
         service_path = mgr._systemd_service_path()
+
         assert "systemd" in str(service_path)
         assert "spellbook-mcp.service" in str(service_path)
 
@@ -755,22 +871,30 @@ class TestGetConfigDir:
 
         assert isinstance(get_config_dir(), Path)
 
-    @patch("installer.compat.get_platform")
-    def test_unix_uses_dot_config(self, mock_plat):
+    def test_unix_uses_dot_config(self):
         from installer.compat import Platform, get_config_dir
 
-        mock_plat.return_value = Platform.LINUX
-        result = get_config_dir()
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.LINUX)
+
+        with bigfoot:
+            result = get_config_dir()
+
         assert ".config" in str(result)
+        mock_plat.assert_call(args=(), kwargs={})
 
-    @patch("installer.compat.get_platform")
-    @patch.dict(os.environ, {"APPDATA": "/fake/appdata"})
-    def test_windows_uses_appdata(self, mock_plat):
+    def test_windows_uses_appdata(self, monkeypatch):
         from installer.compat import Platform, get_config_dir
 
-        mock_plat.return_value = Platform.WINDOWS
-        result = get_config_dir()
+        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat.returns(Platform.WINDOWS)
+        monkeypatch.setenv("APPDATA", "/fake/appdata")
+
+        with bigfoot:
+            result = get_config_dir()
+
         assert "appdata" in str(result).lower()
+        mock_plat.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -808,12 +932,15 @@ class TestPidExists:
 class TestCreateJunction:
     """_create_junction() only operates on Windows."""
 
-    def test_returns_false_on_non_windows(self, tmp_path):
+    def test_returns_false_on_non_windows(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
         from installer.compat import _create_junction
 
-        with patch("installer.compat.sys") as mock_sys:
-            mock_sys.platform = "linux"
-            result = _create_junction(tmp_path / "src", tmp_path / "tgt")
+        monkeypatch.setattr(compat_mod, "sys", type("FakeSys", (), {
+            "platform": "linux",
+        })())
+
+        result = _create_junction(tmp_path / "src", tmp_path / "tgt")
         assert result is False
 
 

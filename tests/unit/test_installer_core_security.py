@@ -1,5 +1,5 @@
 """Tests for security integration in installer core flow."""
-from unittest.mock import patch, MagicMock
+import bigfoot
 from pathlib import Path
 
 

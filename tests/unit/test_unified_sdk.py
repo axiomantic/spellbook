@@ -1,31 +1,30 @@
 import os
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from pathlib import Path
+import bigfoot
+import pytest
 from spellbook.sdk.unified import (
-    AgentOptions, 
-    AgentMessage, 
-    ClaudeAgentClient, 
-    GeminiAgentClient, 
-    get_agent_client
+    AgentOptions,
+    AgentMessage,
+    ClaudeAgentClient,
+    GeminiAgentClient,
+    get_agent_client,
 )
+
 
 @pytest.mark.asyncio
 async def test_claude_agent_client_query():
     options = AgentOptions(system_prompt="test prompt", model="sonnet")
     client = ClaudeAgentClient(options)
-    
+
     # Create a mock message whose type().__name__ == "AssistantMessage"
     class AssistantMessage:
         def __init__(self):
             self.content = "hello from claude"
             self.usage = {"input_tokens": 10}
+
     mock_msg = AssistantMessage()
 
-    # Mock the ClaudeSDKClient and its query/receive_messages methods
-    mock_sdk_client_instance = MagicMock()
-    # Create an async iterator helper
+    # Async iterator helper for receive_messages
     class AsyncIter:
         def __init__(self, items):
             self.items = items
@@ -36,91 +35,161 @@ async def test_claude_agent_client_query():
                 raise StopAsyncIteration
             return self.items.pop(0)
 
-    mock_sdk_client_instance.query = AsyncMock()
-    mock_sdk_client_instance.receive_messages.return_value = AsyncIter([mock_msg])
-    mock_sdk_client_instance.__aenter__ = AsyncMock(return_value=mock_sdk_client_instance)
-    mock_sdk_client_instance.__aexit__ = AsyncMock()
-    
-    with patch("claude_agent_sdk.ClaudeSDKClient", return_value=mock_sdk_client_instance):
+    # Build a fake SDK client object with the methods ClaudeAgentClient.query() uses
+    class FakeSDKClient:
+        async def query(self, prompt):
+            pass
+        def receive_messages(self):
+            return AsyncIter([mock_msg])
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            pass
+
+    fake_client = FakeSDKClient()
+
+    # Use a sentinel so we can assert the exact constructor arg
+    sentinel_options = object()
+    mock_make_opts = bigfoot.mock.object(client, "_make_claude_options")
+    mock_make_opts.returns(sentinel_options)
+
+    # Mock the constructor to return our fake client
+    mock_sdk = bigfoot.mock("claude_agent_sdk:ClaudeSDKClient")
+    mock_sdk.returns(fake_client)
+
+    async with bigfoot:
         messages = []
         async for msg in client.query("hi"):
             messages.append(msg)
-            
-        assert len(messages) == 1
-        assert messages[0].content == "hello from claude"
-        assert messages[0].role == "assistant"
-        assert messages[0].usage == {"input_tokens": 10}
+
+    mock_make_opts.assert_call(args=(), kwargs={})
+    mock_sdk.assert_call(args=(sentinel_options,), kwargs={})
+
+    assert len(messages) == 1
+    assert messages[0].content == "hello from claude"
+    assert messages[0].role == "assistant"
+    assert messages[0].usage == {"input_tokens": 10}
+
 
 @pytest.mark.asyncio
 async def test_claude_agent_client_run():
     client = ClaudeAgentClient()
-    
-    with patch.object(ClaudeAgentClient, "query") as mock_query:
-        mock_query.return_value.__aiter__.return_value = [
-            AgentMessage(role="assistant", content="final result")
-        ]
-        
+
+    # Create an async generator that yields the expected message
+    async def fake_query(prompt):
+        yield AgentMessage(role="assistant", content="final result")
+
+    mock_query = bigfoot.mock.object(client, "query")
+    mock_query.calls(fake_query)
+
+    async with bigfoot:
         result = await client.run("do something")
-        assert result == "final result"
+
+    mock_query.assert_call(args=("do something",), kwargs={})
+    assert result == "final result"
+
 
 @pytest.mark.asyncio
+@pytest.mark.allow("subprocess")
 async def test_gemini_agent_client_run():
+    # Use a minimal fixed env so assertion is deterministic
+    fixed_env = {"PATH": "/usr/bin", "HOME": "/tmp"}
     options = AgentOptions(
         model="gemini-2.5-flash",
         system_prompt="be concise",
-        permission_mode="dontAsk"
+        permission_mode="dontAsk",
+        env=fixed_env,
     )
     client = GeminiAgentClient(options)
 
-    mock_process = AsyncMock()
-    mock_process.returncode = 0
-    mock_process.communicate.return_value = (b"hello from gemini", b"")
+    # Track the args passed to create_subprocess_exec for content assertions
+    captured_args = {}
 
-    mock_create = AsyncMock(return_value=mock_process)
-    with patch.object(asyncio, "create_subprocess_exec", mock_create) as mock_exec:
+    async def fake_create_subprocess_exec(*args, **kwargs):
+        captured_args["args"] = args
+        captured_args["kwargs"] = kwargs
+
+        class FakeProcess:
+            returncode = 0
+            async def communicate(self):
+                return (b"hello from gemini", b"")
+
+        return FakeProcess()
+
+    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec.calls(fake_create_subprocess_exec)
+
+    async with bigfoot:
         result = await client.run("hi")
 
-        assert result == "hello from gemini"
+    # The expected command line built by GeminiAgentClient.query()
+    expected_cmd = (
+        "gemini", "--prompt", "be concise\n\nhi", "-o", "text",
+        "--yolo", "--model", "gemini-2.5-flash",
+    )
+    mock_exec.assert_call(
+        args=expected_cmd,
+        kwargs={
+            "stdout": asyncio.subprocess.PIPE,
+            "stderr": asyncio.subprocess.PIPE,
+            "cwd": str(options.cwd),
+            "env": fixed_env,  # GEMINI_CLI not in env, so no deletion
+        },
+    )
 
-        # Check if correct command was built
-        args, kwargs = mock_exec.call_args
-        # args[0] is 'gemini', args[1] is '--prompt', etc.
-        cmd = list(args)
-        assert "gemini" in cmd
-        assert "--prompt" in cmd
-        # Verify system prompt prepending
-        assert "be concise\n\nhi" in cmd
-        assert "--model" in cmd
-        assert "gemini-2.5-flash" in cmd
-        assert "--yolo" in cmd
+    assert result == "hello from gemini"
 
-def test_get_agent_client_factory():
-    # Test auto-detection
-    with patch.dict(os.environ, {"GEMINI_CLI": "1"}):
-        client = get_agent_client()
-        assert isinstance(client, GeminiAgentClient)
-        
-    with patch.dict(os.environ, {}, clear=True):
-        client = get_agent_client()
-        assert isinstance(client, ClaudeAgentClient)
-        
+    # Additional content assertions on the command
+    cmd = list(captured_args["args"])
+    assert "gemini" in cmd
+    assert "--prompt" in cmd
+    assert "be concise\n\nhi" in cmd
+    assert "--model" in cmd
+    assert "gemini-2.5-flash" in cmd
+    assert "--yolo" in cmd
+
+
+def test_get_agent_client_factory(monkeypatch):
+    # Test auto-detection: with GEMINI_CLI set
+    monkeypatch.setenv("GEMINI_CLI", "1")
+    client = get_agent_client()
+    assert isinstance(client, GeminiAgentClient)
+
+    # Test auto-detection: without GEMINI_CLI
+    monkeypatch.delenv("GEMINI_CLI", raising=False)
+    client = get_agent_client()
+    assert isinstance(client, ClaudeAgentClient)
+
     # Test explicit provider
     client = get_agent_client(provider="gemini")
     assert isinstance(client, GeminiAgentClient)
-    
+
     client = get_agent_client(provider="claude")
     assert isinstance(client, ClaudeAgentClient)
 
-@pytest.mark.asyncio
-async def test_gemini_spawn_session():
+
+def test_gemini_spawn_session():
     client = GeminiAgentClient()
-    
-    with patch("spellbook.daemon.terminal.spawn_terminal_window") as mock_spawn:
-        mock_spawn.return_value = {"status": "spawned"}
-        
+
+    mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+    mock_spawn.returns({"status": "spawned"})
+
+    # spawn_session also calls detect_terminal when terminal=None
+    mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+    mock_detect.returns("iterm2")
+
+    with bigfoot:
         result = client.spawn_session("start shell")
-        assert result["status"] == "spawned"
-        
-        args, kwargs = mock_spawn.call_args
-        assert kwargs["cli_command"] == "gemini"
-        assert kwargs["prompt"] == "start shell"
+
+    mock_detect.assert_call()
+    mock_spawn.assert_call(
+        args=(),
+        kwargs={
+            "terminal": "iterm2",
+            "prompt": "start shell",
+            "working_directory": str(client.options.cwd),
+            "cli_command": "gemini",
+        },
+    )
+
+    assert result["status"] == "spawned"

@@ -1,8 +1,7 @@
 """Tests for PromptSleuth async classification and caching."""
 import os
 import sqlite3
-from unittest.mock import AsyncMock, MagicMock, patch
-
+import bigfoot  # noqa: F401 (canonical mocking framework)
 import pytest
 
 

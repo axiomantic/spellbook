@@ -1,21 +1,24 @@
 """Tests for UpdateWatcher daemon thread."""
 
-import threading
 import time
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+import bigfoot
+
+from spellbook.updates.watcher import UpdateWatcher
 
 
 class TestUpdateWatcherInit:
     """Tests for UpdateWatcher initialization."""
 
     def test_default_values(self, tmp_path):
-        from spellbook.updates.watcher import UpdateWatcher
+        mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
+        # Called twice in __init__: once for auto_update_remote, once for auto_update_branch
+        mock_cg.returns(None).returns(None)
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
+        with bigfoot:
             watcher = UpdateWatcher(str(tmp_path))
+
+        mock_cg.assert_call(args=("auto_update_remote",))
+        mock_cg.assert_call(args=("auto_update_branch",))
 
         assert watcher.check_interval == 86400.0
         assert watcher.remote == "origin"
@@ -26,35 +29,48 @@ class TestUpdateWatcherInit:
 
     def test_lazy_branch_detection(self, tmp_path):
         """Branch detection happens in run(), not __init__."""
-        from spellbook.updates.watcher import UpdateWatcher
+        mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
+        mock_cg.returns(None).returns(None)
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
+        with bigfoot:
             watcher = UpdateWatcher(str(tmp_path))
+
+        mock_cg.assert_call(args=("auto_update_remote",))
+        mock_cg.assert_call(args=("auto_update_branch",))
 
         assert watcher.branch is None  # Not yet resolved
 
-        with patch.object(watcher, "_detect_default_branch", return_value="main"), \
-             patch.object(watcher, "_check_for_update"):
+        mock_detect = bigfoot.mock.object(watcher, "_detect_default_branch")
+        mock_detect.returns("main")
+        mock_check = bigfoot.mock.object(watcher, "_check_for_update")
+        mock_check.returns(None)
+
+        with bigfoot:
             watcher._running = True
             watcher._shutdown.set()  # Prevent periodic loop from blocking
             watcher.run()
 
+        mock_detect.assert_call()
+        mock_check.assert_call()
+
         assert watcher.branch == "main"  # Now resolved
 
     def test_custom_values(self, tmp_path):
-        from spellbook.updates.watcher import UpdateWatcher
+        lookup = {
+            "auto_update_remote": "upstream",
+            "auto_update_branch": "develop",
+        }
+        mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
+        mock_cg.calls(lambda key: lookup.get(key)).calls(lambda key: lookup.get(key))
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.side_effect = lambda key: {
-                "auto_update_remote": "upstream",
-                "auto_update_branch": "develop",
-            }.get(key)
-
+        with bigfoot:
             watcher = UpdateWatcher(
                 str(tmp_path),
                 check_interval=3600.0,
             )
+
+        mock_cg.assert_call(args=("auto_update_remote",))
+        mock_cg.assert_call(args=("auto_update_branch",))
 
         assert watcher.check_interval == 3600.0
         assert watcher.remote == "upstream"
@@ -66,21 +82,24 @@ class TestUpdateWatcherShutdown:
 
     def test_shutdown_responsive(self, tmp_path):
         """Event.wait() allows quick shutdown."""
-        from spellbook.updates.watcher import UpdateWatcher
+        # Create watcher with explicit remote/branch to avoid config_get in __init__
+        watcher = UpdateWatcher(
+            str(tmp_path),
+            check_interval=3600.0,  # 1 hour
+            remote="origin",
+            branch="main",
+        )
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(
-                    str(tmp_path),
-                    check_interval=3600.0,  # 1 hour
-                )
+        mock_check = bigfoot.mock.object(watcher, "_check_for_update")
+        mock_check.returns(None)
 
-        with patch.object(watcher, "_check_for_update"):
+        with bigfoot:
             watcher.start()
             time.sleep(0.1)  # Let it start
             watcher.stop()
             watcher.join(timeout=2.0)
+
+        mock_check.assert_call()
 
         assert not watcher.is_alive()
 
@@ -88,13 +107,17 @@ class TestUpdateWatcherShutdown:
 class TestUpdateWatcherBackoff:
     """Tests for circuit breaker and backoff."""
 
-    def test_backoff_calculation(self, tmp_path):
-        from spellbook.updates.watcher import UpdateWatcher
+    @staticmethod
+    def _make_watcher(tmp_path):
+        """Create a watcher bypassing config_get via explicit args."""
+        return UpdateWatcher(
+            str(tmp_path),
+            remote="origin",
+            branch="main",
+        )
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path))
+    def test_backoff_calculation(self, tmp_path):
+        watcher = self._make_watcher(tmp_path)
 
         # No failures: normal interval
         watcher._consecutive_failures = 0
@@ -114,51 +137,42 @@ class TestUpdateWatcherBackoff:
 
     def test_backoff_cap(self, tmp_path):
         """Backoff never exceeds 24h cap."""
-        from spellbook.updates.watcher import UpdateWatcher
-
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path))
+        watcher = self._make_watcher(tmp_path)
 
         watcher._consecutive_failures = 100
         assert watcher._calculate_backoff() == 86400.0
 
     def test_failure_increments_failure_counter(self, tmp_path):
         """First check failure increments _consecutive_failures."""
-        from spellbook.updates.watcher import UpdateWatcher
+        watcher = self._make_watcher(tmp_path)
 
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path))
-
-        fail_count = {"n": 0}
-
-        def mock_check():
-            fail_count["n"] += 1
-            raise RuntimeError("simulated failure")
-
-        # Stop the watcher after the first check to prevent the HTTP loop
         def mock_check_and_stop():
             watcher._shutdown.set()
-            mock_check()
+            raise RuntimeError("simulated failure")
 
-        with patch.object(watcher, "_check_for_update", side_effect=mock_check_and_stop):
+        mock_check = bigfoot.mock.object(watcher, "_check_for_update")
+        mock_check.calls(mock_check_and_stop)
+        mock_cset = bigfoot.mock("spellbook.updates.watcher:config_set")
+        mock_cset.returns(None)
+
+        with bigfoot:
             watcher._running = True
             watcher.run()
+
+        mock_check.assert_call()
+        mock_cset.assert_call(args=("update_check_failures", 1))
+        bigfoot.log_mock.assert_log(
+            "WARNING",
+            "Update check failed (1): simulated failure",
+            "spellbook.updates.watcher",
+        )
 
         # First check fails, increments counter
         assert watcher._consecutive_failures == 1
 
     def test_circuit_breaker_http_backoff_values(self, tmp_path):
         """Simulate 5+ failures via _check_for_update and verify backoff values."""
-        from spellbook.updates.watcher import UpdateWatcher
-
-        with patch("spellbook.updates.watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path))
+        watcher = self._make_watcher(tmp_path)
 
         # Simulate consecutive failures and check backoff at each level
         expected_backoffs = [

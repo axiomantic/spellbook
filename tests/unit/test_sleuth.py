@@ -1,15 +1,12 @@
 """Tests for PromptSleuth semantic intent classifier."""
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
 def test_parse_classification_valid():
     from spellbook.security.sleuth import parse_classification
-    mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='{"classification": "DIRECTIVE", "confidence": 0.85, "evidence": "found override"}')]
-    result = parse_classification(mock_response)
+    result = parse_classification('{"classification": "DIRECTIVE", "confidence": 0.85, "evidence": "found override"}')
     assert result["classification"] == "DIRECTIVE"
     assert result["confidence"] == 0.85
     assert result["evidence"] == "found override"
@@ -17,18 +14,14 @@ def test_parse_classification_valid():
 
 def test_parse_classification_invalid_json():
     from spellbook.security.sleuth import parse_classification
-    mock_response = MagicMock()
-    mock_response.content = [MagicMock(text="not json")]
-    result = parse_classification(mock_response)
+    result = parse_classification("not json")
     assert result["classification"] == "UNKNOWN"
     assert result["confidence"] == 0.0
 
 
 def test_parse_classification_missing_fields():
     from spellbook.security.sleuth import parse_classification
-    mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='{"classification": "DATA"}')]
-    result = parse_classification(mock_response)
+    result = parse_classification('{"classification": "DATA"}')
     assert result["classification"] == "DATA"
     assert result["confidence"] == 0.0
 

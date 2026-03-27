@@ -96,14 +96,17 @@ def test_security_config_keys_complete():
 
 def test_dry_run_apply_returns_all_selected_keys():
     """Dry-run apply must return the keys it would write."""
-    from unittest.mock import patch
+    import bigfoot
 
     selections = {"spotlighting": True, "crypto": True, "sleuth": False, "lodo": True}
 
     def mock_config_set(key, value):
         raise AssertionError("Should not write in dry-run mode")
 
-    with patch("installer.components.security._config_set", mock_config_set):
+    proxy = bigfoot.mock("installer.components.security:_config_set")
+    proxy.__call__.required(False).calls(mock_config_set)
+
+    with bigfoot:
         keys = apply_security_config(selections, dry_run=True)
 
     assert len(keys) > 0
