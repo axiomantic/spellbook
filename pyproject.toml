@@ -25,12 +25,9 @@ daemon = [
     "uvicorn>=0.30.0",
 ]
 tts = [
-    "kokoro>=0.9.0",
-    "soundfile>=0.12.0",
     "sounddevice>=0.4.6",
-    "spacy>=3.7.0",
-    "misaki>=0.9.0",
-    "pip",
+    "numpy>=1.24.0",
+    "wyoming",
 ]
 dev = [
     "pytest>=7.0.0",
