@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.1] - 2026-03-27
+
+### Changed
+- **Testing framework**: Migrated entire test suite (99 files, 4822 tests) from `unittest.mock` to bigfoot
+  - Strict sandbox enforcement: every external call must be pre-authorized
+  - Every mock interaction must be asserted (catches unused mocks)
+  - Guard mode prevents real I/O by default (subprocess, HTTP, database blocked unless explicitly allowed)
+- Added `dirty-equals` to dev dependencies for flexible assertion matching
+
 ## [0.37.0] - 2026-03-24
 
 ### Added
