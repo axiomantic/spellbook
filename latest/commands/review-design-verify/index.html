@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7379,93 +7575,90 @@
 <h1 id="review-design-verify-diagram">review-design-verify Diagram<a class="headerlink" href="#review-design-verify-diagram" title="Permanent link">&para;</a></h1>
 <p>Phases 4-5 of reviewing-design-docs: Interface Verification + Implementation Simulation.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/&quot;Quality Gate&quot;/]:::gate
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[Subagent Dispatch]:::subagent
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Start([Phase 4-5 Entry]) --&gt; P4[Phase 4:&lt;br&gt;Interface Verification]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    P4 --&gt; P5[Phase 5:&lt;br&gt;Implementation Simulation]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P5 --&gt; End([Return to&lt;br&gt;reviewing-design-docs])
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Quality Gate"/]:::gate
+        L5[Subagent Dispatch]:::subagent
+    end
+
+    Start([Phase 4-5 Entry]) --&gt; P4[Phase 4:&lt;br&gt;Interface Verification]
+    P4 --&gt; P5[Phase 5:&lt;br&gt;Implementation Simulation]
+    P5 --&gt; End([Return to&lt;br&gt;reviewing-design-docs])
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff</code></pre>
 <h2 id="phase-4-interface-verification">Phase 4: Interface Verification<a class="headerlink" href="#phase-4-interface-verification" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L3([Terminal])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L4[/&quot;Quality Gate&quot;/]:::gate
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        L5[Subagent Dispatch]:::subagent
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    Start([Phase 4 Entry]) --&gt; Extract[Extract all interface&lt;br&gt;claims from design doc]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    Extract --&gt; ForEach[For each interface claim]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    ForEach --&gt; ReadSource{Source code&lt;br&gt;readable?}
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    ReadSource --&gt;|Yes| ReadIt[Read docstring,&lt;br&gt;source, and usage examples]
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    ReadSource --&gt;|No| MarkAssumed[Mark as ASSUMED]
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    ReadIt --&gt; CheckDocs{Docs match&lt;br&gt;actual usage?}
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    CheckDocs --&gt;|Yes| MarkVerified[Mark as VERIFIED]
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    CheckDocs --&gt;|No| UsageGround[Use actual usage&lt;br&gt;as ground truth]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    UsageGround --&gt; CheckTests{Usage examples&lt;br&gt;exist?}
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    CheckTests --&gt;|Yes| MarkVerified
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    CheckTests --&gt;|No| ExamineTests[Examine tests&lt;br&gt;for behavior]
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    ExamineTests --&gt; MarkVerified
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    MarkAssumed --&gt; GapDoc[Document as critical gap.&lt;br&gt;Flag to design owner.]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    GapDoc --&gt; GapGate[/&quot;GATE: Block implementation&lt;br&gt;until gaps resolved&quot;/]:::gate
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    MarkVerified --&gt; PopulateTable[Add to Verification Table:&lt;br&gt;Interface, Status, Source, Notes]
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    PopulateTable --&gt; MoreInterfaces{More interfaces&lt;br&gt;to verify?}
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    GapGate --&gt; MoreInterfaces
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    MoreInterfaces --&gt;|Yes| ForEach
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    MoreInterfaces --&gt;|No| CheckClaims{Security, perf,&lt;br&gt;concurrency, numeric,&lt;br&gt;or external claims?}
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    CheckClaims --&gt;|Yes| Escalate[Factchecker Escalation:&lt;br&gt;claim, location, category,&lt;br&gt;depth: SHALLOW/MEDIUM/DEEP]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    CheckClaims --&gt;|No| Continue([Proceed to Phase 5])
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    Escalate --&gt; Continue
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Quality Gate"/]:::gate
+        L5[Subagent Dispatch]:::subagent
+    end
+
+    Start([Phase 4 Entry]) --&gt; Extract[Extract all interface&lt;br&gt;claims from design doc]
+    Extract --&gt; ForEach[For each interface claim]
+
+    ForEach --&gt; ReadSource{Source code&lt;br&gt;readable?}
+    ReadSource --&gt;|Yes| ReadIt[Read docstring,&lt;br&gt;source, and usage examples]
+    ReadSource --&gt;|No| MarkAssumed[Mark as ASSUMED]
+
+    ReadIt --&gt; CheckDocs{Docs match&lt;br&gt;actual usage?}
+    CheckDocs --&gt;|Yes| MarkVerified[Mark as VERIFIED]
+    CheckDocs --&gt;|No| UsageGround[Use actual usage&lt;br&gt;as ground truth]
+    UsageGround --&gt; CheckTests{Usage examples&lt;br&gt;exist?}
+    CheckTests --&gt;|Yes| MarkVerified
+    CheckTests --&gt;|No| ExamineTests[Examine tests&lt;br&gt;for behavior]
+    ExamineTests --&gt; MarkVerified
+
+    MarkAssumed --&gt; GapDoc[Document as critical gap.&lt;br&gt;Flag to design owner.]
+    GapDoc --&gt; GapGate[/"GATE: Block implementation&lt;br&gt;until gaps resolved"/]:::gate
+
+    MarkVerified --&gt; PopulateTable[Add to Verification Table:&lt;br&gt;Interface, Status, Source, Notes]
+
+    PopulateTable --&gt; MoreInterfaces{More interfaces&lt;br&gt;to verify?}
+    GapGate --&gt; MoreInterfaces
+    MoreInterfaces --&gt;|Yes| ForEach
+    MoreInterfaces --&gt;|No| CheckClaims{Security, perf,&lt;br&gt;concurrency, numeric,&lt;br&gt;or external claims?}
+
+    CheckClaims --&gt;|Yes| Escalate[Factchecker Escalation:&lt;br&gt;claim, location, category,&lt;br&gt;depth: SHALLOW/MEDIUM/DEEP]
+    CheckClaims --&gt;|No| Continue([Proceed to Phase 5])
+
+    Escalate --&gt; Continue
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff</code></pre>
 <h3 id="fabrication-anti-pattern-reference">Fabrication Anti-Pattern Reference<a class="headerlink" href="#fabrication-anti-pattern-reference" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart LR
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L4[/&quot;Quality Gate&quot;/]:::gate
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    end
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    subgraph &quot;WRONG Path&quot;
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        direction TB
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        W1[Assume from name] --&gt; W2[Code fails]
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        W2 --&gt; W3[Invent parameter]
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        W3 --&gt; W4[Keep inventing]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        W4 --&gt; W5[/&quot;Fabrication Loop&quot;/]:::gate
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    end
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    subgraph &quot;RIGHT Path&quot;
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>        direction TB
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        R1[Read docstring + source] --&gt; R2[Find usage examples]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        R2 --&gt; R3[Write from VERIFIED behavior]
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        R3 --&gt; R4([Correct implementation]):::success
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    end
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L4[/"Quality Gate"/]:::gate
+    end
+
+    subgraph "WRONG Path"
+        direction TB
+        W1[Assume from name] --&gt; W2[Code fails]
+        W2 --&gt; W3[Invent parameter]
+        W3 --&gt; W4[Keep inventing]
+        W4 --&gt; W5[/"Fabrication Loop"/]:::gate
+    end
+
+    subgraph "RIGHT Path"
+        direction TB
+        R1[Read docstring + source] --&gt; R2[Find usage examples]
+        R2 --&gt; R3[Write from VERIFIED behavior]
+        R3 --&gt; R4([Correct implementation]):::success
+    end
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff</code></pre>
 <h3 id="invariant-principles">Invariant Principles<a class="headerlink" href="#invariant-principles" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -7494,47 +7687,46 @@
 </tbody>
 </table>
 <h2 id="phase-5-implementation-simulation">Phase 5: Implementation Simulation<a class="headerlink" href="#phase-5-implementation-simulation" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph Legend
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[Process]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{Decision}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L3([Terminal])
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L4[/&quot;Quality Gate&quot;/]:::gate
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        L5[Subagent Dispatch]:::subagent
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    end
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    Start([Phase 5 Entry]) --&gt; ForComp[For each component&lt;br&gt;in design doc]
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    ForComp --&gt; Assess{Can implement&lt;br&gt;now?}
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    Assess --&gt;|YES| ListQ[List remaining questions]
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    Assess --&gt;|NO| ListBlockers[List blockers:&lt;br&gt;Must invent, Must guess]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    ListQ --&gt; RecordYes[Record: Component,&lt;br&gt;YES, questions list]
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    ListBlockers --&gt; RecordNo[Record: Component,&lt;br&gt;NO, invent/guess lists]
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    RecordNo --&gt; CountInvent{3+ &#39;Must invent&#39;&lt;br&gt;items?}
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    CountInvent --&gt;|Yes| FractalAvail{fractal-thinking&lt;br&gt;available?}
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    CountInvent --&gt;|No| MoreComp
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    FractalAvail --&gt;|Yes| FractalDispatch[Invoke fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;checkpoint: autonomous&lt;br&gt;seed: spec gap question]:::subagent
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    FractalAvail --&gt;|No| ManualEnum[LOG warning.&lt;br&gt;Manual gap enumeration.]
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    FractalDispatch --&gt; UseSynthesis[Use synthesis to expand&lt;br&gt;specification gaps]
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    UseSynthesis --&gt; MoreComp
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    ManualEnum --&gt; MoreComp
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    RecordYes --&gt; MoreComp{More components?}
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
-<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    MoreComp --&gt;|Yes| ForComp
-<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    MoreComp --&gt;|No| Summary[Compile simulation&lt;br&gt;summary]
-<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    Summary --&gt; End([Return findings to&lt;br&gt;reviewing-design-docs]):::success
-<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>
-<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
-<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
-<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/"Quality Gate"/]:::gate
+        L5[Subagent Dispatch]:::subagent
+    end
+
+    Start([Phase 5 Entry]) --&gt; ForComp[For each component&lt;br&gt;in design doc]
+
+    ForComp --&gt; Assess{Can implement&lt;br&gt;now?}
+
+    Assess --&gt;|YES| ListQ[List remaining questions]
+    Assess --&gt;|NO| ListBlockers[List blockers:&lt;br&gt;Must invent, Must guess]
+
+    ListQ --&gt; RecordYes[Record: Component,&lt;br&gt;YES, questions list]
+    ListBlockers --&gt; RecordNo[Record: Component,&lt;br&gt;NO, invent/guess lists]
+
+    RecordNo --&gt; CountInvent{3+ 'Must invent'&lt;br&gt;items?}
+
+    CountInvent --&gt;|Yes| FractalAvail{fractal-thinking&lt;br&gt;available?}
+    CountInvent --&gt;|No| MoreComp
+
+    FractalAvail --&gt;|Yes| FractalDispatch[Invoke fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;checkpoint: autonomous&lt;br&gt;seed: spec gap question]:::subagent
+    FractalAvail --&gt;|No| ManualEnum[LOG warning.&lt;br&gt;Manual gap enumeration.]
+
+    FractalDispatch --&gt; UseSynthesis[Use synthesis to expand&lt;br&gt;specification gaps]
+    UseSynthesis --&gt; MoreComp
+    ManualEnum --&gt; MoreComp
+
+    RecordYes --&gt; MoreComp{More components?}
+
+    MoreComp --&gt;|Yes| ForComp
+    MoreComp --&gt;|No| Summary[Compile simulation&lt;br&gt;summary]
+    Summary --&gt; End([Return findings to&lt;br&gt;reviewing-design-docs]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef subagent fill:#4a9eff,stroke:#1971c2,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff</code></pre>
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7563,70 +7755,70 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Interface Verification Specialist. Your reputation depends on never accepting a claim you have not read source to verify. Fabricated interfaces cause implementation loops that waste days. This is very important to my career.
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="gh"># Phase 4: Interface Verification</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="k">1.</span> <span class="gs">**Read source before accepting any interface claim**</span> — Assumed behavior from method names is the root cause of fabrication loops
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="k">2.</span> <span class="gs">**Every interface must be marked VERIFIED or ASSUMED**</span> — No unmarked entries; the distinction drives risk assessment
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">3.</span> <span class="gs">**Usage examples trump documentation**</span> — When docs and actual usage diverge, actual usage is ground truth. If neither exists: examine tests.
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>&lt;analysis&gt;
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="sb">`assert_model_updated(model, field=value)`</span> might assert only those fields, require ALL changes, or behave differently. YOU DO NOT KNOW until you READ THE SOURCE.
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>&lt;/analysis&gt;
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="gu">## Fabrication Anti-Pattern</span>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>| Wrong | Right |
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>|-------|-------|
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>| Assume from name | Read docstring, source |
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>| Code fails -&gt; invent parameter | Find usage examples |
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>| Keep inventing | Write from VERIFIED behavior |
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="k">-</span><span class="w"> </span>Marking an interface VERIFIED without reading its source
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="k">-</span><span class="w"> </span>Accepting documentation claims without cross-checking actual usage
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="k">-</span><span class="w"> </span>Inventing parameters or return shapes when source is unread
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="k">-</span><span class="w"> </span>Proceeding past an ASSUMED gap without documenting it
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="gu">## Verification Table</span>
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>| Interface | Verified/Assumed | Source Read | Notes |
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>|-----------|-----------------|-------------|-------|
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>Every ASSUMED = critical gap. Document it, flag it to the design owner, and do not proceed with implementation until resolved.
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>
-<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="gu">## Factchecker Escalation</span>
-<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>
-<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>Trigger: security, performance, concurrency, numeric, or external-reference claims
-<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>
-<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>Format: <span class="sb">`**Escalate:** [claim] | Loc: [X] | Category: [Y] | Depth: SHALLOW/MEDIUM/DEEP`</span>
-<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>
-<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>---
-<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>
-<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="gh"># Phase 5: Implementation Simulation</span>
-<a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>
-<a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="sb">```</span>
-<a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="sb">### Component: [name]</span>
-<a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="sb">**Implement now?** YES/NO</span>
-<a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a><span class="sb">**Questions:** [list]</span>
-<a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="sb">**Must invent:** [what] - should specify: [why]</span>
-<a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="sb">**Must guess:** [shape] - should specify: [why]</span>
-<a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="sb">```</span>
-<a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a>
-<a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a>When a component has 3+ &quot;Must invent&quot; items, invoke fractal-thinking with <span class="sb">`intensity: pulse`</span>, <span class="sb">`checkpoint: autonomous`</span>, seed: &quot;What implementation decisions would be forced into guessing when coding [component]?&quot;. Use synthesis to expand specification gaps. If fractal-thinking is unavailable: LOG warning and proceed with manual gap enumeration.
-<a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a>
-<a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a>Every unverified assumption becomes a fabrication loop. Read the source. Mark everything. Gaps are features — they reveal what the spec must specify before coding begins.
-<a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Interface Verification Specialist. Your reputation depends on never accepting a claim you have not read source to verify. Fabricated interfaces cause implementation loops that waste days. This is very important to my career.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gh"># Phase 4: Interface Verification</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Read source before accepting any interface claim**</span> — Assumed behavior from method names is the root cause of fabrication loops
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Every interface must be marked VERIFIED or ASSUMED**</span> — No unmarked entries; the distinction drives risk assessment
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Usage examples trump documentation**</span> — When docs and actual usage diverge, actual usage is ground truth. If neither exists: examine tests.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;analysis&gt;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">`assert_model_updated(model, field=value)`</span> might assert only those fields, require ALL changes, or behave differently. YOU DO NOT KNOW until you READ THE SOURCE.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gu">## Fabrication Anti-Pattern</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| Wrong | Right |
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>|-------|-------|
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Assume from name | Read docstring, source |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Code fails -&gt; invent parameter | Find usage examples |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Keep inventing | Write from VERIFIED behavior |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Marking an interface VERIFIED without reading its source
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">-</span><span class="w"> </span>Accepting documentation claims without cross-checking actual usage
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">-</span><span class="w"> </span>Inventing parameters or return shapes when source is unread
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">-</span><span class="w"> </span>Proceeding past an ASSUMED gap without documenting it
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">## Verification Table</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Interface | Verified/Assumed | Source Read | Notes |
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>|-----------|-----------------|-------------|-------|
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>Every ASSUMED = critical gap. Document it, flag it to the design owner, and do not proceed with implementation until resolved.
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="gu">## Factchecker Escalation</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>Trigger: security, performance, concurrency, numeric, or external-reference claims
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>Format: <span class="sb">`**Escalate:** [claim] | Loc: [X] | Category: [Y] | Depth: SHALLOW/MEDIUM/DEEP`</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>---
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gh"># Phase 5: Implementation Simulation</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">```</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">### Component: [name]</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">**Implement now?** YES/NO</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">**Questions:** [list]</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">**Must invent:** [what] - should specify: [why]</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">**Must guess:** [shape] - should specify: [why]</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">```</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>When a component has 3+ &quot;Must invent&quot; items, invoke fractal-thinking with <span class="sb">`intensity: pulse`</span>, <span class="sb">`checkpoint: autonomous`</span>, seed: &quot;What implementation decisions would be forced into guessing when coding [component]?&quot;. Use synthesis to expand specification gaps. If fractal-thinking is unavailable: LOG warning and proceed with manual gap enumeration.
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>Every unverified assumption becomes a fabrication loop. Read the source. Mark everything. Gaps are features — they reveal what the spec must specify before coding begins.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

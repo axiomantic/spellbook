@@ -16,7 +16,7 @@
         <link rel="prev" href="../autonomous-roundtable/">
       
       
-        <link rel="next" href="../code-review/">
+        <link rel="next" href="../branch-context/">
       
       
         
@@ -2664,6 +2664,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../async-await-patterns/" class="md-nav__link">
         
   
@@ -2866,6 +2894,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3606,6 +3662,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../optimizing-instructions/" class="md-nav__link">
         
   
@@ -3886,6 +3970,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sharpening-prompts/" class="md-nav__link">
         
   
@@ -3978,6 +4146,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7568,7 +7764,7 @@
 <p>Structured design exploration that evaluates multiple approaches against trade-offs before committing to an architecture. Generates 2-3 candidate designs with explicit pros, cons, and risk profiles so you can make informed decisions. A core spellbook capability, invocable with <code>/brainstorm</code> or by asking to explore options for a technical problem.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when develop provides discovery context for autonomous design.</p>
+<p>Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also invoked by develop when design decisions are needed.</p>
 </blockquote>
 <div class="admonition info">
 <p class="admonition-title">Origin</p>
@@ -7577,79 +7773,78 @@
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Two-mode design exploration skill. <strong>Synthesis mode</strong> (context pre-collected) skips discovery and designs autonomously. <strong>Interactive mode</strong> discovers requirements through one-question-at-a-time collaboration. Both converge on design documentation, quality assessment, self-check, and optional implementation setup.</p>
 <h2 id="full-workflow">Full Workflow<a class="headerlink" href="#full-workflow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend[&quot; Legend &quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        Lproc[Process]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        Ldec{Decision}
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        Lterm([Terminal])
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        Lsub[&quot;Subagent / Skill&quot;]:::subagent
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        Lgate{{&quot;Quality Gate&quot;}}:::gate
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([Brainstorming invoked]) --&gt; Input[&quot;Receive inputs:&lt;br&gt;feature_idea, constraints,&lt;br&gt;existing_patterns, mode_override&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Input --&gt; ModeDetect{&quot;Context contains&lt;br&gt;SYNTHESIS MODE signals?&lt;br&gt;(line 45-48)&quot;}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    %% ===== SYNTHESIS MODE =====
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ModeDetect --&gt;|&quot;Yes&quot;| SynthDecide[&quot;Make autonomous decisions:&lt;br&gt;architecture, trade-offs,&lt;br&gt;scope boundaries.&lt;br&gt;Document rationale.&lt;br&gt;(line 63)&quot;]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    SynthDecide --&gt; CircuitBreaker{&quot;Circuit Breaker:&lt;br&gt;1. Security-critical, no guidance?&lt;br&gt;2. Contradictory requirements?&lt;br&gt;3. Missing context?&lt;br&gt;(line 66-69)&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CircuitBreaker --&gt;|&quot;Any triggered&quot;| Pause([&quot;PAUSE:&lt;br&gt;report to caller&quot;])
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CircuitBreaker --&gt;|&quot;None&quot;| SynthDesign[&quot;Write complete design&lt;br&gt;document autonomously&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    %% Synthesis assessment loop
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SynthDesign --&gt; SynthAssess[&quot;Run /design-assessment&lt;br&gt;autonomously, self-score&lt;br&gt;(line 138-142)&quot;]:::subagent
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    SynthAssess --&gt; SynthAvail{&quot;Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)&quot;}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SynthAvail --&gt;|&quot;Failed/unavailable&quot;| DegradedWarn1[&quot;Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate&lt;br&gt;(line 148)&quot;]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    DegradedWarn1 --&gt; WriteDoc
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SynthAvail --&gt;|&quot;Succeeded&quot;| SynthGate{{&quot;Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)&quot;}}:::gate
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    SynthGate --&gt;|&quot;NOT_READY /&lt;br&gt;NEEDS_WORK&quot;| SynthGaps[&quot;Report gaps.&lt;br&gt;Iterate on design.&lt;br&gt;(line 142)&quot;]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    SynthGaps --&gt; SynthDesign
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SynthGate --&gt;|&quot;READY&quot;| WriteDoc
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    %% ===== INTERACTIVE MODE =====
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    ModeDetect --&gt;|&quot;No&quot;| Discovery[&quot;Discovery Phase:&lt;br&gt;Check project state&lt;br&gt;(files, docs, commits)&lt;br&gt;(line 75)&quot;]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    Discovery --&gt; ExploreAgent[&quot;Explore subagent:&lt;br&gt;codebase patterns&lt;br&gt;(line 76)&quot;]:::subagent
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    ExploreAgent --&gt; AskQuestions[&quot;Ask questions one at a time.&lt;br&gt;Prefer multiple choice.&lt;br&gt;Focus: purpose, constraints,&lt;br&gt;success criteria.&lt;br&gt;(line 77-78)&quot;]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    AskQuestions --&gt; SufficientCtx{&quot;Sufficient&lt;br&gt;context?&quot;}
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    SufficientCtx --&gt;|&quot;No&quot;| AskQuestions
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    SufficientCtx --&gt;|&quot;Yes&quot;| ProposeApproaches[&quot;Propose 2-3 approaches&lt;br&gt;with trade-offs.&lt;br&gt;Lead with recommendation.&lt;br&gt;(line 81-82)&quot;]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    ProposeApproaches --&gt; TradeoffCheck{&quot;2+ approaches have&lt;br&gt;non-obvious trade-offs?&lt;br&gt;(line 84)&quot;}
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    TradeoffCheck --&gt;|&quot;Yes&quot;| Fractal[&quot;Invoke fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;seed: deep trade-offs&lt;br&gt;(line 84)&quot;]:::subagent
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    Fractal --&gt; EnrichCompare[&quot;Enrich trade-off comparison&lt;br&gt;with fractal synthesis&quot;]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    EnrichCompare --&gt; UserSelect[&quot;User selects approach&quot;]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    TradeoffCheck --&gt;|&quot;No&quot;| UserSelect
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    UserSelect --&gt; DesignPresent[&quot;Design Presentation:&lt;br&gt;200-300 word sections.&lt;br&gt;Validate after each.&lt;br&gt;Cover: architecture, components,&lt;br&gt;data flow, error handling, testing.&lt;br&gt;(line 87-89)&quot;]
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    %% Interactive assessment loop
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    DesignPresent --&gt; IntAssess[&quot;Run /design-assessment&lt;br&gt;(line 110-111)&quot;]:::subagent
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    IntAssess --&gt; IntAvail{&quot;Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)&quot;}
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    IntAvail --&gt;|&quot;Failed/unavailable&quot;| DegradedWarn2[&quot;Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate&quot;]
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    DegradedWarn2 --&gt; WriteDoc
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    IntAvail --&gt;|&quot;Succeeded&quot;| IntGate{{&quot;Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)&quot;}}:::gate
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    IntGate --&gt;|&quot;No&quot;| IntFix[&quot;Address findings,&lt;br&gt;iterate on design&quot;]
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    IntFix --&gt; DesignPresent
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    IntGate --&gt;|&quot;READY&quot;| WriteDoc
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    %% ===== CONVERGENCE =====
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    WriteDoc[&quot;Write design document to&lt;br&gt;~/.local/spellbook/docs/&lt;br&gt;PROJECT_ENCODED/plans/&lt;br&gt;YYYY-MM-DD-topic-design.md&lt;br&gt;(line 96-101)&quot;]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    WriteDoc --&gt; SelfCheck{{&quot;Self-Check:&lt;br&gt;1. 2-3 approaches presented?&lt;br&gt;2. Doc in correct location?&lt;br&gt;3. All sections covered?&lt;br&gt;4. No YAGNI violations?&lt;br&gt;5. Mode correctly detected?&lt;br&gt;(line 169-175)&quot;}}:::gate
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    SelfCheck --&gt;|&quot;Any unchecked&quot;| FixItems[&quot;STOP and fix&lt;br&gt;unchecked items&lt;br&gt;(line 176)&quot;]
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    FixItems --&gt; SelfCheck
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    SelfCheck --&gt;|&quot;All pass&quot;| ModeRouting{&quot;Interactive&lt;br&gt;mode?&quot;}
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    ModeRouting --&gt;|&quot;No (Synthesis)&quot;| Complete([&quot;Design complete.&lt;br&gt;Return to caller.&quot;]):::success
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    ModeRouting --&gt;|&quot;Yes&quot;| AskImpl{&quot;Ask user:&lt;br&gt;Ready for implementation?&lt;br&gt;(line 104)&quot;}
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    AskImpl --&gt;|&quot;No&quot;| Complete
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    AskImpl --&gt;|&quot;Yes&quot;| Worktree[&quot;Invoke using-git-worktrees&lt;br&gt;for isolation&lt;br&gt;(line 105)&quot;]:::subagent
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    Worktree --&gt; ImplPlan[&quot;Invoke writing-plans&lt;br&gt;for implementation plan&lt;br&gt;(line 106)&quot;]:::subagent
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    ImplPlan --&gt; ImplReady([&quot;Implementation ready.&quot;]):::success
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend[" Legend "]
+        direction LR
+        Lproc[Process]
+        Ldec{Decision}
+        Lterm([Terminal])
+        Lsub["Subagent / Skill"]:::subagent
+        Lgate{{"Quality Gate"}}:::gate
+    end
+
+    Start([Brainstorming invoked]) --&gt; Input["Receive inputs:&lt;br&gt;feature_idea, constraints,&lt;br&gt;existing_patterns, mode_override"]
+    Input --&gt; ModeDetect{"Context contains&lt;br&gt;SYNTHESIS MODE signals?&lt;br&gt;(line 45-48)"}
+
+    %% ===== SYNTHESIS MODE =====
+    ModeDetect --&gt;|"Yes"| SynthDecide["Make autonomous decisions:&lt;br&gt;architecture, trade-offs,&lt;br&gt;scope boundaries.&lt;br&gt;Document rationale.&lt;br&gt;(line 63)"]
+    SynthDecide --&gt; CircuitBreaker{"Circuit Breaker:&lt;br&gt;1. Security-critical, no guidance?&lt;br&gt;2. Contradictory requirements?&lt;br&gt;3. Missing context?&lt;br&gt;(line 66-69)"}
+    CircuitBreaker --&gt;|"Any triggered"| Pause(["PAUSE:&lt;br&gt;report to caller"])
+    CircuitBreaker --&gt;|"None"| SynthDesign["Write complete design&lt;br&gt;document autonomously"]
+
+    %% Synthesis assessment loop
+    SynthDesign --&gt; SynthAssess["Run /design-assessment&lt;br&gt;autonomously, self-score&lt;br&gt;(line 138-142)"]:::subagent
+    SynthAssess --&gt; SynthAvail{"Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)"}
+    SynthAvail --&gt;|"Failed/unavailable"| DegradedWarn1["Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate&lt;br&gt;(line 148)"]
+    DegradedWarn1 --&gt; WriteDoc
+    SynthAvail --&gt;|"Succeeded"| SynthGate{{"Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)"}}:::gate
+    SynthGate --&gt;|"NOT_READY /&lt;br&gt;NEEDS_WORK"| SynthGaps["Report gaps.&lt;br&gt;Iterate on design.&lt;br&gt;(line 142)"]
+    SynthGaps --&gt; SynthDesign
+    SynthGate --&gt;|"READY"| WriteDoc
+
+    %% ===== INTERACTIVE MODE =====
+    ModeDetect --&gt;|"No"| Discovery["Discovery Phase:&lt;br&gt;Check project state&lt;br&gt;(files, docs, commits)&lt;br&gt;(line 75)"]
+    Discovery --&gt; ExploreAgent["Explore subagent:&lt;br&gt;codebase patterns&lt;br&gt;(line 76)"]:::subagent
+    ExploreAgent --&gt; AskQuestions["Ask questions one at a time.&lt;br&gt;Prefer multiple choice.&lt;br&gt;Focus: purpose, constraints,&lt;br&gt;success criteria.&lt;br&gt;(line 77-78)"]
+    AskQuestions --&gt; SufficientCtx{"Sufficient&lt;br&gt;context?"}
+    SufficientCtx --&gt;|"No"| AskQuestions
+    SufficientCtx --&gt;|"Yes"| ProposeApproaches["Propose 2-3 approaches&lt;br&gt;with trade-offs.&lt;br&gt;Lead with recommendation.&lt;br&gt;(line 81-82)"]
+    ProposeApproaches --&gt; TradeoffCheck{"2+ approaches have&lt;br&gt;non-obvious trade-offs?&lt;br&gt;(line 84)"}
+    TradeoffCheck --&gt;|"Yes"| Fractal["Invoke fractal-thinking&lt;br&gt;intensity: pulse&lt;br&gt;seed: deep trade-offs&lt;br&gt;(line 84)"]:::subagent
+    Fractal --&gt; EnrichCompare["Enrich trade-off comparison&lt;br&gt;with fractal synthesis"]
+    EnrichCompare --&gt; UserSelect["User selects approach"]
+    TradeoffCheck --&gt;|"No"| UserSelect
+
+    UserSelect --&gt; DesignPresent["Design Presentation:&lt;br&gt;200-300 word sections.&lt;br&gt;Validate after each.&lt;br&gt;Cover: architecture, components,&lt;br&gt;data flow, error handling, testing.&lt;br&gt;(line 87-89)"]
+
+    %% Interactive assessment loop
+    DesignPresent --&gt; IntAssess["Run /design-assessment&lt;br&gt;(line 110-111)"]:::subagent
+    IntAssess --&gt; IntAvail{"Assessment&lt;br&gt;succeeded?&lt;br&gt;(line 146-149)"}
+    IntAvail --&gt;|"Failed/unavailable"| DegradedWarn2["Warn: assessment unavailable,&lt;br&gt;proceeding without quality gate"]
+    DegradedWarn2 --&gt; WriteDoc
+    IntAvail --&gt;|"Succeeded"| IntGate{{"Blocking dims &gt;= 3?&lt;br&gt;No CRITICAL/HIGH findings?&lt;br&gt;Verdict READY?&lt;br&gt;(line 130-133)"}}:::gate
+    IntGate --&gt;|"No"| IntFix["Address findings,&lt;br&gt;iterate on design"]
+    IntFix --&gt; DesignPresent
+    IntGate --&gt;|"READY"| WriteDoc
+
+    %% ===== CONVERGENCE =====
+    WriteDoc["Write design document to&lt;br&gt;~/.local/spellbook/docs/&lt;br&gt;PROJECT_ENCODED/plans/&lt;br&gt;YYYY-MM-DD-topic-design.md&lt;br&gt;(line 96-101)"]
+
+    WriteDoc --&gt; SelfCheck{{"Self-Check:&lt;br&gt;1. 2-3 approaches presented?&lt;br&gt;2. Doc in correct location?&lt;br&gt;3. All sections covered?&lt;br&gt;4. No YAGNI violations?&lt;br&gt;5. Mode correctly detected?&lt;br&gt;(line 169-175)"}}:::gate
+    SelfCheck --&gt;|"Any unchecked"| FixItems["STOP and fix&lt;br&gt;unchecked items&lt;br&gt;(line 176)"]
+    FixItems --&gt; SelfCheck
+    SelfCheck --&gt;|"All pass"| ModeRouting{"Interactive&lt;br&gt;mode?"}
+
+    ModeRouting --&gt;|"No (Synthesis)"| Complete(["Design complete.&lt;br&gt;Return to caller."]):::success
+    ModeRouting --&gt;|"Yes"| AskImpl{"Ask user:&lt;br&gt;Ready for implementation?&lt;br&gt;(line 104)"}
+    AskImpl --&gt;|"No"| Complete
+    AskImpl --&gt;|"Yes"| Worktree["Invoke using-git-worktrees&lt;br&gt;for isolation&lt;br&gt;(line 105)"]:::subagent
+    Worktree --&gt; ImplPlan["Invoke writing-plans&lt;br&gt;for implementation plan&lt;br&gt;(line 106)"]:::subagent
+    ImplPlan --&gt; ImplReady(["Implementation ready."]):::success
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7760,179 +7955,179 @@
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Brainstorming Ideas Into Designs</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Creative Systems Architect. Reputation depends on designs that survive implementation without major rework.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**One Question Per Turn**</span> - Single questions get better answers. Wrong: &quot;What&#39;s the goal and what are your constraints?&quot; Right: &quot;What problem does this solve?&quot;
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Explore Before Committing**</span> - Propose 2-3 approaches with trade-offs before settling.
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Incremental Validation**</span> - Present designs in digestible sections; confirm understanding.
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**YAGNI Ruthlessly**</span> - Simplest design that solves the problem.
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">5.</span> <span class="gs">**Context Determines Mode**</span> - Synthesis when context complete; interactive when discovery needed.
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>| Input | Required | Description |
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>|-------|----------|-------------|
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| <span class="sb">`context.feature_idea`</span> | Yes | User&#39;s description of what they want to create/modify |
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>| <span class="sb">`context.constraints`</span> | No | Known constraints (tech stack, performance, timeline) |
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| <span class="sb">`context.existing_patterns`</span> | No | Patterns from codebase research |
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>| <span class="sb">`context.mode_override`</span> | No | &quot;SYNTHESIS MODE&quot; to skip discovery |
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| Output | Type | Description |
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>|--------|------|-------------|
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>| <span class="sb">`design_document`</span> | File | Design doc at <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-&lt;topic&gt;-design.md`</span> |
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>| <span class="sb">`approach_decision`</span> | Inline | Selected approach with rationale for alternatives considered |
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>| <span class="sb">`implementation_ready`</span> | Boolean | Whether design is complete enough to proceed |
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="gu">## Mode Detection</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>&lt;analysis&gt;
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>Check context for synthesis mode indicators BEFORE starting any process step.
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gs">**Synthesis mode active when context contains:**</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="k">-</span><span class="w"> </span>&quot;SYNTHESIS MODE&quot; / &quot;Mode: AUTONOMOUS&quot; / &quot;DO NOT ask questions&quot;
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">-</span><span class="w"> </span>&quot;Pre-Collected Discovery Context&quot; or &quot;design_context&quot;
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span>Comprehensive architectural decisions, scope boundaries, success criteria already defined
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>| Mode | Behavior |
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>|------|----------|
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| Synthesis | Skip discovery. Make autonomous decisions. Document rationale. Write complete design. |
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| Interactive | Ask questions one at a time. Validate incrementally. Collaborate. |
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="gu">## Synthesis Mode Protocol</span>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>&lt;reflection&gt;
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>All context is provided. No discovery needed — only design.
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="gs">**Skip:**</span> Questions about purpose/constraints/criteria, &quot;Which approach?&quot;, &quot;Does this look right?&quot;, &quot;Ready for implementation?&quot;
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="gs">**Decide Autonomously:**</span> Architecture choice (document why), trade-offs (note alternatives), scope boundaries (flag ambiguity only).
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**Circuit Breakers (pause even in synthesis mode):**</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="k">-</span><span class="w"> </span>Security-critical decisions with no guidance
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="k">-</span><span class="w"> </span>Contradictory requirements irreconcilable
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span>Missing context making design impossible
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="gu">## Interactive Mode Protocol</span>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="gs">**Discovery Phase:**</span>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">-</span><span class="w"> </span>Check project state (files, docs, commits)
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">-</span><span class="w"> </span>Explore subagent for codebase patterns (saves main context)
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">-</span><span class="w"> </span>One question per message. Prefer multiple choice.
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">-</span><span class="w"> </span>Focus: purpose, constraints, success criteria
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gs">**Approach Selection:**</span>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="k">-</span><span class="w"> </span>Propose 2-3 approaches with trade-offs
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">-</span><span class="w"> </span>Lead with recommendation and reasoning
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="gs">**Fractal exploration:**</span> When 2+ approaches have non-obvious trade-offs, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the deep trade-offs between [approaches] for [feature]?&quot;. Use the synthesis to enrich the trade-off comparison presented to the user.
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="gs">**Design Presentation:**</span>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">-</span><span class="w"> </span>200-300 word sections
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="k">-</span><span class="w"> </span>Validate after each section
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="k">-</span><span class="w"> </span>Cover: architecture, components, data flow, error handling, testing
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gu">## Design Complete: When and How</span>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="gs">**Completeness criteria:**</span> All sections covered (architecture, components, data flow, error handling, testing), no open contradictions, approach selected with rationale documented.
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gs">**Documentation:**</span>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="sb">```bash</span>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span>
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.local/spellbook/docs/<span class="nv">$PROJECT_ENCODED</span>/plans
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="c1"># Write to: ~/.local/spellbook/docs/$PROJECT_ENCODED/plans/YYYY-MM-DD-&lt;topic&gt;-design.md</span>
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="sb">```</span>
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="gs">**Implementation (interactive only):**</span>
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>Ask: &quot;Ready to set up for implementation?&quot;
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`using-git-worktrees`</span> for isolation
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`writing-plans`</span> for implementation plan
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="gu">## Design Quality Assessment</span>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>After completing a design document, assess quality using <span class="sb">`/design-assessment`</span>.
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="gu">### When to Assess</span>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>| Scenario | Action |
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>|----------|--------|
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>| Design for evaluative skill/command | Run <span class="sb">`/design-assessment --mode=autonomous`</span> to generate framework for the design |
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>| Complex design with multiple stakeholders | Run assessment to validate completeness |
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>| Design review requested | Use assessment dimensions as review criteria |
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="gu">### Assessment Protocol</span>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">1.</span> <span class="gs">**Generate framework**</span>: <span class="sb">`/design-assessment`</span> with target type <span class="sb">`document`</span>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">2.</span> <span class="gs">**Score dimensions**</span>: Rate each dimension 0-5 using the generated rubric
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">3.</span> <span class="gs">**Document findings**</span>: Use finding schema for any issues discovered
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">4.</span> <span class="gs">**Determine verdict**</span>: Apply verdict logic to decide if design is ready
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="gu">### Quality Gate</span>
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>Design is ready for implementation when:
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">-</span><span class="w"> </span>All blocking dimensions (completeness, clarity, accuracy) score &gt;= 3
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">-</span><span class="w"> </span>No CRITICAL or HIGH findings
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">-</span><span class="w"> </span>Verdict is READY
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="gu">### Synthesis Mode Integration</span>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>Run assessment autonomously:
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">1.</span> Generate document assessment framework via <span class="sb">`/design-assessment`</span>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">2.</span> Self-score against dimensions
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="k">3.</span> If any blocking dimension &lt; 3: pause and report gaps
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="k">4.</span> If verdict is NOT_READY or NEEDS_WORK: report gaps to user and iterate on design before proceeding
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="gu">### Error Handling</span>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>If <span class="sb">`/design-assessment`</span> fails (not found, error, timeout):
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>Warn user: &quot;Design assessment unavailable, proceeding without quality gate&quot;
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span>Continue to implementation planning (degraded mode)
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span>Log the failure for debugging
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>&lt;analysis&gt;
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>Before proceeding to implementation planning:
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">-</span><span class="w"> </span>Has the design been assessed against standard dimensions?
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">-</span><span class="w"> </span>Are all blocking dimensions scoring &gt;= 3?
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">-</span><span class="w"> </span>Have any CRITICAL or HIGH findings been addressed?
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="k">-</span><span class="w"> </span>Asking multiple questions in one message (cognitive overload)
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">-</span><span class="w"> </span>Committing to approach without presenting alternatives
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="k">-</span><span class="w"> </span>Writing design doc to project directory (use ~/.local/spellbook/docs/)
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="k">-</span><span class="w"> </span>Skipping trade-off analysis to save time
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="k">-</span><span class="w"> </span>Proceeding with design when requirements are contradictory
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="k">-</span><span class="w"> </span>Adding features &quot;just in case&quot; (violates YAGNI)
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>Before completing:
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="k">- [ ]</span> Presented 2-3 approaches with trade-offs before selecting
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="k">- [ ]</span> Design doc written to correct external location (not project dir)
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="k">- [ ]</span> All sections covered: architecture, components, data flow, error handling, testing
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="k">- [ ]</span> No YAGNI violations (unnecessary complexity removed)
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="k">- [ ]</span> Mode correctly detected (synthesis vs interactive)
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>If ANY unchecked: STOP and fix.
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>You are a Creative Systems Architect. A design that doesn&#39;t survive implementation is not a design — it is a liability. Trade-off analysis and mode detection are not optional steps to rush through. Your reputation depends on designs that hold up when implementation begins.
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Brainstorming Ideas Into Designs</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Creative Systems Architect. Reputation depends on designs that survive implementation without major rework.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**One Question Per Turn**</span> - Single questions get better answers. Wrong: &quot;What&#39;s the goal and what are your constraints?&quot; Right: &quot;What problem does this solve?&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Explore Before Committing**</span> - Propose 2-3 approaches with trade-offs before settling.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Incremental Validation**</span> - Present designs in digestible sections; confirm understanding.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**YAGNI Ruthlessly**</span> - Simplest design that solves the problem.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Context Determines Mode**</span> - Synthesis when context complete; interactive when discovery needed.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| Input | Required | Description |
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>|-------|----------|-------------|
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| <span class="sb">`context.feature_idea`</span> | Yes | User&#39;s description of what they want to create/modify |
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| <span class="sb">`context.constraints`</span> | No | Known constraints (tech stack, performance, timeline) |
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| <span class="sb">`context.existing_patterns`</span> | No | Patterns from codebase research |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| <span class="sb">`context.mode_override`</span> | No | &quot;SYNTHESIS MODE&quot; to skip discovery |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| Output | Type | Description |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>|--------|------|-------------|
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`design_document`</span> | File | Design doc at <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-&lt;topic&gt;-design.md`</span> |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| <span class="sb">`approach_decision`</span> | Inline | Selected approach with rationale for alternatives considered |
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`implementation_ready`</span> | Boolean | Whether design is complete enough to proceed |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">## Mode Detection</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;analysis&gt;
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>Check context for synthesis mode indicators BEFORE starting any process step.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gs">**Synthesis mode active when context contains:**</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>&quot;SYNTHESIS MODE&quot; / &quot;Mode: AUTONOMOUS&quot; / &quot;DO NOT ask questions&quot;
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>&quot;Pre-Collected Discovery Context&quot; or &quot;design_context&quot;
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Comprehensive architectural decisions, scope boundaries, success criteria already defined
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| Mode | Behavior |
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>|------|----------|
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| Synthesis | Skip discovery. Make autonomous decisions. Document rationale. Write complete design. |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Interactive | Ask questions one at a time. Validate incrementally. Collaborate. |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gu">## Synthesis Mode Protocol</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>&lt;reflection&gt;
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>All context is provided. No discovery needed — only design.
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**Skip:**</span> Questions about purpose/constraints/criteria, &quot;Which approach?&quot;, &quot;Does this look right?&quot;, &quot;Ready for implementation?&quot;
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Decide Autonomously:**</span> Architecture choice (document why), trade-offs (note alternatives), scope boundaries (flag ambiguity only).
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Circuit Breakers (pause even in synthesis mode):**</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">-</span><span class="w"> </span>Security-critical decisions with no guidance
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">-</span><span class="w"> </span>Contradictory requirements irreconcilable
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">-</span><span class="w"> </span>Missing context making design impossible
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">## Interactive Mode Protocol</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**Discovery Phase:**</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span>Check project state (files, docs, commits)
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>Explore subagent for codebase patterns (saves main context)
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>One question per message. Prefer multiple choice.
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>Focus: purpose, constraints, success criteria
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gs">**Approach Selection:**</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Propose 2-3 approaches with trade-offs
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Lead with recommendation and reasoning
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gs">**Fractal exploration:**</span> When 2+ approaches have non-obvious trade-offs, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the deep trade-offs between [approaches] for [feature]?&quot;. Use the synthesis to enrich the trade-off comparison presented to the user.
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gs">**Design Presentation:**</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>200-300 word sections
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>Validate after each section
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>Cover: architecture, components, data flow, error handling, testing
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">## Design Complete: When and How</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**Completeness criteria:**</span> All sections covered (architecture, components, data flow, error handling, testing), no open contradictions, approach selected with rationale documented.
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**Documentation:**</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.local/spellbook/docs/<span class="nv">$PROJECT_ENCODED</span>/plans
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="c1"># Write to: ~/.local/spellbook/docs/$PROJECT_ENCODED/plans/YYYY-MM-DD-&lt;topic&gt;-design.md</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">```</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gs">**Implementation (interactive only):**</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Ask: &quot;Ready to set up for implementation?&quot;
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`using-git-worktrees`</span> for isolation
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`writing-plans`</span> for implementation plan
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gu">## Design Quality Assessment</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>After completing a design document, assess quality using <span class="sb">`/design-assessment`</span>.
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="gu">### When to Assess</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>| Scenario | Action |
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>|----------|--------|
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>| Design for evaluative skill/command | Run <span class="sb">`/design-assessment --mode=autonomous`</span> to generate framework for the design |
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>| Complex design with multiple stakeholders | Run assessment to validate completeness |
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>| Design review requested | Use assessment dimensions as review criteria |
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="gu">### Assessment Protocol</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">1.</span> <span class="gs">**Generate framework**</span>: <span class="sb">`/design-assessment`</span> with target type <span class="sb">`document`</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">2.</span> <span class="gs">**Score dimensions**</span>: Rate each dimension 0-5 using the generated rubric
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">3.</span> <span class="gs">**Document findings**</span>: Use finding schema for any issues discovered
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">4.</span> <span class="gs">**Determine verdict**</span>: Apply verdict logic to decide if design is ready
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gu">### Quality Gate</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>Design is ready for implementation when:
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>All blocking dimensions (completeness, clarity, accuracy) score &gt;= 3
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>No CRITICAL or HIGH findings
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Verdict is READY
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">### Synthesis Mode Integration</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>Run assessment autonomously:
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">1.</span> Generate document assessment framework via <span class="sb">`/design-assessment`</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">2.</span> Self-score against dimensions
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">3.</span> If any blocking dimension &lt; 3: pause and report gaps
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">4.</span> If verdict is NOT_READY or NEEDS_WORK: report gaps to user and iterate on design before proceeding
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="gu">### Error Handling</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>If <span class="sb">`/design-assessment`</span> fails (not found, error, timeout):
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">-</span><span class="w"> </span>Warn user: &quot;Design assessment unavailable, proceeding without quality gate&quot;
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">-</span><span class="w"> </span>Continue to implementation planning (degraded mode)
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">-</span><span class="w"> </span>Log the failure for debugging
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>&lt;analysis&gt;
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>Before proceeding to implementation planning:
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">-</span><span class="w"> </span>Has the design been assessed against standard dimensions?
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">-</span><span class="w"> </span>Are all blocking dimensions scoring &gt;= 3?
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">-</span><span class="w"> </span>Have any CRITICAL or HIGH findings been addressed?
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="k">-</span><span class="w"> </span>Asking multiple questions in one message (cognitive overload)
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span>Committing to approach without presenting alternatives
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Writing design doc to project directory (use ~/.local/spellbook/docs/)
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span>Skipping trade-off analysis to save time
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Proceeding with design when requirements are contradictory
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>Adding features &quot;just in case&quot; (violates YAGNI)
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>Before completing:
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">- [ ]</span> Presented 2-3 approaches with trade-offs before selecting
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">- [ ]</span> Design doc written to correct external location (not project dir)
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">- [ ]</span> All sections covered: architecture, components, data flow, error handling, testing
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">- [ ]</span> No YAGNI violations (unnecessary complexity removed)
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">- [ ]</span> Mode correctly detected (synthesis vs interactive)
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>If ANY unchecked: STOP and fix.
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>You are a Creative Systems Architect. A design that doesn&#39;t survive implementation is not a design — it is a liability. Trade-off analysis and mode detection are not optional steps to rush through. Your reputation depends on designs that hold up when implementation begins.
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

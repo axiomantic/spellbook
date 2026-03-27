@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7379,69 +7575,68 @@
 <h1 id="justice-resolver-agent-workflow-diagram">Justice Resolver Agent - Workflow Diagram<a class="headerlink" href="#justice-resolver-agent-workflow-diagram" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The Justice Resolver follows a linear four-phase protocol (Analysis, Dialogue, Synthesis, Reflection) with a per-critique-point loop and a quality gate before the terminal RESOLVE declaration.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/Input-Output/]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[Quality Gate]:::gate
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Start([Receive Inputs:&lt;br&gt;code + critique + original_spec]) --&gt; Validate{All 3 inputs&lt;br&gt;present?}
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Validate --&gt;|No| Abort([Abort: Missing inputs])
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Validate --&gt;|Yes| Parse[Parse critique into&lt;br&gt;individual points]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Parse --&gt; LoopStart{More critique&lt;br&gt;points?}
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    %% === ANALYSIS PHASE ===
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    LoopStart --&gt;|Yes| A1[&quot;&lt;b&gt;ANALYSIS&lt;/b&gt;&lt;br&gt;State critique exactly as written&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    A1 --&gt; A2[Identify targeted code section]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    A2 --&gt; A3[Understand WHY it is a problem&lt;br&gt;not just THAT it is]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    A3 --&gt; A4{Is critique&lt;br&gt;correct?}
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    A4 --&gt;|Correct| D1
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    A4 --&gt;|Partially correct| D1
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    A4 --&gt;|Contextually wrong| Dismiss[Document dismissal&lt;br&gt;with reasoning]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Dismiss --&gt; Record[Record as&lt;br&gt;dismissed with reasoning&lt;br&gt;in resolution table]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Record --&gt; LoopStart
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    %% === DIALOGUE PHASE ===
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    D1[&quot;&lt;b&gt;DIALOGUE&lt;/b&gt;&lt;br&gt;Implementer position:&lt;br&gt;I built this because...&quot;]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    D1 --&gt; D2[&quot;Reviewer position:&lt;br&gt;This breaks because...&quot;]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    D2 --&gt; D3[&quot;Synthesis insight:&lt;br&gt;Both are right when&lt;br&gt;we consider...&quot;]
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    %% === SYNTHESIS PHASE ===
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    D3 --&gt; S1[&quot;&lt;b&gt;SYNTHESIS&lt;/b&gt;&lt;br&gt;State resolution approach&quot;]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    S1 --&gt; S2[Write refined code]
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    S2 --&gt; S3{Original intent&lt;br&gt;preserved?}
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    S3 --&gt;|No| S1
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    S3 --&gt;|Yes| S4{Critique point&lt;br&gt;addressed?}
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    S4 --&gt;|No| S1
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    S4 --&gt;|Yes| S5{New issues&lt;br&gt;introduced?}
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    S5 --&gt;|Yes| S1
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    S5 --&gt;|No| LoopStart
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    %% === REFLECTION PHASE (Quality Gate) ===
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    LoopStart --&gt;|No, all processed| R1[&quot;&lt;b&gt;REFLECTION&lt;/b&gt;&lt;br&gt;Pre-RESOLVE quality gate&quot;]:::gate
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    R1 --&gt; R2{Every critique has&lt;br&gt;explicit resolution&lt;br&gt;or documented dismissal?}
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    R2 --&gt;|No| LoopStart
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    R2 --&gt;|Yes| R3{Original functionality&lt;br&gt;intact?}
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    R3 --&gt;|No - run tests or&lt;br&gt;trace logic| FixReg[Fix regressions]
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    FixReg --&gt; R1
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    R3 --&gt;|Yes| R4{No new issues&lt;br&gt;introduced?}
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    R4 --&gt;|No| FixNew[Fix new issues]
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FixNew --&gt; R1
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    R4 --&gt;|Yes| R5{Solution genuinely&lt;br&gt;better, not just&lt;br&gt;different?}
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    R5 --&gt;|No| Rethink[Re-examine synthesis&lt;br&gt;for elevation]
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    Rethink --&gt; R1
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    R5 --&gt;|Yes| Resolve
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    %% === TERMINAL ===
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    Resolve([RESOLVE:&lt;br&gt;Generate resolution report,&lt;br&gt;synthesis code, resolve speech&lt;br&gt;The matter is settled.]):::success
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    classDef gate fill:#ff6b6b,stroke:#c0392b,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/Input-Output/]
+        L5[Quality Gate]:::gate
+    end
+
+    Start([Receive Inputs:&lt;br&gt;code + critique + original_spec]) --&gt; Validate{All 3 inputs&lt;br&gt;present?}
+    Validate --&gt;|No| Abort([Abort: Missing inputs])
+    Validate --&gt;|Yes| Parse[Parse critique into&lt;br&gt;individual points]
+
+    Parse --&gt; LoopStart{More critique&lt;br&gt;points?}
+
+    %% === ANALYSIS PHASE ===
+    LoopStart --&gt;|Yes| A1["&lt;b&gt;ANALYSIS&lt;/b&gt;&lt;br&gt;State critique exactly as written"]
+    A1 --&gt; A2[Identify targeted code section]
+    A2 --&gt; A3[Understand WHY it is a problem&lt;br&gt;not just THAT it is]
+    A3 --&gt; A4{Is critique&lt;br&gt;correct?}
+    A4 --&gt;|Correct| D1
+    A4 --&gt;|Partially correct| D1
+    A4 --&gt;|Contextually wrong| Dismiss[Document dismissal&lt;br&gt;with reasoning]
+    Dismiss --&gt; Record[Record as&lt;br&gt;dismissed with reasoning&lt;br&gt;in resolution table]
+    Record --&gt; LoopStart
+
+    %% === DIALOGUE PHASE ===
+    D1["&lt;b&gt;DIALOGUE&lt;/b&gt;&lt;br&gt;Implementer position:&lt;br&gt;I built this because..."]
+    D1 --&gt; D2["Reviewer position:&lt;br&gt;This breaks because..."]
+    D2 --&gt; D3["Synthesis insight:&lt;br&gt;Both are right when&lt;br&gt;we consider..."]
+
+    %% === SYNTHESIS PHASE ===
+    D3 --&gt; S1["&lt;b&gt;SYNTHESIS&lt;/b&gt;&lt;br&gt;State resolution approach"]
+    S1 --&gt; S2[Write refined code]
+    S2 --&gt; S3{Original intent&lt;br&gt;preserved?}
+    S3 --&gt;|No| S1
+    S3 --&gt;|Yes| S4{Critique point&lt;br&gt;addressed?}
+    S4 --&gt;|No| S1
+    S4 --&gt;|Yes| S5{New issues&lt;br&gt;introduced?}
+    S5 --&gt;|Yes| S1
+    S5 --&gt;|No| LoopStart
+
+    %% === REFLECTION PHASE (Quality Gate) ===
+    LoopStart --&gt;|No, all processed| R1["&lt;b&gt;REFLECTION&lt;/b&gt;&lt;br&gt;Pre-RESOLVE quality gate"]:::gate
+    R1 --&gt; R2{Every critique has&lt;br&gt;explicit resolution&lt;br&gt;or documented dismissal?}
+    R2 --&gt;|No| LoopStart
+    R2 --&gt;|Yes| R3{Original functionality&lt;br&gt;intact?}
+    R3 --&gt;|No - run tests or&lt;br&gt;trace logic| FixReg[Fix regressions]
+    FixReg --&gt; R1
+    R3 --&gt;|Yes| R4{No new issues&lt;br&gt;introduced?}
+    R4 --&gt;|No| FixNew[Fix new issues]
+    FixNew --&gt; R1
+    R4 --&gt;|Yes| R5{Solution genuinely&lt;br&gt;better, not just&lt;br&gt;different?}
+    R5 --&gt;|No| Rethink[Re-examine synthesis&lt;br&gt;for elevation]
+    Rethink --&gt; R1
+    R5 --&gt;|Yes| Resolve
+
+    %% === TERMINAL ===
+    Resolve([RESOLVE:&lt;br&gt;Generate resolution report,&lt;br&gt;synthesis code, resolve speech&lt;br&gt;The matter is settled.]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#c0392b,color:#fff
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff</code></pre>
 <h2 id="node-to-source-mapping">Node-to-Source Mapping<a class="headerlink" href="#node-to-source-mapping" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7502,118 +7697,118 @@
 <li><strong>No subagent dispatches</strong>: Justice Resolver operates as a self-contained reasoning agent with no external tool calls or skill invocations.</li>
 </ul>
 <h2 id="agent-content">Agent Content<a class="headerlink" href="#agent-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Justice ⚖️ — Principle of Equilibrium. You are the arbiter of truth. Before you lies manifested code (Thesis) and critical illumination (Antithesis). Your sacred function: create Synthesis—higher-quality solutions that honor both without betraying either. The quality of your synthesis determines whether the team trusts this process.
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Before proceeding: give equal weight to both positions. Premature judgment is injustice.
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Equal weight first**</span>: Argue both positions before deciding.
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Synthesis over compromise**</span>: Don&#39;t average—elevate. Find the solution neither side considered.
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Honor the critique**</span>: Every point raised must be addressed.
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Preserve original intent**</span>: The implementer&#39;s code had purpose. Don&#39;t lose it while fixing.
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## Instruction-Engineering Directives</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Both the implementer and reviewer invested effort and thought. Dismissing either is disrespectful.
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>Do NOT ignore any critique point—each represents real concern from a careful review.
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>Do NOT break original functionality while fixing—that trades one problem for another.
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Input | Required | Description |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>|-------|----------|-------------|
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`code`</span> | Yes | Original implementation (Thesis) |
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`critique`</span> | Yes | Review findings (Antithesis) |
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>| <span class="sb">`original_spec`</span> | Yes | What the code was supposed to do |
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| Output | Type | Description |
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>|--------|------|-------------|
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="sb">`synthesis`</span> | Code | Refined implementation honoring both |
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| <span class="sb">`resolution_report`</span> | Text | How each critique point was addressed |
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| <span class="sb">`resolve_speech`</span> | Text | RESOLVE declaration that matter is settled |
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">## Resolution Protocol</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="sb">```</span>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">&lt;analysis&gt;</span>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">For each critique point:</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="sb">1. State the critique exactly as written</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">2. Identify the code section it targets</span>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">3. Understand WHY this is a problem (not just THAT it is)</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">4. Assess: Is the critique correct? Partially correct? Contextually wrong?</span>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">   - Contextually wrong: document why, note as &quot;dismissed with reasoning&quot; in resolution table</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">&lt;/analysis&gt;</span>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">&lt;dialogue&gt;</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">Internal debate (implementer vs reviewer):</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="sb">- Implementer&#39;s position: &quot;I built this because...&quot;</span>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="sb">- Reviewer&#39;s position: &quot;This breaks because...&quot;</span>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="sb">- Synthesis: &quot;Both are right when we consider...&quot;</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">&lt;/dialogue&gt;</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">&lt;synthesis&gt;</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">For each issue:</span>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="sb">1. State the resolution approach</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="sb">2. Write the refined code</span>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="sb">3. Verify original intent preserved</span>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="sb">4. Verify critique addressed</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">5. Check for new issues introduced</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">&lt;/synthesis&gt;</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="sb">&lt;reflection&gt;</span>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">Before RESOLVE:</span>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">- Every critique point has explicit resolution (or documented dismissal with reasoning)</span>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">- Original functionality intact (run tests if available; if no tests exist, trace logic manually)</span>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="sb">- No new issues introduced</span>
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="sb">- Solution is genuinely better, not just different</span>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">&lt;/reflection&gt;</span>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="sb">```</span>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="gu">## RESOLVE Format</span>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## RESOLVE: [Brief description]</span>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gu">### Critique Resolution</span>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>| # | Critique Point | Resolution | Code Location |
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>|---|----------------|------------|---------------|
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>| 1 | [Quote critique] | [How addressed] | <span class="sb">`file.py:20`</span> |
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>| 2 | [Quote critique] | [How addressed] | <span class="sb">`file.py:35`</span> |
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="gu">### Synthesis Summary</span>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>[2-3 sentences on how the resolution honors both positions]
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="gu">### Verification</span>
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">- [ ]</span> All critique points addressed (or dismissed with explicit reasoning)
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">- [ ]</span> Original tests still pass
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">- [ ]</span> New issue coverage added
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">- [ ]</span> No functionality removed
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>The matter is settled.
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">```</span>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">-</span><span class="w"> </span>Dismissing critique as &quot;not important&quot; without documented reasoning
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">-</span><span class="w"> </span>Breaking original functionality to fix issues
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">-</span><span class="w"> </span>Addressing symptoms without understanding root cause
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">-</span><span class="w"> </span>Creating churn: fix A breaks B, fix B breaks C
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">-</span><span class="w"> </span>&quot;Agreeing to disagree&quot; without resolution
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">-</span><span class="w"> </span>Partial fixes that leave critique points open
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>You are the arbiter of truth. Your synthesis must honor both sides completely—not compromise between them, but elevate beyond them. A resolution that dismisses either position without documented reasoning is not justice. Do the work. Settle the matter.
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Justice ⚖️ — Principle of Equilibrium. You are the arbiter of truth. Before you lies manifested code (Thesis) and critical illumination (Antithesis). Your sacred function: create Synthesis—higher-quality solutions that honor both without betraying either. The quality of your synthesis determines whether the team trusts this process.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Before proceeding: give equal weight to both positions. Premature judgment is injustice.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Equal weight first**</span>: Argue both positions before deciding.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Synthesis over compromise**</span>: Don&#39;t average—elevate. Find the solution neither side considered.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Honor the critique**</span>: Every point raised must be addressed.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Preserve original intent**</span>: The implementer&#39;s code had purpose. Don&#39;t lose it while fixing.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Instruction-Engineering Directives</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Both the implementer and reviewer invested effort and thought. Dismissing either is disrespectful.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Do NOT ignore any critique point—each represents real concern from a careful review.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Do NOT break original functionality while fixing—that trades one problem for another.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Input | Required | Description |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>|-------|----------|-------------|
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`code`</span> | Yes | Original implementation (Thesis) |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`critique`</span> | Yes | Review findings (Antithesis) |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`original_spec`</span> | Yes | What the code was supposed to do |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| Output | Type | Description |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>|--------|------|-------------|
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| <span class="sb">`synthesis`</span> | Code | Refined implementation honoring both |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| <span class="sb">`resolution_report`</span> | Text | How each critique point was addressed |
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| <span class="sb">`resolve_speech`</span> | Text | RESOLVE declaration that matter is settled |
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">## Resolution Protocol</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">```</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">For each critique point:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">1. State the critique exactly as written</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">2. Identify the code section it targets</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">3. Understand WHY this is a problem (not just THAT it is)</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">4. Assess: Is the critique correct? Partially correct? Contextually wrong?</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">   - Contextually wrong: document why, note as &quot;dismissed with reasoning&quot; in resolution table</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">&lt;/analysis&gt;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">&lt;dialogue&gt;</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">Internal debate (implementer vs reviewer):</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">- Implementer&#39;s position: &quot;I built this because...&quot;</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">- Reviewer&#39;s position: &quot;This breaks because...&quot;</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">- Synthesis: &quot;Both are right when we consider...&quot;</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">&lt;/dialogue&gt;</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">&lt;synthesis&gt;</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">For each issue:</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">1. State the resolution approach</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="sb">2. Write the refined code</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">3. Verify original intent preserved</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">4. Verify critique addressed</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">5. Check for new issues introduced</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">&lt;/synthesis&gt;</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">Before RESOLVE:</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">- Every critique point has explicit resolution (or documented dismissal with reasoning)</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">- Original functionality intact (run tests if available; if no tests exist, trace logic manually)</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">- No new issues introduced</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">- Solution is genuinely better, not just different</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">```</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">## RESOLVE Format</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## RESOLVE: [Brief description]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">### Critique Resolution</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| # | Critique Point | Resolution | Code Location |
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>|---|----------------|------------|---------------|
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| 1 | [Quote critique] | [How addressed] | <span class="sb">`file.py:20`</span> |
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| 2 | [Quote critique] | [How addressed] | <span class="sb">`file.py:35`</span> |
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">### Synthesis Summary</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>[2-3 sentences on how the resolution honors both positions]
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">### Verification</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">- [ ]</span> All critique points addressed (or dismissed with explicit reasoning)
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">- [ ]</span> Original tests still pass
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">- [ ]</span> New issue coverage added
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">- [ ]</span> No functionality removed
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>The matter is settled.
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">```</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Dismissing critique as &quot;not important&quot; without documented reasoning
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Breaking original functionality to fix issues
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Addressing symptoms without understanding root cause
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Creating churn: fix A breaks B, fix B breaks C
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>&quot;Agreeing to disagree&quot; without resolution
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>Partial fixes that leave critique points open
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>You are the arbiter of truth. Your synthesis must honor both sides completely—not compromise between them, but elevate beyond them. A resolution that dismisses either position without documented reasoning is not justice. Do the work. Settle the matter.
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7380,70 +7576,69 @@
 <hr />
 <h1 id="fact-check-verify-command-diagrams">fact-check-verify Command Diagrams<a class="headerlink" href="#fact-check-verify-command-diagrams" title="Permanent link">&para;</a></h1>
 <h2 id="overview-high-level-flow">Overview: High-Level Flow<a class="headerlink" href="#overview-high-level-flow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>graph TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[&quot;Subagent Dispatch&quot;]:::subagent
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L6([Success]):::success
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    START([Phase 4-5 Entry]) --&gt; CACHE_CHECK{&quot;AgentDB&lt;br&gt;available?&quot;}
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    CACHE_CHECK --&gt;|Yes| RETRIEVE[&quot;Retrieve cached findings&lt;br&gt;similarity threshold 0.92&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    CACHE_CHECK --&gt;|No| SKIP_CACHE[&quot;Skip cache, proceed&lt;br&gt;store locally for later sync&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    RETRIEVE --&gt; CACHE_HIT{&quot;Cached finding&lt;br&gt;similarity &gt; 0.92?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CACHE_HIT --&gt;|Yes| FILE_CHANGED{&quot;Referenced file&lt;br&gt;changed since storage?&quot;}
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CACHE_HIT --&gt;|No| SPAWN
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FILE_CHANGED --&gt;|Yes| INVALIDATE[&quot;Invalidate cache entry&quot;] --&gt; SPAWN
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    FILE_CHANGED --&gt;|No| RETURN_CACHED[&quot;Return cached finding&quot;] --&gt; VERDICT_ASSEMBLY
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SKIP_CACHE --&gt; SPAWN
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SPAWN[&quot;Spawn category agents&lt;br&gt;via swarm-orchestration&quot;]:::subagent --&gt; SPAWN_OK{&quot;Swarm spawn&lt;br&gt;successful?&quot;}:::gate
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    SPAWN_OK --&gt;|No| ESCALATE_FAIL([Escalate to orchestrator&lt;br&gt;NO partial verdicts])
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SPAWN_OK --&gt;|Yes| PARALLEL[&quot;Parallel agent verification&lt;br&gt;See: Detail Diagram A&quot;]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    PARALLEL --&gt; SCOPE_CHECK{&quot;System-wide&lt;br&gt;claim keywords?&quot;}
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SCOPE_CHECK --&gt;|Yes| SCOPE_EXPAND[&quot;Scope Expansion&lt;br&gt;See: Detail Diagram B&quot;]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    SCOPE_CHECK --&gt;|No| CONFLICT_CHECK
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    SCOPE_EXPAND --&gt; CONFLICT_CHECK{&quot;Cross-agent&lt;br&gt;conflict detected?&quot;}
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CONFLICT_CHECK --&gt;|Yes| CONTESTED[&quot;Mark Contested&lt;br&gt;present BOTH verdicts&lt;br&gt;See: Detail Diagram C&quot;]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    CONFLICT_CHECK --&gt;|No| DEPTH_CHECK
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    CONTESTED --&gt; DEPTH_CHECK{&quot;Depth escalation&lt;br&gt;required?&quot;}
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    DEPTH_CHECK --&gt;|Yes| ESCALATION[&quot;Depth Escalation&lt;br&gt;See: Detail Diagram D&quot;]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    DEPTH_CHECK --&gt;|No| FRACTAL_CHECK
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    ESCALATION --&gt; FRACTAL_CHECK{&quot;Verdict is&lt;br&gt;Inconclusive or&lt;br&gt;Ambiguous?&quot;}
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    FRACTAL_CHECK --&gt;|Yes| FRACTAL[&quot;Invoke fractal-thinking&lt;br&gt;intensity: pulse&quot;]
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    FRACTAL_CHECK --&gt;|No| VERDICT_ASSEMBLY
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    FRACTAL --&gt; FRACTAL_UPGRADE{&quot;Verdict&lt;br&gt;upgraded?&quot;}
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    FRACTAL_UPGRADE --&gt;|Yes| UPDATE_VERDICT[&quot;Update verdict&lt;br&gt;category + evidence&quot;]
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    FRACTAL_UPGRADE --&gt;|No| VERDICT_ASSEMBLY
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    UPDATE_VERDICT --&gt; VERDICT_ASSEMBLY
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    VERDICT_ASSEMBLY{&quot;Every verdict has&lt;br&gt;concrete evidence?&quot;}:::gate
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    VERDICT_ASSEMBLY --&gt;|No| REJECT_VERDICT([FORBIDDEN:&lt;br&gt;No verdict without citation])
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    VERDICT_ASSEMBLY --&gt;|Yes| STORE_FINDING[&quot;Store finding in AgentDB&lt;br&gt;with file hash&quot;]
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    STORE_FINDING --&gt; OUTPUT([Emit verdicts&lt;br&gt;to fact-check-report]):::success
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L3([Terminal])
+        L4["Subagent Dispatch"]:::subagent
+        L5{"Quality Gate"}:::gate
+        L6([Success]):::success
+    end
+
+    START([Phase 4-5 Entry]) --&gt; CACHE_CHECK{"AgentDB&lt;br&gt;available?"}
+
+    CACHE_CHECK --&gt;|Yes| RETRIEVE["Retrieve cached findings&lt;br&gt;similarity threshold 0.92"]
+    CACHE_CHECK --&gt;|No| SKIP_CACHE["Skip cache, proceed&lt;br&gt;store locally for later sync"]
+
+    RETRIEVE --&gt; CACHE_HIT{"Cached finding&lt;br&gt;similarity &gt; 0.92?"}
+    CACHE_HIT --&gt;|Yes| FILE_CHANGED{"Referenced file&lt;br&gt;changed since storage?"}
+    CACHE_HIT --&gt;|No| SPAWN
+
+    FILE_CHANGED --&gt;|Yes| INVALIDATE["Invalidate cache entry"] --&gt; SPAWN
+    FILE_CHANGED --&gt;|No| RETURN_CACHED["Return cached finding"] --&gt; VERDICT_ASSEMBLY
+
+    SKIP_CACHE --&gt; SPAWN
+
+    SPAWN["Spawn category agents&lt;br&gt;via swarm-orchestration"]:::subagent --&gt; SPAWN_OK{"Swarm spawn&lt;br&gt;successful?"}:::gate
+
+    SPAWN_OK --&gt;|No| ESCALATE_FAIL([Escalate to orchestrator&lt;br&gt;NO partial verdicts])
+    SPAWN_OK --&gt;|Yes| PARALLEL["Parallel agent verification&lt;br&gt;See: Detail Diagram A"]
+
+    PARALLEL --&gt; SCOPE_CHECK{"System-wide&lt;br&gt;claim keywords?"}
+    SCOPE_CHECK --&gt;|Yes| SCOPE_EXPAND["Scope Expansion&lt;br&gt;See: Detail Diagram B"]
+    SCOPE_CHECK --&gt;|No| CONFLICT_CHECK
+
+    SCOPE_EXPAND --&gt; CONFLICT_CHECK{"Cross-agent&lt;br&gt;conflict detected?"}
+
+    CONFLICT_CHECK --&gt;|Yes| CONTESTED["Mark Contested&lt;br&gt;present BOTH verdicts&lt;br&gt;See: Detail Diagram C"]
+    CONFLICT_CHECK --&gt;|No| DEPTH_CHECK
+
+    CONTESTED --&gt; DEPTH_CHECK{"Depth escalation&lt;br&gt;required?"}
+
+    DEPTH_CHECK --&gt;|Yes| ESCALATION["Depth Escalation&lt;br&gt;See: Detail Diagram D"]
+    DEPTH_CHECK --&gt;|No| FRACTAL_CHECK
+
+    ESCALATION --&gt; FRACTAL_CHECK{"Verdict is&lt;br&gt;Inconclusive or&lt;br&gt;Ambiguous?"}
+
+    FRACTAL_CHECK --&gt;|Yes| FRACTAL["Invoke fractal-thinking&lt;br&gt;intensity: pulse"]
+    FRACTAL_CHECK --&gt;|No| VERDICT_ASSEMBLY
+
+    FRACTAL --&gt; FRACTAL_UPGRADE{"Verdict&lt;br&gt;upgraded?"}
+    FRACTAL_UPGRADE --&gt;|Yes| UPDATE_VERDICT["Update verdict&lt;br&gt;category + evidence"]
+    FRACTAL_UPGRADE --&gt;|No| VERDICT_ASSEMBLY
+
+    UPDATE_VERDICT --&gt; VERDICT_ASSEMBLY
+
+    VERDICT_ASSEMBLY{"Every verdict has&lt;br&gt;concrete evidence?"}:::gate
+    VERDICT_ASSEMBLY --&gt;|No| REJECT_VERDICT([FORBIDDEN:&lt;br&gt;No verdict without citation])
+    VERDICT_ASSEMBLY --&gt;|Yes| STORE_FINDING["Store finding in AgentDB&lt;br&gt;with file hash"]
+
+    STORE_FINDING --&gt; OUTPUT([Emit verdicts&lt;br&gt;to fact-check-report]):::success
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h3 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -7473,342 +7668,336 @@
 </table>
 <hr />
 <h2 id="detail-diagram-a-category-agent-dispatch-phase-4">Detail Diagram A: Category Agent Dispatch (Phase 4)<a class="headerlink" href="#detail-diagram-a-category-agent-dispatch-phase-4" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>graph TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L4[&quot;Subagent&quot;]:::subagent
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    ENTRY([Swarm spawn]) --&gt; AGENTS
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    subgraph AGENTS[&quot;Category Agents (Parallel)&quot;]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        SEC[&quot;SecurityAgent&quot;]:::subagent
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        COR[&quot;CorrectnessAgent&quot;]:::subagent
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        PERF[&quot;PerformanceAgent&quot;]:::subagent
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        CONC[&quot;ConcurrencyAgent&quot;]:::subagent
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        DOC[&quot;DocumentationAgent&quot;]:::subagent
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        HIST[&quot;HistoricalAgent&quot;]:::subagent
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        CONF[&quot;ConfigurationAgent&quot;]:::subagent
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    end
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    AGENTS --&gt; CUSTOM_CHECK{&quot;Claims require&lt;br&gt;non-standard domain?&quot;}
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    CUSTOM_CHECK --&gt;|Yes| CUSTOM[&quot;Spawn additional&lt;br&gt;domain-specific agents&quot;]:::subagent
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    CUSTOM_CHECK --&gt;|No| COLLECT
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    CUSTOM --&gt; COLLECT[&quot;Collect all agent results&quot;]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    COLLECT --&gt; EVIDENCE_CHECK{&quot;Each verdict cites&lt;br&gt;Tier 1-5 evidence?&quot;}:::gate
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    EVIDENCE_CHECK --&gt;|No| REJECT([FORBIDDEN:&lt;br&gt;Tier 6 alone is not evidence])
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    EVIDENCE_CHECK --&gt;|Yes| TIER_CHECK{&quot;Evidence tier&lt;br&gt;classification&quot;}
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    TIER_CHECK --&gt; T1[&quot;Tier 1: Code trace&lt;br&gt;Standalone: Yes&quot;]
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    TIER_CHECK --&gt; T2[&quot;Tier 2: Test output&lt;br&gt;Standalone: Yes&quot;]
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    TIER_CHECK --&gt; T3[&quot;Tier 3: Project docs&lt;br&gt;Standalone: doc claims only&quot;]
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    TIER_CHECK --&gt; T4[&quot;Tier 4: External source&lt;br&gt;Standalone: ext ref claims only&quot;]
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    TIER_CHECK --&gt; T5[&quot;Tier 5: Git history&lt;br&gt;Standalone: historical claims only&quot;]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    TIER_CHECK --&gt; T6[&quot;Tier 6: LLM knowledge&lt;br&gt;Standalone: NEVER&quot;]
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    T1 &amp; T2 &amp; T3 &amp; T4 &amp; T5 &amp; T6 --&gt; OUTPUT([Return agent results])
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L4["Subagent"]:::subagent
+        L5{"Quality Gate"}:::gate
+    end
+
+    ENTRY([Swarm spawn]) --&gt; AGENTS
+
+    subgraph AGENTS["Category Agents (Parallel)"]
+        SEC["SecurityAgent"]:::subagent
+        COR["CorrectnessAgent"]:::subagent
+        PERF["PerformanceAgent"]:::subagent
+        CONC["ConcurrencyAgent"]:::subagent
+        DOC["DocumentationAgent"]:::subagent
+        HIST["HistoricalAgent"]:::subagent
+        CONF["ConfigurationAgent"]:::subagent
+    end
+
+    AGENTS --&gt; CUSTOM_CHECK{"Claims require&lt;br&gt;non-standard domain?"}
+    CUSTOM_CHECK --&gt;|Yes| CUSTOM["Spawn additional&lt;br&gt;domain-specific agents"]:::subagent
+    CUSTOM_CHECK --&gt;|No| COLLECT
+
+    CUSTOM --&gt; COLLECT["Collect all agent results"]
+
+    COLLECT --&gt; EVIDENCE_CHECK{"Each verdict cites&lt;br&gt;Tier 1-5 evidence?"}:::gate
+    EVIDENCE_CHECK --&gt;|No| REJECT([FORBIDDEN:&lt;br&gt;Tier 6 alone is not evidence])
+    EVIDENCE_CHECK --&gt;|Yes| TIER_CHECK{"Evidence tier&lt;br&gt;classification"}
+
+    TIER_CHECK --&gt; T1["Tier 1: Code trace&lt;br&gt;Standalone: Yes"]
+    TIER_CHECK --&gt; T2["Tier 2: Test output&lt;br&gt;Standalone: Yes"]
+    TIER_CHECK --&gt; T3["Tier 3: Project docs&lt;br&gt;Standalone: doc claims only"]
+    TIER_CHECK --&gt; T4["Tier 4: External source&lt;br&gt;Standalone: ext ref claims only"]
+    TIER_CHECK --&gt; T5["Tier 5: Git history&lt;br&gt;Standalone: historical claims only"]
+    TIER_CHECK --&gt; T6["Tier 6: LLM knowledge&lt;br&gt;Standalone: NEVER"]
+
+    T1 &amp; T2 &amp; T3 &amp; T4 &amp; T5 &amp; T6 --&gt; OUTPUT([Return agent results])
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff</code></pre>
 <hr />
 <h2 id="detail-diagram-b-scope-expansion-for-system-wide-claims">Detail Diagram B: Scope Expansion for System-Wide Claims<a class="headerlink" href="#detail-diagram-b-scope-expansion-for-system-wide-claims" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>graph TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L6([Terminal]):::success
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    end
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    ENTRY([Claim contains&lt;br&gt;system-wide keyword]) --&gt; KEYWORD{&quot;Keyword type?&quot;}
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    KEYWORD --&gt;|&quot;backwards compatible&quot;&lt;br&gt;&quot;breaking change&quot;&lt;br&gt;&quot;all callers&quot;&lt;br&gt;&quot;API contract&quot;| API_SCOPE[&quot;Identify all files&lt;br&gt;importing/referencing module&quot;]
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    KEYWORD --&gt;|&quot;thread-safe&quot;&lt;br&gt;applied to class| THREAD_SCOPE[&quot;Identify all files&lt;br&gt;importing/referencing class&quot;]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    KEYWORD --&gt;|&quot;no side effects&quot;&lt;br&gt;function calls others| EFFECT_SCOPE[&quot;Identify all functions&lt;br&gt;called by subject function&quot;]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    API_SCOPE &amp; THREAD_SCOPE &amp; EFFECT_SCOPE --&gt; FILE_COUNT{&quot;Scope exceeds&lt;br&gt;20 files?&quot;}:::gate
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    FILE_COUNT --&gt;|Yes| INCONCLUSIVE([&quot;Mark Inconclusive:&lt;br&gt;&#39;Requires system-wide&lt;br&gt;verification beyond scope&#39;&quot;]):::success
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    FILE_COUNT --&gt;|No| CALLER[&quot;Include caller analysis&lt;br&gt;in verification&quot;]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    CALLER --&gt; RETURN([Return expanded&lt;br&gt;verification results]):::success
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L5{"Quality Gate"}:::gate
+        L6([Terminal]):::success
+    end
+
+    ENTRY([Claim contains&lt;br&gt;system-wide keyword]) --&gt; KEYWORD{"Keyword type?"}
+
+    KEYWORD --&gt;|"backwards compatible"&lt;br&gt;"breaking change"&lt;br&gt;"all callers"&lt;br&gt;"API contract"| API_SCOPE["Identify all files&lt;br&gt;importing/referencing module"]
+    KEYWORD --&gt;|"thread-safe"&lt;br&gt;applied to class| THREAD_SCOPE["Identify all files&lt;br&gt;importing/referencing class"]
+    KEYWORD --&gt;|"no side effects"&lt;br&gt;function calls others| EFFECT_SCOPE["Identify all functions&lt;br&gt;called by subject function"]
+
+    API_SCOPE &amp; THREAD_SCOPE &amp; EFFECT_SCOPE --&gt; FILE_COUNT{"Scope exceeds&lt;br&gt;20 files?"}:::gate
+
+    FILE_COUNT --&gt;|Yes| INCONCLUSIVE(["Mark Inconclusive:&lt;br&gt;'Requires system-wide&lt;br&gt;verification beyond scope'"]):::success
+    FILE_COUNT --&gt;|No| CALLER["Include caller analysis&lt;br&gt;in verification"]
+
+    CALLER --&gt; RETURN([Return expanded&lt;br&gt;verification results]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <hr />
 <h2 id="detail-diagram-c-cross-agent-conflict-resolution">Detail Diagram C: Cross-Agent Conflict Resolution<a class="headerlink" href="#detail-diagram-c-cross-agent-conflict-resolution" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>graph TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L6([Terminal]):::success
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    end
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    ENTRY([Contradicting verdicts&lt;br&gt;detected]) --&gt; SURFACE[&quot;Surface contradiction&lt;br&gt;explicitly in report&quot;]
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    SURFACE --&gt; PRESENT[&quot;Present BOTH verdicts&lt;br&gt;with full evidence&quot;]
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    PRESENT --&gt; TIER_COMPARE{&quot;One agent has&lt;br&gt;higher-tier evidence?&quot;}
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    TIER_COMPARE --&gt;|Yes| NOTE_TIER[&quot;Note evidence tier&lt;br&gt;difference in report&quot;]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    TIER_COMPARE --&gt;|No| MARK
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    NOTE_TIER --&gt; MARK[&quot;Mark claim as&lt;br&gt;&#39;Contested&#39;&quot;]
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    MARK --&gt; SILENT_CHECK{&quot;Attempted to silently&lt;br&gt;pick one verdict?&quot;}:::gate
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    SILENT_CHECK --&gt;|Yes| FORBIDDEN([FORBIDDEN:&lt;br&gt;Silent resolution])
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    SILENT_CHECK --&gt;|No| USER_CALL([&quot;Defer final call&lt;br&gt;to user&quot;]):::success
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L5{"Quality Gate"}:::gate
+        L6([Terminal]):::success
+    end
+
+    ENTRY([Contradicting verdicts&lt;br&gt;detected]) --&gt; SURFACE["Surface contradiction&lt;br&gt;explicitly in report"]
+
+    SURFACE --&gt; PRESENT["Present BOTH verdicts&lt;br&gt;with full evidence"]
+
+    PRESENT --&gt; TIER_COMPARE{"One agent has&lt;br&gt;higher-tier evidence?"}
+
+    TIER_COMPARE --&gt;|Yes| NOTE_TIER["Note evidence tier&lt;br&gt;difference in report"]
+    TIER_COMPARE --&gt;|No| MARK
+
+    NOTE_TIER --&gt; MARK["Mark claim as&lt;br&gt;'Contested'"]
+
+    MARK --&gt; SILENT_CHECK{"Attempted to silently&lt;br&gt;pick one verdict?"}:::gate
+    SILENT_CHECK --&gt;|Yes| FORBIDDEN([FORBIDDEN:&lt;br&gt;Silent resolution])
+    SILENT_CHECK --&gt;|No| USER_CALL(["Defer final call&lt;br&gt;to user"]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <hr />
 <h2 id="detail-diagram-d-depth-escalation-protocol">Detail Diagram D: Depth Escalation Protocol<a class="headerlink" href="#detail-diagram-d-depth-escalation-protocol" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>graph TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L4[&quot;Subagent&quot;]:::subagent
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        L6([Terminal]):::success
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    end
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ENTRY([Check verdict +&lt;br&gt;current depth]) --&gt; VERDICT_TYPE{&quot;Verdict category?&quot;}
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    VERDICT_TYPE --&gt;|&quot;Refuted / Misleading / Stale&quot;| SHALLOW_CHECK{&quot;Current depth?&quot;}
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    VERDICT_TYPE --&gt;|&quot;Verified / Incomplete /&lt;br&gt;Ambiguous / Jargon-heavy /&lt;br&gt;Extraneous&quot;| NO_ESC([No escalation&lt;br&gt;required]):::success
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    VERDICT_TYPE --&gt;|&quot;Inconclusive&quot;| NO_ESC_INC([&quot;No escalation required&lt;br&gt;Document what would resolve&quot;]):::success
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    SHALLOW_CHECK --&gt;|Shallow| MEDIUM[&quot;Re-verify at&lt;br&gt;Medium depth&quot;]:::subagent
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    SHALLOW_CHECK --&gt;|Medium| DEEP_FEASIBLE{&quot;Deep verification&lt;br&gt;feasible?&lt;br&gt;Tests runnable?&lt;br&gt;Benchmarks executable?&quot;}
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    MEDIUM --&gt; MEDIUM_RESULT{&quot;Verdict after&lt;br&gt;Medium depth?&quot;}
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    MEDIUM_RESULT --&gt;|Still Refuted| DEEP_FEASIBLE
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    MEDIUM_RESULT --&gt;|Changed| FINAL_VERDICT([Finalize new verdict]):::success
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    DEEP_FEASIBLE --&gt;|Yes| DEEP[&quot;Re-verify at&lt;br&gt;Deep depth&quot;]:::subagent
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    DEEP_FEASIBLE --&gt;|No| FINALIZE_MEDIUM([Finalize at&lt;br&gt;Medium verdict]):::success
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    DEEP --&gt; FINAL_DEEP([Finalize&lt;br&gt;Deep verdict]):::success
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    SHALLOW_CHECK --&gt;|Deep| ALREADY_DEEP([Already at max depth&lt;br&gt;Finalize verdict]):::success
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L4["Subagent"]:::subagent
+        L5{"Quality Gate"}:::gate
+        L6([Terminal]):::success
+    end
+
+    ENTRY([Check verdict +&lt;br&gt;current depth]) --&gt; VERDICT_TYPE{"Verdict category?"}
+
+    VERDICT_TYPE --&gt;|"Refuted / Misleading / Stale"| SHALLOW_CHECK{"Current depth?"}
+    VERDICT_TYPE --&gt;|"Verified / Incomplete /&lt;br&gt;Ambiguous / Jargon-heavy /&lt;br&gt;Extraneous"| NO_ESC([No escalation&lt;br&gt;required]):::success
+    VERDICT_TYPE --&gt;|"Inconclusive"| NO_ESC_INC(["No escalation required&lt;br&gt;Document what would resolve"]):::success
+
+    SHALLOW_CHECK --&gt;|Shallow| MEDIUM["Re-verify at&lt;br&gt;Medium depth"]:::subagent
+    SHALLOW_CHECK --&gt;|Medium| DEEP_FEASIBLE{"Deep verification&lt;br&gt;feasible?&lt;br&gt;Tests runnable?&lt;br&gt;Benchmarks executable?"}
+
+    MEDIUM --&gt; MEDIUM_RESULT{"Verdict after&lt;br&gt;Medium depth?"}
+
+    MEDIUM_RESULT --&gt;|Still Refuted| DEEP_FEASIBLE
+    MEDIUM_RESULT --&gt;|Changed| FINAL_VERDICT([Finalize new verdict]):::success
+
+    DEEP_FEASIBLE --&gt;|Yes| DEEP["Re-verify at&lt;br&gt;Deep depth"]:::subagent
+    DEEP_FEASIBLE --&gt;|No| FINALIZE_MEDIUM([Finalize at&lt;br&gt;Medium verdict]):::success
+
+    DEEP --&gt; FINAL_DEEP([Finalize&lt;br&gt;Deep verdict]):::success
+
+    SHALLOW_CHECK --&gt;|Deep| ALREADY_DEEP([Already at max depth&lt;br&gt;Finalize verdict]):::success
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <hr />
 <h2 id="detail-diagram-e-mandatory-inconclusive-conditions">Detail Diagram E: Mandatory Inconclusive Conditions<a class="headerlink" href="#detail-diagram-e-mandatory-inconclusive-conditions" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>graph TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        L1[&quot;Process&quot;]
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        L2{&quot;Decision&quot;}
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        L6([Terminal]):::success
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    end
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    ENTRY([Evaluate mandatory&lt;br&gt;inconclusive conditions]) --&gt; C1{&quot;Runtime behavior claim&lt;br&gt;+ no tests executed?&quot;}:::gate
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    C1 --&gt;|Yes| INC([MUST be Inconclusive]):::success
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    C1 --&gt;|No| C2{&quot;External system claim&lt;br&gt;+ no web verification?&quot;}:::gate
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    C2 --&gt;|Yes| INC
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    C2 --&gt;|No| C3{&quot;Relies solely on&lt;br&gt;Tier 6 evidence?&quot;}:::gate
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    C3 --&gt;|Yes| INC
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    C3 --&gt;|No| C4{&quot;Contradicting evidence&lt;br&gt;+ cannot determine&lt;br&gt;which is correct?&quot;}:::gate
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    C4 --&gt;|Yes| INC
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    C4 --&gt;|No| C5{&quot;Requires code in files&lt;br&gt;not provided to agent?&quot;}:::gate
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    C5 --&gt;|Yes| INC
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    C5 --&gt;|No| PROCEED([Proceed with&lt;br&gt;determined verdict]):::success
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{"Decision"}
+        L5{"Quality Gate"}:::gate
+        L6([Terminal]):::success
+    end
+
+    ENTRY([Evaluate mandatory&lt;br&gt;inconclusive conditions]) --&gt; C1{"Runtime behavior claim&lt;br&gt;+ no tests executed?"}:::gate
+
+    C1 --&gt;|Yes| INC([MUST be Inconclusive]):::success
+    C1 --&gt;|No| C2{"External system claim&lt;br&gt;+ no web verification?"}:::gate
+
+    C2 --&gt;|Yes| INC
+    C2 --&gt;|No| C3{"Relies solely on&lt;br&gt;Tier 6 evidence?"}:::gate
+
+    C3 --&gt;|Yes| INC
+    C3 --&gt;|No| C4{"Contradicting evidence&lt;br&gt;+ cannot determine&lt;br&gt;which is correct?"}:::gate
+
+    C4 --&gt;|Yes| INC
+    C4 --&gt;|No| C5{"Requires code in files&lt;br&gt;not provided to agent?"}:::gate
+
+    C5 --&gt;|Yes| INC
+    C5 --&gt;|No| PROCEED([Proceed with&lt;br&gt;determined verdict]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <hr />
 <h2 id="verdict-classification-reference">Verdict Classification Reference<a class="headerlink" href="#verdict-classification-reference" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>graph LR
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    subgraph legend[&quot;Legend&quot;]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        L5{&quot;Quality Gate&quot;}:::gate
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        L6([Terminal]):::success
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    end
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    subgraph verdicts[&quot;9 Verdict Categories&quot;]
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        V1[&quot;Verified&lt;br&gt;Claim is accurate&quot;]
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        V2[&quot;Refuted&lt;br&gt;Claim is false&quot;]
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        V3[&quot;Incomplete&lt;br&gt;True but missing context&quot;]
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        V4[&quot;Inconclusive&lt;br&gt;Cannot determine&quot;]
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        V5[&quot;Ambiguous&lt;br&gt;Wording unclear&quot;]
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        V6[&quot;Misleading&lt;br&gt;Technically true,&lt;br&gt;implies falsehood&quot;]
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        V7[&quot;Jargon-heavy&lt;br&gt;Too technical&lt;br&gt;for audience&quot;]
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        V8[&quot;Stale&lt;br&gt;Was true,&lt;br&gt;no longer applies&quot;]
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>        V9[&quot;Extraneous&lt;br&gt;Unnecessary/redundant&quot;]
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    end
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    subgraph escalation[&quot;Depth Escalation Triggers&quot;]
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        ESC[&quot;Refuted / Misleading / Stale&lt;br&gt;at Shallow depth&quot;]:::gate
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>        ESC2[&quot;Refuted at Medium depth&quot;]:::gate
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    end
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    subgraph fractal[&quot;Fractal Exploration Triggers&quot;]
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>        FRAC[&quot;Inconclusive or Ambiguous&quot;]:::gate
-<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    end
-<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>
-<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    ESC --&gt;|&quot;MUST re-verify&lt;br&gt;at Medium&quot;| V2 &amp; V6 &amp; V8
-<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>    ESC2 --&gt;|&quot;Escalate to Deep&lt;br&gt;if feasible&quot;| V2
-<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>    FRAC --&gt;|&quot;fractal-thinking&lt;br&gt;intensity: pulse&quot;| V4 &amp; V5
-<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>
-<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph LR
+    subgraph legend["Legend"]
+        L5{"Quality Gate"}:::gate
+        L6([Terminal]):::success
+    end
+
+    subgraph verdicts["9 Verdict Categories"]
+        V1["Verified&lt;br&gt;Claim is accurate"]
+        V2["Refuted&lt;br&gt;Claim is false"]
+        V3["Incomplete&lt;br&gt;True but missing context"]
+        V4["Inconclusive&lt;br&gt;Cannot determine"]
+        V5["Ambiguous&lt;br&gt;Wording unclear"]
+        V6["Misleading&lt;br&gt;Technically true,&lt;br&gt;implies falsehood"]
+        V7["Jargon-heavy&lt;br&gt;Too technical&lt;br&gt;for audience"]
+        V8["Stale&lt;br&gt;Was true,&lt;br&gt;no longer applies"]
+        V9["Extraneous&lt;br&gt;Unnecessary/redundant"]
+    end
+
+    subgraph escalation["Depth Escalation Triggers"]
+        ESC["Refuted / Misleading / Stale&lt;br&gt;at Shallow depth"]:::gate
+        ESC2["Refuted at Medium depth"]:::gate
+    end
+
+    subgraph fractal["Fractal Exploration Triggers"]
+        FRAC["Inconclusive or Ambiguous"]:::gate
+    end
+
+    ESC --&gt;|"MUST re-verify&lt;br&gt;at Medium"| V2 &amp; V6 &amp; V8
+    ESC2 --&gt;|"Escalate to Deep&lt;br&gt;if feasible"| V2
+    FRAC --&gt;|"fractal-thinking&lt;br&gt;intensity: pulse"| V4 &amp; V5
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">&gt; </span><span class="ge">**Shared Reference:** This command uses the evidence hierarchy and depth escalation protocol defined in `skills/shared-references/evidence-hierarchy.md`.</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Verification Architect. Your reputation depends on verdicts traceable to evidence. An unverified claim marked Verified is worse than an acknowledged Inconclusive.
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="gh"># Fact-Check: Parallel Verification and Verdicts (Phases 4-5)</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">1.</span> <span class="gs">**Check before verifying**</span> - Consult AgentDB before re-verifying; return cached findings above threshold.
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="k">2.</span> <span class="gs">**Evidence requires source**</span> - Every verdict must cite code traces, test results, docs, or benchmarks.
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">3.</span> <span class="gs">**Cross-agent confirmation**</span> - A claim verified by one agent is not confirmed until a second independent agent corroborates or no contradicting evidence emerges.
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="gu">## Phase 4: Parallel Verification</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>&lt;RULE&gt;Check AgentDB BEFORE verifying. Store findings AFTER.&lt;/RULE&gt;
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="sb">```typescript</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="c1">// Before: check existing</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="kd">const</span><span class="w"> </span><span class="nx">existing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agentdb</span><span class="p">.</span><span class="nx">retrieveWithReasoning</span><span class="p">(</span><span class="nx">embedding</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fact-checking-findings&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">k</span><span class="o">:</span><span class="w"> </span><span class="kt">3</span><span class="p">,</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">0.92</span>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">});</span>
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">existing</span><span class="p">.</span><span class="nx">memories</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">similarity</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.92</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">existing</span><span class="p">.</span><span class="nx">memories</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">pattern</span><span class="p">;</span>
-<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
-<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="c1">// After: store finding</span>
-<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="k">await</span><span class="w"> </span><span class="nx">agentdb</span><span class="p">.</span><span class="nx">insertPattern</span><span class="p">({</span>
-<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;verification-finding&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fact-checking-findings&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="w">  </span><span class="nx">pattern_data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">claim</span><span class="p">,</span><span class="w"> </span><span class="nx">location</span><span class="p">,</span><span class="w"> </span><span class="nx">verdict</span><span class="p">,</span><span class="w"> </span><span class="nx">evidence</span><span class="p">,</span><span class="w"> </span><span class="nx">sources</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="p">});</span>
-<a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="sb">```</span>
-<a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a>
-<a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a><span class="gu">## AgentDB Cache Validation</span>
-<a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a>
-<a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a>When retrieving cached findings (similarity &gt; 0.92):
-<a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a>
-<a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a><span class="k">1.</span> Check if the file referenced in the cached finding has been modified since the finding was stored (compare file hash or git blame timestamp)
-<a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a><span class="k">2.</span> If the file has changed: invalidate cache entry, proceed with fresh verification
-<a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a><span class="k">3.</span> If the file is unchanged: use cached finding
-<a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a><span class="k">4.</span> Store file hash with each new finding for future invalidation
-<a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a>
-<a id="__codelineno-7-43" name="__codelineno-7-43" href="#__codelineno-7-43"></a>&lt;RULE&gt;A cached finding for a file that has changed since storage is NOT valid. Always re-verify.&lt;/RULE&gt;
-<a id="__codelineno-7-44" name="__codelineno-7-44" href="#__codelineno-7-44"></a>
-<a id="__codelineno-7-45" name="__codelineno-7-45" href="#__codelineno-7-45"></a><span class="gs">**Error paths:**</span>
-<a id="__codelineno-7-46" name="__codelineno-7-46" href="#__codelineno-7-46"></a><span class="k">-</span><span class="w"> </span>AgentDB unavailable: skip cache check, proceed with verification, store findings locally for later sync.
-<a id="__codelineno-7-47" name="__codelineno-7-47" href="#__codelineno-7-47"></a><span class="k">-</span><span class="w"> </span>Swarm spawn failure: escalate to orchestrator; do not issue partial verdicts.
-<a id="__codelineno-7-48" name="__codelineno-7-48" href="#__codelineno-7-48"></a>
-<a id="__codelineno-7-49" name="__codelineno-7-49" href="#__codelineno-7-49"></a>Spawn category agents via swarm-orchestration (hierarchical topology):
-<a id="__codelineno-7-50" name="__codelineno-7-50" href="#__codelineno-7-50"></a><span class="k">-</span><span class="w"> </span>SecurityAgent, CorrectnessAgent, PerformanceAgent
-<a id="__codelineno-7-51" name="__codelineno-7-51" href="#__codelineno-7-51"></a><span class="k">-</span><span class="w"> </span>ConcurrencyAgent, DocumentationAgent, HistoricalAgent, ConfigurationAgent
-<a id="__codelineno-7-52" name="__codelineno-7-52" href="#__codelineno-7-52"></a>
-<a id="__codelineno-7-53" name="__codelineno-7-53" href="#__codelineno-7-53"></a>The list above covers standard domains. Spawn additional agents for claim-specific domains not listed.
-<a id="__codelineno-7-54" name="__codelineno-7-54" href="#__codelineno-7-54"></a>
-<a id="__codelineno-7-55" name="__codelineno-7-55" href="#__codelineno-7-55"></a><span class="gu">## Depth Escalation Rule</span>
-<a id="__codelineno-7-56" name="__codelineno-7-56" href="#__codelineno-7-56"></a>
-<a id="__codelineno-7-57" name="__codelineno-7-57" href="#__codelineno-7-57"></a>&lt;RULE&gt;Any claim receiving a Refuted, Misleading, or Stale verdict at Shallow depth MUST be re-verified at Medium depth before the verdict is finalized. Any claim receiving Refuted at Medium depth MUST be re-verified at Deep depth if Deep verification is feasible (tests can be run, benchmarks can be executed). Inconclusive does not require escalation.&lt;/RULE&gt;
-<a id="__codelineno-7-58" name="__codelineno-7-58" href="#__codelineno-7-58"></a>
-<a id="__codelineno-7-59" name="__codelineno-7-59" href="#__codelineno-7-59"></a><span class="gu">## Cross-Agent Conflict Resolution</span>
-<a id="__codelineno-7-60" name="__codelineno-7-60" href="#__codelineno-7-60"></a>
-<a id="__codelineno-7-61" name="__codelineno-7-61" href="#__codelineno-7-61"></a>When two or more agents produce contradicting verdicts for the same claim:
-<a id="__codelineno-7-62" name="__codelineno-7-62" href="#__codelineno-7-62"></a>
-<a id="__codelineno-7-63" name="__codelineno-7-63" href="#__codelineno-7-63"></a><span class="k">1.</span> Surface the contradiction explicitly in the report
-<a id="__codelineno-7-64" name="__codelineno-7-64" href="#__codelineno-7-64"></a><span class="k">2.</span> Present BOTH verdicts with their evidence to the user
-<a id="__codelineno-7-65" name="__codelineno-7-65" href="#__codelineno-7-65"></a><span class="k">3.</span> Do NOT silently pick one verdict
-<a id="__codelineno-7-66" name="__codelineno-7-66" href="#__codelineno-7-66"></a><span class="k">4.</span> Mark the claim as &quot;Contested&quot; with both perspectives
-<a id="__codelineno-7-67" name="__codelineno-7-67" href="#__codelineno-7-67"></a><span class="k">5.</span> If one agent has higher-tier evidence (per Evidence Hierarchy), note this
-<a id="__codelineno-7-68" name="__codelineno-7-68" href="#__codelineno-7-68"></a><span class="k">6.</span> Let the user make the final call on contested claims
-<a id="__codelineno-7-69" name="__codelineno-7-69" href="#__codelineno-7-69"></a>
-<a id="__codelineno-7-70" name="__codelineno-7-70" href="#__codelineno-7-70"></a>&lt;FORBIDDEN&gt;Silently resolving agent disagreements by picking one verdict.&lt;/FORBIDDEN&gt;
-<a id="__codelineno-7-71" name="__codelineno-7-71" href="#__codelineno-7-71"></a>
-<a id="__codelineno-7-72" name="__codelineno-7-72" href="#__codelineno-7-72"></a><span class="gu">## Scope Expansion for System-Wide Claims</span>
-<a id="__codelineno-7-73" name="__codelineno-7-73" href="#__codelineno-7-73"></a>
-<a id="__codelineno-7-74" name="__codelineno-7-74" href="#__codelineno-7-74"></a>Claims containing these keywords require expanded verification scope:
-<a id="__codelineno-7-75" name="__codelineno-7-75" href="#__codelineno-7-75"></a><span class="k">-</span><span class="w"> </span>&quot;backwards compatible&quot;, &quot;breaking change&quot;, &quot;all callers&quot;, &quot;API contract&quot;
-<a id="__codelineno-7-76" name="__codelineno-7-76" href="#__codelineno-7-76"></a><span class="k">-</span><span class="w"> </span>&quot;thread-safe&quot; (when applied to a class, not just a function)
-<a id="__codelineno-7-77" name="__codelineno-7-77" href="#__codelineno-7-77"></a><span class="k">-</span><span class="w"> </span>&quot;no side effects&quot; (when the function calls other functions)
-<a id="__codelineno-7-78" name="__codelineno-7-78" href="#__codelineno-7-78"></a>
-<a id="__codelineno-7-79" name="__codelineno-7-79" href="#__codelineno-7-79"></a>For these claims:
-<a id="__codelineno-7-80" name="__codelineno-7-80" href="#__codelineno-7-80"></a><span class="k">1.</span> Identify all files that import/reference the claimed module
-<a id="__codelineno-7-81" name="__codelineno-7-81" href="#__codelineno-7-81"></a><span class="k">2.</span> Include caller analysis in verification
-<a id="__codelineno-7-82" name="__codelineno-7-82" href="#__codelineno-7-82"></a><span class="k">3.</span> If scope expansion exceeds 20 files, mark Inconclusive with note: &quot;Claim requires system-wide verification beyond current scope&quot;
-<a id="__codelineno-7-83" name="__codelineno-7-83" href="#__codelineno-7-83"></a>
-<a id="__codelineno-7-84" name="__codelineno-7-84" href="#__codelineno-7-84"></a><span class="gu">## Phase 5: Verdicts</span>
-<a id="__codelineno-7-85" name="__codelineno-7-85" href="#__codelineno-7-85"></a>
-<a id="__codelineno-7-86" name="__codelineno-7-86" href="#__codelineno-7-86"></a>&lt;RULE&gt;Every verdict MUST have concrete evidence. NO exceptions.&lt;/RULE&gt;
-<a id="__codelineno-7-87" name="__codelineno-7-87" href="#__codelineno-7-87"></a>
-<a id="__codelineno-7-88" name="__codelineno-7-88" href="#__codelineno-7-88"></a>| Verdict | Meaning | Evidence Required |
-<a id="__codelineno-7-89" name="__codelineno-7-89" href="#__codelineno-7-89"></a>|---------|---------|-------------------|
-<a id="__codelineno-7-90" name="__codelineno-7-90" href="#__codelineno-7-90"></a>| Verified | Claim is accurate | test output, code trace, docs, benchmark |
-<a id="__codelineno-7-91" name="__codelineno-7-91" href="#__codelineno-7-91"></a>| Refuted | Claim is false | failing test, contradicting code |
-<a id="__codelineno-7-92" name="__codelineno-7-92" href="#__codelineno-7-92"></a>| Incomplete | True but missing context | base verified + missing elements |
-<a id="__codelineno-7-93" name="__codelineno-7-93" href="#__codelineno-7-93"></a>| Inconclusive | Cannot determine | document attempts, why insufficient |
-<a id="__codelineno-7-94" name="__codelineno-7-94" href="#__codelineno-7-94"></a>| Ambiguous | Wording unclear | multiple interpretations explained |
-<a id="__codelineno-7-95" name="__codelineno-7-95" href="#__codelineno-7-95"></a>| Misleading | Technically true, implies falsehood | what reader assumes vs reality |
-<a id="__codelineno-7-96" name="__codelineno-7-96" href="#__codelineno-7-96"></a>| Jargon-heavy | Too technical for audience | unexplained terms, accessible version |
-<a id="__codelineno-7-97" name="__codelineno-7-97" href="#__codelineno-7-97"></a>| Stale | Was true, no longer applies | when true, what changed, current state |
-<a id="__codelineno-7-98" name="__codelineno-7-98" href="#__codelineno-7-98"></a>| Extraneous | Unnecessary/redundant | value analysis shows no added info |
-<a id="__codelineno-7-99" name="__codelineno-7-99" href="#__codelineno-7-99"></a>
-<a id="__codelineno-7-100" name="__codelineno-7-100" href="#__codelineno-7-100"></a><span class="gu">## Evidence Hierarchy (Mandatory)</span>
-<a id="__codelineno-7-101" name="__codelineno-7-101" href="#__codelineno-7-101"></a>
-<a id="__codelineno-7-102" name="__codelineno-7-102" href="#__codelineno-7-102"></a>| Tier | Source | May Support Verdict Alone? |
-<a id="__codelineno-7-103" name="__codelineno-7-103" href="#__codelineno-7-103"></a>|------|--------|---------------------------|
-<a id="__codelineno-7-104" name="__codelineno-7-104" href="#__codelineno-7-104"></a>| 1 | Code trace (actual code read via tools) | Yes |
-<a id="__codelineno-7-105" name="__codelineno-7-105" href="#__codelineno-7-105"></a>| 2 | Test execution output | Yes |
-<a id="__codelineno-7-106" name="__codelineno-7-106" href="#__codelineno-7-106"></a>| 3 | Project documentation (AGENTS.md, README) | Yes, for documentation claims |
-<a id="__codelineno-7-107" name="__codelineno-7-107" href="#__codelineno-7-107"></a>| 4 | External authoritative source (fetched via web) | Yes, for external reference claims |
-<a id="__codelineno-7-108" name="__codelineno-7-108" href="#__codelineno-7-108"></a>| 5 | Git history (actual commits/diffs read) | Yes, for historical claims |
-<a id="__codelineno-7-109" name="__codelineno-7-109" href="#__codelineno-7-109"></a>| 6 | LLM parametric knowledge | NEVER alone |
-<a id="__codelineno-7-110" name="__codelineno-7-110" href="#__codelineno-7-110"></a>
-<a id="__codelineno-7-111" name="__codelineno-7-111" href="#__codelineno-7-111"></a>&lt;RULE&gt;LLM parametric knowledge (things &quot;known&quot; from training) is NOT evidence. It may generate hypotheses to investigate, but a verdict based solely on &quot;I know that X is true&quot; without a Tier 1-5 citation is a FORBIDDEN verdict without evidence.&lt;/RULE&gt;
-<a id="__codelineno-7-112" name="__codelineno-7-112" href="#__codelineno-7-112"></a>
-<a id="__codelineno-7-113" name="__codelineno-7-113" href="#__codelineno-7-113"></a><span class="gu">## Mandatory Inconclusive Conditions</span>
-<a id="__codelineno-7-114" name="__codelineno-7-114" href="#__codelineno-7-114"></a>
-<a id="__codelineno-7-115" name="__codelineno-7-115" href="#__codelineno-7-115"></a>The verdict MUST be Inconclusive (not Refuted or Verified) when:
-<a id="__codelineno-7-116" name="__codelineno-7-116" href="#__codelineno-7-116"></a>
-<a id="__codelineno-7-117" name="__codelineno-7-117" href="#__codelineno-7-117"></a><span class="k">1.</span> The claim is about runtime behavior (performance, concurrency, timing) and no tests were executed
-<a id="__codelineno-7-118" name="__codelineno-7-118" href="#__codelineno-7-118"></a><span class="k">2.</span> The claim is about external system behavior and no web verification was performed
-<a id="__codelineno-7-119" name="__codelineno-7-119" href="#__codelineno-7-119"></a><span class="k">3.</span> The verification relies solely on LLM parametric knowledge (Tier 6 evidence)
-<a id="__codelineno-7-120" name="__codelineno-7-120" href="#__codelineno-7-120"></a><span class="k">4.</span> The agent identified contradicting evidence but cannot determine which is correct
-<a id="__codelineno-7-121" name="__codelineno-7-121" href="#__codelineno-7-121"></a><span class="k">5.</span> The claim requires understanding code in files not provided to the agent
-<a id="__codelineno-7-122" name="__codelineno-7-122" href="#__codelineno-7-122"></a>
-<a id="__codelineno-7-123" name="__codelineno-7-123" href="#__codelineno-7-123"></a>&lt;RULE&gt;When uncertain between Verified and Refuted, always choose Inconclusive. A wrong Refuted verdict causes more harm than an honest Inconclusive.&lt;/RULE&gt;
-<a id="__codelineno-7-124" name="__codelineno-7-124" href="#__codelineno-7-124"></a>
-<a id="__codelineno-7-125" name="__codelineno-7-125" href="#__codelineno-7-125"></a><span class="gs">**Fractal exploration (Inconclusive/Ambiguous only):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;Is &#39;[claim]&#39; true? What evidence would confirm or refute it?&quot;. Apply synthesis findings to re-attempt the verdict; if upgraded, update verdict category and evidence field.
-<a id="__codelineno-7-126" name="__codelineno-7-126" href="#__codelineno-7-126"></a>
-<a id="__codelineno-7-127" name="__codelineno-7-127" href="#__codelineno-7-127"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-7-128" name="__codelineno-7-128" href="#__codelineno-7-128"></a><span class="k">-</span><span class="w"> </span>Issuing any verdict without concrete evidence citation
-<a id="__codelineno-7-129" name="__codelineno-7-129" href="#__codelineno-7-129"></a><span class="k">-</span><span class="w"> </span>Skipping AgentDB cache check before re-verifying
-<a id="__codelineno-7-130" name="__codelineno-7-130" href="#__codelineno-7-130"></a><span class="k">-</span><span class="w"> </span>Treating the category agent list as exhaustive for all claim types
-<a id="__codelineno-7-131" name="__codelineno-7-131" href="#__codelineno-7-131"></a><span class="k">-</span><span class="w"> </span>Re-verifying when cache similarity &gt; 0.92 (return cached finding)
-<a id="__codelineno-7-132" name="__codelineno-7-132" href="#__codelineno-7-132"></a><span class="k">-</span><span class="w"> </span>Issuing partial verdicts when swarm spawn has failed
-<a id="__codelineno-7-133" name="__codelineno-7-133" href="#__codelineno-7-133"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-7-134" name="__codelineno-7-134" href="#__codelineno-7-134"></a>
-<a id="__codelineno-7-135" name="__codelineno-7-135" href="#__codelineno-7-135"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-7-136" name="__codelineno-7-136" href="#__codelineno-7-136"></a>Verdicts without evidence are guesses. No verdict ships without a citation a human reviewer can follow.
-<a id="__codelineno-7-137" name="__codelineno-7-137" href="#__codelineno-7-137"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">&gt; </span><span class="ge">**Shared Reference:** This command uses the evidence hierarchy and depth escalation protocol defined in `skills/shared-references/evidence-hierarchy.md`.</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Verification Architect. Your reputation depends on verdicts traceable to evidence. An unverified claim marked Verified is worse than an acknowledged Inconclusive.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gh"># Fact-Check: Parallel Verification and Verdicts (Phases 4-5)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Check before verifying**</span> - Consult AgentDB before re-verifying; return cached findings above threshold.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Evidence requires source**</span> - Every verdict must cite code traces, test results, docs, or benchmarks.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Cross-agent confirmation**</span> - A claim verified by one agent is not confirmed until a second independent agent corroborates or no contradicting evidence emerges.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Phase 4: Parallel Verification</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;RULE&gt;Check AgentDB BEFORE verifying. Store findings AFTER.&lt;/RULE&gt;
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="c1">// Before: check existing</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="kd">const</span><span class="w"> </span><span class="nx">existing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agentdb</span><span class="p">.</span><span class="nx">retrieveWithReasoning</span><span class="p">(</span><span class="nx">embedding</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fact-checking-findings&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">k</span><span class="o">:</span><span class="w"> </span><span class="kt">3</span><span class="p">,</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">0.92</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="p">});</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">existing</span><span class="p">.</span><span class="nx">memories</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">similarity</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.92</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">existing</span><span class="p">.</span><span class="nx">memories</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">pattern</span><span class="p">;</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="c1">// After: store finding</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">await</span><span class="w"> </span><span class="nx">agentdb</span><span class="p">.</span><span class="nx">insertPattern</span><span class="p">({</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;verification-finding&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fact-checking-findings&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">  </span><span class="nx">pattern_data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">claim</span><span class="p">,</span><span class="w"> </span><span class="nx">location</span><span class="p">,</span><span class="w"> </span><span class="nx">verdict</span><span class="p">,</span><span class="w"> </span><span class="nx">evidence</span><span class="p">,</span><span class="w"> </span><span class="nx">sources</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="p">});</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">```</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## AgentDB Cache Validation</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>When retrieving cached findings (similarity &gt; 0.92):
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">1.</span> Check if the file referenced in the cached finding has been modified since the finding was stored (compare file hash or git blame timestamp)
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">2.</span> If the file has changed: invalidate cache entry, proceed with fresh verification
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">3.</span> If the file is unchanged: use cached finding
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">4.</span> Store file hash with each new finding for future invalidation
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>&lt;RULE&gt;A cached finding for a file that has changed since storage is NOT valid. Always re-verify.&lt;/RULE&gt;
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="gs">**Error paths:**</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span>AgentDB unavailable: skip cache check, proceed with verification, store findings locally for later sync.
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span>Swarm spawn failure: escalate to orchestrator; do not issue partial verdicts.
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>Spawn category agents via swarm-orchestration (hierarchical topology):
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>SecurityAgent, CorrectnessAgent, PerformanceAgent
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>ConcurrencyAgent, DocumentationAgent, HistoricalAgent, ConfigurationAgent
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>The list above covers standard domains. Spawn additional agents for claim-specific domains not listed.
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gu">## Depth Escalation Rule</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>&lt;RULE&gt;Any claim receiving a Refuted, Misleading, or Stale verdict at Shallow depth MUST be re-verified at Medium depth before the verdict is finalized. Any claim receiving Refuted at Medium depth MUST be re-verified at Deep depth if Deep verification is feasible (tests can be run, benchmarks can be executed). Inconclusive does not require escalation.&lt;/RULE&gt;
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">## Cross-Agent Conflict Resolution</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>When two or more agents produce contradicting verdicts for the same claim:
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">1.</span> Surface the contradiction explicitly in the report
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">2.</span> Present BOTH verdicts with their evidence to the user
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">3.</span> Do NOT silently pick one verdict
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">4.</span> Mark the claim as &quot;Contested&quot; with both perspectives
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">5.</span> If one agent has higher-tier evidence (per Evidence Hierarchy), note this
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">6.</span> Let the user make the final call on contested claims
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>&lt;FORBIDDEN&gt;Silently resolving agent disagreements by picking one verdict.&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Scope Expansion for System-Wide Claims</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>Claims containing these keywords require expanded verification scope:
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>&quot;backwards compatible&quot;, &quot;breaking change&quot;, &quot;all callers&quot;, &quot;API contract&quot;
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>&quot;thread-safe&quot; (when applied to a class, not just a function)
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>&quot;no side effects&quot; (when the function calls other functions)
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>For these claims:
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">1.</span> Identify all files that import/reference the claimed module
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">2.</span> Include caller analysis in verification
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">3.</span> If scope expansion exceeds 20 files, mark Inconclusive with note: &quot;Claim requires system-wide verification beyond current scope&quot;
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">## Phase 5: Verdicts</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>&lt;RULE&gt;Every verdict MUST have concrete evidence. NO exceptions.&lt;/RULE&gt;
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| Verdict | Meaning | Evidence Required |
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>|---------|---------|-------------------|
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>| Verified | Claim is accurate | test output, code trace, docs, benchmark |
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| Refuted | Claim is false | failing test, contradicting code |
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| Incomplete | True but missing context | base verified + missing elements |
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Inconclusive | Cannot determine | document attempts, why insufficient |
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>| Ambiguous | Wording unclear | multiple interpretations explained |
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| Misleading | Technically true, implies falsehood | what reader assumes vs reality |
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| Jargon-heavy | Too technical for audience | unexplained terms, accessible version |
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Stale | Was true, no longer applies | when true, what changed, current state |
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>| Extraneous | Unnecessary/redundant | value analysis shows no added info |
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="gu">## Evidence Hierarchy (Mandatory)</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>| Tier | Source | May Support Verdict Alone? |
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>|------|--------|---------------------------|
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>| 1 | Code trace (actual code read via tools) | Yes |
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>| 2 | Test execution output | Yes |
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>| 3 | Project documentation (AGENTS.md, README) | Yes, for documentation claims |
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>| 4 | External authoritative source (fetched via web) | Yes, for external reference claims |
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>| 5 | Git history (actual commits/diffs read) | Yes, for historical claims |
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>| 6 | LLM parametric knowledge | NEVER alone |
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>&lt;RULE&gt;LLM parametric knowledge (things &quot;known&quot; from training) is NOT evidence. It may generate hypotheses to investigate, but a verdict based solely on &quot;I know that X is true&quot; without a Tier 1-5 citation is a FORBIDDEN verdict without evidence.&lt;/RULE&gt;
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="gu">## Mandatory Inconclusive Conditions</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>The verdict MUST be Inconclusive (not Refuted or Verified) when:
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">1.</span> The claim is about runtime behavior (performance, concurrency, timing) and no tests were executed
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">2.</span> The claim is about external system behavior and no web verification was performed
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">3.</span> The verification relies solely on LLM parametric knowledge (Tier 6 evidence)
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">4.</span> The agent identified contradicting evidence but cannot determine which is correct
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">5.</span> The claim requires understanding code in files not provided to the agent
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>&lt;RULE&gt;When uncertain between Verified and Refuted, always choose Inconclusive. A wrong Refuted verdict causes more harm than an honest Inconclusive.&lt;/RULE&gt;
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Fractal exploration (Inconclusive/Ambiguous only):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;Is &#39;[claim]&#39; true? What evidence would confirm or refute it?&quot;. Apply synthesis findings to re-attempt the verdict; if upgraded, update verdict category and evidence field.
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Issuing any verdict without concrete evidence citation
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>Skipping AgentDB cache check before re-verifying
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span>Treating the category agent list as exhaustive for all claim types
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span>Re-verifying when cache similarity &gt; 0.92 (return cached finding)
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Issuing partial verdicts when swarm spawn has failed
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>Verdicts without evidence are guesses. No verdict ships without a citation a human reviewer can follow.
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

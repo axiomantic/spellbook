@@ -2686,6 +2686,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../async-await-patterns/" class="md-nav__link">
         
   
@@ -2902,6 +2930,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3650,6 +3706,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../optimizing-instructions/" class="md-nav__link">
         
   
@@ -3930,6 +4014,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sharpening-prompts/" class="md-nav__link">
         
   
@@ -4022,6 +4190,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7644,134 +7840,131 @@ for equivalent behavior.</p>
 <p><strong>Deprecated:</strong> This skill has been absorbed into <code>develop</code>. These diagrams capture the original workflow for reference. See <a href="../develop/">develop diagrams</a> for the current equivalent.</p>
 </blockquote>
 <h2 id="overview-forge-loop">Overview: Forge Loop<a class="headerlink" href="#overview-forge-loop" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>graph TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/Skill Reference/]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[[Subagent Dispatch]]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        style L1 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        style L2 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        style L3 fill:#51cf66,stroke:#333
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        style L4 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        style L5 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    end
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    START([User invokes&lt;br&gt;autonomous-roundtable]) --&gt; SPAWN[[Main chat spawns&lt;br&gt;orchestrator subagent]]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    SPAWN --&gt; INIT[forge_project_init]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    INIT --&gt; FEATURES[Get features&lt;br&gt;in dependency order]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    FEATURES --&gt; NEXT_FEAT{More features&lt;br&gt;remaining?}
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    NEXT_FEAT --&gt;|No| DONE([All features COMPLETE])
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    NEXT_FEAT --&gt;|Yes| DEP_CHECK{Dependencies&lt;br&gt;satisfied?}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    DEP_CHECK --&gt;|No| SKIP[Skip feature,&lt;br&gt;try next]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    SKIP --&gt; NEXT_FEAT
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    DEP_CHECK --&gt;|Yes| ITER_START[forge_iteration_start]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    ITER_START --&gt; STAGE_LOOP[&quot;Stage loop&lt;br&gt;(see Detail diagram)&quot;]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    STAGE_LOOP --&gt; COMPLETE{Feature&lt;br&gt;COMPLETE?}
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    COMPLETE --&gt;|Yes| NEXT_FEAT
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    COMPLETE --&gt;|No / ESCALATED| ESCALATE[Report to user,&lt;br&gt;continue non-blocked features]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    ESCALATE --&gt; NEXT_FEAT
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style START fill:#f5f5f5,stroke:#333
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style INIT fill:#f5f5f5,stroke:#333
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style DONE fill:#51cf66,stroke:#333
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style ESCALATE fill:#ff6b6b,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/Skill Reference/]
+        L5[[Subagent Dispatch]]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L4 fill:#4a9eff,stroke:#333,color:#fff
+        style L5 fill:#4a9eff,stroke:#333,color:#fff
+    end
+
+    START([User invokes&lt;br&gt;autonomous-roundtable]) --&gt; SPAWN[[Main chat spawns&lt;br&gt;orchestrator subagent]]
+    SPAWN --&gt; INIT[forge_project_init]
+    INIT --&gt; FEATURES[Get features&lt;br&gt;in dependency order]
+    FEATURES --&gt; NEXT_FEAT{More features&lt;br&gt;remaining?}
+
+    NEXT_FEAT --&gt;|No| DONE([All features COMPLETE])
+    NEXT_FEAT --&gt;|Yes| DEP_CHECK{Dependencies&lt;br&gt;satisfied?}
+
+    DEP_CHECK --&gt;|No| SKIP[Skip feature,&lt;br&gt;try next]
+    SKIP --&gt; NEXT_FEAT
+    DEP_CHECK --&gt;|Yes| ITER_START[forge_iteration_start]
+
+    ITER_START --&gt; STAGE_LOOP["Stage loop&lt;br&gt;(see Detail diagram)"]
+    STAGE_LOOP --&gt; COMPLETE{Feature&lt;br&gt;COMPLETE?}
+
+    COMPLETE --&gt;|Yes| NEXT_FEAT
+    COMPLETE --&gt;|No / ESCALATED| ESCALATE[Report to user,&lt;br&gt;continue non-blocked features]
+    ESCALATE --&gt; NEXT_FEAT
+
+    style START fill:#f5f5f5,stroke:#333
+    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
+    style INIT fill:#f5f5f5,stroke:#333
+    style DONE fill:#51cf66,stroke:#333
+    style ESCALATE fill:#ff6b6b,stroke:#333,color:#fff</code></pre>
 <h2 id="detail-stage-execution-and-roundtable-gating">Detail: Stage Execution and Roundtable Gating<a class="headerlink" href="#detail-stage-execution-and-roundtable-gating" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>graph TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision / Gate}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L3([Terminal])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L4[/Skill Invocation/]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        LG&gt;Roundtable Gate]
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        style L1 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        style L2 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        style L3 fill:#51cf66,stroke:#333
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        style L4 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        style LG fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    end
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    ENTRY([Enter stage loop]) --&gt; ANALYSIS[&quot;&amp;lt;analysis&amp;gt;&lt;br&gt;Check: feature, stage,&lt;br&gt;deps, context capacity&quot;]
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    ANALYSIS --&gt; CTX_CHECK{Context&lt;br&gt;&lt; 20% capacity?}
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    CTX_CHECK --&gt;|Yes| HANDOFF([Generate HANDOFF,&lt;br&gt;return to main chat])
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    CTX_CHECK --&gt;|No| SELECT[forge_select_skill]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    SELECT --&gt; STAGE{Current stage?}
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    STAGE --&gt;|DISCOVER| S1[/gathering-requirements/]
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    STAGE --&gt;|DESIGN| S2[/brainstorming/]
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    STAGE --&gt;|PLAN| S3[/writing-plans/]
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    STAGE --&gt;|IMPLEMENT| S4[/develop/]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    STAGE --&gt;|COMPLETE| S5[Final roundtable]
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    S1 --&gt; ARTIFACT[Produce artifact]
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    S2 --&gt; ARTIFACT
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    S3 --&gt; ARTIFACT
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    S4 --&gt; ARTIFACT
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    S5 --&gt; ARTIFACT
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    ARTIFACT --&gt; RT&gt;roundtable_convene]
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    RT --&gt; DEBATE[roundtable_debate]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    DEBATE --&gt; PROCESS[process_roundtable_response]
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    PROCESS --&gt; VERDICT{Verdict?}
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    VERDICT --&gt;|APPROVE| REFLECT[&quot;&amp;lt;reflection&amp;gt;&lt;br&gt;Log artifacts, verdict&quot;]
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    REFLECT --&gt; ADVANCE[forge_iteration_advance]
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    ADVANCE --&gt; NEXT_STAGE{More stages?}
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    NEXT_STAGE --&gt;|Yes| ANALYSIS
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    NEXT_STAGE --&gt;|No| FEATURE_DONE([Feature COMPLETE])
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    VERDICT --&gt;|ITERATE| FAIL_COUNT{Iteration&lt;br&gt;count &gt;= 3?}
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>    FAIL_COUNT --&gt;|Yes| ESCALATE_OUT([ESCALATE to user])
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    FAIL_COUNT --&gt;|No| RETURN[forge_iteration_return]
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    RETURN --&gt; REFLEXION[/reflexion skill/]
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    REFLEXION --&gt; RESELECT[forge_select_skill&lt;br&gt;with feedback]
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    RESELECT --&gt; RETRY_STAGE{Same stage}
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    RETRY_STAGE --&gt; STAGE
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    style ENTRY fill:#f5f5f5,stroke:#333
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>    style HANDOFF fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    style FEATURE_DONE fill:#51cf66,stroke:#333
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>    style ESCALATE_OUT fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>    style RT fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>    style S1 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>    style S2 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    style S3 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>    style S4 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>    style S5 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>    style REFLEXION fill:#4a9eff,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision / Gate}
+        L3([Terminal])
+        L4[/Skill Invocation/]
+        LG&gt;Roundtable Gate]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L4 fill:#4a9eff,stroke:#333,color:#fff
+        style LG fill:#ff6b6b,stroke:#333,color:#fff
+    end
+
+    ENTRY([Enter stage loop]) --&gt; ANALYSIS["&amp;lt;analysis&amp;gt;&lt;br&gt;Check: feature, stage,&lt;br&gt;deps, context capacity"]
+    ANALYSIS --&gt; CTX_CHECK{Context&lt;br&gt;&lt; 20% capacity?}
+
+    CTX_CHECK --&gt;|Yes| HANDOFF([Generate HANDOFF,&lt;br&gt;return to main chat])
+    CTX_CHECK --&gt;|No| SELECT[forge_select_skill]
+
+    SELECT --&gt; STAGE{Current stage?}
+    STAGE --&gt;|DISCOVER| S1[/gathering-requirements/]
+    STAGE --&gt;|DESIGN| S2[/brainstorming/]
+    STAGE --&gt;|PLAN| S3[/writing-plans/]
+    STAGE --&gt;|IMPLEMENT| S4[/develop/]
+    STAGE --&gt;|COMPLETE| S5[Final roundtable]
+
+    S1 --&gt; ARTIFACT[Produce artifact]
+    S2 --&gt; ARTIFACT
+    S3 --&gt; ARTIFACT
+    S4 --&gt; ARTIFACT
+    S5 --&gt; ARTIFACT
+
+    ARTIFACT --&gt; RT&gt;roundtable_convene]
+    RT --&gt; DEBATE[roundtable_debate]
+    DEBATE --&gt; PROCESS[process_roundtable_response]
+    PROCESS --&gt; VERDICT{Verdict?}
+
+    VERDICT --&gt;|APPROVE| REFLECT["&amp;lt;reflection&amp;gt;&lt;br&gt;Log artifacts, verdict"]
+    REFLECT --&gt; ADVANCE[forge_iteration_advance]
+    ADVANCE --&gt; NEXT_STAGE{More stages?}
+    NEXT_STAGE --&gt;|Yes| ANALYSIS
+    NEXT_STAGE --&gt;|No| FEATURE_DONE([Feature COMPLETE])
+
+    VERDICT --&gt;|ITERATE| FAIL_COUNT{Iteration&lt;br&gt;count &gt;= 3?}
+    FAIL_COUNT --&gt;|Yes| ESCALATE_OUT([ESCALATE to user])
+    FAIL_COUNT --&gt;|No| RETURN[forge_iteration_return]
+    RETURN --&gt; REFLEXION[/reflexion skill/]
+    REFLEXION --&gt; RESELECT[forge_select_skill&lt;br&gt;with feedback]
+    RESELECT --&gt; RETRY_STAGE{Same stage}
+    RETRY_STAGE --&gt; STAGE
+
+    style ENTRY fill:#f5f5f5,stroke:#333
+    style HANDOFF fill:#ff6b6b,stroke:#333,color:#fff
+    style FEATURE_DONE fill:#51cf66,stroke:#333
+    style ESCALATE_OUT fill:#ff6b6b,stroke:#333,color:#fff
+    style RT fill:#ff6b6b,stroke:#333,color:#fff
+    style S1 fill:#4a9eff,stroke:#333,color:#fff
+    style S2 fill:#4a9eff,stroke:#333,color:#fff
+    style S3 fill:#4a9eff,stroke:#333,color:#fff
+    style S4 fill:#4a9eff,stroke:#333,color:#fff
+    style S5 fill:#4a9eff,stroke:#333,color:#fff
+    style REFLEXION fill:#4a9eff,stroke:#333,color:#fff</code></pre>
 <h2 id="detail-context-overflow-and-handoff">Detail: Context Overflow and Handoff<a class="headerlink" href="#detail-context-overflow-and-handoff" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>graph TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L3([Terminal])
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L5[[Subagent Dispatch]]
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        style L1 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        style L2 fill:#f5f5f5,stroke:#333
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        style L3 fill:#51cf66,stroke:#333
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        style L5 fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    end
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    CHECK{Context&lt;br&gt;&lt; 20% capacity?} --&gt;|Yes| GEN[Generate HANDOFF:&lt;br&gt;project, feature, stage,&lt;br&gt;iteration, call stack,&lt;br&gt;completed, in-progress,&lt;br&gt;decisions, corrections]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    GEN --&gt; RETURN([Return handoff&lt;br&gt;to main chat])
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    RETURN --&gt; MAIN[Main chat receives&lt;br&gt;handoff]
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    MAIN --&gt; SPAWN[[Spawn successor&lt;br&gt;subagent with&lt;br&gt;full handoff in prompt]]
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    SPAWN --&gt; STATUS[forge_project_status]
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    STATUS --&gt; RESUME[Resume at exact&lt;br&gt;position from handoff]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    style RETURN fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    style RESUME fill:#51cf66,stroke:#333
-</code></pre></div>
+<pre class="mermaid"><code>graph TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L5[[Subagent Dispatch]]
+        style L1 fill:#f5f5f5,stroke:#333
+        style L2 fill:#f5f5f5,stroke:#333
+        style L3 fill:#51cf66,stroke:#333
+        style L5 fill:#4a9eff,stroke:#333,color:#fff
+    end
+
+    CHECK{Context&lt;br&gt;&lt; 20% capacity?} --&gt;|Yes| GEN[Generate HANDOFF:&lt;br&gt;project, feature, stage,&lt;br&gt;iteration, call stack,&lt;br&gt;completed, in-progress,&lt;br&gt;decisions, corrections]
+    GEN --&gt; RETURN([Return handoff&lt;br&gt;to main chat])
+    RETURN --&gt; MAIN[Main chat receives&lt;br&gt;handoff]
+    MAIN --&gt; SPAWN[[Spawn successor&lt;br&gt;subagent with&lt;br&gt;full handoff in prompt]]
+    SPAWN --&gt; STATUS[forge_project_status]
+    STATUS --&gt; RESUME[Resume at exact&lt;br&gt;position from handoff]
+
+    style RETURN fill:#ff6b6b,stroke:#333,color:#fff
+    style SPAWN fill:#4a9eff,stroke:#333,color:#fff
+    style RESUME fill:#51cf66,stroke:#333</code></pre>
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7837,26 +8030,26 @@ for equivalent behavior.</p>
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gh"># Autonomous Roundtable (Deprecated)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>This skill is deprecated. Its functionality has been absorbed into the <span class="sb">`develop`</span> skill.
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="gs">**Migration:**</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">-</span><span class="w"> </span>Project decomposition: Use develop with COMPLEX tier (automatic work item decomposition)
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">-</span><span class="w"> </span>Roundtable validation: Set <span class="sb">`dialectic_mode: &quot;roundtable&quot;`</span> in Phase 0.4 preferences
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">-</span><span class="w"> </span>Token enforcement: Set <span class="sb">`token_enforcement: &quot;gate_level&quot;`</span> or <span class="sb">`&quot;every_step&quot;`</span> in Phase 0.4
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="k">-</span><span class="w"> </span>Reflexion on ITERATE: Still invoked automatically by develop when roundtable returns ITERATE
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="gs">**To use:**</span> Invoke the <span class="sb">`develop`</span> skill instead. Configure dialectic preferences in Phase 0.4.
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="k">1.</span> <span class="gs">**Deprecated**</span> - Do not use this skill. Use <span class="sb">`develop`</span> instead.
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>&lt;analysis&gt;This skill is deprecated. Redirect to develop skill.&lt;/analysis&gt;
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>&lt;reflection&gt;If invoked, redirect user to the develop skill with dialectic_mode: &quot;roundtable&quot;.&lt;/reflection&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Autonomous Roundtable (Deprecated)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>This skill is deprecated. Its functionality has been absorbed into the <span class="sb">`develop`</span> skill.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gs">**Migration:**</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">-</span><span class="w"> </span>Project decomposition: Use develop with COMPLEX tier (automatic work item decomposition)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">-</span><span class="w"> </span>Roundtable validation: Set <span class="sb">`dialectic_mode: &quot;roundtable&quot;`</span> in Phase 0.4 preferences
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">-</span><span class="w"> </span>Token enforcement: Set <span class="sb">`token_enforcement: &quot;gate_level&quot;`</span> or <span class="sb">`&quot;every_step&quot;`</span> in Phase 0.4
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>Reflexion on ITERATE: Still invoked automatically by develop when roundtable returns ITERATE
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gs">**To use:**</span> Invoke the <span class="sb">`develop`</span> skill instead. Configure dialectic preferences in Phase 0.4.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">1.</span> <span class="gs">**Deprecated**</span> - Do not use this skill. Use <span class="sb">`develop`</span> instead.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;analysis&gt;This skill is deprecated. Redirect to develop skill.&lt;/analysis&gt;
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>&lt;reflection&gt;If invoked, redirect user to the develop skill with dialectic_mode: &quot;roundtable&quot;.&lt;/reflection&gt;
 </code></pre></div>
 
 

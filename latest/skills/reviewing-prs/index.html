@@ -2620,6 +2620,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../async-await-patterns/" class="md-nav__link">
         
   
@@ -2712,6 +2740,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3460,6 +3516,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../optimizing-instructions/" class="md-nav__link">
         
   
@@ -3798,6 +3882,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sharpening-prompts/" class="md-nav__link">
         
   
@@ -3890,6 +4058,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7436,7 +7632,7 @@
 <p>Safety layer for PR review that determines whether to analyze diffs only or read local files, based on branch state and worktree presence. Prevents the subtle failure mode where reading local files on the wrong branch produces confidently incorrect review verdicts. This core spellbook skill should be loaded before dispatching any subagent to review a pull request.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL_FILES mode selection based on branch state and worktree presence. Prevents the silent wrong-verdict failure where local files on a different branch produce confidently incorrect REFUTED findings.</p>
+<p>System skill loaded before dispatching any PR review subagent. Ensures correct file version selection based on branch and worktree state. Not invoked directly by users. Required by: code-review, advanced-code-review, distilling-prs when reviewing PRs.</p>
 </blockquote>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Reviewing PRs Safely</span>

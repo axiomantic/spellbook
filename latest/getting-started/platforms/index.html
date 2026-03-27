@@ -695,6 +695,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#contributing-platform-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing Platform Support
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2870,6 +2881,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2962,6 +3001,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3710,6 +3777,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3990,6 +4085,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -4082,6 +4261,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7854,6 +8061,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#contributing-platform-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing Platform Support
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7875,10 +8093,10 @@
 
 
 <h1 id="platform-support">Platform Support<a class="headerlink" href="#platform-support" title="Permanent link">&para;</a></h1>
-<p>Spellbook works across multiple AI coding assistants with varying levels of integration.</p>
+<p>Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and Crush have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.</p>
 <h2 id="claude-code">Claude Code<a class="headerlink" href="#claude-code" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Full Support</p>
-<p>Claude Code is the primary platform with native support for all features.</p>
+<p><strong>Status:</strong> Primary platform, full support</p>
+<p>Claude Code receives full support for all Spellbook features.</p>
 <h3 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>install.py
 </code></pre></div>
@@ -7888,10 +8106,11 @@
 <li>TodoWrite for task management</li>
 <li>Task tool for subagent orchestration</li>
 <li>MCP server for skill discovery and session management</li>
+<li>Full hook system (PreToolUse, PostToolUse, Stop, Notification)</li>
 </ul>
 <h2 id="opencode">OpenCode<a class="headerlink" href="#opencode" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Full Support</p>
-<p>OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents.</p>
+<p><strong>Status:</strong> Basic support</p>
+<p>OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents. Some Claude Code-specific MCP tools and hooks are not available on OpenCode, but can usually be implemented using OpenCode's own extension points.</p>
 <h3 id="setup_1">Setup<a class="headerlink" href="#setup_1" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
@@ -7919,8 +8138,8 @@
 <h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
 <p>OpenCode natively reads skills from <code>~/.claude/skills/*</code>, which is where the Claude Code installer places them. No separate skill installation is needed for OpenCode. Install spellbook for Claude Code first, and OpenCode will automatically see the skills.</p>
 <h2 id="codex">Codex<a class="headerlink" href="#codex" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Full Support</p>
-<p>Codex integration via MCP server and bootstrap context.</p>
+<p><strong>Status:</strong> Basic support</p>
+<p>Codex integration via MCP server and bootstrap context. Skills and MCP tools work, but subagent orchestration is unavailable.</p>
 <h3 id="setup_2">Setup<a class="headerlink" href="#setup_2" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
@@ -7932,11 +8151,11 @@
 <h3 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h3>
 <ul>
 <li>No subagent support (Task tool unavailable)</li>
-<li>Skills requiring subagents will inform user to use Claude Code</li>
+<li>Skills requiring subagents will inform the user to use Claude Code</li>
 </ul>
 <h2 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Full Support</p>
-<p>Gemini CLI integration via native extension system.</p>
+<p><strong>Status:</strong> Basic support</p>
+<p>Gemini CLI integration via native extension system. Skills and MCP tools work, but subagent orchestration is unavailable.</p>
 <h3 id="setup_3">Setup<a class="headerlink" href="#setup_3" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
@@ -7952,12 +8171,12 @@
 </ul>
 <h3 id="limitations_1">Limitations<a class="headerlink" href="#limitations_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No <code>Task</code> tool for subagent orchestration (same as Codex). Skills requiring subagents will inform the user to use Claude Code.</li>
+<li>No <code>Task</code> tool for subagent orchestration. Skills requiring subagents will inform the user to use Claude Code.</li>
 <li>Native skill discovery is pending upstream support (<a href="https://github.com/google-gemini/gemini-cli/issues/15327">gemini-cli#15327</a>). Until then, skills are loaded via the MCP server.</li>
 </ul>
 <h2 id="crush">Crush<a class="headerlink" href="#crush" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Full Support</p>
-<p>Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills.</p>
+<p><strong>Status:</strong> Basic support</p>
+<p>Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills. Crush supports the same Agent Skills format as Claude Code, so skills work natively. Some hooks may not be available.</p>
 <h3 id="setup_4">Setup<a class="headerlink" href="#setup_4" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
@@ -7991,6 +8210,8 @@
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
 </code></pre></div>
+<h2 id="contributing-platform-support">Contributing Platform Support<a class="headerlink" href="#contributing-platform-support" title="Permanent link">&para;</a></h2>
+<p>If you use OpenCode, Codex, Gemini CLI, or Crush and want fuller Spellbook coverage, contributions are welcome. See the <a href="../../contributing/porting-to-your-assistant/">Porting Guide</a> for how to add or extend platform support.</p>
 
 
 

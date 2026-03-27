@@ -2741,6 +2741,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../async-await-patterns/" class="md-nav__link">
         
   
@@ -2833,6 +2861,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3581,6 +3637,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../optimizing-instructions/" class="md-nav__link">
         
   
@@ -4040,6 +4124,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sharpening-prompts/" class="md-nav__link">
         
   
@@ -4132,6 +4300,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7799,7 +7995,7 @@
 <p>Pre-PR structured review that assembles context, dispatches review agents, triages findings by severity, and produces a remediation plan. Ensures every critical finding is addressed before merge by orchestrating the full review lifecycle from planning through quality gate. A core spellbook capability for when implementation is complete and you want a thorough check before creating a PR.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Use when implementation is done and you need a structured pre-PR review workflow. Triggers: 'ready for review', 'review my changes before PR', 'pre-merge check', 'is this ready', 'submit for review'. Orchestrates multi-phase review (planning, context assembly, dispatch, triage, fix, gate). Dispatches code-review internally. NOT the same as finishing-a-development-branch (which handles merge/PR decisions after review passes).</p>
+<p>Use when implementation is done and you need a structured pre-PR review workflow. Triggers: 'ready for review', 'review my changes before PR', 'pre-merge check', 'is this ready', 'submit for review'. NOT for: post-merge review (use code-review) or deciding how to integrate (use finishing-a-development-branch).</p>
 </blockquote>
 <div class="admonition info">
 <p class="admonition-title">Origin</p>
@@ -7809,62 +8005,61 @@
 <p>Pre-PR review orchestrator with six phases: planning, context assembly, reviewer dispatch, triage, fix execution, and quality gate. Dispatches code-review agent internally and enforces blocking rules on Critical/High findings. Artifacts stored per-phase in <code>~/.local/spellbook/reviews/</code>.</p>
 <h2 id="overview-diagram">Overview Diagram<a class="headerlink" href="#overview-diagram" title="Permanent link">&para;</a></h2>
 <p>High-level phase flow. Phases 1-2 handled by <code>/request-review-plan</code>, Phases 3-6 by <code>/request-review-execute</code>. Artifacts governed by <code>/request-review-artifacts</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[/Artifact/]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[Subagent Dispatch]:::subagent
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L6{Quality Gate}:::gate
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([User requests review]) --&gt; Analysis[Pre-workflow analysis:&lt;br&gt;scope, git state, plan/spec,&lt;br&gt;resume phase]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Analysis --&gt; P1
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    subgraph &quot;Phases 1-2: /request-review-plan&quot;
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        P1[Phase 1: PLANNING&lt;br&gt;Determine git range,&lt;br&gt;list files, estimate complexity]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        P1 --&gt; A1[/review-manifest.json/]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        A1 --&gt; G1{File list confirmed?&lt;br&gt;Git range defined?}:::gate
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        G1 --&gt;|No| P1
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        G1 --&gt;|Yes| P2[Phase 2: CONTEXT&lt;br&gt;Extract plan excerpts,&lt;br&gt;gather dependencies,&lt;br&gt;capture prior findings]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        P2 --&gt; A2[/context-bundle.md/]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        A2 --&gt; G2{Context bundle&lt;br&gt;ready for dispatch?}:::gate
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        G2 --&gt;|No| P2
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    end
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    G2 --&gt;|Yes| P3
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    subgraph &quot;Phases 3-6: /request-review-execute&quot;
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        P3[Phase 3: DISPATCH&lt;br&gt;Invoke code-reviewer agent]:::subagent
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        P3 --&gt; A3[/review-findings.json/]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        A3 --&gt; G3{Valid findings received?&lt;br&gt;Location + evidence present?}:::gate
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        G3 --&gt;|Discard invalid| P3
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        G3 --&gt;|Yes| P4[Phase 4: TRIAGE&lt;br&gt;Sort by severity,&lt;br&gt;group by file,&lt;br&gt;classify fix effort]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        P4 --&gt; A4[/triage-report.md/]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        A4 --&gt; G4{All findings&lt;br&gt;classified?}:::gate
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        G4 --&gt;|No| P4
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        G4 --&gt;|Yes| P5[Phase 5: EXECUTE&lt;br&gt;Fix Critical first,&lt;br&gt;then High, then rest]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        P5 --&gt; A5[/fix-report.md/]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        A5 --&gt; G5{Re-review&lt;br&gt;required?}:::gate
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        G5 --&gt;|Critical fixed, or&lt;br&gt;&gt;=3 High fixed, or&lt;br&gt;&gt;100 new lines, or&lt;br&gt;new files modified| P3
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        G5 --&gt;|No re-review needed| P6{Phase 6: GATE&lt;br&gt;Apply blocking rules}:::gate
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        P6 --&gt; A6[/gate-decision.md/]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    end
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    P6 --&gt;|Any Critical unfixed| BLOCKED([BLOCKED:&lt;br&gt;Must fix before merge]):::blocked
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    P6 --&gt;|Any High unfixed&lt;br&gt;without rationale| BLOCKED
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    P6 --&gt;|&gt;=3 High unfixed| BLOCKED
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    P6 --&gt;|All Critical/High resolved,&lt;br&gt;some deferred with rationale| FOLLOWUP([APPROVED&lt;br&gt;WITH FOLLOW-UP]):::success
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    P6 --&gt;|All findings resolved| APPROVED([APPROVED]):::success
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    BLOCKED --&gt; P5
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[/Artifact/]
+        L5[Subagent Dispatch]:::subagent
+        L6{Quality Gate}:::gate
+    end
+
+    Start([User requests review]) --&gt; Analysis[Pre-workflow analysis:&lt;br&gt;scope, git state, plan/spec,&lt;br&gt;resume phase]
+    Analysis --&gt; P1
+
+    subgraph "Phases 1-2: /request-review-plan"
+        P1[Phase 1: PLANNING&lt;br&gt;Determine git range,&lt;br&gt;list files, estimate complexity]
+        P1 --&gt; A1[/review-manifest.json/]
+        A1 --&gt; G1{File list confirmed?&lt;br&gt;Git range defined?}:::gate
+        G1 --&gt;|No| P1
+        G1 --&gt;|Yes| P2[Phase 2: CONTEXT&lt;br&gt;Extract plan excerpts,&lt;br&gt;gather dependencies,&lt;br&gt;capture prior findings]
+        P2 --&gt; A2[/context-bundle.md/]
+        A2 --&gt; G2{Context bundle&lt;br&gt;ready for dispatch?}:::gate
+        G2 --&gt;|No| P2
+    end
+
+    G2 --&gt;|Yes| P3
+
+    subgraph "Phases 3-6: /request-review-execute"
+        P3[Phase 3: DISPATCH&lt;br&gt;Invoke code-reviewer agent]:::subagent
+        P3 --&gt; A3[/review-findings.json/]
+        A3 --&gt; G3{Valid findings received?&lt;br&gt;Location + evidence present?}:::gate
+        G3 --&gt;|Discard invalid| P3
+        G3 --&gt;|Yes| P4[Phase 4: TRIAGE&lt;br&gt;Sort by severity,&lt;br&gt;group by file,&lt;br&gt;classify fix effort]
+        P4 --&gt; A4[/triage-report.md/]
+        A4 --&gt; G4{All findings&lt;br&gt;classified?}:::gate
+        G4 --&gt;|No| P4
+        G4 --&gt;|Yes| P5[Phase 5: EXECUTE&lt;br&gt;Fix Critical first,&lt;br&gt;then High, then rest]
+        P5 --&gt; A5[/fix-report.md/]
+        A5 --&gt; G5{Re-review&lt;br&gt;required?}:::gate
+        G5 --&gt;|Critical fixed, or&lt;br&gt;&gt;=3 High fixed, or&lt;br&gt;&gt;100 new lines, or&lt;br&gt;new files modified| P3
+        G5 --&gt;|No re-review needed| P6{Phase 6: GATE&lt;br&gt;Apply blocking rules}:::gate
+        P6 --&gt; A6[/gate-decision.md/]
+    end
+
+    P6 --&gt;|Any Critical unfixed| BLOCKED([BLOCKED:&lt;br&gt;Must fix before merge]):::blocked
+    P6 --&gt;|Any High unfixed&lt;br&gt;without rationale| BLOCKED
+    P6 --&gt;|&gt;=3 High unfixed| BLOCKED
+    P6 --&gt;|All Critical/High resolved,&lt;br&gt;some deferred with rationale| FOLLOWUP([APPROVED&lt;br&gt;WITH FOLLOW-UP]):::success
+    P6 --&gt;|All findings resolved| APPROVED([APPROVED]):::success
+
+    BLOCKED --&gt; P5
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff</code></pre>
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7901,203 +8096,196 @@
 </tbody>
 </table>
 <h2 id="phase-1-planning-detail">Phase 1: Planning Detail<a class="headerlink" href="#phase-1-planning-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L3[/Artifact/]
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L4{Quality Gate}:::gate
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    Start([Phase 1 Entry]) --&gt; MergeBase[&quot;Run: git merge-base main HEAD&lt;br&gt;to get BASE_SHA&quot;]
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    MergeBase --&gt; HeadSHA[Capture HEAD_SHA&lt;br&gt;as reviewed_sha]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    HeadSHA --&gt; FileList[&quot;Run: git diff --stat&lt;br&gt;BASE_SHA..HEAD_SHA&quot;]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    FileList --&gt; Exclude{Contains generated,&lt;br&gt;vendor, or lockfiles?}
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    Exclude --&gt;|Yes| Filter[Exclude: *.min.js,&lt;br&gt;go.sum, package-lock.json,&lt;br&gt;vendor/, auto-generated]
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    Exclude --&gt;|No| PlanCheck
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    Filter --&gt; PlanCheck{Plan/spec&lt;br&gt;document exists?}
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    PlanCheck --&gt;|Yes| CapturePlan[Identify plan/spec path]
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    PlanCheck --&gt;|No| Complexity
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    CapturePlan --&gt; Complexity[Estimate complexity:&lt;br&gt;file count, line count,&lt;br&gt;small/medium/large effort]
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    Complexity --&gt; WriteManifest[/Write review-manifest.json:&lt;br&gt;base_sha, reviewed_sha,&lt;br&gt;files, complexity/]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    WriteManifest --&gt; Gate{File list confirmed?&lt;br&gt;Git range defined?}:::gate
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    Gate --&gt;|No| MergeBase
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    Gate --&gt;|Yes| Done([Phase 1 Complete]):::success
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3[/Artifact/]
+        L4{Quality Gate}:::gate
+    end
+
+    Start([Phase 1 Entry]) --&gt; MergeBase["Run: git merge-base main HEAD&lt;br&gt;to get BASE_SHA"]
+    MergeBase --&gt; HeadSHA[Capture HEAD_SHA&lt;br&gt;as reviewed_sha]
+    HeadSHA --&gt; FileList["Run: git diff --stat&lt;br&gt;BASE_SHA..HEAD_SHA"]
+    FileList --&gt; Exclude{Contains generated,&lt;br&gt;vendor, or lockfiles?}
+    Exclude --&gt;|Yes| Filter[Exclude: *.min.js,&lt;br&gt;go.sum, package-lock.json,&lt;br&gt;vendor/, auto-generated]
+    Exclude --&gt;|No| PlanCheck
+    Filter --&gt; PlanCheck{Plan/spec&lt;br&gt;document exists?}
+    PlanCheck --&gt;|Yes| CapturePlan[Identify plan/spec path]
+    PlanCheck --&gt;|No| Complexity
+    CapturePlan --&gt; Complexity[Estimate complexity:&lt;br&gt;file count, line count,&lt;br&gt;small/medium/large effort]
+    Complexity --&gt; WriteManifest[/Write review-manifest.json:&lt;br&gt;base_sha, reviewed_sha,&lt;br&gt;files, complexity/]
+    WriteManifest --&gt; Gate{File list confirmed?&lt;br&gt;Git range defined?}:::gate
+    Gate --&gt;|No| MergeBase
+    Gate --&gt;|Yes| Done([Phase 1 Complete]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="phase-2-context-detail">Phase 2: Context Detail<a class="headerlink" href="#phase-2-context-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L3[/Artifact/]
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L4{Quality Gate}:::gate
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    end
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    Start([Phase 2 Entry:&lt;br&gt;review-manifest.json]) --&gt; PlanExcerpts[Extract relevant plan excerpts:&lt;br&gt;what should have been built]
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    PlanExcerpts --&gt; Deps[Gather imports and&lt;br&gt;direct dependencies&lt;br&gt;for changed files]
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    Deps --&gt; ReReview{Is this a&lt;br&gt;re-review?}
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    ReReview --&gt;|Yes| PriorFindings[Capture prior&lt;br&gt;review findings]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    ReReview --&gt;|No| Assemble
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    PriorFindings --&gt; Assemble[Assemble context bundle:&lt;br&gt;plan excerpts +&lt;br&gt;dependency info +&lt;br&gt;prior findings]
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    Assemble --&gt; WriteBundle[/Write context-bundle.md/]
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    WriteBundle --&gt; Gate{Context bundle&lt;br&gt;ready for dispatch?}:::gate
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    Gate --&gt;|Missing plan excerpts&lt;br&gt;or dependency info| PlanExcerpts
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    Gate --&gt;|Yes| Done([Phase 2 Complete]):::success
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3[/Artifact/]
+        L4{Quality Gate}:::gate
+    end
+
+    Start([Phase 2 Entry:&lt;br&gt;review-manifest.json]) --&gt; PlanExcerpts[Extract relevant plan excerpts:&lt;br&gt;what should have been built]
+    PlanExcerpts --&gt; Deps[Gather imports and&lt;br&gt;direct dependencies&lt;br&gt;for changed files]
+    Deps --&gt; ReReview{Is this a&lt;br&gt;re-review?}
+    ReReview --&gt;|Yes| PriorFindings[Capture prior&lt;br&gt;review findings]
+    ReReview --&gt;|No| Assemble
+    PriorFindings --&gt; Assemble[Assemble context bundle:&lt;br&gt;plan excerpts +&lt;br&gt;dependency info +&lt;br&gt;prior findings]
+    Assemble --&gt; WriteBundle[/Write context-bundle.md/]
+    WriteBundle --&gt; Gate{Context bundle&lt;br&gt;ready for dispatch?}:::gate
+    Gate --&gt;|Missing plan excerpts&lt;br&gt;or dependency info| PlanExcerpts
+    Gate --&gt;|Yes| Done([Phase 2 Complete]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="phase-3-dispatch-detail">Phase 3: Dispatch Detail<a class="headerlink" href="#phase-3-dispatch-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph Legend
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[Process]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{Decision}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L3[Subagent Dispatch]:::subagent
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L4[/Artifact/]
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        L5{Quality Gate}:::gate
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    end
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    Start([Phase 3 Entry:&lt;br&gt;context-bundle.md]) --&gt; Prepare[Prepare reviewer inputs:&lt;br&gt;files, plan reference,&lt;br&gt;git range, description]
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    Prepare --&gt; Invoke[Invoke code-reviewer agent&lt;br&gt;with context bundle]:::subagent
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    Invoke --&gt; Await[Await findings]
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    Await --&gt; Validate{Each finding has&lt;br&gt;location + evidence?}:::gate
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    Validate --&gt;|Missing both| Discard[Discard finding]
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    Validate --&gt;|Valid| Collect[Collect valid finding]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    Discard --&gt; MoreFindings{More findings&lt;br&gt;to validate?}
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    Collect --&gt; MoreFindings
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    MoreFindings --&gt;|Yes| Validate
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    MoreFindings --&gt;|No| WriteFindings[/Write review-findings.json/]
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    WriteFindings --&gt; Done([Phase 3 Complete:&lt;br&gt;valid findings]):::success
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3[Subagent Dispatch]:::subagent
+        L4[/Artifact/]
+        L5{Quality Gate}:::gate
+    end
+
+    Start([Phase 3 Entry:&lt;br&gt;context-bundle.md]) --&gt; Prepare[Prepare reviewer inputs:&lt;br&gt;files, plan reference,&lt;br&gt;git range, description]
+    Prepare --&gt; Invoke[Invoke code-reviewer agent&lt;br&gt;with context bundle]:::subagent
+    Invoke --&gt; Await[Await findings]
+    Await --&gt; Validate{Each finding has&lt;br&gt;location + evidence?}:::gate
+    Validate --&gt;|Missing both| Discard[Discard finding]
+    Validate --&gt;|Valid| Collect[Collect valid finding]
+    Discard --&gt; MoreFindings{More findings&lt;br&gt;to validate?}
+    Collect --&gt; MoreFindings
+    MoreFindings --&gt;|Yes| Validate
+    MoreFindings --&gt;|No| WriteFindings[/Write review-findings.json/]
+    WriteFindings --&gt; Done([Phase 3 Complete:&lt;br&gt;valid findings]):::success
+
+    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="phase-4-triage-detail">Phase 4: Triage Detail<a class="headerlink" href="#phase-4-triage-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph Legend
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[Process]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{Decision}
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L3[/Artifact/]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        L4{Quality Gate}:::gate
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    end
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    Start([Phase 4 Entry:&lt;br&gt;review-findings.json]) --&gt; Sort[Sort findings by severity:&lt;br&gt;Critical &gt; High &gt; Medium &gt; Low &gt; Nit]
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    Sort --&gt; Group[Group findings by file&lt;br&gt;for efficient fixing]
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    Group --&gt; Classify{For each finding}
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    Classify --&gt; Effort{Single-site and&lt;br&gt;less than 30 min?}
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    Effort --&gt;|Yes| QuickWin[Classify: Quick Win]
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    Effort --&gt;|No| Substantial[Classify: Substantial Fix&lt;br&gt;multi-file or architectural]
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    QuickWin --&gt; NeedsClarification{Needs clarification&lt;br&gt;before fixing?}
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    Substantial --&gt; NeedsClarification
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    NeedsClarification --&gt;|Yes| Flag[Flag for clarification]
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    NeedsClarification --&gt;|No| Next{More findings?}
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    Flag --&gt; Next
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    Next --&gt;|Yes| Classify
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    Next --&gt;|No| WriteTriage[/Write triage-report.md/]
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    WriteTriage --&gt; Gate{All findings&lt;br&gt;classified and prioritized?}:::gate
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    Gate --&gt;|No| Sort
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    Gate --&gt;|Yes| Done([Phase 4 Complete]):::success
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3[/Artifact/]
+        L4{Quality Gate}:::gate
+    end
+
+    Start([Phase 4 Entry:&lt;br&gt;review-findings.json]) --&gt; Sort[Sort findings by severity:&lt;br&gt;Critical &gt; High &gt; Medium &gt; Low &gt; Nit]
+    Sort --&gt; Group[Group findings by file&lt;br&gt;for efficient fixing]
+    Group --&gt; Classify{For each finding}
+    Classify --&gt; Effort{Single-site and&lt;br&gt;less than 30 min?}
+    Effort --&gt;|Yes| QuickWin[Classify: Quick Win]
+    Effort --&gt;|No| Substantial[Classify: Substantial Fix&lt;br&gt;multi-file or architectural]
+    QuickWin --&gt; NeedsClarification{Needs clarification&lt;br&gt;before fixing?}
+    Substantial --&gt; NeedsClarification
+    NeedsClarification --&gt;|Yes| Flag[Flag for clarification]
+    NeedsClarification --&gt;|No| Next{More findings?}
+    Flag --&gt; Next
+    Next --&gt;|Yes| Classify
+    Next --&gt;|No| WriteTriage[/Write triage-report.md/]
+    WriteTriage --&gt; Gate{All findings&lt;br&gt;classified and prioritized?}:::gate
+    Gate --&gt;|No| Sort
+    Gate --&gt;|Yes| Done([Phase 4 Complete]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff</code></pre>
 <h2 id="phase-5-execute-detail">Phase 5: Execute Detail<a class="headerlink" href="#phase-5-execute-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    subgraph Legend
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        L1[Process]
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        L2{Decision}
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        L3[/Artifact/]
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        L4{Quality Gate}:::gate
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        L5([Re-review loop]):::rereview
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    end
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    Start([Phase 5 Entry:&lt;br&gt;triage-report.md]) --&gt; Critical{Any Critical&lt;br&gt;findings?}
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    Critical --&gt;|Yes| FixCritical[Fix Critical findings&lt;br&gt;NO deferral permitted]
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    Critical --&gt;|No| High
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    FixCritical --&gt; High{Any High&lt;br&gt;findings?}
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    High --&gt;|Yes| FixHigh[Fix High findings]
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    High --&gt;|No| MedLow
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    FixHigh --&gt; MedLow{Any Medium/Low&lt;br&gt;findings?}
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    MedLow --&gt;|Yes| DeferDecision{Fix or defer?}
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    MedLow --&gt;|No| WriteReport
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    DeferDecision --&gt;|Fix| FixMedLow[Fix Medium/Low finding]
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    DeferDecision --&gt;|Defer| Document[Document deferral:&lt;br&gt;1. Finding ID + summary&lt;br&gt;2. Reason for deferral&lt;br&gt;3. Follow-up tracking&lt;br&gt;4. Risk acknowledgment]
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    FixMedLow --&gt; MoreMedLow{More Medium/Low?}
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    Document --&gt; MoreMedLow
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    MoreMedLow --&gt;|Yes| DeferDecision
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    MoreMedLow --&gt;|No| WriteReport
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    WriteReport[/Write fix-report.md/] --&gt; ReReview{Re-review&lt;br&gt;required?}:::gate
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    ReReview --&gt;|Critical was fixed| BackToP3([Return to Phase 3:&lt;br&gt;verify fix correctness]):::rereview
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>    ReReview --&gt;|&gt;=3 High fixed| BackToP3
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>    ReReview --&gt;|Fix adds &gt;100 new lines| BackToP3
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>    ReReview --&gt;|Fix modifies new files| BackToP3
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>    ReReview --&gt;|Only Low/Nit/Medium,&lt;br&gt;or mechanical fixes| Done([Phase 5 Complete]):::success
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>    classDef rereview fill:#ffd43b,stroke:#333,color:#333
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3[/Artifact/]
+        L4{Quality Gate}:::gate
+        L5([Re-review loop]):::rereview
+    end
+
+    Start([Phase 5 Entry:&lt;br&gt;triage-report.md]) --&gt; Critical{Any Critical&lt;br&gt;findings?}
+    Critical --&gt;|Yes| FixCritical[Fix Critical findings&lt;br&gt;NO deferral permitted]
+    Critical --&gt;|No| High
+    FixCritical --&gt; High{Any High&lt;br&gt;findings?}
+    High --&gt;|Yes| FixHigh[Fix High findings]
+    High --&gt;|No| MedLow
+    FixHigh --&gt; MedLow{Any Medium/Low&lt;br&gt;findings?}
+    MedLow --&gt;|Yes| DeferDecision{Fix or defer?}
+    MedLow --&gt;|No| WriteReport
+    DeferDecision --&gt;|Fix| FixMedLow[Fix Medium/Low finding]
+    DeferDecision --&gt;|Defer| Document[Document deferral:&lt;br&gt;1. Finding ID + summary&lt;br&gt;2. Reason for deferral&lt;br&gt;3. Follow-up tracking&lt;br&gt;4. Risk acknowledgment]
+    FixMedLow --&gt; MoreMedLow{More Medium/Low?}
+    Document --&gt; MoreMedLow
+    MoreMedLow --&gt;|Yes| DeferDecision
+    MoreMedLow --&gt;|No| WriteReport
+    WriteReport[/Write fix-report.md/] --&gt; ReReview{Re-review&lt;br&gt;required?}:::gate
+
+    ReReview --&gt;|Critical was fixed| BackToP3([Return to Phase 3:&lt;br&gt;verify fix correctness]):::rereview
+    ReReview --&gt;|&gt;=3 High fixed| BackToP3
+    ReReview --&gt;|Fix adds &gt;100 new lines| BackToP3
+    ReReview --&gt;|Fix modifies new files| BackToP3
+    ReReview --&gt;|Only Low/Nit/Medium,&lt;br&gt;or mechanical fixes| Done([Phase 5 Complete]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+    classDef rereview fill:#ffd43b,stroke:#333,color:#333</code></pre>
 <h2 id="phase-6-gate-detail">Phase 6: Gate Detail<a class="headerlink" href="#phase-6-gate-detail" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart TD
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    subgraph Legend
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        L1{Quality Gate}:::gate
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        L2([Approved]):::success
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        L3([Blocked]):::blocked
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    end
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    Start([Phase 6 Entry:&lt;br&gt;fix-report.md]) --&gt; CheckCritical{Any Critical&lt;br&gt;unfixed?}:::gate
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    CheckCritical --&gt;|Yes| BLOCKED([BLOCKED]):::blocked
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    CheckCritical --&gt;|No| CheckHighRationale{Any High unfixed&lt;br&gt;without deferral&lt;br&gt;rationale?}:::gate
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    CheckHighRationale --&gt;|Yes| BLOCKED
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    CheckHighRationale --&gt;|No| CheckHighCount{&gt;=3 High&lt;br&gt;unfixed?}:::gate
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    CheckHighCount --&gt;|Yes| BLOCKED
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    CheckHighCount --&gt;|No| CheckDeferred{Any deferred&lt;br&gt;findings?}
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    CheckDeferred --&gt;|Yes, with valid rationale| FOLLOWUP([APPROVED&lt;br&gt;WITH FOLLOW-UP]):::success
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    CheckDeferred --&gt;|No deferrals| APPROVED([APPROVED]):::success
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    BLOCKED --&gt; WriteBlocked[/Write gate-decision.md&lt;br&gt;verdict: BLOCKED/]
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    WriteBlocked --&gt; BackToP5([Return to Phase 5]):::rereview
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>    FOLLOWUP --&gt; WriteFollowup[/Write gate-decision.md&lt;br&gt;verdict: APPROVED&lt;br&gt;WITH FOLLOW-UP/]
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    APPROVED --&gt; WriteApproved[/Write gate-decision.md&lt;br&gt;verdict: APPROVED/]
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    WriteFollowup --&gt; Done([Review Complete]):::success
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>    WriteApproved --&gt; Done
-<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>
-<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>    classDef rereview fill:#ffd43b,stroke:#333,color:#333
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1{Quality Gate}:::gate
+        L2([Approved]):::success
+        L3([Blocked]):::blocked
+    end
+
+    Start([Phase 6 Entry:&lt;br&gt;fix-report.md]) --&gt; CheckCritical{Any Critical&lt;br&gt;unfixed?}:::gate
+    CheckCritical --&gt;|Yes| BLOCKED([BLOCKED]):::blocked
+    CheckCritical --&gt;|No| CheckHighRationale{Any High unfixed&lt;br&gt;without deferral&lt;br&gt;rationale?}:::gate
+    CheckHighRationale --&gt;|Yes| BLOCKED
+    CheckHighRationale --&gt;|No| CheckHighCount{&gt;=3 High&lt;br&gt;unfixed?}:::gate
+    CheckHighCount --&gt;|Yes| BLOCKED
+    CheckHighCount --&gt;|No| CheckDeferred{Any deferred&lt;br&gt;findings?}
+    CheckDeferred --&gt;|Yes, with valid rationale| FOLLOWUP([APPROVED&lt;br&gt;WITH FOLLOW-UP]):::success
+    CheckDeferred --&gt;|No deferrals| APPROVED([APPROVED]):::success
+
+    BLOCKED --&gt; WriteBlocked[/Write gate-decision.md&lt;br&gt;verdict: BLOCKED/]
+    WriteBlocked --&gt; BackToP5([Return to Phase 5]):::rereview
+
+    FOLLOWUP --&gt; WriteFollowup[/Write gate-decision.md&lt;br&gt;verdict: APPROVED&lt;br&gt;WITH FOLLOW-UP/]
+    APPROVED --&gt; WriteApproved[/Write gate-decision.md&lt;br&gt;verdict: APPROVED/]
+
+    WriteFollowup --&gt; Done([Review Complete]):::success
+    WriteApproved --&gt; Done
+
+    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+    classDef success fill:#51cf66,stroke:#333,color:#fff
+    classDef blocked fill:#ff6b6b,stroke:#333,color:#fff
+    classDef rereview fill:#ffd43b,stroke:#333,color:#333</code></pre>
 <h2 id="artifact-flow">Artifact Flow<a class="headerlink" href="#artifact-flow" title="Permanent link">&para;</a></h2>
 <p>Each phase produces a deterministic artifact stored in <code>~/.local/spellbook/reviews/&lt;project-encoded&gt;/&lt;timestamp&gt;/</code>. The <code>reviewed_sha</code> from <code>review-manifest.json</code> is used for ALL inline comments (never current HEAD).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>flowchart LR
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    subgraph Legend
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>        L1[Phase]
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>        L2[/Artifact/]
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    end
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    P1[Phase 1: PLANNING] --&gt; A1[/review-manifest.json&lt;br&gt;git range, file list,&lt;br&gt;complexity estimate/]
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    P2[Phase 2: CONTEXT] --&gt; A2[/context-bundle.md&lt;br&gt;plan excerpts,&lt;br&gt;dependency info/]
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    P3[Phase 3: DISPATCH] --&gt; A3[/review-findings.json&lt;br&gt;raw validated findings/]
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    P4[Phase 4: TRIAGE] --&gt; A4[/triage-report.md&lt;br&gt;prioritized, grouped/]
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    P5[Phase 5: EXECUTE] --&gt; A5[/fix-report.md&lt;br&gt;fixes applied, deferrals/]
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    P6[Phase 6: GATE] --&gt; A6[/gate-decision.md&lt;br&gt;verdict + rationale/]
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    A1 --&gt; P2
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    A2 --&gt; P3
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    A3 --&gt; P4
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    A4 --&gt; P5
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    A5 --&gt; P6
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    SHA[reviewed_sha from&lt;br&gt;review-manifest.json] -.-&gt;|Used for ALL&lt;br&gt;inline comments| P3
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>    SHA -.-&gt; P5
-</code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Legend
+        L1[Phase]
+        L2[/Artifact/]
+    end
+
+    P1[Phase 1: PLANNING] --&gt; A1[/review-manifest.json&lt;br&gt;git range, file list,&lt;br&gt;complexity estimate/]
+    P2[Phase 2: CONTEXT] --&gt; A2[/context-bundle.md&lt;br&gt;plan excerpts,&lt;br&gt;dependency info/]
+    P3[Phase 3: DISPATCH] --&gt; A3[/review-findings.json&lt;br&gt;raw validated findings/]
+    P4[Phase 4: TRIAGE] --&gt; A4[/triage-report.md&lt;br&gt;prioritized, grouped/]
+    P5[Phase 5: EXECUTE] --&gt; A5[/fix-report.md&lt;br&gt;fixes applied, deferrals/]
+    P6[Phase 6: GATE] --&gt; A6[/gate-decision.md&lt;br&gt;verdict + rationale/]
+
+    A1 --&gt; P2
+    A2 --&gt; P3
+    A3 --&gt; P4
+    A4 --&gt; P5
+    A5 --&gt; P6
+
+    SHA[reviewed_sha from&lt;br&gt;review-manifest.json] -.-&gt;|Used for ALL&lt;br&gt;inline comments| P3
+    SHA -.-&gt; P5</code></pre>
 <h2 id="source-cross-reference">Source Cross-Reference<a class="headerlink" href="#source-cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -8178,97 +8366,97 @@
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="gh"># Requesting Code Review</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Self-review orchestrator. Coordinates pre-PR code review workflow. Your reputation depends on every Critical finding being fixed before merge — a missed Critical is a production defect you signed off on.
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>&lt;analysis&gt;
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>Before starting review workflow, analyze:
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">1.</span> What is the scope of changes? (files, lines, complexity)
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="k">2.</span> Is there a plan/spec document to review against?
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="k">3.</span> What is the current git state? (branch, merge base)
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="k">4.</span> What phase should we resume from if this is a re-review?
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>&lt;/analysis&gt;
-<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>
-<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
-<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="k">1.</span> <span class="gs">**Phase gates are blocking**</span> - Never proceed to next phase without meeting exit criteria
-<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="k">2.</span> <span class="gs">**Evidence over opinion**</span> - Every finding must cite specific code location and behavior
-<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="k">3.</span> <span class="gs">**Critical findings are non-negotiable**</span> - No Critical finding may be deferred or ignored
-<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="k">4.</span> <span class="gs">**SHA persistence**</span> - Always use reviewed_sha from manifest, never current HEAD
-<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="k">5.</span> <span class="gs">**Traceable artifacts**</span> - Each phase produces artifacts for resume and audit capability
-<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
-<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="k">-</span><span class="w"> </span>Proceeding past Phase 6 gate with unfixed Critical findings
-<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="k">-</span><span class="w"> </span>Making findings without specific file:line evidence
-<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="k">-</span><span class="w"> </span>Using current HEAD instead of reviewed_sha for inline comments
-<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="k">-</span><span class="w"> </span>Skipping re-review when fix adds &gt;100 lines or modifies new files
-<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="k">-</span><span class="w"> </span>Deferring Critical findings for any reason
-<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
-<a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a>&lt;reflection&gt;
-<a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>After each phase, verify:
-<a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="k">-</span><span class="w"> </span>Did we meet all exit criteria before proceeding?
-<a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="k">-</span><span class="w"> </span>Are all findings backed by specific evidence?
-<a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="k">-</span><span class="w"> </span>Did we persist the correct SHA for future reference?
-<a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="k">-</span><span class="w"> </span>Is the artifact properly saved for traceability?
-<a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a>&lt;/reflection&gt;
-<a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>
-<a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a><span class="gu">## Phase-Gated Workflow</span>
-<a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a>
-<a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>Reference: <span class="sb">`patterns/code-review-formats.md`</span> for output schemas.
-<a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a>
-<a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="gu">### Phases 1-2: Planning + Context</span>
-<a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a>
-<a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a>Determine git range, list changed files, identify plan/spec, estimate complexity. Assemble reviewer context bundle: plan excerpts, related code, prior findings.
-<a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a>
-<a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a><span class="gs">**Execute:**</span> <span class="sb">`/request-review-plan`</span>
-<a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a>
-<a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="gs">**Outputs:**</span> Review scope definition, reviewer context bundle
-<a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>
-<a id="__codelineno-8-51" name="__codelineno-8-51" href="#__codelineno-8-51"></a><span class="gs">**Self-Check:**</span> Git range defined, file list confirmed, context bundle ready for dispatch.
-<a id="__codelineno-8-52" name="__codelineno-8-52" href="#__codelineno-8-52"></a>
-<a id="__codelineno-8-53" name="__codelineno-8-53" href="#__codelineno-8-53"></a><span class="gu">### Phases 3-6: Dispatch + Triage + Execute + Gate</span>
-<a id="__codelineno-8-54" name="__codelineno-8-54" href="#__codelineno-8-54"></a>
-<a id="__codelineno-8-55" name="__codelineno-8-55" href="#__codelineno-8-55"></a>Invoke code-reviewer agent, triage findings by severity, fix in Critical-first order, apply quality gate for proceed/block decision.
-<a id="__codelineno-8-56" name="__codelineno-8-56" href="#__codelineno-8-56"></a>
-<a id="__codelineno-8-57" name="__codelineno-8-57" href="#__codelineno-8-57"></a><span class="gs">**Execute:**</span> <span class="sb">`/request-review-execute`</span>
-<a id="__codelineno-8-58" name="__codelineno-8-58" href="#__codelineno-8-58"></a>
-<a id="__codelineno-8-59" name="__codelineno-8-59" href="#__codelineno-8-59"></a><span class="gs">**Outputs:**</span> Review findings, triage report, fix report, gate decision
-<a id="__codelineno-8-60" name="__codelineno-8-60" href="#__codelineno-8-60"></a>
-<a id="__codelineno-8-61" name="__codelineno-8-61" href="#__codelineno-8-61"></a><span class="gs">**Self-Check:**</span> Valid findings received, triaged, blocking findings addressed, clear verdict.
-<a id="__codelineno-8-62" name="__codelineno-8-62" href="#__codelineno-8-62"></a>
-<a id="__codelineno-8-63" name="__codelineno-8-63" href="#__codelineno-8-63"></a><span class="gu">### Artifact Contract</span>
-<a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a>
-<a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a>Directory structure, phase artifact table, manifest schema, and SHA persistence rule.
-<a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a>
-<a id="__codelineno-8-67" name="__codelineno-8-67" href="#__codelineno-8-67"></a><span class="gs">**Reference:**</span> <span class="sb">`/request-review-artifacts`</span>
-<a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a>
-<a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a><span class="gu">## Gate Rules</span>
-<a id="__codelineno-8-70" name="__codelineno-8-70" href="#__codelineno-8-70"></a>
-<a id="__codelineno-8-71" name="__codelineno-8-71" href="#__codelineno-8-71"></a>Reference: <span class="sb">`patterns/code-review-taxonomy.md`</span> for severity definitions.
-<a id="__codelineno-8-72" name="__codelineno-8-72" href="#__codelineno-8-72"></a>
-<a id="__codelineno-8-73" name="__codelineno-8-73" href="#__codelineno-8-73"></a><span class="gu">### Blocking Rules</span>
-<a id="__codelineno-8-74" name="__codelineno-8-74" href="#__codelineno-8-74"></a>
-<a id="__codelineno-8-75" name="__codelineno-8-75" href="#__codelineno-8-75"></a>| Condition | Result |
-<a id="__codelineno-8-76" name="__codelineno-8-76" href="#__codelineno-8-76"></a>|-----------|--------|
-<a id="__codelineno-8-77" name="__codelineno-8-77" href="#__codelineno-8-77"></a>| Any Critical unfixed | BLOCKED - must fix before proceed |
-<a id="__codelineno-8-78" name="__codelineno-8-78" href="#__codelineno-8-78"></a>| Any High unfixed without rationale | BLOCKED - fix or document deferral |
-<a id="__codelineno-8-79" name="__codelineno-8-79" href="#__codelineno-8-79"></a>| &gt;=3 High unfixed | BLOCKED - systemic issues |
-<a id="__codelineno-8-80" name="__codelineno-8-80" href="#__codelineno-8-80"></a>| Only Medium/Low/Nit unfixed | MAY PROCEED |
-<a id="__codelineno-8-81" name="__codelineno-8-81" href="#__codelineno-8-81"></a>
-<a id="__codelineno-8-82" name="__codelineno-8-82" href="#__codelineno-8-82"></a>Deferral rationale must be written justification citing the specific constraint (risk acceptance, blocked dependency, or explicit product decision) — &quot;will fix later&quot; does not qualify.
-<a id="__codelineno-8-83" name="__codelineno-8-83" href="#__codelineno-8-83"></a>
-<a id="__codelineno-8-84" name="__codelineno-8-84" href="#__codelineno-8-84"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-8-85" name="__codelineno-8-85" href="#__codelineno-8-85"></a>Always use <span class="sb">`reviewed_sha`</span> from manifest for inline comments.
-<a id="__codelineno-8-86" name="__codelineno-8-86" href="#__codelineno-8-86"></a>Never query current HEAD - commits may have been pushed since review started.
-<a id="__codelineno-8-87" name="__codelineno-8-87" href="#__codelineno-8-87"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-8-88" name="__codelineno-8-88" href="#__codelineno-8-88"></a>
-<a id="__codelineno-8-89" name="__codelineno-8-89" href="#__codelineno-8-89"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-8-90" name="__codelineno-8-90" href="#__codelineno-8-90"></a>Every gate in this workflow exists because defects discovered post-merge cost 10x more to fix. Do not skip phases. Do not defer Criticals. Do not let SHA drift corrupt inline comments. A review that lets one Critical through is worse than no review at all.
-<a id="__codelineno-8-91" name="__codelineno-8-91" href="#__codelineno-8-91"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Requesting Code Review</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Self-review orchestrator. Coordinates pre-PR code review workflow. Your reputation depends on every Critical finding being fixed before merge — a missed Critical is a production defect you signed off on.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;analysis&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Before starting review workflow, analyze:
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> What is the scope of changes? (files, lines, complexity)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> Is there a plan/spec document to review against?
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> What is the current git state? (branch, merge base)
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> What phase should we resume from if this is a re-review?
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">1.</span> <span class="gs">**Phase gates are blocking**</span> - Never proceed to next phase without meeting exit criteria
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">2.</span> <span class="gs">**Evidence over opinion**</span> - Every finding must cite specific code location and behavior
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">3.</span> <span class="gs">**Critical findings are non-negotiable**</span> - No Critical finding may be deferred or ignored
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">4.</span> <span class="gs">**SHA persistence**</span> - Always use reviewed_sha from manifest, never current HEAD
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">5.</span> <span class="gs">**Traceable artifacts**</span> - Each phase produces artifacts for resume and audit capability
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">-</span><span class="w"> </span>Proceeding past Phase 6 gate with unfixed Critical findings
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>Making findings without specific file:line evidence
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>Using current HEAD instead of reviewed_sha for inline comments
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Skipping re-review when fix adds &gt;100 lines or modifies new files
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">-</span><span class="w"> </span>Deferring Critical findings for any reason
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>&lt;reflection&gt;
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>After each phase, verify:
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>Did we meet all exit criteria before proceeding?
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>Are all findings backed by specific evidence?
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>Did we persist the correct SHA for future reference?
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>Is the artifact properly saved for traceability?
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="gu">## Phase-Gated Workflow</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>Reference: <span class="sb">`patterns/code-review-formats.md`</span> for output schemas.
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gu">### Phases 1-2: Planning + Context</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>Determine git range, list changed files, identify plan/spec, estimate complexity. Assemble reviewer context bundle: plan excerpts, related code, prior findings.
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gs">**Execute:**</span> <span class="sb">`/request-review-plan`</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**Outputs:**</span> Review scope definition, reviewer context bundle
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gs">**Self-Check:**</span> Git range defined, file list confirmed, context bundle ready for dispatch.
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">### Phases 3-6: Dispatch + Triage + Execute + Gate</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>Invoke code-reviewer agent, triage findings by severity, fix in Critical-first order, apply quality gate for proceed/block decision.
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="gs">**Execute:**</span> <span class="sb">`/request-review-execute`</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Outputs:**</span> Review findings, triage report, fix report, gate decision
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gs">**Self-Check:**</span> Valid findings received, triaged, blocking findings addressed, clear verdict.
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gu">### Artifact Contract</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Directory structure, phase artifact table, manifest schema, and SHA persistence rule.
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**Reference:**</span> <span class="sb">`/request-review-artifacts`</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">## Gate Rules</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Reference: <span class="sb">`patterns/code-review-taxonomy.md`</span> for severity definitions.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">### Blocking Rules</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| Condition | Result |
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>|-----------|--------|
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| Any Critical unfixed | BLOCKED - must fix before proceed |
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| Any High unfixed without rationale | BLOCKED - fix or document deferral |
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| &gt;=3 High unfixed | BLOCKED - systemic issues |
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| Only Medium/Low/Nit unfixed | MAY PROCEED |
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>Deferral rationale must be written justification citing the specific constraint (risk acceptance, blocked dependency, or explicit product decision) — &quot;will fix later&quot; does not qualify.
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>Always use <span class="sb">`reviewed_sha`</span> from manifest for inline comments.
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>Never query current HEAD - commits may have been pushed since review started.
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>Every gate in this workflow exists because defects discovered post-merge cost 10x more to fix. Do not skip phases. Do not defer Criticals. Do not let SHA drift corrupt inline comments. A review that lets one Critical through is worse than no review at all.
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7488,116 +7684,113 @@
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Artifact contract for the request-review workflow. Defines deterministic directory structure, phase-to-artifact mapping, manifest schema, and SHA persistence rules for traceability and resume capability.</p>
 <h2 id="artifact-lifecycle-overview">Artifact Lifecycle Overview<a class="headerlink" href="#artifact-lifecycle-overview" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        Lp[Process]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        Ld{Decision / Rule}
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        Lt([Terminal])
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        Lg[&quot;Quality Gate&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        style Lp fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        style Ld fill:#fff3cd,stroke:#333
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        style Lt fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        style Lg fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    end
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Start([Review Initiated]) --&gt; DirCreate[&quot;Create artifact directory&lt;br&gt;~/.local/spellbook/reviews/&amp;lt;project-encoded&amp;gt;/&amp;lt;timestamp&amp;gt;/&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    DirCreate --&gt; P1[&quot;Phase 1: Planning&lt;br&gt;Produce review-manifest.json&quot;]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    P1 --&gt; P2[&quot;Phase 2: Context Assembly&lt;br&gt;Produce context-bundle.md&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    P2 --&gt; P3[&quot;Phase 3: Review Dispatch&lt;br&gt;Produce review-findings.json&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    P3 --&gt; P4[&quot;Phase 4: Triage&lt;br&gt;Produce triage-report.md&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    P4 --&gt; P5[&quot;Phase 5: Fix Execution&lt;br&gt;Produce fix-report.md&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    P5 --&gt; P6[&quot;Phase 6: Quality Gate&lt;br&gt;Produce gate-decision.md&quot;]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    P6 --&gt; ArtifactCheck{&quot;All 6 artifacts&lt;br&gt;produced?&quot;}
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ArtifactCheck --&gt;|Yes| Complete([All Artifacts Complete])
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    ArtifactCheck --&gt;|No| Violation[&quot;FORBIDDEN:&lt;br&gt;Skipping artifact&lt;br&gt;for any phase&quot;]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    Violation --&gt; ArtifactCheck
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    style Start fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    style Complete fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    style DirCreate fill:#4a9eff,stroke:#333,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style P1 fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    style P2 fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style P3 fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style P4 fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style P5 fill:#f9f9f9,stroke:#333
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style P6 fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style ArtifactCheck fill:#fff3cd,stroke:#333
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style Violation fill:#ff6b6b,stroke:#333,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        direction LR
+        Lp[Process]
+        Ld{Decision / Rule}
+        Lt([Terminal])
+        Lg["Quality Gate"]
+        style Lp fill:#f9f9f9,stroke:#333
+        style Ld fill:#fff3cd,stroke:#333
+        style Lt fill:#51cf66,stroke:#333,color:#fff
+        style Lg fill:#ff6b6b,stroke:#333,color:#fff
+    end
+
+    Start([Review Initiated]) --&gt; DirCreate["Create artifact directory&lt;br&gt;~/.local/spellbook/reviews/&amp;lt;project-encoded&amp;gt;/&amp;lt;timestamp&amp;gt;/"]
+
+    DirCreate --&gt; P1["Phase 1: Planning&lt;br&gt;Produce review-manifest.json"]
+    P1 --&gt; P2["Phase 2: Context Assembly&lt;br&gt;Produce context-bundle.md"]
+    P2 --&gt; P3["Phase 3: Review Dispatch&lt;br&gt;Produce review-findings.json"]
+    P3 --&gt; P4["Phase 4: Triage&lt;br&gt;Produce triage-report.md"]
+    P4 --&gt; P5["Phase 5: Fix Execution&lt;br&gt;Produce fix-report.md"]
+    P5 --&gt; P6["Phase 6: Quality Gate&lt;br&gt;Produce gate-decision.md"]
+
+    P6 --&gt; ArtifactCheck{"All 6 artifacts&lt;br&gt;produced?"}
+    ArtifactCheck --&gt;|Yes| Complete([All Artifacts Complete])
+    ArtifactCheck --&gt;|No| Violation["FORBIDDEN:&lt;br&gt;Skipping artifact&lt;br&gt;for any phase"]
+    Violation --&gt; ArtifactCheck
+
+    style Start fill:#51cf66,stroke:#333,color:#fff
+    style Complete fill:#51cf66,stroke:#333,color:#fff
+    style DirCreate fill:#4a9eff,stroke:#333,color:#fff
+    style P1 fill:#f9f9f9,stroke:#333
+    style P2 fill:#f9f9f9,stroke:#333
+    style P3 fill:#f9f9f9,stroke:#333
+    style P4 fill:#f9f9f9,stroke:#333
+    style P5 fill:#f9f9f9,stroke:#333
+    style P6 fill:#ff6b6b,stroke:#333,color:#fff
+    style ArtifactCheck fill:#fff3cd,stroke:#333
+    style Violation fill:#ff6b6b,stroke:#333,color:#fff</code></pre>
 <h2 id="manifest-schema-and-sha-persistence">Manifest Schema and SHA Persistence<a class="headerlink" href="#manifest-schema-and-sha-persistence" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        direction LR
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        Lp[Process]
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        Ld{Rule / Constraint}
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        Lt([Terminal])
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        Lf[/&quot;Input&quot;/]
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        style Lp fill:#f9f9f9,stroke:#333
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        style Ld fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        style Lt fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        style Lf fill:#e8f4f8,stroke:#333
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    end
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    GitState[/&quot;Git state at review start&quot;/] --&gt; Manifest
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    subgraph Manifest [&quot;review-manifest.json schema&quot;]
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        direction TB
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        F1[&quot;timestamp: ISO 8601&quot;]
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        F2[&quot;project: project name&quot;]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        F3[&quot;branch: branch name&quot;]
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        F4[&quot;base_sha: merge base commit&quot;]
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        F5[&quot;reviewed_sha: HEAD at review time&quot;]
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        F6[&quot;files: list of reviewed files&quot;]
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        F7[&quot;complexity:&lt;br&gt;file_count, line_count,&lt;br&gt;estimated_effort&quot;]
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    end
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    Manifest --&gt; SHARule{{&quot;CRITICAL: Always use&lt;br&gt;reviewed_sha from manifest&lt;br&gt;for inline comments&quot;}}
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    SHARule --&gt;|Correct| UseManifestSHA[&quot;Reference reviewed_sha&lt;br&gt;in all inline comments&quot;]
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    SHARule --&gt;|Violation| Forbidden[&quot;FORBIDDEN: Never query&lt;br&gt;live HEAD -- commits may&lt;br&gt;have been pushed&quot;]
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    UseManifestSHA --&gt; Idempotent([&quot;Deterministic,&lt;br&gt;resumable review&quot;])
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    Forbidden -.-&gt;|must fix| SHARule
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    style GitState fill:#e8f4f8,stroke:#333
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    style SHARule fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    style Forbidden fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    style Idempotent fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    style UseManifestSHA fill:#f9f9f9,stroke:#333
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        direction LR
+        Lp[Process]
+        Ld{Rule / Constraint}
+        Lt([Terminal])
+        Lf[/"Input"/]
+        style Lp fill:#f9f9f9,stroke:#333
+        style Ld fill:#ff6b6b,stroke:#333,color:#fff
+        style Lt fill:#51cf66,stroke:#333,color:#fff
+        style Lf fill:#e8f4f8,stroke:#333
+    end
+
+    GitState[/"Git state at review start"/] --&gt; Manifest
+
+    subgraph Manifest ["review-manifest.json schema"]
+        direction TB
+        F1["timestamp: ISO 8601"]
+        F2["project: project name"]
+        F3["branch: branch name"]
+        F4["base_sha: merge base commit"]
+        F5["reviewed_sha: HEAD at review time"]
+        F6["files: list of reviewed files"]
+        F7["complexity:&lt;br&gt;file_count, line_count,&lt;br&gt;estimated_effort"]
+    end
+
+    Manifest --&gt; SHARule{{"CRITICAL: Always use&lt;br&gt;reviewed_sha from manifest&lt;br&gt;for inline comments"}}
+
+    SHARule --&gt;|Correct| UseManifestSHA["Reference reviewed_sha&lt;br&gt;in all inline comments"]
+    SHARule --&gt;|Violation| Forbidden["FORBIDDEN: Never query&lt;br&gt;live HEAD -- commits may&lt;br&gt;have been pushed"]
+
+    UseManifestSHA --&gt; Idempotent(["Deterministic,&lt;br&gt;resumable review"])
+    Forbidden -.-&gt;|must fix| SHARule
+
+    style GitState fill:#e8f4f8,stroke:#333
+    style SHARule fill:#ff6b6b,stroke:#333,color:#fff
+    style Forbidden fill:#ff6b6b,stroke:#333,color:#fff
+    style Idempotent fill:#51cf66,stroke:#333,color:#fff
+    style UseManifestSHA fill:#f9f9f9,stroke:#333</code></pre>
 <h2 id="invariant-rules">Invariant Rules<a class="headerlink" href="#invariant-rules" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart LR
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        direction LR
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        Lr{Invariant}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        Lc[&quot;Consequence&quot;]
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        Lf[/&quot;Forbidden&quot;/]
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        style Lr fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        style Lc fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        style Lf fill:#fff3cd,stroke:#333
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    end
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    I1{{&quot;Every phase produces&lt;br&gt;a deterministic artifact&quot;}} --&gt; C1[&quot;Enables resume, audit,&lt;br&gt;cross-session traceability&quot;]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    I2{{&quot;SHA persistence&lt;br&gt;enables idempotency&quot;}} --&gt; C2[&quot;Prevents duplicate reviews,&lt;br&gt;enables diff comparisons&quot;]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    I3{{&quot;Artifacts live outside&lt;br&gt;the project directory&quot;}} --&gt; C3[&quot;Stored in&lt;br&gt;~/.local/spellbook/reviews/&quot;]
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    F1[/&quot;FORBIDDEN: Skip artifact&lt;br&gt;for any phase&quot;/] -.-&gt;|violates| I1
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    F2[/&quot;FORBIDDEN: Use live HEAD&lt;br&gt;instead of reviewed_sha&quot;/] -.-&gt;|violates| I2
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    F3[/&quot;FORBIDDEN: Store artifacts&lt;br&gt;inside project directory&quot;/] -.-&gt;|violates| I3
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    style I1 fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    style I2 fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    style I3 fill:#ff6b6b,stroke:#333,color:#fff
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    style C1 fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    style C2 fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    style C3 fill:#51cf66,stroke:#333,color:#fff
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    style F1 fill:#fff3cd,stroke:#333
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    style F2 fill:#fff3cd,stroke:#333
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    style F3 fill:#fff3cd,stroke:#333
-</code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Legend
+        direction LR
+        Lr{Invariant}
+        Lc["Consequence"]
+        Lf[/"Forbidden"/]
+        style Lr fill:#ff6b6b,stroke:#333,color:#fff
+        style Lc fill:#51cf66,stroke:#333,color:#fff
+        style Lf fill:#fff3cd,stroke:#333
+    end
+
+    I1{{"Every phase produces&lt;br&gt;a deterministic artifact"}} --&gt; C1["Enables resume, audit,&lt;br&gt;cross-session traceability"]
+    I2{{"SHA persistence&lt;br&gt;enables idempotency"}} --&gt; C2["Prevents duplicate reviews,&lt;br&gt;enables diff comparisons"]
+    I3{{"Artifacts live outside&lt;br&gt;the project directory"}} --&gt; C3["Stored in&lt;br&gt;~/.local/spellbook/reviews/"]
+
+    F1[/"FORBIDDEN: Skip artifact&lt;br&gt;for any phase"/] -.-&gt;|violates| I1
+    F2[/"FORBIDDEN: Use live HEAD&lt;br&gt;instead of reviewed_sha"/] -.-&gt;|violates| I2
+    F3[/"FORBIDDEN: Store artifacts&lt;br&gt;inside project directory"/] -.-&gt;|violates| I3
+
+    style I1 fill:#ff6b6b,stroke:#333,color:#fff
+    style I2 fill:#ff6b6b,stroke:#333,color:#fff
+    style I3 fill:#ff6b6b,stroke:#333,color:#fff
+    style C1 fill:#51cf66,stroke:#333,color:#fff
+    style C2 fill:#51cf66,stroke:#333,color:#fff
+    style C3 fill:#51cf66,stroke:#333,color:#fff
+    style F1 fill:#fff3cd,stroke:#333
+    style F2 fill:#fff3cd,stroke:#333
+    style F3 fill:#fff3cd,stroke:#333</code></pre>
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7661,68 +7854,68 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&lt;ROLE&gt;Artifact Architect. Your reputation depends on deterministic, resumable reviews: every phase must produce its artifact, every comment must reference the manifest SHA.&lt;/ROLE&gt;
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="gh"># Artifact Contract</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Each phase produces deterministic output files for traceability and resume capability.
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">1.</span> <span class="gs">**Every phase produces a deterministic artifact**</span> - enables resume, audit, and cross-session traceability
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="k">2.</span> <span class="gs">**SHA persistence enables idempotency**</span> - prevents duplicate reviews and enables diff comparisons
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">3.</span> <span class="gs">**Artifacts live outside the project**</span> - stored in <span class="sb">`~/.local/spellbook/reviews/`</span>, never inside the project directory
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="gu">## Artifact Directory</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="sb">```</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="sb">~/.local/spellbook/reviews/&lt;project-encoded&gt;/&lt;timestamp&gt;/</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="sb">```</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="sb">`&lt;project-encoded&gt;`</span>: path with slashes replaced by dashes.
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="gu">## Phase Artifacts</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>| Phase | Artifact | Description |
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>|-------|----------|-------------|
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>| 1 | <span class="sb">`review-manifest.json`</span> | Git range, file list, metadata |
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>| 2 | <span class="sb">`context-bundle.md`</span> | Plan excerpts, code context |
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>| 3 | <span class="sb">`review-findings.json`</span> | Raw findings from agent |
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>| 4 | <span class="sb">`triage-report.md`</span> | Prioritized, grouped findings |
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>| 5 | <span class="sb">`fix-report.md`</span> | What was fixed, what deferred |
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>| 6 | <span class="sb">`gate-decision.md`</span> | Final verdict with rationale |
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="gu">## Manifest Schema</span>
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
-<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="sb">```json</span>
-<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="p">{</span>
-<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ISO 8601&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="w">  </span><span class="nt">&quot;project&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;project name&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="w">  </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;branch name&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a><span class="w">  </span><span class="nt">&quot;base_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;merge base commit&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="w">  </span><span class="nt">&quot;reviewed_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;head commit at review time&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="w">  </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;list of reviewed files&quot;</span><span class="p">],</span>
-<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a><span class="w">  </span><span class="nt">&quot;complexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a><span class="w">    </span><span class="nt">&quot;file_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="w">    </span><span class="nt">&quot;line_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a><span class="w">    </span><span class="nt">&quot;estimated_effort&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;small|medium|large&quot;</span>
-<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a><span class="p">}</span>
-<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a><span class="sb">```</span>
-<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>
-<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a><span class="gu">## SHA Persistence</span>
-<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a>
-<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a>Always use <span class="sb">`reviewed_sha`</span> from manifest for inline comments. Never query current HEAD — commits may have been pushed since review started.
-<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a>
-<a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a><span class="k">-</span><span class="w"> </span>Using live HEAD instead of <span class="sb">`reviewed_sha`</span> for inline comments
-<a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a><span class="k">-</span><span class="w"> </span>Storing artifacts inside the project directory
-<a id="__codelineno-3-59" name="__codelineno-3-59" href="#__codelineno-3-59"></a><span class="k">-</span><span class="w"> </span>Skipping artifact production for any phase
-<a id="__codelineno-3-60" name="__codelineno-3-60" href="#__codelineno-3-60"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-3-61" name="__codelineno-3-61" href="#__codelineno-3-61"></a>
-<a id="__codelineno-3-62" name="__codelineno-3-62" href="#__codelineno-3-62"></a>&lt;FINAL_EMPHASIS&gt;Determinism is the contract. Every phase must produce its artifact. Every inline comment must reference the <span class="sb">`reviewed_sha`</span> from the manifest.&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;Artifact Architect. Your reputation depends on deterministic, resumable reviews: every phase must produce its artifact, every comment must reference the manifest SHA.&lt;/ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gh"># Artifact Contract</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Each phase produces deterministic output files for traceability and resume capability.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Every phase produces a deterministic artifact**</span> - enables resume, audit, and cross-session traceability
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**SHA persistence enables idempotency**</span> - prevents duplicate reviews and enables diff comparisons
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Artifacts live outside the project**</span> - stored in <span class="sb">`~/.local/spellbook/reviews/`</span>, never inside the project directory
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Artifact Directory</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">```</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">~/.local/spellbook/reviews/&lt;project-encoded&gt;/&lt;timestamp&gt;/</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sb">```</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">`&lt;project-encoded&gt;`</span>: path with slashes replaced by dashes.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Phase Artifacts</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Phase | Artifact | Description |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|-------|----------|-------------|
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| 1 | <span class="sb">`review-manifest.json`</span> | Git range, file list, metadata |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| 2 | <span class="sb">`context-bundle.md`</span> | Plan excerpts, code context |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| 3 | <span class="sb">`review-findings.json`</span> | Raw findings from agent |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| 4 | <span class="sb">`triage-report.md`</span> | Prioritized, grouped findings |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| 5 | <span class="sb">`fix-report.md`</span> | What was fixed, what deferred |
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| 6 | <span class="sb">`gate-decision.md`</span> | Final verdict with rationale |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">## Manifest Schema</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">```json</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="p">{</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ISO 8601&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">  </span><span class="nt">&quot;project&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;project name&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">  </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;branch name&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">  </span><span class="nt">&quot;base_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;merge base commit&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="w">  </span><span class="nt">&quot;reviewed_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;head commit at review time&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">  </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;list of reviewed files&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">  </span><span class="nt">&quot;complexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">    </span><span class="nt">&quot;file_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">    </span><span class="nt">&quot;line_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">    </span><span class="nt">&quot;estimated_effort&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;small|medium|large&quot;</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="p">}</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">```</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">## SHA Persistence</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>Always use <span class="sb">`reviewed_sha`</span> from manifest for inline comments. Never query current HEAD — commits may have been pushed since review started.
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>Using live HEAD instead of <span class="sb">`reviewed_sha`</span> for inline comments
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span>Storing artifacts inside the project directory
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">-</span><span class="w"> </span>Skipping artifact production for any phase
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>&lt;FINAL_EMPHASIS&gt;Determinism is the contract. Every phase must produce its artifact. Every inline comment must reference the <span class="sb">`reviewed_sha`</span> from the manifest.&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

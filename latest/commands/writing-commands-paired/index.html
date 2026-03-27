@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7421,46 +7617,45 @@
 <h1 id="writing-commands-paired">/writing-commands-paired<a class="headerlink" href="#writing-commands-paired" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Create paired commands (create + remove) with proper artifact contracts. Ensures every command that produces artifacts has a matching removal command with manifest tracking, heuristic fallback discovery, safety checks, and verification.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start]) --&gt; IdentifyArtifacts[Identify all artifacts\ncreated by command]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  IdentifyArtifacts --&gt; DefineManifest[Define manifest\nformat and location]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  DefineManifest --&gt; WriteCreator[Write creating command\nwith manifest generation]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  WriteCreator --&gt; WriteRemover[Write removal command]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  WriteRemover --&gt; ManifestRead[Reads manifest first]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  ManifestRead --&gt; HeuristicFallback[Heuristic fallback\nif manifest missing]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  HeuristicFallback --&gt; ModCheck[Check timestamps\nbefore reverting]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  ModCheck --&gt; ReportOutput[Report removed\nvs preserved]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  ReportOutput --&gt; CrossRef[Add cross-references\nin both commands]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  CrossRef --&gt; NeedsAssessment{Produces evaluative\noutput?}
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  NeedsAssessment -- Yes --&gt; DesignAssessment[/Run design-assessment/]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  DesignAssessment --&gt; CopyDimensions[Copy dimensions,\nseverity, schema]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  CopyDimensions --&gt; TestBoth
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  NeedsAssessment -- No --&gt; TestBoth[Test create then remove]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  TestBoth --&gt; CleanState{Clean state\nafter removal?}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  CleanState -- No --&gt; FixContract[Fix contract issues]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  FixContract --&gt; TestBoth
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  CleanState -- Yes --&gt; Output[Output: paired\ncommand files]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  Output --&gt; Done([Done])
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  style DesignAssessment fill:#4CAF50,color:#fff
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  style NeedsAssessment fill:#FF9800,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  style CleanState fill:#f44336,color:#fff
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  style IdentifyArtifacts fill:#2196F3,color:#fff
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  style DefineManifest fill:#2196F3,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  style WriteCreator fill:#2196F3,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  style WriteRemover fill:#2196F3,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  style ManifestRead fill:#2196F3,color:#fff
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  style HeuristicFallback fill:#2196F3,color:#fff
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  style ModCheck fill:#2196F3,color:#fff
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  style ReportOutput fill:#2196F3,color:#fff
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  style CrossRef fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  style CopyDimensions fill:#2196F3,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  style TestBoth fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  style FixContract fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  style Output fill:#2196F3,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+  Start([Start]) --&gt; IdentifyArtifacts[Identify all artifacts\ncreated by command]
+  IdentifyArtifacts --&gt; DefineManifest[Define manifest\nformat and location]
+  DefineManifest --&gt; WriteCreator[Write creating command\nwith manifest generation]
+  WriteCreator --&gt; WriteRemover[Write removal command]
+  WriteRemover --&gt; ManifestRead[Reads manifest first]
+  ManifestRead --&gt; HeuristicFallback[Heuristic fallback\nif manifest missing]
+  HeuristicFallback --&gt; ModCheck[Check timestamps\nbefore reverting]
+  ModCheck --&gt; ReportOutput[Report removed\nvs preserved]
+  ReportOutput --&gt; CrossRef[Add cross-references\nin both commands]
+  CrossRef --&gt; NeedsAssessment{Produces evaluative\noutput?}
+  NeedsAssessment -- Yes --&gt; DesignAssessment[/Run design-assessment/]
+  DesignAssessment --&gt; CopyDimensions[Copy dimensions,\nseverity, schema]
+  CopyDimensions --&gt; TestBoth
+  NeedsAssessment -- No --&gt; TestBoth[Test create then remove]
+  TestBoth --&gt; CleanState{Clean state\nafter removal?}
+  CleanState -- No --&gt; FixContract[Fix contract issues]
+  FixContract --&gt; TestBoth
+  CleanState -- Yes --&gt; Output[Output: paired\ncommand files]
+  Output --&gt; Done([Done])
+
+  style Start fill:#4CAF50,color:#fff
+  style Done fill:#4CAF50,color:#fff
+  style DesignAssessment fill:#4CAF50,color:#fff
+  style NeedsAssessment fill:#FF9800,color:#fff
+  style CleanState fill:#f44336,color:#fff
+  style IdentifyArtifacts fill:#2196F3,color:#fff
+  style DefineManifest fill:#2196F3,color:#fff
+  style WriteCreator fill:#2196F3,color:#fff
+  style WriteRemover fill:#2196F3,color:#fff
+  style ManifestRead fill:#2196F3,color:#fff
+  style HeuristicFallback fill:#2196F3,color:#fff
+  style ModCheck fill:#2196F3,color:#fff
+  style ReportOutput fill:#2196F3,color:#fff
+  style CrossRef fill:#2196F3,color:#fff
+  style CopyDimensions fill:#2196F3,color:#fff
+  style TestBoth fill:#2196F3,color:#fff
+  style FixContract fill:#2196F3,color:#fff
+  style Output fill:#2196F3,color:#fff</code></pre>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7489,83 +7684,83 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>When a command creates artifacts (files, injections, manifests), create a paired removal command with proper contracts for manifest tracking, discovery, safety, and verification.
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Contract Designer. Orphaned artifacts are technical debt that silently accumulates. Every creation must have a clean removal path — no exceptions.
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">1.</span> <span class="gs">**Paired commands share a contract**</span>: If command A creates artifacts, command B must know how to find and remove them. The manifest is the interface.
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">2.</span> <span class="gs">**Commands are direct prompts**</span>: Load entirely into context. No subagent dispatch. The agent reads and executes.
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">3.</span> <span class="gs">**FORBIDDEN closes loopholes**</span>: Every command needs explicit negative constraints against rationalization under pressure.
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gu">## Paired Command Protocol</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="gs">**Contract requirements:**</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| Requirement | Responsibility |
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>|-------------|----------------|
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| Manifest | Creating command writes to a known location (JSON recommended) |
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>| Discovery | Removing command reads manifest; falls back to heuristic search if missing |
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| Safety | Removing command checks for user modifications before reverting |
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Verification | Both commands verify their work compiled/resolved correctly |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="gs">**Naming:**</span> <span class="sb">`&lt;name&gt;`</span> and <span class="sb">`&lt;name&gt;-remove`</span> (e.g., <span class="sb">`test-bar`</span> / <span class="sb">`test-bar-remove`</span>)
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="gs">**Cross-references**</span> (required in both commands):
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>| Command | Must include |
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>|---------|-------------|
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| Creating | &quot;To remove: <span class="sb">`/command-name-remove`</span>&quot; |
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| Removing | &quot;Removes artifacts from <span class="sb">`/command-name`</span>&quot; |
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">## Steps</span>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="k">1.</span> Identify all artifacts the creating command produces (files, config changes, injections)
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="k">2.</span> Define manifest format and location (JSON recommended, stored alongside artifacts)
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="k">3.</span> Write the creating command with manifest generation baked into its protocol
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">4.</span> Write the removal command that:
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Reads the manifest first
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Falls back to heuristic search if manifest missing
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Checks modification timestamps before reverting
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Reports what was removed and what was preserved
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">5.</span> Add cross-references in both commands
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">6.</span> Test both commands: create then remove, verify clean state
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="gu">## Assessment Framework Integration</span>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>For commands that produce evaluative output (verdicts, findings, scores, pass/fail):
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">1.</span> Run <span class="sb">`/design-assessment`</span> with the target type being evaluated
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">2.</span> Copy relevant sections into the command:
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Dimensions table, severity levels, finding schema, verdict logic
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">3.</span> Reference the vocabulary consistently throughout the command
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>Consistent vocabulary (CRITICAL/HIGH/MEDIUM/LOW/NIT), standardized finding schemas, and clear verdict logic prevent ambiguous outcomes. Example commands: <span class="sb">`verify`</span>, <span class="sb">`audit-green-mirage`</span>, <span class="sb">`code-review-give`</span>, <span class="sb">`fact-check-verify`</span>.
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gu">## Output</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>For each paired set, produce:
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span>Creating command at <span class="sb">`commands/&lt;name&gt;.md`</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">-</span><span class="w"> </span>Removal command at <span class="sb">`commands/&lt;name&gt;-remove.md`</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">-</span><span class="w"> </span>Both with cross-references and shared manifest format
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>Creating a command that produces artifacts without a paired removal command
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">-</span><span class="w"> </span>Omitting the manifest from the creating command
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">-</span><span class="w"> </span>Writing a removal command that has no fallback when manifest is missing
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">-</span><span class="w"> </span>Omitting cross-references between paired commands
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">-</span><span class="w"> </span>Skipping modification-timestamp checks before reverting user files
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">-</span><span class="w"> </span>Omitting verification steps from either command
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>Orphaned artifacts are invisible failures. The paired-command contract — manifest, discovery, safety, verification, cross-references — exists precisely because removal is always an afterthought until it isn&#39;t. Write the removal command before you think you need it.
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># MISSION</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>When a command creates artifacts (files, injections, manifests), create a paired removal command with proper contracts for manifest tracking, discovery, safety, and verification.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Contract Designer. Orphaned artifacts are technical debt that silently accumulates. Every creation must have a clean removal path — no exceptions.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Paired commands share a contract**</span>: If command A creates artifacts, command B must know how to find and remove them. The manifest is the interface.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Commands are direct prompts**</span>: Load entirely into context. No subagent dispatch. The agent reads and executes.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**FORBIDDEN closes loopholes**</span>: Every command needs explicit negative constraints against rationalization under pressure.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Paired Command Protocol</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gs">**Contract requirements:**</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Requirement | Responsibility |
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>|-------------|----------------|
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Manifest | Creating command writes to a known location (JSON recommended) |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Discovery | Removing command reads manifest; falls back to heuristic search if missing |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Safety | Removing command checks for user modifications before reverting |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Verification | Both commands verify their work compiled/resolved correctly |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="gs">**Naming:**</span> <span class="sb">`&lt;name&gt;`</span> and <span class="sb">`&lt;name&gt;-remove`</span> (e.g., <span class="sb">`test-bar`</span> / <span class="sb">`test-bar-remove`</span>)
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gs">**Cross-references**</span> (required in both commands):
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Command | Must include |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>|---------|-------------|
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| Creating | &quot;To remove: <span class="sb">`/command-name-remove`</span>&quot; |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Removing | &quot;Removes artifacts from <span class="sb">`/command-name`</span>&quot; |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">## Steps</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">1.</span> Identify all artifacts the creating command produces (files, config changes, injections)
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">2.</span> Define manifest format and location (JSON recommended, stored alongside artifacts)
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">3.</span> Write the creating command with manifest generation baked into its protocol
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">4.</span> Write the removal command that:
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Reads the manifest first
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Falls back to heuristic search if manifest missing
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Checks modification timestamps before reverting
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Reports what was removed and what was preserved
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">5.</span> Add cross-references in both commands
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">6.</span> Test both commands: create then remove, verify clean state
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gu">## Assessment Framework Integration</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>For commands that produce evaluative output (verdicts, findings, scores, pass/fail):
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">1.</span> Run <span class="sb">`/design-assessment`</span> with the target type being evaluated
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">2.</span> Copy relevant sections into the command:
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Dimensions table, severity levels, finding schema, verdict logic
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">3.</span> Reference the vocabulary consistently throughout the command
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>Consistent vocabulary (CRITICAL/HIGH/MEDIUM/LOW/NIT), standardized finding schemas, and clear verdict logic prevent ambiguous outcomes. Example commands: <span class="sb">`verify`</span>, <span class="sb">`audit-green-mirage`</span>, <span class="sb">`code-review-give`</span>, <span class="sb">`fact-check-verify`</span>.
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">## Output</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>For each paired set, produce:
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">-</span><span class="w"> </span>Creating command at <span class="sb">`commands/&lt;name&gt;.md`</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">-</span><span class="w"> </span>Removal command at <span class="sb">`commands/&lt;name&gt;-remove.md`</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">-</span><span class="w"> </span>Both with cross-references and shared manifest format
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>Creating a command that produces artifacts without a paired removal command
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span>Omitting the manifest from the creating command
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>Writing a removal command that has no fallback when manifest is missing
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>Omitting cross-references between paired commands
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>Skipping modification-timestamp checks before reverting user files
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span>Omitting verification steps from either command
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>Orphaned artifacts are invisible failures. The paired-command contract — manifest, discovery, safety, verification, cross-references — exists precisely because removal is always an afterthought until it isn&#39;t. Write the removal command before you think you need it.
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

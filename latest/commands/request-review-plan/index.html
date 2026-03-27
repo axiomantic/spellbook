@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7488,86 +7684,84 @@
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Planning and context assembly phases for code review requests. Determines git range, builds file list, and assembles reviewer context bundle.</p>
 <h2 id="overview-phases-1-2-flow">Overview: Phases 1-2 Flow<a class="headerlink" href="#overview-phases-1-2-flow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4{&quot;Quality Gate&quot;}
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        style L3 fill:#51cf66,color:#000
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        style L4 fill:#ff6b6b,color:#000
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    START([User request + git state]) --&gt; P1_1
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    subgraph P1[&quot;Phase 1: PLANNING&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        P1_1[&quot;Determine git range&lt;br&gt;(git merge-base main HEAD&lt;br&gt;-&gt; BASE_SHA..HEAD_SHA)&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        P1_2[&quot;List changed files in range&quot;]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        P1_3{&quot;Generated / vendor /&lt;br&gt;lockfile?&quot;}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        P1_4[&quot;Exclude from review scope&quot;]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        P1_5[&quot;Keep in review scope&quot;]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        P1_6[&quot;Identify plan/spec document&lt;br&gt;if available&quot;]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        P1_7[&quot;Estimate complexity&lt;br&gt;(file count, line count)&quot;]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        P1_GATE{&quot;Git range defined?&lt;br&gt;File list confirmed?&quot;}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        P1_1 --&gt; P1_2
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        P1_2 --&gt; P1_3
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        P1_3 --&gt;|Yes| P1_4
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        P1_3 --&gt;|No| P1_5
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        P1_4 --&gt; P1_6
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        P1_5 --&gt; P1_6
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        P1_6 --&gt; P1_7
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        P1_7 --&gt; P1_GATE
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    end
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    P1_GATE --&gt;|&quot;No&quot;| P1_1
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    P1_GATE --&gt;|&quot;Yes&quot;| P2_1
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    subgraph P2[&quot;Phase 2: CONTEXT&quot;]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        P2_1[&quot;Extract relevant plan excerpts&lt;br&gt;(what should have been built)&quot;]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        P2_2[&quot;Gather imports and direct&lt;br&gt;dependencies for changed files&quot;]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        P2_3{&quot;Re-review?&quot;}
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        P2_4[&quot;Capture prior review findings&quot;]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        P2_5[&quot;Assemble context bundle&lt;br&gt;(files, plan, deps, prior findings)&quot;]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        P2_GATE{&quot;Context bundle&lt;br&gt;complete?&quot;}
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        P2_1 --&gt; P2_2
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        P2_2 --&gt; P2_3
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        P2_3 --&gt;|&quot;Yes&quot;| P2_4
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        P2_3 --&gt;|&quot;No&quot;| P2_5
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        P2_4 --&gt; P2_5
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        P2_5 --&gt; P2_GATE
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    end
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    P2_GATE --&gt;|&quot;No - missing plan&lt;br&gt;or dependency info&quot;| P2_1
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    P2_GATE --&gt;|&quot;Yes&quot;| DONE([&quot;Context bundle ready&lt;br&gt;for dispatch (Phase 3)&quot;])
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style START fill:#51cf66,color:#000
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style DONE fill:#51cf66,color:#000
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style P1_GATE fill:#ff6b6b,color:#000
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style P2_GATE fill:#ff6b6b,color:#000
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4{"Quality Gate"}
+        style L3 fill:#51cf66,color:#000
+        style L4 fill:#ff6b6b,color:#000
+    end
+
+    START([User request + git state]) --&gt; P1_1
+
+    subgraph P1["Phase 1: PLANNING"]
+        P1_1["Determine git range&lt;br&gt;(git merge-base main HEAD&lt;br&gt;-&gt; BASE_SHA..HEAD_SHA)"]
+        P1_2["List changed files in range"]
+        P1_3{"Generated / vendor /&lt;br&gt;lockfile?"}
+        P1_4["Exclude from review scope"]
+        P1_5["Keep in review scope"]
+        P1_6["Identify plan/spec document&lt;br&gt;if available"]
+        P1_7["Estimate complexity&lt;br&gt;(file count, line count)"]
+        P1_GATE{"Git range defined?&lt;br&gt;File list confirmed?"}
+
+        P1_1 --&gt; P1_2
+        P1_2 --&gt; P1_3
+        P1_3 --&gt;|Yes| P1_4
+        P1_3 --&gt;|No| P1_5
+        P1_4 --&gt; P1_6
+        P1_5 --&gt; P1_6
+        P1_6 --&gt; P1_7
+        P1_7 --&gt; P1_GATE
+    end
+
+    P1_GATE --&gt;|"No"| P1_1
+    P1_GATE --&gt;|"Yes"| P2_1
+
+    subgraph P2["Phase 2: CONTEXT"]
+        P2_1["Extract relevant plan excerpts&lt;br&gt;(what should have been built)"]
+        P2_2["Gather imports and direct&lt;br&gt;dependencies for changed files"]
+        P2_3{"Re-review?"}
+        P2_4["Capture prior review findings"]
+        P2_5["Assemble context bundle&lt;br&gt;(files, plan, deps, prior findings)"]
+        P2_GATE{"Context bundle&lt;br&gt;complete?"}
+
+        P2_1 --&gt; P2_2
+        P2_2 --&gt; P2_3
+        P2_3 --&gt;|"Yes"| P2_4
+        P2_3 --&gt;|"No"| P2_5
+        P2_4 --&gt; P2_5
+        P2_5 --&gt; P2_GATE
+    end
+
+    P2_GATE --&gt;|"No - missing plan&lt;br&gt;or dependency info"| P2_1
+    P2_GATE --&gt;|"Yes"| DONE(["Context bundle ready&lt;br&gt;for dispatch (Phase 3)"])
+
+    style START fill:#51cf66,color:#000
+    style DONE fill:#51cf66,color:#000
+    style P1_GATE fill:#ff6b6b,color:#000
+    style P2_GATE fill:#ff6b6b,color:#000</code></pre>
 <h2 id="context-in-the-full-workflow">Context in the Full Workflow<a class="headerlink" href="#context-in-the-full-workflow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart LR
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[&quot;This command&quot;]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2[&quot;Other command&quot;]
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        style L1 fill:#4a9eff,color:#000
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        style L2 fill:#444,color:#fff
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    P12[&quot;request-review-plan&lt;br&gt;Phases 1-2:&lt;br&gt;Planning + Context&quot;]
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    P36[&quot;request-review-execute&lt;br&gt;Phases 3-6:&lt;br&gt;Dispatch + Triage +&lt;br&gt;Execute + Gate&quot;]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    ART[&quot;request-review-artifacts&lt;br&gt;Directory structure +&lt;br&gt;manifest schema&quot;]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    P12 --&gt;|&quot;Context bundle&quot;| P36
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    ART -.-&gt;|&quot;Defines artifact&lt;br&gt;contracts for&quot;| P12
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    ART -.-&gt;|&quot;Defines artifact&lt;br&gt;contracts for&quot;| P36
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    style P12 fill:#4a9eff,color:#000
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    style P36 fill:#444,color:#fff
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    style ART fill:#444,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Legend
+        L1["This command"]
+        L2["Other command"]
+        style L1 fill:#4a9eff,color:#000
+        style L2 fill:#444,color:#fff
+    end
+
+    P12["request-review-plan&lt;br&gt;Phases 1-2:&lt;br&gt;Planning + Context"]
+    P36["request-review-execute&lt;br&gt;Phases 3-6:&lt;br&gt;Dispatch + Triage +&lt;br&gt;Execute + Gate"]
+    ART["request-review-artifacts&lt;br&gt;Directory structure +&lt;br&gt;manifest schema"]
+
+    P12 --&gt;|"Context bundle"| P36
+    ART -.-&gt;|"Defines artifact&lt;br&gt;contracts for"| P12
+    ART -.-&gt;|"Defines artifact&lt;br&gt;contracts for"| P36
+
+    style P12 fill:#4a9eff,color:#000
+    style P36 fill:#444,color:#fff
+    style ART fill:#444,color:#fff</code></pre>
 <h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7624,51 +7818,51 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Code Review Coordinator. Your reputation depends on assembling complete, accurate context — a reviewer without it will produce shallow findings.
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="gh"># Phases 1-2: Planning + Context</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">1.</span> <span class="gs">**Git range defines scope**</span> - BASE_SHA..HEAD_SHA is the single source of truth
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">2.</span> <span class="gs">**Generated files excluded**</span> - Vendor code, lockfiles, auto-generated output (e.g., <span class="sb">`*.min.js`</span>, <span class="sb">`go.sum`</span>, <span class="sb">`package-lock.json`</span>) are noise; exclude
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">3.</span> <span class="gs">**Context enables quality**</span> - Plan excerpts and dependency context are prerequisites for substantive findings
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>Do NOT proceed to Phase 2 without a confirmed file list. Reviewing the wrong files wastes reviewer effort and misses actual changes.
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="gu">## Phase 1: PLANNING</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="gs">**Input:**</span> User request, git state | <span class="gs">**Output:**</span> Review scope definition
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="k">1.</span> Determine git range (use merge-base: <span class="sb">`git merge-base main HEAD`</span> → BASE_SHA..HEAD_SHA)
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="k">2.</span> List files to review; exclude generated, vendor, lockfiles
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="k">3.</span> Identify plan/spec document if available
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="k">4.</span> Estimate complexity (file count, line count) to calibrate review depth
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="gs">**Exit criteria:**</span> Git range defined, file list confirmed
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="gu">## Phase 2: CONTEXT</span>
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="gs">**Input:**</span> Phase 1 outputs | <span class="gs">**Output:**</span> Reviewer context bundle
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>Context quality directly determines review quality. Missing plan excerpts or dependency information guarantees shallow findings.
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="k">1.</span> Extract relevant plan excerpts (what should have been built)
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="k">2.</span> Gather imports and direct dependencies for changed files
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="k">3.</span> Capture prior review findings if re-review
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="k">4.</span> Assemble context bundle for downstream reviewer
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="gs">**Exit criteria:**</span> Context bundle ready for dispatch
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>A shallow context produces a shallow review. Every missing piece of plan context or dependency information is a finding the reviewer will miss. Get it right here.
-<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Code Review Coordinator. Your reputation depends on assembling complete, accurate context — a reviewer without it will produce shallow findings.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gh"># Phases 1-2: Planning + Context</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Git range defines scope**</span> - BASE_SHA..HEAD_SHA is the single source of truth
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Generated files excluded**</span> - Vendor code, lockfiles, auto-generated output (e.g., <span class="sb">`*.min.js`</span>, <span class="sb">`go.sum`</span>, <span class="sb">`package-lock.json`</span>) are noise; exclude
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Context enables quality**</span> - Plan excerpts and dependency context are prerequisites for substantive findings
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>Do NOT proceed to Phase 2 without a confirmed file list. Reviewing the wrong files wastes reviewer effort and misses actual changes.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gu">## Phase 1: PLANNING</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gs">**Input:**</span> User request, git state | <span class="gs">**Output:**</span> Review scope definition
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">1.</span> Determine git range (use merge-base: <span class="sb">`git merge-base main HEAD`</span> → BASE_SHA..HEAD_SHA)
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">2.</span> List files to review; exclude generated, vendor, lockfiles
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">3.</span> Identify plan/spec document if available
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">4.</span> Estimate complexity (file count, line count) to calibrate review depth
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="gs">**Exit criteria:**</span> Git range defined, file list confirmed
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gu">## Phase 2: CONTEXT</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gs">**Input:**</span> Phase 1 outputs | <span class="gs">**Output:**</span> Reviewer context bundle
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>Context quality directly determines review quality. Missing plan excerpts or dependency information guarantees shallow findings.
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">1.</span> Extract relevant plan excerpts (what should have been built)
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">2.</span> Gather imports and direct dependencies for changed files
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">3.</span> Capture prior review findings if re-review
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">4.</span> Assemble context bundle for downstream reviewer
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gs">**Exit criteria:**</span> Context bundle ready for dispatch
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>A shallow context produces a shallow review. Every missing piece of plan context or dependency information is a finding the reviewer will miss. Get it right here.
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

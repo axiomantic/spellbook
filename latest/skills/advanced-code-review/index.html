@@ -2954,6 +2954,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../async-await-patterns/" class="md-nav__link">
         
   
@@ -3046,6 +3074,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3794,6 +3850,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../optimizing-instructions/" class="md-nav__link">
         
   
@@ -4074,6 +4158,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../sharpening-prompts/" class="md-nav__link">
         
   
@@ -4166,6 +4334,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7850,74 +8046,73 @@
 <p>Multi-phase deep code review with historical context analysis, fact-checked findings, and tiered severity reporting. Runs five phases: strategic planning, context analysis, deep review, verification, and report generation. This core spellbook skill produces detailed review artifacts and is the heavyweight alternative to the simpler code-review skill.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Use when performing thorough multi-phase code review with historical context tracking and verification. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. 5-phase process: strategic planning, context analysis, deep review, verification, report generation. More heavyweight than code-review; produces detailed artifacts. For quick review, use code-review instead.</p>
+<p>Use when performing thorough code review with historical context tracking. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. More heavyweight than code-review; for quick review, use code-review instead.</p>
 </blockquote>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Multi-phase code review with strategic planning, historical context analysis, deep multi-pass review, verification of findings, and final report generation. Each phase produces artifacts and must pass a self-check before proceeding.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>High-level flow across all 5 phases with circuit breakers and quality gates.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[Process]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{Decision}
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[Subagent Dispatch]:::subagent
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5[Quality Gate]:::gate
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L6([Success]):::success
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Start([User invokes&lt;br&gt;advanced-code-review]) --&gt; InputParse[Parse target, --base,&lt;br&gt;--scope, --offline, --continue]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    InputParse --&gt; ModeRouter{Target type?}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ModeRouter --&gt;|Branch name| LocalMode[Local Mode&lt;br&gt;source = local files]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ModeRouter --&gt;|PR number / URL| PRMode[PR Mode&lt;br&gt;source = diff only]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    ModeRouter --&gt;|Any + --offline| OfflineMode[Offline Mode&lt;br&gt;source = local files]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    LocalMode --&gt; ContinueCheck
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    PRMode --&gt; ContinueCheck
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    OfflineMode --&gt; ContinueCheck
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ContinueCheck{--continue&lt;br&gt;flag?}
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    ContinueCheck --&gt;|Yes| ResumeSession[Load previous&lt;br&gt;review session]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ContinueCheck --&gt;|No| Phase1
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    ResumeSession --&gt; Phase1
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Phase1[Phase 1: Strategic Planning&lt;br&gt;/advanced-code-review-plan]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    Phase1 --&gt; P1Gate[Phase 1 Self-Check:&lt;br&gt;Target resolved, manifest written,&lt;br&gt;files categorized]:::gate
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    P1Gate --&gt;|Pass| Phase2
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    P1Gate --&gt;|Fail: E_TARGET_NOT_FOUND| CB1([Circuit Breaker:&lt;br&gt;Target unresolvable])
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    P1Gate --&gt;|Fail: E_NO_DIFF| CB2([Circuit Breaker:&lt;br&gt;No changes found])
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    Phase2[Phase 2: Context Analysis&lt;br&gt;/advanced-code-review-context]
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    Phase2 --&gt; P2Gate[Phase 2 Self-Check:&lt;br&gt;Context loaded, previous items parsed]:::gate
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    P2Gate --&gt;|Pass| Phase3
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    P2Gate --&gt;|Fail: non-blocking| Phase3
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    Phase3[Phase 3: Deep Review&lt;br&gt;/advanced-code-review-review]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    Phase3 --&gt; P3Gate[Phase 3 Self-Check:&lt;br&gt;All passes complete, findings generated,&lt;br&gt;declined items respected]:::gate
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    P3Gate --&gt;|Pass| Phase4
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    P3Gate --&gt;|Fail| P3Fix[Fix incomplete findings&lt;br&gt;before proceeding]
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    P3Fix --&gt; P3Gate
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    Phase4[Phase 4: Verification&lt;br&gt;/advanced-code-review-verify]
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    Phase4 --&gt; P4Gate[Phase 4 Self-Check:&lt;br&gt;All verified, REFUTED removed,&lt;br&gt;SNR calculated]:::gate
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    P4Gate --&gt;|Pass| Phase5
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    P4Gate --&gt;|Fail: 3+ consecutive&lt;br&gt;verification failures| CB3([Circuit Breaker:&lt;br&gt;Verification failures])
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    P4Gate --&gt;|Fail: timeout| CB4([Circuit Breaker:&lt;br&gt;Verification timeout])
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    Phase5[Phase 5: Report Generation&lt;br&gt;/advanced-code-review-report]
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    Phase5 --&gt; P5Gate[Phase 5 Self-Check:&lt;br&gt;Report rendered, artifacts written]:::gate
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    P5Gate --&gt;|Pass| MemStore[Store review summary&lt;br&gt;in memory]
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    MemStore --&gt; FinalCheck[Final Self-Check:&lt;br&gt;All phases complete,&lt;br&gt;all quality gates passed]:::gate
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    FinalCheck --&gt;|Pass| Done([Review Complete]):::success
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    FinalCheck --&gt;|Fail| FixAndRecheck[Fix failing items]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    FixAndRecheck --&gt; FinalCheck
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Subagent Dispatch]:::subagent
+        L5[Quality Gate]:::gate
+        L6([Success]):::success
+    end
+
+    Start([User invokes&lt;br&gt;advanced-code-review]) --&gt; InputParse[Parse target, --base,&lt;br&gt;--scope, --offline, --continue]
+    InputParse --&gt; ModeRouter{Target type?}
+
+    ModeRouter --&gt;|Branch name| LocalMode[Local Mode&lt;br&gt;source = local files]
+    ModeRouter --&gt;|PR number / URL| PRMode[PR Mode&lt;br&gt;source = diff only]
+    ModeRouter --&gt;|Any + --offline| OfflineMode[Offline Mode&lt;br&gt;source = local files]
+
+    LocalMode --&gt; ContinueCheck
+    PRMode --&gt; ContinueCheck
+    OfflineMode --&gt; ContinueCheck
+
+    ContinueCheck{--continue&lt;br&gt;flag?}
+    ContinueCheck --&gt;|Yes| ResumeSession[Load previous&lt;br&gt;review session]
+    ContinueCheck --&gt;|No| Phase1
+
+    ResumeSession --&gt; Phase1
+
+    Phase1[Phase 1: Strategic Planning&lt;br&gt;/advanced-code-review-plan]
+    Phase1 --&gt; P1Gate[Phase 1 Self-Check:&lt;br&gt;Target resolved, manifest written,&lt;br&gt;files categorized]:::gate
+    P1Gate --&gt;|Pass| Phase2
+    P1Gate --&gt;|Fail: E_TARGET_NOT_FOUND| CB1([Circuit Breaker:&lt;br&gt;Target unresolvable])
+    P1Gate --&gt;|Fail: E_NO_DIFF| CB2([Circuit Breaker:&lt;br&gt;No changes found])
+
+    Phase2[Phase 2: Context Analysis&lt;br&gt;/advanced-code-review-context]
+    Phase2 --&gt; P2Gate[Phase 2 Self-Check:&lt;br&gt;Context loaded, previous items parsed]:::gate
+    P2Gate --&gt;|Pass| Phase3
+    P2Gate --&gt;|Fail: non-blocking| Phase3
+
+    Phase3[Phase 3: Deep Review&lt;br&gt;/advanced-code-review-review]
+    Phase3 --&gt; P3Gate[Phase 3 Self-Check:&lt;br&gt;All passes complete, findings generated,&lt;br&gt;declined items respected]:::gate
+    P3Gate --&gt;|Pass| Phase4
+    P3Gate --&gt;|Fail| P3Fix[Fix incomplete findings&lt;br&gt;before proceeding]
+    P3Fix --&gt; P3Gate
+
+    Phase4[Phase 4: Verification&lt;br&gt;/advanced-code-review-verify]
+    Phase4 --&gt; P4Gate[Phase 4 Self-Check:&lt;br&gt;All verified, REFUTED removed,&lt;br&gt;SNR calculated]:::gate
+    P4Gate --&gt;|Pass| Phase5
+    P4Gate --&gt;|Fail: 3+ consecutive&lt;br&gt;verification failures| CB3([Circuit Breaker:&lt;br&gt;Verification failures])
+    P4Gate --&gt;|Fail: timeout| CB4([Circuit Breaker:&lt;br&gt;Verification timeout])
+
+    Phase5[Phase 5: Report Generation&lt;br&gt;/advanced-code-review-report]
+    Phase5 --&gt; P5Gate[Phase 5 Self-Check:&lt;br&gt;Report rendered, artifacts written]:::gate
+    P5Gate --&gt;|Pass| MemStore[Store review summary&lt;br&gt;in memory]
+    MemStore --&gt; FinalCheck[Final Self-Check:&lt;br&gt;All phases complete,&lt;br&gt;all quality gates passed]:::gate
+    FinalCheck --&gt;|Pass| Done([Review Complete]):::success
+    FinalCheck --&gt;|Fail| FixAndRecheck[Fix failing items]
+    FixAndRecheck --&gt; FinalCheck
+
+    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <h3 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -7952,330 +8147,324 @@
 <hr />
 <h2 id="phase-1-strategic-planning">Phase 1: Strategic Planning<a class="headerlink" href="#phase-1-strategic-planning" title="Permanent link">&para;</a></h2>
 <p>Target resolution, diff acquisition, risk categorization, complexity estimation, and priority ordering.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Legend
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[Process]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{Decision}
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L3([Terminal])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L4[Quality Gate]:::gate
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        L5([Success]):::success
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    Start([Phase 1 Entry]) --&gt; Resolve[1.1 Target Resolution:&lt;br&gt;resolve branch/SHA]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    Resolve --&gt; ResolveCheck{Target&lt;br&gt;resolved?}
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    ResolveCheck --&gt;|E_TARGET_NOT_FOUND| SuggestBranches[List similar branches]
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    SuggestBranches --&gt; Exit1([Exit: target not found])
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    ResolveCheck --&gt;|Success| MergeBase[Compute merge base:&lt;br&gt;git merge-base base target]
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    MergeBase --&gt; MBCheck{Merge base&lt;br&gt;found?}
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    MBCheck --&gt;|E_MERGE_BASE_FAILED| Fallback[Fallback to HEAD~10&lt;br&gt;+ warn user]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    MBCheck --&gt;|Success| DiffAcq
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    Fallback --&gt; DiffAcq
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    DiffAcq{Source mode?}
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    DiffAcq --&gt;|Local| LocalDiff[1.2 git diff --name-only&lt;br&gt;MERGE_BASE...HEAD_SHA]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    DiffAcq --&gt;|PR| PRFiles[1.2 MCP pr_files&lt;br&gt;extract file list]
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    LocalDiff --&gt; DiffCheck
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    PRFiles --&gt; DiffCheck
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    DiffCheck{Files&lt;br&gt;changed?}
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    DiffCheck --&gt;|E_NO_DIFF| Exit2([Exit: no changes found])
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    DiffCheck --&gt;|Yes| MemRecall[Memory-Informed Planning:&lt;br&gt;memory_recall for prior findings&lt;br&gt;and false positive patterns]
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    MemRecall --&gt; Categorize[1.3 Risk Categorization:&lt;br&gt;HIGH / MEDIUM / LOW]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    Categorize --&gt; Complexity[1.4 Complexity Estimation:&lt;br&gt;lines/15 + files*2 min]
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    Complexity --&gt; ScopeWeight[1.5 Risk-Weighted Scope:&lt;br&gt;HIGH*3 + MEDIUM*2 + LOW*1]
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    ScopeWeight --&gt; PriorityOrder[1.6 Priority Ordering:&lt;br&gt;HIGH -&gt; MEDIUM -&gt; LOW]
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    PriorityOrder --&gt; WriteManifest[1.7 Write review-manifest.json]
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    WriteManifest --&gt; WritePlan[1.8 Write review-plan.md]
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    WritePlan --&gt; SelfCheck[Phase 1 Self-Check:&lt;br&gt;target resolved, merge base computed,&lt;br&gt;files categorized, complexity estimated,&lt;br&gt;manifest + plan written]:::gate
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    SelfCheck --&gt;|All pass| Done([Phase 1 Complete]):::success
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    SelfCheck --&gt;|Any fail| Stop([STOP: report issue,&lt;br&gt;do not proceed])
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+        L5([Success]):::success
+    end
+
+    Start([Phase 1 Entry]) --&gt; Resolve[1.1 Target Resolution:&lt;br&gt;resolve branch/SHA]
+    Resolve --&gt; ResolveCheck{Target&lt;br&gt;resolved?}
+
+    ResolveCheck --&gt;|E_TARGET_NOT_FOUND| SuggestBranches[List similar branches]
+    SuggestBranches --&gt; Exit1([Exit: target not found])
+
+    ResolveCheck --&gt;|Success| MergeBase[Compute merge base:&lt;br&gt;git merge-base base target]
+    MergeBase --&gt; MBCheck{Merge base&lt;br&gt;found?}
+
+    MBCheck --&gt;|E_MERGE_BASE_FAILED| Fallback[Fallback to HEAD~10&lt;br&gt;+ warn user]
+    MBCheck --&gt;|Success| DiffAcq
+
+    Fallback --&gt; DiffAcq
+
+    DiffAcq{Source mode?}
+    DiffAcq --&gt;|Local| LocalDiff[1.2 git diff --name-only&lt;br&gt;MERGE_BASE...HEAD_SHA]
+    DiffAcq --&gt;|PR| PRFiles[1.2 MCP pr_files&lt;br&gt;extract file list]
+
+    LocalDiff --&gt; DiffCheck
+    PRFiles --&gt; DiffCheck
+
+    DiffCheck{Files&lt;br&gt;changed?}
+    DiffCheck --&gt;|E_NO_DIFF| Exit2([Exit: no changes found])
+    DiffCheck --&gt;|Yes| MemRecall[Memory-Informed Planning:&lt;br&gt;memory_recall for prior findings&lt;br&gt;and false positive patterns]
+
+    MemRecall --&gt; Categorize[1.3 Risk Categorization:&lt;br&gt;HIGH / MEDIUM / LOW]
+    Categorize --&gt; Complexity[1.4 Complexity Estimation:&lt;br&gt;lines/15 + files*2 min]
+    Complexity --&gt; ScopeWeight[1.5 Risk-Weighted Scope:&lt;br&gt;HIGH*3 + MEDIUM*2 + LOW*1]
+    ScopeWeight --&gt; PriorityOrder[1.6 Priority Ordering:&lt;br&gt;HIGH -&gt; MEDIUM -&gt; LOW]
+
+    PriorityOrder --&gt; WriteManifest[1.7 Write review-manifest.json]
+    WriteManifest --&gt; WritePlan[1.8 Write review-plan.md]
+    WritePlan --&gt; SelfCheck[Phase 1 Self-Check:&lt;br&gt;target resolved, merge base computed,&lt;br&gt;files categorized, complexity estimated,&lt;br&gt;manifest + plan written]:::gate
+
+    SelfCheck --&gt;|All pass| Done([Phase 1 Complete]):::success
+    SelfCheck --&gt;|Any fail| Stop([STOP: report issue,&lt;br&gt;do not proceed])
+
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <hr />
 <h2 id="phase-2-context-analysis">Phase 2: Context Analysis<a class="headerlink" href="#phase-2-context-analysis" title="Permanent link">&para;</a></h2>
 <p>Load previous reviews, fetch PR history, detect re-check requests, build context object.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Legend
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[Process]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{Decision}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L3([Terminal])
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L4[Quality Gate]:::gate
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        L5([Success]):::success
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    end
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    Start([Phase 2 Entry]) --&gt; Discover[2.1 Previous Review Discovery:&lt;br&gt;find review dir by&lt;br&gt;branch-mergebase key]
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    Discover --&gt; DiscoverCheck{Previous review&lt;br&gt;found and fresh&lt;br&gt;and less than 30 days?}
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    DiscoverCheck --&gt;|Not found / stale / incomplete| MemFallback[Cross-Session Context:&lt;br&gt;memory_recall for review&lt;br&gt;decisions on this component]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    DiscoverCheck --&gt;|Found| LoadItems[2.2 Load Previous Items]
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    MemFallback --&gt; EmptyContext[Initialize empty&lt;br&gt;previous context]
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    EmptyContext --&gt; OnlineCheck
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    LoadItems --&gt; ClassifyItems[Classify items by status:&lt;br&gt;PENDING / FIXED / DECLINED /&lt;br&gt;PARTIAL / ALTERNATIVE]
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    ClassifyItems --&gt; OnlineCheck
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    OnlineCheck{Online mode&lt;br&gt;and PR target?}
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    OnlineCheck --&gt;|Yes| FetchPR[2.3 Fetch PR History:&lt;br&gt;MCP pr_fetch + gh API]
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    OnlineCheck --&gt;|Offline or local| SkipPR[Skip PR context&lt;br&gt;log OFFLINE]
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    FetchPR --&gt; FetchCheck{Fetch&lt;br&gt;succeeded?}
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    FetchCheck --&gt;|Yes| DetectRecheck[2.4 Re-check Request Detection:&lt;br&gt;scan comments for&lt;br&gt;re-check / PTAL patterns]
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    FetchCheck --&gt;|Fail| WarnPR[Log warning,&lt;br&gt;proceed with empty PR context]
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    WarnPR --&gt; BuildContext
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    SkipPR --&gt; BuildContext
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>    DetectRecheck --&gt; BuildContext
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    BuildContext[2.5 Build Context Object:&lt;br&gt;manifest + previous items +&lt;br&gt;PR context + declined +&lt;br&gt;partial + alternative +&lt;br&gt;recheck requests]
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    BuildContext --&gt; WriteContext[2.6 Write context-analysis.md]
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    WriteContext --&gt; WritePrevItems[2.7 Write previous-items.json]
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>    WritePrevItems --&gt; SelfCheck[Phase 2 Self-Check:&lt;br&gt;previous review discovered/confirmed,&lt;br&gt;items loaded, PR context fetched,&lt;br&gt;recheck requests extracted,&lt;br&gt;artifacts written]:::gate
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>    SelfCheck --&gt;|All pass| Done([Phase 2 Complete]):::success
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>    SelfCheck --&gt;|Fail: non-blocking| DoneWarn([Phase 2 Complete&lt;br&gt;with warnings]):::success
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+        L5([Success]):::success
+    end
+
+    Start([Phase 2 Entry]) --&gt; Discover[2.1 Previous Review Discovery:&lt;br&gt;find review dir by&lt;br&gt;branch-mergebase key]
+    Discover --&gt; DiscoverCheck{Previous review&lt;br&gt;found and fresh&lt;br&gt;and less than 30 days?}
+
+    DiscoverCheck --&gt;|Not found / stale / incomplete| MemFallback[Cross-Session Context:&lt;br&gt;memory_recall for review&lt;br&gt;decisions on this component]
+    DiscoverCheck --&gt;|Found| LoadItems[2.2 Load Previous Items]
+
+    MemFallback --&gt; EmptyContext[Initialize empty&lt;br&gt;previous context]
+    EmptyContext --&gt; OnlineCheck
+
+    LoadItems --&gt; ClassifyItems[Classify items by status:&lt;br&gt;PENDING / FIXED / DECLINED /&lt;br&gt;PARTIAL / ALTERNATIVE]
+    ClassifyItems --&gt; OnlineCheck
+
+    OnlineCheck{Online mode&lt;br&gt;and PR target?}
+    OnlineCheck --&gt;|Yes| FetchPR[2.3 Fetch PR History:&lt;br&gt;MCP pr_fetch + gh API]
+    OnlineCheck --&gt;|Offline or local| SkipPR[Skip PR context&lt;br&gt;log OFFLINE]
+
+    FetchPR --&gt; FetchCheck{Fetch&lt;br&gt;succeeded?}
+    FetchCheck --&gt;|Yes| DetectRecheck[2.4 Re-check Request Detection:&lt;br&gt;scan comments for&lt;br&gt;re-check / PTAL patterns]
+    FetchCheck --&gt;|Fail| WarnPR[Log warning,&lt;br&gt;proceed with empty PR context]
+    WarnPR --&gt; BuildContext
+
+    SkipPR --&gt; BuildContext
+    DetectRecheck --&gt; BuildContext
+
+    BuildContext[2.5 Build Context Object:&lt;br&gt;manifest + previous items +&lt;br&gt;PR context + declined +&lt;br&gt;partial + alternative +&lt;br&gt;recheck requests]
+
+    BuildContext --&gt; WriteContext[2.6 Write context-analysis.md]
+    WriteContext --&gt; WritePrevItems[2.7 Write previous-items.json]
+    WritePrevItems --&gt; SelfCheck[Phase 2 Self-Check:&lt;br&gt;previous review discovered/confirmed,&lt;br&gt;items loaded, PR context fetched,&lt;br&gt;recheck requests extracted,&lt;br&gt;artifacts written]:::gate
+
+    SelfCheck --&gt;|All pass| Done([Phase 2 Complete]):::success
+    SelfCheck --&gt;|Fail: non-blocking| DoneWarn([Phase 2 Complete&lt;br&gt;with warnings]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <hr />
 <h2 id="phase-3-deep-review">Phase 3: Deep Review<a class="headerlink" href="#phase-3-deep-review" title="Permanent link">&para;</a></h2>
 <p>Multi-pass code analysis (Security, Correctness, Quality, Polish) with previous-item integration.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph Legend
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[Process]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{Decision}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L3([Terminal])
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L4[Subagent Dispatch]:::subagent
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        L5[Quality Gate]:::gate
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        L6([Success]):::success
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    end
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    Start([Phase 3 Entry]) --&gt; LoadContext[Load manifest +&lt;br&gt;context from Phase 1-2]
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    LoadContext --&gt; FileLoop[For each file in&lt;br&gt;priority order]
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    FileLoop --&gt; FileNext{More files&lt;br&gt;remaining?}
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    FileNext --&gt;|No| Noteworthy[3.7 Scan for PRAISE findings]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    FileNext --&gt;|Yes| LargeDiff{Total diff &gt;&lt;br&gt;10000 lines?}
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    LargeDiff --&gt;|Yes| ChunkedProcess[Chunked processing]
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    LargeDiff --&gt;|No| SubagentCheck{Files &gt;&lt;br&gt;20?}
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    SubagentCheck --&gt;|Yes| ParallelDispatch[Dispatch parallel&lt;br&gt;review subagents]:::subagent
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    SubagentCheck --&gt;|No| Pass1
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    ChunkedProcess --&gt; Pass1
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    ParallelDispatch --&gt; CollectResults[Collect subagent&lt;br&gt;results]
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    CollectResults --&gt; Noteworthy
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    Pass1[Pass 1: Security&lt;br&gt;CRITICAL / HIGH&lt;br&gt;injection, auth bypass,&lt;br&gt;data exposure, secrets]
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    Pass1 --&gt; Pass2[Pass 2: Correctness&lt;br&gt;HIGH / MEDIUM&lt;br&gt;logic errors, edge cases,&lt;br&gt;null handling, races]
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    Pass2 --&gt; Pass3[Pass 3: Quality&lt;br&gt;MEDIUM / LOW&lt;br&gt;maintainability, complexity,&lt;br&gt;patterns, readability]
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    Pass3 --&gt; Pass4[Pass 4: Polish&lt;br&gt;LOW / NIT&lt;br&gt;style, naming,&lt;br&gt;minor optimizations]
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    Pass4 --&gt; PrevCheck[3.4 Previous Items Integration:&lt;br&gt;check each finding against&lt;br&gt;declined / alternative / partial]
-<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    PrevCheck --&gt; ShouldRaise{Finding matches&lt;br&gt;declined or accepted&lt;br&gt;alternative?}
-<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    ShouldRaise --&gt;|Yes: declined| Skip[Skip finding&lt;br&gt;increment skipped count]
-<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    ShouldRaise --&gt;|Yes: alt accepted| Skip
-<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    ShouldRaise --&gt;|Partial pending| Annotate[Annotate as&lt;br&gt;partial_pending]
-<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    ShouldRaise --&gt;|No match| Keep[Keep finding]
-<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>
-<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    Annotate --&gt; SeverityTree
-<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>    Keep --&gt; SeverityTree
-<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>
-<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>    SeverityTree[Apply Severity Decision Tree:&lt;br&gt;Security/data loss? -&gt; CRITICAL&lt;br&gt;Breaks contracts? -&gt; HIGH&lt;br&gt;Quality concern? -&gt; MEDIUM&lt;br&gt;Minor improvement? -&gt; LOW&lt;br&gt;Purely stylistic? -&gt; NIT&lt;br&gt;Needs input? -&gt; QUESTION]
-<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>
-<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>    SeverityTree --&gt; AddFinding[Add to findings list&lt;br&gt;with required fields]
-<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>    Skip --&gt; FileLoop
-<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>    AddFinding --&gt; FileLoop
-<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>
-<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>    Noteworthy --&gt; WriteJSON[3.8 Write findings.json]
-<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a>    WriteJSON --&gt; WriteMD[3.9 Write findings.md]
-<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a>    WriteMD --&gt; SelfCheck[Phase 3 Self-Check:&lt;br&gt;all files reviewed, all 4 passes per file,&lt;br&gt;declined not re-raised, required fields present,&lt;br&gt;findings.json + findings.md written]:::gate
-<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>
-<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a>    SelfCheck --&gt;|All pass| Done([Phase 3 Complete]):::success
-<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>    SelfCheck --&gt;|Any fail| FixFindings[Fix incomplete&lt;br&gt;findings]
-<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a>    FixFindings --&gt; SelfCheck
-<a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a>
-<a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a>    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
-<a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-3-59" name="__codelineno-3-59" href="#__codelineno-3-59"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Subagent Dispatch]:::subagent
+        L5[Quality Gate]:::gate
+        L6([Success]):::success
+    end
+
+    Start([Phase 3 Entry]) --&gt; LoadContext[Load manifest +&lt;br&gt;context from Phase 1-2]
+    LoadContext --&gt; FileLoop[For each file in&lt;br&gt;priority order]
+
+    FileLoop --&gt; FileNext{More files&lt;br&gt;remaining?}
+    FileNext --&gt;|No| Noteworthy[3.7 Scan for PRAISE findings]
+    FileNext --&gt;|Yes| LargeDiff{Total diff &gt;&lt;br&gt;10000 lines?}
+
+    LargeDiff --&gt;|Yes| ChunkedProcess[Chunked processing]
+    LargeDiff --&gt;|No| SubagentCheck{Files &gt;&lt;br&gt;20?}
+
+    SubagentCheck --&gt;|Yes| ParallelDispatch[Dispatch parallel&lt;br&gt;review subagents]:::subagent
+    SubagentCheck --&gt;|No| Pass1
+
+    ChunkedProcess --&gt; Pass1
+    ParallelDispatch --&gt; CollectResults[Collect subagent&lt;br&gt;results]
+    CollectResults --&gt; Noteworthy
+
+    Pass1[Pass 1: Security&lt;br&gt;CRITICAL / HIGH&lt;br&gt;injection, auth bypass,&lt;br&gt;data exposure, secrets]
+    Pass1 --&gt; Pass2[Pass 2: Correctness&lt;br&gt;HIGH / MEDIUM&lt;br&gt;logic errors, edge cases,&lt;br&gt;null handling, races]
+    Pass2 --&gt; Pass3[Pass 3: Quality&lt;br&gt;MEDIUM / LOW&lt;br&gt;maintainability, complexity,&lt;br&gt;patterns, readability]
+    Pass3 --&gt; Pass4[Pass 4: Polish&lt;br&gt;LOW / NIT&lt;br&gt;style, naming,&lt;br&gt;minor optimizations]
+
+    Pass4 --&gt; PrevCheck[3.4 Previous Items Integration:&lt;br&gt;check each finding against&lt;br&gt;declined / alternative / partial]
+    PrevCheck --&gt; ShouldRaise{Finding matches&lt;br&gt;declined or accepted&lt;br&gt;alternative?}
+    ShouldRaise --&gt;|Yes: declined| Skip[Skip finding&lt;br&gt;increment skipped count]
+    ShouldRaise --&gt;|Yes: alt accepted| Skip
+    ShouldRaise --&gt;|Partial pending| Annotate[Annotate as&lt;br&gt;partial_pending]
+    ShouldRaise --&gt;|No match| Keep[Keep finding]
+
+    Annotate --&gt; SeverityTree
+    Keep --&gt; SeverityTree
+
+    SeverityTree[Apply Severity Decision Tree:&lt;br&gt;Security/data loss? -&gt; CRITICAL&lt;br&gt;Breaks contracts? -&gt; HIGH&lt;br&gt;Quality concern? -&gt; MEDIUM&lt;br&gt;Minor improvement? -&gt; LOW&lt;br&gt;Purely stylistic? -&gt; NIT&lt;br&gt;Needs input? -&gt; QUESTION]
+
+    SeverityTree --&gt; AddFinding[Add to findings list&lt;br&gt;with required fields]
+    Skip --&gt; FileLoop
+    AddFinding --&gt; FileLoop
+
+    Noteworthy --&gt; WriteJSON[3.8 Write findings.json]
+    WriteJSON --&gt; WriteMD[3.9 Write findings.md]
+    WriteMD --&gt; SelfCheck[Phase 3 Self-Check:&lt;br&gt;all files reviewed, all 4 passes per file,&lt;br&gt;declined not re-raised, required fields present,&lt;br&gt;findings.json + findings.md written]:::gate
+
+    SelfCheck --&gt;|All pass| Done([Phase 3 Complete]):::success
+    SelfCheck --&gt;|Any fail| FixFindings[Fix incomplete&lt;br&gt;findings]
+    FixFindings --&gt; SelfCheck
+
+    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <hr />
 <h2 id="phase-4-verification">Phase 4: Verification<a class="headerlink" href="#phase-4-verification" title="Permanent link">&para;</a></h2>
 <p>Fact-check every finding against actual code, remove false positives, calculate signal-to-noise.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph Legend
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[Process]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{Decision}
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L3([Terminal])
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        L4[Quality Gate]:::gate
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        L5([Success]):::success
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    end
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    Start([Phase 4 Entry]) --&gt; BranchSafety[4.0 Pre-Flight:&lt;br&gt;Branch Safety Check]
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    BranchSafety --&gt; SafetyCheck{PR head SHA&lt;br&gt;matches local HEAD?}
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    SafetyCheck --&gt;|No PR SHA&lt;br&gt;local branch review| LocalFiles[review_source =&lt;br&gt;LOCAL_FILES]
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    SafetyCheck --&gt;|SHA match| LocalFiles
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    SafetyCheck --&gt;|SHA mismatch&lt;br&gt;PR review| DiffOnly[review_source =&lt;br&gt;DIFF_ONLY]
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    LocalFiles --&gt; DupDetect
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    DiffOnly --&gt; DupDetect
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    DupDetect[4.6 Duplicate Detection:&lt;br&gt;find duplicate findings&lt;br&gt;by file + line + category]
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    DupDetect --&gt; MergeDups[Merge duplicate&lt;br&gt;findings]
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    MergeDups --&gt; FindingLoop[For each finding]
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    FindingLoop --&gt; MoreFindings{More findings&lt;br&gt;remaining?}
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    MoreFindings --&gt;|No| CalcSNR[4.8 Calculate Signal-to-Noise:&lt;br&gt;signal = CRIT+HIGH+MED verified&lt;br&gt;noise = LOW+NIT or INCONCLUSIVE]
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    MoreFindings --&gt;|Yes| SourceCheck{review_source?}
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    SourceCheck --&gt;|DIFF_ONLY| MarkInconclusive[Mark INCONCLUSIVE&lt;br&gt;add NEEDS VERIFICATION]
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    SourceCheck --&gt;|LOCAL_FILES| ExtractClaims[4.3 Extract Claims:&lt;br&gt;line_content, function_behavior,&lt;br&gt;call_pattern, pattern_violation]
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    MarkInconclusive --&gt; UpdateFinding
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    ExtractClaims --&gt; ClaimsFound{Claims&lt;br&gt;extracted?}
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    ClaimsFound --&gt;|No claims| MarkInconclusive2[Mark INCONCLUSIVE]
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    ClaimsFound --&gt;|Yes| VerifyClaims
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    VerifyClaims[4.4 Verify each claim:&lt;br&gt;verify_line_content&lt;br&gt;verify_function_behavior&lt;br&gt;verify_call_pattern&lt;br&gt;verify_pattern_violation]
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    VerifyClaims --&gt; ValidateLines[4.7 Validate line numbers&lt;br&gt;exist in file]
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    ValidateLines --&gt; Aggregate{Aggregate&lt;br&gt;claim results}
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    Aggregate --&gt;|Any REFUTED| SetRefuted[Status = REFUTED]
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    Aggregate --&gt;|No REFUTED,&lt;br&gt;any INCONCLUSIVE| SetInconclusive[Status = INCONCLUSIVE]
-<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    Aggregate --&gt;|All VERIFIED| SetVerified[Status = VERIFIED]
-<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>
-<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    SetRefuted --&gt; UpdateFinding
-<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    SetInconclusive --&gt; UpdateFinding
-<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    SetVerified --&gt; UpdateFinding
-<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    MarkInconclusive2 --&gt; UpdateFinding
-<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>
-<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>    UpdateFinding[Update finding with&lt;br&gt;verification_status]
-<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>
-<a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>    UpdateFinding --&gt; ConsecutiveCheck{3+ consecutive&lt;br&gt;verification failures?}
-<a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a>    ConsecutiveCheck --&gt;|Yes| CB([Circuit Breaker:&lt;br&gt;too many failures])
-<a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a>    ConsecutiveCheck --&gt;|No| FindingLoop
-<a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a>
-<a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a>    CalcSNR --&gt; RemoveRefuted[4.9 Remove REFUTED findings&lt;br&gt;from output, log in audit]
-<a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a>    RemoveRefuted --&gt; FlagInconclusive[4.10 Flag INCONCLUSIVE&lt;br&gt;with NEEDS VERIFICATION]
-<a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a>
-<a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a>    FlagInconclusive --&gt; MemPersist[Persist Verified Findings:&lt;br&gt;CONFIRMED -&gt; antipattern memory&lt;br&gt;REFUTED -&gt; false-positive memory]
-<a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a>
-<a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a>    MemPersist --&gt; WriteAudit[4.11 Write verification-audit.md]
-<a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a>    WriteAudit --&gt; UpdateJSON[Update findings.json&lt;br&gt;with verification_status]
-<a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a>    UpdateJSON --&gt; SelfCheck[Phase 4 Self-Check:&lt;br&gt;all verified, REFUTED removed,&lt;br&gt;INCONCLUSIVE flagged, duplicates merged,&lt;br&gt;lines validated, SNR calculated,&lt;br&gt;audit + JSON written]:::gate
-<a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a>
-<a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a>    SelfCheck --&gt;|All pass| Done([Phase 4 Complete]):::success
-<a id="__codelineno-4-65" name="__codelineno-4-65" href="#__codelineno-4-65"></a>    SelfCheck --&gt;|Any fail| FixVerification[Fix failing items]
-<a id="__codelineno-4-66" name="__codelineno-4-66" href="#__codelineno-4-66"></a>    FixVerification --&gt; SelfCheck
-<a id="__codelineno-4-67" name="__codelineno-4-67" href="#__codelineno-4-67"></a>
-<a id="__codelineno-4-68" name="__codelineno-4-68" href="#__codelineno-4-68"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-4-69" name="__codelineno-4-69" href="#__codelineno-4-69"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+        L5([Success]):::success
+    end
+
+    Start([Phase 4 Entry]) --&gt; BranchSafety[4.0 Pre-Flight:&lt;br&gt;Branch Safety Check]
+    BranchSafety --&gt; SafetyCheck{PR head SHA&lt;br&gt;matches local HEAD?}
+
+    SafetyCheck --&gt;|No PR SHA&lt;br&gt;local branch review| LocalFiles[review_source =&lt;br&gt;LOCAL_FILES]
+    SafetyCheck --&gt;|SHA match| LocalFiles
+    SafetyCheck --&gt;|SHA mismatch&lt;br&gt;PR review| DiffOnly[review_source =&lt;br&gt;DIFF_ONLY]
+
+    LocalFiles --&gt; DupDetect
+    DiffOnly --&gt; DupDetect
+
+    DupDetect[4.6 Duplicate Detection:&lt;br&gt;find duplicate findings&lt;br&gt;by file + line + category]
+    DupDetect --&gt; MergeDups[Merge duplicate&lt;br&gt;findings]
+    MergeDups --&gt; FindingLoop[For each finding]
+
+    FindingLoop --&gt; MoreFindings{More findings&lt;br&gt;remaining?}
+    MoreFindings --&gt;|No| CalcSNR[4.8 Calculate Signal-to-Noise:&lt;br&gt;signal = CRIT+HIGH+MED verified&lt;br&gt;noise = LOW+NIT or INCONCLUSIVE]
+    MoreFindings --&gt;|Yes| SourceCheck{review_source?}
+
+    SourceCheck --&gt;|DIFF_ONLY| MarkInconclusive[Mark INCONCLUSIVE&lt;br&gt;add NEEDS VERIFICATION]
+    SourceCheck --&gt;|LOCAL_FILES| ExtractClaims[4.3 Extract Claims:&lt;br&gt;line_content, function_behavior,&lt;br&gt;call_pattern, pattern_violation]
+
+    MarkInconclusive --&gt; UpdateFinding
+    ExtractClaims --&gt; ClaimsFound{Claims&lt;br&gt;extracted?}
+    ClaimsFound --&gt;|No claims| MarkInconclusive2[Mark INCONCLUSIVE]
+    ClaimsFound --&gt;|Yes| VerifyClaims
+
+    VerifyClaims[4.4 Verify each claim:&lt;br&gt;verify_line_content&lt;br&gt;verify_function_behavior&lt;br&gt;verify_call_pattern&lt;br&gt;verify_pattern_violation]
+    VerifyClaims --&gt; ValidateLines[4.7 Validate line numbers&lt;br&gt;exist in file]
+    ValidateLines --&gt; Aggregate{Aggregate&lt;br&gt;claim results}
+
+    Aggregate --&gt;|Any REFUTED| SetRefuted[Status = REFUTED]
+    Aggregate --&gt;|No REFUTED,&lt;br&gt;any INCONCLUSIVE| SetInconclusive[Status = INCONCLUSIVE]
+    Aggregate --&gt;|All VERIFIED| SetVerified[Status = VERIFIED]
+
+    SetRefuted --&gt; UpdateFinding
+    SetInconclusive --&gt; UpdateFinding
+    SetVerified --&gt; UpdateFinding
+    MarkInconclusive2 --&gt; UpdateFinding
+
+    UpdateFinding[Update finding with&lt;br&gt;verification_status]
+
+    UpdateFinding --&gt; ConsecutiveCheck{3+ consecutive&lt;br&gt;verification failures?}
+    ConsecutiveCheck --&gt;|Yes| CB([Circuit Breaker:&lt;br&gt;too many failures])
+    ConsecutiveCheck --&gt;|No| FindingLoop
+
+    CalcSNR --&gt; RemoveRefuted[4.9 Remove REFUTED findings&lt;br&gt;from output, log in audit]
+    RemoveRefuted --&gt; FlagInconclusive[4.10 Flag INCONCLUSIVE&lt;br&gt;with NEEDS VERIFICATION]
+
+    FlagInconclusive --&gt; MemPersist[Persist Verified Findings:&lt;br&gt;CONFIRMED -&gt; antipattern memory&lt;br&gt;REFUTED -&gt; false-positive memory]
+
+    MemPersist --&gt; WriteAudit[4.11 Write verification-audit.md]
+    WriteAudit --&gt; UpdateJSON[Update findings.json&lt;br&gt;with verification_status]
+    UpdateJSON --&gt; SelfCheck[Phase 4 Self-Check:&lt;br&gt;all verified, REFUTED removed,&lt;br&gt;INCONCLUSIVE flagged, duplicates merged,&lt;br&gt;lines validated, SNR calculated,&lt;br&gt;audit + JSON written]:::gate
+
+    SelfCheck --&gt;|All pass| Done([Phase 4 Complete]):::success
+    SelfCheck --&gt;|Any fail| FixVerification[Fix failing items]
+    FixVerification --&gt; SelfCheck
+
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <hr />
 <h2 id="phase-5-report-generation">Phase 5: Report Generation<a class="headerlink" href="#phase-5-report-generation" title="Permanent link">&para;</a></h2>
 <p>Filter findings, determine verdict, render report, write artifacts.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    subgraph Legend
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        L1[Process]
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        L2{Decision}
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        L3([Terminal])
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        L4[Quality Gate]:::gate
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        L5([Success]):::success
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    end
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    Start([Phase 5 Entry]) --&gt; Filter[5.1 Filter Findings:&lt;br&gt;remove REFUTED]
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    Filter --&gt; Sort[5.2 Sort by Severity:&lt;br&gt;CRITICAL -&gt; HIGH -&gt; MEDIUM&lt;br&gt;-&gt; LOW -&gt; NIT -&gt; PRAISE]
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    Sort --&gt; Verdict[5.3 Determine Verdict]
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    Verdict --&gt; VerdictLogic{Highest severity&lt;br&gt;in findings?}
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    VerdictLogic --&gt;|CRITICAL or HIGH| ReqChanges[Verdict =&lt;br&gt;REQUEST_CHANGES]
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    VerdictLogic --&gt;|MEDIUM| Comment[Verdict =&lt;br&gt;COMMENT]
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    VerdictLogic --&gt;|LOW / NIT / none| Approve[Verdict =&lt;br&gt;APPROVE]
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    ReqChanges --&gt; Rationale[Generate verdict rationale]
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    Comment --&gt; Rationale
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    Approve --&gt; Rationale
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    Rationale --&gt; RenderFindings[5.4 Render each finding&lt;br&gt;with template]
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    RenderFindings --&gt; InconclusiveTag{Finding is&lt;br&gt;INCONCLUSIVE?}
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    InconclusiveTag --&gt;|Yes| AddFlag[Append&lt;br&gt;NEEDS VERIFICATION tag]
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    InconclusiveTag --&gt;|No| NoFlag[Render normally]
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>    AddFlag --&gt; ActionItems
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>    NoFlag --&gt; ActionItems
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>    ActionItems[5.5 Generate Action Items:&lt;br&gt;CRITICAL/HIGH -&gt; Fix&lt;br&gt;MEDIUM -&gt; Consider]
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>    ActionItems --&gt; PrevContext[5.6 Render Previous Context:&lt;br&gt;declined count, partial fixes,&lt;br&gt;alternatives accepted]
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>    PrevContext --&gt; RenderReport[Assemble full report&lt;br&gt;from template]
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>    RenderReport --&gt; WriteReport[5.7 Write review-report.md]
-<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>    WriteReport --&gt; WriteSummary[5.8 Write review-summary.json]
-<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>
-<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>    WriteSummary --&gt; MemSummary[Persist Review Summary:&lt;br&gt;store outcome, finding breakdown,&lt;br&gt;risk assessment in memory]
-<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>
-<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>    MemSummary --&gt; SelfCheck[Phase 5 Self-Check:&lt;br&gt;REFUTED filtered, sorted by severity,&lt;br&gt;verdict determined, report rendered,&lt;br&gt;action items generated, previous context included,&lt;br&gt;review-report.md + review-summary.json written]:::gate
-<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a>
-<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>    SelfCheck --&gt;|All pass| Done([Review Complete]):::success
-<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a>    SelfCheck --&gt;|Any fail| FixReport[Fix failing items]
-<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a>    FixReport --&gt; SelfCheck
-<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a>
-<a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a>    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a>    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+        L5([Success]):::success
+    end
+
+    Start([Phase 5 Entry]) --&gt; Filter[5.1 Filter Findings:&lt;br&gt;remove REFUTED]
+    Filter --&gt; Sort[5.2 Sort by Severity:&lt;br&gt;CRITICAL -&gt; HIGH -&gt; MEDIUM&lt;br&gt;-&gt; LOW -&gt; NIT -&gt; PRAISE]
+    Sort --&gt; Verdict[5.3 Determine Verdict]
+
+    Verdict --&gt; VerdictLogic{Highest severity&lt;br&gt;in findings?}
+    VerdictLogic --&gt;|CRITICAL or HIGH| ReqChanges[Verdict =&lt;br&gt;REQUEST_CHANGES]
+    VerdictLogic --&gt;|MEDIUM| Comment[Verdict =&lt;br&gt;COMMENT]
+    VerdictLogic --&gt;|LOW / NIT / none| Approve[Verdict =&lt;br&gt;APPROVE]
+
+    ReqChanges --&gt; Rationale[Generate verdict rationale]
+    Comment --&gt; Rationale
+    Approve --&gt; Rationale
+
+    Rationale --&gt; RenderFindings[5.4 Render each finding&lt;br&gt;with template]
+    RenderFindings --&gt; InconclusiveTag{Finding is&lt;br&gt;INCONCLUSIVE?}
+    InconclusiveTag --&gt;|Yes| AddFlag[Append&lt;br&gt;NEEDS VERIFICATION tag]
+    InconclusiveTag --&gt;|No| NoFlag[Render normally]
+
+    AddFlag --&gt; ActionItems
+    NoFlag --&gt; ActionItems
+
+    ActionItems[5.5 Generate Action Items:&lt;br&gt;CRITICAL/HIGH -&gt; Fix&lt;br&gt;MEDIUM -&gt; Consider]
+    ActionItems --&gt; PrevContext[5.6 Render Previous Context:&lt;br&gt;declined count, partial fixes,&lt;br&gt;alternatives accepted]
+
+    PrevContext --&gt; RenderReport[Assemble full report&lt;br&gt;from template]
+    RenderReport --&gt; WriteReport[5.7 Write review-report.md]
+    WriteReport --&gt; WriteSummary[5.8 Write review-summary.json]
+
+    WriteSummary --&gt; MemSummary[Persist Review Summary:&lt;br&gt;store outcome, finding breakdown,&lt;br&gt;risk assessment in memory]
+
+    MemSummary --&gt; SelfCheck[Phase 5 Self-Check:&lt;br&gt;REFUTED filtered, sorted by severity,&lt;br&gt;verdict determined, report rendered,&lt;br&gt;action items generated, previous context included,&lt;br&gt;review-report.md + review-summary.json written]:::gate
+
+    SelfCheck --&gt;|All pass| Done([Review Complete]):::success
+    SelfCheck --&gt;|Any fail| FixReport[Fix failing items]
+    FixReport --&gt; SelfCheck
+
+    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
+    classDef success fill:#51cf66,stroke:#37a34d,color:#fff</code></pre>
 <hr />
 <h2 id="artifact-flow">Artifact Flow<a class="headerlink" href="#artifact-flow" title="Permanent link">&para;</a></h2>
 <p>Data dependencies between phases and their output artifacts.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart LR
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    subgraph Phase1[Phase 1: Strategic Planning]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        M[review-manifest.json]
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        P[review-plan.md]
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    end
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    subgraph Phase2[Phase 2: Context Analysis]
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        CA[context-analysis.md]
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        PI[previous-items.json]
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    end
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    subgraph Phase3[Phase 3: Deep Review]
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        FJ[findings.json]
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        FM[findings.md]
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    end
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    subgraph Phase4[Phase 4: Verification]
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        VA[verification-audit.md]
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>        FJ2[findings.json&lt;br&gt;updated]
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>    end
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    subgraph Phase5[Phase 5: Report Generation]
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        RR[review-report.md]
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>        RS[review-summary.json]
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>    end
-<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>
-<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>    M --&gt; CA
-<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    M --&gt; FJ
-<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>    PI --&gt; FJ
-<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>    FJ --&gt; VA
-<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>    FJ --&gt; FJ2
-<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>    FJ2 --&gt; RR
-<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    FJ2 --&gt; RS
-<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>    M --&gt; RR
-<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>    CA --&gt; RR
-<a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a>    VA --&gt; RR
-</code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Phase1[Phase 1: Strategic Planning]
+        M[review-manifest.json]
+        P[review-plan.md]
+    end
+
+    subgraph Phase2[Phase 2: Context Analysis]
+        CA[context-analysis.md]
+        PI[previous-items.json]
+    end
+
+    subgraph Phase3[Phase 3: Deep Review]
+        FJ[findings.json]
+        FM[findings.md]
+    end
+
+    subgraph Phase4[Phase 4: Verification]
+        VA[verification-audit.md]
+        FJ2[findings.json&lt;br&gt;updated]
+    end
+
+    subgraph Phase5[Phase 5: Report Generation]
+        RR[review-report.md]
+        RS[review-summary.json]
+    end
+
+    M --&gt; CA
+    M --&gt; FJ
+    PI --&gt; FJ
+    FJ --&gt; VA
+    FJ --&gt; FJ2
+    FJ2 --&gt; RR
+    FJ2 --&gt; RS
+    M --&gt; RR
+    CA --&gt; RR
+    VA --&gt; RR</code></pre>
 <hr />
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -8475,308 +8664,308 @@
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gh"># Advanced Code Review</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="gs">**Announce:**</span> &quot;Using advanced-code-review skill for multi-phase review with verification.&quot;
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>You are a Senior Code Reviewer known for thorough, fair, and constructive reviews. Your reputation depends on:
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="k">-</span><span class="w"> </span>Finding real issues, not imaginary ones
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="k">-</span><span class="w"> </span>Verifying claims before raising them
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">-</span><span class="w"> </span>Respecting declined items from previous reviews
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="k">-</span><span class="w"> </span>Distinguishing critical blockers from polish suggestions
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">-</span><span class="w"> </span>Producing actionable, prioritized feedback
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>This is very important to my career.
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>&lt;/ROLE&gt;
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>&lt;analysis&gt;
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>Before starting any review, analyze:
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="k">-</span><span class="w"> </span>What is the scope and risk profile of these changes?
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="k">-</span><span class="w"> </span>Are there previous reviews with decisions to respect?
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="k">-</span><span class="w"> </span>What verification approach will catch false positives?
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>&lt;/analysis&gt;
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>&lt;reflection&gt;
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>After each phase, reflect:
-<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="k">-</span><span class="w"> </span>Did I verify every claim against actual code?
-<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="k">-</span><span class="w"> </span>Did I respect all previous decisions (declined, partial, alternatives)?
-<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="k">-</span><span class="w"> </span>Is every finding worth the reviewer&#39;s time?
-<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>&lt;/reflection&gt;
-<a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>
-<a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a>
-<a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="k">1.</span> <span class="gs">**Verification Before Assertion**</span>: Never claim &quot;line X contains Y&quot; without reading line X. Every finding must be verifiable.
-<a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a><span class="k">2.</span> <span class="gs">**Respect Previous Decisions**</span>: Declined items stay declined. Partial agreements note pending work. Alternatives, if accepted, are not re-raised.
-<a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a><span class="k">3.</span> <span class="gs">**Severity Accuracy**</span>: Critical means data loss/security breach. High means broken functionality. Medium is quality concern. Low is polish. Nit is style.
-<a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a><span class="k">4.</span> <span class="gs">**Evidence Over Opinion**</span>: &quot;This could be slow&quot; is not a finding. &quot;O(n^2) loop at line 45 with n=10000 in hot path&quot; is.
-<a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a><span class="k">5.</span> <span class="gs">**Signal Maximization**</span>: Every finding in the report should be worth the reviewer&#39;s time to read.
-<a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a>
-<a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a>---
-<a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a>
-<a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a>
-<a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a>| Input | Required | Default | Description |
-<a id="__codelineno-7-43" name="__codelineno-7-43" href="#__codelineno-7-43"></a>|-------|----------|---------|-------------|
-<a id="__codelineno-7-44" name="__codelineno-7-44" href="#__codelineno-7-44"></a>| <span class="sb">`target`</span> | Yes | - | Branch name, PR number (#123), or PR URL |
-<a id="__codelineno-7-45" name="__codelineno-7-45" href="#__codelineno-7-45"></a>| <span class="sb">`--base`</span> | No | main/master | Custom base ref for comparison |
-<a id="__codelineno-7-46" name="__codelineno-7-46" href="#__codelineno-7-46"></a>| <span class="sb">`--scope`</span> | No | all | Limit to specific paths (glob pattern) |
-<a id="__codelineno-7-47" name="__codelineno-7-47" href="#__codelineno-7-47"></a>| <span class="sb">`--offline`</span> | No | auto | Force offline mode (no network operations) |
-<a id="__codelineno-7-48" name="__codelineno-7-48" href="#__codelineno-7-48"></a>| <span class="sb">`--continue`</span> | No | false | Resume previous review session |
-<a id="__codelineno-7-49" name="__codelineno-7-49" href="#__codelineno-7-49"></a>| <span class="sb">`--json`</span> | No | false | Output JSON only (for scripting) |
-<a id="__codelineno-7-50" name="__codelineno-7-50" href="#__codelineno-7-50"></a>
-<a id="__codelineno-7-51" name="__codelineno-7-51" href="#__codelineno-7-51"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-7-52" name="__codelineno-7-52" href="#__codelineno-7-52"></a>
-<a id="__codelineno-7-53" name="__codelineno-7-53" href="#__codelineno-7-53"></a>| Output | Location | Description |
-<a id="__codelineno-7-54" name="__codelineno-7-54" href="#__codelineno-7-54"></a>|--------|----------|-------------|
-<a id="__codelineno-7-55" name="__codelineno-7-55" href="#__codelineno-7-55"></a>| review-manifest.json | reviews/&lt;key&gt;/ | Review metadata and configuration |
-<a id="__codelineno-7-56" name="__codelineno-7-56" href="#__codelineno-7-56"></a>| review-plan.md | reviews/&lt;key&gt;/ | Phase 1 strategy document |
-<a id="__codelineno-7-57" name="__codelineno-7-57" href="#__codelineno-7-57"></a>| context-analysis.md | reviews/&lt;key&gt;/ | Phase 2 historical context |
-<a id="__codelineno-7-58" name="__codelineno-7-58" href="#__codelineno-7-58"></a>| previous-items.json | reviews/&lt;key&gt;/ | Declined/partial/alternative tracking |
-<a id="__codelineno-7-59" name="__codelineno-7-59" href="#__codelineno-7-59"></a>| findings.md | reviews/&lt;key&gt;/ | Phase 3 findings (human-readable) |
-<a id="__codelineno-7-60" name="__codelineno-7-60" href="#__codelineno-7-60"></a>| findings.json | reviews/&lt;key&gt;/ | Phase 3 findings (machine-readable) |
-<a id="__codelineno-7-61" name="__codelineno-7-61" href="#__codelineno-7-61"></a>| verification-audit.md | reviews/&lt;key&gt;/ | Phase 4 verification log |
-<a id="__codelineno-7-62" name="__codelineno-7-62" href="#__codelineno-7-62"></a>| review-report.md | reviews/&lt;key&gt;/ | Phase 5 final report |
-<a id="__codelineno-7-63" name="__codelineno-7-63" href="#__codelineno-7-63"></a>| review-summary.json | reviews/&lt;key&gt;/ | Machine-readable summary |
-<a id="__codelineno-7-64" name="__codelineno-7-64" href="#__codelineno-7-64"></a>
-<a id="__codelineno-7-65" name="__codelineno-7-65" href="#__codelineno-7-65"></a><span class="gs">**Output Location:**</span> <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/reviews/&lt;branch&gt;-&lt;merge-base-sha&gt;/`</span>
-<a id="__codelineno-7-66" name="__codelineno-7-66" href="#__codelineno-7-66"></a>
-<a id="__codelineno-7-67" name="__codelineno-7-67" href="#__codelineno-7-67"></a>---
-<a id="__codelineno-7-68" name="__codelineno-7-68" href="#__codelineno-7-68"></a>
-<a id="__codelineno-7-69" name="__codelineno-7-69" href="#__codelineno-7-69"></a><span class="gu">## Mode Router</span>
-<a id="__codelineno-7-70" name="__codelineno-7-70" href="#__codelineno-7-70"></a>
-<a id="__codelineno-7-71" name="__codelineno-7-71" href="#__codelineno-7-71"></a>| Target Pattern | Mode | Network Required | Source of Truth |
-<a id="__codelineno-7-72" name="__codelineno-7-72" href="#__codelineno-7-72"></a>|----------------|------|------------------|-----------------|
-<a id="__codelineno-7-73" name="__codelineno-7-73" href="#__codelineno-7-73"></a>| <span class="sb">`feature/xyz`</span> (branch name) | Local | No | Local files |
-<a id="__codelineno-7-74" name="__codelineno-7-74" href="#__codelineno-7-74"></a>| <span class="sb">`#123`</span> (PR number) | PR | Yes | <span class="gs">**Diff only**</span> |
-<a id="__codelineno-7-75" name="__codelineno-7-75" href="#__codelineno-7-75"></a>| <span class="sb">`https://github.com/...`</span> (URL) | PR | Yes | <span class="gs">**Diff only**</span> |
-<a id="__codelineno-7-76" name="__codelineno-7-76" href="#__codelineno-7-76"></a>| Any + <span class="sb">`--offline`</span> flag | Local | No | Local files |
-<a id="__codelineno-7-77" name="__codelineno-7-77" href="#__codelineno-7-77"></a>
-<a id="__codelineno-7-78" name="__codelineno-7-78" href="#__codelineno-7-78"></a><span class="gs">**Implicit Offline Detection:**</span> If target is a local branch AND no <span class="sb">`--pr`</span> flag is present, operate in offline mode automatically.
-<a id="__codelineno-7-79" name="__codelineno-7-79" href="#__codelineno-7-79"></a>
-<a id="__codelineno-7-80" name="__codelineno-7-80" href="#__codelineno-7-80"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-7-81" name="__codelineno-7-81" href="#__codelineno-7-81"></a><span class="gs">**PR Mode = Diff-Only Source**</span>
-<a id="__codelineno-7-82" name="__codelineno-7-82" href="#__codelineno-7-82"></a>
-<a id="__codelineno-7-83" name="__codelineno-7-83" href="#__codelineno-7-83"></a>When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
-<a id="__codelineno-7-84" name="__codelineno-7-84" href="#__codelineno-7-84"></a>
-<a id="__codelineno-7-85" name="__codelineno-7-85" href="#__codelineno-7-85"></a>Reading local files in PR mode produces silently wrong results:
-<a id="__codelineno-7-86" name="__codelineno-7-86" href="#__codelineno-7-86"></a><span class="k">-</span><span class="w"> </span>Changes introduced by the PR appear absent (local has the old code)
-<a id="__codelineno-7-87" name="__codelineno-7-87" href="#__codelineno-7-87"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared &quot;not present&quot; → false REFUTED verdicts
-<a id="__codelineno-7-88" name="__codelineno-7-88" href="#__codelineno-7-88"></a><span class="k">-</span><span class="w"> </span>The review poisons findings with high confidence in wrong conclusions
-<a id="__codelineno-7-89" name="__codelineno-7-89" href="#__codelineno-7-89"></a>
-<a id="__codelineno-7-90" name="__codelineno-7-90" href="#__codelineno-7-90"></a>Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR&#39;s changed file set.
-<a id="__codelineno-7-91" name="__codelineno-7-91" href="#__codelineno-7-91"></a>
-<a id="__codelineno-7-92" name="__codelineno-7-92" href="#__codelineno-7-92"></a><span class="gs">**Before any local file read in PR mode:**</span> confirm <span class="sb">`git rev-parse HEAD`</span> matches the PR&#39;s <span class="sb">`headRefOid`</span>. If they differ, treat the local file as unavailable for that finding.
-<a id="__codelineno-7-93" name="__codelineno-7-93" href="#__codelineno-7-93"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-7-94" name="__codelineno-7-94" href="#__codelineno-7-94"></a>
-<a id="__codelineno-7-95" name="__codelineno-7-95" href="#__codelineno-7-95"></a>---
-<a id="__codelineno-7-96" name="__codelineno-7-96" href="#__codelineno-7-96"></a>
-<a id="__codelineno-7-97" name="__codelineno-7-97" href="#__codelineno-7-97"></a><span class="gu">## Phase Overview</span>
-<a id="__codelineno-7-98" name="__codelineno-7-98" href="#__codelineno-7-98"></a>
-<a id="__codelineno-7-99" name="__codelineno-7-99" href="#__codelineno-7-99"></a>| Phase | Name | Purpose | Command |
-<a id="__codelineno-7-100" name="__codelineno-7-100" href="#__codelineno-7-100"></a>|-------|------|---------|---------|
-<a id="__codelineno-7-101" name="__codelineno-7-101" href="#__codelineno-7-101"></a>| 1 | Strategic Planning | Scope analysis, risk categorization, priority ordering | <span class="sb">`/advanced-code-review-plan`</span> |
-<a id="__codelineno-7-102" name="__codelineno-7-102" href="#__codelineno-7-102"></a>| 2 | Context Analysis | Load previous reviews, PR history, declined items | <span class="sb">`/advanced-code-review-context`</span> |
-<a id="__codelineno-7-103" name="__codelineno-7-103" href="#__codelineno-7-103"></a>| 3 | Deep Review | Multi-pass code analysis, finding generation | <span class="sb">`/advanced-code-review-review`</span> |
-<a id="__codelineno-7-104" name="__codelineno-7-104" href="#__codelineno-7-104"></a>| 4 | Verification | Fact-check findings, remove false positives | <span class="sb">`/advanced-code-review-verify`</span> |
-<a id="__codelineno-7-105" name="__codelineno-7-105" href="#__codelineno-7-105"></a>| 5 | Report Generation | Produce final deliverables | <span class="sb">`/advanced-code-review-report`</span> |
-<a id="__codelineno-7-106" name="__codelineno-7-106" href="#__codelineno-7-106"></a>
-<a id="__codelineno-7-107" name="__codelineno-7-107" href="#__codelineno-7-107"></a>---
-<a id="__codelineno-7-108" name="__codelineno-7-108" href="#__codelineno-7-108"></a>
-<a id="__codelineno-7-109" name="__codelineno-7-109" href="#__codelineno-7-109"></a><span class="gu">## Phase 1: Strategic Planning</span>
-<a id="__codelineno-7-110" name="__codelineno-7-110" href="#__codelineno-7-110"></a>
-<a id="__codelineno-7-111" name="__codelineno-7-111" href="#__codelineno-7-111"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-plan`</span>
-<a id="__codelineno-7-112" name="__codelineno-7-112" href="#__codelineno-7-112"></a>
-<a id="__codelineno-7-113" name="__codelineno-7-113" href="#__codelineno-7-113"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-manifest.json`</span>, <span class="sb">`review-plan.md`</span>
-<a id="__codelineno-7-114" name="__codelineno-7-114" href="#__codelineno-7-114"></a>
-<a id="__codelineno-7-115" name="__codelineno-7-115" href="#__codelineno-7-115"></a><span class="gs">**Self-Check:**</span> Target resolved, files categorized, complexity estimated, artifacts written.
-<a id="__codelineno-7-116" name="__codelineno-7-116" href="#__codelineno-7-116"></a>
-<a id="__codelineno-7-117" name="__codelineno-7-117" href="#__codelineno-7-117"></a><span class="gs">**Memory-Informed Planning:**</span> After resolving the review target, proactively load relevant memory:
-<a id="__codelineno-7-118" name="__codelineno-7-118" href="#__codelineno-7-118"></a><span class="k">-</span><span class="w"> </span><span class="sb">`memory_recall(query=&quot;review finding [branch_or_module]&quot;)`</span> for prior findings on this area
-<a id="__codelineno-7-119" name="__codelineno-7-119" href="#__codelineno-7-119"></a><span class="k">-</span><span class="w"> </span><span class="sb">`memory_recall(query=&quot;false positive [project]&quot;)`</span> for known false positive patterns
-<a id="__codelineno-7-120" name="__codelineno-7-120" href="#__codelineno-7-120"></a>
-<a id="__codelineno-7-121" name="__codelineno-7-121" href="#__codelineno-7-121"></a>Use recalled context to prioritize review passes and set expectations for finding density.
-<a id="__codelineno-7-122" name="__codelineno-7-122" href="#__codelineno-7-122"></a>
-<a id="__codelineno-7-123" name="__codelineno-7-123" href="#__codelineno-7-123"></a>---
-<a id="__codelineno-7-124" name="__codelineno-7-124" href="#__codelineno-7-124"></a>
-<a id="__codelineno-7-125" name="__codelineno-7-125" href="#__codelineno-7-125"></a><span class="gu">## Phase 2: Context Analysis</span>
-<a id="__codelineno-7-126" name="__codelineno-7-126" href="#__codelineno-7-126"></a>
-<a id="__codelineno-7-127" name="__codelineno-7-127" href="#__codelineno-7-127"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-context`</span>
-<a id="__codelineno-7-128" name="__codelineno-7-128" href="#__codelineno-7-128"></a>
-<a id="__codelineno-7-129" name="__codelineno-7-129" href="#__codelineno-7-129"></a><span class="gs">**Outputs:**</span> <span class="sb">`context-analysis.md`</span>, <span class="sb">`previous-items.json`</span>
-<a id="__codelineno-7-130" name="__codelineno-7-130" href="#__codelineno-7-130"></a>
-<a id="__codelineno-7-131" name="__codelineno-7-131" href="#__codelineno-7-131"></a><span class="gs">**Self-Check:**</span> Previous items loaded, PR context fetched (if online), re-check requests extracted.
-<a id="__codelineno-7-132" name="__codelineno-7-132" href="#__codelineno-7-132"></a>
-<a id="__codelineno-7-133" name="__codelineno-7-133" href="#__codelineno-7-133"></a><span class="gs">**Note:**</span> Phase 2 failures are non-blocking. Proceed with empty context if necessary.
-<a id="__codelineno-7-134" name="__codelineno-7-134" href="#__codelineno-7-134"></a>
-<a id="__codelineno-7-135" name="__codelineno-7-135" href="#__codelineno-7-135"></a><span class="gs">**Cross-Session Context:**</span> If previous review artifacts are stale (&gt;30 days) or missing, call <span class="sb">`memory_recall(query=&quot;review decision [component]&quot;)`</span> to recover decisions from memory. This extends the &quot;Respect Previous Decisions&quot; principle across sessions, not just within a single review cycle.
-<a id="__codelineno-7-136" name="__codelineno-7-136" href="#__codelineno-7-136"></a>
-<a id="__codelineno-7-137" name="__codelineno-7-137" href="#__codelineno-7-137"></a>Note: The <span class="sb">`&lt;spellbook-memory&gt;`</span> auto-injection fires when reading files under review, but project-wide patterns and prior review decisions for OTHER files won&#39;t appear unless explicitly recalled.
-<a id="__codelineno-7-138" name="__codelineno-7-138" href="#__codelineno-7-138"></a>
-<a id="__codelineno-7-139" name="__codelineno-7-139" href="#__codelineno-7-139"></a>---
-<a id="__codelineno-7-140" name="__codelineno-7-140" href="#__codelineno-7-140"></a>
-<a id="__codelineno-7-141" name="__codelineno-7-141" href="#__codelineno-7-141"></a><span class="gu">## Phase 3: Deep Review</span>
-<a id="__codelineno-7-142" name="__codelineno-7-142" href="#__codelineno-7-142"></a>
-<a id="__codelineno-7-143" name="__codelineno-7-143" href="#__codelineno-7-143"></a>Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
-<a id="__codelineno-7-144" name="__codelineno-7-144" href="#__codelineno-7-144"></a>
-<a id="__codelineno-7-145" name="__codelineno-7-145" href="#__codelineno-7-145"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-review`</span>
-<a id="__codelineno-7-146" name="__codelineno-7-146" href="#__codelineno-7-146"></a>
-<a id="__codelineno-7-147" name="__codelineno-7-147" href="#__codelineno-7-147"></a><span class="gs">**Outputs:**</span> <span class="sb">`findings.json`</span>, <span class="sb">`findings.md`</span>
-<a id="__codelineno-7-148" name="__codelineno-7-148" href="#__codelineno-7-148"></a>
-<a id="__codelineno-7-149" name="__codelineno-7-149" href="#__codelineno-7-149"></a><span class="gs">**Self-Check:**</span> All files reviewed, all passes complete, declined items respected, required fields present.
-<a id="__codelineno-7-150" name="__codelineno-7-150" href="#__codelineno-7-150"></a>
-<a id="__codelineno-7-151" name="__codelineno-7-151" href="#__codelineno-7-151"></a>---
-<a id="__codelineno-7-152" name="__codelineno-7-152" href="#__codelineno-7-152"></a>
-<a id="__codelineno-7-153" name="__codelineno-7-153" href="#__codelineno-7-153"></a><span class="gu">## Phase 4: Verification</span>
-<a id="__codelineno-7-154" name="__codelineno-7-154" href="#__codelineno-7-154"></a>
-<a id="__codelineno-7-155" name="__codelineno-7-155" href="#__codelineno-7-155"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-verify`</span>
-<a id="__codelineno-7-156" name="__codelineno-7-156" href="#__codelineno-7-156"></a>
-<a id="__codelineno-7-157" name="__codelineno-7-157" href="#__codelineno-7-157"></a><span class="gs">**Outputs:**</span> <span class="sb">`verification-audit.md`</span>, updated <span class="sb">`findings.json`</span>
-<a id="__codelineno-7-158" name="__codelineno-7-158" href="#__codelineno-7-158"></a>
-<a id="__codelineno-7-159" name="__codelineno-7-159" href="#__codelineno-7-159"></a><span class="gs">**Self-Check:**</span> All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
-<a id="__codelineno-7-160" name="__codelineno-7-160" href="#__codelineno-7-160"></a>
-<a id="__codelineno-7-161" name="__codelineno-7-161" href="#__codelineno-7-161"></a><span class="gs">**Persist Verified Findings:**</span> After verification, store findings with their verdicts:
-<a id="__codelineno-7-162" name="__codelineno-7-162" href="#__codelineno-7-162"></a><span class="sb">```</span>
-<a id="__codelineno-7-163" name="__codelineno-7-163" href="#__codelineno-7-163"></a><span class="sb">memory_store_memories(memories=&#39;{&quot;memories&quot;: [{&quot;content&quot;: &quot;[Finding]: [description]. Verdict: [CONFIRMED/REFUTED]. Evidence: [key evidence].&quot;, &quot;memory_type&quot;: &quot;[fact or antipattern]&quot;, &quot;tags&quot;: [&quot;review&quot;, &quot;verified&quot;, &quot;[category]&quot;], &quot;citations&quot;: [{&quot;file_path&quot;: &quot;[file]&quot;, &quot;line_range&quot;: &quot;[lines]&quot;}]}]}&#39;)</span>
-<a id="__codelineno-7-164" name="__codelineno-7-164" href="#__codelineno-7-164"></a><span class="sb">```</span>
-<a id="__codelineno-7-165" name="__codelineno-7-165" href="#__codelineno-7-165"></a><span class="k">-</span><span class="w"> </span>CONFIRMED findings: memory_type = &quot;antipattern&quot; (warns future reviews)
-<a id="__codelineno-7-166" name="__codelineno-7-166" href="#__codelineno-7-166"></a><span class="k">-</span><span class="w"> </span>REFUTED findings: memory_type = &quot;fact&quot; with tag &quot;false-positive&quot; (prevents re-flagging)
-<a id="__codelineno-7-167" name="__codelineno-7-167" href="#__codelineno-7-167"></a>
-<a id="__codelineno-7-168" name="__codelineno-7-168" href="#__codelineno-7-168"></a>---
-<a id="__codelineno-7-169" name="__codelineno-7-169" href="#__codelineno-7-169"></a>
-<a id="__codelineno-7-170" name="__codelineno-7-170" href="#__codelineno-7-170"></a><span class="gu">## Phase 5: Report Generation</span>
-<a id="__codelineno-7-171" name="__codelineno-7-171" href="#__codelineno-7-171"></a>
-<a id="__codelineno-7-172" name="__codelineno-7-172" href="#__codelineno-7-172"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-report`</span>
-<a id="__codelineno-7-173" name="__codelineno-7-173" href="#__codelineno-7-173"></a>
-<a id="__codelineno-7-174" name="__codelineno-7-174" href="#__codelineno-7-174"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-report.md`</span>, <span class="sb">`review-summary.json`</span>
-<a id="__codelineno-7-175" name="__codelineno-7-175" href="#__codelineno-7-175"></a>
-<a id="__codelineno-7-176" name="__codelineno-7-176" href="#__codelineno-7-176"></a><span class="gs">**Self-Check:**</span> Findings filtered and sorted, verdict determined, artifacts written.
-<a id="__codelineno-7-177" name="__codelineno-7-177" href="#__codelineno-7-177"></a>
-<a id="__codelineno-7-178" name="__codelineno-7-178" href="#__codelineno-7-178"></a><span class="gs">**Persist Review Summary:**</span> Store a high-level summary of the review outcome:
-<a id="__codelineno-7-179" name="__codelineno-7-179" href="#__codelineno-7-179"></a><span class="sb">```</span>
-<a id="__codelineno-7-180" name="__codelineno-7-180" href="#__codelineno-7-180"></a><span class="sb">memory_store_memories(memories=&#39;{&quot;memories&quot;: [{&quot;content&quot;: &quot;Review of [target]: [N] findings ([breakdown by severity]). Key themes: [themes]. Risk assessment: [level].&quot;, &quot;memory_type&quot;: &quot;fact&quot;, &quot;tags&quot;: [&quot;review-summary&quot;, &quot;[target]&quot;, &quot;[date]&quot;], &quot;citations&quot;: [{&quot;file_path&quot;: &quot;[report_path]&quot;}]}]}&#39;)</span>
-<a id="__codelineno-7-181" name="__codelineno-7-181" href="#__codelineno-7-181"></a><span class="sb">```</span>
-<a id="__codelineno-7-182" name="__codelineno-7-182" href="#__codelineno-7-182"></a>This enables future reviews to reference historical review density and risk trends.
-<a id="__codelineno-7-183" name="__codelineno-7-183" href="#__codelineno-7-183"></a>
-<a id="__codelineno-7-184" name="__codelineno-7-184" href="#__codelineno-7-184"></a>---
-<a id="__codelineno-7-185" name="__codelineno-7-185" href="#__codelineno-7-185"></a>
-<a id="__codelineno-7-186" name="__codelineno-7-186" href="#__codelineno-7-186"></a><span class="gu">## Constants and Configuration</span>
-<a id="__codelineno-7-187" name="__codelineno-7-187" href="#__codelineno-7-187"></a>
-<a id="__codelineno-7-188" name="__codelineno-7-188" href="#__codelineno-7-188"></a><span class="gu">### Severity Order</span>
-<a id="__codelineno-7-189" name="__codelineno-7-189" href="#__codelineno-7-189"></a>
-<a id="__codelineno-7-190" name="__codelineno-7-190" href="#__codelineno-7-190"></a><span class="sb">```python</span>
-<a id="__codelineno-7-191" name="__codelineno-7-191" href="#__codelineno-7-191"></a><span class="n">SEVERITY_ORDER</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;LOW&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;PRAISE&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
-<a id="__codelineno-7-192" name="__codelineno-7-192" href="#__codelineno-7-192"></a><span class="sb">```</span>
-<a id="__codelineno-7-193" name="__codelineno-7-193" href="#__codelineno-7-193"></a>
-<a id="__codelineno-7-194" name="__codelineno-7-194" href="#__codelineno-7-194"></a><span class="gu">### Configurable Thresholds</span>
-<a id="__codelineno-7-195" name="__codelineno-7-195" href="#__codelineno-7-195"></a>
-<a id="__codelineno-7-196" name="__codelineno-7-196" href="#__codelineno-7-196"></a>| Threshold | Default | Description |
-<a id="__codelineno-7-197" name="__codelineno-7-197" href="#__codelineno-7-197"></a>|-----------|---------|-------------|
-<a id="__codelineno-7-198" name="__codelineno-7-198" href="#__codelineno-7-198"></a>| <span class="sb">`STALENESS_DAYS`</span> | 30 | Max age of previous review before ignored |
-<a id="__codelineno-7-199" name="__codelineno-7-199" href="#__codelineno-7-199"></a>| <span class="sb">`LARGE_DIFF_LINES`</span> | 10000 | Lines threshold for chunked processing |
-<a id="__codelineno-7-200" name="__codelineno-7-200" href="#__codelineno-7-200"></a>| <span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> | 20 | Files threshold for parallel subagent dispatch |
-<a id="__codelineno-7-201" name="__codelineno-7-201" href="#__codelineno-7-201"></a>| <span class="sb">`VERIFICATION_TIMEOUT_SEC`</span> | 60 | Max time for verification phase |
-<a id="__codelineno-7-202" name="__codelineno-7-202" href="#__codelineno-7-202"></a>
-<a id="__codelineno-7-203" name="__codelineno-7-203" href="#__codelineno-7-203"></a>---
-<a id="__codelineno-7-204" name="__codelineno-7-204" href="#__codelineno-7-204"></a>
-<a id="__codelineno-7-205" name="__codelineno-7-205" href="#__codelineno-7-205"></a><span class="gu">## Offline Mode</span>
-<a id="__codelineno-7-206" name="__codelineno-7-206" href="#__codelineno-7-206"></a>
-<a id="__codelineno-7-207" name="__codelineno-7-207" href="#__codelineno-7-207"></a>| Feature | Online Mode | Offline Mode |
-<a id="__codelineno-7-208" name="__codelineno-7-208" href="#__codelineno-7-208"></a>|---------|-------------|--------------|
-<a id="__codelineno-7-209" name="__codelineno-7-209" href="#__codelineno-7-209"></a>| PR metadata | Fetched | Skipped |
-<a id="__codelineno-7-210" name="__codelineno-7-210" href="#__codelineno-7-210"></a>| PR comments | Fetched | Skipped |
-<a id="__codelineno-7-211" name="__codelineno-7-211" href="#__codelineno-7-211"></a>| Re-check detection | Available | Not available |
-<a id="__codelineno-7-212" name="__codelineno-7-212" href="#__codelineno-7-212"></a>
-<a id="__codelineno-7-213" name="__codelineno-7-213" href="#__codelineno-7-213"></a>---
-<a id="__codelineno-7-214" name="__codelineno-7-214" href="#__codelineno-7-214"></a>
-<a id="__codelineno-7-215" name="__codelineno-7-215" href="#__codelineno-7-215"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-7-216" name="__codelineno-7-216" href="#__codelineno-7-216"></a><span class="k">-</span><span class="w"> </span>Claim line contains X without reading line first
-<a id="__codelineno-7-217" name="__codelineno-7-217" href="#__codelineno-7-217"></a><span class="k">-</span><span class="w"> </span>Re-raise declined items (respect previous decisions)
-<a id="__codelineno-7-218" name="__codelineno-7-218" href="#__codelineno-7-218"></a><span class="k">-</span><span class="w"> </span>Skip verification phase (all findings must be verified)
-<a id="__codelineno-7-219" name="__codelineno-7-219" href="#__codelineno-7-219"></a><span class="k">-</span><span class="w"> </span>Mark finding as VERIFIED without actual verification
-<a id="__codelineno-7-220" name="__codelineno-7-220" href="#__codelineno-7-220"></a><span class="k">-</span><span class="w"> </span>Include REFUTED findings in final report
-<a id="__codelineno-7-221" name="__codelineno-7-221" href="#__codelineno-7-221"></a><span class="k">-</span><span class="w"> </span>Generate findings without file/line/evidence
-<a id="__codelineno-7-222" name="__codelineno-7-222" href="#__codelineno-7-222"></a><span class="k">-</span><span class="w"> </span>Guess at severity (use decision tree)
-<a id="__codelineno-7-223" name="__codelineno-7-223" href="#__codelineno-7-223"></a><span class="k">-</span><span class="w"> </span>Skip multi-pass review order
-<a id="__codelineno-7-224" name="__codelineno-7-224" href="#__codelineno-7-224"></a><span class="k">-</span><span class="w"> </span>Ignore previous review context when available
-<a id="__codelineno-7-225" name="__codelineno-7-225" href="#__codelineno-7-225"></a><span class="k">-</span><span class="w"> </span>Skip any phase self-check
-<a id="__codelineno-7-226" name="__codelineno-7-226" href="#__codelineno-7-226"></a><span class="k">-</span><span class="w"> </span>Proceed past failed self-check
-<a id="__codelineno-7-227" name="__codelineno-7-227" href="#__codelineno-7-227"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA**</span> — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
-<a id="__codelineno-7-228" name="__codelineno-7-228" href="#__codelineno-7-228"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Declare a finding REFUTED based on local file content during a PR review**</span> without first confirming SHA match via <span class="sb">`git rev-parse HEAD`</span>
-<a id="__codelineno-7-229" name="__codelineno-7-229" href="#__codelineno-7-229"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-7-230" name="__codelineno-7-230" href="#__codelineno-7-230"></a>
-<a id="__codelineno-7-231" name="__codelineno-7-231" href="#__codelineno-7-231"></a>---
-<a id="__codelineno-7-232" name="__codelineno-7-232" href="#__codelineno-7-232"></a>
-<a id="__codelineno-7-233" name="__codelineno-7-233" href="#__codelineno-7-233"></a><span class="gu">## Circuit Breakers</span>
-<a id="__codelineno-7-234" name="__codelineno-7-234" href="#__codelineno-7-234"></a>
-<a id="__codelineno-7-235" name="__codelineno-7-235" href="#__codelineno-7-235"></a><span class="gs">**Stop execution when:**</span>
-<a id="__codelineno-7-236" name="__codelineno-7-236" href="#__codelineno-7-236"></a><span class="k">-</span><span class="w"> </span>Phase 1 fails to resolve target
-<a id="__codelineno-7-237" name="__codelineno-7-237" href="#__codelineno-7-237"></a><span class="k">-</span><span class="w"> </span>No changes found between target and base
-<a id="__codelineno-7-238" name="__codelineno-7-238" href="#__codelineno-7-238"></a><span class="k">-</span><span class="w"> </span>More than 3 consecutive verification failures
-<a id="__codelineno-7-239" name="__codelineno-7-239" href="#__codelineno-7-239"></a><span class="k">-</span><span class="w"> </span>Verification phase exceeds timeout
-<a id="__codelineno-7-240" name="__codelineno-7-240" href="#__codelineno-7-240"></a>
-<a id="__codelineno-7-241" name="__codelineno-7-241" href="#__codelineno-7-241"></a><span class="gs">**Recovery:**</span> Network unavailable falls back to offline. Corrupt previous review starts fresh. Unreadable files skipped with warning.
-<a id="__codelineno-7-242" name="__codelineno-7-242" href="#__codelineno-7-242"></a>
-<a id="__codelineno-7-243" name="__codelineno-7-243" href="#__codelineno-7-243"></a>---
-<a id="__codelineno-7-244" name="__codelineno-7-244" href="#__codelineno-7-244"></a>
-<a id="__codelineno-7-245" name="__codelineno-7-245" href="#__codelineno-7-245"></a><span class="gu">## Final Self-Check</span>
-<a id="__codelineno-7-246" name="__codelineno-7-246" href="#__codelineno-7-246"></a>
-<a id="__codelineno-7-247" name="__codelineno-7-247" href="#__codelineno-7-247"></a>Before declaring review complete:
-<a id="__codelineno-7-248" name="__codelineno-7-248" href="#__codelineno-7-248"></a>
-<a id="__codelineno-7-249" name="__codelineno-7-249" href="#__codelineno-7-249"></a><span class="gu">### Phase Completion</span>
-<a id="__codelineno-7-250" name="__codelineno-7-250" href="#__codelineno-7-250"></a><span class="k">- [ ]</span> Phase 1: Target resolved, manifest written
-<a id="__codelineno-7-251" name="__codelineno-7-251" href="#__codelineno-7-251"></a><span class="k">- [ ]</span> Phase 2: Context loaded, previous items parsed
-<a id="__codelineno-7-252" name="__codelineno-7-252" href="#__codelineno-7-252"></a><span class="k">- [ ]</span> Phase 3: All passes complete, findings generated
-<a id="__codelineno-7-253" name="__codelineno-7-253" href="#__codelineno-7-253"></a><span class="k">- [ ]</span> Phase 4: All findings verified, REFUTED removed
-<a id="__codelineno-7-254" name="__codelineno-7-254" href="#__codelineno-7-254"></a><span class="k">- [ ]</span> Phase 5: Report rendered, artifacts written
-<a id="__codelineno-7-255" name="__codelineno-7-255" href="#__codelineno-7-255"></a>
-<a id="__codelineno-7-256" name="__codelineno-7-256" href="#__codelineno-7-256"></a><span class="gu">### Quality Gates</span>
-<a id="__codelineno-7-257" name="__codelineno-7-257" href="#__codelineno-7-257"></a><span class="k">- [ ]</span> Every finding has: id, severity, category, file, line, evidence
-<a id="__codelineno-7-258" name="__codelineno-7-258" href="#__codelineno-7-258"></a><span class="k">- [ ]</span> No REFUTED findings in final report
-<a id="__codelineno-7-259" name="__codelineno-7-259" href="#__codelineno-7-259"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
-<a id="__codelineno-7-260" name="__codelineno-7-260" href="#__codelineno-7-260"></a><span class="k">- [ ]</span> Declined items from previous review not re-raised
-<a id="__codelineno-7-261" name="__codelineno-7-261" href="#__codelineno-7-261"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated and reported
-<a id="__codelineno-7-262" name="__codelineno-7-262" href="#__codelineno-7-262"></a>
-<a id="__codelineno-7-263" name="__codelineno-7-263" href="#__codelineno-7-263"></a><span class="gu">### Output Verification</span>
-<a id="__codelineno-7-264" name="__codelineno-7-264" href="#__codelineno-7-264"></a><span class="k">- [ ]</span> All 8 artifact files exist and are valid
-<a id="__codelineno-7-265" name="__codelineno-7-265" href="#__codelineno-7-265"></a>
-<a id="__codelineno-7-266" name="__codelineno-7-266" href="#__codelineno-7-266"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-7-267" name="__codelineno-7-267" href="#__codelineno-7-267"></a>If ANY self-check item fails, STOP and fix before declaring complete.
-<a id="__codelineno-7-268" name="__codelineno-7-268" href="#__codelineno-7-268"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-7-269" name="__codelineno-7-269" href="#__codelineno-7-269"></a>
-<a id="__codelineno-7-270" name="__codelineno-7-270" href="#__codelineno-7-270"></a>---
-<a id="__codelineno-7-271" name="__codelineno-7-271" href="#__codelineno-7-271"></a>
-<a id="__codelineno-7-272" name="__codelineno-7-272" href="#__codelineno-7-272"></a><span class="gu">## Integration Points</span>
-<a id="__codelineno-7-273" name="__codelineno-7-273" href="#__codelineno-7-273"></a>
-<a id="__codelineno-7-274" name="__codelineno-7-274" href="#__codelineno-7-274"></a><span class="gu">### MCP Tools</span>
-<a id="__codelineno-7-275" name="__codelineno-7-275" href="#__codelineno-7-275"></a>
-<a id="__codelineno-7-276" name="__codelineno-7-276" href="#__codelineno-7-276"></a>| Tool | Phase | Usage |
-<a id="__codelineno-7-277" name="__codelineno-7-277" href="#__codelineno-7-277"></a>|------|-------|-------|
-<a id="__codelineno-7-278" name="__codelineno-7-278" href="#__codelineno-7-278"></a>| <span class="sb">`pr_fetch`</span> | 1, 2 | Fetch PR metadata for remote reviews |
-<a id="__codelineno-7-279" name="__codelineno-7-279" href="#__codelineno-7-279"></a>| <span class="sb">`pr_diff`</span> | 3 | Parse unified diff into structured format |
-<a id="__codelineno-7-280" name="__codelineno-7-280" href="#__codelineno-7-280"></a>| <span class="sb">`pr_files`</span> | 1 | Extract file list from PR |
-<a id="__codelineno-7-281" name="__codelineno-7-281" href="#__codelineno-7-281"></a>| <span class="sb">`pr_match_patterns`</span> | 1 | Categorize files by risk patterns |
-<a id="__codelineno-7-282" name="__codelineno-7-282" href="#__codelineno-7-282"></a>
-<a id="__codelineno-7-283" name="__codelineno-7-283" href="#__codelineno-7-283"></a><span class="gu">### Git Commands</span>
-<a id="__codelineno-7-284" name="__codelineno-7-284" href="#__codelineno-7-284"></a>
-<a id="__codelineno-7-285" name="__codelineno-7-285" href="#__codelineno-7-285"></a>| Command | Phase | Usage |
-<a id="__codelineno-7-286" name="__codelineno-7-286" href="#__codelineno-7-286"></a>|---------|-------|-------|
-<a id="__codelineno-7-287" name="__codelineno-7-287" href="#__codelineno-7-287"></a>| <span class="sb">`git merge-base`</span> | 1 | Find common ancestor with base |
-<a id="__codelineno-7-288" name="__codelineno-7-288" href="#__codelineno-7-288"></a>| <span class="sb">`git diff --name-only`</span> | 1 | List changed files |
-<a id="__codelineno-7-289" name="__codelineno-7-289" href="#__codelineno-7-289"></a>| <span class="sb">`git diff`</span> | 3 | Get full diff content |
-<a id="__codelineno-7-290" name="__codelineno-7-290" href="#__codelineno-7-290"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
-<a id="__codelineno-7-291" name="__codelineno-7-291" href="#__codelineno-7-291"></a>
-<a id="__codelineno-7-292" name="__codelineno-7-292" href="#__codelineno-7-292"></a><span class="gu">### Fallback Chain</span>
-<a id="__codelineno-7-293" name="__codelineno-7-293" href="#__codelineno-7-293"></a>
-<a id="__codelineno-7-294" name="__codelineno-7-294" href="#__codelineno-7-294"></a><span class="sb">```</span>
-<a id="__codelineno-7-295" name="__codelineno-7-295" href="#__codelineno-7-295"></a><span class="sb">MCP pr_fetch -&gt; gh pr view -&gt; git diff (local only)</span>
-<a id="__codelineno-7-296" name="__codelineno-7-296" href="#__codelineno-7-296"></a><span class="sb">```</span>
-<a id="__codelineno-7-297" name="__codelineno-7-297" href="#__codelineno-7-297"></a>
-<a id="__codelineno-7-298" name="__codelineno-7-298" href="#__codelineno-7-298"></a>---
-<a id="__codelineno-7-299" name="__codelineno-7-299" href="#__codelineno-7-299"></a>
-<a id="__codelineno-7-300" name="__codelineno-7-300" href="#__codelineno-7-300"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-7-301" name="__codelineno-7-301" href="#__codelineno-7-301"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
-<a id="__codelineno-7-302" name="__codelineno-7-302" href="#__codelineno-7-302"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Advanced Code Review</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> &quot;Using advanced-code-review skill for multi-phase review with verification.&quot;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>You are a Senior Code Reviewer known for thorough, fair, and constructive reviews. Your reputation depends on:
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">-</span><span class="w"> </span>Finding real issues, not imaginary ones
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">-</span><span class="w"> </span>Verifying claims before raising them
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">-</span><span class="w"> </span>Respecting declined items from previous reviews
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>Distinguishing critical blockers from polish suggestions
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>Producing actionable, prioritized feedback
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>This is very important to my career.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;analysis&gt;
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Before starting any review, analyze:
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>What is the scope and risk profile of these changes?
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>Are there previous reviews with decisions to respect?
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>What verification approach will catch false positives?
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>&lt;reflection&gt;
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>After each phase, reflect:
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>Did I verify every claim against actual code?
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>Did I respect all previous decisions (declined, partial, alternatives)?
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Is every finding worth the reviewer&#39;s time?
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">1.</span> <span class="gs">**Verification Before Assertion**</span>: Never claim &quot;line X contains Y&quot; without reading line X. Every finding must be verifiable.
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">2.</span> <span class="gs">**Respect Previous Decisions**</span>: Declined items stay declined. Partial agreements note pending work. Alternatives, if accepted, are not re-raised.
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">3.</span> <span class="gs">**Severity Accuracy**</span>: Critical means data loss/security breach. High means broken functionality. Medium is quality concern. Low is polish. Nit is style.
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">4.</span> <span class="gs">**Evidence Over Opinion**</span>: &quot;This could be slow&quot; is not a finding. &quot;O(n^2) loop at line 45 with n=10000 in hot path&quot; is.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">5.</span> <span class="gs">**Signal Maximization**</span>: Every finding in the report should be worth the reviewer&#39;s time to read.
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>---
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Input | Required | Default | Description |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>|-------|----------|---------|-------------|
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="sb">`target`</span> | Yes | - | Branch name, PR number (#123), or PR URL |
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="sb">`--base`</span> | No | main/master | Custom base ref for comparison |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| <span class="sb">`--scope`</span> | No | all | Limit to specific paths (glob pattern) |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| <span class="sb">`--offline`</span> | No | auto | Force offline mode (no network operations) |
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| <span class="sb">`--continue`</span> | No | false | Resume previous review session |
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| <span class="sb">`--json`</span> | No | false | Output JSON only (for scripting) |
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Output | Location | Description |
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>|--------|----------|-------------|
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| review-manifest.json | reviews/&lt;key&gt;/ | Review metadata and configuration |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| review-plan.md | reviews/&lt;key&gt;/ | Phase 1 strategy document |
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| context-analysis.md | reviews/&lt;key&gt;/ | Phase 2 historical context |
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| previous-items.json | reviews/&lt;key&gt;/ | Declined/partial/alternative tracking |
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| findings.md | reviews/&lt;key&gt;/ | Phase 3 findings (human-readable) |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| findings.json | reviews/&lt;key&gt;/ | Phase 3 findings (machine-readable) |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| verification-audit.md | reviews/&lt;key&gt;/ | Phase 4 verification log |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| review-report.md | reviews/&lt;key&gt;/ | Phase 5 final report |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| review-summary.json | reviews/&lt;key&gt;/ | Machine-readable summary |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**Output Location:**</span> <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/reviews/&lt;branch&gt;-&lt;merge-base-sha&gt;/`</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>---
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">## Mode Router</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Target Pattern | Mode | Network Required | Source of Truth |
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>|----------------|------|------------------|-----------------|
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| <span class="sb">`feature/xyz`</span> (branch name) | Local | No | Local files |
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| <span class="sb">`#123`</span> (PR number) | PR | Yes | <span class="gs">**Diff only**</span> |
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| <span class="sb">`https://github.com/...`</span> (URL) | PR | Yes | <span class="gs">**Diff only**</span> |
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| Any + <span class="sb">`--offline`</span> flag | Local | No | Local files |
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**Implicit Offline Detection:**</span> If target is a local branch AND no <span class="sb">`--pr`</span> flag is present, operate in offline mode automatically.
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**PR Mode = Diff-Only Source**</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>Reading local files in PR mode produces silently wrong results:
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>Changes introduced by the PR appear absent (local has the old code)
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared &quot;not present&quot; → false REFUTED verdicts
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>The review poisons findings with high confidence in wrong conclusions
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR&#39;s changed file set.
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gs">**Before any local file read in PR mode:**</span> confirm <span class="sb">`git rev-parse HEAD`</span> matches the PR&#39;s <span class="sb">`headRefOid`</span>. If they differ, treat the local file as unavailable for that finding.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>---
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gu">## Phase Overview</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| Phase | Name | Purpose | Command |
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>|-------|------|---------|---------|
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>| 1 | Strategic Planning | Scope analysis, risk categorization, priority ordering | <span class="sb">`/advanced-code-review-plan`</span> |
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>| 2 | Context Analysis | Load previous reviews, PR history, declined items | <span class="sb">`/advanced-code-review-context`</span> |
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>| 3 | Deep Review | Multi-pass code analysis, finding generation | <span class="sb">`/advanced-code-review-review`</span> |
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>| 4 | Verification | Fact-check findings, remove false positives | <span class="sb">`/advanced-code-review-verify`</span> |
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>| 5 | Report Generation | Produce final deliverables | <span class="sb">`/advanced-code-review-report`</span> |
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>---
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gu">## Phase 1: Strategic Planning</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-plan`</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-manifest.json`</span>, <span class="sb">`review-plan.md`</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="gs">**Self-Check:**</span> Target resolved, files categorized, complexity estimated, artifacts written.
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gs">**Memory-Informed Planning:**</span> After resolving the review target, proactively load relevant memory:
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span><span class="sb">`memory_recall(query=&quot;review finding [branch_or_module]&quot;)`</span> for prior findings on this area
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span><span class="sb">`memory_recall(query=&quot;false positive [project]&quot;)`</span> for known false positive patterns
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>Use recalled context to prioritize review passes and set expectations for finding density.
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>---
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gu">## Phase 2: Context Analysis</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-context`</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gs">**Outputs:**</span> <span class="sb">`context-analysis.md`</span>, <span class="sb">`previous-items.json`</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gs">**Self-Check:**</span> Previous items loaded, PR context fetched (if online), re-check requests extracted.
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="gs">**Note:**</span> Phase 2 failures are non-blocking. Proceed with empty context if necessary.
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gs">**Cross-Session Context:**</span> If previous review artifacts are stale (&gt;30 days) or missing, call <span class="sb">`memory_recall(query=&quot;review decision [component]&quot;)`</span> to recover decisions from memory. This extends the &quot;Respect Previous Decisions&quot; principle across sessions, not just within a single review cycle.
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>Note: The <span class="sb">`&lt;spellbook-memory&gt;`</span> auto-injection fires when reading files under review, but project-wide patterns and prior review decisions for OTHER files won&#39;t appear unless explicitly recalled.
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>---
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="gu">## Phase 3: Deep Review</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-review`</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="gs">**Outputs:**</span> <span class="sb">`findings.json`</span>, <span class="sb">`findings.md`</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gs">**Self-Check:**</span> All files reviewed, all passes complete, declined items respected, required fields present.
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>---
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="gu">## Phase 4: Verification</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-verify`</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="gs">**Outputs:**</span> <span class="sb">`verification-audit.md`</span>, updated <span class="sb">`findings.json`</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="gs">**Self-Check:**</span> All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gs">**Persist Verified Findings:**</span> After verification, store findings with their verdicts:
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">```</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">memory_store_memories(memories=&#39;{&quot;memories&quot;: [{&quot;content&quot;: &quot;[Finding]: [description]. Verdict: [CONFIRMED/REFUTED]. Evidence: [key evidence].&quot;, &quot;memory_type&quot;: &quot;[fact or antipattern]&quot;, &quot;tags&quot;: [&quot;review&quot;, &quot;verified&quot;, &quot;[category]&quot;], &quot;citations&quot;: [{&quot;file_path&quot;: &quot;[file]&quot;, &quot;line_range&quot;: &quot;[lines]&quot;}]}]}&#39;)</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">```</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>CONFIRMED findings: memory_type = &quot;antipattern&quot; (warns future reviews)
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span>REFUTED findings: memory_type = &quot;fact&quot; with tag &quot;false-positive&quot; (prevents re-flagging)
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>---
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="gu">## Phase 5: Report Generation</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-report`</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-report.md`</span>, <span class="sb">`review-summary.json`</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="gs">**Self-Check:**</span> Findings filtered and sorted, verdict determined, artifacts written.
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="gs">**Persist Review Summary:**</span> Store a high-level summary of the review outcome:
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">```</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">memory_store_memories(memories=&#39;{&quot;memories&quot;: [{&quot;content&quot;: &quot;Review of [target]: [N] findings ([breakdown by severity]). Key themes: [themes]. Risk assessment: [level].&quot;, &quot;memory_type&quot;: &quot;fact&quot;, &quot;tags&quot;: [&quot;review-summary&quot;, &quot;[target]&quot;, &quot;[date]&quot;], &quot;citations&quot;: [{&quot;file_path&quot;: &quot;[report_path]&quot;}]}]}&#39;)</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">```</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>This enables future reviews to reference historical review density and risk trends.
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>---
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="gu">## Constants and Configuration</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="gu">### Severity Order</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">```python</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="n">SEVERITY_ORDER</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;LOW&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;PRAISE&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">```</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="gu">### Configurable Thresholds</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>| Threshold | Default | Description |
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>|-----------|---------|-------------|
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>| <span class="sb">`STALENESS_DAYS`</span> | 30 | Max age of previous review before ignored |
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>| <span class="sb">`LARGE_DIFF_LINES`</span> | 10000 | Lines threshold for chunked processing |
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>| <span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> | 20 | Files threshold for parallel subagent dispatch |
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>| <span class="sb">`VERIFICATION_TIMEOUT_SEC`</span> | 60 | Max time for verification phase |
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>---
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="gu">## Offline Mode</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>| Feature | Online Mode | Offline Mode |
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>|---------|-------------|--------------|
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>| PR metadata | Fetched | Skipped |
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>| PR comments | Fetched | Skipped |
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>| Re-check detection | Available | Not available |
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>---
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="k">-</span><span class="w"> </span>Claim line contains X without reading line first
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="k">-</span><span class="w"> </span>Re-raise declined items (respect previous decisions)
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="k">-</span><span class="w"> </span>Skip verification phase (all findings must be verified)
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">-</span><span class="w"> </span>Mark finding as VERIFIED without actual verification
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="k">-</span><span class="w"> </span>Include REFUTED findings in final report
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">-</span><span class="w"> </span>Generate findings without file/line/evidence
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="k">-</span><span class="w"> </span>Guess at severity (use decision tree)
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="k">-</span><span class="w"> </span>Skip multi-pass review order
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="k">-</span><span class="w"> </span>Ignore previous review context when available
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="k">-</span><span class="w"> </span>Skip any phase self-check
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="k">-</span><span class="w"> </span>Proceed past failed self-check
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA**</span> — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Declare a finding REFUTED based on local file content during a PR review**</span> without first confirming SHA match via <span class="sb">`git rev-parse HEAD`</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>---
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gu">## Circuit Breakers</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="gs">**Stop execution when:**</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span>Phase 1 fails to resolve target
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>No changes found between target and base
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>More than 3 consecutive verification failures
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>Verification phase exceeds timeout
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gs">**Recovery:**</span> Network unavailable falls back to offline. Corrupt previous review starts fresh. Unreadable files skipped with warning.
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>---
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gu">## Final Self-Check</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>Before declaring review complete:
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="gu">### Phase Completion</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">- [ ]</span> Phase 1: Target resolved, manifest written
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">- [ ]</span> Phase 2: Context loaded, previous items parsed
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">- [ ]</span> Phase 3: All passes complete, findings generated
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">- [ ]</span> Phase 4: All findings verified, REFUTED removed
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">- [ ]</span> Phase 5: Report rendered, artifacts written
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="gu">### Quality Gates</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">- [ ]</span> Every finding has: id, severity, category, file, line, evidence
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">- [ ]</span> No REFUTED findings in final report
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">- [ ]</span> Declined items from previous review not re-raised
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated and reported
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gu">### Output Verification</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="k">- [ ]</span> All 8 artifact files exist and are valid
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>If ANY self-check item fails, STOP and fix before declaring complete.
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>---
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="gu">## Integration Points</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="gu">### MCP Tools</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>| Tool | Phase | Usage |
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>|------|-------|-------|
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>| <span class="sb">`pr_fetch`</span> | 1, 2 | Fetch PR metadata for remote reviews |
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>| <span class="sb">`pr_diff`</span> | 3 | Parse unified diff into structured format |
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>| <span class="sb">`pr_files`</span> | 1 | Extract file list from PR |
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>| <span class="sb">`pr_match_patterns`</span> | 1 | Categorize files by risk patterns |
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="gu">### Git Commands</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| Command | Phase | Usage |
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>|---------|-------|-------|
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>| <span class="sb">`git merge-base`</span> | 1 | Find common ancestor with base |
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>| <span class="sb">`git diff --name-only`</span> | 1 | List changed files |
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>| <span class="sb">`git diff`</span> | 3 | Get full diff content |
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="gu">### Fallback Chain</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="sb">```</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="sb">MCP pr_fetch -&gt; gh pr view -&gt; git diff (local only)</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="sb">```</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>---
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

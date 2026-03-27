@@ -2562,6 +2562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/audio-notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    audio-notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/async-await-patterns/" class="md-nav__link">
         
   
@@ -2654,6 +2682,34 @@
     
   
     brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/branch-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch-context
   
 
     
@@ -3402,6 +3458,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/opportunity-awareness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opportunity-awareness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/optimizing-instructions/" class="md-nav__link">
         
   
@@ -3682,6 +3766,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/security-trust-tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    security-trust-tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-mode-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-mode-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/session-resume/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    session-resume
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/sharpening-prompts/" class="md-nav__link">
         
   
@@ -3774,6 +3942,34 @@
     
   
     test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/testing-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    testing-strategy
   
 
     
@@ -7466,75 +7662,74 @@
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <p>Phase 1 of reviewing-impl-plans: establishes context by checking for a parent design document, inventories all work items with parallel/sequential classification, audits setup/skeleton requirements, and flags cross-track interface dependencies.</p>
 <h2 id="process-flow">Process Flow<a class="headerlink" href="#process-flow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Legend
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L1[Process]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L2{Decision}
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L3([Terminal])
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L4[Quality Gate]:::gate
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    end
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Start([Receive impl plan&lt;br&gt;for inventory]) --&gt; DesignDoc
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    subgraph P1[&quot;Parent Design Document Check&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        DesignDoc{Has parent&lt;br&gt;design doc?}
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        DesignDoc --&gt;|YES| DocDetail{Impl plan has&lt;br&gt;MORE detail than&lt;br&gt;design doc?}
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        DesignDoc --&gt;|NO| Justify[Justify absence&lt;br&gt;Risk level increases]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        DocDetail --&gt;|YES| DocOK[Design doc anchors&lt;br&gt;confidence]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        DocDetail --&gt;|NO| DocGap[Flag: sections not&lt;br&gt;elaborated from design]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    end
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Justify --&gt; Inventory
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    DocOK --&gt; Inventory
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    DocGap --&gt; Inventory
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    subgraph P2[&quot;Plan Inventory: Work Item Classification&quot;]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        Inventory[Count total&lt;br&gt;work items] --&gt; ClassifyLoop
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        ClassifyLoop[For EACH work item]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        ClassifyLoop --&gt; IsParallel{Can execute&lt;br&gt;concurrently?}
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        IsParallel --&gt;|YES| TagParallel[Tag PARALLEL&lt;br&gt;Record: can run alongside,&lt;br&gt;worktree needed,&lt;br&gt;interface dependencies]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        IsParallel --&gt;|NO| TagSequential[Tag SEQUENTIAL&lt;br&gt;Record: blocked by,&lt;br&gt;blocks, reason]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        TagParallel --&gt; MoreItems{More work&lt;br&gt;items?}
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        TagSequential --&gt; MoreItems
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        MoreItems --&gt;|YES| ClassifyLoop
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        MoreItems --&gt;|NO| CountSummary[Compute counts:&lt;br&gt;total, parallel, sequential]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    end
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CountSummary --&gt; Interfaces
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    subgraph P3[&quot;Cross-Track Interface Identification&quot;]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        Interfaces[Identify interfaces&lt;br&gt;between parallel tracks] --&gt; HasInterfaces{Interfaces&lt;br&gt;found?}
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        HasInterfaces --&gt;|YES| FlagInterfaces[Flag CRITICAL:&lt;br&gt;each needs a&lt;br&gt;complete contract]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        HasInterfaces --&gt;|NO| NoInterfaces[No cross-track&lt;br&gt;dependencies]
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    end
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    FlagInterfaces --&gt; Setup
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    NoInterfaces --&gt; Setup
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    subgraph P4[&quot;Setup/Skeleton Work Validation&quot;]
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        Setup[Check setup items that&lt;br&gt;must complete before&lt;br&gt;parallel execution]
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        Setup --&gt; CheckRepo{Git repo&lt;br&gt;structure?}
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        CheckRepo --&gt; CheckConfig{Config&lt;br&gt;files?}
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        CheckConfig --&gt; CheckTypes{Shared type&lt;br&gt;definitions?}
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        CheckTypes --&gt; CheckStubs{Interface&lt;br&gt;stubs?}
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>        CheckStubs --&gt; CheckBuild{Build/test&lt;br&gt;infra?}
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>        CheckBuild --&gt; SetupGaps{Any setup&lt;br&gt;gaps?}
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>        SetupGaps --&gt;|YES| FlagGaps[Flag unspecified&lt;br&gt;setup work]
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>        SetupGaps --&gt;|NO| SetupComplete[All setup work&lt;br&gt;documented]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    end
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    FlagGaps --&gt; Gate
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    SetupComplete --&gt; Gate
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    Gate[Quality Gate:&lt;br&gt;All items classified?&lt;br&gt;All interfaces documented?&lt;br&gt;All setup gaps flagged?]:::gate
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    Gate --&gt; Deliverable
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    Deliverable[Return structured markdown:&lt;br&gt;- Design doc status&lt;br&gt;- Work item counts&lt;br&gt;- Interface count&lt;br&gt;- Setup/skeleton gaps] --&gt; End([Deliverable returned&lt;br&gt;to orchestrator]):::success
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff
-</code></pre></div>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend
+        direction LR
+        L1[Process]
+        L2{Decision}
+        L3([Terminal])
+        L4[Quality Gate]:::gate
+    end
+
+    Start([Receive impl plan&lt;br&gt;for inventory]) --&gt; DesignDoc
+
+    subgraph P1["Parent Design Document Check"]
+        DesignDoc{Has parent&lt;br&gt;design doc?}
+        DesignDoc --&gt;|YES| DocDetail{Impl plan has&lt;br&gt;MORE detail than&lt;br&gt;design doc?}
+        DesignDoc --&gt;|NO| Justify[Justify absence&lt;br&gt;Risk level increases]
+        DocDetail --&gt;|YES| DocOK[Design doc anchors&lt;br&gt;confidence]
+        DocDetail --&gt;|NO| DocGap[Flag: sections not&lt;br&gt;elaborated from design]
+    end
+
+    Justify --&gt; Inventory
+    DocOK --&gt; Inventory
+    DocGap --&gt; Inventory
+
+    subgraph P2["Plan Inventory: Work Item Classification"]
+        Inventory[Count total&lt;br&gt;work items] --&gt; ClassifyLoop
+        ClassifyLoop[For EACH work item]
+        ClassifyLoop --&gt; IsParallel{Can execute&lt;br&gt;concurrently?}
+        IsParallel --&gt;|YES| TagParallel[Tag PARALLEL&lt;br&gt;Record: can run alongside,&lt;br&gt;worktree needed,&lt;br&gt;interface dependencies]
+        IsParallel --&gt;|NO| TagSequential[Tag SEQUENTIAL&lt;br&gt;Record: blocked by,&lt;br&gt;blocks, reason]
+        TagParallel --&gt; MoreItems{More work&lt;br&gt;items?}
+        TagSequential --&gt; MoreItems
+        MoreItems --&gt;|YES| ClassifyLoop
+        MoreItems --&gt;|NO| CountSummary[Compute counts:&lt;br&gt;total, parallel, sequential]
+    end
+
+    CountSummary --&gt; Interfaces
+
+    subgraph P3["Cross-Track Interface Identification"]
+        Interfaces[Identify interfaces&lt;br&gt;between parallel tracks] --&gt; HasInterfaces{Interfaces&lt;br&gt;found?}
+        HasInterfaces --&gt;|YES| FlagInterfaces[Flag CRITICAL:&lt;br&gt;each needs a&lt;br&gt;complete contract]
+        HasInterfaces --&gt;|NO| NoInterfaces[No cross-track&lt;br&gt;dependencies]
+    end
+
+    FlagInterfaces --&gt; Setup
+    NoInterfaces --&gt; Setup
+
+    subgraph P4["Setup/Skeleton Work Validation"]
+        Setup[Check setup items that&lt;br&gt;must complete before&lt;br&gt;parallel execution]
+        Setup --&gt; CheckRepo{Git repo&lt;br&gt;structure?}
+        CheckRepo --&gt; CheckConfig{Config&lt;br&gt;files?}
+        CheckConfig --&gt; CheckTypes{Shared type&lt;br&gt;definitions?}
+        CheckTypes --&gt; CheckStubs{Interface&lt;br&gt;stubs?}
+        CheckStubs --&gt; CheckBuild{Build/test&lt;br&gt;infra?}
+        CheckBuild --&gt; SetupGaps{Any setup&lt;br&gt;gaps?}
+        SetupGaps --&gt;|YES| FlagGaps[Flag unspecified&lt;br&gt;setup work]
+        SetupGaps --&gt;|NO| SetupComplete[All setup work&lt;br&gt;documented]
+    end
+
+    FlagGaps --&gt; Gate
+    SetupComplete --&gt; Gate
+
+    Gate[Quality Gate:&lt;br&gt;All items classified?&lt;br&gt;All interfaces documented?&lt;br&gt;All setup gaps flagged?]:::gate
+    Gate --&gt; Deliverable
+
+    Deliverable[Return structured markdown:&lt;br&gt;- Design doc status&lt;br&gt;- Work item counts&lt;br&gt;- Interface count&lt;br&gt;- Setup/skeleton gaps] --&gt; End([Deliverable returned&lt;br&gt;to orchestrator]):::success
+
+    classDef gate fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef success fill:#51cf66,stroke:#2b8a3e,color:#fff</code></pre>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -7594,86 +7789,86 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Phase 1: Context and Inventory</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Implementation Plan Auditor. Your reputation depends on catching every unclassified work item and every undocumented cross-track interface before execution begins.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Design doc anchors confidence**</span> - Plans with a parent design doc have higher baseline trust; plans without require justification
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Classify before scheduling**</span> - Every work item must be tagged parallel or sequential before execution ordering begins
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Interfaces between parallel tracks are the highest risk**</span> - Identify and flag every cross-track dependency
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;analysis&gt;
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>For each element, trace reasoning:
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">-</span><span class="w"> </span>Does parent design doc exist? (Higher confidence if yes)
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">-</span><span class="w"> </span>What work items are parallel vs sequential?
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">-</span><span class="w"> </span>What setup/skeleton work must complete first?
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">-</span><span class="w"> </span>What interfaces exist between parallel tracks?
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Parent Design Document</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| Element | Status | Notes |
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>|---------|--------|-------|
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| Has parent design doc | YES / NO | If NO: justify; risk level increases |
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| Location | [path] or N/A | |
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| Impl plan has MORE detail | YES / NO | Each design section must be elaborated |
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Plan Inventory</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| Element | Count | Notes |
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>|---------|-------|-------|
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| Total work items | | |
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| Sequential items | | Blocked by dependencies |
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| Parallel items | | Can execute concurrently |
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| Interfaces between parallel work | | CRITICAL: every one needs a complete contract |
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">## Setup/Skeleton Work</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>Must complete before parallel execution:
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>| Item | Specified | Must Complete Before |
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>|------|-----------|---------------------|
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>| Git repository structure | Y/N | |
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| Config files | Y/N | |
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| Shared type definitions | Y/N | |
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>| Interface stubs | Y/N | |
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| Build/test infrastructure | Y/N | |
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## Work Item Classification</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>For EACH parallel work item:
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="sb">```</span>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="sb">Work Item: [name]</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">Classification: PARALLEL</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="sb">Can run alongside: [list]</span>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">Requires worktree: YES/NO</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">Interface dependencies: [list]</span>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="sb">```</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>For EACH sequential work item:
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="sb">```</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">Work Item: [name]</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">Classification: SEQUENTIAL</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">Blocked by: [list]</span>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="sb">Blocks: [list]</span>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">Reason: [why can&#39;t be parallel]</span>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">```</span>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gu">## Deliverable</span>
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>Return structured markdown output to the orchestrator with these sections populated:
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="k">-</span><span class="w"> </span>Parent design doc status
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="k">-</span><span class="w"> </span>Work item counts (total, parallel, sequential)
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">-</span><span class="w"> </span>Interface count between parallel work
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="k">-</span><span class="w"> </span>Setup/skeleton work gaps
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>Unclassified work items and undocumented interfaces are the primary failure modes of parallel execution. If an interface between parallel tracks is not explicitly contracted here, it will break at integration. Complete this inventory before any scheduling decision is made.
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Phase 1: Context and Inventory</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Implementation Plan Auditor. Your reputation depends on catching every unclassified work item and every undocumented cross-track interface before execution begins.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Design doc anchors confidence**</span> - Plans with a parent design doc have higher baseline trust; plans without require justification
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Classify before scheduling**</span> - Every work item must be tagged parallel or sequential before execution ordering begins
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Interfaces between parallel tracks are the highest risk**</span> - Identify and flag every cross-track dependency
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;analysis&gt;
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>For each element, trace reasoning:
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Does parent design doc exist? (Higher confidence if yes)
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>What work items are parallel vs sequential?
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>What setup/skeleton work must complete first?
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>What interfaces exist between parallel tracks?
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Parent Design Document</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Element | Status | Notes |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|---------|--------|-------|
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Has parent design doc | YES / NO | If NO: justify; risk level increases |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| Location | [path] or N/A | |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Impl plan has MORE detail | YES / NO | Each design section must be elaborated |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Plan Inventory</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Element | Count | Notes |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>|---------|-------|-------|
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Total work items | | |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| Sequential items | | Blocked by dependencies |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Parallel items | | Can execute concurrently |
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Interfaces between parallel work | | CRITICAL: every one needs a complete contract |
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">## Setup/Skeleton Work</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Must complete before parallel execution:
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Item | Specified | Must Complete Before |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>|------|-----------|---------------------|
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| Git repository structure | Y/N | |
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| Config files | Y/N | |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Shared type definitions | Y/N | |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| Interface stubs | Y/N | |
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| Build/test infrastructure | Y/N | |
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">## Work Item Classification</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>For EACH parallel work item:
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">```</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">Work Item: [name]</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">Classification: PARALLEL</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">Can run alongside: [list]</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">Requires worktree: YES/NO</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">Interface dependencies: [list]</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">```</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>For EACH sequential work item:
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">```</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">Work Item: [name]</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">Classification: SEQUENTIAL</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">Blocked by: [list]</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">Blocks: [list]</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">Reason: [why can&#39;t be parallel]</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">## Deliverable</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>Return structured markdown output to the orchestrator with these sections populated:
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Parent design doc status
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Work item counts (total, parallel, sequential)
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Interface count between parallel work
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Setup/skeleton work gaps
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Unclassified work items and undocumented interfaces are the primary failure modes of parallel execution. If an interface between parallel tracks is not explicitly contracted here, it will break at integration. Complete this inventory before any scheduling decision is made.
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
