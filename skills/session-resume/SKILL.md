@@ -67,4 +67,4 @@ When `spellbook_session_init` returns a `repairs` array, display each repair acc
 > Welcome to spellbook-enhanced Claude.
 >
 > Repairs needed:
-> - TTS is enabled but kokoro is not installed. Fix: `uv pip install 'spellbook[tts]'`
+> - TTS enabled but Wyoming server not reachable at localhost:10200. Fix: Start a Wyoming TTS server (e.g., wyoming-piper or wyoming-kokoro) listening on localhost:10200

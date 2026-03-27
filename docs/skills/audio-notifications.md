@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Reference for TTS and OS notification configuration. Auto-loads when TTS is enabled (session_init reports TTS active). Also triggered by: 'mute', 'unmute', 'change voice', 'volume', 'notify', 'notification settings', '/tts', '/notify', 'kokoro', 'speak', 'audio feedback'.
+> Reference for TTS and OS notification configuration. Auto-loads when TTS is enabled (session_init reports TTS active). Also triggered by: 'mute', 'unmute', 'change voice', 'volume', 'notify', 'notification settings', '/tts', '/notify', 'tts', 'speak', 'audio feedback'.
 ## Skill Content
 
 ``````````markdown
@@ -24,14 +24,14 @@ Did I use the correct MCP tool (session vs config) for the desired scope (tempor
 
 Spellbook provides two feedback channels for long-running tool completions. Both auto-trigger via PostToolUse hooks when tools exceed 30 seconds (configurable).
 
-## TTS (Kokoro text-to-speech)
+## TTS (Wyoming protocol)
 
-Requires `uv pip install spellbook[tts]`. Threshold: `SPELLBOOK_TTS_THRESHOLD`. Interactive/management tools excluded (AskUserQuestion, TodoRead, TodoWrite, TaskCreate, TaskUpdate, TaskGet, TaskList).
+Requires `uv pip install spellbook[tts]` and a running Wyoming TTS server. Threshold: `SPELLBOOK_TTS_THRESHOLD`. Interactive/management tools excluded (AskUserQuestion, TodoRead, TodoWrite, TaskCreate, TaskUpdate, TaskGet, TaskList).
 
 | MCP Tool | Purpose |
 |----------|---------|
-| `kokoro_speak(text, voice?, volume?)` | Speak text aloud |
-| `kokoro_status()` | Check TTS availability |
+| `tts_speak(text, voice?, volume?)` | Speak text aloud |
+| `tts_status()` | Check TTS availability |
 | `tts_session_set(enabled?, voice?, volume?)` | Session override |
 | `tts_config_set(enabled?, voice?, volume?)` | Persistent settings |
 
@@ -50,7 +50,7 @@ Uses macOS Notification Center, Linux notify-send, or Windows toast. Threshold: 
 
 - **Mute session:** `*_session_set(enabled=false)`
 - **Unmute:** `*_session_set(enabled=true)`
-- **Change voice:** `tts_config_set(voice="bf_emma")`
+- **Change voice:** `tts_config_set(voice="en_US-lessac-medium")`
 - **Adjust volume:** `tts_config_set(volume=0.5)`
 - **Change title:** `notify_config_set(title="My Project")`
 ``````````
