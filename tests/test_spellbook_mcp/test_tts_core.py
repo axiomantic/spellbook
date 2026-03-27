@@ -211,7 +211,7 @@ class TestEnsureConnected:
         success, error = await tts_mod.ensure_connected()
 
         assert success is False
-        assert "Cannot reach" in error
+        assert error == "Cannot reach Wyoming TTS server at localhost:10200: Connection refused"
 
 
 class TestResolveSetting:
@@ -305,8 +305,8 @@ class TestGetStatus:
         assert status["voice"] == ""
         assert status["volume"] == 0.3
         assert status["error"] is None
-        assert "tts_wyoming_host" in status
-        assert "tts_wyoming_port" in status
+        assert status["tts_wyoming_host"] == "localhost"
+        assert status["tts_wyoming_port"] == 10200
 
     def test_status_when_server_unreachable(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
@@ -441,8 +441,8 @@ class TestSpeak:
         result = await tts_mod.speak("hello", voice="test-voice", volume=0.3)
 
         assert result["ok"] is True
-        assert "elapsed" in result
-        assert "wav_path" in result
+        assert isinstance(result["elapsed"], float)
+        assert result["wav_path"] == "/tmp/spellbook-tts-test-uuid.wav"
         assert len(play_calls) == 1
 
     @pytest.mark.asyncio
@@ -455,8 +455,10 @@ class TestSpeak:
 
         result = await tts_mod.speak("hello")
 
-        assert "error" in result
-        assert "disabled" in result["error"].lower()
+        assert result == {
+            "error": "TTS disabled. Enable with tts_config_set(enabled=true) "
+            "or tts_session_set(enabled=true)"
+        }
 
     @pytest.mark.asyncio
     async def test_speak_connection_error(self, monkeypatch):
@@ -473,7 +475,7 @@ class TestSpeak:
 
         result = await tts_mod.speak("hello")
 
-        assert "error" in result
+        assert result == {"error": "Cannot reach server"}
 
     @pytest.mark.asyncio
     async def test_speak_clamps_volume(self, monkeypatch):
@@ -512,7 +514,7 @@ class TestSpeak:
         result = await tts_mod.speak("hello", volume=1.5)
 
         assert result["ok"] is True
-        assert "warning" in result
+        assert result["warning"] == "Volume clamped from 1.5 to 1.0"
 
     @pytest.mark.asyncio
     async def test_speak_playback_failure_returns_wav_path(self, monkeypatch):
@@ -554,5 +556,5 @@ class TestSpeak:
         result = await tts_mod.speak("hello")
 
         assert result["ok"] is True
-        assert "wav_path" in result
-        assert "Audio playback failed" in result.get("warning", "")
+        assert result["wav_path"] == "/tmp/spellbook-tts-test-uuid.wav"
+        assert result["warning"] == "Audio playback failed: No sounddevice. WAV file saved to /tmp/spellbook-tts-test-uuid.wav"

@@ -43,8 +43,7 @@ class TestTtsSpeak:
         async with bigfoot:
             result = await server.tts_speak.fn(text="hello")
 
-        assert "error" in result
-        assert "not available" in result["error"].lower()
+        assert result == {"error": "TTS not available. Server unreachable"}
         mock_speak.assert_call(args=("hello",), kwargs={"voice": None, "volume": None, "session_id": None})
 
     @pytest.mark.asyncio
@@ -224,7 +223,7 @@ class TestApiSpeakEndpoint:
         client = TestClient(app)
         response = client.post("/api/speak", json={})
         assert response.status_code == 400
-        assert "no text" in response.json()["error"]
+        assert response.json()["error"] == "no text provided"
 
     def test_invalid_json_returns_400(self):
         from starlette.testclient import TestClient
@@ -237,7 +236,7 @@ class TestApiSpeakEndpoint:
             headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 400
-        assert "invalid JSON" in response.json()["error"]
+        assert response.json()["error"] == "invalid JSON"
 
     def test_passes_voice_and_volume_to_speak(self):
         from starlette.testclient import TestClient

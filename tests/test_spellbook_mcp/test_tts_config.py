@@ -20,7 +20,6 @@ class TestSessionStateTtsKey:
         _session_states.clear()
         _session_activity.clear()
         state = _get_session_state("test-tts-session")
-        assert "tts" in state
         assert state["tts"] == {}
         _session_states.clear()
         _session_activity.clear()
@@ -38,7 +37,6 @@ class TestSessionStateTtsKey:
         _session_states["legacy-session"] = {"mode": None}
         _session_activity["legacy-session"] = datetime.now()
         state = _get_session_state("legacy-session")
-        assert "tts" in state
         assert state["tts"] == {}
         _session_states.clear()
         _session_activity.clear()
@@ -129,9 +127,7 @@ class TestTtsSessionSet:
         # Only set enabled, voice and volume should not appear
         result = tts_session_set(enabled=True)
 
-        assert result["session_tts"]["enabled"] is True
-        assert "voice" not in result["session_tts"]
-        assert "volume" not in result["session_tts"]
+        assert result["session_tts"] == {"enabled": True}
 
         _session_states.clear()
         _session_activity.clear()
@@ -309,6 +305,4 @@ class TestTtsDefaultVoiceEmpty:
         from spellbook.core.config import TTS_DEFAULT_VOICE
         assert TTS_DEFAULT_VOICE == ""
 
-    def test_default_voice_not_kokoro(self):
-        from spellbook.core.config import TTS_DEFAULT_VOICE
-        assert TTS_DEFAULT_VOICE != "test-voice"
+
