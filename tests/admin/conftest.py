@@ -1,17 +1,16 @@
 import pytest
-from unittest.mock import patch
 import secrets
 
 
 @pytest.fixture(autouse=True)
-def mock_mcp_token(tmp_path):
+def mock_mcp_token(monkeypatch):
     """Mock the MCP token for all admin tests."""
     token = secrets.token_urlsafe(32)
-    token_path = tmp_path / ".mcp-token"
-    token_path.write_text(token)
-    with patch("spellbook.admin.auth.load_token", return_value=token), \
-         patch("spellbook.admin.routes.auth.load_token", return_value=token):
-        yield token
+
+    monkeypatch.setattr("spellbook.admin.auth.load_token", lambda: token)
+    monkeypatch.setattr("spellbook.admin.routes.auth.load_token", lambda: token)
+
+    yield token
 
 
 @pytest.fixture

@@ -1,57 +1,112 @@
 """Tests for security event log API routes (SQLAlchemy ORM)."""
 
-from unittest.mock import AsyncMock, MagicMock
+from types import SimpleNamespace
 
+import bigfoot
 import pytest
 
 
+class _ScalarsResult:
+    """Stub for SQLAlchemy result.scalars() chain."""
+
+    def __init__(self, items):
+        self._items = items
+
+    def first(self):
+        if isinstance(self._items, list):
+            return self._items[0] if self._items else None
+        return self._items
+
+    def all(self):
+        if isinstance(self._items, list):
+            return self._items
+        return [self._items] if self._items is not None else []
+
+
+class _ExecuteResult:
+    """Stub for SQLAlchemy session.execute() result."""
+
+    def __init__(self, items=None, scalar_one_value=None, all_value=None):
+        self._items = items
+        self._scalar_one_value = scalar_one_value
+        self._all_value = all_value
+
+    def scalars(self):
+        return _ScalarsResult(self._items)
+
+    def scalar_one(self):
+        return self._scalar_one_value
+
+    def all(self):
+        return self._all_value if self._all_value is not None else []
+
+
+class _MockAsyncSession:
+    """Stub async session that returns pre-configured results from execute()."""
+
+    def __init__(self, results):
+        self._results = list(results)
+        self._call_count = 0
+
+    async def execute(self, *args, **kwargs):
+        idx = self._call_count
+        self._call_count += 1
+        if idx < len(self._results):
+            return self._results[idx]
+        raise IndexError(f"MockAsyncSession: no result for call #{idx}")
+
+
+def _mock_session_with_events(events, total):
+    """Create a mock session that simulates SQLAlchemy ORM queries.
+
+    The list_security_events handler executes:
+      1. A count query (select func.count())
+      2. A data query (select SecurityEvent with filters, order, limit, offset)
+    Both go through session.execute(), which returns a result proxy.
+    """
+    count_result = _ExecuteResult(scalar_one_value=total)
+    data_result = _ExecuteResult(items=events)
+    return _MockAsyncSession([count_result, data_result])
+
+
+def _make_mock_event(**overrides):
+    """Create a stub SecurityEvent ORM object with to_dict()."""
+    defaults = {
+        "id": 1,
+        "event_type": "tool_blocked",
+        "severity": "warning",
+        "source": "test",
+        "detail": "blocked tool",
+        "session_id": None,
+        "tool_name": "rm",
+        "action_taken": "blocked",
+        "created_at": "2026-03-14T10:00:00Z",
+    }
+    defaults.update(overrides)
+    obj = SimpleNamespace(**defaults)
+    obj.to_dict = lambda: dict(defaults)
+    return obj
+
+
+def _override_spellbook_db(client, mock_session):
+    """Override the spellbook_db FastAPI dependency to use a mock session."""
+    from spellbook.db import spellbook_db
+
+    client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+    return spellbook_db
+
+
+def _cleanup_overrides(client, dep):
+    """Remove dependency override after test."""
+    client.app.dependency_overrides.pop(dep, None)
+
+
 class TestSecurityEvents:
-    def _mock_session_with_events(self, events, total):
-        """Create a mock session that simulates SQLAlchemy ORM queries.
-
-        The list_security_events handler executes:
-          1. A count query (select func.count())
-          2. A data query (select SecurityEvent with filters, order, limit, offset)
-        Both go through session.execute(), which returns a result proxy.
-        """
-        mock_session = AsyncMock()
-
-        # Count query result
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = total
-
-        # Data query result
-        data_result = MagicMock()
-        data_result.scalars.return_value.all.return_value = events
-
-        mock_session.execute = AsyncMock(side_effect=[count_result, data_result])
-        return mock_session
-
-    def _make_mock_event(self, **overrides):
-        """Create a mock SecurityEvent ORM object with to_dict()."""
-        defaults = {
-            "id": 1,
-            "event_type": "tool_blocked",
-            "severity": "warning",
-            "source": "test",
-            "detail": "blocked tool",
-            "session_id": None,
-            "tool_name": "rm",
-            "action_taken": "blocked",
-            "created_at": "2026-03-14T10:00:00Z",
-        }
-        defaults.update(overrides)
-        event = MagicMock()
-        event.to_dict.return_value = defaults
-        return event
-
     def test_list_events_returns_paginated(self, client):
-        mock_event = self._make_mock_event()
-        mock_session = self._mock_session_with_events([mock_event], total=1)
+        mock_event = _make_mock_event()
+        mock_session = _mock_session_with_events([mock_event], total=1)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events")
             assert response.status_code == 200
@@ -76,14 +131,12 @@ class TestSecurityEvents:
                 "pages": 1,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_filters_by_severity(self, client):
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events?severity=critical")
             assert response.status_code == 200
@@ -96,16 +149,14 @@ class TestSecurityEvents:
                 "pages": 1,
             }
             # Verify that session.execute was called (count + data)
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_filters_by_event_type(self, client):
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events?event_type=tool_blocked")
             assert response.status_code == 200
@@ -117,16 +168,14 @@ class TestSecurityEvents:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_filters_by_date_range(self, client):
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get(
                 "/api/security/events?since=2026-03-01&until=2026-03-14"
@@ -140,16 +189,14 @@ class TestSecurityEvents:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_pagination(self, client):
-        mock_session = self._mock_session_with_events([], total=75)
+        mock_session = _mock_session_with_events([], total=75)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events?page=2&per_page=25")
             assert response.status_code == 200
@@ -162,15 +209,13 @@ class TestSecurityEvents:
                 "pages": 3,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_sorting(self, client):
         """Verify sort_by and sort_order parameters are accepted."""
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get(
                 "/api/security/events?sort_by=severity&sort_order=asc"
@@ -185,33 +230,29 @@ class TestSecurityEvents:
                 "pages": 1,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_sorting_invalid_column_rejected(self, client):
         """Verify invalid sort_by values are rejected (not in whitelist)."""
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get(
                 "/api/security/events?sort_by=id&sort_order=asc"
             )
             assert response.status_code == 422
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_list_events_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/security/events")
         assert response.status_code == 401
 
     def test_list_events_empty(self, client):
-        mock_session = self._mock_session_with_events([], total=0)
+        mock_session = _mock_session_with_events([], total=0)
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events")
             assert response.status_code == 200
@@ -224,15 +265,12 @@ class TestSecurityEvents:
                 "pages": 1,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
 
 class TestSecurityEventDetail:
     def test_event_detail_returns_event(self, client):
-        mock_session = AsyncMock()
-        mock_result = MagicMock()
-        mock_event = MagicMock()
-        mock_event.to_dict.return_value = {
+        event_data = {
             "id": 42,
             "event_type": "tool_blocked",
             "severity": "warning",
@@ -243,12 +281,13 @@ class TestSecurityEventDetail:
             "action_taken": "blocked",
             "created_at": "2026-03-14T10:00:00Z",
         }
-        mock_result.scalars.return_value.first.return_value = mock_event
-        mock_session.execute = AsyncMock(return_value=mock_result)
+        mock_event = SimpleNamespace(**event_data)
+        mock_event.to_dict = lambda: dict(event_data)
 
-        from spellbook.db import spellbook_db
+        result = _ExecuteResult(items=mock_event)
+        mock_session = _MockAsyncSession([result])
 
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events/42")
             assert response.status_code == 200
@@ -265,17 +304,13 @@ class TestSecurityEventDetail:
                 "created_at": "2026-03-14T10:00:00Z",
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_event_detail_404_not_found(self, client):
-        mock_session = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.first.return_value = None
-        mock_session.execute = AsyncMock(return_value=mock_result)
+        result = _ExecuteResult(items=None)
+        mock_session = _MockAsyncSession([result])
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/events/999")
             assert response.status_code == 404
@@ -287,7 +322,7 @@ class TestSecurityEventDetail:
                 }
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_event_detail_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/security/events/1")
@@ -296,19 +331,13 @@ class TestSecurityEventDetail:
 
 class TestSecuritySummary:
     def test_summary_returns_counts(self, client):
-        mock_session = AsyncMock()
-        mock_result = MagicMock()
         # The ORM query returns rows of (severity, count) tuples
-        mock_result.all.return_value = [
-            ("warning", 3),
-            ("info", 10),
-            ("critical", 1),
-        ]
-        mock_session.execute = AsyncMock(return_value=mock_result)
+        result = _ExecuteResult(
+            all_value=[("warning", 3), ("info", 10), ("critical", 1)]
+        )
+        mock_session = _MockAsyncSession([result])
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/summary")
             assert response.status_code == 200
@@ -321,24 +350,20 @@ class TestSecuritySummary:
                 }
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_summary_empty_db(self, client):
-        mock_session = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.all.return_value = []
-        mock_session.execute = AsyncMock(return_value=mock_result)
+        result = _ExecuteResult(all_value=[])
+        mock_session = _MockAsyncSession([result])
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/summary")
             assert response.status_code == 200
             data = response.json()
             assert data == {"by_severity": {}}
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_summary_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/security/summary")
@@ -360,37 +385,28 @@ class TestSecurityDashboard:
         session.execute(). We mock execute to return the right result for
         each call in sequence.
         """
-        mock_session = AsyncMock()
-
         # 1. Events by severity (24h) - returns (severity, cnt) tuples
-        sev_result = MagicMock()
-        sev_result.all.return_value = severity_rows
+        sev_result = _ExecuteResult(all_value=severity_rows)
 
         # 2. Top event types - returns (event_type, cnt) tuples
-        top_result = MagicMock()
-        top_result.all.return_value = top_types_rows
+        top_result = _ExecuteResult(all_value=top_types_rows)
 
         # 3. Active canaries count - returns scalar
-        canary_result = MagicMock()
-        canary_result.scalar_one.return_value = canary_count
+        canary_result = _ExecuteResult(scalar_one_value=canary_count)
 
         # 4. Trust registry size - returns scalar
-        trust_result = MagicMock()
-        trust_result.scalar_one.return_value = trust_count
+        trust_result = _ExecuteResult(scalar_one_value=trust_count)
 
         # 5. Security mode - returns a model or None
-        mode_result = MagicMock()
         if mode_value is not None:
-            mode_obj = MagicMock()
-            mode_obj.mode = mode_value
-            mode_result.scalars.return_value.first.return_value = mode_obj
+            mode_obj = SimpleNamespace(mode=mode_value)
+            mode_result = _ExecuteResult(items=mode_obj)
         else:
-            mode_result.scalars.return_value.first.return_value = None
+            mode_result = _ExecuteResult(items=None)
 
-        mock_session.execute = AsyncMock(
-            side_effect=[sev_result, top_result, canary_result, trust_result, mode_result]
+        return _MockAsyncSession(
+            [sev_result, top_result, canary_result, trust_result, mode_result]
         )
-        return mock_session
 
     def test_dashboard_returns_full_aggregation(self, client):
         mock_session = self._build_dashboard_mock_session(
@@ -401,9 +417,7 @@ class TestSecurityDashboard:
             mode_value="standard",
         )
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/dashboard")
             assert response.status_code == 200
@@ -418,7 +432,7 @@ class TestSecurityDashboard:
                 "trust_registry_size": 15,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_dashboard_missing_mode_defaults_to_standard(self, client):
         mock_session = self._build_dashboard_mock_session(
@@ -429,9 +443,7 @@ class TestSecurityDashboard:
             mode_value=None,
         )
 
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
+        dep = _override_spellbook_db(client, mock_session)
         try:
             response = client.get("/api/security/dashboard")
             assert response.status_code == 200
@@ -444,7 +456,7 @@ class TestSecurityDashboard:
                 "trust_registry_size": 0,
             }
         finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
+            _cleanup_overrides(client, dep)
 
     def test_dashboard_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/security/dashboard")

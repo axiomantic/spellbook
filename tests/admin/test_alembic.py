@@ -11,6 +11,33 @@ import pytest
 MIGRATIONS_DIR = Path(__file__).parent.parent.parent / "spellbook" / "db" / "migrations"
 
 
+class _FakeModule:
+    """Fake module object that auto-creates attributes on access.
+
+    Replaces MagicMock for sys.modules injection: any attribute access
+    returns another _FakeModule, and instances are callable (returning
+    themselves by default).
+    """
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def __getattr__(self, name):
+        obj = _FakeModule()
+        object.__setattr__(self, name, obj)
+        return obj
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
 class TestAlembicFileStructure:
     """Verify all required migration files and directories exist."""
 
@@ -47,58 +74,41 @@ class TestEnvPyStructure:
     """Verify env.py has correct DB_CONFIGS and imports."""
 
     @pytest.fixture()
-    def env_module(self):
+    def env_module(self, monkeypatch):
         """Import env.py as a module without executing migration logic.
 
-        We patch alembic.context to avoid runtime errors from Alembic
-        expecting to be run inside a migration context.  The mock's
+        We inject fake alembic.context and alembic.op modules into
+        sys.modules so env.py can import them.  The fake context's
         is_offline_mode returns True so the module-level code takes the
-        offline branch (whose calls are all no-ops on the MagicMock),
+        offline branch (whose calls are all no-ops on the fake),
         avoiding asyncio.run() which would try to connect to real databases.
         """
-        from unittest.mock import MagicMock
+        # Create a fake alembic.context module so env.py can import it
+        fake_config = _FakeModule(config_file_name=None)
+        fake_context = _FakeModule(config=fake_config)
+        fake_context.is_offline_mode = lambda: False
+        fake_context.get_x_argument = lambda **kwargs: {}
 
-        # Create a mock alembic.context module so env.py can import it
-        mock_context = MagicMock()
-        mock_context.config = MagicMock()
-        mock_context.config.config_file_name = None
-        mock_context.is_offline_mode.return_value = False
-        mock_context.get_x_argument.return_value = {}
-
-        # Temporarily replace alembic.context
+        # Temporarily replace alembic.context and alembic.op
         original_context = sys.modules.get("alembic.context")
-        sys.modules["alembic.context"] = mock_context
-
-        # We also need alembic.op mocked for script imports
         original_op = sys.modules.get("alembic.op")
-        sys.modules["alembic.op"] = MagicMock()
+        monkeypatch.setitem(sys.modules, "alembic.context", fake_context)
+        monkeypatch.setitem(sys.modules, "alembic.op", _FakeModule())
 
-        try:
-            env_path = MIGRATIONS_DIR / "env.py"
-            spec = importlib.util.spec_from_file_location(
-                "spellbook_migrations_env", str(env_path)
-            )
-            module = importlib.util.module_from_spec(spec)
+        env_path = MIGRATIONS_DIR / "env.py"
+        spec = importlib.util.spec_from_file_location(
+            "spellbook_migrations_env", str(env_path)
+        )
+        module = importlib.util.module_from_spec(spec)
 
-            # env.py has module-level code that calls run_migrations_online()
-            # which invokes asyncio.run(run_async_migrations()).  Mock
-            # is_offline_mode to return True so env.py takes the offline
-            # branch instead, and mock run_migrations_offline via context
-            # to be a no-op (context.configure/begin_transaction/run_migrations
-            # are already mocked).
-            mock_context.is_offline_mode.return_value = True
-            spec.loader.exec_module(module)
-            yield module
-        finally:
-            # Restore original modules
-            if original_context is not None:
-                sys.modules["alembic.context"] = original_context
-            else:
-                sys.modules.pop("alembic.context", None)
-            if original_op is not None:
-                sys.modules["alembic.op"] = original_op
-            else:
-                sys.modules.pop("alembic.op", None)
+        # env.py has module-level code that calls run_migrations_online()
+        # which invokes asyncio.run(run_async_migrations()).  Set
+        # is_offline_mode to return True so env.py takes the offline
+        # branch instead (configure/begin_transaction/run_migrations
+        # are all no-ops on the fake module).
+        fake_context.is_offline_mode = lambda: True
+        spec.loader.exec_module(module)
+        yield module
 
     def test_db_configs_has_exactly_four_databases(self, env_module):
         assert isinstance(env_module.DB_CONFIGS, dict)
