@@ -18,8 +18,8 @@ def _async_return(value):
     return _fn
 
 
-class TestKokoroSpeak:
-    """kokoro_speak() MCP tool."""
+class TestTtsSpeak:
+    """tts_speak() MCP tool."""
 
     @pytest.mark.asyncio
     async def test_success_returns_ok(self):
@@ -28,7 +28,7 @@ class TestKokoroSpeak:
         mock_speak.calls(_async_return(mock_result))
 
         async with bigfoot:
-            result = await server.kokoro_speak.fn(text="hello world")
+            result = await server.tts_speak.fn(text="hello world")
 
         assert result["ok"] is True
         assert result["elapsed"] == 1.23
@@ -36,12 +36,12 @@ class TestKokoroSpeak:
 
     @pytest.mark.asyncio
     async def test_not_available_returns_error(self):
-        mock_result = {"error": "TTS not available. Missing kokoro"}
+        mock_result = {"error": "TTS not available. Server unreachable"}
         mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
         mock_speak.calls(_async_return(mock_result))
 
         async with bigfoot:
-            result = await server.kokoro_speak.fn(text="hello")
+            result = await server.tts_speak.fn(text="hello")
 
         assert "error" in result
         assert "not available" in result["error"].lower()
@@ -53,9 +53,9 @@ class TestKokoroSpeak:
         mock_speak.calls(_async_return({"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}))
 
         async with bigfoot:
-            await server.kokoro_speak.fn(text="hi", voice="bf_emma", volume=0.5)
+            await server.tts_speak.fn(text="hi", voice="test-voice", volume=0.5)
 
-        mock_speak.assert_call(args=("hi",), kwargs={"voice": "bf_emma", "volume": 0.5, "session_id": None})
+        mock_speak.assert_call(args=("hi",), kwargs={"voice": "test-voice", "volume": 0.5, "session_id": None})
 
     @pytest.mark.asyncio
     async def test_passes_session_id(self):
@@ -63,28 +63,30 @@ class TestKokoroSpeak:
         mock_speak.calls(_async_return({"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}))
 
         async with bigfoot:
-            await server.kokoro_speak.fn(text="hi", session_id="sess-123")
+            await server.tts_speak.fn(text="hi", session_id="sess-123")
 
         mock_speak.assert_call(args=("hi",), kwargs={"voice": None, "volume": None, "session_id": "sess-123"})
 
 
-class TestKokoroStatus:
-    """kokoro_status() MCP tool."""
+class TestTtsStatus:
+    """tts_status() MCP tool."""
 
     def test_returns_status_dict(self):
         mock_status = {
             "available": True,
             "enabled": True,
-            "model_loaded": False,
-            "voice": "af_heart",
+            "server_reachable": False,
+            "voice": "",
             "volume": 0.3,
+            "tts_wyoming_host": "localhost",
+            "tts_wyoming_port": 10200,
             "error": None,
         }
         mock_get = bigfoot.mock("spellbook.notifications.tts:get_status")
         mock_get.returns(mock_status)
 
         with bigfoot:
-            result = server.kokoro_status.fn()
+            result = server.tts_status.fn()
 
         assert result == mock_status
         mock_get.assert_call(kwargs={"session_id": None})
@@ -93,16 +95,18 @@ class TestKokoroStatus:
         mock_status = {
             "available": True,
             "enabled": True,
-            "model_loaded": False,
-            "voice": "af_heart",
+            "server_reachable": False,
+            "voice": "",
             "volume": 0.3,
+            "tts_wyoming_host": "localhost",
+            "tts_wyoming_port": 10200,
             "error": None,
         }
         mock_get = bigfoot.mock("spellbook.notifications.tts:get_status")
         mock_get.returns(mock_status)
 
         with bigfoot:
-            server.kokoro_status.fn(session_id="sess-456")
+            server.tts_status.fn(session_id="sess-456")
 
         mock_get.assert_call(kwargs={"session_id": "sess-456"})
 

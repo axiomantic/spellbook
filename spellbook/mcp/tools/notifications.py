@@ -1,8 +1,8 @@
 """MCP tools for TTS and notification management."""
 
 __all__ = [
-    "kokoro_speak",
-    "kokoro_status",
+    "tts_speak",
+    "tts_status",
     "tts_session_set",
     "tts_config_set",
     "notify_send",
@@ -30,21 +30,21 @@ from spellbook.sessions.injection import inject_recovery_context
 
 @mcp.tool()
 @inject_recovery_context
-async def kokoro_speak(
+async def tts_speak(
     text: str,
     voice: str = None,
     volume: float = None,
     session_id: str = None,
 ) -> dict:
     """
-    Generate speech from text using Kokoro TTS and play it.
+    Generate speech from text using a Wyoming TTS server and play it.
 
-    Lazy-loads the Kokoro model on first call (~20-30s). Subsequent calls
-    are fast (~2s). Audio plays through the default system output device.
+    Connects to a Wyoming-compatible TTS server (Piper, wyoming-kokoro, etc.)
+    over TCP to synthesize audio. Audio plays through the default system output device.
 
     Args:
         text: Text to speak (required)
-        voice: Kokoro voice ID (default: config or "af_heart")
+        voice: Voice name supported by the Wyoming server (default: server default)
         volume: Playback volume 0.0-1.0 (default: config or 0.3)
         session_id: Session identifier for settings resolution (auto-detected if omitted)
 
@@ -59,7 +59,7 @@ async def kokoro_speak(
 
 @mcp.tool()
 @inject_recovery_context
-def kokoro_status(session_id: str = None) -> dict:
+def tts_status(session_id: str = None) -> dict:
     """
     Check TTS availability and current settings.
 
@@ -68,12 +68,14 @@ def kokoro_status(session_id: str = None) -> dict:
 
     Returns:
         {
-            "available": bool,       # kokoro importable
-            "enabled": bool,         # resolved via session > config > default
-            "model_loaded": bool,    # KPipeline cached
-            "voice": str,            # effective voice
-            "volume": float,         # effective volume
-            "error": str | None      # if not available, why
+            "available": bool,         # TTS dependencies importable
+            "enabled": bool,           # resolved via session > config > default
+            "server_reachable": bool,  # Wyoming server connectivity
+            "voice": str,              # effective voice
+            "volume": float,           # effective volume
+            "tts_wyoming_host": str,   # configured Wyoming server host
+            "tts_wyoming_port": int,   # configured Wyoming server port
+            "error": str | None        # if not available, why
         }
     """
     return tts_module.get_status(session_id=session_id)
@@ -120,7 +122,7 @@ def tts_config_set(
 
     Args:
         enabled: Enable/disable TTS globally
-        voice: Default voice ID (e.g., "af_heart", "bf_emma")
+        voice: Voice name supported by the Wyoming TTS server
         volume: Default volume 0.0-1.0
 
     Returns:
