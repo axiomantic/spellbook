@@ -383,7 +383,7 @@ class TestWindowsTerminalEscaping:
         assert result == {"status": "spawned", "terminal": "windows-terminal", "pid": 1234}
         mock_popen.assert_call(
             args=(expected_cmd,),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
     def test_prompt_with_special_chars_pwsh(self):
@@ -408,7 +408,7 @@ class TestWindowsTerminalEscaping:
         assert result == {"status": "spawned", "terminal": "pwsh", "pid": 1234}
         mock_popen.assert_call(
             args=(expected_cmd,),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
     def test_prompt_with_special_chars_cmd(self):
@@ -434,7 +434,7 @@ class TestWindowsTerminalEscaping:
         assert result == {"status": "spawned", "terminal": "cmd", "pid": 1234}
         mock_popen.assert_call(
             args=(expected_cmd,),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
 

@@ -460,7 +460,7 @@ class TestSpawnWindowsTerminal:
         safe_cli_prompt = subprocess.list2cmdline(["claude", "test prompt"])
         mock_popen.assert_call(
             args=(["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt],),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
     def test_spawn_windows_terminal_pwsh(self):
@@ -480,7 +480,7 @@ class TestSpawnWindowsTerminal:
         mock_popen.assert_call(
             args=(["pwsh", "-NoExit", "-Command",
                    "Set-Location 'C:\\Users\\test'; & 'claude' 'test prompt'"],),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
     def test_spawn_windows_terminal_cmd(self):
@@ -501,7 +501,7 @@ class TestSpawnWindowsTerminal:
         mock_popen.assert_call(
             args=(["cmd", "/c", "start", "cmd", "/k",
                    f'cd /d "C:\\Users\\test" && {safe_cli_prompt}'],),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
     def test_spawn_windows_terminal_custom_cli_command(self):
@@ -520,7 +520,7 @@ class TestSpawnWindowsTerminal:
         mock_popen.assert_call(
             args=(["cmd", "/c", "start", "cmd", "/k",
                    f'cd /d "C:\\" && {safe_cli_prompt}'],),
-            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_CONSOLE", 0)},
         )
 
 
