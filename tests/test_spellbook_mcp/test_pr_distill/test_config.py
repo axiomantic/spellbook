@@ -3,7 +3,6 @@
 import json
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -91,18 +90,18 @@ class TestDefaultConfig:
 class TestLoadConfig:
     """Test configuration loading."""
 
-    def test_returns_defaults_when_file_not_exists(self, tmp_path):
+    def test_returns_defaults_when_file_not_exists(self, tmp_path, monkeypatch):
         """Return DEFAULT_CONFIG when config file doesn't exist."""
         project_root = str(tmp_path / "nonexistent_project")
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = load_config(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = load_config(project_root)
 
         assert result == DEFAULT_CONFIG
         # Verify it's a copy, not the same object
         assert result is not DEFAULT_CONFIG
 
-    def test_loads_existing_config(self, tmp_path):
+    def test_loads_existing_config(self, tmp_path, monkeypatch):
         """Load config from existing file."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -119,14 +118,14 @@ class TestLoadConfig:
         }
         config_file.write_text(json.dumps(custom_config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = load_config(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = load_config(project_root)
 
         assert result["blessed_patterns"] == ["pattern-1", "pattern-2"]
         assert result["always_review_paths"] == ["/important/"]
         assert result["query_count_thresholds"]["relative_percent"] == 30
 
-    def test_merges_with_defaults_for_missing_keys(self, tmp_path):
+    def test_merges_with_defaults_for_missing_keys(self, tmp_path, monkeypatch):
         """Config missing keys gets defaults merged in."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -139,14 +138,14 @@ class TestLoadConfig:
         }
         config_file.write_text(json.dumps(partial_config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = load_config(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = load_config(project_root)
 
         assert result["blessed_patterns"] == ["pattern-1"]
         assert result["always_review_paths"] == []  # From defaults
         assert result["query_count_thresholds"] == DEFAULT_CONFIG["query_count_thresholds"]
 
-    def test_returns_defaults_on_invalid_json(self, tmp_path):
+    def test_returns_defaults_on_invalid_json(self, tmp_path, monkeypatch):
         """Return defaults when config file has invalid JSON."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -155,8 +154,8 @@ class TestLoadConfig:
 
         config_file.write_text("{ invalid json }")
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = load_config(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = load_config(project_root)
 
         assert result == DEFAULT_CONFIG
 
@@ -164,7 +163,7 @@ class TestLoadConfig:
 class TestSaveConfig:
     """Test configuration saving."""
 
-    def test_creates_directories(self, tmp_path):
+    def test_creates_directories(self, tmp_path, monkeypatch):
         """save_config creates parent directories if needed."""
         project_root = "/Users/alice/project"
 
@@ -177,13 +176,13 @@ class TestSaveConfig:
             },
         }
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            save_config(project_root, config)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        save_config(project_root, config)
 
         config_path = tmp_path / "Users-alice-project" / "pr-distill-config.json"
         assert config_path.exists()
 
-    def test_writes_json_content(self, tmp_path):
+    def test_writes_json_content(self, tmp_path, monkeypatch):
         """save_config writes valid JSON."""
         project_root = "/Users/alice/project"
 
@@ -196,8 +195,8 @@ class TestSaveConfig:
             },
         }
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            save_config(project_root, config)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        save_config(project_root, config)
 
         config_path = tmp_path / "Users-alice-project" / "pr-distill-config.json"
         loaded = json.loads(config_path.read_text())
@@ -206,7 +205,7 @@ class TestSaveConfig:
         assert loaded["always_review_paths"] == ["/critical/"]
         assert loaded["query_count_thresholds"]["relative_percent"] == 25
 
-    def test_overwrites_existing_config(self, tmp_path):
+    def test_overwrites_existing_config(self, tmp_path, monkeypatch):
         """save_config overwrites existing config file."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -222,8 +221,8 @@ class TestSaveConfig:
             "query_count_thresholds": DEFAULT_CONFIG["query_count_thresholds"],
         }
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            save_config(project_root, new_config)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        save_config(project_root, new_config)
 
         loaded = json.loads(config_file.read_text())
         assert loaded["blessed_patterns"] == ["new"]
@@ -232,12 +231,12 @@ class TestSaveConfig:
 class TestBlessPattern:
     """Test pattern blessing functionality."""
 
-    def test_adds_pattern_to_empty_list(self, tmp_path):
+    def test_adds_pattern_to_empty_list(self, tmp_path, monkeypatch):
         """Bless a pattern when no config exists."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "new-pattern")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "new-pattern")
 
         assert "new-pattern" in result["blessed_patterns"]
 
@@ -246,7 +245,7 @@ class TestBlessPattern:
         loaded = json.loads(config_path.read_text())
         assert "new-pattern" in loaded["blessed_patterns"]
 
-    def test_adds_pattern_to_existing_list(self, tmp_path):
+    def test_adds_pattern_to_existing_list(self, tmp_path, monkeypatch):
         """Add pattern to existing blessed patterns."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -260,12 +259,12 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "new-pattern")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "new-pattern")
 
         assert result["blessed_patterns"] == ["existing-pattern", "new-pattern"]
 
-    def test_does_not_duplicate_pattern(self, tmp_path):
+    def test_does_not_duplicate_pattern(self, tmp_path, monkeypatch):
         """Blessing same pattern twice doesn't create duplicates."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -279,20 +278,20 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            # Bless same pattern twice
-            bless_pattern(project_root, "pattern-1")
-            result = bless_pattern(project_root, "pattern-1")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        # Bless same pattern twice
+        bless_pattern(project_root, "pattern-1")
+        result = bless_pattern(project_root, "pattern-1")
 
         assert result["blessed_patterns"] == ["pattern-1"]
         assert result["blessed_patterns"].count("pattern-1") == 1
 
-    def test_returns_updated_config(self, tmp_path):
+    def test_returns_updated_config(self, tmp_path, monkeypatch):
         """bless_pattern returns the full updated config."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "test-pattern")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "test-pattern")
 
         assert "blessed_patterns" in result
         assert "always_review_paths" in result

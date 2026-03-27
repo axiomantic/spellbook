@@ -5,9 +5,10 @@ Tests the generate_memory_md function (static template), _resolve_auto_memory_di
 regenerate_memory_md_for_project (orchestrator).
 """
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 from pathlib import Path
-from unittest.mock import patch
 
 from spellbook.core.db import init_db, close_all_connections
 from spellbook.memory.store import get_unconsolidated_events
@@ -83,9 +84,13 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "-Users-alice-project" / "memory"
         memory_dir.mkdir(parents=True)
 
-        with patch("spellbook.memory.bootstrap.Path.home", return_value=tmp_path):
+        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home.__call__.returns(tmp_path)
+
+        with bigfoot:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
+        mock_home.__call__.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_dir_exists_without_leading_dash(self, tmp_path):
@@ -94,17 +99,25 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "Users-alice-project" / "memory"
         memory_dir.mkdir(parents=True)
 
-        with patch("spellbook.memory.bootstrap.Path.home", return_value=tmp_path):
+        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home.__call__.returns(tmp_path)
+
+        with bigfoot:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
+        mock_home.__call__.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_dir_missing_returns_none(self, tmp_path):
         from spellbook.memory.bootstrap import _resolve_auto_memory_dir
 
-        with patch("spellbook.memory.bootstrap.Path.home", return_value=tmp_path):
+        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home.__call__.returns(tmp_path)
+
+        with bigfoot:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
+        mock_home.__call__.assert_call(args=(), kwargs={})
         assert result is None
 
     def test_path_encoding_multi_segment(self, tmp_path):
@@ -114,9 +127,13 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "-Users-alice-Development-myproject" / "memory"
         memory_dir.mkdir(parents=True)
 
-        with patch("spellbook.memory.bootstrap.Path.home", return_value=tmp_path):
+        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home.__call__.returns(tmp_path)
+
+        with bigfoot:
             result = _resolve_auto_memory_dir("/Users/alice/Development/myproject")
 
+        mock_home.__call__.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_prefers_dash_prefix_over_no_prefix(self, tmp_path):
@@ -128,9 +145,13 @@ class TestResolveAutoMemoryDir:
         no_dash_dir = tmp_path / ".claude" / "projects" / "Users-alice-project" / "memory"
         no_dash_dir.mkdir(parents=True)
 
-        with patch("spellbook.memory.bootstrap.Path.home", return_value=tmp_path):
+        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home.__call__.returns(tmp_path)
+
+        with bigfoot:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
+        mock_home.__call__.assert_call(args=(), kwargs={})
         assert result == dash_dir
 
 
@@ -140,10 +161,19 @@ class TestRegenerateMemoryMdForProject:
     def test_writes_file_with_template(self, db, auto_memory_dir):
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", return_value=auto_memory_dir), \
-             patch("spellbook.memory.bootstrap.get_db_path", return_value=Path(db)), \
-             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"):
+        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve.__call__.returns(auto_memory_dir)
+        mock_db = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db.__call__.returns(Path(db))
+        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode.__call__.returns("tmp-test")
+
+        with bigfoot:
             regenerate_memory_md_for_project("/tmp/test")
+
+        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
+        mock_db.__call__.assert_call(args=(), kwargs={})
+        mock_encode.__call__.assert_call(args=("/tmp/test",), kwargs={})
 
         memory_md = auto_memory_dir / "MEMORY.md"
         assert memory_md.exists()
@@ -156,26 +186,47 @@ class TestRegenerateMemoryMdForProject:
         """No auto-memory directory means nothing to do."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", return_value=None):
+        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve.__call__.returns(None)
+
+        with bigfoot:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
+
+        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
 
     def test_fail_open_on_exception(self):
         """Exception in generation does not propagate (fail-open)."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", side_effect=RuntimeError("boom")):
+        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve.__call__.raises(RuntimeError("boom"))
+
+        with bigfoot:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
+
+        mock_resolve.__call__.assert_call(
+            args=("/tmp/test",), kwargs={}, raised=IsInstance(RuntimeError),
+        )
 
     def test_creates_marker_file(self, db, auto_memory_dir):
         """After regeneration, .spellbook-bridge-initialized marker exists."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir", return_value=auto_memory_dir), \
-             patch("spellbook.memory.bootstrap.get_db_path", return_value=Path(db)), \
-             patch("spellbook.memory.bootstrap.encode_cwd", return_value="tmp-test"):
+        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve.__call__.returns(auto_memory_dir)
+        mock_db = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db.__call__.returns(Path(db))
+        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode.__call__.returns("tmp-test")
+
+        with bigfoot:
             regenerate_memory_md_for_project("/tmp/test")
+
+        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
+        mock_db.__call__.assert_call(args=(), kwargs={})
+        mock_encode.__call__.assert_call(args=("/tmp/test",), kwargs={})
 
         marker = auto_memory_dir / ".spellbook-bridge-initialized"
         assert marker.exists()

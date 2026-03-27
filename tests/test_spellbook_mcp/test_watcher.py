@@ -5,9 +5,10 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 pytestmark = pytest.mark.slow
 
@@ -148,34 +149,36 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
     # Create watcher with project path
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-    # Mock all the lazy imports within _poll_sessions
-    with patch.object(
-        watcher.__class__, '_poll_sessions', autospec=True
-    ) as original_poll:
-        # Restore original method but with patched imports
-        original_poll.side_effect = None
+    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check.returns(mock_event)
 
-    # Use patch.dict to patch the modules that get lazy imported
-    with patch(
-        "spellbook.sessions.compaction.check_for_compaction", return_value=mock_event
-    ) as mock_check:
-        with patch(
-            "spellbook.sessions.compaction._get_current_session_file",
-            return_value=session_file,
-        ):
-            with patch(
-                "spellbook.sessions.soul_extractor.extract_soul", return_value=mock_soul
-            ) as mock_extract:
-                monkeypatch.setattr(injection, "_set_pending_compaction", mock_set_pending)
+    # _get_current_session_file is called twice: once for soul extraction, once for _analyze_skills
+    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file.returns(session_file).returns(session_file)
 
-                # Call _poll_sessions
-                watcher._poll_sessions()
+    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract.returns(mock_soul)
 
-                # Verify check_for_compaction was called with project path
-                mock_check.assert_called_once_with(str(project_path))
+    monkeypatch.setattr(injection, "_set_pending_compaction", mock_set_pending)
 
-                # Verify extract_soul was called with session file
-                mock_extract.assert_called_once_with(str(session_file))
+    with bigfoot:
+        # Call _poll_sessions
+        watcher._poll_sessions()
+
+    # Verify check_for_compaction was called with project path
+    mock_check.assert_call(args=(str(project_path),))
+
+    # Verify extract_soul was called with session file, and _get_current_session_file called twice
+    with bigfoot.in_any_order():
+        mock_get_file.assert_call(args=(str(project_path),))
+        mock_get_file.assert_call(args=(str(project_path),))
+        mock_extract.assert_call(args=(str(session_file),))
+        # _analyze_skills fails parsing the simple test messages
+        bigfoot.log_mock.assert_log(
+            "WARNING",
+            "Skill analysis failed: 'str' object has no attribute 'get'",
+            "spellbook.sessions.watcher",
+        )
 
     # Verify soul was saved to database
     conn = get_connection(str(db_path))
@@ -226,14 +229,22 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     # Pre-mark this compaction as processed
     watcher._processed_compactions[("test-session", "leaf-123")] = time.time()
 
-    with patch(
-        "spellbook.sessions.compaction.check_for_compaction", return_value=mock_event
-    ):
-        with patch("spellbook.sessions.soul_extractor.extract_soul") as mock_extract:
-            watcher._poll_sessions()
+    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check.returns(mock_event)
 
-            # extract_soul should NOT be called since event was already processed
-            mock_extract.assert_not_called()
+    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract.__call__.required(False)
+
+    # _analyze_skills also calls _get_current_session_file; return None to skip analysis
+    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file.returns(None)
+
+    with bigfoot:
+        watcher._poll_sessions()
+
+    # Assert the interactions that did happen
+    mock_check.assert_call(args=(str(project_path),))
+    mock_get_file.assert_call(args=(str(project_path),))
 
     # Verify no soul was saved
     conn = get_connection(str(db_path))
@@ -255,14 +266,22 @@ def test_poll_sessions_no_compaction_event(tmp_path):
 
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-    with patch(
-        "spellbook.sessions.compaction.check_for_compaction", return_value=None
-    ):
-        with patch("spellbook.sessions.soul_extractor.extract_soul") as mock_extract:
-            watcher._poll_sessions()
+    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check.returns(None)
 
-            # extract_soul should NOT be called
-            mock_extract.assert_not_called()
+    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract.__call__.required(False)
+
+    # _analyze_skills also calls _get_current_session_file; return None to skip analysis
+    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file.returns(None)
+
+    with bigfoot:
+        watcher._poll_sessions()
+
+    # Assert the interactions that did happen
+    mock_check.assert_call(args=(str(project_path),))
+    mock_get_file.assert_call(args=(str(project_path),))
 
     # Verify no soul was saved
     conn = get_connection(str(db_path))
@@ -316,11 +335,13 @@ def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
     # Mock the session file lookup
-    with patch(
-        "spellbook.sessions.compaction._get_current_session_file",
-        return_value=session_file,
-    ):
+    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file.returns(session_file)
+
+    with bigfoot:
         watcher._analyze_skills()
+
+    mock_get_file.assert_call(args=(str(project_path),))
 
     # Check outcomes were persisted
     conn = get_connection(str(db_path))
@@ -363,35 +384,35 @@ def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
 
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-    # First call to set up tracking
-    with patch(
-        "spellbook.sessions.compaction._get_current_session_file",
-        return_value=session_file,
-    ):
+    # Mock _get_current_session_file for both calls to _analyze_skills
+    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file.returns(session_file).returns(session_file)
+
+    with bigfoot:
+        # First call to set up tracking
         watcher._analyze_skills()
 
-    # Simulate inactivity by setting last_activity in the past
-    session_id = session_file.stem
-    if session_id in watcher._skill_states:
-        watcher._skill_states[session_id].last_activity = (
-            datetime.now() - timedelta(seconds=SESSION_INACTIVE_THRESHOLD_SECONDS + 60)
-        )
+        # Simulate inactivity by setting last_activity in the past
+        session_id = session_file.stem
+        if session_id in watcher._skill_states:
+            watcher._skill_states[session_id].last_activity = (
+                datetime.now() - timedelta(seconds=SESSION_INACTIVE_THRESHOLD_SECONDS + 60)
+            )
 
-    # Insert a record with empty outcome to simulate open skill
-    conn = get_connection(str(db_path))
-    conn.execute("""
-        INSERT OR REPLACE INTO skill_outcomes
-        (skill_name, session_id, project_encoded, start_time, outcome)
-        VALUES (?, ?, ?, ?, ?)
-    """, ("debugging", session_id, "test", "2026-01-26T10:00:00", ""))
-    conn.commit()
+        # Insert a record with empty outcome to simulate open skill
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT OR REPLACE INTO skill_outcomes
+            (skill_name, session_id, project_encoded, start_time, outcome)
+            VALUES (?, ?, ?, ?, ?)
+        """, ("debugging", session_id, "test", "2026-01-26T10:00:00", ""))
+        conn.commit()
 
-    # Second call should detect inactivity and finalize
-    with patch(
-        "spellbook.sessions.compaction._get_current_session_file",
-        return_value=session_file,
-    ):
+        # Second call should detect inactivity and finalize
         watcher._analyze_skills()
+
+    mock_get_file.assert_call(args=(str(project_path),))
+    mock_get_file.assert_call(args=(str(project_path),))
 
     # Check outcome was finalized
     cursor = conn.cursor()
@@ -508,12 +529,13 @@ def test_prune_expired_compactions_called_in_run_loop(tmp_path):
     watcher._prune_expired_compactions = tracking_prune
 
     # Suppress _poll_sessions and _cleanup_stale_data to avoid side effects
-    with patch.object(watcher, '_poll_sessions'):
-        with patch.object(watcher, '_cleanup_stale_data'):
-            thread = watcher.start()
-            time.sleep(0.8)
-            watcher.stop()
-            thread.join(timeout=2.0)
+    watcher._poll_sessions = lambda: None
+    watcher._cleanup_stale_data = lambda: None
+
+    thread = watcher.start()
+    time.sleep(0.8)
+    watcher.stop()
+    thread.join(timeout=2.0)
 
     assert len(prune_calls) >= 1, "Prune should have been called at least once in the run loop"
 
@@ -594,11 +616,19 @@ def test_cleanup_stale_data_deletes_old_rows(tmp_path):
 
     watcher = SessionWatcher(str(db_path))
 
-    # Mock swarm and forged cleanup to isolate the test
-    with patch("spellbook.sessions.watcher.SessionWatcher._cleanup_stale_data", wraps=watcher._cleanup_stale_data):
-        with patch("spellbook.coordination.state.StateManager.cleanup_old_swarms", side_effect=Exception("skip")):
-            with patch("spellbook.forged.schema.get_forged_connection", side_effect=Exception("skip")):
-                watcher._cleanup_stale_data()
+    # Mock coordination and forged session factories to isolate the test
+    mock_coord = bigfoot.mock("spellbook.db:get_coordination_session")
+    mock_coord.__call__.raises(Exception("skip"))
+
+    mock_forged = bigfoot.mock("spellbook.db:get_forged_session")
+    mock_forged.__call__.raises(Exception("skip"))
+
+    with bigfoot:
+        watcher._cleanup_stale_data()
+
+    with bigfoot.in_any_order():
+        mock_coord.assert_call(raised=IsInstance(Exception))
+        mock_forged.assert_call(raised=IsInstance(Exception))
 
     # Verify old rows deleted, recent rows preserved
     cursor = conn.cursor()

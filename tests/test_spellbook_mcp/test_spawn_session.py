@@ -1,13 +1,11 @@
 """Tests for spawn_claude_session MCP tool and terminal detection utilities."""
 
-import shutil
-import unittest
-from unittest.mock import patch, MagicMock
-import sys
 import os
+import subprocess
+import sys
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+import bigfoot
+import pytest
 
 from spellbook.daemon.terminal import (
     detect_terminal,
@@ -16,407 +14,561 @@ from spellbook.daemon.terminal import (
     detect_windows_terminal,
     spawn_terminal_window,
     spawn_macos_terminal,
-    spawn_linux_terminal
+    spawn_linux_terminal,
 )
 
 
-class TestDetectMacOSTerminal(unittest.TestCase):
+class TestDetectMacOSTerminal:
     """Test macOS terminal detection."""
 
-    @patch('subprocess.run')
-    @patch('os.path.exists')
-    @patch('sys.platform', 'darwin')
-    def test_detect_running_iterm(self, mock_exists, mock_run):
+    def test_detect_running_iterm(self, monkeypatch):
         """Test detection of running iTerm2 process."""
-        # Mock pgrep finding iTerm2
-        mock_run.return_value = MagicMock(returncode=0, stdout='12345\n')
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = detect_macos_terminal()
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_result = type("Result", (), {"returncode": 0, "stdout": "12345\n"})()
+        mock_run.returns(mock_result)
 
-        self.assertEqual(result, 'iTerm2')
-        mock_run.assert_called_once()
-        self.assertIn('pgrep', mock_run.call_args[0][0])
+        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        mock_exists.__call__.required(False)
 
-    @patch('subprocess.run')
-    @patch('os.path.exists')
-    @patch('sys.platform', 'darwin')
-    def test_detect_installed_warp(self, mock_exists, mock_run):
+        with bigfoot:
+            result = detect_macos_terminal()
+
+        assert result == "iTerm2"
+        mock_run.assert_call(
+            args=(["pgrep", "-x", "iTerm2"],),
+            kwargs={"capture_output": True, "text": True, "timeout": 5},
+        )
+
+    def test_detect_installed_warp(self, monkeypatch):
         """Test detection of installed Warp app."""
-        # Mock pgrep finding no running processes
-        mock_run.return_value = MagicMock(returncode=1)
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        # Mock Warp.app exists
-        def exists_side_effect(path):
-            return '/Applications/Warp.app' in path
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_result_fail = type("Result", (), {"returncode": 1})()
+        # 3 pgrep calls: iTerm2, Warp, Terminal -- all fail
+        mock_run.returns(mock_result_fail).returns(mock_result_fail).returns(mock_result_fail)
 
-        mock_exists.side_effect = exists_side_effect
+        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        # /Applications/iTerm.app -> False, /Applications/Warp.app -> True
+        mock_exists.returns(False).returns(True)
 
-        result = detect_macos_terminal()
+        with bigfoot:
+            result = detect_macos_terminal()
 
-        self.assertEqual(result, 'Warp')
+        assert result == "Warp"
+        with bigfoot.in_any_order():
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "iTerm2"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "Warp"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "Terminal"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+        # First exists check: /Applications/iTerm.app (False), second: /Applications/Warp.app (True)
+        mock_exists.assert_call(args=("/Applications/iTerm.app",))
+        mock_exists.assert_call(args=("/Applications/Warp.app",))
 
-    @patch('subprocess.run')
-    @patch('os.path.exists')
-    @patch('sys.platform', 'darwin')
-    def test_detect_fallback_terminal(self, mock_exists, mock_run):
+    def test_detect_fallback_terminal(self, monkeypatch):
         """Test fallback to Terminal.app."""
-        # No running processes
-        mock_run.return_value = MagicMock(returncode=1)
-        # No installed apps
-        mock_exists.return_value = False
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = detect_macos_terminal()
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_result_fail = type("Result", (), {"returncode": 1})()
+        mock_run.returns(mock_result_fail).returns(mock_result_fail).returns(mock_result_fail)
 
-        self.assertEqual(result, 'terminal')
+        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        mock_exists.returns(False).returns(False).returns(False)
+
+        with bigfoot:
+            result = detect_macos_terminal()
+
+        assert result == "terminal"
+        with bigfoot.in_any_order():
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "iTerm2"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "Warp"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["pgrep", "-x", "Terminal"],),
+                kwargs={"capture_output": True, "text": True, "timeout": 5},
+            )
+        mock_exists.assert_call(args=("/Applications/iTerm.app",))
+        mock_exists.assert_call(args=("/Applications/Warp.app",))
+        mock_exists.assert_call(args=("/System/Applications/Utilities/Terminal.app",))
 
 
-class TestDetectLinuxTerminal(unittest.TestCase):
+class TestDetectLinuxTerminal:
     """Test Linux terminal detection."""
 
-    @patch('shutil.which', return_value='/usr/bin/gnome-terminal')
-    @patch('os.environ', {'TERMINAL': 'gnome-terminal'})
-    @patch('sys.platform', 'linux')
-    def test_detect_from_env_var(self, mock_which):
+    def test_detect_from_env_var(self, monkeypatch):
         """Test detection from TERMINAL environment variable (validated via which)."""
-        result = detect_linux_terminal()
+        monkeypatch.setattr("sys.platform", "linux")
+        monkeypatch.setattr(os, "environ", {"TERMINAL": "gnome-terminal"})
 
-        self.assertEqual(result, 'gnome-terminal')
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns("/usr/bin/gnome-terminal")
 
-    @patch('subprocess.run')
-    @patch('os.environ', {})
-    @patch('sys.platform', 'linux')
-    def test_detect_installed_konsole(self, mock_run):
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "gnome-terminal"
+        mock_which.assert_call(args=("gnome-terminal",))
+
+    def test_detect_installed_konsole(self, monkeypatch):
         """Test detection of installed konsole."""
-        def run_side_effect(cmd, **kwargs):
-            if 'konsole' in cmd:
-                return MagicMock(returncode=0)
-            return MagicMock(returncode=1)
+        monkeypatch.setattr("sys.platform", "linux")
+        monkeypatch.setattr(os, "environ", {})
 
-        mock_run.side_effect = run_side_effect
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_fail = type("Result", (), {"returncode": 1})()
+        mock_ok = type("Result", (), {"returncode": 0})()
+        # gnome-terminal fails, konsole succeeds
+        mock_run.returns(mock_fail).returns(mock_ok)
 
-        result = detect_linux_terminal()
+        with bigfoot:
+            result = detect_linux_terminal()
 
-        self.assertEqual(result, 'konsole')
+        assert result == "konsole"
+        mock_run.assert_call(
+            args=(["which", "gnome-terminal"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
+        mock_run.assert_call(
+            args=(["which", "konsole"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
 
-    @patch('subprocess.run')
-    @patch('os.environ', {})
-    @patch('sys.platform', 'linux')
-    def test_detect_fallback_xterm(self, mock_run):
+    def test_detect_fallback_xterm(self, monkeypatch):
         """Test fallback to xterm."""
-        # No terminals found
-        mock_run.return_value = MagicMock(returncode=1)
+        monkeypatch.setattr("sys.platform", "linux")
+        monkeypatch.setattr(os, "environ", {})
 
-        result = detect_linux_terminal()
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_result_fail = type("Result", (), {"returncode": 1})()
+        # 5 common terminals all fail
+        (mock_run
+         .returns(mock_result_fail)
+         .returns(mock_result_fail)
+         .returns(mock_result_fail)
+         .returns(mock_result_fail)
+         .returns(mock_result_fail))
 
-        self.assertEqual(result, 'xterm')
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "xterm"
+        with bigfoot.in_any_order():
+            mock_run.assert_call(
+                args=(["which", "gnome-terminal"],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["which", "konsole"],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["which", "xterm"],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["which", "terminator"],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
+            mock_run.assert_call(
+                args=(["which", "alacritty"],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
 
 
-class TestDetectWindowsTerminal(unittest.TestCase):
+class TestDetectWindowsTerminal:
     """Test Windows terminal detection."""
 
-    @patch('shutil.which')
-    def test_windows_terminal_detected(self, mock_which):
+    def test_windows_terminal_detected(self):
         """Test that Windows Terminal is detected when wt is available."""
-        mock_which.side_effect = lambda cmd: "/usr/bin/wt" if cmd == "wt" else None
-        result = detect_windows_terminal()
-        self.assertEqual(result, "windows-terminal")
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns("/usr/bin/wt")
 
-    @patch('shutil.which')
-    def test_pwsh_fallback(self, mock_which):
+        with bigfoot:
+            result = detect_windows_terminal()
+
+        assert result == "windows-terminal"
+        mock_which.assert_call(args=("wt",))
+
+    def test_pwsh_fallback(self):
         """Test that PowerShell Core is detected as fallback."""
-        mock_which.side_effect = lambda cmd: "/usr/bin/pwsh" if cmd == "pwsh" else None
-        result = detect_windows_terminal()
-        self.assertEqual(result, "pwsh")
+        mock_which = bigfoot.mock("shutil:which")
+        # wt not found, pwsh found
+        mock_which.returns(None).returns("/usr/bin/pwsh")
 
-    @patch('shutil.which', return_value=None)
-    def test_cmd_fallback(self, mock_which):
+        with bigfoot:
+            result = detect_windows_terminal()
+
+        assert result == "pwsh"
+        mock_which.assert_call(args=("wt",))
+        mock_which.assert_call(args=("pwsh",))
+
+    def test_cmd_fallback(self):
         """Test that cmd is the final fallback."""
-        result = detect_windows_terminal()
-        self.assertEqual(result, "cmd")
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None).returns(None)
+
+        with bigfoot:
+            result = detect_windows_terminal()
+
+        assert result == "cmd"
+        mock_which.assert_call(args=("wt",))
+        mock_which.assert_call(args=("pwsh",))
 
 
-class TestDetectTerminal(unittest.TestCase):
+class TestDetectTerminal:
     """Test main detect_terminal function."""
 
-    @patch('spellbook.daemon.terminal.detect_macos_terminal')
-    @patch('sys.platform', 'darwin')
-    def test_delegates_to_macos(self, mock_macos):
+    def test_delegates_to_macos(self, monkeypatch):
         """Test delegation to macOS detection."""
-        mock_macos.return_value = 'iTerm2'
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = detect_terminal()
+        mock_macos = bigfoot.mock("spellbook.daemon.terminal:detect_macos_terminal")
+        mock_macos.returns("iTerm2")
 
-        self.assertEqual(result, 'iTerm2')
-        mock_macos.assert_called_once()
+        with bigfoot:
+            result = detect_terminal()
 
-    @patch('spellbook.daemon.terminal.detect_linux_terminal')
-    @patch('sys.platform', 'linux')
-    def test_delegates_to_linux(self, mock_linux):
+        assert result == "iTerm2"
+        mock_macos.assert_call(args=(), kwargs={})
+
+    def test_delegates_to_linux(self, monkeypatch):
         """Test delegation to Linux detection."""
-        mock_linux.return_value = 'gnome-terminal'
+        monkeypatch.setattr("sys.platform", "linux")
 
-        result = detect_terminal()
+        mock_linux = bigfoot.mock("spellbook.daemon.terminal:detect_linux_terminal")
+        mock_linux.returns("gnome-terminal")
 
-        self.assertEqual(result, 'gnome-terminal')
-        mock_linux.assert_called_once()
+        with bigfoot:
+            result = detect_terminal()
 
-    @patch('spellbook.daemon.terminal.detect_windows_terminal')
-    @patch('sys.platform', 'win32')
-    def test_delegates_to_windows(self, mock_windows):
+        assert result == "gnome-terminal"
+        mock_linux.assert_call(args=(), kwargs={})
+
+    def test_delegates_to_windows(self, monkeypatch):
         """Test delegation to Windows detection."""
-        mock_windows.return_value = 'windows-terminal'
+        monkeypatch.setattr("sys.platform", "win32")
 
-        result = detect_terminal()
+        mock_windows = bigfoot.mock("spellbook.daemon.terminal:detect_windows_terminal")
+        mock_windows.returns("windows-terminal")
 
-        self.assertEqual(result, 'windows-terminal')
-        mock_windows.assert_called_once()
+        with bigfoot:
+            result = detect_terminal()
+
+        assert result == "windows-terminal"
+        mock_windows.assert_call(args=(), kwargs={})
 
 
-class TestSpawnMacOSTerminal(unittest.TestCase):
+class TestSpawnMacOSTerminal:
     """Test macOS terminal spawning."""
 
-    @patch('subprocess.Popen')
-    @patch('sys.platform', 'darwin')
-    def test_spawn_iterm2(self, mock_popen):
+    def test_spawn_iterm2(self, monkeypatch):
         """Test spawning iTerm2 with AppleScript."""
-        mock_process = MagicMock()
-        mock_process.pid = 12345
-        mock_popen.return_value = mock_process
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = spawn_macos_terminal('iTerm2', 'test prompt', '/tmp')
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 12345})()
+        mock_popen.returns(mock_process)
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'iTerm2')
-        self.assertEqual(result['pid'], 12345)
+        with bigfoot:
+            result = spawn_macos_terminal("iTerm2", "test prompt", "/tmp")
 
-        # Check AppleScript was used
-        mock_popen.assert_called_once()
-        args = mock_popen.call_args[0][0]
-        self.assertIn('osascript', args)
-        self.assertIn('-e', args)
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "iTerm2"
+        assert result["pid"] == 12345
+        # Verify osascript was called with iTerm2 AppleScript
+        expected_cmd = "cd /tmp && claude 'test prompt'"
+        expected_script = (
+            '\ntell application "iTerm2"\n'
+            "    create window with default profile\n"
+            "    tell current session of current window\n"
+            f'        write text "{expected_cmd}"\n'
+            "    end tell\n"
+            "end tell\n"
+        )
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_script],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
-    @patch('subprocess.Popen')
-    @patch('sys.platform', 'darwin')
-    def test_spawn_terminal_app(self, mock_popen):
+    def test_spawn_terminal_app(self, monkeypatch):
         """Test spawning Terminal.app with AppleScript."""
-        mock_process = MagicMock()
-        mock_process.pid = 54321
-        mock_popen.return_value = mock_process
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = spawn_macos_terminal('terminal', 'another prompt', '/home')
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 54321})()
+        mock_popen.returns(mock_process)
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'terminal')
-        self.assertEqual(result['pid'], 54321)
+        with bigfoot:
+            result = spawn_macos_terminal("terminal", "another prompt", "/home")
+
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "terminal"
+        assert result["pid"] == 54321
+        expected_cmd = "cd /home && claude 'another prompt'"
+        expected_script = (
+            '\ntell application "Terminal"\n'
+            f'    do script "{expected_cmd}"\n'
+            "    activate\n"
+            "end tell\n"
+        )
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_script],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
-class TestSpawnLinuxTerminal(unittest.TestCase):
+class TestSpawnLinuxTerminal:
     """Test Linux terminal spawning."""
 
-    @patch('subprocess.Popen')
-    @patch('sys.platform', 'linux')
-    def test_spawn_gnome_terminal(self, mock_popen):
+    def test_spawn_gnome_terminal(self, monkeypatch):
         """Test spawning gnome-terminal."""
-        mock_process = MagicMock()
-        mock_process.pid = 99999
-        mock_popen.return_value = mock_process
+        monkeypatch.setattr("sys.platform", "linux")
 
-        result = spawn_linux_terminal('gnome-terminal', 'test prompt', '/var')
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 99999})()
+        mock_popen.returns(mock_process)
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'gnome-terminal')
-        self.assertEqual(result['pid'], 99999)
+        with bigfoot:
+            result = spawn_linux_terminal("gnome-terminal", "test prompt", "/var")
 
-        # Check command format
-        args = mock_popen.call_args[0][0]
-        self.assertIn('gnome-terminal', args)
-        self.assertIn('--', args)
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "gnome-terminal"
+        assert result["pid"] == 99999
+        expected_cmd = "cd /var && claude 'test prompt'; exec bash"
+        mock_popen.assert_call(
+            args=(["gnome-terminal", "--", "bash", "-c", expected_cmd],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
-    @patch('subprocess.Popen')
-    @patch('sys.platform', 'linux')
-    def test_spawn_xterm(self, mock_popen):
+    def test_spawn_xterm(self, monkeypatch):
         """Test spawning xterm."""
-        mock_process = MagicMock()
-        mock_process.pid = 11111
-        mock_popen.return_value = mock_process
+        monkeypatch.setattr("sys.platform", "linux")
 
-        result = spawn_linux_terminal('xterm', 'xterm test', '/root')
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 11111})()
+        mock_popen.returns(mock_process)
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'xterm')
+        with bigfoot:
+            result = spawn_linux_terminal("xterm", "xterm test", "/root")
+
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "xterm"
+        expected_cmd = "cd /root && claude 'xterm test'; exec bash"
+        mock_popen.assert_call(
+            args=(["xterm", "-e", "bash", "-c", expected_cmd],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
-class TestSpawnTerminalWindow(unittest.TestCase):
+class TestSpawnTerminalWindow:
     """Test main spawn_terminal_window function."""
 
-    @patch('spellbook.daemon.terminal.spawn_macos_terminal')
-    @patch('sys.platform', 'darwin')
-    def test_delegates_to_macos(self, mock_macos_spawn):
+    def test_delegates_to_macos(self, monkeypatch):
         """Test delegation to macOS spawning."""
-        mock_macos_spawn.return_value = {
-            'status': 'spawned',
-            'terminal': 'iTerm2',
-            'pid': 12345
-        }
+        monkeypatch.setattr("sys.platform", "darwin")
 
-        result = spawn_terminal_window('iTerm2', 'test', '/tmp')
+        mock_macos_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_macos_terminal")
+        mock_macos_spawn.returns({
+            "status": "spawned",
+            "terminal": "iTerm2",
+            "pid": 12345,
+        })
 
-        self.assertEqual(result['status'], 'spawned')
-        mock_macos_spawn.assert_called_once_with('iTerm2', 'test', '/tmp', 'claude')
+        with bigfoot:
+            result = spawn_terminal_window("iTerm2", "test", "/tmp")
 
-    @patch('spellbook.daemon.terminal.spawn_linux_terminal')
-    @patch('sys.platform', 'linux')
-    def test_delegates_to_linux(self, mock_linux_spawn):
+        assert result["status"] == "spawned"
+        mock_macos_spawn.assert_call(
+            args=("iTerm2", "test", "/tmp", "claude"),
+            kwargs={},
+        )
+
+    def test_delegates_to_linux(self, monkeypatch):
         """Test delegation to Linux spawning."""
-        mock_linux_spawn.return_value = {
-            'status': 'spawned',
-            'terminal': 'gnome-terminal',
-            'pid': 99999
-        }
+        monkeypatch.setattr("sys.platform", "linux")
 
-        result = spawn_terminal_window('gnome-terminal', 'test', '/var')
+        mock_linux_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_linux_terminal")
+        mock_linux_spawn.returns({
+            "status": "spawned",
+            "terminal": "gnome-terminal",
+            "pid": 99999,
+        })
 
-        self.assertEqual(result['status'], 'spawned')
-        mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var', 'claude')
+        with bigfoot:
+            result = spawn_terminal_window("gnome-terminal", "test", "/var")
 
-    @patch('spellbook.daemon.terminal.spawn_windows_terminal')
-    @patch('sys.platform', 'win32')
-    def test_delegates_to_windows(self, mock_windows_spawn):
+        assert result["status"] == "spawned"
+        mock_linux_spawn.assert_call(
+            args=("gnome-terminal", "test", "/var", "claude"),
+            kwargs={},
+        )
+
+    def test_delegates_to_windows(self, monkeypatch):
         """Test delegation to Windows spawning."""
-        mock_windows_spawn.return_value = {
-            'status': 'spawned',
-            'terminal': 'cmd',
-            'pid': 12345
-        }
+        monkeypatch.setattr("sys.platform", "win32")
 
-        result = spawn_terminal_window('cmd', 'test', 'C:\\')
+        mock_windows_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_windows_terminal")
+        mock_windows_spawn.returns({
+            "status": "spawned",
+            "terminal": "cmd",
+            "pid": 12345,
+        })
 
-        self.assertEqual(result['status'], 'spawned')
-        mock_windows_spawn.assert_called_once_with('cmd', 'test', 'C:\\', 'claude')
+        with bigfoot:
+            result = spawn_terminal_window("cmd", "test", "C:\\")
+
+        assert result["status"] == "spawned"
+        mock_windows_spawn.assert_call(
+            args=("cmd", "test", "C:\\", "claude"),
+            kwargs={},
+        )
 
 
-class TestSpawnWindowsTerminal(unittest.TestCase):
+class TestSpawnWindowsTerminal:
     """Test Windows terminal spawning."""
 
-    @patch('subprocess.Popen')
-    def test_spawn_windows_terminal_wt(self, mock_popen):
+    def test_spawn_windows_terminal_wt(self):
         """Test spawning Windows Terminal (wt)."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_process = MagicMock()
-        mock_process.pid = 44444
-        mock_popen.return_value = mock_process
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 44444})()
+        mock_popen.returns(mock_process)
 
-        result = spawn_windows_terminal('windows-terminal', 'test prompt', 'C:\\Users\\test')
+        with bigfoot:
+            result = spawn_windows_terminal("windows-terminal", "test prompt", "C:\\Users\\test")
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'windows-terminal')
-        self.assertEqual(result['pid'], 44444)
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "windows-terminal"
+        assert result["pid"] == 44444
+        safe_cli_prompt = subprocess.list2cmdline(["claude", "test prompt"])
+        mock_popen.assert_call(
+            args=(["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+        )
 
-        args = mock_popen.call_args[0][0]
-        self.assertEqual(args[0], 'wt')
-        self.assertIn('C:\\Users\\test', args)
-
-    @patch('subprocess.Popen')
-    def test_spawn_windows_terminal_pwsh(self, mock_popen):
+    def test_spawn_windows_terminal_pwsh(self):
         """Test spawning PowerShell Core."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_process = MagicMock()
-        mock_process.pid = 55555
-        mock_popen.return_value = mock_process
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 55555})()
+        mock_popen.returns(mock_process)
 
-        result = spawn_windows_terminal('pwsh', 'test prompt', 'C:\\Users\\test')
+        with bigfoot:
+            result = spawn_windows_terminal("pwsh", "test prompt", "C:\\Users\\test")
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'pwsh')
-        self.assertEqual(result['pid'], 55555)
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "pwsh"
+        assert result["pid"] == 55555
+        mock_popen.assert_call(
+            args=(["pwsh", "-NoExit", "-Command",
+                   "Set-Location 'C:\\Users\\test'; & 'claude' 'test prompt'"],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+        )
 
-        args = mock_popen.call_args[0][0]
-        self.assertEqual(args[0], 'pwsh')
-
-    @patch('subprocess.Popen')
-    def test_spawn_windows_terminal_cmd(self, mock_popen):
+    def test_spawn_windows_terminal_cmd(self):
         """Test spawning cmd.exe (default fallback)."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_process = MagicMock()
-        mock_process.pid = 66666
-        mock_popen.return_value = mock_process
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 66666})()
+        mock_popen.returns(mock_process)
 
-        result = spawn_windows_terminal('cmd', 'test prompt', 'C:\\Users\\test')
+        with bigfoot:
+            result = spawn_windows_terminal("cmd", "test prompt", "C:\\Users\\test")
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'cmd')
-        self.assertEqual(result['pid'], 66666)
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "cmd"
+        assert result["pid"] == 66666
+        safe_cli_prompt = subprocess.list2cmdline(["claude", "test prompt"])
+        mock_popen.assert_call(
+            args=(["cmd", "/c", "start", "cmd", "/k",
+                   f'cd /d "C:\\Users\\test" && {safe_cli_prompt}'],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+        )
 
-        args = mock_popen.call_args[0][0]
-        self.assertIn('cmd', args)
-
-    @patch('subprocess.Popen')
-    def test_spawn_windows_terminal_custom_cli_command(self, mock_popen):
+    def test_spawn_windows_terminal_custom_cli_command(self):
         """Test spawning with a custom CLI command (e.g., 'codex')."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_process = MagicMock()
-        mock_process.pid = 77777
-        mock_popen.return_value = mock_process
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_process = type("Process", (), {"pid": 77777})()
+        mock_popen.returns(mock_process)
 
-        result = spawn_windows_terminal('cmd', 'test prompt', 'C:\\', cli_command='codex')
+        with bigfoot:
+            result = spawn_windows_terminal("cmd", "test prompt", "C:\\", cli_command="codex")
 
-        self.assertEqual(result['status'], 'spawned')
-        # Verify the custom CLI command appears in the arguments
-        args = mock_popen.call_args[0][0]
-        cmd_str = ' '.join(str(a) for a in args)
-        self.assertIn('codex', cmd_str)
+        assert result["status"] == "spawned"
+        safe_cli_prompt = subprocess.list2cmdline(["codex", "test prompt"])
+        mock_popen.assert_call(
+            args=(["cmd", "/c", "start", "cmd", "/k",
+                   f'cd /d "C:\\" && {safe_cli_prompt}'],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": 0},
+        )
 
 
-class TestSpawnClaudeSessionMCPTool(unittest.TestCase):
+class TestSpawnClaudeSessionMCPTool:
     """Test the spawn_claude_session MCP tool logic."""
 
-    @patch('spellbook.daemon.terminal.detect_terminal')
-    @patch('spellbook.daemon.terminal.spawn_terminal_window')
-    def test_spawn_with_auto_detect(self, mock_spawn, mock_detect):
+    def test_spawn_with_auto_detect(self):
         """Test spawning with auto-detected terminal."""
-        # This tests the function logic that the MCP tool wraps
-        # We test the core logic directly, which is what the tool uses
-        mock_detect.return_value = 'iTerm2'
-        mock_spawn.return_value = {
-            'status': 'spawned',
-            'terminal': 'iTerm2',
-            'pid': 12345
-        }
+        import spellbook.daemon.terminal as terminal_mod
 
-        # Simulate what spawn_claude_session does
-        terminal = mock_detect()  # Auto-detect
-        working_directory = '/tmp'
-        result = mock_spawn(terminal, 'test prompt', working_directory)
+        mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+        mock_detect.returns("iTerm2")
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'iTerm2')
-        self.assertEqual(result['pid'], 12345)
-        mock_detect.assert_called_once()
-        mock_spawn.assert_called_once_with('iTerm2', 'test prompt', '/tmp')
+        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+        mock_spawn.returns({
+            "status": "spawned",
+            "terminal": "iTerm2",
+            "pid": 12345,
+        })
 
-    @patch('spellbook.daemon.terminal.spawn_terminal_window')
-    def test_spawn_with_specified_terminal(self, mock_spawn):
+        with bigfoot:
+            terminal = terminal_mod.detect_terminal()
+            working_directory = "/tmp"
+            result = terminal_mod.spawn_terminal_window(terminal, "test prompt", working_directory)
+
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "iTerm2"
+        assert result["pid"] == 12345
+        mock_detect.assert_call(args=(), kwargs={})
+        mock_spawn.assert_call(args=("iTerm2", "test prompt", "/tmp"), kwargs={})
+
+    def test_spawn_with_specified_terminal(self):
         """Test spawning with user-specified terminal."""
-        mock_spawn.return_value = {
-            'status': 'spawned',
-            'terminal': 'Warp',
-            'pid': 54321
-        }
+        import spellbook.daemon.terminal as terminal_mod
 
-        # Simulate what spawn_claude_session does with explicit terminal
-        terminal = 'Warp'  # User specified
-        working_directory = '/home/user'
-        result = mock_spawn(terminal, 'specific test', working_directory)
+        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+        mock_spawn.returns({
+            "status": "spawned",
+            "terminal": "Warp",
+            "pid": 54321,
+        })
 
-        self.assertEqual(result['status'], 'spawned')
-        self.assertEqual(result['terminal'], 'Warp')
-        self.assertEqual(result['pid'], 54321)
-        mock_spawn.assert_called_once_with('Warp', 'specific test', '/home/user')
+        with bigfoot:
+            terminal = "Warp"
+            working_directory = "/home/user"
+            result = terminal_mod.spawn_terminal_window(terminal, "specific test", working_directory)
 
-
-if __name__ == '__main__':
-    unittest.main()
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "Warp"
+        assert result["pid"] == 54321
+        mock_spawn.assert_call(args=("Warp", "specific test", "/home/user"), kwargs={})

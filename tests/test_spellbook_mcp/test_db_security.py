@@ -8,7 +8,6 @@ import time
 
 import pytest
 from pathlib import Path
-from unittest.mock import patch
 
 from spellbook.core import db as db_module
 

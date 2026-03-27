@@ -5,12 +5,11 @@ authenticating HTTP requests to the MCP server.
 """
 
 import os
-import secrets
 import stat
 import sys
 import pytest
+import bigfoot
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
 
 
 class TestTokenGeneration:
@@ -255,15 +254,18 @@ class TestBearerAuthMiddleware:
         """Token comparison must use secrets.compare_digest for timing safety."""
         from starlette.testclient import TestClient
 
-        client = TestClient(auth_app, raise_server_exceptions=False)
-        with patch("spellbook.core.auth.secrets.compare_digest", return_value=True) as mock_compare:
+        mock_compare = bigfoot.mock("spellbook.core.auth:secrets.compare_digest")
+        mock_compare.__call__.returns(True)
+
+        with bigfoot:
+            client = TestClient(auth_app, raise_server_exceptions=False)
             response = client.get(
                 "/mcp/v1/tools",
                 headers={"Authorization": "Bearer any-token"},
             )
             assert response.status_code == 200
-            mock_compare.assert_called_once_with("any-token", "correct-token")
-            assert mock_compare.call_count == 1
+
+        mock_compare.__call__.assert_call(args=("any-token", "correct-token"))
 
     @pytest.mark.asyncio
     async def test_non_http_scope_passes_through(self):
@@ -285,33 +287,33 @@ class TestBearerAuthMiddleware:
 class TestAuthDisabledEnvVar:
     """SPELLBOOK_MCP_AUTH=disabled escape hatch."""
 
-    def test_auth_disabled_check(self):
+    def test_auth_disabled_check(self, monkeypatch):
         """When SPELLBOOK_MCP_AUTH=disabled, auth_is_disabled() returns True."""
         from spellbook.core.auth import auth_is_disabled
 
-        with patch.dict(os.environ, {"SPELLBOOK_MCP_AUTH": "disabled"}):
-            assert auth_is_disabled() is True
+        monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "disabled")
+        assert auth_is_disabled() is True
 
-    def test_auth_enabled_by_default(self):
+    def test_auth_enabled_by_default(self, monkeypatch):
         """Without SPELLBOOK_MCP_AUTH env var, auth_is_disabled() returns False."""
         from spellbook.core.auth import auth_is_disabled
 
-        with patch.dict(os.environ, {}, clear=True):
-            assert auth_is_disabled() is False
+        monkeypatch.delenv("SPELLBOOK_MCP_AUTH", raising=False)
+        assert auth_is_disabled() is False
 
-    def test_auth_disabled_case_insensitive(self):
+    def test_auth_disabled_case_insensitive(self, monkeypatch):
         """SPELLBOOK_MCP_AUTH check must be case-insensitive."""
         from spellbook.core.auth import auth_is_disabled
 
-        with patch.dict(os.environ, {"SPELLBOOK_MCP_AUTH": "Disabled"}):
-            assert auth_is_disabled() is True
+        monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "Disabled")
+        assert auth_is_disabled() is True
 
-    def test_auth_not_disabled_for_other_values(self):
+    def test_auth_not_disabled_for_other_values(self, monkeypatch):
         """Only 'disabled' (case-insensitive) disables auth."""
         from spellbook.core.auth import auth_is_disabled
 
-        with patch.dict(os.environ, {"SPELLBOOK_MCP_AUTH": "off"}):
-            assert auth_is_disabled() is False
+        monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "off")
+        assert auth_is_disabled() is False
 
 
 class TestServerStartupAuthIntegration:
@@ -322,7 +324,7 @@ class TestServerStartupAuthIntegration:
     passed to mcp.run().
     """
 
-    def test_http_kwargs_include_middleware_when_auth_enabled(self, tmp_path):
+    def test_http_kwargs_include_middleware_when_auth_enabled(self, tmp_path, monkeypatch):
         """When auth is not disabled, build_http_run_kwargs must return middleware list."""
         from spellbook.core import auth
         from spellbook.server import build_http_run_kwargs
@@ -331,8 +333,9 @@ class TestServerStartupAuthIntegration:
         original = auth.TOKEN_PATH
         auth.TOKEN_PATH = token_path
         try:
-            with patch.dict(os.environ, {"SPELLBOOK_MCP_HOST": "127.0.0.1", "SPELLBOOK_MCP_PORT": "9999"}, clear=False):
-                kwargs = build_http_run_kwargs()
+            monkeypatch.setenv("SPELLBOOK_MCP_HOST", "127.0.0.1")
+            monkeypatch.setenv("SPELLBOOK_MCP_PORT", "9999")
+            kwargs = build_http_run_kwargs()
 
             assert kwargs["transport"] == "streamable-http"
             assert kwargs["host"] == "127.0.0.1"
@@ -353,7 +356,7 @@ class TestServerStartupAuthIntegration:
         finally:
             auth.TOKEN_PATH = original
 
-    def test_http_kwargs_no_middleware_when_auth_disabled(self, tmp_path):
+    def test_http_kwargs_no_middleware_when_auth_disabled(self, tmp_path, monkeypatch):
         """When SPELLBOOK_MCP_AUTH=disabled, build_http_run_kwargs must return empty middleware."""
         from spellbook.core import auth
         from spellbook.server import build_http_run_kwargs
@@ -362,12 +365,10 @@ class TestServerStartupAuthIntegration:
         original = auth.TOKEN_PATH
         auth.TOKEN_PATH = token_path
         try:
-            with patch.dict(os.environ, {
-                "SPELLBOOK_MCP_AUTH": "disabled",
-                "SPELLBOOK_MCP_HOST": "0.0.0.0",
-                "SPELLBOOK_MCP_PORT": "8765",
-            }, clear=False):
-                kwargs = build_http_run_kwargs()
+            monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "disabled")
+            monkeypatch.setenv("SPELLBOOK_MCP_HOST", "0.0.0.0")
+            monkeypatch.setenv("SPELLBOOK_MCP_PORT", "8765")
+            kwargs = build_http_run_kwargs()
 
             assert kwargs == {
                 "transport": "streamable-http",
@@ -381,7 +382,7 @@ class TestServerStartupAuthIntegration:
         finally:
             auth.TOKEN_PATH = original
 
-    def test_http_kwargs_use_default_host_and_port(self, tmp_path):
+    def test_http_kwargs_use_default_host_and_port(self, tmp_path, monkeypatch):
         """build_http_run_kwargs must use default host/port when env vars are unset."""
         from spellbook.core import auth
         from spellbook.server import build_http_run_kwargs
@@ -390,15 +391,10 @@ class TestServerStartupAuthIntegration:
         original = auth.TOKEN_PATH
         auth.TOKEN_PATH = token_path
         try:
-            # Clear host/port env vars to test defaults
-            env = {
-                "SPELLBOOK_MCP_AUTH": "disabled",
-            }
-            with patch.dict(os.environ, env, clear=False):
-                # Remove host/port if they happen to be set
-                os.environ.pop("SPELLBOOK_MCP_HOST", None)
-                os.environ.pop("SPELLBOOK_MCP_PORT", None)
-                kwargs = build_http_run_kwargs()
+            monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "disabled")
+            monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
+            monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
+            kwargs = build_http_run_kwargs()
 
             assert kwargs == {
                 "transport": "streamable-http",

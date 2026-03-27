@@ -1,14 +1,21 @@
 """Tests for tooling discovery system."""
 
+import bigfoot
 import pytest
 import yaml
 from pathlib import Path
-from unittest.mock import patch
 
 
 REGISTRY_PATH = str(
     Path(__file__).parent.parent.parent / "spellbook" / "data" / "tooling-registry.yaml"
 )
+
+
+def _chain(proxy, fn, n):
+    """Chain .calls(fn) n times on a bigfoot mock proxy."""
+    for _ in range(n):
+        proxy.calls(fn)
+    return proxy
 
 
 class TestRegistryLoads:
@@ -129,27 +136,43 @@ class TestKeywordMatching:
 
 
 class TestCLIDetection:
-    @patch("shutil.which")
-    def test_cli_detected_when_available(self, mock_which):
+    def test_cli_detected_when_available(self):
         """CLI tool marked available when shutil.which returns a path."""
         from spellbook.tooling.discovery import discover_tools
 
-        mock_which.side_effect = lambda name: "/usr/bin/gh" if name == "gh" else None
-        result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+        # github domain: "GitHub CLI" has cli_names=["gh"], "GitHub MCP Server" has none
+        # So shutil.which is called once with "gh"
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.calls(lambda name: "/usr/bin/gh" if name == "gh" else None)
+
+        with bigfoot:
+            result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+
         gh_tools = [t for t in result["tools"] if t["name"] == "GitHub CLI"]
         assert len(gh_tools) == 1
         assert gh_tools[0]["available"] is True
         assert "cli_available" in gh_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("gh",), kwargs={})
 
-    @patch("shutil.which", return_value=None)
-    def test_cli_not_detected_when_missing(self, mock_which):
+    def test_cli_not_detected_when_missing(self):
         """CLI tool not marked available when binary not found."""
         from spellbook.tooling.discovery import discover_tools
 
-        result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+        # docker domain: "Docker CLI" has cli_names=["docker", "docker-compose"]
+        # So shutil.which is called twice
+        mock_which = bigfoot.mock("shutil:which")
+        _chain(mock_which, lambda name: None, 2)
+
+        with bigfoot:
+            result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+
         docker_tools = [t for t in result["tools"] if t["name"] == "Docker CLI"]
         assert len(docker_tools) == 1
         assert docker_tools[0]["available"] is False
+
+        with bigfoot.in_any_order():
+            mock_which.assert_call(args=("docker",), kwargs={})
+            mock_which.assert_call(args=("docker-compose",), kwargs={})
 
 
 class TestDepScanning:
@@ -162,7 +185,11 @@ class TestDepScanning:
             '[project]\ndependencies = ["boto3>=1.26", "requests"]\n'
         )
 
-        with patch("shutil.which", return_value=None):
+        # aws domain: "AWS CLI" has cli_names=["aws"]
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        with bigfoot:
             result = discover_tools(
                 ["aws"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
@@ -171,6 +198,7 @@ class TestDepScanning:
         assert len(aws_tools) == 1
         assert aws_tools[0]["available"] is True
         assert "dep_detected" in aws_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("aws",), kwargs={})
 
     def test_dep_scanning_package_json(self, tmp_path):
         """Detects npm deps from package.json."""
@@ -184,7 +212,11 @@ class TestDepScanning:
             "devDependencies": {},
         }))
 
-        with patch("shutil.which", return_value=None):
+        # stripe domain: "Stripe CLI" has cli_names=["stripe"]
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        with bigfoot:
             result = discover_tools(
                 ["stripe"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
@@ -193,6 +225,7 @@ class TestDepScanning:
         assert len(stripe_tools) == 1
         assert stripe_tools[0]["available"] is True
         assert "dep_detected" in stripe_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("stripe",), kwargs={})
 
 
 class TestMCPToolWrapper:

@@ -5,7 +5,6 @@ functions. These are the settings layer only -- no kokoro availability checks.
 """
 
 from datetime import datetime
-from unittest.mock import patch
 
 
 class TestSessionStateTtsKey:

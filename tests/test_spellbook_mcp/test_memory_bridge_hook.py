@@ -1,7 +1,6 @@
 """Tests for auto-memory bridge hook path matching and content capture."""
 
-from unittest.mock import patch, call
-
+import bigfoot
 import pytest
 
 
@@ -70,16 +69,20 @@ class TestMemoryBridge:
     def test_ignores_non_write_tool(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post:
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.__call__.required(False).returns(None)
+
+        with bigfoot:
             _memory_bridge("Read", self._make_data("/some/file.md"))
-            assert mock_post.call_count == 0
 
     def test_ignores_non_memory_path(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post:
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.__call__.required(False).returns(None)
+
+        with bigfoot:
             _memory_bridge("Write", self._make_data("/Users/alice/project/src/main.py"))
-            assert mock_post.call_count == 0
 
     def test_ignores_empty_content(self):
         from hooks.spellbook_hook import _memory_bridge
@@ -88,9 +91,11 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="",
         )
-        with patch("hooks.spellbook_hook._http_post") as mock_post:
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.__call__.required(False).returns(None)
+
+        with bigfoot:
             _memory_bridge("Write", data)
-            assert mock_post.call_count == 0
 
     def test_ignores_spellbook_managed_content(self):
         """Skips re-capturing spellbook-generated MEMORY.md (echo prevention)."""
@@ -100,9 +105,11 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="# Spellbook Memory System\n\nThe contents of this file are managed...",
         )
-        with patch("hooks.spellbook_hook._http_post") as mock_post:
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.__call__.required(False).returns(None)
+
+        with bigfoot:
             _memory_bridge("Write", data)
-            assert mock_post.call_count == 0
 
     def test_dispatches_audit_and_content(self):
         from hooks.spellbook_hook import _memory_bridge
@@ -110,40 +117,50 @@ class TestMemoryBridge:
         file_path = "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md"
         data = self._make_data(file_path, content="# Key facts\n- Python 3.10")
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post, \
-             patch("hooks.spellbook_hook._resolve_git_context", return_value=("/Users/alice/project", "main")):
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.returns(None).returns(None)
+        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git.returns(("/Users/alice/project", "main"))
+
+        with bigfoot:
             _memory_bridge("Write", data)
 
-            assert mock_post.call_count == 2
+        mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
 
-            # First call: audit trail to /api/memory/event
-            audit_url = mock_post.call_args_list[0][0][0]
-            audit_payload = mock_post.call_args_list[0][0][1]
-            assert audit_url == "http://127.0.0.1:8765/api/memory/event"
-            assert audit_payload == {
-                "session_id": "sess-123",
-                "project": "Users-alice-project",
-                "tool_name": "Write",
-                "subject": file_path,
-                "summary": "auto-memory primary: MEMORY.md",
-                "tags": "auto-memory,bridge,memory",
-                "event_type": "auto_memory_bridge",
-                "branch": "main",
-            }
+        # First call: audit trail to /api/memory/event
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/event",
+                {
+                    "session_id": "sess-123",
+                    "project": "Users-alice-project",
+                    "tool_name": "Write",
+                    "subject": file_path,
+                    "summary": "auto-memory primary: MEMORY.md",
+                    "tags": "auto-memory,bridge,memory",
+                    "event_type": "auto_memory_bridge",
+                    "branch": "main",
+                },
+            ),
+            kwargs={"timeout": 5},
+        )
 
-            # Second call: content to /api/memory/bridge-content
-            content_url = mock_post.call_args_list[1][0][0]
-            content_payload = mock_post.call_args_list[1][0][1]
-            assert content_url == "http://127.0.0.1:8765/api/memory/bridge-content"
-            assert content_payload == {
-                "session_id": "sess-123",
-                "project": "Users-alice-project",
-                "file_path": file_path,
-                "filename": "MEMORY.md",
-                "content": "# Key facts\n- Python 3.10",
-                "is_primary": True,
-                "branch": "main",
-            }
+        # Second call: content to /api/memory/bridge-content
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/bridge-content",
+                {
+                    "session_id": "sess-123",
+                    "project": "Users-alice-project",
+                    "file_path": file_path,
+                    "filename": "MEMORY.md",
+                    "content": "# Key facts\n- Python 3.10",
+                    "is_primary": True,
+                    "branch": "main",
+                },
+            ),
+            kwargs={"timeout": 10},
+        )
 
     def test_detects_topic_file(self):
         from hooks.spellbook_hook import _memory_bridge
@@ -151,21 +168,50 @@ class TestMemoryBridge:
         file_path = "/Users/alice/.claude/projects/-Users-alice-project/memory/debugging.md"
         data = self._make_data(file_path, content="# Debug notes")
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post, \
-             patch("hooks.spellbook_hook._resolve_git_context", return_value=("/Users/alice/project", "main")):
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.returns(None).returns(None)
+        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git.returns(("/Users/alice/project", "main"))
+
+        with bigfoot:
             _memory_bridge("Write", data)
 
-            assert mock_post.call_count == 2
+        mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
 
-            # Audit call should say "topic"
-            audit_payload = mock_post.call_args_list[0][0][1]
-            assert audit_payload["summary"] == "auto-memory topic: debugging.md"
-            assert audit_payload["tags"] == "auto-memory,bridge,debugging"
+        # Audit call should say "topic"
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/event",
+                {
+                    "session_id": "sess-123",
+                    "project": "Users-alice-project",
+                    "tool_name": "Write",
+                    "subject": file_path,
+                    "summary": "auto-memory topic: debugging.md",
+                    "tags": "auto-memory,bridge,debugging",
+                    "event_type": "auto_memory_bridge",
+                    "branch": "main",
+                },
+            ),
+            kwargs={"timeout": 5},
+        )
 
-            # Content call should have is_primary=False
-            content_payload = mock_post.call_args_list[1][0][1]
-            assert content_payload["is_primary"] is False
-            assert content_payload["filename"] == "debugging.md"
+        # Content call should have is_primary=False
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/bridge-content",
+                {
+                    "session_id": "sess-123",
+                    "project": "Users-alice-project",
+                    "file_path": file_path,
+                    "filename": "debugging.md",
+                    "content": "# Debug notes",
+                    "is_primary": False,
+                    "branch": "main",
+                },
+            ),
+            kwargs={"timeout": 10},
+        )
 
     def test_caps_content_at_50k(self):
         from hooks.spellbook_hook import _memory_bridge
@@ -174,20 +220,66 @@ class TestMemoryBridge:
         huge_content = "x" * 60000
         data = self._make_data(file_path, content=huge_content)
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post, \
-             patch("hooks.spellbook_hook._resolve_git_context", return_value=("/Users/alice/project", "main")):
+        captured_content = {}
+
+        def capture_post(url, payload, **kwargs):
+            if "bridge-content" in url:
+                captured_content["length"] = len(payload["content"])
+
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.calls(capture_post).calls(capture_post)
+        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git.returns(("/Users/alice/project", "main"))
+
+        with bigfoot:
             _memory_bridge("Write", data)
 
-            content_payload = mock_post.call_args_list[1][0][1]
-            assert len(content_payload["content"]) == 50000
+        mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
+
+        with bigfoot.in_any_order():
+            mock_post.assert_call(
+                args=(
+                    "http://127.0.0.1:8765/api/memory/event",
+                    {
+                        "session_id": "sess-123",
+                        "project": "Users-alice-project",
+                        "tool_name": "Write",
+                        "subject": file_path,
+                        "summary": "auto-memory primary: MEMORY.md",
+                        "tags": "auto-memory,bridge,memory",
+                        "event_type": "auto_memory_bridge",
+                        "branch": "main",
+                    },
+                ),
+                kwargs={"timeout": 5},
+            )
+            mock_post.assert_call(
+                args=(
+                    "http://127.0.0.1:8765/api/memory/bridge-content",
+                    {
+                        "session_id": "sess-123",
+                        "project": "Users-alice-project",
+                        "file_path": file_path,
+                        "filename": "MEMORY.md",
+                        "content": "x" * 50000,
+                        "is_primary": True,
+                        "branch": "main",
+                    },
+                ),
+                kwargs={"timeout": 10},
+            )
+
+        assert captured_content["length"] == 50000
 
     def test_missing_tool_input(self):
         """Handles missing tool_input gracefully (fail-open)."""
         from hooks.spellbook_hook import _memory_bridge
 
-        with patch("hooks.spellbook_hook._http_post") as mock_post:
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.__call__.required(False).returns(None)
+
+        with bigfoot:
             _memory_bridge("Write", {"cwd": "/tmp", "session_id": "s"})
-            assert mock_post.call_count == 0
 
     def test_namespace_consistency_with_worktree(self):
         """Namespace from _resolve_git_context resolves worktree to main repo root.
@@ -208,12 +300,49 @@ class TestMemoryBridge:
         }
 
         # Simulate _resolve_git_context resolving worktree to main repo
-        with patch("hooks.spellbook_hook._http_post") as mock_post, \
-             patch("hooks.spellbook_hook._resolve_git_context",
-                   return_value=("/Users/alice/project", "feature-branch")):
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.returns(None).returns(None)
+        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git.returns(("/Users/alice/project", "feature-branch"))
+
+        with bigfoot:
             _memory_bridge("Write", data)
 
-            content_payload = mock_post.call_args_list[1][0][1]
-            # Namespace should be based on main repo, not worktree path
-            assert "worktrees" not in content_payload["project"]
-            assert content_payload["project"] == "Users-alice-project"
+        mock_git.assert_call(
+            args=("/Users/alice/project/.worktrees/feature-branch",), kwargs={},
+        )
+
+        # Audit call
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/event",
+                {
+                    "session_id": "sess-wt",
+                    "project": "Users-alice-project",
+                    "tool_name": "Write",
+                    "subject": file_path,
+                    "summary": "auto-memory primary: MEMORY.md",
+                    "tags": "auto-memory,bridge,memory",
+                    "event_type": "auto_memory_bridge",
+                    "branch": "feature-branch",
+                },
+            ),
+            kwargs={"timeout": 5},
+        )
+
+        # Content call: namespace should be based on main repo, not worktree path
+        mock_post.assert_call(
+            args=(
+                "http://127.0.0.1:8765/api/memory/bridge-content",
+                {
+                    "session_id": "sess-wt",
+                    "project": "Users-alice-project",
+                    "file_path": file_path,
+                    "filename": "MEMORY.md",
+                    "content": "# Test",
+                    "is_primary": True,
+                    "branch": "feature-branch",
+                },
+            ),
+            kwargs={"timeout": 10},
+        )

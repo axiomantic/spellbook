@@ -2,9 +2,10 @@
 
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 from spellbook.pr_distill.errors import ErrorCode, PRDistillError
 from spellbook.pr_distill.fetch import (
@@ -17,6 +18,9 @@ from spellbook.pr_distill.fetch import (
     map_gh_error,
     fetch_pr,
 )
+
+# gh pr view JSON fields used by fetch_pr
+_GH_VIEW_FIELDS = "number,title,body,headRefOid,baseRefName,additions,deletions,files"
 
 
 class TestConstants:
@@ -73,54 +77,67 @@ class TestCheckGhVersion:
 
     def test_valid_version_exact_minimum(self):
         """Exact minimum version passes."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="gh version 2.30.0 (2023-05-10)"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("gh version 2.30.0 (2023-05-10)")
+
+        with bigfoot:
             result = check_gh_version()
-            assert result is True
+
+        assert result is True
+        mock_run.assert_call(args=("gh --version",), kwargs={})
 
     def test_valid_version_higher(self):
         """Version higher than minimum passes."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="gh version 2.40.0 (2024-01-15)"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("gh version 2.40.0 (2024-01-15)")
+
+        with bigfoot:
             result = check_gh_version()
-            assert result is True
+
+        assert result is True
+        mock_run.assert_call(args=("gh --version",), kwargs={})
 
     def test_version_too_old(self):
         """Version below minimum raises GH_VERSION_TOO_OLD."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="gh version 2.29.0 (2023-04-01)"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("gh version 2.29.0 (2023-04-01)")
+
+        with bigfoot:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
-            assert exc_info.value.code == ErrorCode.GH_VERSION_TOO_OLD
-            assert "2.29.0" in str(exc_info.value)
-            assert MIN_GH_VERSION in str(exc_info.value)
+
+        assert exc_info.value.code == ErrorCode.GH_VERSION_TOO_OLD
+        assert "2.29.0" in str(exc_info.value)
+        assert MIN_GH_VERSION in str(exc_info.value)
+        mock_run.assert_call(args=("gh --version",), kwargs={})
 
     def test_gh_not_installed(self):
         """gh CLI not installed raises GH_NOT_AUTHENTICATED."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            side_effect=subprocess.CalledProcessError(1, "gh --version")
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.raises(subprocess.CalledProcessError(1, "gh --version"))
+
+        with bigfoot:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
-            assert exc_info.value.code == ErrorCode.GH_NOT_AUTHENTICATED
-            assert "not installed" in str(exc_info.value)
+
+        assert exc_info.value.code == ErrorCode.GH_NOT_AUTHENTICATED
+        assert "not installed" in str(exc_info.value)
+        mock_run.assert_call(
+            args=("gh --version",), kwargs={},
+            raised=IsInstance(subprocess.CalledProcessError),
+        )
 
     def test_unparseable_version_output(self):
         """Unparseable version output raises GH_VERSION_TOO_OLD."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="some weird output"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("some weird output")
+
+        with bigfoot:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
-            assert exc_info.value.code == ErrorCode.GH_VERSION_TOO_OLD
+
+        assert exc_info.value.code == ErrorCode.GH_VERSION_TOO_OLD
+        mock_run.assert_call(args=("gh --version",), kwargs={})
 
 
 class TestParsePRIdentifier:
@@ -140,23 +157,27 @@ class TestParsePRIdentifier:
 
     def test_parse_number_with_git_remote(self):
         """Parse PR number using git remote for repo."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="https://github.com/myorg/myrepo.git"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("https://github.com/myorg/myrepo.git")
+
+        with bigfoot:
             result = parse_pr_identifier("789")
-            assert result["pr_number"] == 789
-            assert result["repo"] == "myorg/myrepo"
+
+        assert result["pr_number"] == 789
+        assert result["repo"] == "myorg/myrepo"
+        mock_run.assert_call(args=("git remote get-url origin",), kwargs={})
 
     def test_parse_number_with_ssh_remote(self):
         """Parse PR number using SSH git remote."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            return_value="git@github.com:org/project.git"
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("git@github.com:org/project.git")
+
+        with bigfoot:
             result = parse_pr_identifier("42")
-            assert result["pr_number"] == 42
-            assert result["repo"] == "org/project"
+
+        assert result["pr_number"] == 42
+        assert result["repo"] == "org/project"
+        mock_run.assert_call(args=("git remote get-url origin",), kwargs={})
 
     def test_parse_invalid_raises(self):
         """Invalid identifier raises GH_PR_NOT_FOUND."""
@@ -166,14 +187,19 @@ class TestParsePRIdentifier:
 
     def test_parse_number_no_git_remote(self):
         """PR number with no git remote raises GH_PR_NOT_FOUND."""
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            side_effect=subprocess.CalledProcessError(1, "git remote")
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.raises(subprocess.CalledProcessError(1, "git remote"))
+
+        with bigfoot:
             with pytest.raises(PRDistillError) as exc_info:
                 parse_pr_identifier("123")
-            assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
-            assert "Could not determine repository" in str(exc_info.value)
+
+        assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+        assert "Could not determine repository" in str(exc_info.value)
+        mock_run.assert_call(
+            args=("git remote get-url origin",), kwargs={},
+            raised=IsInstance(subprocess.CalledProcessError),
+        )
 
 
 class TestMapGhError:
@@ -224,26 +250,36 @@ class TestFetchPR:
             "headRefOid": "abc123",
         }
 
+        import json
+
         def mock_run_command(cmd):
             if "gh --version" in cmd:
                 return "gh version 2.40.0 (2024-01-15)"
             elif "gh pr view" in cmd:
-                import json
                 return json.dumps(mock_meta)
             elif "gh pr diff" in cmd:
                 return "diff --git a/file.py b/file.py\n+new line"
             raise Exception(f"Unexpected command: {cmd}")
 
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            side_effect=mock_run_command
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.calls(mock_run_command).calls(mock_run_command).calls(mock_run_command)
+
+        with bigfoot:
             result = fetch_pr(pr_identifier)
 
         assert result["meta"]["number"] == 123
         assert result["meta"]["title"] == "Test PR"
         assert "diff --git" in result["diff"]
         assert result["repo"] == "owner/repo"
+        with bigfoot.in_any_order():
+            mock_run.assert_call(args=("gh --version",), kwargs={})
+            mock_run.assert_call(
+                args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+                kwargs={},
+            )
+            mock_run.assert_call(
+                args=("gh pr diff 123 --repo owner/repo",), kwargs={},
+            )
 
     def test_fetch_pr_not_found(self):
         """Fetch with non-existent PR raises GH_PR_NOT_FOUND."""
@@ -258,37 +294,48 @@ class TestFetchPR:
                 )
             raise Exception(f"Unexpected command: {cmd}")
 
-        with patch(
-            "spellbook.pr_distill.fetch.run_command",
-            side_effect=mock_run_command
-        ):
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.calls(mock_run_command).calls(mock_run_command)
+
+        with bigfoot:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr(pr_identifier)
-            assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+
+        assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+        with bigfoot.in_any_order():
+            mock_run.assert_call(args=("gh --version",), kwargs={})
+            mock_run.assert_call(
+                args=(f"gh pr view 99999 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+                kwargs={},
+            )
 
 
 class TestRunCommand:
     """Test shell command execution."""
 
     @pytest.mark.skipif(sys.platform == "win32", reason="echo is a shell built-in on Windows, not an external command")
+    @pytest.mark.allow("subprocess")
     def test_run_command_success(self):
         """Successful command returns output."""
         result = run_command("echo hello")
         assert result.strip() == "hello"
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows shlex.split(posix=False) preserves quotes, changing -c argument semantics")
+    @pytest.mark.allow("subprocess")
     def test_run_command_failure(self):
         """Failed command raises CalledProcessError."""
         with pytest.raises(subprocess.CalledProcessError):
             run_command(f"{sys.executable} -c \"import sys; sys.exit(1)\"")
 
     @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific run_command tests")
+    @pytest.mark.allow("subprocess")
     def test_run_command_success_windows(self):
         """Successful command returns output on Windows."""
         result = run_command(f"{sys.executable} -c print(42)")
         assert result.strip() == "42"
 
     @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific run_command tests")
+    @pytest.mark.allow("subprocess")
     def test_run_command_failure_windows(self):
         """Failed command raises CalledProcessError on Windows."""
         with pytest.raises(subprocess.CalledProcessError):
@@ -296,10 +343,18 @@ class TestRunCommand:
 
     def test_run_command_timeout(self):
         """run_command propagates TimeoutExpired from subprocess."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.TimeoutExpired(cmd="test", timeout=120)
+        mock_run = bigfoot.mock("subprocess:run")
+        mock_run.raises(subprocess.TimeoutExpired(cmd="test", timeout=120))
+
+        with bigfoot:
             with pytest.raises(subprocess.TimeoutExpired):
                 run_command("test command")
+
+        mock_run.assert_call(
+            args=(["test", "command"],),
+            kwargs={"capture_output": True, "text": True, "timeout": GH_TIMEOUT, "check": True},
+            raised=IsInstance(subprocess.TimeoutExpired),
+        )
 
 
 class TestCompareSemverEdgeCases:
@@ -335,24 +390,30 @@ class TestParsePRIdentifierEdgeCases:
 class TestFetchPRErrorPaths:
     """Tests for fetch_pr error handling."""
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetch_pr_invalid_json(self, mock_run_command, mock_check_version):
+    def test_fetch_pr_invalid_json(self):
         """fetch_pr raises PRDistillError on invalid JSON response."""
-        mock_check_version.return_value = True
-        mock_run_command.return_value = "not valid json at all"
+        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check.returns(True)
 
-        with pytest.raises(PRDistillError) as exc_info:
-            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.returns("not valid json at all")
+
+        with bigfoot:
+            with pytest.raises(PRDistillError) as exc_info:
+                fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
         assert exc_info.value.code == ErrorCode.GH_NETWORK_ERROR
         assert "Invalid JSON" in str(exc_info.value)
+        mock_check.assert_call(args=(), kwargs={})
+        mock_run.assert_call(
+            args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+            kwargs={},
+        )
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetch_pr_diff_fails(self, mock_run_command, mock_check_version):
+    def test_fetch_pr_diff_fails(self):
         """fetch_pr handles failure when pr view succeeds but pr diff fails."""
-        mock_check_version.return_value = True
+        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check.returns(True)
 
         def side_effect(cmd):
             if "gh pr view" in cmd:
@@ -363,37 +424,62 @@ class TestFetchPRErrorPaths:
                 )
             raise Exception(f"Unexpected command: {cmd}")
 
-        mock_run_command.side_effect = side_effect
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.calls(side_effect).calls(side_effect)
 
-        with pytest.raises(PRDistillError) as exc_info:
-            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+        with bigfoot:
+            with pytest.raises(PRDistillError) as exc_info:
+                fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
         # Should map to GH_PR_NOT_FOUND since stderr contains "not found"
         assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+        mock_check.assert_call(args=(), kwargs={})
+        with bigfoot.in_any_order():
+            mock_run.assert_call(
+                args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+                kwargs={},
+            )
+            mock_run.assert_call(
+                args=("gh pr diff 123 --repo owner/repo",), kwargs={},
+            )
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetch_pr_rate_limited(self, mock_run_command, mock_check_version):
+    def test_fetch_pr_rate_limited(self):
         """fetch_pr handles rate limit errors."""
-        mock_check_version.return_value = True
-        error = subprocess.CalledProcessError(1, "gh", stderr=b"API rate limit exceeded")
-        mock_run_command.side_effect = error
+        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check.returns(True)
 
-        with pytest.raises(PRDistillError) as exc_info:
-            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.raises(subprocess.CalledProcessError(1, "gh", stderr=b"API rate limit exceeded"))
+
+        with bigfoot:
+            with pytest.raises(PRDistillError) as exc_info:
+                fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
         assert exc_info.value.code == ErrorCode.GH_RATE_LIMITED
         assert exc_info.value.recoverable is True
+        mock_check.assert_call(args=(), kwargs={})
+        mock_run.assert_call(
+            args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+            kwargs={},
+            raised=IsInstance(subprocess.CalledProcessError),
+        )
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetch_pr_auth_error(self, mock_run_command, mock_check_version):
+    def test_fetch_pr_auth_error(self):
         """fetch_pr handles authentication errors."""
-        mock_check_version.return_value = True
-        error = subprocess.CalledProcessError(1, "gh", stderr=b"gh auth login")
-        mock_run_command.side_effect = error
+        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check.returns(True)
 
-        with pytest.raises(PRDistillError) as exc_info:
-            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run.raises(subprocess.CalledProcessError(1, "gh", stderr=b"gh auth login"))
+
+        with bigfoot:
+            with pytest.raises(PRDistillError) as exc_info:
+                fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
         assert exc_info.value.code == ErrorCode.GH_NOT_AUTHENTICATED
+        mock_check.assert_call(args=(), kwargs={})
+        mock_run.assert_call(
+            args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
+            kwargs={},
+            raised=IsInstance(subprocess.CalledProcessError),
+        )

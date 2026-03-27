@@ -1,8 +1,9 @@
 """Tests for memory consolidation pipeline."""
 
 import json
+import bigfoot
 import pytest
-from unittest.mock import patch
+from dirty_equals import IsInstance
 
 from spellbook.core.db import init_db, get_connection, close_all_connections
 from spellbook.memory.store import (
@@ -433,14 +434,16 @@ class TestConsolidateBatch:
         _seed_events(db, 15)
 
         # Force an error in the heuristic pipeline by making a strategy raise
-        with patch(
-            "spellbook.memory.consolidation._strategy_content_hash_dedup",
-            side_effect=RuntimeError("hash computation failed"),
-        ):
+        mock_dedup = bigfoot.mock("spellbook.memory.consolidation:_strategy_content_hash_dedup")
+        mock_dedup.raises(RuntimeError("hash computation failed"))
+
+        with bigfoot:
             result = consolidate_batch(
                 db_path=db,
                 namespace="Users-alice-myproject",
             )
+
+        mock_dedup.assert_call(args=(IsInstance(list),), kwargs={}, raised=IsInstance(RuntimeError))
 
         assert result["status"] == "error"
         assert result["error"] == "hash computation failed"
@@ -488,11 +491,13 @@ class TestConsolidateBatch:
             )
 
         # Fail jaccard_similarity (second strategy, after content_hash succeeds)
-        with patch(
-            "spellbook.memory.consolidation._strategy_jaccard_similarity",
-            side_effect=ValueError("jaccard computation exploded"),
-        ):
+        mock_jaccard = bigfoot.mock("spellbook.memory.consolidation:_strategy_jaccard_similarity")
+        mock_jaccard.raises(ValueError("jaccard computation exploded"))
+
+        with bigfoot:
             result = consolidate_batch(db_path=db, namespace="ns")
+
+        mock_jaccard.assert_call(args=(IsInstance(list),), kwargs={}, raised=IsInstance(ValueError))
 
         assert result["status"] == "error"
         assert result["error"] == "jaccard computation exploded"
@@ -572,10 +577,10 @@ class TestConsolidateBatch:
         """Consolidation calls purge_deleted at the end on success."""
         _seed_duplicate_events(db)
 
-        with patch(
-            "spellbook.memory.consolidation.purge_deleted",
-            return_value=2,
-        ) as mock_purge:
+        mock_purge = bigfoot.mock("spellbook.memory.consolidation:purge_deleted")
+        mock_purge.returns(2)
+
+        with bigfoot:
             result = consolidate_batch(
                 db_path=db,
                 namespace="Users-alice-myproject",
@@ -583,7 +588,7 @@ class TestConsolidateBatch:
 
         assert result["status"] == "success"
         assert result["purged"] == 2
-        mock_purge.assert_called_once_with(db)
+        mock_purge.assert_call(args=(db,), kwargs={})
 
     def test_audit_log_on_success(self, db):
         """Successful consolidation logs consolidation_complete with metrics."""

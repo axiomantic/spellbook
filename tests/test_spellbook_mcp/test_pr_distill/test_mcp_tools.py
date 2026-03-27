@@ -4,8 +4,8 @@ Uses .fn to access the underlying function from the FunctionTool wrapper
 created by the @mcp.tool() decorator.
 """
 
+import bigfoot
 import pytest
-from unittest.mock import patch, MagicMock
 
 # Import the MCP server module to access the tools
 from spellbook import server
@@ -277,40 +277,64 @@ class TestPrListPatterns:
 class TestPrFetch:
     """Tests for pr_fetch MCP tool."""
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetches_pr_by_number(self, mock_run_command, mock_check_version):
+    def test_fetches_pr_by_number(self):
         """pr_fetch fetches PR by number (mocked)."""
-        mock_check_version.return_value = True
-        mock_run_command.side_effect = [
-            "origin\thttps://github.com/owner/repo.git (fetch)",  # git remote get-url
-            '{"number": 123, "title": "Test PR", "files": []}',  # gh pr view
-            "diff content here",  # gh pr diff
-        ]
+        mock_check_version = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check_version.returns(True)
 
-        result = server.pr_fetch.fn("123")
+        mock_run_command = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run_command.returns(
+            "https://github.com/owner/repo.git"  # git remote get-url origin
+        ).returns(
+            '{"number": 123, "title": "Test PR", "files": []}'  # gh pr view
+        ).returns(
+            "diff content here"  # gh pr diff
+        )
+
+        with bigfoot:
+            result = server.pr_fetch.fn("123")
 
         assert "meta" in result
         assert "diff" in result
         assert result["meta"]["number"] == 123
-        # Verify mocks were actually called
-        mock_check_version.assert_called_once()
-        assert mock_run_command.call_count == 3  # remote, pr view, pr diff
+        # Verify mocks were actually called (order varies)
+        with bigfoot.in_any_order():
+            mock_check_version.assert_call(args=(), kwargs={})
+            mock_run_command.assert_call(
+                args=("git remote get-url origin",), kwargs={},
+            )
+            mock_run_command.assert_call(
+                args=("gh pr view 123 --repo owner/repo --json number,title,body,headRefOid,baseRefName,additions,deletions,files",),
+                kwargs={},
+            )
+            mock_run_command.assert_call(
+                args=("gh pr diff 123 --repo owner/repo",), kwargs={},
+            )
 
-    @patch("spellbook.pr_distill.fetch.check_gh_version")
-    @patch("spellbook.pr_distill.fetch.run_command")
-    def test_fetches_pr_by_url(self, mock_run_command, mock_check_version):
+    def test_fetches_pr_by_url(self):
         """pr_fetch fetches PR by URL (mocked)."""
-        mock_check_version.return_value = True
-        mock_run_command.side_effect = [
-            '{"number": 456, "title": "Another PR", "files": []}',  # gh pr view
-            "diff content",  # gh pr diff
-        ]
+        mock_check_version = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check_version.returns(True)
 
-        result = server.pr_fetch.fn("https://github.com/owner/repo/pull/456")
+        mock_run_command = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run_command.returns(
+            '{"number": 456, "title": "Another PR", "files": []}'  # gh pr view
+        ).returns(
+            "diff content"  # gh pr diff
+        )
+
+        with bigfoot:
+            result = server.pr_fetch.fn("https://github.com/owner/repo/pull/456")
 
         assert result["meta"]["number"] == 456
         assert result["repo"] == "owner/repo"
-        # Verify mocks were actually called
-        mock_check_version.assert_called_once()
-        assert mock_run_command.call_count == 2  # pr view, pr diff (no remote needed for URL)
+        # Verify mocks were actually called (order varies)
+        with bigfoot.in_any_order():
+            mock_check_version.assert_call(args=(), kwargs={})
+            mock_run_command.assert_call(
+                args=("gh pr view 456 --repo owner/repo --json number,title,body,headRefOid,baseRefName,additions,deletions,files",),
+                kwargs={},
+            )
+            mock_run_command.assert_call(
+                args=("gh pr diff 456 --repo owner/repo",), kwargs={},
+            )
