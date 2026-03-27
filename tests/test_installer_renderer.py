@@ -1,8 +1,6 @@
 """Tests for InstallerRenderer ABC, PlainTextRenderer, and RichRenderer in installer/renderer.py."""
 
-import sys
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -580,8 +578,7 @@ class TestRichRendererRenderWelcome:
     def test_fresh_install(self):
         """render_welcome for fresh install does not raise."""
         renderer, console = self._make_renderer()
-        with patch("installer.renderer.RichRenderer.render_welcome", wraps=renderer.render_welcome):
-            renderer.render_welcome("1.0.0", is_upgrade=False)
+        renderer.render_welcome("1.0.0", is_upgrade=False)
 
     def test_upgrade(self):
         """render_welcome for upgrade does not raise."""

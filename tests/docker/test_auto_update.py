@@ -20,8 +20,8 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Generator
-from unittest.mock import patch
 
+import bigfoot
 import pytest
 
 from installer.compat import CrossPlatformLock
@@ -92,8 +92,7 @@ def _make_installer_interceptor(
         installer_stderr: Stderr text for the faked installer.
 
     Returns:
-        A callable suitable for use as ``side_effect`` on a patched
-        ``subprocess.run``.
+        A callable suitable for use as a bigfoot ``.calls()`` handler.
     """
 
     def _intercept(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -190,11 +189,13 @@ class TestApplyUpdate:
         sha_before = _get_head_sha(committed_repo)
         latest_sha = _get_latest_sha(committed_repo)
 
-        with patch(
-            "spellbook.updates.tools.subprocess.run",
-            side_effect=_make_installer_interceptor(installer_returncode=0),
-        ):
+        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run.calls(_make_installer_interceptor(installer_returncode=0))
+
+        with bigfoot:
             result = apply_update(committed_repo, lock_path=lock_file)
+
+        mock_run.assert_call()
 
         assert result["success"] is True, f"Update failed: {result['error']}"
         assert result["pre_update_sha"] == sha_before
@@ -210,13 +211,17 @@ class TestApplyUpdate:
         """When the installer step fails, git is reset to the pre-update SHA."""
         sha_before = _get_head_sha(committed_repo)
 
-        with patch(
-            "spellbook.updates.tools.subprocess.run",
-            side_effect=_make_installer_interceptor(
+        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run.calls(
+            _make_installer_interceptor(
                 installer_returncode=1, installer_stderr="Installer crashed"
-            ),
-        ):
+            )
+        )
+
+        with bigfoot:
             result = apply_update(committed_repo, lock_path=lock_file)
+
+        mock_run.assert_call()
 
         assert result["success"] is False
         assert result["error"] is not None
@@ -238,22 +243,26 @@ class TestRollbackUpdate:
         interceptor = _make_installer_interceptor(installer_returncode=0)
 
         # Apply update first (with mocked installer)
-        with patch(
-            "spellbook.updates.tools.subprocess.run",
-            side_effect=interceptor,
-        ):
+        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run.calls(interceptor)
+
+        with bigfoot:
             apply_result = apply_update(committed_repo, lock_path=lock_file)
+
+        mock_run.assert_call()
 
         assert apply_result["success"] is True, f"Setup failed: {apply_result['error']}"
         sha_after_update = _get_head_sha(committed_repo)
         assert sha_after_update != sha_before
 
         # Now rollback (also with mocked installer)
-        with patch(
-            "spellbook.updates.tools.subprocess.run",
-            side_effect=interceptor,
-        ):
+        mock_run2 = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run2.calls(interceptor)
+
+        with bigfoot:
             rollback_result = rollback_update(committed_repo, lock_path=lock_file)
+
+        mock_run2.assert_call()
 
         assert rollback_result["success"] is True, (
             f"Rollback failed: {rollback_result['error']}"
@@ -408,11 +417,13 @@ class TestUpdateConfigPersistence:
         """After a successful apply_update, update state is persisted in config."""
         from spellbook.core.config import config_get
 
-        with patch(
-            "spellbook.updates.tools.subprocess.run",
-            side_effect=_make_installer_interceptor(installer_returncode=0),
-        ):
+        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run.calls(_make_installer_interceptor(installer_returncode=0))
+
+        with bigfoot:
             result = apply_update(committed_repo, lock_path=lock_file)
+
+        mock_run.assert_call()
 
         assert result["success"] is True, f"Update failed: {result['error']}"
 

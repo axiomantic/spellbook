@@ -12,12 +12,32 @@ objects. We access the underlying function via the .fn attribute.
 """
 
 import json
+import bigfoot
 import pytest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import patch
 
 from spellbook.core.db import init_db, get_connection, close_all_connections
+
+
+def _setup_get_connection_mock(db_path, call_count):
+    """Set up a bigfoot mock for get_connection returning a test DB connection.
+
+    Returns (mock, conn). After the `with bigfoot:` block, caller must assert
+    call_count times via _assert_get_connection_calls().
+    """
+    mock = bigfoot.mock("spellbook.core.db:get_connection")
+    conn = get_connection(db_path)
+    for _ in range(call_count):
+        mock.__call__.required(False).returns(conn)
+    return mock, conn
+
+
+def _assert_get_connection_calls(mock, call_count):
+    """Assert that get_connection was called call_count times."""
+    with bigfoot.in_any_order():
+        for _ in range(call_count):
+            mock.assert_call(args=(), kwargs={})
 
 
 class TestWorkflowStateSave:
@@ -41,14 +61,16 @@ class TestWorkflowStateSave:
             "todos": [{"id": "1", "text": "Task 1", "status": "pending"}],
         }
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
+
+        with bigfoot:
             result = workflow_state_save.fn(
                 project_path=project_path,
                 state=state,
                 trigger="manual",
             )
 
+        _assert_get_connection_calls(mock_conn, 1)
         assert result["success"] is True
         assert result["project_path"] == project_path
         assert result["trigger"] == "manual"
@@ -72,9 +94,9 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
+        with bigfoot:
             # First save
             state1 = {"active_skill": "debugging"}
             workflow_state_save.fn(project_path=project_path, state=state1, trigger="manual")
@@ -85,6 +107,7 @@ class TestWorkflowStateSave:
                 project_path=project_path, state=state2, trigger="auto"
             )
 
+        _assert_get_connection_calls(mock_conn, 2)
         assert result["success"] is True
 
         # Verify only one record and it has the updated state
@@ -106,9 +129,9 @@ class TestWorkflowStateSave:
 
         triggers = ["manual", "auto", "checkpoint"]
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
+        with bigfoot:
             for i, trigger in enumerate(triggers):
                 project_path = f"/test/project-{i}"
                 state = {"workflow_pattern": trigger}
@@ -117,6 +140,8 @@ class TestWorkflowStateSave:
                 )
                 assert result["success"] is True
                 assert result["trigger"] == trigger
+
+        _assert_get_connection_calls(mock_conn, 3)
 
         # Verify all triggers stored correctly
         conn = get_connection(self.db_path)
@@ -135,9 +160,9 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
+        with bigfoot:
             # First save
             workflow_state_save.fn(
                 project_path=project_path,
@@ -146,8 +171,8 @@ class TestWorkflowStateSave:
             )
 
             # Get created_at
-            conn = get_connection(self.db_path)
-            cursor = conn.cursor()
+            conn_check = get_connection(self.db_path)
+            cursor = conn_check.cursor()
             cursor.execute(
                 "SELECT created_at FROM workflow_state WHERE project_path = ?",
                 (project_path,),
@@ -173,6 +198,8 @@ class TestWorkflowStateSave:
             created_at_2 = row[0]
             updated_at_2 = row[1]
 
+        _assert_get_connection_calls(mock_conn, 2)
+
         # created_at should be preserved, updated_at should be newer
         assert created_at_1 == created_at_2
         assert updated_at_2 >= created_at_2
@@ -195,12 +222,14 @@ class TestWorkflowStateSave:
             },
         }
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
+
+        with bigfoot:
             result = workflow_state_save.fn(
                 project_path=project_path, state=state, trigger="checkpoint"
             )
 
+        _assert_get_connection_calls(mock_conn, 1)
         assert result["success"] is True
 
         # Verify complex state stored correctly
@@ -230,10 +259,12 @@ class TestWorkflowStateLoad:
         """Test loading returns found=False for missing project."""
         from spellbook.server import workflow_state_load
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
+
+        with bigfoot:
             result = workflow_state_load.fn(project_path="/nonexistent/project")
 
+        _assert_get_connection_calls(mock_conn, 1)
         assert result["success"] is True
         assert result["found"] is False
         assert result["state"] is None
@@ -247,15 +278,16 @@ class TestWorkflowStateLoad:
         project_path = "/test/project"
         state = {"active_skill": "debugging", "todos": []}
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
+        with bigfoot:
             # Save state
             workflow_state_save.fn(project_path=project_path, state=state, trigger="manual")
 
             # Load state
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 2)
         assert result["success"] is True
         assert result["found"] is True
         assert result["state"] == state
@@ -282,12 +314,14 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = conn
+        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc.__call__.required(False).returns(conn)
 
+        with bigfoot:
             # Load with default max_age_hours (24)
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
+        _assert_get_connection_calls(mock_gc, 1)
         assert result["success"] is True
         assert result["found"] is False  # Too old
         assert result["state"] is None
@@ -314,12 +348,14 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = conn
+        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc.__call__.required(False).returns(conn)
 
+        with bigfoot:
             # Load with 24 hour max age
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
+        _assert_get_connection_calls(mock_gc, 1)
         assert result["success"] is True
         assert result["found"] is True
         assert result["state"] == {"skill_phase": "discovery"}
@@ -344,10 +380,13 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = conn
+        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc.__call__.required(False).returns(conn)
+
+        with bigfoot:
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
+        _assert_get_connection_calls(mock_gc, 1)
         assert result["success"] is True
         assert result["found"] is True
         # Allow some margin for test execution time
@@ -372,9 +411,11 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = conn
+        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc.__call__.required(False).returns(conn)
+        mock_gc.__call__.required(False).returns(conn)
 
+        with bigfoot:
             # With max_age=2 hours, should be stale
             result_stale = workflow_state_load.fn(project_path=project_path, max_age_hours=2.0)
             assert result_stale["found"] is False
@@ -382,6 +423,8 @@ class TestWorkflowStateLoad:
             # With max_age=4 hours, should be fresh
             result_fresh = workflow_state_load.fn(project_path=project_path, max_age_hours=4.0)
             assert result_fresh["found"] is True
+
+        _assert_get_connection_calls(mock_gc, 2)
 
 
 class TestWorkflowStateUpdate:
@@ -402,15 +445,17 @@ class TestWorkflowStateUpdate:
         project_path = "/test/project"
         updates = {"active_skill": "debugging", "skill_phase": "discovery"}
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # update(1) + load(1) = 2
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
+        with bigfoot:
             result = workflow_state_update.fn(project_path=project_path, updates=updates)
             assert result["success"] is True
 
             # Verify state was created
             load_result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 2)
         assert load_result["found"] is True
         assert load_result["state"]["active_skill"] == "debugging"
         assert load_result["state"]["skill_phase"] == "discovery"
@@ -421,9 +466,10 @@ class TestWorkflowStateUpdate:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # save(1) + update(1) + load(1) = 3
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
+        with bigfoot:
             # Initial state with nested dict
             initial_state = {
                 "skill_constraints": {
@@ -445,6 +491,7 @@ class TestWorkflowStateUpdate:
             # Load and verify merge
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 3)
         assert result["found"] is True
         constraints = result["state"]["skill_constraints"]
         # Lists are appended
@@ -460,9 +507,10 @@ class TestWorkflowStateUpdate:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # save(1) + update(1) + load(1) = 3
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
+        with bigfoot:
             # Initial state with lists
             initial_state = {
                 "recent_files": ["src/main.py"],
@@ -479,6 +527,7 @@ class TestWorkflowStateUpdate:
 
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 3)
         assert result["found"] is True
         assert result["state"]["recent_files"] == ["src/main.py", "tests/test_main.py"]
         assert len(result["state"]["todos"]) == 2
@@ -491,9 +540,10 @@ class TestWorkflowStateUpdate:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # save(1) + update(1) + load(1) = 3
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
+        with bigfoot:
             # Initial state with scalars
             initial_state = {
                 "active_skill": "debugging",
@@ -512,6 +562,7 @@ class TestWorkflowStateUpdate:
 
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 3)
         assert result["found"] is True
         assert result["state"]["active_skill"] == "tdd"
         assert result["state"]["skill_phase"] == "implementation"
@@ -523,12 +574,14 @@ class TestWorkflowStateUpdate:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # update(1) + load(1) = 2
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
+        with bigfoot:
             workflow_state_update.fn(project_path=project_path, updates={"active_skill": "debugging"})
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 2)
         assert result["trigger"] == "auto"
 
     def test_update_multiple_times(self, tmp_path):
@@ -537,9 +590,10 @@ class TestWorkflowStateUpdate:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # 3 updates(3) + load(1) = 4
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 4)
 
+        with bigfoot:
             # First update
             workflow_state_update.fn(
                 project_path=project_path,
@@ -560,6 +614,7 @@ class TestWorkflowStateUpdate:
 
             result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 4)
         assert result["found"] is True
         assert result["state"]["recent_files"] == ["file1.py", "file2.py", "file3.py"]
         assert result["state"]["pending_todos"] == 2  # Overwritten
@@ -633,10 +688,13 @@ Follow these requirements.
         """Test getting full skill content without section filter."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(skill_name="test-skill")
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         assert result["skill_name"] == "test-skill"
         assert "ROLE" in result["content"]
@@ -648,13 +706,16 @@ Follow these requirements.
         """Test extracting specific sections (FORBIDDEN, ROLE)."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["FORBIDDEN", "ROLE"],
             )
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         assert "sections" in result
         assert "FORBIDDEN" in result["sections"]
@@ -666,10 +727,13 @@ Follow these requirements.
         """Test returns error for non-existent skill."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(skill_name="nonexistent-skill")
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is False
         assert "error" in result
         assert "not found" in result["error"].lower()
@@ -678,13 +742,16 @@ Follow these requirements.
         """Test extracting <FORBIDDEN>...</FORBIDDEN> style sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["CRITICAL"],
             )
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         assert "CRITICAL" in result["sections"]
         assert "critical information" in result["sections"]["CRITICAL"].lower()
@@ -693,13 +760,16 @@ Follow these requirements.
         """Test extracting ## Section Name style sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["Required Practices"],
             )
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         assert "Required Practices" in result["sections"]
         assert "thing X" in result["sections"]["Required Practices"]
@@ -708,13 +778,16 @@ Follow these requirements.
         """Test that missing sections are simply not included."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["ROLE", "NONEXISTENT_SECTION"],
             )
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         assert "ROLE" in result["sections"]
         assert "NONEXISTENT_SECTION" not in result["sections"]
@@ -723,13 +796,16 @@ Follow these requirements.
         """Test that content field contains combined sections."""
         from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.tools.forged.get_spellbook_dir") as mock_dir:
-            mock_dir.return_value = mock_spellbook_dir
+        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir.returns(mock_spellbook_dir)
+
+        with bigfoot:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["ROLE", "FORBIDDEN"],
             )
 
+        mock_dir.assert_call(args=(), kwargs={})
         assert result["success"] is True
         # Content should contain formatted sections
         assert "## ROLE" in result["content"] or "## FORBIDDEN" in result["content"]
@@ -968,9 +1044,10 @@ class TestWorkflowStateIntegration:
 
         project_path = "/test/project"
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # save(1) + 3 updates(3) + load(1) = 5
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 5)
 
+        with bigfoot:
             # 1. Initial save (session start)
             initial_state = {
                 "recent_files": [],
@@ -1013,6 +1090,8 @@ class TestWorkflowStateIntegration:
             # 5. Load and verify accumulated state
             load_result = workflow_state_load.fn(project_path=project_path)
 
+        _assert_get_connection_calls(mock_conn, 5)
+
         assert load_result["success"] is True
         assert load_result["found"] is True
         state = load_result["state"]
@@ -1031,9 +1110,10 @@ class TestWorkflowStateIntegration:
             workflow_state_load,
         )
 
-        with patch("spellbook.core.db.get_connection") as mock_conn:
-            mock_conn.return_value = get_connection(self.db_path)
+        # 2 saves + 2 loads = 4
+        mock_conn, conn = _setup_get_connection_mock(self.db_path, 4)
 
+        with bigfoot:
             # Save state for project A
             workflow_state_save.fn(
                 project_path="/project/a",
@@ -1051,6 +1131,8 @@ class TestWorkflowStateIntegration:
             # Load each and verify isolation
             result_a = workflow_state_load.fn(project_path="/project/a")
             result_b = workflow_state_load.fn(project_path="/project/b")
+
+        _assert_get_connection_calls(mock_conn, 4)
 
         assert result_a["state"]["active_skill"] == "debugging"
         assert result_a["state"]["pending_todos"] == 1

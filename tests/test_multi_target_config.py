@@ -1,8 +1,6 @@
 """Tests for multi-target config resolution: resolve_config_dirs() and PLATFORM_CONFIG entries."""
 
-import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -87,35 +85,45 @@ def _fake_platform_config(default_dir: Path):
 class TestResolveConfigDirs:
     """Tests for resolve_config_dirs() with patched PLATFORM_CONFIG."""
 
-    def test_default_behavior_returns_single_default_dir(self, tmp_path):
+    @pytest.fixture(autouse=True)
+    def _patch_config(self, monkeypatch):
+        """Ensure FAKE_CONFIG_DIR is not set in environment for all tests."""
+        monkeypatch.delenv("FAKE_CONFIG_DIR", raising=False)
+
+    def test_default_behavior_returns_single_default_dir(self, tmp_path, monkeypatch):
         """No CLI, no env -> single default dir (created if missing)."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {}, clear=True):
-            result = resolve_config_dirs("fake_platform")
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform")
 
         assert len(result) == 1
         assert result[0] == default_dir
         # Default dir should have been created
         assert default_dir.exists()
 
-    def test_cli_single_dir(self, tmp_path):
+    def test_cli_single_dir(self, tmp_path, monkeypatch):
         """Single CLI dir returns that dir."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         cli_dir = tmp_path / "cli_config"
         cli_dir.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[cli_dir])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform", cli_dirs=[cli_dir])
 
         assert len(result) == 1
         assert result[0] == cli_dir
 
-    def test_cli_multiple_dirs(self, tmp_path):
+    def test_cli_multiple_dirs(self, tmp_path, monkeypatch):
         """Multiple CLI dirs returns all."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         dir1 = tmp_path / "dir1"
         dir2 = tmp_path / "dir2"
@@ -123,15 +131,17 @@ class TestResolveConfigDirs:
         dir2.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2])
 
         assert len(result) == 2
         assert result[0] == dir1
         assert result[1] == dir2
 
-    def test_cli_overrides_env_var(self, tmp_path):
+    def test_cli_overrides_env_var(self, tmp_path, monkeypatch):
         """CLI dirs override env var."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         cli_dir = tmp_path / "cli_config"
         env_dir = tmp_path / "env_config"
@@ -139,32 +149,36 @@ class TestResolveConfigDirs:
         env_dir.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {"FAKE_CONFIG_DIR": str(env_dir)}):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[cli_dir])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        monkeypatch.setenv("FAKE_CONFIG_DIR", str(env_dir))
+        result = resolve_config_dirs("fake_platform", cli_dirs=[cli_dir])
 
         # CLI should win over env
         assert len(result) == 1
         assert result[0] == cli_dir
 
-    def test_env_var_overrides_default(self, tmp_path):
+    def test_env_var_overrides_default(self, tmp_path, monkeypatch):
         """Env var replaces default."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         env_dir = tmp_path / "env_config"
         env_dir.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {"FAKE_CONFIG_DIR": str(env_dir)}):
-            result = resolve_config_dirs("fake_platform")
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        monkeypatch.setenv("FAKE_CONFIG_DIR", str(env_dir))
+        result = resolve_config_dirs("fake_platform")
 
         assert len(result) == 1
         assert result[0] == env_dir
         # Default dir should NOT have been created
         assert not default_dir.exists()
 
-    def test_env_override_param(self, tmp_path):
+    def test_env_override_param(self, tmp_path, monkeypatch):
         """The env_override parameter bypasses os.environ."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         override_dir = tmp_path / "override_config"
         env_dir = tmp_path / "env_config"
@@ -172,90 +186,101 @@ class TestResolveConfigDirs:
         env_dir.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {"FAKE_CONFIG_DIR": str(env_dir)}):
-            result = resolve_config_dirs(
-                "fake_platform", env_override=str(override_dir)
-            )
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        monkeypatch.setenv("FAKE_CONFIG_DIR", str(env_dir))
+        result = resolve_config_dirs(
+            "fake_platform", env_override=str(override_dir)
+        )
 
         # env_override should win over os.environ
         assert len(result) == 1
         assert result[0] == override_dir
 
-    def test_deduplication(self, tmp_path):
+    def test_deduplication(self, tmp_path, monkeypatch):
         """Same dir twice -> deduplicated to 1."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         cli_dir = tmp_path / "cli_config"
         cli_dir.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs(
-                "fake_platform", cli_dirs=[cli_dir, cli_dir]
-            )
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs(
+            "fake_platform", cli_dirs=[cli_dir, cli_dir]
+        )
 
         assert len(result) == 1
         assert result[0] == cli_dir
 
-    def test_nonexistent_cli_dir_skipped(self, tmp_path):
+    def test_nonexistent_cli_dir_skipped(self, tmp_path, monkeypatch):
         """Non-existent CLI dir skipped (returns empty)."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         missing_dir = tmp_path / "does_not_exist"
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[missing_dir])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform", cli_dirs=[missing_dir])
 
         assert result == []
 
-    def test_nonexistent_default_dir_created(self, tmp_path):
+    def test_nonexistent_default_dir_created(self, tmp_path, monkeypatch):
         """Default dir auto-created."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         assert not default_dir.exists()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {}, clear=True):
-            result = resolve_config_dirs("fake_platform")
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform")
 
         assert len(result) == 1
         assert default_dir.exists()
 
-    def test_all_cli_dirs_invalid_returns_empty(self, tmp_path):
+    def test_all_cli_dirs_invalid_returns_empty(self, tmp_path, monkeypatch):
         """All invalid CLI dirs -> empty."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         bad1 = tmp_path / "nope1"
         bad2 = tmp_path / "nope2"
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[bad1, bad2])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform", cli_dirs=[bad1, bad2])
 
         assert result == []
 
-    def test_mixed_valid_invalid_cli_dirs(self, tmp_path):
+    def test_mixed_valid_invalid_cli_dirs(self, tmp_path, monkeypatch):
         """Mix of valid/invalid -> only valid returned."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         good = tmp_path / "good"
         bad = tmp_path / "bad"
         good.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            result = resolve_config_dirs("fake_platform", cli_dirs=[bad, good])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        result = resolve_config_dirs("fake_platform", cli_dirs=[bad, good])
 
         assert len(result) == 1
         assert result[0] == good
 
-    def test_nonexistent_env_dir_skipped(self, tmp_path):
+    def test_nonexistent_env_dir_skipped(self, tmp_path, monkeypatch):
         """Non-existent env dir -> empty (not fallen back to default)."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         missing_env = tmp_path / "env_missing"
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {"FAKE_CONFIG_DIR": str(missing_env)}):
-            result = resolve_config_dirs("fake_platform")
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        monkeypatch.setenv("FAKE_CONFIG_DIR", str(missing_env))
+        result = resolve_config_dirs("fake_platform")
 
         # Should be empty because env dir doesn't exist, and since it was
         # explicit, it should NOT fall back to the default dir

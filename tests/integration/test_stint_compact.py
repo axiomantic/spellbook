@@ -4,8 +4,8 @@ import json
 import os
 import sys
 from pathlib import Path
-from unittest.mock import patch
 
+import bigfoot
 import pytest
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
@@ -265,8 +265,7 @@ class TestStintCompactionSurvival:
 class TestBehavioralModeSurvivesCompaction:
     """End-to-end: behavioral_mode persists through compaction cycle."""
 
-    @patch.object(spellbook_hook, "_mcp_call")
-    def test_full_compaction_round_trip(self, mock_mcp_call):
+    def test_full_compaction_round_trip(self):
         """Push with behavioral_mode, compact, recover, verify mode in output."""
         saved_stack = [
             {
@@ -289,21 +288,35 @@ class TestBehavioralModeSurvivesCompaction:
             "compaction_flag": True,
         }
 
-        # Mock the MCP calls for SessionStart recovery
-        mock_mcp_call.side_effect = [
-            # 1. workflow_state_load
-            {"found": True, "state": saved_state},
-            # 2. stint_replace (restore stack)
-            {"success": True, "depth": 1, "correction_logged": True},
-            # 3. skill_instructions_get (from _build_recovery_directive)
-            {
-                "success": True,
-                "content": "## FORBIDDEN\n- Never skip phases\n## REQUIRED\n- Follow all steps",
-            },
-        ]
+        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        # 1. workflow_state_load
+        mock_mcp.returns({"found": True, "state": saved_state})
+        # 2. stint_replace (restore stack)
+        mock_mcp.returns({"success": True, "depth": 1, "correction_logged": True})
+        # 3. skill_instructions_get (from _build_recovery_directive)
+        mock_mcp.returns({
+            "success": True,
+            "content": "## FORBIDDEN\n- Never skip phases\n## REQUIRED\n- Follow all steps",
+        })
 
         data = {"source": "compact", "cwd": "/tmp/test-project"}
-        result = spellbook_hook._handle_session_start(data)
+
+        with bigfoot:
+            result = spellbook_hook._handle_session_start(data)
+
+        mock_mcp.assert_call(args=("workflow_state_load", {
+            "project_path": "/tmp/test-project",
+            "max_age_hours": 24,
+        }), kwargs={})
+        mock_mcp.assert_call(args=("stint_replace", {
+            "project_path": "/tmp/test-project",
+            "stack": saved_stack,
+            "reason": "post-compaction restoration",
+        }), kwargs={})
+        mock_mcp.assert_call(args=("skill_instructions_get", {
+            "skill_name": "develop",
+            "sections": ["FORBIDDEN", "REQUIRED"],
+        }), kwargs={})
 
         assert result is not None
         context = result["hookSpecificOutput"]["additionalContext"]
@@ -324,8 +337,7 @@ class TestBehavioralModeSurvivesCompaction:
             f"Expected context:\n{expected_context!r}\n\nGot:\n{context!r}"
         )
 
-    @patch.object(spellbook_hook, "_mcp_call")
-    def test_compaction_with_no_behavioral_mode_backward_compat(self, mock_mcp_call):
+    def test_compaction_with_no_behavioral_mode_backward_compat(self):
         """Old stack entries without behavioral_mode survive compaction."""
         saved_stack = [
             {
@@ -341,13 +353,24 @@ class TestBehavioralModeSurvivesCompaction:
             },
         ]
 
-        mock_mcp_call.side_effect = [
-            {"found": True, "state": {"stint_stack": saved_stack}},
-            {"success": True},  # stint_replace
-        ]
+        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        mock_mcp.returns({"found": True, "state": {"stint_stack": saved_stack}})
+        mock_mcp.returns({"success": True})  # stint_replace
 
         data = {"source": "compact", "cwd": "/tmp/test-project"}
-        result = spellbook_hook._handle_session_start(data)
+
+        with bigfoot:
+            result = spellbook_hook._handle_session_start(data)
+
+        mock_mcp.assert_call(args=("workflow_state_load", {
+            "project_path": "/tmp/test-project",
+            "max_age_hours": 24,
+        }), kwargs={})
+        mock_mcp.assert_call(args=("stint_replace", {
+            "project_path": "/tmp/test-project",
+            "stack": saved_stack,
+            "reason": "post-compaction restoration",
+        }), kwargs={})
 
         assert result is not None
         context = result["hookSpecificOutput"]["additionalContext"]
@@ -362,10 +385,10 @@ class TestBehavioralModeSurvivesCompaction:
             f"Expected context:\n{expected_context!r}\n\nGot:\n{context!r}"
         )
 
-    @patch.object(spellbook_hook, "_mcp_call")
-    def test_first_post_tool_use_after_compaction_shows_behavioral_mode(self, mock_mcp_call):
+    def test_first_post_tool_use_after_compaction_shows_behavioral_mode(self):
         """After compaction recovery, the first PostToolUse should show behavioral_mode."""
-        mock_mcp_call.return_value = {
+        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        mock_mcp.returns({
             "success": True,
             "stack": [
                 {
@@ -374,10 +397,14 @@ class TestBehavioralModeSurvivesCompaction:
                     "behavioral_mode": "ORCHESTRATOR: Dispatch subagents",
                 },
             ],
-        }
+        })
 
         data = {"tool_name": "Bash", "cwd": "/tmp/test-project"}
-        result = spellbook_hook._stint_depth_check(data)
+
+        with bigfoot:
+            result = spellbook_hook._stint_depth_check(data)
+
+        mock_mcp.assert_call(args=("stint_check", {"project_path": "/tmp/test-project"}), kwargs={})
 
         # depth=1 < threshold(5), so no tree output, just behavioral_mode
         assert result == "<behavioral-mode>ORCHESTRATOR: Dispatch subagents</behavioral-mode>"

@@ -8,9 +8,10 @@ Validates:
 """
 
 import sqlite3
-from unittest.mock import patch
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance, IsTuple
 
 from spellbook.core.db import close_all_connections, get_connection, init_db
 
@@ -260,45 +261,51 @@ class TestDoLogEventDegradedMode:
         # Use a path that won't have an initialized DB and mock the
         # connection to raise
         bad_path = str(tmp_path / "nonexistent_dir" / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_log_event(
                 event_type="test",
                 severity="LOW",
                 db_path=bad_path,
             )
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["success"] is True
 
     def test_returns_degraded_true_when_db_unavailable(self, tmp_path):
         from spellbook.security.tools import do_log_event
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_log_event(
                 event_type="test",
                 severity="LOW",
                 db_path=bad_path,
             )
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["degraded"] is True
 
     def test_returns_warning_when_db_unavailable(self, tmp_path):
         from spellbook.security.tools import do_log_event
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_log_event(
                 event_type="test",
                 severity="LOW",
                 db_path=bad_path,
             )
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["warning"] == "Security database unavailable"
 
 
@@ -543,43 +550,51 @@ class TestDoQueryEventsDegradedMode:
         from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_query_events(db_path=bad_path)
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["success"] is True
 
     def test_returns_degraded_true_when_db_unavailable(self, tmp_path):
         from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_query_events(db_path=bad_path)
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["degraded"] is True
 
     def test_returns_warning_when_db_unavailable(self, tmp_path):
         from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_query_events(db_path=bad_path)
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["warning"] == "Security database unavailable"
 
     def test_returns_empty_events_when_db_unavailable(self, tmp_path):
         from spellbook.security.tools import do_query_events
 
         bad_path = str(tmp_path / "bad.db")
-        with patch(
-            "spellbook.security.tools.get_sync_session",
-            side_effect=Exception("DB unavailable"),
-        ):
+        mock_session = bigfoot.mock("spellbook.security.tools:get_sync_session")
+        mock_session.raises(Exception("DB unavailable"))
+
+        with bigfoot:
             result = do_query_events(db_path=bad_path)
+
+        mock_session.assert_call(args=(IsInstance(str),), kwargs={}, raised=IsInstance(Exception))
         assert result["events"] == []
         assert result["count"] == 0

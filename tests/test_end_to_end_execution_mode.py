@@ -12,13 +12,16 @@ Tests the actual Python code:
 import json
 import os
 import platform
+import shlex
+import subprocess
 import sys
 import tempfile
 import threading
 import time
+import types
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
+import bigfoot
 import pytest
 
 
@@ -250,32 +253,63 @@ class TestTerminalUtilsE2E:
         assert isinstance(result, str)
         assert len(result) > 0
 
-    def test_spawn_command_generation(self):
-        """Test that spawn functions generate proper commands."""
-        from spellbook.daemon.terminal import spawn_macos_terminal, spawn_linux_terminal
+    def test_spawn_command_generation_macos(self):
+        """Test that macOS spawn generates proper osascript commands."""
+        from spellbook.daemon.terminal import spawn_macos_terminal, _escape_for_applescript
 
-        # Mock subprocess.Popen for macOS (uses Popen, not run)
-        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
-            mock_popen.return_value = MagicMock(pid=12345)
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=12345))
 
-            # Test macOS iTerm2
+        with bigfoot:
             result = spawn_macos_terminal("iterm2", "/test prompt", "/test/dir")
-            assert result["status"] == "spawned"
-            assert result["terminal"] == "iterm2"
-            assert result["pid"] == 12345
 
-            # Verify osascript was called
-            call_args = mock_popen.call_args
-            assert call_args[0][0][0] == "osascript"
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "iterm2"
+        assert result["pid"] == 12345
 
-        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
-            mock_popen.return_value = MagicMock(pid=67890)
+        # Build expected AppleScript
+        safe_prompt = shlex.quote("/test prompt")
+        safe_wd = shlex.quote("/test/dir")
+        safe_cli = shlex.quote("claude")
+        command = f"cd {safe_wd} && {safe_cli} {safe_prompt}"
+        as_command = _escape_for_applescript(command)
+        expected_applescript = f'''
+tell application "iTerm2"
+    create window with default profile
+    tell current session of current window
+        write text "{as_command}"
+    end tell
+end tell
+'''
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
-            # Test Linux gnome-terminal
+    def test_spawn_command_generation_linux(self):
+        """Test that Linux spawn generates proper commands."""
+        from spellbook.daemon.terminal import spawn_linux_terminal
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=67890))
+
+        with bigfoot:
             result = spawn_linux_terminal("gnome-terminal", "/test prompt", "/test/dir")
-            assert result["status"] == "spawned"
-            assert result["terminal"] == "gnome-terminal"
-            assert result["pid"] == 67890
+
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "gnome-terminal"
+        assert result["pid"] == 67890
+
+        # Build expected Linux command
+        safe_prompt = shlex.quote("/test prompt")
+        safe_wd = shlex.quote("/test/dir")
+        safe_cli = shlex.quote("claude")
+        command = f"cd {safe_wd} && {safe_cli} {safe_prompt}; exec bash"
+        expected_cmd = ["gnome-terminal", "--", "bash", "-c", command]
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
 class TestMCPToolE2E:
@@ -283,44 +317,87 @@ class TestMCPToolE2E:
 
     def test_spawn_workflow_auto_detection(self):
         """Test spawn workflow with auto terminal detection (tests underlying functions)."""
-        from spellbook.daemon.terminal import spawn_terminal_window
+        from spellbook.daemon.terminal import spawn_terminal_window, _escape_for_applescript
 
-        with patch('spellbook.daemon.terminal.detect_terminal') as mock_detect:
-            with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
-                # Mock detect to return iTerm2
-                mock_detect.return_value = "iTerm2"
-                mock_popen.return_value = MagicMock(pid=12345)
+        prompt = "/execute-work-packet /path/to/packet.md"
+        wd = "/path/to/project"
 
-                # Step 1: Detect terminal (mocked)
-                terminal = mock_detect()
-                assert terminal == "iTerm2"
+        mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+        mock_detect.returns("iTerm2")
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=12345))
 
-                # Step 2: Spawn window
-                result = spawn_terminal_window(
-                    terminal,
-                    "/execute-work-packet /path/to/packet.md",
-                    "/path/to/project"
-                )
+        with bigfoot:
+            # Step 1: Detect terminal (mocked)
+            from spellbook.daemon.terminal import detect_terminal
+            terminal = detect_terminal()
+            assert terminal == "iTerm2"
 
-                assert result["status"] == "spawned"
-                assert result["pid"] is not None
+            # Step 2: Spawn window
+            result = spawn_terminal_window(terminal, prompt, wd)
+
+        assert result["status"] == "spawned"
+        assert result["pid"] == 12345
+        mock_detect.assert_call(args=(), kwargs={})
+
+        # Build expected AppleScript for iTerm2
+        safe_prompt = shlex.quote(prompt)
+        safe_wd = shlex.quote(wd)
+        safe_cli = shlex.quote("claude")
+        command = f"cd {safe_wd} && {safe_cli} {safe_prompt}"
+        as_command = _escape_for_applescript(command)
+        expected_applescript = f'''
+tell application "iTerm2"
+    create window with default profile
+    tell current session of current window
+        write text "{as_command}"
+    end tell
+end tell
+'''
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_spawn_workflow_explicit_terminal(self):
         """Test spawn workflow with explicit terminal."""
-        from spellbook.daemon.terminal import spawn_terminal_window
+        from spellbook.daemon.terminal import spawn_terminal_window, _escape_for_applescript
 
-        with patch('spellbook.daemon.terminal.subprocess.Popen') as mock_popen:
-            mock_popen.return_value = MagicMock(pid=67890)
+        prompt = "/execute-work-packet test.md"
+        wd = "/test/dir"
 
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=67890))
+
+        with bigfoot:
             result = spawn_terminal_window(
                 "iterm2",  # Explicit terminal
-                "/execute-work-packet test.md",
-                "/test/dir"
+                prompt,
+                wd
             )
 
-            assert result["status"] == "spawned"
-            assert result["terminal"] == "iterm2"
-            assert result["pid"] == 67890
+        assert result["status"] == "spawned"
+        assert result["terminal"] == "iterm2"
+        assert result["pid"] == 67890
+
+        # Build expected AppleScript for iTerm2
+        safe_prompt = shlex.quote(prompt)
+        safe_wd = shlex.quote(wd)
+        safe_cli = shlex.quote("claude")
+        command = f"cd {safe_wd} && {safe_cli} {safe_prompt}"
+        as_command = _escape_for_applescript(command)
+        expected_applescript = f'''
+tell application "iTerm2"
+    create window with default profile
+    tell current session of current window
+        write text "{as_command}"
+    end tell
+end tell
+'''
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
 class TestPreferencesE2E:

@@ -10,9 +10,10 @@ Validates:
 
 import tomllib
 from pathlib import Path
-from unittest.mock import patch
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 
 # ---------------------------------------------------------------------------
@@ -273,17 +274,19 @@ class TestGeminiInstallerIntegration:
         # Create the extension dir so the installer doesn't bail early
         ext_dir = spellbook_dir / "extensions" / "gemini"
 
-        with patch(
-            "installer.platforms.gemini.check_gemini_cli_available",
-            return_value=True,
-        ), patch(
-            "installer.platforms.gemini.link_extension",
-            return_value=(True, "extension linked"),
-        ):
+        cli_mock = bigfoot.mock("installer.platforms.gemini:check_gemini_cli_available")
+        cli_mock.returns(True)
+        link_mock = bigfoot.mock("installer.platforms.gemini:link_extension")
+        link_mock.returns((True, "extension linked"))
+
+        with bigfoot:
             installer = GeminiInstaller(
                 spellbook_dir, config_dir, "1.0.0", dry_run=False
             )
             results = installer.install()
+
+        cli_mock.assert_call(args=(), kwargs={})
+        link_mock.assert_call(args=(IsInstance(Path),), kwargs={"dry_run": False})
 
         policy_results = [r for r in results if r.component == "security_policy"]
         assert len(policy_results) == 1, (

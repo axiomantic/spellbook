@@ -25,7 +25,6 @@ import time
 from pathlib import Path
 
 import pytest
-from unittest.mock import patch
 
 pytestmark = pytest.mark.integration
 
@@ -252,14 +251,14 @@ class TestHookRegistration:
 
         assert first == second  # No duplication
 
-    def test_platform_transform_windows(self):
+    def test_platform_transform_windows(self, monkeypatch):
         from installer.components.hooks import _get_hook_path_for_platform
-        with patch("sys.platform", "win32"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        monkeypatch.setattr("sys.platform", "win32")
+        result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
         assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
 
-    def test_platform_transform_unix(self):
+    def test_platform_transform_unix(self, monkeypatch):
         from installer.components.hooks import _get_hook_path_for_platform
-        with patch("sys.platform", "linux"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        monkeypatch.setattr("sys.platform", "linux")
+        result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
         assert result == "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
