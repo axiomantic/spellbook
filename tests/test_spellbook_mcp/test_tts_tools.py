@@ -138,7 +138,7 @@ class TestTtsSessionSet:
 
         # Set initial values
         state = _get_session_state()
-        state["tts"] = {"enabled": True, "voice": "af_heart", "volume": 0.3}
+        state["tts"] = {"enabled": True, "voice": "test-voice", "volume": 0.3}
 
         result = server.tts_session_set.fn(voice="bf_emma")  # Only change voice
 

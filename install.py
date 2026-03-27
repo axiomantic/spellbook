@@ -755,37 +755,6 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
-def _install_tts_deps(spellbook_dir: Path, quiet: bool = False) -> bool:
-    """Install TTS dependencies into the daemon venv.
-
-    Installs sounddevice, numpy, and wyoming packages from the TTS
-    dependency group.
-
-    Returns True if installation succeeded.
-    """
-    if not quiet:
-        print_step("Installing TTS dependencies into daemon venv...")
-        print_info("Packages: sounddevice, numpy, wyoming")
-    try:
-        from installer.components.mcp import install_tts_to_daemon_venv
-
-        success, msg = install_tts_to_daemon_venv(spellbook_dir)
-        if not success:
-            if not quiet:
-                print_error(f"TTS dependency installation failed: {msg}")
-            return False
-        if not quiet:
-            print_success("TTS packages installed")
-        return True
-    except ImportError:
-        if not quiet:
-            print_error("Could not import installer components for daemon venv TTS install")
-        return False
-    except Exception as e:
-        if not quiet:
-            print_error(f"TTS dependency installation failed: {e}")
-        return False
-
 
 def setup_tts(
     dry_run: bool = False,
@@ -1113,10 +1082,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             tts_config = renderer.render_tts_wizard()
             if tts_config.get("tts_enabled") is not None:
                 _set_tts_config(tts_config["tts_enabled"])
-            if tts_config.get("tts_install"):
-                if _install_tts_deps(spellbook_dir):
-                    _preload_tts_model(spellbook_dir)
-                    _set_tts_config(True)
         else:
             setup_tts(
                 dry_run=args.dry_run,

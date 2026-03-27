@@ -46,7 +46,7 @@ class TestConfigGet:
         config = response.json()["config"]
         # Should include defaults even when no explicit config exists
         assert config["tts_enabled"] is True
-        assert config["tts_voice"] == "af_heart"
+        assert config["tts_voice"] == ""
         assert config["tts_volume"] == 0.3
         assert config["notify_enabled"] is True
         assert config["notify_title"] == "Spellbook"
@@ -102,15 +102,15 @@ class TestConfigUpdate:
 
     def test_update_string_key(self, client):
         mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")
-        mock_set.returns({"status": "ok", "config": {"tts_voice": "af_heart"}})
+        mock_set.returns({"status": "ok", "config": {"tts_voice": "test-voice"}})
 
         with bigfoot:
             response = client.put(
-                "/api/config/tts_voice", json={"value": "af_heart"}
+                "/api/config/tts_voice", json={"value": "test-voice"}
             )
 
         assert response.status_code == 200
-        mock_set.assert_call(args=("tts_voice", "af_heart"), kwargs={})
+        mock_set.assert_call(args=("tts_voice", "test-voice"), kwargs={})
 
     def test_update_number_key(self, client):
         mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")

@@ -80,7 +80,7 @@ class TestTtsSessionSet:
 
         # Set initial values
         state = _get_session_state()
-        state["tts"] = {"enabled": True, "voice": "af_heart", "volume": 0.3}
+        state["tts"] = {"enabled": True, "voice": "test-voice", "volume": 0.3}
 
         # Only change voice
         result = tts_session_set(voice="bf_emma")
@@ -311,4 +311,4 @@ class TestTtsDefaultVoiceEmpty:
 
     def test_default_voice_not_kokoro(self):
         from spellbook.core.config import TTS_DEFAULT_VOICE
-        assert TTS_DEFAULT_VOICE != "af_heart"
+        assert TTS_DEFAULT_VOICE != "test-voice"

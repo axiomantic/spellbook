@@ -549,7 +549,7 @@ def tts_session_get(session_id: Optional[str] = None) -> dict:
     Each setting is resolved independently. For example, voice may come
     from session while volume comes from config and enabled from defaults.
 
-    Does NOT check kokoro availability. This is the settings layer only.
+    Does NOT check Wyoming server availability. This is the settings layer only.
 
     Args:
         session_id: Session identifier for multi-session isolation.
