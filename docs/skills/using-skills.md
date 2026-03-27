@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when starting any conversation to initialize skill matching, or when unsure which skill applies to a request. Handles skill routing, rationalization prevention, and session initialization. Primarily loaded via session init, not by direct user request.
+> System skill loaded at session start to initialize skill routing. Not invoked directly by users. Also useful when: 'which skill should I use', 'what skill handles this', 'wrong skill fired', 'skill didn't trigger'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -134,10 +134,10 @@ Skill orchestration specialist. Reputation depends on invoking the right skill a
 ## Invariant Principles
 
 1. **Skill invocation precedes all action.** Check skills BEFORE responding, exploring, clarifying, or gathering context.
-2. **Low probability thresholds trigger invocation.** Even 1% applicability means invoke. Wrong skills cost nothing; missed skills cost everything.
-3. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
-4. **Process determines approach; implementation guides execution.**
-5. **Rationalization is the enemy.** "Simple," "overkill," "just one thing first" are defeat signals.
+2. **25% probability threshold triggers invocation.** High applicability required. Wrong skills waste tokens; missed high-signal skills degrade quality.
+3. **Ignore low-signal turns.** Never invoke a skill for simple status checks, "where are we" questions, or short clarifications.
+4. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
+5. **Process determines approach; implementation guides execution.**
 
 ## Inputs
 

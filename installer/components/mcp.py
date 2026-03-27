@@ -336,28 +336,27 @@ def ensure_daemon_venv(
     include_tts: bool = False,
 ) -> Tuple[bool, str]:
     """
-    Create or update the daemon-dedicated venv from pinned lockfiles.
+    Create or update the daemon-dedicated venv from pyproject.toml groups.
 
     The venv lives at ~/.local/spellbook/daemon-venv/ and is rebuilt
-    whenever daemon/requirements.txt changes (detected via SHA256 hash).
+    whenever pyproject.toml changes (detected via SHA256 hash).
 
     Args:
-        spellbook_dir: Path to spellbook installation (contains lockfiles).
+        spellbook_dir: Path to spellbook installation (contains pyproject.toml).
         force: If True, always rebuild the venv even if hashes match.
-        include_tts: If True, also install TTS dependencies from
-            daemon/requirements-tts.txt.
+        include_tts: If True, also install TTS dependencies from the 'tts' group.
 
     Returns: (success, message)
     """
-    lockfile = spellbook_dir / "daemon" / "requirements.txt"
-    if not lockfile.exists():
-        return (False, f"Lockfile not found: {lockfile}")
+    pyproject = spellbook_dir / "pyproject.toml"
+    if not pyproject.exists():
+        return (False, f"pyproject.toml not found: {pyproject}")
 
     venv_dir = get_daemon_venv_dir()
     daemon_python = get_daemon_python()
-    hash_file = venv_dir / ".lockfile-hash"
+    hash_file = venv_dir / ".pyproject-hash"
 
-    current_hash = _hash_file(lockfile)
+    current_hash = _hash_file(pyproject)
     needs_rebuild = force or not daemon_python.exists()
 
     if not needs_rebuild and hash_file.exists():
@@ -368,19 +367,9 @@ def ensure_daemon_venv(
     if not needs_rebuild and not hash_file.exists():
         needs_rebuild = True
 
-    # Check TTS lockfile hash if include_tts and base venv is up to date
-    tts_lockfile = spellbook_dir / "daemon" / "requirements-tts.txt"
-    tts_hash_file = venv_dir / ".lockfile-tts-hash"
-    tts_needs_install = False
-
-    if include_tts and tts_lockfile.exists():
-        tts_current_hash = _hash_file(tts_lockfile)
-        if tts_hash_file.exists():
-            tts_stored_hash = tts_hash_file.read_text().strip()
-            if tts_stored_hash != tts_current_hash:
-                tts_needs_install = True
-        else:
-            tts_needs_install = True
+    # Check if TTS was requested but not installed previously
+    tts_installed_marker = venv_dir / ".tts-installed"
+    tts_needs_install = include_tts and not tts_installed_marker.exists()
 
     if not needs_rebuild and not tts_needs_install:
         return (True, "Daemon venv is up to date")
@@ -397,6 +386,7 @@ def ensure_daemon_venv(
         venv_dir.mkdir(parents=True, exist_ok=True)
 
         try:
+            # Create venv with --seed to ensure pip is available (required for spaCy workaround)
             result = subprocess.run(
                 ["uv", "venv", str(venv_dir), "--python", "3.12", "--seed"],
                 capture_output=True,
@@ -424,13 +414,14 @@ def ensure_daemon_venv(
             except OSError as e:
                 return (False, f"Venv creation failed: {e}")
 
-        # Install pinned deps from lockfile
+        # Install daemon group from pyproject.toml
         try:
             result = subprocess.run(
                 [
                     "uv", "pip", "install",
                     "--python", str(daemon_python),
-                    "-r", str(lockfile),
+                    "--requirement", str(pyproject),
+                    "--group", "daemon",
                 ],
                 capture_output=True,
                 text=True,
@@ -438,7 +429,7 @@ def ensure_daemon_venv(
             )
             if result.returncode != 0:
                 error = result.stderr.strip() or result.stdout.strip()
-                return (False, f"Failed to install deps: {error}")
+                return (False, f"Failed to install daemon deps: {error}")
         except FileNotFoundError:
             return (False, "uv not found; cannot install deps into daemon venv")
         except subprocess.TimeoutExpired:
@@ -469,63 +460,63 @@ def ensure_daemon_venv(
         except OSError as e:
             return (False, f"Spellbook editable install failed: {e}")
 
-        # Store lockfile hash
+        # Store pyproject hash
         hash_file.write_text(current_hash)
-        tts_needs_install = include_tts and tts_lockfile.exists()
+        tts_needs_install = include_tts
 
     # Install TTS deps if requested
     if tts_needs_install:
         success, msg = install_tts_to_daemon_venv(spellbook_dir)
         if not success:
             return (False, f"Daemon venv created but TTS install failed: {msg}")
+        # Mark TTS as installed
+        tts_installed_marker.touch()
 
     return (True, "Daemon venv created and dependencies installed")
 
 
 def install_tts_to_daemon_venv(spellbook_dir: Path) -> Tuple[bool, str]:
     """
-    Install TTS dependencies from the TTS lockfile into the daemon venv.
+    Install TTS dependencies from the tts dependency group in pyproject.toml.
 
-    Also installs the spacy language model required by misaki (kokoro's
-    text processing dependency). The spacy model is a pip package hosted
-    on GitHub Releases, installed via uv with the correct version for the
-    installed spacy.
-
-    The daemon venv must already exist (created by ensure_daemon_venv).
-
-    Args:
-        spellbook_dir: Path to spellbook installation (contains lockfiles).
-
-    Returns: (success, message)
+    Also installs the spacy language model required by misaki.
     """
     daemon_python = get_daemon_python()
     if not daemon_python.exists():
         return (False, "Daemon venv does not exist; run ensure_daemon_venv first")
 
-    tts_lockfile = spellbook_dir / "daemon" / "requirements-tts.txt"
-    if not tts_lockfile.exists():
-        return (False, f"TTS lockfile not found: {tts_lockfile}")
+    pyproject = spellbook_dir / "pyproject.toml"
+    if not pyproject.exists():
+        return (False, f"pyproject.toml not found: {pyproject}")
 
     try:
         result = subprocess.run(
             [
                 "uv", "pip", "install",
                 "--python", str(daemon_python),
-                "-r", str(tts_lockfile),
+                "--requirement", str(pyproject),
+                "--group", "tts",
             ],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=180,
         )
         if result.returncode != 0:
             error = result.stderr.strip() or result.stdout.strip()
-            return (False, f"TTS dep installation failed: {error}")
+            return (False, f"TTS group installation failed: {error}")
     except FileNotFoundError:
         return (False, "uv not found; cannot install TTS deps into daemon venv")
     except subprocess.TimeoutExpired:
-        return (False, "TTS dep installation timed out")
+        return (False, "TTS group installation timed out")
     except OSError as e:
-        return (False, f"TTS dep installation failed: {e}")
+        return (False, f"TTS group installation failed: {e}")
+
+    # Install spacy language model required by misaki
+    ok, msg = _install_spacy_model(daemon_python)
+    if not ok:
+        return (False, f"TTS group installed but spacy model failed: {msg}")
+
+    return (True, "TTS dependencies installed into daemon venv")
 
     # Install spacy language model required by misaki (kokoro's G2P engine).
     # spacy.cli.download() uses pip internally which isn't available in a

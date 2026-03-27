@@ -6,8 +6,15 @@ Rich-based welcome panels, feature selection, and progress display.
 """
 
 import sys
-import tty
-import termios
+
+try:
+    import tty
+    import termios
+except ImportError:
+    # tty/termios are Unix-only; on Windows, interactive terminal
+    # functions that depend on them will raise at call time.
+    tty = None  # type: ignore[assignment]
+    termios = None  # type: ignore[assignment]
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 

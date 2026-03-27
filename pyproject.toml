@@ -5,17 +5,33 @@ description = "Skills, commands, and MCP tools for AI coding assistants"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=2.9.0,<4",
-    "fastapi>=0.100.0",
     "websockets>=12.0",
     "sqlalchemy[asyncio]>=2.0.30,<2.1",
     "aiosqlite>=0.20.0,<0.23",
     "alembic>=1.13.0,<1.19",
     "cryptography>=43.0",
     "rich>=13.0",
+    "claude-agent-sdk",
 ]
 
 [project.optional-dependencies]
+claude = ["claude-agent-sdk"]
+gemini = []
+
+[dependency-groups]
+daemon = [
+    "fastmcp>=0.4.1",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+]
+tts = [
+    "kokoro>=0.9.0",
+    "soundfile>=0.12.0",
+    "sounddevice>=0.4.6",
+    "spacy>=3.7.0",
+    "misaki>=0.9.0",
+    "pip",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -23,20 +39,17 @@ dev = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.2.0",
     "httpx>=0.25.0",
+    "bigfoot>=0.18.1",
+    "dirty-equals>=0.8.0",
+    "fastmcp>=0.4.1",
+    "fastapi>=0.115.0",
+    "pyyaml>=6.0",
 ]
 docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.0.0",
     "mike>=2.0.0",
 ]
-sleuth = ["anthropic>=0.40"]
-tts = [
-    "kokoro>=0.9.0",
-    "soundfile>=0.12.0",
-    "sounddevice>=0.4.6",
-    "pip",
-]
-
 [project.scripts]
 spellbook = "spellbook.cli.main:main"
 
@@ -63,3 +76,7 @@ markers = [
     "slow: marks tests with deliberate sleeps > 0.5s (skipped locally, runs in CI)",
     "external: marks tests requiring external tools like Claude CLI (skipped locally)",
 ]
+
+[tool.bigfoot]
+guard = "error"
+guard_allow = ["socket", "database", "subprocess", "http", "dns"]

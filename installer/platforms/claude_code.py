@@ -205,36 +205,85 @@ class ClaudeCodeInstaller(PlatformInstaller):
         # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")
         claude_md = self.config_dir / "CLAUDE.md"
-        spellbook_content = generate_claude_context(self.spellbook_dir)
 
-        if spellbook_content:
-            if self.dry_run:
-                action = "would be updated"
-                results.append(
-                    InstallResult(
-                        component="CLAUDE.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message=f"CLAUDE.md: {action}",
+        # Special case: ~/.claude/CLAUDE.md is ALWAYS read by Claude Code as
+        # global instructions. If the user has multiple config dirs (e.g.
+        # ~/.claude and ~/.claude-work) and ~/.claude is one of them, we only
+        # want the spellbook chunk in ~/.claude to avoid duplicate loading
+        # and context window bloat.
+        default_dir = Path.home() / ".claude"
+        all_claude_dirs = self._context.get("claude_config_dirs", []) if self._context else []
+
+        should_skip_context = (
+            self.config_dir.resolve() != default_dir.resolve()
+            and any(d.resolve() == default_dir.resolve() for d in all_claude_dirs)
+        )
+
+        if should_skip_context:
+            self._step("Skipping CLAUDE.md (using ~/.claude instead)")
+            if not self.dry_run:
+                action, _backup = remove_demarcated_section(claude_md)
+                if action == "removed":
+                    results.append(
+                        InstallResult(
+                            component="CLAUDE.md",
+                            platform=self.platform_id,
+                            success=True,
+                            action="removed",
+                            message="CLAUDE.md: removed redundant spellbook section (prioritizing ~/.claude)",
+                        )
                     )
-                )
+                else:
+                    results.append(
+                        InstallResult(
+                            component="CLAUDE.md",
+                            platform=self.platform_id,
+                            success=True,
+                            action="skipped",
+                            message="CLAUDE.md: skipped update (prioritizing ~/.claude)",
+                        )
+                    )
             else:
-                action, backup_path = update_demarcated_section(
-                    claude_md, spellbook_content, self.version
-                )
-                msg = f"CLAUDE.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
                 results.append(
                     InstallResult(
                         component="CLAUDE.md",
                         platform=self.platform_id,
                         success=True,
-                        action=action,
-                        message=msg,
+                        action="skipped",
+                        message="CLAUDE.md: would skip update (prioritizing ~/.claude)",
                     )
                 )
+        else:
+            spellbook_content = generate_claude_context(self.spellbook_dir)
+
+            if spellbook_content:
+                if self.dry_run:
+                    action = "would be updated"
+                    results.append(
+                        InstallResult(
+                            component="CLAUDE.md",
+                            platform=self.platform_id,
+                            success=True,
+                            action="installed",
+                            message=f"CLAUDE.md: {action}",
+                        )
+                    )
+                else:
+                    action, backup_path = update_demarcated_section(
+                        claude_md, spellbook_content, self.version
+                    )
+                    msg = f"CLAUDE.md: {action}"
+                    if backup_path:
+                        msg += f" (backup: {backup_path.name})"
+                    results.append(
+                        InstallResult(
+                            component="CLAUDE.md",
+                            platform=self.platform_id,
+                            success=True,
+                            action=action,
+                            message=msg,
+                        )
+                    )
 
         # Register MCP server connection (daemon is installed centrally by core.py)
         # This is a global step: MCP registration is system-wide, not per-dir.

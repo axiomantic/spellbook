@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> [DEPRECATED] <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
+> [DEPRECATED] Use project-level AGENTS.md files instead. Previously used for first-session codebase onboarding and persistent glossary creation.
 
 ## Workflow Diagram
 

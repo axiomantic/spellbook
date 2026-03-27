@@ -2,8 +2,8 @@
 
 import json
 
+import bigfoot
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from spellbook.core.db import init_db, get_connection, close_all_connections
 from spellbook.memory.store import (
@@ -1169,189 +1169,246 @@ class TestMemoryToolsServerRegistration:
         """memory_get_unconsolidated delegates to do_get_unconsolidated with correct args."""
         from spellbook import server
         from spellbook.memory.tools import MEMORY_STORE_SCHEMA
-        from unittest.mock import patch
 
-        mock_ctx = MagicMock()
-        mock_ctx.list_roots = AsyncMock(return_value=[])
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None) as mock_get_path, \
-             patch("spellbook.mcp.tools.memory.do_get_unconsolidated") as mock_do:
-            mock_do.return_value = {
-                "events": [],
-                "count": 0,
-                "consolidation_prompt": "",
-                "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
-            }
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+        mock_get_path.__call__.required(False).returns(None)
+
+        expected_result = {
+            "events": [],
+            "count": 0,
+            "consolidation_prompt": "",
+            "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+        }
+        mock_do = bigfoot.mock("spellbook.mcp.tools.memory:do_get_unconsolidated")
+        mock_do.returns(expected_result)
+
+        async with bigfoot:
             # With explicit namespace, should NOT call get_project_path_from_context
             result = await server.memory_get_unconsolidated.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 namespace="test-ns",
                 limit=25,
                 include_consolidated=True,
             )
 
-            mock_do.assert_called_once_with(
-                db_path=db,
-                namespace="test-ns",
-                limit=25,
-                include_consolidated=True,
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_do.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": db,
+                    "namespace": "test-ns",
+                    "limit": 25,
+                    "include_consolidated": True,
+                },
             )
-            assert result == {
-                "events": [],
-                "count": 0,
-                "consolidation_prompt": "",
-                "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
-            }
+        assert result == expected_result
 
     @pytest.mark.asyncio
     async def test_memory_get_unconsolidated_auto_detects_namespace(self, db):
         """memory_get_unconsolidated auto-detects namespace from context when empty."""
         from spellbook import server
         from spellbook.core.path_utils import encode_cwd
-        from unittest.mock import patch
-
-        mock_ctx = MagicMock()
 
         fake_project_path = "/Users/test/myproject"
         expected_namespace = encode_cwd(fake_project_path)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
-             patch("spellbook.mcp.tools.memory.do_get_unconsolidated") as mock_do:
-            mock_do.return_value = {"events": [], "count": 0, "consolidation_prompt": "", "response_schema": "{}"}
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_fake_path(*args, **kwargs):
+            return fake_project_path
+
+        mock_get_path.calls(_return_fake_path)
+
+        mock_do = bigfoot.mock("spellbook.mcp.tools.memory:do_get_unconsolidated")
+        mock_do.returns({"events": [], "count": 0, "consolidation_prompt": "", "response_schema": "{}"})
+
+        async with bigfoot:
             result = await server.memory_get_unconsolidated.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 namespace="",
                 limit=50,
                 include_consolidated=False,
             )
 
-            mock_do.assert_called_once_with(
-                db_path=db,
-                namespace=expected_namespace,
-                limit=50,
-                include_consolidated=False,
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_get_path.assert_call(args=(None,), kwargs={})
+            mock_do.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": db,
+                    "namespace": expected_namespace,
+                    "limit": 50,
+                    "include_consolidated": False,
+                },
             )
 
     @pytest.mark.asyncio
     async def test_memory_get_unconsolidated_returns_error_when_no_namespace(self, db):
         """memory_get_unconsolidated returns error when namespace empty and context fails."""
         from spellbook import server
-        from unittest.mock import patch
 
-        mock_ctx = MagicMock()
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_none(*args, **kwargs):
+            return None
+
+        mock_get_path.calls(_return_none)
+
+        async with bigfoot:
             result = await server.memory_get_unconsolidated.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 namespace="",
                 limit=50,
                 include_consolidated=False,
             )
 
-            assert result == {
-                "error": "Could not determine project namespace",
-                "events": [],
-            }
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_get_path.assert_call(args=(None,), kwargs={})
+        assert result == {
+            "error": "Could not determine project namespace",
+            "events": [],
+        }
 
     @pytest.mark.asyncio
     async def test_memory_store_memories_delegates_to_do_function(self, db):
         """memory_store_memories delegates to do_store_memories with correct args."""
         from spellbook import server
-        from unittest.mock import patch
 
-        mock_ctx = MagicMock()
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None), \
-             patch("spellbook.mcp.tools.memory.do_store_memories") as mock_do:
-            mock_do.return_value = {
-                "status": "success",
-                "memories_created": 1,
-                "events_consolidated": 2,
-                "memory_ids": ["mem-1"],
-            }
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
 
+        async def _return_none(*args, **kwargs):
+            return None
+
+        mock_get_path.calls(_return_none)
+
+        expected_result = {
+            "status": "success",
+            "memories_created": 1,
+            "events_consolidated": 2,
+            "memory_ids": ["mem-1"],
+        }
+        mock_do = bigfoot.mock("spellbook.mcp.tools.memory:do_store_memories")
+        mock_do.returns(expected_result)
+
+        async with bigfoot:
             result = await server.memory_store_memories.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 memories='{"memories": [{"content": "test"}]}',
                 event_ids="1,2",
                 namespace="test-ns",
             )
 
-            mock_do.assert_called_once_with(
-                db_path=db,
-                memories_json='{"memories": [{"content": "test"}]}',
-                event_ids_str="1,2",
-                namespace="test-ns",
-                branch="",
-                scope="project",
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_get_path.assert_call(args=(None,), kwargs={})
+            mock_do.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": db,
+                    "memories_json": '{"memories": [{"content": "test"}]}',
+                    "event_ids_str": "1,2",
+                    "namespace": "test-ns",
+                    "branch": "",
+                    "scope": "project",
+                },
             )
-            assert result == {
-                "status": "success",
-                "memories_created": 1,
-                "events_consolidated": 2,
-                "memory_ids": ["mem-1"],
-            }
+        assert result == expected_result
 
     @pytest.mark.asyncio
     async def test_memory_store_memories_auto_detects_namespace(self, db):
         """memory_store_memories auto-detects namespace from context when empty."""
         from spellbook import server
         from spellbook.core.path_utils import encode_cwd
-        from unittest.mock import patch
 
-        mock_ctx = MagicMock()
         fake_project_path = "/Users/test/myproject"
         expected_namespace = encode_cwd(fake_project_path)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
-             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="main"), \
-             patch("spellbook.mcp.tools.memory.do_store_memories") as mock_do:
-            mock_do.return_value = {
-                "status": "success",
-                "memories_created": 0,
-                "events_consolidated": 0,
-                "memory_ids": [],
-            }
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_fake_path(*args, **kwargs):
+            return fake_project_path
+
+        mock_get_path.calls(_return_fake_path)
+
+        mock_branch = bigfoot.mock("spellbook.mcp.tools.memory:get_current_branch")
+        mock_branch.returns("main")
+
+        mock_do = bigfoot.mock("spellbook.mcp.tools.memory:do_store_memories")
+        mock_do.returns({
+            "status": "success",
+            "memories_created": 0,
+            "events_consolidated": 0,
+            "memory_ids": [],
+        })
+
+        async with bigfoot:
             await server.memory_store_memories.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 memories="[]",
                 event_ids="",
                 namespace="",
             )
 
-            mock_do.assert_called_once_with(
-                db_path=db,
-                memories_json="[]",
-                event_ids_str="",
-                namespace=expected_namespace,
-                branch="main",
-                scope="project",
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_get_path.assert_call(args=(None,), kwargs={})
+            mock_branch.assert_call(args=(fake_project_path,), kwargs={})
+            mock_do.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": db,
+                    "memories_json": "[]",
+                    "event_ids_str": "",
+                    "namespace": expected_namespace,
+                    "branch": "main",
+                    "scope": "project",
+                },
             )
 
     @pytest.mark.asyncio
     async def test_memory_store_memories_returns_error_when_no_namespace(self, db):
         """memory_store_memories returns error when namespace empty and context fails."""
         from spellbook import server
-        from unittest.mock import patch
 
-        mock_ctx = MagicMock()
+        mock_db_path = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        mock_db_path.returns(db)
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db), \
-             patch("spellbook.mcp.tools.memory.get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+        mock_get_path = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_none(*args, **kwargs):
+            return None
+
+        mock_get_path.calls(_return_none)
+
+        async with bigfoot:
             result = await server.memory_store_memories.fn(
-                ctx=mock_ctx,
+                ctx=None,
                 memories='{"memories": []}',
                 event_ids="",
                 namespace="",
             )
 
-            assert result == {
-                "error": "Could not determine project namespace",
-            }
+        with bigfoot.in_any_order():
+            mock_db_path.assert_call(args=(), kwargs={})
+            mock_get_path.assert_call(args=(None,), kwargs={})
+        assert result == {
+            "error": "Could not determine project namespace",
+        }

@@ -4,7 +4,7 @@ Evidence-based verification of technical claims in code, docs, and comments. Ext
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Verify technical claims in code, docs, and comments via evidence-backed verdicts before merge.
+> Use when verifying technical claims in code, docs, or comments before merge. Triggers: 'is this claim correct', 'verify this', 'fact check', 'is this accurate', 'check these assertions', 'are these comments true'. NOT for: checking if AI hallucinated references (use dehallucination).
 
 ## Workflow Diagram
 

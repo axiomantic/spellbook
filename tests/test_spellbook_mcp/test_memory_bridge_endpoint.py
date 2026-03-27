@@ -6,7 +6,7 @@ audit), and triggers consolidation when the threshold is met.
 """
 
 import pytest
-from unittest.mock import patch
+import bigfoot
 
 from spellbook.core.db import init_db, close_all_connections
 from spellbook.memory.store import (
@@ -109,14 +109,15 @@ class TestBridgeContentEndpointHTTP:
     """Tests exercising the actual HTTP endpoint via Starlette TestClient."""
 
     @pytest.fixture
-    def client(self, db):
+    def client(self, db, monkeypatch):
         """Create a TestClient wired to the endpoint with a test DB."""
         from starlette.testclient import TestClient
         from spellbook.mcp import server
+        import spellbook.mcp.routes as routes_mod
 
-        with patch("spellbook.mcp.routes.get_db_path", return_value=db):
-            app = server.mcp.http_app(transport="http")
-            yield TestClient(app, raise_server_exceptions=False)
+        monkeypatch.setattr(routes_mod, "get_db_path", lambda: db)
+        app = server.mcp.http_app(transport="http")
+        yield TestClient(app, raise_server_exceptions=False)
 
     def test_rejects_missing_content(self, client):
         """POST without content field returns 400 with error listing missing field."""
@@ -274,24 +275,27 @@ class TestBridgeContentEndpointHTTP:
             assert len(content_events) == 1
             assert len(content_events[0][0]) == 10000
 
-    def test_consolidation_triggered(self, client, db):
+    def test_consolidation_triggered(self, client, db, monkeypatch):
         """When should_consolidate returns True, consolidated=True in response."""
-        with patch("spellbook.mcp.routes.should_consolidate", return_value=True), \
-             patch("spellbook.mcp.routes.consolidate_batch") as mock_cb:
-            resp = client.post(
-                "/api/memory/bridge-content",
-                json={
-                    "session_id": "s1",
-                    "project": "Users-alice-project",
-                    "file_path": "/path/MEMORY.md",
-                    "filename": "MEMORY.md",
-                    "content": "# Test",
-                    "is_primary": True,
-                    "branch": "main",
-                },
-            )
-            assert resp.status_code == 200
-            assert resp.json()["consolidated"] is True
+        import spellbook.mcp.routes as routes_mod
+
+        monkeypatch.setattr(routes_mod, "should_consolidate", lambda *a, **kw: True)
+        monkeypatch.setattr(routes_mod, "consolidate_batch", lambda *a, **kw: None)
+
+        resp = client.post(
+            "/api/memory/bridge-content",
+            json={
+                "session_id": "s1",
+                "project": "Users-alice-project",
+                "file_path": "/path/MEMORY.md",
+                "filename": "MEMORY.md",
+                "content": "# Test",
+                "is_primary": True,
+                "branch": "main",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["consolidated"] is True
 
     def test_no_consolidation_below_threshold(self, client):
         """When should_consolidate returns False, consolidated=False."""

@@ -4,9 +4,34 @@ Verifies the routes correctly use get_spellbook_session() and process
 query results into the expected API response format.
 """
 
+import bigfoot
+import pytest
+
 from collections import namedtuple
 from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+
+
+class _FakeResult:
+    """Mimics a SQLAlchemy result object supporting iteration and one_or_none."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    def __iter__(self):
+        return iter(self._rows)
+
+    def one_or_none(self):
+        return self._rows[0] if self._rows else None
+
+
+class _FakeSession:
+    """Mimics an async SQLAlchemy session with execute()."""
+
+    def __init__(self, result):
+        self._result = result
+
+    async def execute(self, stmt):
+        return self._result
 
 
 def _make_session_mock(execute_return):
@@ -18,14 +43,7 @@ def _make_session_mock(execute_return):
 
     @asynccontextmanager
     async def mock_get_session():
-        session = AsyncMock()
-        result = MagicMock()
-        result.__iter__ = lambda self: iter(execute_return)
-        result.one_or_none.return_value = (
-            execute_return[0] if execute_return else None
-        )
-        session.execute.return_value = result
-        yield session
+        yield _FakeSession(_FakeResult(execute_return))
 
     return mock_get_session
 
@@ -54,11 +72,15 @@ class TestToolFrequencyORM:
             ToolFreqRow(tool_name="Write", count=75, errors=5),
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/tool-frequency")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -70,11 +92,15 @@ class TestToolFrequencyORM:
 
     def test_empty_results(self, client):
         """Empty database should return empty tools list."""
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock([]),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock([]))
+
+        with bigfoot:
             response = client.get("/api/analytics/tool-frequency")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -83,11 +109,15 @@ class TestToolFrequencyORM:
         """A single tool with zero errors."""
         rows = [ToolFreqRow(tool_name="Bash", count=42, errors=0)]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/tool-frequency?period=all")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -98,13 +128,17 @@ class TestToolFrequencyORM:
 
     def test_passes_period_and_event_type_to_query(self, client):
         """Verify the route builds the statement with period and event_type filters."""
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock([]),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock([]))
+
+        with bigfoot:
             response = client.get(
                 "/api/analytics/tool-frequency?period=24h&event_type=tool_call"
             )
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -129,11 +163,15 @@ class TestErrorRatesORM:
             ErrorRateRow(tool_name="Write", total=75, errors=5, error_rate=6.67),
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/error-rates")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -149,11 +187,15 @@ class TestErrorRatesORM:
             ErrorRateRow(tool_name="Bash", total=50, errors=3, error_rate=6.0),
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/error-rates?period=all")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -165,11 +207,15 @@ class TestErrorRatesORM:
 
     def test_empty_results(self, client):
         """No tools with errors returns empty list."""
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock([]),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock([]))
+
+        with bigfoot:
             response = client.get("/api/analytics/error-rates")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -195,11 +241,15 @@ class TestTimelineORM:
             TimelineRow(bucket="2026-03-15 11:00", count=38, errors=1),
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/timeline")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -216,11 +266,15 @@ class TestTimelineORM:
             TimelineRow(bucket="2026-03-15", count=120, errors=2),
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/timeline?period=7d")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -232,11 +286,15 @@ class TestTimelineORM:
 
     def test_empty_results(self, client):
         """Empty database should return empty timeline."""
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock([]),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock([]))
+
+        with bigfoot:
             response = client.get("/api/analytics/timeline")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"timeline": []}
@@ -266,11 +324,15 @@ class TestAnalyticsSummaryORM:
             )
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/summary")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -286,11 +348,15 @@ class TestAnalyticsSummaryORM:
             SummaryRow(total_events=0, unique_tools=0, error_rate=0, events_today=0)
         ]
 
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock(rows),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock(rows))
+
+        with bigfoot:
             response = client.get("/api/analytics/summary")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -302,11 +368,15 @@ class TestAnalyticsSummaryORM:
 
     def test_no_rows_returns_zeros(self, client):
         """When query returns no rows, should return zero defaults."""
-        with patch(
-            "spellbook.admin.routes.analytics.get_spellbook_session",
-            new=_make_session_mock([]),
-        ):
+        mock_session = bigfoot.mock(
+            "spellbook.admin.routes.analytics:get_spellbook_session"
+        )
+        mock_session.calls(_make_session_mock([]))
+
+        with bigfoot:
             response = client.get("/api/analytics/summary")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {

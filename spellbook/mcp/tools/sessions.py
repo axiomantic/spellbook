@@ -4,13 +4,14 @@ __all__ = [
     "find_session",
     "split_session",
     "list_sessions",
+    "spawn_session",
     "spawn_claude_session",
 ]
 
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastmcp import Context
 
@@ -22,6 +23,7 @@ from spellbook.core.path_utils import (
 )
 from spellbook.sessions.parser import list_sessions_with_samples, split_by_char_limit
 from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
+from spellbook.sdk.unified import get_agent_client, AgentOptions
 
 
 @mcp.tool()
@@ -163,19 +165,21 @@ def _get_session_id(ctx):
 
 @mcp.tool()
 @inject_recovery_context
-async def spawn_claude_session(
+async def spawn_session(
     ctx: Context,
     prompt: str,
     working_directory: str = None,
-    terminal: str = None
+    terminal: str = None,
+    provider: str = None
 ) -> dict:
     """
-    Open a new terminal window with an interactive Claude session.
+    Open a new terminal window with an interactive AI assistant session.
 
     Args:
-        prompt: Initial prompt/command to send to Claude
+        prompt: Initial prompt/command to send to the assistant
         working_directory: Directory to start in (defaults to client cwd)
         terminal: Terminal program (auto-detected if not specified)
+        provider: Provider name (claude or gemini). Auto-detected if not specified.
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
@@ -192,7 +196,7 @@ async def spawn_claude_session(
 
     # Scan prompt for injection patterns
     _check_result = _check_tool_input(
-        "spawn_claude_session",
+        "spawn_session",
         {"prompt": prompt},
     )
 
@@ -203,7 +207,7 @@ async def spawn_claude_session(
             severity="HIGH",
             source="spawn_guard",
             detail=f"Injection pattern detected in spawn prompt: {_first['message']}",
-            tool_name="spawn_claude_session",
+            tool_name="spawn_session",
             action_taken=f"blocked:{_first['rule_id']}",
             db_path=_db_path,
         )
@@ -230,7 +234,7 @@ async def spawn_claude_session(
                     severity="MEDIUM",
                     source="spawn_guard",
                     detail="Rate limit exceeded: max 1 spawn per 5 minutes",
-                    tool_name="spawn_claude_session",
+                    tool_name="spawn_session",
                     action_taken="blocked:rate_limit",
                     db_path=_db_path,
                 )
@@ -261,7 +265,7 @@ async def spawn_claude_session(
         severity="INFO",
         source="spawn_guard",
         detail=f"Spawn allowed for session {_session_id}",
-        tool_name="spawn_claude_session",
+        tool_name="spawn_session",
         action_taken="allowed",
         db_path=_db_path,
     )
@@ -270,7 +274,7 @@ async def spawn_claude_session(
     # Also scan working_directory through security check if provided
     if working_directory:
         _wd_check = _check_tool_input(
-            "spawn_claude_session",
+            "spawn_session",
             {"working_directory": working_directory},
         )
         if not _wd_check["safe"]:
@@ -280,7 +284,7 @@ async def spawn_claude_session(
                 severity="HIGH",
                 source="spawn_guard",
                 detail=f"Injection pattern in working_directory: {_wd_first['message']}",
-                tool_name="spawn_claude_session",
+                tool_name="spawn_session",
                 action_taken=f"blocked:{_wd_first['rule_id']}",
                 db_path=_db_path,
             )
@@ -289,9 +293,6 @@ async def spawn_claude_session(
                 "reason": _wd_first["message"],
                 "rule_id": _wd_first["rule_id"],
             }
-
-    if terminal is None:
-        terminal = detect_terminal()
 
     if working_directory is None:
         working_directory = await get_project_path_from_context(ctx)
@@ -306,4 +307,22 @@ async def spawn_claude_session(
         except ValueError as e:
             return {"success": False, "error": str(e)}
 
-    return spawn_terminal_window(terminal, prompt, working_directory)
+    # Use SDK to spawn
+    options = AgentOptions(cwd=Path(working_directory) if working_directory else Path.cwd())
+    client = get_agent_client(provider, options)
+    return client.spawn_session(prompt, terminal=terminal)
+
+
+@mcp.tool()
+@inject_recovery_context
+async def spawn_claude_session(
+    ctx: Context,
+    prompt: str,
+    working_directory: str = None,
+    terminal: str = None
+) -> dict:
+    """
+    DEPRECATED: Use spawn_session instead.
+    Open a new terminal window with an interactive Claude session.
+    """
+    return await spawn_session(ctx, prompt, working_directory, terminal, provider="claude")

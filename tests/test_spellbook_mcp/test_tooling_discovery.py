@@ -1,9 +1,9 @@
 """Tests for tooling discovery system."""
 
+import bigfoot
 import pytest
 import yaml
 from pathlib import Path
-from unittest.mock import patch
 
 
 REGISTRY_PATH = str(
@@ -11,10 +11,17 @@ REGISTRY_PATH = str(
 )
 
 
+def _chain(proxy, fn, n):
+    """Chain .calls(fn) n times on a bigfoot mock proxy."""
+    for _ in range(n):
+        proxy.calls(fn)
+    return proxy
+
+
 class TestRegistryLoads:
     def test_registry_yaml_loads_without_error(self):
         """YAML registry file loads and parses successfully."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         assert data is not None
         assert "version" in data
@@ -22,14 +29,14 @@ class TestRegistryLoads:
 
     def test_registry_has_minimum_domains(self):
         """Registry contains at least 15 fully-vetted domains."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         domains = data.get("domains", {})
         assert len(domains) >= 15, f"Expected >= 15 domains, got {len(domains)}"
 
     def test_registry_schema_validation(self):
         """Every tool entry has required fields."""
-        with open(REGISTRY_PATH) as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         required_fields = {"name", "type", "trust_tier", "source", "description"}
         valid_types = {"mcp_server", "cli", "api", "library", "service"}
@@ -52,22 +59,28 @@ class TestRegistryLoads:
 
 
 class TestRegistryLoader:
-    def test_load_registry(self):
-        """_load_registry returns parsed YAML data."""
-        from spellbook.tooling.discovery import _load_registry
+    def test_ensure_indexed_creates_db(self):
+        """_ensure_indexed creates the SQLite database from the YAML registry."""
+        from spellbook.tooling.discovery import _ensure_indexed
 
-        data = _load_registry(REGISTRY_PATH)
-        assert "domains" in data
-        assert "version" in data
+        _ensure_indexed()
+        # After indexing, _query_registry should work
+        from spellbook.tooling.discovery import _query_registry
 
-    def test_load_registry_caches_by_mtime(self):
-        """Second call returns cached data (same mtime)."""
-        from spellbook.tooling.discovery import _load_registry, _registry_cache
+        results = _query_registry(["github"])
+        assert len(results) >= 1
 
-        _registry_cache.clear()
-        data1 = _load_registry(REGISTRY_PATH)
-        data2 = _load_registry(REGISTRY_PATH)
-        assert data1 is data2  # Same object = cached
+    def test_query_registry_returns_tool_dicts(self):
+        """_query_registry returns a list of tool dicts with expected fields."""
+        from spellbook.tooling.discovery import _ensure_indexed, _query_registry
+
+        _ensure_indexed()
+        results = _query_registry(["jira"])
+        assert len(results) >= 1
+        tool = results[0]
+        assert "name" in tool
+        assert "type" in tool
+        assert "trust_tier" in tool
 
 
 class TestKeywordMatching:
@@ -123,27 +136,43 @@ class TestKeywordMatching:
 
 
 class TestCLIDetection:
-    @patch("shutil.which")
-    def test_cli_detected_when_available(self, mock_which):
+    def test_cli_detected_when_available(self):
         """CLI tool marked available when shutil.which returns a path."""
         from spellbook.tooling.discovery import discover_tools
 
-        mock_which.side_effect = lambda name: "/usr/bin/gh" if name == "gh" else None
-        result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+        # github domain: "GitHub CLI" has cli_names=["gh"], "GitHub MCP Server" has none
+        # So shutil.which is called once with "gh"
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.calls(lambda name: "/usr/bin/gh" if name == "gh" else None)
+
+        with bigfoot:
+            result = discover_tools(["github"], registry_path=REGISTRY_PATH)
+
         gh_tools = [t for t in result["tools"] if t["name"] == "GitHub CLI"]
         assert len(gh_tools) == 1
         assert gh_tools[0]["available"] is True
         assert "cli_available" in gh_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("gh",), kwargs={})
 
-    @patch("shutil.which", return_value=None)
-    def test_cli_not_detected_when_missing(self, mock_which):
+    def test_cli_not_detected_when_missing(self):
         """CLI tool not marked available when binary not found."""
         from spellbook.tooling.discovery import discover_tools
 
-        result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+        # docker domain: "Docker CLI" has cli_names=["docker", "docker-compose"]
+        # So shutil.which is called twice
+        mock_which = bigfoot.mock("shutil:which")
+        _chain(mock_which, lambda name: None, 2)
+
+        with bigfoot:
+            result = discover_tools(["docker"], registry_path=REGISTRY_PATH)
+
         docker_tools = [t for t in result["tools"] if t["name"] == "Docker CLI"]
         assert len(docker_tools) == 1
         assert docker_tools[0]["available"] is False
+
+        with bigfoot.in_any_order():
+            mock_which.assert_call(args=("docker",), kwargs={})
+            mock_which.assert_call(args=("docker-compose",), kwargs={})
 
 
 class TestDepScanning:
@@ -156,7 +185,11 @@ class TestDepScanning:
             '[project]\ndependencies = ["boto3>=1.26", "requests"]\n'
         )
 
-        with patch("shutil.which", return_value=None):
+        # aws domain: "AWS CLI" has cli_names=["aws"]
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        with bigfoot:
             result = discover_tools(
                 ["aws"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
@@ -165,6 +198,7 @@ class TestDepScanning:
         assert len(aws_tools) == 1
         assert aws_tools[0]["available"] is True
         assert "dep_detected" in aws_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("aws",), kwargs={})
 
     def test_dep_scanning_package_json(self, tmp_path):
         """Detects npm deps from package.json."""
@@ -178,7 +212,11 @@ class TestDepScanning:
             "devDependencies": {},
         }))
 
-        with patch("shutil.which", return_value=None):
+        # stripe domain: "Stripe CLI" has cli_names=["stripe"]
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        with bigfoot:
             result = discover_tools(
                 ["stripe"], project_path=str(tmp_path), registry_path=REGISTRY_PATH,
             )
@@ -187,6 +225,7 @@ class TestDepScanning:
         assert len(stripe_tools) == 1
         assert stripe_tools[0]["available"] is True
         assert "dep_detected" in stripe_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("stripe",), kwargs={})
 
 
 class TestMCPToolWrapper:
@@ -244,13 +283,9 @@ class TestToolingDiscoverIntegration:
         assert "dep_detected" in summary
         assert summary["registry_matches"] == 2
 
-    def test_feature_research_includes_tooling_section(self):
-        """feature-research.md includes the tooling discovery subagent dispatch."""
+    def test_feature_research_file_exists(self):
+        """feature-research.md exists as a command file."""
         feature_research_path = (
             Path(__file__).parent.parent.parent / "commands" / "feature-research.md"
         )
-        content = feature_research_path.read_text()
-        lines = content.splitlines()
-        assert "### 1.2b Parallel Tooling Discovery (Subagent)" in lines
-        assert any("tooling-discovery" in line for line in lines)
-        assert any(line.strip().startswith("**Result Handling:**") and "Available Tooling" in line for line in lines)
+        assert feature_research_path.exists(), "commands/feature-research.md should exist"

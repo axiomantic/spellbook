@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
 """
 Generate diagrams for skills and commands by invoking Claude Code in headless mode.
 
@@ -22,15 +18,19 @@ Usage:
     python3 scripts/generate_diagrams.py --verbose
 """
 
+import asyncio
 import argparse
 import fnmatch
 import json
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple
+from typing import Optional, Union
+
+from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
 
 from diagram_config import (
     AGENTS_DIR,
@@ -47,15 +47,16 @@ from diagram_config import (
     compute_structure_hash,
 )
 
-# Timeout for each Claude headless invocation (5 minutes)
-CLAUDE_TIMEOUT_SECONDS = 300
+# No timeouts on LLM invocations -- let them run to completion
+# (Classification and patching timeouts are also unused since those use the SDK now)
 
 # ---------------------------------------------------------------------------
 # Data types
 # ---------------------------------------------------------------------------
 
 
-class SourceItem(NamedTuple):
+@dataclass
+class SourceItem:
     """A discovered source file with its tier classification."""
     name: str
     kind: str          # "skill", "command", or "agent"
@@ -64,11 +65,12 @@ class SourceItem(NamedTuple):
     mandatory: bool
 
 
-class GenerationResult(NamedTuple):
+@dataclass
+class GenerationResult:
     """Result of a diagram generation attempt."""
     item: SourceItem
     status: str        # "generated", "skipped", "failed", "fresh"
-    message: str
+    message: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -329,12 +331,18 @@ def generate_diagram(
     item: SourceItem,
     current_hash: str,
     *,
+    provider: str = "claude",
+    model: str = "sonnet",
+    provider_args: list[str] | None = None,
     verbose: bool = False,
     write: bool = True,
 ) -> tuple[GenerationResult, str | None]:
-    """Generate a diagram for a single item via Claude headless.
+    """Generate a diagram for a single item via an LLM provider.
 
     Args:
+        provider: "claude" or "gemini"
+        model: model name to pass to the provider
+        provider_args: extra arguments for the provider CLI
         write: If True, write the diagram file. If False, return the content
                without writing (for interactive mode).
 
@@ -344,55 +352,67 @@ def generate_diagram(
     prompt = build_prompt(item)
     source_rel = str(item.source_path.relative_to(REPO_ROOT))
 
-    cmd = [
-        "claude",
-        "--print",
-        "--dangerously-skip-permissions",
-        prompt,
-    ]
+    if provider == "claude":
+        cmd = [
+            "claude",
+            "--print",
+            "--model", model,
+            "--dangerously-skip-permissions",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
+    elif provider == "gemini":
+        cmd = [
+            "gemini",
+            "--prompt", prompt,
+            "--model", model,
+            "--yolo",
+            "-o", "text",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+    else:
+        return GenerationResult(
+            item=item,
+            status="failed",
+            message=f"Unknown provider: {provider}",
+        ), None
 
     if verbose:
-        print(f"  Command: {' '.join(cmd[:3])} [prompt truncated]")
+        print(f"  Command: {' '.join(cmd[:4])} [prompt truncated]")
         print(f"  Stdin: {item.source_path}")
 
-    # Unset CLAUDECODE to allow spawning Claude subprocesses from within
-    # an active Claude Code session (e.g., when run via pre-commit hooks).
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    # Unset CLAUDECODE and GEMINI_CLI to allow spawning subprocesses from within
+    # an active session (e.g., when run via pre-commit hooks).
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
 
-    print(f"  Generating diagram for {item.source_path.name}...", end="", flush=True)
+    print(f"  Generating diagram for {item.source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         result = subprocess.run(
             cmd,
             stdin=subprocess.DEVNULL,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=None,  # inherit parent stderr so errors are visible
             text=True,
-            timeout=CLAUDE_TIMEOUT_SECONDS,
             cwd=REPO_ROOT,
             env=env,
         )
-    except subprocess.TimeoutExpired:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message=f"Claude timed out after {CLAUDE_TIMEOUT_SECONDS}s",
-        ), None
     except FileNotFoundError:
         print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
-            message="'claude' command not found. Is Claude Code installed and on PATH?",
+            message=f"'{cmd[0]}' command not found. Is it installed and on PATH?",
         ), None
 
     if result.returncode != 0:
         print(" failed")
-        stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
         return GenerationResult(
             item=item,
             status="failed",
-            message=f"Claude exited with code {result.returncode}: {stderr_snippet}",
+            message=f"{cmd[0]} exited with code {result.returncode} (stderr was printed above)",
         ), None
 
     diagram_content = result.stdout.strip()
@@ -506,9 +526,7 @@ def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
 # Smart update: diff retrieval, classification, and patching
 # ---------------------------------------------------------------------------
 
-# Timeout for classification/patch Claude calls (60 seconds -- much shorter than full gen)
-CLASSIFY_TIMEOUT_SECONDS = 30
-PATCH_TIMEOUT_SECONDS = 120
+# Classification and patching now use the Unified SDK (no subprocess timeouts needed)
 
 CLASSIFICATION_PROMPT = """\
 You are classifying whether a source file change affects its workflow diagram.
@@ -594,41 +612,36 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
-def classify_change(source_path: Path, diagram_path: Path) -> str:
-    """Classify a source file change as STAMP, PATCH, or REGENERATE.
-
-    Uses git diff to get the change, then sends it to Claude for classification.
-    Falls back to REGENERATE on any error.
-    """
+async def classify_change(
+    source_path: Path,
+    diagram_path: Path,
+    *,
+    provider: str = "claude",
+    model: str = "haiku",
+    provider_args: list[str] | None = None,
+) -> str:
+    """Classify a source file change via Unified SDK."""
     diff = get_source_diff(source_path)
     if not diff:
         return "REGENERATE"
 
     prompt = CLASSIFICATION_PROMPT.format(diff=diff)
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-
-    print(f"  Classifying change for {source_path.name}...", end="", flush=True)
+    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
-        result = subprocess.run(
-            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=CLASSIFY_TIMEOUT_SECONDS,
-            cwd=REPO_ROOT,
-            env=env,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        classification = await client.run(prompt)
+        classification = classification.strip().upper()
+    except Exception:
         print(" REGENERATE")
         return "REGENERATE"
-
-    if result.returncode != 0:
-        print(" REGENERATE")
-        return "REGENERATE"
-
-    classification = result.stdout.strip().upper()
 
     if classification in ("STAMP", "PATCH", "REGENERATE"):
         print(f" {classification}")
@@ -638,41 +651,38 @@ def classify_change(source_path: Path, diagram_path: Path) -> str:
     return "REGENERATE"
 
 
-def patch_diagram(source_path: Path, diagram_path: Path, diff: str) -> str | None:
-    """Surgically patch an existing diagram based on a source diff.
-
-    Sends the existing diagram content and diff to Claude for a minimal patch.
-    Returns the patched diagram content (mermaid code blocks), or None on failure.
-    """
+async def patch_diagram(
+    source_path: Path,
+    diagram_path: Path,
+    diff: str,
+    *,
+    provider: str = "claude",
+    model: str = "haiku",
+    provider_args: list[str] | None = None,
+) -> str | None:
+    """Surgically patch an existing diagram via Unified SDK."""
     if not diagram_path.exists():
         return None
 
     existing_diagram = diagram_path.read_text(encoding="utf-8")
     prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-
-    print(f"  Patching diagram for {source_path.name}...", end="", flush=True)
+    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
-        result = subprocess.run(
-            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=PATCH_TIMEOUT_SECONDS,
-            cwd=REPO_ROOT,
-            env=env,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        output = await client.run(prompt)
+        output = output.strip()
+    except Exception:
         print(" failed, falling back to regeneration")
         return None
 
-    if result.returncode != 0:
-        print(" failed, falling back to regeneration")
-        return None
-
-    output = result.stdout.strip()
     if not output or output == "CANNOT_PATCH":
         print(" failed, falling back to regeneration")
         return None
@@ -686,6 +696,38 @@ def patch_diagram(source_path: Path, diagram_path: Path, diff: str) -> str | Non
 # ---------------------------------------------------------------------------
 
 
+def _is_tracked_by_git(source_rel: Union[str, Path]) -> bool:
+    """Check whether a file is tracked by git."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", str(source_rel)],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        return result.returncode == 0
+    except OSError:
+        return False
+
+
+def _strip_diff_headers(lines: list[str]) -> list[str]:
+    """Strip git diff header lines (diff --git, index, ---/+++ lines)."""
+    content_lines = []
+    for line in lines:
+        stripped = line.lstrip("\x1b[0123456789;m")
+        if stripped.startswith(("diff --git", "index ", "--- ", "+++ ")):
+            continue
+        content_lines.append(line)
+    return content_lines
+
+
+def _print_diff_lines(lines: list[str], max_lines: int = 100) -> bool:
+    """Print diff lines with indentation. Returns True if any lines were printed."""
+    for line in lines[:max_lines]:
+        print(f"  {line}")
+    if len(lines) > max_lines:
+        print(f"  ... ({len(lines) - max_lines} more lines)")
+    return bool(lines)
+
+
 def show_source_changes(item: SourceItem) -> None:
     """Show a single combined diff of source changes since the diagram was last generated."""
     import shutil
@@ -696,6 +738,23 @@ def show_source_changes(item: SourceItem) -> None:
     print("-" * min(term_width, 80))
     print(f"  Source changes: {source_rel}")
     print("-" * min(term_width, 80))
+
+    # Check if the source file is tracked by git at all
+    if not _is_tracked_by_git(source_rel):
+        print("  (new file, not yet tracked by git)")
+        print()
+        # Show first 60 lines of the file content as a preview
+        try:
+            content = item.source_path.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            for line in lines[:60]:
+                print(f"  + {line}")
+            if len(lines) > 60:
+                print(f"  ... ({len(lines) - 60} more lines)")
+        except OSError:
+            print("  (could not read file)")
+        print()
+        return
 
     # Find the commit where the diagram was last generated/stamped
     base_commit = None
@@ -712,59 +771,93 @@ def show_source_changes(item: SourceItem) -> None:
                 )
                 commits = result.stdout.strip().splitlines()
                 if commits:
-                    base_commit = commits[0] + "~1"
+                    # Verify the parent commit exists (first commit has no parent)
+                    parent_check = subprocess.run(
+                        ["git", "rev-parse", "--verify", commits[0] + "~1"],
+                        capture_output=True, text=True, cwd=REPO_ROOT,
+                    )
+                    if parent_check.returncode == 0:
+                        base_commit = commits[0] + "~1"
+                    else:
+                        # First commit in repo; diff against empty tree
+                        base_commit = "4b825dc642cb6eb9a060e54bf899d15f7fb7c488"
             except OSError:
                 pass
 
-    # Single combined diff: base_commit..HEAD (or last 3 commits if no base)
-    if base_commit:
-        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
-                     base_commit, "HEAD", "--", str(source_rel)]
-    else:
-        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
-                     "HEAD~3", "HEAD", "--", str(source_rel)]
-
     shown = False
-    try:
-        diff_result = subprocess.run(
-            diff_cmd, capture_output=True, text=True, cwd=REPO_ROOT,
-        )
-        if diff_result.stdout.strip():
-            lines = diff_result.stdout.splitlines()
-            # Skip git diff header lines (diff --git, index, ---/+++ lines)
-            content_lines = []
-            for line in lines:
-                stripped = line.lstrip("\x1b[0123456789;m")
-                if stripped.startswith(("diff --git", "index ", "--- ", "+++ ")):
-                    continue
-                content_lines.append(line)
-            for line in content_lines[:100]:
-                print(f"  {line}")
-            if len(content_lines) > 100:
-                print(f"  ... ({len(content_lines) - 100} more lines)")
-            shown = bool(content_lines)
-    except OSError:
-        pass
 
-    # Fall back to uncommitted changes if nothing from git history
-    if not shown:
+    # Strategy 1: Combined diff from base_commit to working tree (includes uncommitted)
+    if base_commit:
         try:
-            unstaged = subprocess.run(
-                ["git", "diff", "--color=always", "--", str(source_rel)],
+            diff_result = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 base_commit, "--", str(source_rel)],
                 capture_output=True, text=True, cwd=REPO_ROOT,
             )
+            if diff_result.stdout.strip():
+                content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                shown = _print_diff_lines(content_lines)
+        except OSError:
+            pass
+
+    # Strategy 2: Uncommitted changes (staged + unstaged)
+    if not shown:
+        try:
             staged = subprocess.run(
-                ["git", "diff", "--cached", "--color=always", "--", str(source_rel)],
+                ["git", "diff", "--cached", "--color=always", "--no-ext-diff",
+                 "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            unstaged = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 "--", str(source_rel)],
                 capture_output=True, text=True, cwd=REPO_ROOT,
             )
             combined = (staged.stdout.strip() + "\n" + unstaged.stdout.strip()).strip()
             if combined:
-                for line in combined.splitlines()[:100]:
-                    print(f"  {line}")
-            else:
-                print("  (no diff available)")
+                content_lines = _strip_diff_headers(combined.splitlines())
+                shown = _print_diff_lines(content_lines)
         except OSError:
-            print("  (git not available)")
+            pass
+
+    # Strategy 3: Diff across recent history (widen the search)
+    if not shown:
+        # The source hash changed but we couldn't find a diff above. This typically
+        # means the change was committed and we failed to locate the base commit.
+        # Walk back through history to find where the file last matched.
+        for depth in ("HEAD~5", "HEAD~10", "HEAD~25"):
+            try:
+                diff_result = subprocess.run(
+                    ["git", "diff", "--color=always", "--no-ext-diff",
+                     depth, "HEAD", "--", str(source_rel)],
+                    capture_output=True, text=True, cwd=REPO_ROOT,
+                )
+                if diff_result.stdout.strip():
+                    content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                    shown = _print_diff_lines(content_lines)
+                    break
+            except OSError:
+                break
+
+    # Strategy 4: Show the full file diff against empty tree (file exists but
+    # all git diff strategies failed, e.g., very old change or unusual history)
+    if not shown:
+        try:
+            diff_result = subprocess.run(
+                ["git", "diff", "--color=always", "--no-ext-diff",
+                 "4b825dc642cb6eb9a060e54bf899d15f7fb7c488",
+                 "HEAD", "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            if diff_result.stdout.strip():
+                content_lines = _strip_diff_headers(diff_result.stdout.splitlines())
+                print("  (showing full file content; could not isolate specific changes)")
+                shown = _print_diff_lines(content_lines)
+        except OSError:
+            pass
+
+    if not shown:
+        print("  (no diff available - git may not be accessible)")
 
     print()
 
@@ -839,9 +932,25 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 
-def main() -> int:
+async def main_async() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate diagrams for skills and commands via Claude headless",
+        description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
+    )
+    parser.add_argument(
+        "--provider",
+        choices=["claude", "gemini"],
+        default="claude",
+        help="LLM provider to use (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Model name to pass to the provider (default: 'sonnet' for claude, 'gemini-2.5-flash' for gemini)",
+    )
+    parser.add_argument(
+        "--provider-args",
+        nargs="*",
+        help="Additional arguments to pass to the provider CLI",
     )
     parser.add_argument(
         "--dry-run",
@@ -903,6 +1012,24 @@ def main() -> int:
     print(f"Found {len(all_commands)} commands ({cmds_mandatory} mandatory, {cmds_optional} optional)")
     print(f"Found {len(all_agents)} agents ({agents_mandatory} mandatory, {agents_optional} optional)")
 
+    # Set default model based on provider
+    provider = args.provider
+    model = args.model
+    if model is None:
+        if provider == "claude":
+            model = "sonnet"
+        elif provider == "gemini":
+            model = "gemini-2.5-flash"
+    
+    # Fast model for utility tasks (classification, patching)
+    # Use the specified model if provided, otherwise default to a fast one
+    fast_model = args.model
+    if fast_model is None:
+        if provider == "claude":
+            fast_model = "haiku"
+        elif provider == "gemini":
+            fast_model = "gemini-2.5-flash"
+
     # Merge and filter
     all_items = all_skills + all_commands + all_agents
     filtered_items = apply_filters(
@@ -943,9 +1070,9 @@ def main() -> int:
 
     print()
     if args.force:
-        print(f"Force mode: regenerating all {len(work_items)} diagrams")
+        print(f"Force mode: regenerating all {len(work_items)} diagrams via {provider} ({model})")
     else:
-        print(f"Stale/missing diagrams: {len(work_items)}")
+        print(f"Stale/missing diagrams: {len(work_items)} (using {provider})")
     print()
 
     # Ensure output directories exist
@@ -980,7 +1107,11 @@ def main() -> int:
 
             # Smart classification for interactive mode
             if use_smart and item.diagram_path.exists():
-                classification = classify_change(item.source_path, item.diagram_path)
+                classification = await classify_change(
+                    item.source_path, item.diagram_path,
+                    provider=provider, model=fast_model,
+                    provider_args=args.provider_args,
+                )
                 print(f"  Smart classification: {classification}")
 
                 if classification == "STAMP":
@@ -1053,7 +1184,7 @@ def main() -> int:
 
         total_work = len(to_generate) + len(to_patch)
         print(f"\n{'=' * 60}")
-        print(f"  Processing {total_work} diagrams (batch mode, no further input needed)")
+        print(f"  Processing {total_work} diagrams (batch mode, using {provider})")
         print(f"{'=' * 60}\n")
 
         generated_count = 0
@@ -1062,8 +1193,11 @@ def main() -> int:
 
         # Process patches first
         for item, current_hash, diff in to_patch:
-            print(f"Patching: {item.name}...", end="", flush=True)
-            patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+            patched_content = await patch_diagram(
+                item.source_path, item.diagram_path, diff,
+                provider=provider, model=fast_model,
+                provider_args=args.provider_args,
+            )
             if patched_content is not None:
                 # Build output with metadata header
                 source_rel = str(item.source_path.relative_to(REPO_ROOT))
@@ -1074,18 +1208,24 @@ def main() -> int:
                     "generated_at": now,
                     "generator": "generate_diagrams.py",
                     "method": "patch",
+                    "provider": provider,
+                    "model": fast_model,
                 }
                 meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
                 output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                 item.diagram_path.write_text(output, encoding="utf-8")
                 patched_count += 1
-                print(f" done (patched)")
+                print(f"  {item.name}: done (patched)")
             else:
                 # Fall back to full generation
-                print(f" patch failed, regenerating...", end="", flush=True)
-                result, output_content = generate_diagram(
-                    item, current_hash, verbose=args.verbose, write=False,
+                print(f"  {item.name}: patch failed, regenerating...", end="", flush=True)
+                result, output_content = await asyncio.to_thread(
+                    generate_diagram,
+                    item, current_hash,
+                    provider=provider, model=model,
+                    provider_args=args.provider_args,
+                    verbose=args.verbose, write=False,
                 )
                 if result.status == "generated" and output_content is not None:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1098,9 +1238,12 @@ def main() -> int:
 
         # Process full generations
         for i, (item, current_hash) in enumerate(to_generate, 1):
-            print(f"[{i}/{len(to_generate)}] Generating: {item.name}...", end="", flush=True)
-            result, output_content = generate_diagram(
-                item, current_hash, verbose=args.verbose, write=False,
+            result, output_content = await asyncio.to_thread(
+                generate_diagram,
+                item, current_hash,
+                provider=provider, model=model,
+                provider_args=args.provider_args,
+                verbose=args.verbose, write=False,
             )
             if result.status == "generated" and output_content is not None:
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1147,7 +1290,11 @@ def main() -> int:
     for i, (item, current_hash) in enumerate(work_items, 1):
         # Smart classification (if enabled and diagram exists)
         if use_smart and item.diagram_path.exists():
-            classification = classify_change(item.source_path, item.diagram_path)
+            classification = await classify_change(
+                item.source_path, item.diagram_path,
+                provider=provider, model=fast_model,
+                provider_args=args.provider_args,
+            )
 
             if classification == "STAMP":
                 stamp_as_fresh(item, current_hash)
@@ -1156,9 +1303,12 @@ def main() -> int:
                 continue
 
             if classification == "PATCH":
-                print(f"[{i}/{len(work_items)}] Patching: {item.name}...", end="", flush=True)
                 diff = get_source_diff(item.source_path)
-                patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+                patched_content = await patch_diagram(
+                    item.source_path, item.diagram_path, diff,
+                    provider=provider, model=fast_model,
+                    provider_args=args.provider_args,
+                )
                 if patched_content is not None:
                     source_rel = str(item.source_path.relative_to(REPO_ROOT))
                     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1168,24 +1318,28 @@ def main() -> int:
                         "generated_at": now,
                         "generator": "generate_diagrams.py",
                         "method": "patch",
+                        "provider": provider,
+                        "model": fast_model,
                     }
                     meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
                     output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                     item.diagram_path.write_text(output, encoding="utf-8")
                     patched_count += 1
-                    print(f" done (surgical update)")
+                    print(f"[{i}/{len(work_items)}] Patched diagram: {item.name} (surgical update)")
                     continue
                 else:
-                    print(f" patch failed, falling back to full generation")
                     # Fall through to full generation below
+                    pass
 
             # classification == "REGENERATE" or patch failed: fall through
 
-        print(f"[{i}/{len(work_items)}] Generating: {item.name}...", end="", flush=True)
-
-        result, output_content = generate_diagram(
+        result, output_content = await asyncio.to_thread(
+            generate_diagram,
             item, current_hash,
+            provider=provider,
+            model=model,
+            provider_args=args.provider_args,
             verbose=args.verbose,
             write=True,
         )
@@ -1220,4 +1374,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(asyncio.run(main_async()))

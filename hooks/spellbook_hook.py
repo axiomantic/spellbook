@@ -208,8 +208,17 @@ def _send_os_notification(title: str, body: str) -> None:
         pass
 
 
-# Excluded tools for notifications, TTS, and memory capture
+# Excluded tools for notifications and TTS (high-frequency, fast tools)
 _EXCLUDED_TOOLS = frozenset({
+    "AskUserQuestion", "TodoRead", "TodoWrite",
+    "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
+    "Read", "Grep", "Glob", "list_directory", "ls", "cat",
+    "file_history_snapshot", "get_file_contents",
+})
+
+# Interactive/UI tools excluded from stint depth checks, memory capture,
+# and other handlers where we still want file-related tools to fire
+_INTERACTIVE_EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
 })
@@ -560,7 +569,7 @@ def _memory_capture(tool_name: str, data: dict) -> None:
 
     Builds a summary of the tool call and POSTs to /api/memory/event.
     """
-    if tool_name in _EXCLUDED_TOOLS or not tool_name:
+    if tool_name in _INTERACTIVE_EXCLUDED_TOOLS or not tool_name:
         return
     tool_input = data.get("tool_input") or {}
     cwd = data.get("cwd", "")
@@ -761,7 +770,7 @@ def _stint_depth_check(data: dict) -> str | None:
     FAIL-OPEN: returns None on any error.
     """
     tool_name = data.get("tool_name", "")
-    if tool_name in _EXCLUDED_TOOLS:
+    if tool_name in _INTERACTIVE_EXCLUDED_TOOLS:
         return None
 
     project_path = data.get("cwd", "")

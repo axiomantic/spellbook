@@ -173,3 +173,5 @@ docs/Users-*/
 
 mise.toml
 .claude/worktrees
+*.db
+.claude/prompts/

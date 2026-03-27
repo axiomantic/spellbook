@@ -504,7 +504,8 @@ class TestCLIScopeFlag:
     def test_search_with_scope_flag(self, db_path, monkeypatch):
         """CLI search passes --scope through to do_memory_recall."""
         import argparse
-        from unittest.mock import patch
+
+        import bigfoot
 
         from spellbook.cli.commands import memory as mem_cli
 
@@ -521,21 +522,27 @@ class TestCLIScopeFlag:
             json=True,
         )
 
-        with patch("spellbook.memory.tools.do_memory_recall") as mock_recall:
-            mock_recall.return_value = {"count": 0, "memories": []}
+        mock_recall = bigfoot.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall.returns({"count": 0, "memories": []})
+
+        with bigfoot:
             mem_cli._run_search(args)
-            mock_recall.assert_called_once_with(
-                db_path=db_path,
-                query="CLI test",
-                namespace="default",
-                limit=10,
-                scope="global",
-            )
+
+        mock_recall.assert_call(
+            kwargs={
+                "db_path": db_path,
+                "query": "CLI test",
+                "namespace": "default",
+                "limit": 10,
+                "scope": "global",
+            },
+        )
 
     def test_search_scope_default_is_project(self, db_path, monkeypatch):
         """CLI search defaults to scope='project' when --scope not provided."""
         import argparse
-        from unittest.mock import patch
+
+        import bigfoot
 
         from spellbook.cli.commands import memory as mem_cli
 
@@ -552,16 +559,21 @@ class TestCLIScopeFlag:
             json=True,
         )
 
-        with patch("spellbook.memory.tools.do_memory_recall") as mock_recall:
-            mock_recall.return_value = {"count": 0, "memories": []}
+        mock_recall = bigfoot.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall.returns({"count": 0, "memories": []})
+
+        with bigfoot:
             mem_cli._run_search(args)
-            mock_recall.assert_called_once_with(
-                db_path=db_path,
-                query="test",
-                namespace="default",
-                limit=10,
-                scope="project",
-            )
+
+        mock_recall.assert_call(
+            kwargs={
+                "db_path": db_path,
+                "query": "test",
+                "namespace": "default",
+                "limit": 10,
+                "scope": "project",
+            },
+        )
 
 
 class TestGlobalMemoryCrossProject:

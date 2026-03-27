@@ -1,7 +1,33 @@
 """Integration tests for MCP server with swarm tools."""
+import asyncio
+
+import bigfoot
 import pytest
-from unittest.mock import patch, AsyncMock
+
 from spellbook.core.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+
+
+class _FakeBackend:
+    """Fake async backend for testing swarm tools."""
+
+    def __init__(self, **returns):
+        self._returns = returns
+
+    async def create_swarm(self, feature, manifest_path, auto_merge):
+        return self._returns.get("create_swarm", "swarm-test-123")
+
+    async def register_worker(self, swarm_id, packet_id, packet_name, tasks_total, worktree):
+        return self._returns.get("register_worker", {"status": "registered", "packet_id": 1})
+
+    async def get_status(self, swarm_id):
+        return self._returns.get("get_status", {
+            "swarm_id": "swarm-123",
+            "status": "running",
+            "workers_registered": 3,
+            "workers_complete": 1,
+            "workers_failed": 0,
+            "ready_for_merge": False,
+        })
 
 
 class TestMCPServerSwarmToolsIntegration:
@@ -26,19 +52,23 @@ class TestMCPServerSwarmToolsIntegration:
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
             mcp_sse=MCPSSEConfig(port=7432, host="127.0.0.1")
         )
+        fake = _FakeBackend()
 
-        mock_backend = AsyncMock()
-        mock_backend.create_swarm.return_value = "swarm-test-123"
+        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
+        mock_config.returns(config)
+        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
+        mock_get_backend.returns(fake)
 
-        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
-            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
-                result = swarm_create(
-                    feature="test-feature",
-                    manifest_path="/path/to/manifest.json"
-                )
+        with bigfoot:
+            result = swarm_create(
+                feature="test-feature",
+                manifest_path="/path/to/manifest.json"
+            )
 
-                assert result["swarm_id"] == "swarm-test-123"
-                assert result["status"] == "created"
+        assert result["swarm_id"] == "swarm-test-123"
+        assert result["status"] == "created"
+        mock_config.assert_call(args=(), kwargs={})
+        mock_get_backend.assert_call(args=(config,), kwargs={})
 
     def test_swarm_register_tool_is_callable(self):
         """Test that mcp_swarm_register tool is callable."""
@@ -48,25 +78,26 @@ class TestMCPServerSwarmToolsIntegration:
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
             mcp_sse=MCPSSEConfig(port=7432, host="127.0.0.1")
         )
+        fake = _FakeBackend()
 
-        mock_backend = AsyncMock()
-        mock_backend.register_worker.return_value = {
-            "status": "registered",
-            "packet_id": 1
-        }
+        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
+        mock_config.returns(config)
+        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
+        mock_get_backend.returns(fake)
 
-        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
-            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
-                result = swarm_register(
-                    swarm_id="swarm-123",
-                    packet_id=1,
-                    packet_name="test-packet",
-                    tasks_total=5,
-                    worktree="/path/to/worktree"
-                )
+        with bigfoot:
+            result = swarm_register(
+                swarm_id="swarm-123",
+                packet_id=1,
+                packet_name="test-packet",
+                tasks_total=5,
+                worktree="/path/to/worktree"
+            )
 
-                assert result["status"] == "registered"
-                assert result["packet_id"] == 1
+        assert result["status"] == "registered"
+        assert result["packet_id"] == 1
+        mock_config.assert_call(args=(), kwargs={})
+        mock_get_backend.assert_call(args=(config,), kwargs={})
 
     def test_swarm_monitor_tool_is_callable(self):
         """Test that mcp_swarm_monitor tool is callable."""
@@ -76,24 +107,21 @@ class TestMCPServerSwarmToolsIntegration:
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
             mcp_sse=MCPSSEConfig(port=7432, host="127.0.0.1")
         )
+        fake = _FakeBackend()
 
-        mock_backend = AsyncMock()
-        mock_backend.get_status.return_value = {
-            "swarm_id": "swarm-123",
-            "status": "running",
-            "workers_registered": 3,
-            "workers_complete": 1,
-            "workers_failed": 0,
-            "ready_for_merge": False
-        }
+        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
+        mock_config.returns(config)
+        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
+        mock_get_backend.returns(fake)
 
-        with patch("spellbook.coordination.swarm.load_coordination_config", return_value=config):
-            with patch("spellbook.coordination.swarm._get_backend", return_value=mock_backend):
-                result = swarm_monitor(swarm_id="swarm-123")
+        with bigfoot:
+            result = swarm_monitor(swarm_id="swarm-123")
 
-                assert result["swarm_id"] == "swarm-123"
-                assert result["status"] == "running"
-                assert result["workers_registered"] == 3
+        assert result["swarm_id"] == "swarm-123"
+        assert result["status"] == "running"
+        assert result["workers_registered"] == 3
+        mock_config.assert_call(args=(), kwargs={})
+        mock_get_backend.assert_call(args=(config,), kwargs={})
 
     def test_server_module_loads_without_errors(self):
         """Test that the server module loads without errors."""

@@ -6,8 +6,7 @@ via SQLAlchemy metadata (SpellbookBase.metadata.create_all) rather than
 init_db() raw DDL.
 """
 
-from unittest.mock import patch
-
+import bigfoot
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
@@ -312,25 +311,31 @@ class TestNoRawSQLInTelemetry:
         """telemetry_enable must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_enable
 
-        with patch("spellbook.core.db.get_connection") as mock_get_conn:
+        mock_get_conn = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_get_conn.__call__.required(False)
+
+        with bigfoot:
             telemetry_enable(db_path=orm_db)
-            mock_get_conn.assert_not_called()
 
     def test_telemetry_disable_does_not_use_get_connection(self, orm_db):
         """telemetry_disable must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_disable
 
-        with patch("spellbook.core.db.get_connection") as mock_get_conn:
+        mock_get_conn = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_get_conn.__call__.required(False)
+
+        with bigfoot:
             telemetry_disable(db_path=orm_db)
-            mock_get_conn.assert_not_called()
 
     def test_telemetry_status_does_not_use_get_connection(self, orm_db):
         """telemetry_status must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_status
 
-        with patch("spellbook.core.db.get_connection") as mock_get_conn:
+        mock_get_conn = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_get_conn.__call__.required(False)
+
+        with bigfoot:
             telemetry_status(db_path=orm_db)
-            mock_get_conn.assert_not_called()
 
     def test_telemetry_enable_does_not_import_sqlite3(self, orm_db):
         """telemetry_enable must not catch sqlite3.Error (uses SQLAlchemy exceptions)."""

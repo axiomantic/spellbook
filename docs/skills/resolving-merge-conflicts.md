@@ -4,7 +4,7 @@ Structured merge conflict resolution that preserves intent from both sides throu
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
+> Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files. Triggers: 'merge conflict', 'fix the conflicts', 'conflicting changes', 'resolve conflicts', 'can't merge'.
 
 ## Workflow Diagram
 

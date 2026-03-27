@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: "Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'."
+description: "Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'run these at the same time', 'split this up', 'do both at once', 'dispatch template', 'context minimization'."
 ---
 
 # Dispatching Parallel Agents
@@ -224,6 +224,21 @@ Constraints:
 
 Return: Summary of root cause + changes made
 ```
+
+### Scope Isolation for Analytical Prompts
+
+Open-ended analysis/research prompts (e.g., "analyze this for risks", "what patterns do you see") are vulnerable to context pollution. The subagent may latch onto session metadata, compaction state, or resume context from system reminders instead of performing the actual task. Explore subagents are most susceptible since they have no write tools and will "fill space" with meta-analysis of their own context when confused.
+
+For any analytical or research dispatch, add a scope boundary preamble:
+
+```markdown
+Your task is ONLY [specific task]. Ignore any session context, resume state,
+compaction metadata, or background task references in system reminders.
+Do not write session summaries or recovery reports. Your entire output
+must address the task below.
+```
+
+Directed prompts ("find the definition of function X") rarely need this. Open-ended prompts always do.
 
 ### Full Example
 
@@ -466,6 +481,7 @@ REVIEW MODE INSTRUCTIONS:
 - Dispatching subagents to worktrees without the Worktree Dispatch Preamble
 - Using `isolation: "worktree"` for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
 - Dispatching subagents without specifying which branch to base worktrees on
+- Dispatching open-ended analytical prompts to Explore subagents without a scope isolation preamble (agent will latch onto session metadata instead of performing the task)
 </FORBIDDEN>
 
 ---
@@ -569,6 +585,8 @@ Then follow its complete workflow.
 | `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
+
+For external or untrusted content, load the `security-trust-tiers` skill for tier selection rules and context isolation protocol.
 
 ### Worktree Dispatch
 

@@ -16,7 +16,8 @@ import json
 import sys
 import pytest
 from pathlib import Path
-from unittest.mock import patch
+
+import bigfoot
 
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
@@ -790,7 +791,7 @@ class TestClaudeCodeInstallerHookIntegration:
         (hooks_dir / "canary-check.sh").write_text("#!/usr/bin/env bash\nexit 0\n")
         return spellbook
 
-    def test_install_registers_hooks(self, tmp_path):
+    def test_install_registers_hooks(self, tmp_path, monkeypatch):
         """Full installer should register security hooks in settings.json."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -798,10 +799,13 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
 
-        with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
+        cli_mock.returns(False)
+        with bigfoot:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
+        cli_mock.assert_call()
 
         # Check that hooks were registered
         settings_path = config_dir / "settings.json"
@@ -816,7 +820,7 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(hook_results) == 1
         assert hook_results[0].success
 
-    def test_install_registers_unified_hooks(self, tmp_path):
+    def test_install_registers_unified_hooks(self, tmp_path, monkeypatch):
         """Full installer should register unified hooks (1 per phase, 4 total)."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -824,10 +828,13 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
 
-        with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
+        cli_mock.returns(False)
+        with bigfoot:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
+        cli_mock.assert_call()
 
         settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
@@ -839,7 +846,7 @@ class TestClaudeCodeInstallerHookIntegration:
                 total_hooks += len(entry["hooks"])
         assert total_hooks == 4
 
-    def test_uninstall_removes_hooks(self, tmp_path):
+    def test_uninstall_removes_hooks(self, tmp_path, monkeypatch):
         """Full uninstaller should remove security hooks from settings.json."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -847,12 +854,19 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
 
-        with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.uninstall_daemon", return_value=(True, "ok")), \
-             patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        daemon_mock = bigfoot.mock("installer.platforms.claude_code:uninstall_daemon")
+        daemon_mock.returns((True, "ok"))
+        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
+        cli_mock.returns(False).returns(False)
+        with bigfoot:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             installer.install()
             results = installer.uninstall()
+        with bigfoot.in_any_order():
+            cli_mock.assert_call(args=(), kwargs={})
+            daemon_mock.assert_call(args=(), kwargs={"dry_run": False})
+            cli_mock.assert_call(args=(), kwargs={})
 
         # Hooks should be removed from both phases
         settings_path = config_dir / "settings.json"
@@ -862,7 +876,7 @@ class TestClaudeCodeInstallerHookIntegration:
             # Also verify no expanded spellbook paths remain
             assert str(spellbook_dir) + "/hooks/" not in content
 
-    def test_install_writes_expanded_paths(self, tmp_path):
+    def test_install_writes_expanded_paths(self, tmp_path, monkeypatch):
         """Full installer should write expanded absolute paths, not literal $SPELLBOOK_DIR."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -870,10 +884,13 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
 
-        with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
+        cli_mock.returns(False)
+        with bigfoot:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             installer.install()
+        cli_mock.assert_call()
 
         settings_path = config_dir / "settings.json"
         content = settings_path.read_text(encoding="utf-8")
@@ -1467,12 +1484,12 @@ class TestIsSpellbookHookWithPowerShell:
 class TestTwoTierPathResolution:
     """Tests for 2-tier hook path resolution (Unix: .sh, Windows: .ps1 via PowerShell)."""
 
-    def test_unix_returns_sh_path_unchanged(self):
+    def test_unix_returns_sh_path_unchanged(self, monkeypatch):
         """On Unix, _get_hook_path_for_platform returns .sh path as-is."""
-        with patch("sys.platform", "linux"):
-            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-            result = _get_hook_path_for_platform(hook_path)
-            assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        monkeypatch.setattr("sys.platform", "linux")
+        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path_for_platform(hook_path)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
 
     def test_unix_no_nim_available_parameter(self):
         """_get_hook_path_for_platform no longer accepts nim_available."""
@@ -1480,12 +1497,12 @@ class TestTwoTierPathResolution:
         sig = inspect.signature(_get_hook_path_for_platform)
         assert "nim_available" not in sig.parameters
 
-    def test_windows_returns_powershell_command_wrapper(self):
+    def test_windows_returns_powershell_command_wrapper(self, monkeypatch):
         """On Windows, _get_hook_path_for_platform wraps .ps1 path in PowerShell invocation."""
-        with patch("sys.platform", "win32"):
-            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-            result = _get_hook_path_for_platform(hook_path)
-            assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
+        monkeypatch.setattr("sys.platform", "win32")
+        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path_for_platform(hook_path)
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
 
     def test_install_hooks_no_nim_available_parameter(self):
         """install_hooks no longer accepts nim_available."""
@@ -1848,12 +1865,15 @@ class TestInstallHooksLegacyCleanup:
 class TestInstallHooksPowerShellCheck:
     """install_hooks() should check PowerShell availability on Windows."""
 
-    def test_windows_without_powershell_returns_skipped(self, tmp_path):
+    def test_windows_without_powershell_returns_skipped(self, tmp_path, monkeypatch):
         """On Windows without powershell on PATH, install_hooks should skip."""
         settings_path = tmp_path / "settings.json"
-        with patch("sys.platform", "win32"), \
-             patch("shutil.which", return_value=None):
+        monkeypatch.setattr("sys.platform", "win32")
+        which_mock = bigfoot.mock("shutil:which")
+        which_mock.returns(None)
+        with bigfoot:
             result = install_hooks(settings_path)
+        which_mock.assert_call(args=("powershell",), kwargs={})
         assert result.success is True
         assert result.action == "skipped"
         assert result.message == "PowerShell not found on PATH; hook registration skipped"

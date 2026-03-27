@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
+> Use when writing subagent prompts, skill instructions, or any text where accuracy is critical and hallucination would cause harm. Triggers: 'make this accurate', 'high-stakes prompt', 'this needs to be truthful', 'critical instructions', 'get this right'. NOT for: general prompt improvement (use instruction-engineering) or prompt ambiguity review (use sharpening-prompts).
 
 ## Workflow Diagram
 

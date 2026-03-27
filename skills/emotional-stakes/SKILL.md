@@ -1,6 +1,6 @@
 ---
 name: emotional-stakes
-description: "Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness"
+description: "Use when writing subagent prompts, skill instructions, or any text where accuracy is critical and hallucination would cause harm. Triggers: 'make this accurate', 'high-stakes prompt', 'this needs to be truthful', 'critical instructions', 'get this right'. NOT for: general prompt improvement (use instruction-engineering) or prompt ambiguity review (use sharpening-prompts)."
 ---
 
 # Emotional Stakes

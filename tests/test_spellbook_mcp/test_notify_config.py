@@ -6,7 +6,6 @@ platform availability checks.
 """
 
 from datetime import datetime
-from unittest.mock import patch
 
 
 class TestSessionStateNotifyKey:

@@ -4,7 +4,7 @@ Domain modeling for unfamiliar problem spaces, building glossaries, entity maps,
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when develop Phase 1.2 detects unfamiliar domain.
+> Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: 'what are the domain concepts', 'define the entities', 'model this domain', 'DDD', 'ubiquitous language', 'bounded context'. Also invoked by develop during research phase.
 
 ## Workflow Diagram
 

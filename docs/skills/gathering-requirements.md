@@ -4,7 +4,7 @@ Structured elicitation of feature requirements through discovery questions and c
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during DISCOVER stage and by the develop workflow.
+> Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by develop during discovery.
 
 ## Workflow Diagram
 

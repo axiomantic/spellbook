@@ -2,8 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability.
-Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
+> Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability. Triggers: 'optimize instructions', 'reduce tokens', 'compress skill', 'make this shorter', 'too verbose', 'this skill is too big', 'over the line limit', 'trim this down'.
 
 ## Workflow Diagram
 
@@ -167,6 +166,12 @@ IF NO to ANY: revert changes to that section.
 5. Draft optimized version
 6. Verify capability preservation
 7. Calculate savings, present diff
+
+## Architecture for Efficiency
+
+1. **Orchestrator vs. Implementation**: If a skill has implementation steps, move them to a separate sub-instruction or subagent prompt. The orchestrator should only see the "Trigger" and "Dispatch Template".
+2. **Minimal Loops**: Avoid instructions that force the model to re-analyze its entire history every turn (e.g., "Always check if X happened in turn Y").
+3. **Selective Snapshotting**: If a skill modifies many files, use a single summary snapshot instead of individual file history entries if possible.
 
 ## Large File Strategy (>500 lines)
 

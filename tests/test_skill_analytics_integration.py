@@ -2,9 +2,10 @@
 
 import json
 import pytest
+import bigfoot
 from datetime import datetime, timedelta
+from dirty_equals import IsStr
 from pathlib import Path
-from unittest.mock import patch
 
 
 class TestEndToEndSkillAnalytics:
@@ -66,11 +67,13 @@ class TestEndToEndSkillAnalytics:
         # Create watcher and run analysis
         watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-        with patch(
-            "spellbook.sessions.compaction._get_current_session_file",
-            return_value=session_file,
-        ):
+        mock_get_session = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+        mock_get_session.returns(session_file)
+
+        with bigfoot:
             watcher._analyze_skills()
+
+        mock_get_session.assert_call(args=(IsStr(),), kwargs={})
 
         # Query analytics
         project_encoded = str(project_path).replace("/", "-").lstrip("-")
@@ -207,35 +210,36 @@ class TestSessionInactivityHandling:
 
         watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-        # First poll: detect skill
-        with patch(
-            "spellbook.sessions.compaction._get_current_session_file",
-            return_value=session_file,
-        ):
+        # Set up mock for both polls (two returns for two calls)
+        mock_get_session = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+        mock_get_session.returns(session_file)
+        mock_get_session.returns(session_file)
+
+        with bigfoot:
+            # First poll: detect skill
             watcher._analyze_skills()
 
-        # Simulate inactivity
-        session_id = session_file.stem
-        if session_id in watcher._skill_states:
-            watcher._skill_states[session_id].last_activity = (
-                datetime.now() - timedelta(seconds=SESSION_INACTIVE_THRESHOLD_SECONDS + 60)
-            )
+            # Simulate inactivity
+            session_id = session_file.stem
+            if session_id in watcher._skill_states:
+                watcher._skill_states[session_id].last_activity = (
+                    datetime.now() - timedelta(seconds=SESSION_INACTIVE_THRESHOLD_SECONDS + 60)
+                )
 
-        # Insert a record with empty outcome to simulate open skill
-        conn = get_connection(str(db_path))
-        conn.execute("""
-            INSERT OR REPLACE INTO skill_outcomes
-            (skill_name, session_id, project_encoded, start_time, outcome)
-            VALUES (?, ?, ?, ?, ?)
-        """, ("debugging", session_id, "test", "2026-01-26T10:00:00", ""))
-        conn.commit()
+            # Insert a record with empty outcome to simulate open skill
+            conn = get_connection(str(db_path))
+            conn.execute("""
+                INSERT OR REPLACE INTO skill_outcomes
+                (skill_name, session_id, project_encoded, start_time, outcome)
+                VALUES (?, ?, ?, ?, ?)
+            """, ("debugging", session_id, "test", "2026-01-26T10:00:00", ""))
+            conn.commit()
 
-        # Second poll: should finalize
-        with patch(
-            "spellbook.sessions.compaction._get_current_session_file",
-            return_value=session_file,
-        ):
+            # Second poll: should finalize
             watcher._analyze_skills()
+
+        mock_get_session.assert_call(args=(IsStr(),), kwargs={})
+        mock_get_session.assert_call(args=(IsStr(),), kwargs={})
 
         # Verify finalization
         cursor = conn.cursor()

@@ -2,8 +2,8 @@
 
 import os
 import subprocess
-from unittest.mock import patch
 
+import bigfoot
 import pytest
 
 pytestmark = pytest.mark.integration
@@ -78,17 +78,24 @@ class TestFullUpdateDetection:
 
         repo = mock_git_repo["repo"]
 
-        # Mock _get_latest_release_version to simulate a new release on GitHub
-        with (
-            patch("spellbook.updates.tools.config_get") as mock_config_get,
-            patch("spellbook.updates.tools._get_latest_release_version", return_value="0.9.10"),
-        ):
-            mock_config_get.side_effect = lambda key: {
-                "auto_update_remote": "origin",
-                "auto_update_branch": "main",
-            }.get(key)
+        config_map = {
+            "auto_update_remote": "origin",
+            "auto_update_branch": "main",
+        }
 
+        mock_config_get = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config_get.calls(lambda key: config_map.get(key))
+        mock_config_get.calls(lambda key: config_map.get(key))
+
+        mock_release = bigfoot.mock("spellbook.updates.tools:_get_latest_release_version")
+        mock_release.returns("0.9.10")
+
+        with bigfoot:
             result = check_for_updates(repo)
+
+        mock_config_get.assert_call(args=("auto_update_remote",), kwargs={})
+        mock_config_get.assert_call(args=("auto_update_branch",), kwargs={})
+        mock_release.assert_call(args=(repo,), kwargs={})
 
         assert result["error"] is None, f"Unexpected error: {result}"
         assert result["update_available"] is True, f"Expected update_available=True: {result}"
@@ -102,17 +109,24 @@ class TestFullUpdateDetection:
 
         repo = mock_git_repo["repo"]
 
-        # Mock _get_latest_release_version to return the same version as local
-        with (
-            patch("spellbook.updates.tools.config_get") as mock_config_get,
-            patch("spellbook.updates.tools._get_latest_release_version", return_value="0.9.9"),
-        ):
-            mock_config_get.side_effect = lambda key: {
-                "auto_update_remote": "origin",
-                "auto_update_branch": "main",
-            }.get(key)
+        config_map = {
+            "auto_update_remote": "origin",
+            "auto_update_branch": "main",
+        }
 
+        mock_config_get = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config_get.calls(lambda key: config_map.get(key))
+        mock_config_get.calls(lambda key: config_map.get(key))
+
+        mock_release = bigfoot.mock("spellbook.updates.tools:_get_latest_release_version")
+        mock_release.returns("0.9.9")
+
+        with bigfoot:
             result = check_for_updates(repo)
+
+        mock_config_get.assert_call(args=("auto_update_remote",), kwargs={})
+        mock_config_get.assert_call(args=("auto_update_branch",), kwargs={})
+        mock_release.assert_call(args=(repo,), kwargs={})
 
         assert result["update_available"] is False
         assert result["error"] is None
@@ -123,17 +137,24 @@ class TestFullUpdateDetection:
 
         repo = mock_git_repo["repo"]
 
-        # Mock _get_latest_release_version to simulate a major version bump
-        with (
-            patch("spellbook.updates.tools.config_get") as mock_config_get,
-            patch("spellbook.updates.tools._get_latest_release_version", return_value="1.0.0"),
-        ):
-            mock_config_get.side_effect = lambda key: {
-                "auto_update_remote": "origin",
-                "auto_update_branch": "main",
-            }.get(key)
+        config_map = {
+            "auto_update_remote": "origin",
+            "auto_update_branch": "main",
+        }
 
+        mock_config_get = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config_get.calls(lambda key: config_map.get(key))
+        mock_config_get.calls(lambda key: config_map.get(key))
+
+        mock_release = bigfoot.mock("spellbook.updates.tools:_get_latest_release_version")
+        mock_release.returns("1.0.0")
+
+        with bigfoot:
             result = check_for_updates(repo)
+
+        mock_config_get.assert_call(args=("auto_update_remote",), kwargs={})
+        mock_config_get.assert_call(args=("auto_update_branch",), kwargs={})
+        mock_release.assert_call(args=(repo,), kwargs={})
 
         assert result["error"] is None, f"Unexpected error: {result}"
         assert result["update_available"] is True, f"Expected update_available=True: {result}"

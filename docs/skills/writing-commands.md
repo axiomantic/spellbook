@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command"
+> Use when creating new commands, editing existing commands, or reviewing command quality. Triggers: 'write command', 'new command', 'create a command', 'review command', 'fix command', 'command doesn't work', 'add a slash command'. NOT for: skill creation (use writing-skills).
 
 ## Workflow Diagram
 

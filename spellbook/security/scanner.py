@@ -65,6 +65,7 @@ _ENTROPY_THRESHOLD = 4.5
 # Only add files that reference platform-injected tags (e.g., <system-reminder>)
 # in documentation context where the scanner cannot distinguish mention from use.
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
+    "AGENTS.spellbook.md",
     "commands/feature-config.md",
     "docs/security.md",
 ]

@@ -1,6 +1,6 @@
 import pytest
 import sqlite3
-from unittest.mock import patch, MagicMock
+import bigfoot
 
 
 def _make_test_db(tmp_path):
@@ -26,11 +26,16 @@ async def test_query_spellbook_db_returns_list(tmp_path):
 
     mock_conn = _make_test_db(tmp_path)
 
-    with patch("spellbook.core.db.get_connection", return_value=mock_conn):
+    proxy = bigfoot.mock("spellbook.core.db:get_connection")
+    proxy.returns(mock_conn)
+
+    async with bigfoot:
         results = await query_spellbook_db("SELECT id, name FROM test ORDER BY id")
-        assert len(results) == 2
-        assert results[0] == {"id": 1, "name": "hello"}
-        assert results[1] == {"id": 2, "name": "world"}
+
+    proxy.assert_call(args=(), kwargs={})
+    assert len(results) == 2
+    assert results[0] == {"id": 1, "name": "hello"}
+    assert results[1] == {"id": 2, "name": "world"}
 
 
 @pytest.mark.asyncio
@@ -40,12 +45,17 @@ async def test_query_spellbook_db_with_params(tmp_path):
 
     mock_conn = _make_test_db(tmp_path)
 
-    with patch("spellbook.core.db.get_connection", return_value=mock_conn):
+    proxy = bigfoot.mock("spellbook.core.db:get_connection")
+    proxy.returns(mock_conn)
+
+    async with bigfoot:
         results = await query_spellbook_db(
             "SELECT id, name FROM test WHERE id = ?", (2,)
         )
-        assert len(results) == 1
-        assert results[0]["name"] == "world"
+
+    proxy.assert_call(args=(), kwargs={})
+    assert len(results) == 1
+    assert results[0]["name"] == "world"
 
 
 @pytest.mark.asyncio
@@ -56,19 +66,27 @@ async def test_query_spellbook_db_runs_in_thread():
 
     call_thread_ids = []
 
+    class StubCursor:
+        def fetchall(self):
+            return []
+
+    class StubConn:
+        def execute(self, *args, **kwargs):
+            return StubCursor()
+
     def mock_get_connection():
         call_thread_ids.append(threading.current_thread().ident)
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.fetchall.return_value = []
-        mock_conn.execute.return_value = mock_cursor
-        return mock_conn
+        return StubConn()
 
     main_thread_id = threading.current_thread().ident
 
-    with patch("spellbook.core.db.get_connection", side_effect=mock_get_connection):
+    proxy = bigfoot.mock("spellbook.core.db:get_connection")
+    proxy.calls(mock_get_connection)
+
+    async with bigfoot:
         await query_spellbook_db("SELECT 1")
 
+    proxy.assert_call(args=(), kwargs={})
     # The DB work should have run on a different thread
     assert len(call_thread_ids) == 1
     assert call_thread_ids[0] != main_thread_id

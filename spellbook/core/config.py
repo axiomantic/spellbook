@@ -27,6 +27,53 @@ CONFIG_DEFAULTS: dict[str, Any] = {
 }
 
 
+# Wizard-relevant config keys. Used by get_unset_config_keys() to determine
+# which keys to prompt for during installation.
+WIZARD_CONFIG_KEYS: list[str] = [
+    "security.spotlighting.enabled",
+    "security.spotlighting.tier",
+    "tts.enabled",
+    "tts.voice",
+]
+
+
+def config_is_explicitly_set(key: str) -> bool:
+    """Return True if key exists in spellbook.json (not just in CONFIG_DEFAULTS).
+
+    Reads the config file directly without applying CONFIG_DEFAULTS, so a key
+    that has a default but has never been written to disk returns False.
+
+    Args:
+        key: Dotted config key string (e.g. "security.spotlighting.enabled")
+
+    Returns:
+        True if the key is present as a top-level key in spellbook.json,
+        False if the file is missing, unreadable, malformed, or the key is absent.
+    """
+    config_path = get_config_dir() / "spellbook.json"
+    if not config_path.exists():
+        return False
+    try:
+        return key in json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+def get_unset_config_keys(keys: list[str] = WIZARD_CONFIG_KEYS) -> list[str]:
+    """Return the subset of keys not yet explicitly set in spellbook.json.
+
+    Preserves input order.
+
+    Args:
+        keys: List of dotted config key strings to check. Defaults to
+              WIZARD_CONFIG_KEYS.
+
+    Returns:
+        Keys from the input list for which config_is_explicitly_set() is False.
+    """
+    return [k for k in keys if not config_is_explicitly_set(k)]
+
+
 # Session-specific state keyed by session_id (in-memory, resets on MCP server restart)
 # This allows session-only mode changes that don't persist to config
 # Each session gets its own state dict to support multi-session HTTP daemon mode

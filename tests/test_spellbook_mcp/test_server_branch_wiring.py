@@ -1,11 +1,13 @@
 """Tests for branch wiring in server.py REST endpoints and MCP tools."""
 
 import json
+from types import SimpleNamespace
 
+import bigfoot
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from spellbook.core.db import init_db
+from spellbook.core.path_utils import encode_cwd
 
 
 @pytest.fixture
@@ -13,6 +15,15 @@ def db_path(tmp_path):
     path = str(tmp_path / "test.db")
     init_db(path)
     return path
+
+
+def _make_request(body: dict):
+    """Create a fake Starlette-like request with an async json() method."""
+
+    async def _json():
+        return body
+
+    return SimpleNamespace(json=_json)
 
 
 class TestApiMemoryEventBranch:
@@ -27,9 +38,14 @@ class TestApiMemoryEventBranch:
             captured.update(kwargs)
             return {"status": "logged", "event_id": 1}
 
-        request = AsyncMock()
-        request.json = AsyncMock(
-            return_value={
+        log_event_mock = bigfoot.mock("spellbook.mcp.routes:do_log_event")
+        log_event_mock.calls(mock_do_log_event)
+
+        db_mock = bigfoot.mock("spellbook.mcp.routes:get_db_path")
+        db_mock.returns(db_path)
+
+        request = _make_request(
+            {
                 "session_id": "sess1",
                 "project": "test-project",
                 "tool_name": "Read",
@@ -39,10 +55,25 @@ class TestApiMemoryEventBranch:
             }
         )
 
-        with patch("spellbook.mcp.routes.do_log_event", side_effect=mock_do_log_event), \
-             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+        async with bigfoot:
             response = await routes.api_memory_event(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            log_event_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "session_id": "sess1",
+                    "project": "test-project",
+                    "tool_name": "Read",
+                    "subject": "/path/to/file.py",
+                    "summary": "Read file",
+                    "tags": "",
+                    "event_type": "tool_use",
+                    "branch": "feature-x",
+                },
+            )
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
@@ -56,9 +87,14 @@ class TestApiMemoryEventBranch:
             captured.update(kwargs)
             return {"status": "logged", "event_id": 1}
 
-        request = AsyncMock()
-        request.json = AsyncMock(
-            return_value={
+        log_event_mock = bigfoot.mock("spellbook.mcp.routes:do_log_event")
+        log_event_mock.calls(mock_do_log_event)
+
+        db_mock = bigfoot.mock("spellbook.mcp.routes:get_db_path")
+        db_mock.returns(db_path)
+
+        request = _make_request(
+            {
                 "session_id": "sess1",
                 "project": "test-project",
                 "tool_name": "Read",
@@ -67,10 +103,25 @@ class TestApiMemoryEventBranch:
             }
         )
 
-        with patch("spellbook.mcp.routes.do_log_event", side_effect=mock_do_log_event), \
-             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+        async with bigfoot:
             response = await routes.api_memory_event(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            log_event_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "session_id": "sess1",
+                    "project": "test-project",
+                    "tool_name": "Read",
+                    "subject": "/path/to/file.py",
+                    "summary": "Read file",
+                    "tags": "",
+                    "event_type": "tool_use",
+                    "branch": "",
+                },
+            )
         assert captured["branch"] == ""
 
 
@@ -86,19 +137,37 @@ class TestApiMemoryRecallBranch:
             captured.update(kwargs)
             return {"memories": [], "count": 0}
 
-        request = AsyncMock()
-        request.json = AsyncMock(
-            return_value={
+        recall_mock = bigfoot.mock("spellbook.mcp.routes:do_memory_recall")
+        recall_mock.calls(mock_do_memory_recall)
+
+        db_mock = bigfoot.mock("spellbook.mcp.routes:get_db_path")
+        db_mock.returns(db_path)
+
+        request = _make_request(
+            {
                 "namespace": "test-project",
                 "file_path": "/path/to/file.py",
                 "branch": "feature-x",
             }
         )
 
-        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+        async with bigfoot:
             response = await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": "/path/to/file.py",
+                    "branch": "feature-x",
+                    "repo_path": "",
+                },
+            )
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
@@ -112,9 +181,14 @@ class TestApiMemoryRecallBranch:
             captured.update(kwargs)
             return {"memories": [], "count": 0}
 
-        request = AsyncMock()
-        request.json = AsyncMock(
-            return_value={
+        recall_mock = bigfoot.mock("spellbook.mcp.routes:do_memory_recall")
+        recall_mock.calls(mock_do_memory_recall)
+
+        db_mock = bigfoot.mock("spellbook.mcp.routes:get_db_path")
+        db_mock.returns(db_path)
+
+        request = _make_request(
+            {
                 "namespace": "test-project",
                 "query": "test",
                 "branch": "main",
@@ -122,10 +196,23 @@ class TestApiMemoryRecallBranch:
             }
         )
 
-        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+        async with bigfoot:
             response = await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": None,
+                    "branch": "main",
+                    "repo_path": "/Users/test/repo",
+                },
+            )
         assert captured["branch"] == "main"
         assert captured["repo_path"] == "/Users/test/repo"
 
@@ -140,18 +227,36 @@ class TestApiMemoryRecallBranch:
             captured.update(kwargs)
             return {"memories": [], "count": 0}
 
-        request = AsyncMock()
-        request.json = AsyncMock(
-            return_value={
+        recall_mock = bigfoot.mock("spellbook.mcp.routes:do_memory_recall")
+        recall_mock.calls(mock_do_memory_recall)
+
+        db_mock = bigfoot.mock("spellbook.mcp.routes:get_db_path")
+        db_mock.returns(db_path)
+
+        request = _make_request(
+            {
                 "namespace": "test-project",
                 "query": "test",
             }
         )
 
-        with patch("spellbook.mcp.routes.do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook.mcp.routes.get_db_path", return_value=db_path):
+        async with bigfoot:
             response = await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": None,
+                    "branch": "",
+                    "repo_path": "",
+                },
+            )
         assert captured["branch"] == ""
         assert captured["repo_path"] == ""
 
@@ -168,17 +273,30 @@ class TestMcpMemoryRecallBranch:
             captured.update(kwargs)
             return {"memories": [], "count": 0, "query": "", "namespace": "test-ns"}
 
-        mock_ctx = MagicMock()
         fake_project_path = "/Users/test/myproject"
+        expected_namespace = encode_cwd(fake_project_path)
+        mock_ctx = SimpleNamespace()
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db_path), \
-             patch(
-                 "spellbook.mcp.tools.memory.get_project_path_from_context",
-                 new_callable=AsyncMock, return_value=fake_project_path,
-             ), \
-             patch("spellbook.mcp.tools.memory.do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="feature-branch"), \
-             patch("spellbook.mcp.tools.memory.resolve_repo_root", return_value="/Users/test/myproject"):
+        db_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        db_mock.returns(db_path)
+
+        project_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_project_path(*args, **kwargs):
+            return fake_project_path
+
+        project_mock.calls(_return_project_path)
+
+        recall_mock = bigfoot.mock("spellbook.mcp.tools.memory:do_memory_recall")
+        recall_mock.calls(mock_do_memory_recall)
+
+        branch_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_current_branch")
+        branch_mock.returns("feature-branch")
+
+        repo_mock = bigfoot.mock("spellbook.mcp.tools.memory:resolve_repo_root")
+        repo_mock.returns("/Users/test/myproject")
+
+        async with bigfoot:
             await server.memory_recall.fn(
                 ctx=mock_ctx,
                 query="test query",
@@ -187,6 +305,24 @@ class TestMcpMemoryRecallBranch:
                 file_path="",
             )
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            project_mock.assert_call(args=(mock_ctx,), kwargs={})
+            repo_mock.assert_call(args=(fake_project_path,), kwargs={})
+            branch_mock.assert_call(args=("/Users/test/myproject",), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test query",
+                    "namespace": expected_namespace,
+                    "limit": 10,
+                    "file_path": None,
+                    "branch": "feature-branch",
+                    "repo_path": "/Users/test/myproject",
+                    "scope": "project",
+                },
+            )
         assert captured["branch"] == "feature-branch"
         assert captured["repo_path"] == "/Users/test/myproject"
 
@@ -208,16 +344,27 @@ class TestMcpMemoryStoreMemoriesBranch:
                 "memory_ids": [],
             }
 
-        mock_ctx = MagicMock()
         fake_project_path = "/Users/test/myproject"
+        expected_namespace = encode_cwd(fake_project_path)
+        mock_ctx = SimpleNamespace()
 
-        with patch("spellbook.mcp.tools.memory.get_db_path", return_value=db_path), \
-             patch(
-                 "spellbook.mcp.tools.memory.get_project_path_from_context",
-                 new_callable=AsyncMock, return_value=fake_project_path,
-             ), \
-             patch("spellbook.mcp.tools.memory.do_store_memories", side_effect=mock_do_store_memories), \
-             patch("spellbook.mcp.tools.memory.get_current_branch", return_value="dev-branch"):
+        db_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_db_path")
+        db_mock.returns(db_path)
+
+        project_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_project_path_from_context")
+
+        async def _return_project_path(*args, **kwargs):
+            return fake_project_path
+
+        project_mock.calls(_return_project_path)
+
+        store_mock = bigfoot.mock("spellbook.mcp.tools.memory:do_store_memories")
+        store_mock.calls(mock_do_store_memories)
+
+        branch_mock = bigfoot.mock("spellbook.mcp.tools.memory:get_current_branch")
+        branch_mock.returns("dev-branch")
+
+        async with bigfoot:
             await server.memory_store_memories.fn(
                 ctx=mock_ctx,
                 memories='{"memories": []}',
@@ -225,4 +372,19 @@ class TestMcpMemoryStoreMemoriesBranch:
                 namespace="",
             )
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            project_mock.assert_call(args=(mock_ctx,), kwargs={})
+            branch_mock.assert_call(args=(fake_project_path,), kwargs={})
+            store_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "memories_json": '{"memories": []}',
+                    "event_ids_str": "",
+                    "namespace": expected_namespace,
+                    "branch": "dev-branch",
+                    "scope": "project",
+                },
+            )
         assert captured["branch"] == "dev-branch"

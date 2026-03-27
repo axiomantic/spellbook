@@ -1,6 +1,6 @@
 ---
 name: creating-issues-and-pull-requests
-description: "Use when creating GitHub pull requests or issues with template compliance. Triggers: 'create a PR', 'open a pull request', 'file an issue', 'create issue', or invoked as delegate from finishing-a-development-branch Option 2. Discovers project templates, populates them from branch context, and creates via reliable gh CLI patterns."
+description: "Use when creating GitHub pull requests or issues with template compliance. Triggers: 'create a PR', 'open a pull request', 'file an issue', 'create issue'. Also invoked by finishing-a-development-branch. NOT for: deciding whether to merge or PR (use finishing-a-development-branch)."
 intro: |
   Creates GitHub issues and pull requests with proper template discovery and population. Finds project-specific templates, fills them from branch context, and handles naming conventions and target repository confirmation. A core spellbook capability that ensures PRs and issues respect the project's workflow constraints.
 ---

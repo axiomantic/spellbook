@@ -73,13 +73,15 @@ Development instructions for spellbook codebase. User-facing template: `AGENTS.s
 
 ## Supported Platforms
 
-| Platform | GitHub | Config Location | MCP Transport |
-|----------|--------|-----------------|---------------|
-| Claude Code | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
-| OpenCode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
-| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
-| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
-| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
+Claude Code is the **primary** supported platform with full support. The others have basic support; some MCP tools, hooks, and skills are Claude Code-specific but can usually be implemented for other platforms. Contributions to extend coverage are welcome.
+
+| Platform | Support Level | GitHub | Config Location | MCP Transport |
+|----------|---------------|--------|-----------------|---------------|
+| Claude Code | Primary, full | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
+| OpenCode | Basic | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
+| Codex | Basic | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
+| Gemini CLI | Basic | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
+| Crush | Basic | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
 
 **Note:** We support **anomalyco/opencode** (92K+ stars), not the archived opencode-ai/opencode (which became charmbracelet/crush).
 
@@ -206,6 +208,22 @@ commands/
 
 Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.
 
+### Sandbox & Security (Bigfoot)
+
+This project uses **bigfoot** to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
+
+**How to permit specific actions:**
+- **Subprocesses**: Use the `@pytest.mark.allow("subprocess")` marker on your test function.
+- **Network**: Use `@pytest.mark.allow("network")`.
+
+Example:
+```python
+@pytest.mark.allow("subprocess")
+def test_cli_invocation():
+    # This test is now allowed to use subprocess.run/Popen
+    ...
+```
+
 **Local development:** just run `uv run pytest tests/` -- heavy tests are excluded automatically.
 
 **To opt in to specific markers locally:**
@@ -218,6 +236,71 @@ uv run pytest tests/ -m "not docker" --override-ini="addopts="
 ```
 
 **Docker tests** only run in CI via `integration-test.yml` in a dedicated container. Never run locally.
+
+### Testing with Bigfoot
+
+Bigfoot is the ONLY mocking framework for this project. Do NOT use `unittest.mock` (no `patch()`, `MagicMock`, `AsyncMock`, `mock_open`, etc.).
+
+#### Why Bigfoot Instead of unittest.mock
+
+Bigfoot enforces three guarantees unittest.mock does not:
+1. **Every call must be pre-authorized** - unmocked calls raise `UnmockedInteractionError`
+2. **Every interaction must be asserted** - unasserted calls raise `UnassertedInteractionsError` at teardown
+3. **Every mock must fire** - unused mocks raise `UnusedMocksError`
+
+#### Quick Reference
+
+```python
+import bigfoot
+
+def test_example():
+    # Setup mocks
+    config = bigfoot.mock("myapp.config:get_setting")
+    config.returns("value")
+
+    # Execute in sandbox
+    with bigfoot:
+        result = my_function()
+
+    # Assert interactions (REQUIRED - bigfoot enforces this)
+    config.assert_call(args=("key",), kwargs={})
+```
+
+#### Common Patterns
+
+| Need | Pattern |
+|------|---------|
+| Mock a module attribute | `bigfoot.mock("module.path:attribute")` |
+| Mock an object method | `bigfoot.mock.object(obj, "method")` |
+| Return a value | `.returns(value)` |
+| Raise an exception | `.raises(ExceptionType(...))` |
+| Custom side effect | `.calls(my_function)` |
+| Multiple return values | `.returns(a).returns(b).returns(c)` |
+| Spy (call real + record) | `bigfoot.spy("module:attr")` |
+| Assert a call | `.assert_call(args=(...), kwargs={...})` |
+| Order-independent asserts | `with bigfoot.in_any_order(): ...` |
+| Optional mock (may not fire) | `.required(False)` |
+| Async function mock | Same API; use `async with bigfoot:` for sandbox |
+| Environment variables | Use `monkeypatch.setenv()` (pytest built-in) |
+
+#### Domain Plugins
+
+Use bigfoot's domain-specific plugins when applicable instead of generic mocks:
+- `bigfoot.http` for HTTP requests (httpx, requests)
+- `bigfoot.subprocess_mock` for subprocess calls
+- `bigfoot.database` for SQLite/database calls
+- `bigfoot.socket` for socket operations
+
+#### Guard Mode
+
+Guard mode is configured in `pyproject.toml`:
+```toml
+[tool.bigfoot]
+guard = "error"
+guard_allow = ["socket", "database", "subprocess", "http", "dns"]
+```
+
+This catches any real I/O that escapes the sandbox during tests. Use `@pytest.mark.allow("plugin")` for tests that intentionally make real calls.
 
 ## Pre-Commit Checklist
 

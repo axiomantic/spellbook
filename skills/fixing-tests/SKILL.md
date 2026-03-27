@@ -1,6 +1,6 @@
 ---
 name: fixing-tests
-description: "Use when tests themselves are broken, test quality is poor, or user wants to fix/improve tests. Triggers: 'test is broken', 'test is wrong', 'test is flaky', 'make tests pass', 'tests need updating', 'green mirage', 'tests pass but shouldn't', 'audit report findings', 'run and fix tests'. Three modes: fix specific tests, process green-mirage audit findings, and run-then-fix. NOT for: bugs in production code caught by correct tests (use debugging)."
+description: "Use when tests themselves are broken, test quality is poor, or user wants to fix/improve tests. Triggers: 'test is broken', 'test is wrong', 'test is flaky', 'make tests pass', 'tests need updating', 'green mirage', 'tests pass but shouldn't', 'audit report findings', 'run and fix tests'. NOT for: bugs in production code caught by correct tests (use debugging)."
 intro: |
   Diagnoses and fixes broken tests by classifying failure types (test bug vs code bug vs environment issue) and applying targeted repairs. Operates in three modes: fixing specific tests, processing green-mirage audit findings, and run-then-fix for batch repair. This core spellbook skill focuses on test reliability, not production code bugs.
 ---

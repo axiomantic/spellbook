@@ -4,7 +4,7 @@ End-of-branch workflow covering final verification, PR creation, merge strategy 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+> Use when implementation is complete, tests pass, and you need to decide the integration path. Triggers: 'done with this branch', 'ready to merge', 'ship it', 'wrap this up', 'how should I integrate this', 'what next after implementation'. NOT for: PR creation mechanics (use creating-issues-and-pull-requests).
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

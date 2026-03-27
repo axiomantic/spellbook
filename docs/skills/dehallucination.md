@@ -4,7 +4,7 @@ Verifies that claims, file references, and assertions in documents are grounded 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, develop workflow, and after deep-research verification.
+> Use when verifying that AI-generated claims, references, or assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by develop and deep-research. NOT for: verifying technical claims in code (use fact-checking).
 
 ## Workflow Diagram
 
@@ -107,40 +107,17 @@ flowchart TD
 ``````````markdown
 # Dehallucination
 
-<ROLE>
-Factual Verification Specialist. Your reputation depends on catching false claims before they propagate. Zero tolerance for ungrounded assertions. Hallucinations compound: one false claim becomes many bugs.
-</ROLE>
+<ROLE>Factual Verification Specialist. Adhere to AGENTS.spellbook.md.</ROLE>
 
 <analysis>Before verification: artifact under review, context sources, specific concerns, verification scope.</analysis>
 
-<reflection>After verification: all claims assessed, confidence levels assigned, hallucinations flagged, recovery actions defined.</reflection>
-
-## Evidence Hierarchy Reference
-
-This skill follows the shared evidence hierarchy defined in `skills/shared-references/evidence-hierarchy.md`. Confidence levels map to evidence tiers as follows:
-
-| Confidence Level | Evidence Tier Required |
-|-----------------|----------------------|
-| VERIFIED | Tier 1-2 (code trace, test execution) |
-| HIGH | Tier 1-3 (code trace, tests, project docs) |
-| MEDIUM | Tier 3-4 (project docs, external sources) |
-| LOW | Tier 5 only (git history) |
-| UNVERIFIED | Tier 6 only (insufficient, requires escalation) |
-| HALLUCINATION | Contradicted by Tier 1-2 evidence |
-
-<RULE>Claims about API capabilities, library features, or external service behavior MUST be verified against actual code or documentation (Tier 1-4), never from LLM memory alone.</RULE>
-
-## CoVe Self-Interrogation Reference
-
-This skill applies the Chain-of-Verification protocol defined in `skills/shared-references/cove-protocol.md` between Detection Protocol steps 2 and 3. After categorizing claims by risk, CoVe self-interrogation validates the categorization itself before verification begins. See the shared reference for the full three-step protocol and dehallucination integration notes.
+<reflection>After verification: claims assessed, confidence levels assigned, hallucinations flagged.</reflection>
 
 ## Invariant Principles
 
-1. **Claims Require Evidence**: Every factual assertion needs citation or explicit confidence level.
-2. **Uncertainty Is Honest**: "I don't know" beats a confident wrong answer.
-3. **Hallucinations Compound**: One false claim in requirements → many bugs in implementation.
-4. **Context Grounds Truth**: Verify against available context, not assumed knowledge.
-5. **Recovery Is Mandatory**: Detected hallucinations require explicit correction, not silent fixes.
+1. **Verify first**: Always check Tier 1-5 sources before accepting a claim.
+2. **Citation required**: Every verdict must cite specific evidence.
+3. **Trace spread**: When a hallucination is found, check all dependent artifacts.
 
 ## Inputs / Outputs
 
@@ -166,42 +143,16 @@ This skill applies the Chain-of-Verification protocol defined in `skills/shared-
 | **Phantom Dependencies** | Assuming unavailable dependencies | Check requirements, config |
 | **Temporal Confusion** | Mixing planned vs implemented | Check current codebase state |
 
-## Confidence Levels
+## Confidence Levels (Guidelines)
 
 | Level | Evidence Required |
 |-------|-------------------|
 | **VERIFIED** | Direct evidence (file, code, docs) |
 | **HIGH** | Multiple supporting signals |
-| **MEDIUM** | Context supports but not confirmed |
 | **LOW** | Limited or conflicting evidence |
-| **UNVERIFIED** | No supporting evidence |
 | **HALLUCINATION** | Evidence contradicts claim |
 
 ### Assessment Process
-
-1. Identify claim type: existence, behavior, constraint, or relationship
-2. Gather evidence: codebase, docs, deps, config
-3. Assign confidence based on evidence strength
-4. Document: `CLAIM: "[text]" | TYPE: [type] | EVIDENCE: [checked] | CONFIDENCE: [level]`
-
-## Mandatory Inconclusive Conditions
-
-This skill follows the shared mandatory inconclusive conditions from `skills/shared-references/evidence-hierarchy.md`. In addition:
-
-- Claims about API capabilities, library features, or external service behavior MUST be verified against actual code or documentation, never from LLM memory alone.
-- If the only evidence for a claim is Tier 6 (LLM parametric knowledge), the confidence MUST be UNVERIFIED, not MEDIUM or higher.
-
-## Depth Escalation
-
-When initial verification is inconclusive, escalate:
-
-1. **Shallow**: Check if file/function exists, pattern match imports
-2. **Medium**: Trace usage and behavior, read surrounding code, check dependencies
-3. **Deep**: Execute tests or verify runtime behavior
-
-<RULE>A claim that is inconclusive at Shallow depth MUST be escalated to Medium before assigning a final confidence level. A claim inconclusive at Medium should be escalated to Deep if feasible.</RULE>
-
-## Detection Protocol
 
 1. **Extract claims**: existence, capability, constraint, relationship statements
 2. **Categorize by risk**: Critical (security, deps, APIs) > High (implementation) > Medium (config) > Low (docs)

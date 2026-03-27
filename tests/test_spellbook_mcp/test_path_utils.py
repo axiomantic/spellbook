@@ -3,7 +3,22 @@
 import pytest
 import os
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from types import SimpleNamespace
+
+
+def _make_root(uri):
+    """Create a stub root object with a uri attribute."""
+    return SimpleNamespace(uri=uri)
+
+
+def _make_ctx(roots=None, error=None):
+    """Create a stub MCP context with an async list_roots method."""
+    async def list_roots():
+        if error is not None:
+            raise error
+        return roots if roots is not None else []
+
+    return SimpleNamespace(list_roots=list_roots)
 
 
 def test_encode_cwd_basic():
@@ -111,18 +126,12 @@ async def test_get_project_path_from_context_with_roots(monkeypatch):
     """Test extracting project path from MCP context roots."""
     from spellbook.core.path_utils import get_project_path_from_context
 
-    # Create a mock Root object
-    mock_root = MagicMock()
-    mock_root.uri = 'file:///Users/alice/Development/myproject'
-
-    # Create a mock context
-    mock_ctx = MagicMock()
-    mock_ctx.list_roots = AsyncMock(return_value=[mock_root])
+    mock_root = _make_root('file:///Users/alice/Development/myproject')
+    mock_ctx = _make_ctx(roots=[mock_root])
 
     result = await get_project_path_from_context(mock_ctx)
 
     assert result == '/Users/alice/Development/myproject'
-    mock_ctx.list_roots.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -132,9 +141,7 @@ async def test_get_project_path_from_context_no_roots(monkeypatch):
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/fallback/cwd')
 
-    # Context with empty roots
-    mock_ctx = MagicMock()
-    mock_ctx.list_roots = AsyncMock(return_value=[])
+    mock_ctx = _make_ctx(roots=[])
 
     result = await get_project_path_from_context(mock_ctx)
 
@@ -160,9 +167,7 @@ async def test_get_project_path_from_context_list_roots_error(monkeypatch):
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/fallback/cwd')
 
-    # Context that raises on list_roots
-    mock_ctx = MagicMock()
-    mock_ctx.list_roots = AsyncMock(side_effect=RuntimeError("MCP not connected"))
+    mock_ctx = _make_ctx(error=RuntimeError("MCP not connected"))
 
     result = await get_project_path_from_context(mock_ctx)
 
@@ -176,12 +181,8 @@ async def test_get_project_path_from_context_non_file_uri(monkeypatch):
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/fallback/cwd')
 
-    # Root with non-file URI
-    mock_root = MagicMock()
-    mock_root.uri = 'https://example.com/project'
-
-    mock_ctx = MagicMock()
-    mock_ctx.list_roots = AsyncMock(return_value=[mock_root])
+    mock_root = _make_root('https://example.com/project')
+    mock_ctx = _make_ctx(roots=[mock_root])
 
     result = await get_project_path_from_context(mock_ctx)
 
@@ -195,12 +196,8 @@ async def test_get_project_dir_from_context(monkeypatch):
 
     monkeypatch.delenv('SPELLBOOK_CONFIG_DIR', raising=False)
 
-    # Create mock context with root
-    mock_root = MagicMock()
-    mock_root.uri = 'file:///Users/alice/myproject'
-
-    mock_ctx = MagicMock()
-    mock_ctx.list_roots = AsyncMock(return_value=[mock_root])
+    mock_root = _make_root('file:///Users/alice/myproject')
+    mock_ctx = _make_ctx(roots=[mock_root])
 
     result = await get_project_dir_from_context(mock_ctx)
 

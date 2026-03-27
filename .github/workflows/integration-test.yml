@@ -34,7 +34,7 @@ jobs:
         mkdir -p tests/docker/results
         docker compose -f tests/docker/docker-compose.yml run \
           --rm integration-tests \
-          pytest tests/docker/ -v --tb=short --junitxml=/app/tests/docker/results/junit.xml
+          uv run pytest tests/docker/ -v --tb=short --junitxml=/app/tests/docker/results/junit.xml
 
     - name: Upload test results
       if: failure()

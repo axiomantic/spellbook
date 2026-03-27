@@ -1,6 +1,6 @@
 ---
 name: managing-artifacts
-description: Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path"
+description: "Use when generating documents, reports, plans, audits, or deciding where to save output files. Triggers: 'save report', 'write plan', 'where should I put this', 'where does this go', 'output directory', 'save this somewhere'."
 ---
 
 # Managing Artifacts

@@ -7,22 +7,27 @@ verifies the fix detects the correct format.
 
 import json
 import os
-from unittest.mock import patch
 
+import bigfoot
 import pytest
 
 from spellbook.sessions.compaction import check_for_compaction, CompactionEvent
 
 
 @pytest.fixture(autouse=True)
-def clean_state(tmp_path):
+def mock_mcp_token():
+    """Override the admin conftest autouse fixture (not needed for compaction tests)."""
+    yield
+
+
+@pytest.fixture(autouse=True)
+def clean_state(tmp_path, monkeypatch):
     """Use a temporary state file for each test."""
     state_file = tmp_path / "compaction_state.json"
-    with patch(
+    monkeypatch.setattr(
         "spellbook.sessions.compaction._get_state_file",
-        return_value=state_file,
-    ):
-        yield
+        lambda: state_file,
+    )
 
 
 @pytest.fixture
@@ -69,11 +74,14 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        with patch(
-            "spellbook.sessions.compaction._get_claude_session_dir",
-            return_value=session_base,
-        ):
+        session_dir_mock = bigfoot.mock(
+            "spellbook.sessions.compaction:_get_claude_session_dir",
+        ).returns(session_base)
+
+        with bigfoot:
             event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is not None
         assert isinstance(event, CompactionEvent)
@@ -91,11 +99,14 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        with patch(
-            "spellbook.sessions.compaction._get_claude_session_dir",
-            return_value=session_base,
-        ):
+        session_dir_mock = bigfoot.mock(
+            "spellbook.sessions.compaction:_get_claude_session_dir",
+        ).returns(session_base)
+
+        with bigfoot:
             event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is None
 
@@ -107,11 +118,14 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        with patch(
-            "spellbook.sessions.compaction._get_claude_session_dir",
-            return_value=session_base,
-        ):
+        session_dir_mock = bigfoot.mock(
+            "spellbook.sessions.compaction:_get_claude_session_dir",
+        ).returns(session_base)
+
+        with bigfoot:
             event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is None
 
@@ -124,11 +138,14 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        with patch(
-            "spellbook.sessions.compaction._get_claude_session_dir",
-            return_value=session_base,
-        ):
+        session_dir_mock = bigfoot.mock(
+            "spellbook.sessions.compaction:_get_claude_session_dir",
+        ).returns(session_base)
+
+        with bigfoot:
             event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is None
 
@@ -147,11 +164,14 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        with patch(
-            "spellbook.sessions.compaction._get_claude_session_dir",
-            return_value=session_base,
-        ):
+        session_dir_mock = bigfoot.mock(
+            "spellbook.sessions.compaction:_get_claude_session_dir",
+        ).returns(session_base)
+
+        with bigfoot:
             event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is not None
         assert isinstance(event, CompactionEvent)

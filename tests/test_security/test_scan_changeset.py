@@ -15,9 +15,10 @@ Validates:
 import subprocess
 import sys
 import textwrap
-from unittest.mock import patch
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 pytestmark = pytest.mark.integration
 
@@ -87,53 +88,85 @@ class TestGetGitDiff:
     """_get_git_diff runs git commands and returns diff text."""
 
     def test_staged_runs_git_diff_cached(self):
+        import spellbook.security.scanner as scanner_mod
         from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
-            mock_run.return_value.stdout = CLEAN_DIFF
-            mock_run.return_value.returncode = 0
+        captured_cmds = []
+
+        def capture_run(cmd, **kwargs):
+            captured_cmds.append(cmd)
+            return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
+
+        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run.calls(capture_run)
+
+        with bigfoot:
             result = _get_git_diff(staged=True)
-            mock_run.assert_called_once()
-            cmd = mock_run.call_args[0][0]
-            assert "diff" in cmd
-            assert "--cached" in cmd
-            assert result == CLEAN_DIFF
+
+        mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
+        assert "diff" in captured_cmds[0]
+        assert "--cached" in captured_cmds[0]
+        assert result == CLEAN_DIFF
 
     def test_base_runs_git_diff_triple_dot(self):
+        import spellbook.security.scanner as scanner_mod
         from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
-            mock_run.return_value.stdout = CLEAN_DIFF
-            mock_run.return_value.returncode = 0
+        captured_cmds = []
+
+        def capture_run(cmd, **kwargs):
+            captured_cmds.append(cmd)
+            return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
+
+        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run.calls(capture_run)
+
+        with bigfoot:
             result = _get_git_diff(base="main")
-            mock_run.assert_called_once()
-            cmd = mock_run.call_args[0][0]
-            assert "diff" in cmd
-            assert "main...HEAD" in cmd
-            assert result == CLEAN_DIFF
+
+        mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
+        assert "diff" in captured_cmds[0]
+        assert "main...HEAD" in captured_cmds[0]
+        assert result == CLEAN_DIFF
 
     def test_commit_runs_git_diff_range(self):
+        import spellbook.security.scanner as scanner_mod
         from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
-            mock_run.return_value.stdout = CLEAN_DIFF
-            mock_run.return_value.returncode = 0
+        captured_cmds = []
+
+        def capture_run(cmd, **kwargs):
+            captured_cmds.append(cmd)
+            return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
+
+        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run.calls(capture_run)
+
+        with bigfoot:
             result = _get_git_diff(commit="HEAD~3..HEAD")
-            mock_run.assert_called_once()
-            cmd = mock_run.call_args[0][0]
-            assert "diff" in cmd
-            assert "HEAD~3..HEAD" in cmd
-            assert result == CLEAN_DIFF
+
+        mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
+        assert "diff" in captured_cmds[0]
+        assert "HEAD~3..HEAD" in captured_cmds[0]
+        assert result == CLEAN_DIFF
 
     def test_git_failure_raises_system_exit(self):
+        import spellbook.security.scanner as scanner_mod
         from spellbook.security.scanner import _get_git_diff
 
-        with patch("spellbook.security.scanner.subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 128
-            mock_run.return_value.stderr = "fatal: not a git repository"
+        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run.returns(
+            subprocess.CompletedProcess(
+                [], returncode=128, stderr="fatal: not a git repository"
+            )
+        )
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 _get_git_diff(staged=True)
-            assert exc_info.value.code != 0
+
+        mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
+        assert exc_info.value.code != 0
 
     def test_no_args_raises_value_error(self):
         from spellbook.security.scanner import _get_git_diff
@@ -157,34 +190,58 @@ class TestCLIStaged:
     """CLI --staged flag runs git diff --cached and scans the result."""
 
     def test_staged_clean_diff_exits_zero(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(CLEAN_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code == 0
+
+        mock_diff.assert_call(args=(), kwargs={"staged": True})
+        assert exc_info.value.code == 0
 
     def test_staged_malicious_diff_exits_one(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(MALICIOUS_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code == 1
+
+        mock_diff.assert_call(args=(), kwargs={"staged": True})
+        assert exc_info.value.code == 1
 
     def test_staged_removal_only_exits_zero(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=REMOVAL_ONLY_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(REMOVAL_ONLY_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code == 0
+
+        mock_diff.assert_call(args=(), kwargs={"staged": True})
+        assert exc_info.value.code == 0
 
     def test_staged_empty_diff_exits_zero(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=""):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns("")
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code == 0
+
+        mock_diff.assert_call(args=(), kwargs={"staged": True})
+        assert exc_info.value.code == 0
 
     def test_staged_passes_staged_flag_to_get_git_diff(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns("")
+
+        with bigfoot:
             with pytest.raises(SystemExit):
                 scanner_main(["--staged"])
-            mock.assert_called_once_with(staged=True)
+
+        mock_diff.assert_call(args=(), kwargs={"staged": True})
 
 
 # ---------------------------------------------------------------------------
@@ -196,22 +253,36 @@ class TestCLIBase:
     """CLI --base BRANCH flag runs git diff BRANCH...HEAD and scans the result."""
 
     def test_base_clean_diff_exits_zero(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(CLEAN_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
-            assert exc_info.value.code == 0
+
+        mock_diff.assert_call(args=(), kwargs={"base": "main"})
+        assert exc_info.value.code == 0
 
     def test_base_malicious_diff_exits_one(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(MALICIOUS_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
-            assert exc_info.value.code == 1
+
+        mock_diff.assert_call(args=(), kwargs={"base": "main"})
+        assert exc_info.value.code == 1
 
     def test_base_passes_branch_to_get_git_diff(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns("")
+
+        with bigfoot:
             with pytest.raises(SystemExit):
                 scanner_main(["--base", "develop"])
-            mock.assert_called_once_with(base="develop")
+
+        mock_diff.assert_call(args=(), kwargs={"base": "develop"})
 
     def test_base_missing_branch_name_exits_two(self):
         """--base without a branch name should show usage and exit 2."""
@@ -229,22 +300,36 @@ class TestCLICommit:
     """CLI --commit RANGE flag runs git diff RANGE and scans the result."""
 
     def test_commit_clean_diff_exits_zero(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=CLEAN_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(CLEAN_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
-            assert exc_info.value.code == 0
+
+        mock_diff.assert_call(args=(), kwargs={"commit": "HEAD~3..HEAD"})
+        assert exc_info.value.code == 0
 
     def test_commit_malicious_diff_exits_one(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=MALICIOUS_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(MALICIOUS_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
-            assert exc_info.value.code == 1
+
+        mock_diff.assert_call(args=(), kwargs={"commit": "HEAD~3..HEAD"})
+        assert exc_info.value.code == 1
 
     def test_commit_passes_range_to_get_git_diff(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value="") as mock:
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns("")
+
+        with bigfoot:
             with pytest.raises(SystemExit):
                 scanner_main(["--commit", "abc123..def456"])
-            mock.assert_called_once_with(commit="abc123..def456")
+
+        mock_diff.assert_call(args=(), kwargs={"commit": "abc123..def456"})
 
     def test_commit_missing_range_exits_two(self):
         """--commit without a range should show usage and exit 2."""
@@ -262,16 +347,26 @@ class TestMultiFileChangeset:
     """Multiple files in a changeset are all scanned."""
 
     def test_staged_multi_file_detects_both(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(MULTI_FILE_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code == 1
+
+        mock_diff.assert_call(args=(), kwargs=IsInstance(dict))
+        assert exc_info.value.code == 1
 
     def test_base_multi_file_detects_both(self):
-        with patch("spellbook.security.scanner._get_git_diff", return_value=MULTI_FILE_DIFF):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.returns(MULTI_FILE_DIFF)
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
-            assert exc_info.value.code == 1
+
+        mock_diff.assert_call(args=(), kwargs=IsInstance(dict))
+        assert exc_info.value.code == 1
 
 
 # ---------------------------------------------------------------------------
@@ -283,31 +378,37 @@ class TestGitErrorHandling:
     """Proper error handling when git commands fail."""
 
     def test_staged_git_failure_exits_nonzero(self):
-        with patch(
-            "spellbook.security.scanner._get_git_diff",
-            side_effect=SystemExit(1),
-        ):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.raises(SystemExit(1))
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
-            assert exc_info.value.code != 0
+
+        mock_diff.assert_call(args=(), kwargs=IsInstance(dict), raised=IsInstance(SystemExit))
+        assert exc_info.value.code != 0
 
     def test_base_git_failure_exits_nonzero(self):
-        with patch(
-            "spellbook.security.scanner._get_git_diff",
-            side_effect=SystemExit(1),
-        ):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.raises(SystemExit(1))
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
-            assert exc_info.value.code != 0
+
+        mock_diff.assert_call(args=(), kwargs=IsInstance(dict), raised=IsInstance(SystemExit))
+        assert exc_info.value.code != 0
 
     def test_commit_git_failure_exits_nonzero(self):
-        with patch(
-            "spellbook.security.scanner._get_git_diff",
-            side_effect=SystemExit(1),
-        ):
+        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff.raises(SystemExit(1))
+
+        with bigfoot:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
-            assert exc_info.value.code != 0
+
+        mock_diff.assert_call(args=(), kwargs=IsInstance(dict), raised=IsInstance(SystemExit))
+        assert exc_info.value.code != 0
 
 
 # ---------------------------------------------------------------------------

@@ -1,9 +1,7 @@
 """Tests for the multi-target orchestration layer and cross-platform coupling."""
 
 import inspect
-import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -35,19 +33,23 @@ def _fake_platform_config(default_dir: Path):
 class TestMultiDirOrchestration:
     """Tests for multi-directory orchestration via resolve_config_dirs."""
 
-    def test_no_overrides_single_dir_per_platform(self, tmp_path):
+    def test_no_overrides_single_dir_per_platform(self, tmp_path, monkeypatch):
         """Without overrides, resolve_config_dirs returns 1 dir."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config), \
-             patch.dict(os.environ, {}, clear=True):
-            dirs = resolve_config_dirs("fake_platform")
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        monkeypatch.delenv("FAKE_CONFIG_DIR", raising=False)
+        dirs = resolve_config_dirs("fake_platform")
 
         assert len(dirs) == 1
 
-    def test_overrides_produce_multiple_dirs(self, tmp_path):
+    def test_overrides_produce_multiple_dirs(self, tmp_path, monkeypatch):
         """CLI overrides produce multiple dirs."""
+        import installer.config as config_mod
+
         default_dir = tmp_path / "default_config"
         dir1 = tmp_path / "dir1"
         dir2 = tmp_path / "dir2"
@@ -56,8 +58,8 @@ class TestMultiDirOrchestration:
             d.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        with patch("installer.config.PLATFORM_CONFIG", fake_config):
-            dirs = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2, dir3])
+        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
+        dirs = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2, dir3])
 
         assert len(dirs) == 3
         assert dirs == [dir1, dir2, dir3]

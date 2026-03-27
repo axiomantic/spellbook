@@ -1,7 +1,6 @@
 """Tests for pr_distill pattern blessing with validation."""
 
 import json
-from unittest.mock import patch
 
 import pytest
 
@@ -97,28 +96,28 @@ class TestValidatePatternId:
 class TestBlessPattern:
     """Test pattern blessing with validation."""
 
-    def test_bless_valid_pattern(self, tmp_path):
+    def test_bless_valid_pattern(self, tmp_path, monkeypatch):
         """Bless a valid pattern succeeds."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "my-pattern")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "my-pattern")
 
         assert result["success"] is True
         assert "my-pattern" in result["config"]["blessed_patterns"]
 
-    def test_bless_invalid_pattern(self, tmp_path):
+    def test_bless_invalid_pattern(self, tmp_path, monkeypatch):
         """Bless an invalid pattern fails with error."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "a")  # Too short
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "a")  # Too short
 
         assert result["success"] is False
         assert "error" in result
         assert "2-50 characters" in result["error"]
 
-    def test_bless_already_blessed_is_idempotent(self, tmp_path):
+    def test_bless_already_blessed_is_idempotent(self, tmp_path, monkeypatch):
         """Blessing an already-blessed pattern is idempotent."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -135,8 +134,8 @@ class TestBlessPattern:
         }
         config_file.write_text(json.dumps(existing_config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = bless_pattern(project_root, "my-pattern")
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = bless_pattern(project_root, "my-pattern")
 
         assert result["success"] is True
         # Should still have exactly one occurrence
@@ -146,16 +145,16 @@ class TestBlessPattern:
 class TestListBlessedPatterns:
     """Test listing blessed patterns."""
 
-    def test_list_empty_when_no_config(self, tmp_path):
+    def test_list_empty_when_no_config(self, tmp_path, monkeypatch):
         """Returns empty list when no config exists."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = list_blessed_patterns(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = list_blessed_patterns(project_root)
 
         assert result == []
 
-    def test_list_returns_blessed_patterns(self, tmp_path):
+    def test_list_returns_blessed_patterns(self, tmp_path, monkeypatch):
         """Returns list of blessed patterns from config."""
         project_root = "/Users/alice/project"
         config_dir = tmp_path / "Users-alice-project"
@@ -172,17 +171,17 @@ class TestListBlessedPatterns:
         }
         config_file.write_text(json.dumps(config))
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            result = list_blessed_patterns(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        result = list_blessed_patterns(project_root)
 
         assert result == ["pattern-1", "pattern-2"]
 
-    def test_list_after_blessing(self, tmp_path):
+    def test_list_after_blessing(self, tmp_path, monkeypatch):
         """List shows newly blessed patterns."""
         project_root = "/Users/alice/project"
 
-        with patch("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path)):
-            bless_pattern(project_root, "new-pattern")
-            result = list_blessed_patterns(project_root)
+        monkeypatch.setattr("spellbook.pr_distill.config.CONFIG_DIR", str(tmp_path))
+        bless_pattern(project_root, "new-pattern")
+        result = list_blessed_patterns(project_root)
 
         assert "new-pattern" in result

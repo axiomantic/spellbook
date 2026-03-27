@@ -6,6 +6,7 @@ CLI tests for distill-session.py helper script.
 import json
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -39,7 +40,7 @@ def test_cli_list_sessions(tmp_path):
         'distill_session.py'
     )
     result = subprocess.run(
-        ['python3', script_path, 'list-sessions', str(session_dir)],
+        [sys.executable, script_path, 'list-sessions', str(session_dir)],
         capture_output=True,
         text=True,
         timeout=30,

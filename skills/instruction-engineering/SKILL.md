@@ -1,6 +1,6 @@
 ---
 name: instruction-engineering
-description: "Use when crafting, improving, or reviewing prompts, system prompts, skill instructions, or any text that instructs an LLM. Triggers: 'write a prompt', 'prompt engineering', 'improve this prompt', 'design a system prompt', 'write skill instructions', 'craft agent instructions'. Provides CSO (Claude Search Optimization) guidance for skill descriptions. Also invoked by writing-skills."
+description: "Use when crafting, improving, or reviewing prompts, system prompts, skill instructions, or any text that instructs an LLM. Triggers: 'write a prompt', 'prompt engineering', 'improve this prompt', 'design a system prompt', 'write skill instructions', 'craft agent instructions'. Also invoked by writing-skills. NOT for: auditing existing prompts for ambiguity (use sharpening-prompts)."
 version: 3.0.0
 ---
 

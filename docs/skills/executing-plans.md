@@ -4,7 +4,7 @@ Executes implementation plans task by task, dispatching subagents for each step 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when you have a written implementation plan to execute
+> Use when you have an implementation plan ready to execute. Triggers: 'run the plan', 'start building', 'execute the tasks', 'implement the steps', 'next task in the plan', 'work through the plan'. Also invoked by develop after planning phase completes. NOT for: creating plans (use writing-plans).
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

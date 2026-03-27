@@ -137,6 +137,51 @@ def apply_security_config(
     return written_keys
 
 
+_SECURITY_LEVEL_PRESETS: Dict[str, Dict[str, bool]] = {
+    # Minimal: only passive content isolation; no key generation or API calls.
+    "minimal": {
+        "spotlighting": True,
+        "crypto": False,
+        "sleuth": False,
+        "lodo": False,
+    },
+    # Standard: passive isolation + cryptographic provenance (default wizard choice).
+    "standard": {
+        "spotlighting": True,
+        "crypto": True,
+        "sleuth": False,
+        "lodo": False,
+    },
+    # Strict: all defenses enabled; sleuth requires an API key configured separately.
+    "strict": {
+        "spotlighting": True,
+        "crypto": True,
+        "sleuth": True,
+        "lodo": True,
+    },
+}
+
+
+def security_level_to_selections(level: str) -> Dict[str, bool]:
+    """Convert a named security level to a feature-selections dict.
+
+    Args:
+        level: One of ``"minimal"``, ``"standard"``, or ``"strict"``.
+
+    Returns:
+        Mapping of feature id to enabled bool, suitable for passing to
+        :func:`apply_security_config` or ``Installer.run(security_selections=...)``.
+
+    Raises:
+        ValueError: If *level* is not a recognised preset name.
+    """
+    try:
+        return dict(_SECURITY_LEVEL_PRESETS[level])
+    except KeyError:
+        valid = ", ".join(sorted(_SECURITY_LEVEL_PRESETS))
+        raise ValueError(f"Unknown security level {level!r}. Valid levels: {valid}")
+
+
 def get_security_summary(selections: Dict[str, bool]) -> str:
     """Return a human-readable summary of security feature selections.
 

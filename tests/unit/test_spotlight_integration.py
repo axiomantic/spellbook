@@ -1,13 +1,18 @@
 """Integration test: full PostToolUse pipeline with spotlight + accumulator."""
+import contextlib
 import json
 import os
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
+import bigfoot
 
 
 # Add hooks dir to path for import
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
+
+# Number of optional return slots for mocks called variable times
+_MANY = 10
 
 
 def _import_hook():
@@ -25,6 +30,31 @@ def _import_hook():
             sys.path.remove(str(HOOKS_DIR))
 
 
+def _stub_hook_infra(hook):
+    """Create non-enforcing stubs for hook infrastructure (_mcp_call, _fire_and_forget).
+
+    Uses individual mock context managers (enforce=False) so interactions
+    do not require assertion -- these are pure stubs to prevent real I/O.
+
+    Returns a contextlib.ExitStack that the caller should use as a context manager.
+    """
+    stack = contextlib.ExitStack()
+
+    mock_mcp = bigfoot.mock.object(hook, "_mcp_call")
+    mock_mcp.__call__.required(False)
+    for _ in range(_MANY):
+        mock_mcp.__call__.returns(None)
+
+    mock_fire = bigfoot.mock.object(hook, "_fire_and_forget")
+    mock_fire.__call__.required(False)
+    for _ in range(_MANY):
+        mock_fire.__call__.returns(None)
+
+    stack.enter_context(mock_mcp)
+    stack.enter_context(mock_fire)
+    return stack
+
+
 def test_post_tool_use_webfetch_produces_spotlight_output():
     """WebFetch tool result should produce spotlight-wrapped output."""
     hook = _import_hook()
@@ -36,9 +66,7 @@ def test_post_tool_use_webfetch_produces_spotlight_output():
         "cwd": "/tmp/test",
     }
 
-    # Mock _mcp_call to avoid network calls, _fire_and_forget to avoid threads
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget"):
+    with _stub_hook_infra(hook):
         outputs = hook._handle_post_tool_use("WebFetch", data)
 
     # Should have at least one output with spotlight delimiters
@@ -60,8 +88,7 @@ def test_post_tool_use_websearch_produces_spotlight_output():
         "cwd": "/tmp/test",
     }
 
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget"):
+    with _stub_hook_infra(hook):
         outputs = hook._handle_post_tool_use("WebSearch", data)
 
     spotlight_outputs = [o for o in outputs if "[EXTERNAL_DATA_BEGIN" in o]
@@ -79,8 +106,7 @@ def test_post_tool_use_mcp_tool_produces_spotlight_output():
         "cwd": "/tmp/test",
     }
 
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget"):
+    with _stub_hook_infra(hook):
         outputs = hook._handle_post_tool_use("mcp__external__fetch_data", data)
 
     spotlight_outputs = [o for o in outputs if "[EXTERNAL_DATA_BEGIN" in o]
@@ -98,8 +124,7 @@ def test_post_tool_use_read_tool_no_spotlight():
         "cwd": "/tmp/test",
     }
 
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget"):
+    with _stub_hook_infra(hook):
         outputs = hook._handle_post_tool_use("Read", data)
 
     spotlight_outputs = [o for o in outputs if "EXTERNAL_DATA_BEGIN" in o]
@@ -120,13 +145,23 @@ def test_post_tool_use_fires_accumulator_for_external():
     }
 
     fire_calls = []
-    original_fire = hook._fire_and_forget
 
     def capture_fire(fn, *args):
         fire_calls.append((fn.__name__, args))
 
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget", side_effect=capture_fire):
+    # Stub _mcp_call (non-enforcing)
+    mock_mcp = bigfoot.mock.object(hook, "_mcp_call")
+    mock_mcp.__call__.required(False)
+    for _ in range(_MANY):
+        mock_mcp.__call__.returns(None)
+
+    # _fire_and_forget captures calls for assertion (non-enforcing)
+    mock_fire = bigfoot.mock.object(hook, "_fire_and_forget")
+    mock_fire.__call__.required(False)
+    for _ in range(_MANY):
+        mock_fire.__call__.calls(capture_fire)
+
+    with mock_mcp, mock_fire:
         hook._handle_post_tool_use("WebFetch", data)
 
     accumulator_calls = [c for c in fire_calls if c[0] == "_accumulator_write"]
@@ -151,9 +186,14 @@ def test_spotlight_disabled_via_config():
             return False
         return default
 
-    with patch.object(hook, "_mcp_call", return_value=None), \
-         patch.object(hook, "_fire_and_forget"), \
-         patch.object(hook, "_get_config_value", side_effect=config_with_disabled):
+    stack = _stub_hook_infra(hook)
+
+    mock_config = bigfoot.mock.object(hook, "_get_config_value")
+    mock_config.__call__.required(False)
+    for _ in range(_MANY):
+        mock_config.__call__.calls(config_with_disabled)
+
+    with stack, mock_config:
         outputs = hook._handle_post_tool_use("WebFetch", data)
 
     spotlight_outputs = [o for o in outputs if "EXTERNAL_DATA_BEGIN" in o]

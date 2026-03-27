@@ -1,4 +1,0 @@
-# Spellbook MCP daemon - top-level dependencies
-# Edit versions here, then run: scripts/update-daemon-deps.sh
-fastmcp==3.1.1
-fastapi==0.135.1

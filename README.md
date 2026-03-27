@@ -7,7 +7,7 @@
 
 <p align="center">
   <em>A structured skill system for AI coding assistants -- workflows, quality gates, and guardrails so they work more like experienced engineers.</em><br>
-  For Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
+  Primary platform: Claude Code. Basic support for OpenCode, Codex, Gemini CLI, and Crush.
 </p>
 
 <p align="center">
@@ -53,6 +53,7 @@
   - [Agents (7 total)](#agents-7-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
+  - [AI Coding Assistants](#ai-coding-assistants)
   - [Operating Systems](#operating-systems)
   - [YOLO Mode](#yolo-mode)
 - [Example Workflows](#example-workflows)
@@ -189,9 +190,9 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
-| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [security-trust-tiers], [generating-diagrams], [shared-references], [tooling-discovery] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [testing-strategy], [opportunity-awareness], [branch-context] |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -241,6 +242,13 @@ Reusable workflows for structured development:
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
+[session-mode-init]: https://axiomantic.github.io/spellbook/latest/skills/session-mode-init/
+[session-resume]: https://axiomantic.github.io/spellbook/latest/skills/session-resume/
+[audio-notifications]: https://axiomantic.github.io/spellbook/latest/skills/audio-notifications/
+[security-trust-tiers]: https://axiomantic.github.io/spellbook/latest/skills/security-trust-tiers/
+[testing-strategy]: https://axiomantic.github.io/spellbook/latest/skills/testing-strategy/
+[opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
+[branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
@@ -492,6 +500,18 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 </details>
 
 ## Platform Support
+
+### AI Coding Assistants
+
+| Platform | Support Level | Notes |
+|----------|---------------|-------|
+| **Claude Code** | Primary, full support | All features: skills, hooks, MCP tools, subagent orchestration |
+| **OpenCode** | Basic support | Skills, MCP server, YOLO agents. Some hooks and MCP tools are Claude Code-specific. |
+| **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
+| **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |
+| **Crush** | Basic support | Skills (native Agent Skills format), MCP server. Some hooks may not be available. |
+
+Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose. These features are noted in their documentation. Contributions to extend coverage for other platforms are welcome -- see [Contributing](#contributing).
 
 ### Operating Systems
 
@@ -1016,7 +1036,9 @@ Full documentation available at **[axiomantic.github.io/spellbook](https://axiom
 
 Spellbook requires **agent skills** support. Agent skills are prompt files that automatically activate based on trigger descriptions (e.g., "Use when implementing features" or "Use when tests are failing"). This is different from MCP tools or programmatic hooks.
 
-If your assistant supports agent skills with description-based triggers, see the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) for instructions on adding support. We appreciate contributions!
+If your assistant supports agent skills with description-based triggers, see the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) for instructions on adding support.
+
+**Improving platform coverage:** Claude Code is the primary supported platform. OpenCode, Codex, Gemini CLI, and Crush have basic support. Some MCP tools, hooks, and skills are Claude Code-specific, but they can usually be implemented for other platforms. If you use one of these platforms and want fuller coverage, contributions are welcome.
 
 ## Acknowledgments
 

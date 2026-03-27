@@ -4,7 +4,7 @@ Structured design exploration that evaluates multiple approaches against trade-o
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when develop provides discovery context for autonomous design.
+> Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also invoked by develop when design decisions are needed.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

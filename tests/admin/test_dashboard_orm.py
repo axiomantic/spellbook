@@ -6,116 +6,135 @@ instead of raw SQL query helpers.
 """
 
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from types import SimpleNamespace
 
+import bigfoot
+from dirty_equals import IsInstance
 import pytest
 
-from spellbook.db.coordination_models import Swarm
-from spellbook.db.fractal_models import FractalGraph
-from spellbook.db.spellbook_models import Experiment, Memory, SecurityEvent
 
+def _make_result_mock(value):
+    """Build a SimpleNamespace mimicking a SQLAlchemy result.
 
-@pytest.fixture
-def mock_event_bus():
-    """Mock the event_bus with subscriber_count and total_dropped_events."""
-    bus = MagicMock()
-    bus.subscriber_count = 2
-    bus.total_dropped_events = 5
-    return bus
+    For int values: result.scalar_one() returns the int.
+    For list values: result.scalars().all() returns the list.
+    """
+    if isinstance(value, int):
+        return SimpleNamespace(scalar_one=lambda: value)
+    else:
+        scalars_ns = SimpleNamespace(all=lambda: value)
+        return SimpleNamespace(scalars=lambda: scalars_ns)
 
 
 def _make_async_session_ctx(scalars_results):
-    """Build an async context manager that yields a mock session.
+    """Build an async context manager that yields a fake session.
 
-    scalars_results is a list of lists: each call to session.execute()
-    returns the next entry. For scalar_one() calls (counts), wrap in
-    a mock that returns the int. For scalars().all() calls (lists),
-    wrap accordingly.
+    scalars_results is a list: each call to session.execute()
+    returns the next entry, converted to a result namespace.
     """
     call_index = [0]
+    execute_count = [0]
 
     async def _execute(query):
         idx = call_index[0]
         call_index[0] += 1
-        result_mock = MagicMock()
-        value = scalars_results[idx]
-        if isinstance(value, int):
-            # For func.count() -> scalar_one()
-            result_mock.scalar_one.return_value = value
-        else:
-            # For list queries -> scalars().all()
-            scalars_mock = MagicMock()
-            scalars_mock.all.return_value = value
-            result_mock.scalars.return_value = scalars_mock
-        return result_mock
+        execute_count[0] += 1
+        return _make_result_mock(scalars_results[idx])
 
-    session = MagicMock()
-    session.execute = AsyncMock(side_effect=_execute)
+    session = SimpleNamespace(execute=_execute)
 
     @asynccontextmanager
     async def _ctx():
         yield session
 
-    return _ctx, session
+    return _ctx, execute_count
+
+
+def _setup_common_mocks(monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+                         subscriber_count=0, total_dropped_events=0,
+                         version="0.30.5", db_size=0, session_files=0,
+                         session_files_raises=None):
+    """Set up bigfoot mocks and monkeypatch for common dashboard test pattern.
+
+    Returns dict of bigfoot mock proxies for assertion.
+    """
+    import spellbook.admin.routes.dashboard as dashboard_mod
+
+    mock_spellbook = bigfoot.mock("spellbook.admin.routes.dashboard:get_spellbook_session")
+    mock_spellbook.calls(spellbook_ctx)
+
+    mock_coord = bigfoot.mock("spellbook.admin.routes.dashboard:get_coordination_session")
+    mock_coord.calls(coord_ctx)
+
+    mock_fractal = bigfoot.mock("spellbook.admin.routes.dashboard:get_fractal_session")
+    mock_fractal.calls(fractal_ctx)
+
+    # event_bus is accessed for attribute reads, not called -- use monkeypatch
+    fake_bus = SimpleNamespace(
+        subscriber_count=subscriber_count,
+        total_dropped_events=total_dropped_events,
+    )
+    monkeypatch.setattr(dashboard_mod, "event_bus", fake_bus)
+
+    mock_version = bigfoot.mock("spellbook.admin.routes.dashboard:pkg_version")
+    mock_version.returns(version)
+
+    mock_db_size = bigfoot.mock("spellbook.admin.routes.dashboard:_get_db_size")
+    mock_db_size.returns(db_size)
+
+    mock_session_files = bigfoot.mock("spellbook.admin.routes.dashboard:_count_session_files")
+    if session_files_raises is not None:
+        mock_session_files.raises(session_files_raises)
+    else:
+        mock_session_files.returns(session_files)
+
+    return {
+        "spellbook": mock_spellbook,
+        "coord": mock_coord,
+        "fractal": mock_fractal,
+        "version": mock_version,
+        "db_size": mock_db_size,
+        "session_files": mock_session_files,
+    }
+
+
+def _assert_common_calls(mocks, session_files_raised=None):
+    """Assert all common mocks were called."""
+    with bigfoot.in_any_order():
+        mocks["spellbook"].assert_call(args=(), kwargs={})
+        mocks["coord"].assert_call(args=(), kwargs={})
+        mocks["fractal"].assert_call(args=(), kwargs={})
+        mocks["version"].assert_call(args=("spellbook",), kwargs={})
+        mocks["db_size"].assert_call(args=(), kwargs={})
+        if session_files_raised is not None:
+            mocks["session_files"].assert_call(
+                args=(), kwargs={}, raised=session_files_raised,
+            )
+        else:
+            mocks["session_files"].assert_call(args=(), kwargs={})
 
 
 @pytest.mark.asyncio
-async def test_dashboard_data_uses_orm_sessions():
+async def test_dashboard_data_uses_orm_sessions(monkeypatch):
     """get_dashboard_data uses ORM sessions, not raw SQL query helpers."""
-    # Set up spellbook session: 5 execute calls
-    # 1. count active memories -> 200
-    # 2. count security events 24h -> 10
-    # 3. count running/paused experiments -> 1
-    # 4. recent security events (list) -> 1 item
-    # 5. recent memories (list) -> 1 item
-    sec_event = MagicMock(spec=SecurityEvent)
-    sec_event.event_type = "canary_check"
-    sec_event.created_at = "2026-03-14T12:00:00Z"
-    sec_event.detail = "Canary verified"
-
-    mem = MagicMock(spec=Memory)
-    mem.created_at = "2026-03-14T11:00:00Z"
-    mem.content = "Stored a new memory about testing patterns and conventions"
-
-    spellbook_ctx, spellbook_session = _make_async_session_ctx([
+    spellbook_ctx, spellbook_exec_count = _make_async_session_ctx([
         200,            # active memories count
         10,             # security events 24h count
         1,              # open experiments count
-        [sec_event],    # recent security events
-        [mem],          # recent memories
+        [SimpleNamespace(event_type="canary_check", created_at="2026-03-14T12:00:00Z", detail="Canary verified")],
+        [SimpleNamespace(created_at="2026-03-14T11:00:00Z", content="Stored a new memory about testing patterns and conventions")],
     ])
 
-    # Coordination session: 1 execute call - count running swarms
-    coord_ctx, coord_session = _make_async_session_ctx([2])
+    coord_ctx, coord_exec_count = _make_async_session_ctx([2])
+    fractal_ctx, fractal_exec_count = _make_async_session_ctx([4])
 
-    # Fractal session: 1 execute call - count graphs
-    fractal_ctx, fractal_session = _make_async_session_ctx([4])
+    mocks = _setup_common_mocks(
+        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+        subscriber_count=2, total_dropped_events=5,
+        db_size=2048, session_files=3,
+    )
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=spellbook_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=coord_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=fractal_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=2048,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        return_value=3,
-    ):
-        mock_bus.subscriber_count = 2
-        mock_bus.total_dropped_events = 5
-
+    async with bigfoot:
         from spellbook.admin.routes.dashboard import get_dashboard_data
 
         result = await get_dashboard_data()
@@ -152,13 +171,15 @@ async def test_dashboard_data_uses_orm_sessions():
     }
 
     # Verify ORM sessions were actually used (execute was called)
-    assert spellbook_session.execute.call_count == 5
-    assert coord_session.execute.call_count == 1
-    assert fractal_session.execute.call_count == 1
+    assert spellbook_exec_count[0] == 5
+    assert coord_exec_count[0] == 1
+    assert fractal_exec_count[0] == 1
+
+    _assert_common_calls(mocks)
 
 
 @pytest.mark.asyncio
-async def test_dashboard_data_orm_handles_session_errors():
+async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
     """Dashboard returns safe defaults when ORM sessions raise exceptions."""
 
     @asynccontextmanager
@@ -166,30 +187,12 @@ async def test_dashboard_data_orm_handles_session_errors():
         raise Exception("DB locked")
         yield  # pragma: no cover
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=0,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        side_effect=Exception("Filesystem error"),
-    ):
-        mock_bus.subscriber_count = 0
-        mock_bus.total_dropped_events = 0
+    mocks = _setup_common_mocks(
+        monkeypatch, _failing_session, _failing_session, _failing_session,
+        session_files_raises=Exception("Filesystem error"),
+    )
 
+    async with bigfoot:
         from spellbook.admin.routes.dashboard import get_dashboard_data
 
         result = await get_dashboard_data()
@@ -205,51 +208,27 @@ async def test_dashboard_data_orm_handles_session_errors():
     }
     assert result["recent_activity"] == []
 
+    _assert_common_calls(mocks, session_files_raised=IsInstance(Exception))
+
 
 @pytest.mark.asyncio
-async def test_dashboard_data_orm_memory_content_truncated_to_80_chars():
+async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypatch):
     """Recent memories truncate content to 80 characters in the summary."""
     long_content = "A" * 200
 
-    mem = MagicMock(spec=Memory)
-    mem.created_at = "2026-03-14T11:00:00Z"
-    mem.content = long_content
-
     spellbook_ctx, _ = _make_async_session_ctx([
-        0,          # active memories count
-        0,          # security events 24h count
-        0,          # open experiments count
-        [],         # recent security events
-        [mem],      # recent memories with long content
+        0, 0, 0,
+        [],
+        [SimpleNamespace(created_at="2026-03-14T11:00:00Z", content=long_content)],
     ])
-
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=spellbook_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=coord_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=fractal_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=0,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        return_value=0,
-    ):
-        mock_bus.subscriber_count = 0
-        mock_bus.total_dropped_events = 0
+    mocks = _setup_common_mocks(
+        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+    )
 
+    async with bigfoot:
         from spellbook.admin.routes.dashboard import get_dashboard_data
 
         result = await get_dashboard_data()
@@ -262,57 +241,28 @@ async def test_dashboard_data_orm_memory_content_truncated_to_80_chars():
         "summary": "A" * 80,
     }
 
+    _assert_common_calls(mocks)
+
 
 @pytest.mark.asyncio
-async def test_dashboard_data_orm_security_event_detail_fallback():
+async def test_dashboard_data_orm_security_event_detail_fallback(monkeypatch):
     """Security events use detail for summary, falling back to event_type."""
-    # Event with detail
-    ev_with_detail = MagicMock(spec=SecurityEvent)
-    ev_with_detail.event_type = "canary_check"
-    ev_with_detail.created_at = "2026-03-14T12:00:00Z"
-    ev_with_detail.detail = "Canary verified"
-
-    # Event without detail (None)
-    ev_without_detail = MagicMock(spec=SecurityEvent)
-    ev_without_detail.event_type = "mode_change"
-    ev_without_detail.created_at = "2026-03-14T11:00:00Z"
-    ev_without_detail.detail = None
-
     spellbook_ctx, _ = _make_async_session_ctx([
-        0,  # active memories count
-        0,  # security events 24h count
-        0,  # open experiments count
-        [ev_with_detail, ev_without_detail],  # recent security events
-        [],  # recent memories
+        0, 0, 0,
+        [
+            SimpleNamespace(event_type="canary_check", created_at="2026-03-14T12:00:00Z", detail="Canary verified"),
+            SimpleNamespace(event_type="mode_change", created_at="2026-03-14T11:00:00Z", detail=None),
+        ],
+        [],
     ])
-
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=spellbook_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=coord_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=fractal_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=0,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        return_value=0,
-    ):
-        mock_bus.subscriber_count = 0
-        mock_bus.total_dropped_events = 0
+    mocks = _setup_common_mocks(
+        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+    )
 
+    async with bigfoot:
         from spellbook.admin.routes.dashboard import get_dashboard_data
 
         result = await get_dashboard_data()
@@ -330,56 +280,25 @@ async def test_dashboard_data_orm_security_event_detail_fallback():
         },
     ]
 
+    _assert_common_calls(mocks)
+
 
 @pytest.mark.asyncio
-async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc():
+async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch):
     """Recent activity merges security events and memories, sorted desc."""
-    # Older security event
-    sec_event = MagicMock(spec=SecurityEvent)
-    sec_event.event_type = "login"
-    sec_event.created_at = "2026-03-14T10:00:00Z"
-    sec_event.detail = "Login event"
-
-    # Newer memory
-    mem = MagicMock(spec=Memory)
-    mem.created_at = "2026-03-14T12:00:00Z"
-    mem.content = "Recent memory"
-
     spellbook_ctx, _ = _make_async_session_ctx([
-        0,            # active memories count
-        0,            # security events 24h count
-        0,            # open experiments count
-        [sec_event],  # recent security events (older)
-        [mem],        # recent memories (newer)
+        0, 0, 0,
+        [SimpleNamespace(event_type="login", created_at="2026-03-14T10:00:00Z", detail="Login event")],
+        [SimpleNamespace(created_at="2026-03-14T12:00:00Z", content="Recent memory")],
     ])
-
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=spellbook_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=coord_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=fractal_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=0,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        return_value=0,
-    ):
-        mock_bus.subscriber_count = 0
-        mock_bus.total_dropped_events = 0
+    mocks = _setup_common_mocks(
+        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+    )
 
+    async with bigfoot:
         from spellbook.admin.routes.dashboard import get_dashboard_data
 
         result = await get_dashboard_data()
@@ -397,3 +316,5 @@ async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc():
             "summary": "Login event",
         },
     ]
+
+    _assert_common_calls(mocks)

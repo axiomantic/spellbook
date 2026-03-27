@@ -14,8 +14,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
 
+import bigfoot
 import pytest
 
 
@@ -85,6 +85,26 @@ def home_dir(tmp_path):
     return home
 
 
+def _fake_platform_installer(platform_name, platform_id, call_order=None):
+    """Create a fake platform installer class instance."""
+    class FakeStatus:
+        available = True
+        installed = False
+
+    class FakeInstaller:
+        def __init__(self):
+            self.platform_name = platform_name
+            self.platform_id = platform_id
+        def install(self, force=False, skip_global_steps=False):
+            if call_order is not None:
+                call_order.append(f"platform_install:{platform_id}")
+            return []
+        def detect(self):
+            return FakeStatus()
+
+    return FakeInstaller()
+
+
 # ---------------------------------------------------------------------------
 # 1. Centralized daemon install in Installer.run()
 # ---------------------------------------------------------------------------
@@ -97,38 +117,23 @@ class TestInstallerRunDaemonCentralized:
         from installer.core import Installer
 
         monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
+        monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
 
         call_order = []
 
-        original_install_daemon = None
-
-        def mock_install_daemon(sb_dir, dry_run=False):
+        def mock_install_daemon(*args, **kwargs):
             call_order.append("install_daemon")
             return (True, "daemon installed")
 
-        def mock_get_platform_installer(platform, sb_dir, version, dry_run=False, on_step=None, **kwargs):
-            mock_installer = MagicMock()
-            mock_installer.platform_name = platform
-            mock_installer.platform_id = platform
+        def mock_get_platform_installer(platform, *args, **kwargs):
+            return _fake_platform_installer(platform, platform, call_order)
 
-            def mock_install(force=False, skip_global_steps=False):
-                call_order.append(f"platform_install:{platform}")
-                return []
-            mock_installer.install = mock_install
+        monkeypatch.setattr("installer.core.get_platform_installer", mock_get_platform_installer)
+        monkeypatch.setattr("installer.components.mcp.install_daemon", mock_install_daemon)
 
-            status = MagicMock()
-            status.available = True
-            status.installed = False
-            mock_installer.detect.return_value = status
-            return mock_installer
-
-        monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
-
-        with patch("installer.core.get_platform_installer", side_effect=mock_get_platform_installer), \
-             patch("installer.components.mcp.install_daemon", side_effect=mock_install_daemon), \
-             patch("installer.demarcation.get_installed_version", return_value=None):
-            installer = Installer(spellbook_dir)
-            session = installer.run(platforms=["claude_code", "opencode"], dry_run=False)
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code", "opencode"], dry_run=False)
 
         assert call_order[0] == "install_daemon"
         platform_installs = [c for c in call_order if c.startswith("platform_install:")]
@@ -148,19 +153,15 @@ class TestInstallerRunDaemonCentralized:
         def on_progress(event, data):
             events.append(event)
 
-        mock_installer = MagicMock()
-        mock_installer.platform_name = "Claude Code"
-        mock_installer.platform_id = "claude_code"
-        mock_installer.install.return_value = []
-        status = MagicMock()
-        status.available = True
-        mock_installer.detect.return_value = status
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Claude Code", "claude_code"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "healthy"))
 
-        with patch("installer.core.get_platform_installer", return_value=mock_installer), \
-             patch("installer.components.mcp.install_daemon", return_value=(True, "ok")), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "healthy")):
-            installer = Installer(spellbook_dir)
-            installer.run(platforms=["claude_code"], dry_run=False, on_progress=on_progress)
+        installer = Installer(spellbook_dir)
+        installer.run(platforms=["claude_code"], dry_run=False, on_progress=on_progress)
 
         # daemon_start comes first, then step (installing daemon), then result
         assert events[0] == "daemon_start"
@@ -185,20 +186,15 @@ class TestInstallerRunDaemonCentralized:
         monkeypatch.setattr(Path, "home", lambda: home_dir)
         monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
         monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "daemon ok"))
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "healthy"))
 
-        with patch("installer.core.get_platform_installer") as mock_gpi, \
-             patch("installer.components.mcp.install_daemon", return_value=(True, "daemon ok")), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "healthy")):
-
-            mock_pi = MagicMock()
-            mock_pi.platform_name = "Test"
-            mock_pi.platform_id = "test"
-            mock_pi.install.return_value = []
-            mock_pi.detect.return_value = MagicMock(available=True)
-            mock_gpi.return_value = mock_pi
-
-            installer = Installer(spellbook_dir)
-            session = installer.run(platforms=["claude_code"], dry_run=False)
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=False)
 
         daemon_results = [r for r in session.results if r.component == "mcp_daemon"]
         assert len(daemon_results) == 1
@@ -212,20 +208,24 @@ class TestInstallerRunDaemonCentralized:
         monkeypatch.setattr(Path, "home", lambda: home_dir)
         monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
         monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
 
-        mock_pi = MagicMock()
-        mock_pi.platform_name = "Test"
-        mock_pi.platform_id = "test"
-        mock_pi.install.return_value = []
-        mock_pi.detect.return_value = MagicMock(available=True)
+        health_called = []
 
-        with patch("installer.core.get_platform_installer", return_value=mock_pi), \
-             patch("installer.components.mcp.install_daemon", return_value=(True, "ok")), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "healthy")) as mock_health:
-            installer = Installer(spellbook_dir)
-            session = installer.run(platforms=["claude_code"], dry_run=False)
+        def track_health(*args, **kwargs):
+            health_called.append(True)
+            return (True, "healthy")
 
-        mock_health.assert_called_once()
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", track_health)
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=False)
+
+        assert len(health_called) == 1
         health_results = [r for r in session.results if r.component == "mcp_health"]
         assert len(health_results) == 1
         assert health_results[0].platform == "system"
@@ -237,20 +237,24 @@ class TestInstallerRunDaemonCentralized:
         monkeypatch.setattr(Path, "home", lambda: home_dir)
         monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
         monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
 
-        mock_pi = MagicMock()
-        mock_pi.platform_name = "Test"
-        mock_pi.platform_id = "test"
-        mock_pi.install.return_value = []
-        mock_pi.detect.return_value = MagicMock(available=True)
+        health_called = []
 
-        with patch("installer.core.get_platform_installer", return_value=mock_pi), \
-             patch("installer.components.mcp.install_daemon", return_value=(True, "ok")), \
-             patch("installer.components.mcp.check_daemon_health") as mock_health:
-            installer = Installer(spellbook_dir)
-            session = installer.run(platforms=["claude_code"], dry_run=True)
+        def track_health(*args, **kwargs):
+            health_called.append(True)
+            return (True, "healthy")
 
-        mock_health.assert_not_called()
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", track_health)
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=True)
+
+        assert len(health_called) == 0
         health_results = [r for r in session.results if r.component == "mcp_health"]
         assert len(health_results) == 0
 
@@ -261,20 +265,24 @@ class TestInstallerRunDaemonCentralized:
         monkeypatch.setattr(Path, "home", lambda: home_dir)
         monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
         monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (False, "venv failed"))
 
-        mock_pi = MagicMock()
-        mock_pi.platform_name = "Test"
-        mock_pi.platform_id = "test"
-        mock_pi.install.return_value = []
-        mock_pi.detect.return_value = MagicMock(available=True)
+        health_called = []
 
-        with patch("installer.core.get_platform_installer", return_value=mock_pi), \
-             patch("installer.components.mcp.install_daemon", return_value=(False, "venv failed")), \
-             patch("installer.components.mcp.check_daemon_health") as mock_health:
-            installer = Installer(spellbook_dir)
-            session = installer.run(platforms=["claude_code"], dry_run=False)
+        def track_health(*args, **kwargs):
+            health_called.append(True)
+            return (True, "healthy")
 
-        mock_health.assert_not_called()
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", track_health)
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=False)
+
+        assert len(health_called) == 0
         daemon_results = [r for r in session.results if r.component == "mcp_daemon"]
         assert daemon_results[0].success is False
         assert daemon_results[0].action == "failed"
@@ -293,15 +301,19 @@ class TestPlatformInstallersNoInstallDaemon:
 
         config_dir = home_dir / ".claude"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr("installer.platforms.claude_code.check_claude_cli_available", lambda: False)
+        monkeypatch.setattr("installer.components.mcp.check_claude_cli_available", lambda: False)
+
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
 
         installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
 
-        with patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False), \
-             patch("installer.components.mcp.check_claude_cli_available", return_value=False), \
-             patch("installer.components.mcp.install_daemon") as mock_daemon:
-            installer.install()
-
-        mock_daemon.assert_not_called()
+        assert len(daemon_called) == 0
 
     def test_codex_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
         """CodexInstaller.install() does not call install_daemon."""
@@ -310,12 +322,16 @@ class TestPlatformInstallersNoInstallDaemon:
         config_dir = home_dir / ".codex"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
 
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
+
         installer = CodexInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
 
-        with patch("installer.components.mcp.install_daemon") as mock_daemon:
-            installer.install()
-
-        mock_daemon.assert_not_called()
+        assert len(daemon_called) == 0
 
     def test_gemini_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
         """GeminiInstaller.install() does not call install_daemon."""
@@ -323,15 +339,19 @@ class TestPlatformInstallersNoInstallDaemon:
 
         config_dir = home_dir / ".gemini"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr("installer.platforms.gemini.check_gemini_cli_available", lambda: True)
+        monkeypatch.setattr("installer.platforms.gemini.link_extension", lambda *a, **kw: (True, "ok"))
+
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
 
         installer = GeminiInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
 
-        with patch("installer.platforms.gemini.check_gemini_cli_available", return_value=True), \
-             patch("installer.platforms.gemini.link_extension", return_value=(True, "ok")), \
-             patch("installer.components.mcp.install_daemon") as mock_daemon:
-            installer.install()
-
-        mock_daemon.assert_not_called()
+        assert len(daemon_called) == 0
 
     def test_crush_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
         """CrushInstaller.install() does not call install_daemon."""
@@ -340,12 +360,16 @@ class TestPlatformInstallersNoInstallDaemon:
         config_dir = home_dir / ".local" / "share" / "crush"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
 
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
+
         installer = CrushInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
 
-        with patch("installer.components.mcp.install_daemon") as mock_daemon:
-            installer.install()
-
-        mock_daemon.assert_not_called()
+        assert len(daemon_called) == 0
 
     def test_opencode_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
         """OpenCodeInstaller.install() does not call install_daemon."""
@@ -354,12 +378,16 @@ class TestPlatformInstallersNoInstallDaemon:
         config_dir = home_dir / ".config" / "opencode"
         monkeypatch.setattr(Path, "home", lambda: home_dir)
 
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
+
         installer = OpenCodeInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
 
-        with patch("installer.components.mcp.install_daemon") as mock_daemon:
-            installer.install()
-
-        mock_daemon.assert_not_called()
+        assert len(daemon_called) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -369,7 +397,7 @@ class TestPlatformInstallersNoInstallDaemon:
 class TestCheckDaemonHealth:
     """Test all return paths of check_daemon_health()."""
 
-    def test_healthy_response(self):
+    def test_healthy_response(self, monkeypatch):
         """Returns (True, message) with version and uptime on success."""
         from installer.components.mcp import check_daemon_health
 
@@ -379,67 +407,86 @@ class TestCheckDaemonHealth:
             "uptime_seconds": 42.5,
         }).encode()
 
-        mock_resp = MagicMock()
-        mock_resp.status = 200
-        mock_resp.read.return_value = response_body
-        mock_resp.__enter__ = lambda s: s
-        mock_resp.__exit__ = MagicMock(return_value=False)
+        class FakeResponse:
+            status = 200
+            def read(self):
+                return response_body
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
 
-        with patch("urllib.request.urlopen", return_value=mock_resp):
-            healthy, msg = check_daemon_health()
+        monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResponse())
+
+        healthy, msg = check_daemon_health()
 
         assert healthy is True
         assert "v0.10.0" in msg
         assert "42s" in msg
 
-    def test_url_error(self):
+    def test_url_error(self, monkeypatch):
         """Returns (False, message) on URLError (daemon not running)."""
         from installer.components.mcp import check_daemon_health
         from urllib.error import URLError
 
-        with patch("urllib.request.urlopen", side_effect=URLError("Connection refused")):
-            healthy, msg = check_daemon_health()
+        def raise_url_error(*args, **kwargs):
+            raise URLError("Connection refused")
+
+        monkeypatch.setattr("urllib.request.urlopen", raise_url_error)
+
+        healthy, msg = check_daemon_health()
 
         assert healthy is False
         assert "daemon not responding" in msg
         assert "Connection refused" in msg
 
-    def test_timeout_error(self):
+    def test_timeout_error(self, monkeypatch):
         """Returns (False, message) on TimeoutError."""
         from installer.components.mcp import check_daemon_health
 
-        with patch("urllib.request.urlopen", side_effect=TimeoutError()):
-            healthy, msg = check_daemon_health()
+        def raise_timeout(*args, **kwargs):
+            raise TimeoutError()
+
+        monkeypatch.setattr("urllib.request.urlopen", raise_timeout)
+
+        healthy, msg = check_daemon_health()
 
         assert healthy is False
         assert "timed out" in msg
 
-    def test_non_200_status(self):
+    def test_non_200_status(self, monkeypatch):
         """Returns (False, message) on non-200 HTTP status."""
         from installer.components.mcp import check_daemon_health
 
-        mock_resp = MagicMock()
-        mock_resp.status = 500
-        mock_resp.__enter__ = lambda s: s
-        mock_resp.__exit__ = MagicMock(return_value=False)
+        class FakeResponse:
+            status = 500
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
 
-        with patch("urllib.request.urlopen", return_value=mock_resp):
-            healthy, msg = check_daemon_health()
+        monkeypatch.setattr("urllib.request.urlopen", lambda *a, **kw: FakeResponse())
+
+        healthy, msg = check_daemon_health()
 
         assert healthy is False
         assert "HTTP 500" in msg
 
-    def test_os_error(self):
+    def test_os_error(self, monkeypatch):
         """Returns (False, message) on generic OSError."""
         from installer.components.mcp import check_daemon_health
 
-        with patch("urllib.request.urlopen", side_effect=OSError("Network unreachable")):
-            healthy, msg = check_daemon_health()
+        def raise_os_error(*args, **kwargs):
+            raise OSError("Network unreachable")
+
+        monkeypatch.setattr("urllib.request.urlopen", raise_os_error)
+
+        healthy, msg = check_daemon_health()
 
         assert healthy is False
         assert "daemon not responding" in msg
 
-    def test_custom_timeout_value(self):
+    def test_custom_timeout_value(self, monkeypatch):
         """Timeout parameter is passed to urlopen."""
         from installer.components.mcp import check_daemon_health
 
@@ -449,18 +496,30 @@ class TestCheckDaemonHealth:
             "uptime_seconds": 0,
         }).encode()
 
-        mock_resp = MagicMock()
-        mock_resp.status = 200
-        mock_resp.read.return_value = response_body
-        mock_resp.__enter__ = lambda s: s
-        mock_resp.__exit__ = MagicMock(return_value=False)
+        class FakeResponse:
+            status = 200
+            def read(self):
+                return response_body
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
 
-        with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
-            check_daemon_health(timeout=30)
+        captured_args = {}
+
+        def fake_urlopen(*args, **kwargs):
+            captured_args["args"] = args
+            captured_args["kwargs"] = kwargs
+            return FakeResponse()
+
+        monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+        check_daemon_health(timeout=30)
 
         # Verify timeout was passed
-        args, kwargs = mock_urlopen.call_args
-        assert kwargs.get("timeout") == 30 or (len(args) > 1 and args[1] == 30)
+        assert captured_args["kwargs"].get("timeout") == 30 or (
+            len(captured_args["args"]) > 1 and captured_args["args"][1] == 30
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -520,59 +579,69 @@ class TestGetDaemonPython:
 class TestGetRepairs:
     """Test _get_repairs() uses find_spec instead of importing kokoro."""
 
-    def test_tts_enabled_kokoro_missing(self):
+    def test_tts_enabled_kokoro_missing(self, monkeypatch):
         """Returns tts-deps-missing repair when TTS enabled but kokoro not installed."""
         from spellbook.core.config import _get_repairs
 
-        with patch("spellbook.core.config.config_get", return_value=True) as mock_cg, \
-             patch("importlib.util.find_spec", return_value=None):
-            repairs = _get_repairs()
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+        monkeypatch.setattr("importlib.util.find_spec", lambda name: None)
 
-        mock_cg.assert_any_call("tts_enabled")
+        repairs = _get_repairs()
+
         tts_repairs = [r for r in repairs if r["id"] == "tts-deps-missing"]
         assert len(tts_repairs) == 1
         assert tts_repairs[0]["severity"] == "warning"
 
-    def test_tts_not_enabled_no_repair(self):
+    def test_tts_not_enabled_no_repair(self, monkeypatch):
         """Returns no TTS repair when TTS is not enabled."""
         from spellbook.core.config import _get_repairs
 
-        with patch("spellbook.core.config.config_get", return_value=False):
-            repairs = _get_repairs()
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: False)
+
+        repairs = _get_repairs()
 
         tts_repairs = [r for r in repairs if "tts" in r.get("id", "")]
         assert len(tts_repairs) == 0
 
-    def test_tts_enabled_kokoro_installed(self):
+    def test_tts_enabled_kokoro_installed(self, monkeypatch):
         """No tts-deps-missing repair when both kokoro and soundfile are present."""
         from spellbook.core.config import _get_repairs
 
+        class FakeSpec:
+            def __init__(self, name):
+                self.name = name
+
         def mock_find_spec(name):
             if name in ("kokoro", "soundfile", "pip"):
-                mock = MagicMock()
-                mock.name = name
-                return mock
+                return FakeSpec(name)
             return None
 
-        with patch("spellbook.core.config.config_get", return_value=True), \
-             patch("importlib.util.find_spec", side_effect=mock_find_spec):
-            repairs = _get_repairs()
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+        monkeypatch.setattr("importlib.util.find_spec", mock_find_spec)
+
+        repairs = _get_repairs()
 
         tts_deps_repairs = [r for r in repairs if r["id"] == "tts-deps-missing"]
         assert len(tts_deps_repairs) == 0
 
-    def test_find_spec_used_not_import(self):
+    def test_find_spec_used_not_import(self, monkeypatch):
         """Verify find_spec is called, not direct import of kokoro."""
         from spellbook.core.config import _get_repairs
 
-        with patch("spellbook.core.config.config_get", return_value=True), \
-             patch("importlib.util.find_spec") as mock_fs:
-            mock_fs.return_value = None
-            _get_repairs()
+        find_spec_calls = []
+
+        def tracking_find_spec(name):
+            find_spec_calls.append(name)
+            return None
+
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+        monkeypatch.setattr("importlib.util.find_spec", tracking_find_spec)
+
+        _get_repairs()
 
         # find_spec should have been called with "kokoro"
-        calls = [c for c in mock_fs.call_args_list if c[0][0] == "kokoro"]
-        assert len(calls) >= 1
+        kokoro_calls = [c for c in find_spec_calls if c == "kokoro"]
+        assert len(kokoro_calls) >= 1
 
 
 # ---------------------------------------------------------------------------
@@ -589,21 +658,18 @@ class TestYesFlagSelectsPlatforms:
         monkeypatch.setattr(Path, "home", lambda: home_dir)
         monkeypatch.setattr("installer.core.get_platform_config_dir", lambda p: home_dir / ".claude")
         monkeypatch.setattr("installer.demarcation.get_installed_version", lambda p: None)
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "ok"))
 
-        mock_pi = MagicMock()
-        mock_pi.platform_name = "Test"
-        mock_pi.platform_id = "test"
-        mock_pi.install.return_value = []
-        mock_pi.detect.return_value = MagicMock(available=True)
+        installer = Installer(spellbook_dir)
+        detected = installer.detect_platforms()
 
-        with patch("installer.core.get_platform_installer", return_value=mock_pi), \
-             patch("installer.components.mcp.install_daemon", return_value=(True, "ok")), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")):
-            installer = Installer(spellbook_dir)
-            detected = installer.detect_platforms()
-
-            # Simulate -y behavior: platforms = installer.detect_platforms()
-            session = installer.run(platforms=detected, dry_run=True)
+        # Simulate -y behavior: platforms = installer.detect_platforms()
+        session = installer.run(platforms=detected, dry_run=True)
 
         # Verify detected platforms were used (at least claude_code is always detected)
         assert len(detected) >= 1
@@ -614,10 +680,12 @@ class TestYesFlagSelectsPlatforms:
         # This tests the logic from install.py line ~922
         # We verify the conditional: args.yes or args.no_interactive or not is_interactive()
 
-        args = MagicMock()
-        args.platforms = None
-        args.yes = True
-        args.no_interactive = False
+        class FakeArgs:
+            platforms = None
+            yes = True
+            no_interactive = False
+
+        args = FakeArgs()
 
         # The condition is: args.yes or args.no_interactive or not is_interactive()
         # With args.yes = True, it should use detect_platforms
@@ -632,17 +700,17 @@ class TestEnsureDaemonVenvHashDetection:
     """Test the hash comparison logic in ensure_daemon_venv()."""
 
     def test_hash_matches_skips_rebuild(self, tmp_path, monkeypatch):
-        """When lockfile hash matches stored hash, venv is not rebuilt."""
+        """When pyproject hash matches stored hash, venv is not rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\nuvicorn==0.30\n")
+        # Create pyproject.toml (production uses this, not requirements.txt)
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         # Create venv dir with matching hash file and a python binary
         venv_dir = tmp_path / "config" / "daemon-venv"
@@ -651,7 +719,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(
@@ -669,14 +737,14 @@ class TestEnsureDaemonVenvHashDetection:
         assert "up to date" in msg
 
     def test_hash_mismatch_triggers_rebuild(self, tmp_path, monkeypatch):
-        """When lockfile hash differs from stored hash, venv is rebuilt."""
+        """When pyproject hash differs from stored hash, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==2.0\nuvicorn==0.31\n")
+        # Create pyproject.toml
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\nversion = '2.0'\n")
 
         # Create venv dir with mismatched hash
         venv_dir = tmp_path / "config" / "daemon-venv"
@@ -685,7 +753,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text("stale_hash_value")
 
         monkeypatch.setattr(
@@ -697,27 +765,36 @@ class TestEnsureDaemonVenvHashDetection:
             lambda: python_path,
         )
 
-        # Mock the subprocess calls and stop_daemon since it will try to rebuild
-        with patch("installer.components.mcp.stop_daemon"), \
-             patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            success, msg = ensure_daemon_venv(tmp_path / "spellbook")
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        run_called = []
+
+        monkeypatch.setattr("installer.components.mcp.stop_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *a, **kw: (run_called.append(True), FakeResult())[-1],
+        )
+
+        success, msg = ensure_daemon_venv(tmp_path / "spellbook")
 
         # subprocess.run should have been called to create the venv
-        assert mock_run.called
+        assert len(run_called) > 0
 
     def test_force_triggers_rebuild(self, tmp_path, monkeypatch):
         """force=True always triggers rebuild even when hash matches."""
         from installer.components.mcp import ensure_daemon_venv
 
-        # Create lockfile
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        # Create pyproject.toml
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute matching hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_bin = venv_dir / "bin"
@@ -725,7 +802,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(
@@ -737,22 +814,32 @@ class TestEnsureDaemonVenvHashDetection:
             lambda: python_path,
         )
 
-        with patch("installer.components.mcp.stop_daemon"), \
-             patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            ensure_daemon_venv(tmp_path / "spellbook", force=True)
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        run_called = []
+
+        monkeypatch.setattr("installer.components.mcp.stop_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *a, **kw: (run_called.append(True), FakeResult())[-1],
+        )
+
+        ensure_daemon_venv(tmp_path / "spellbook", force=True)
 
         # Should rebuild despite matching hash
-        assert mock_run.called
+        assert len(run_called) > 0
 
     def test_missing_hash_file_triggers_rebuild(self, tmp_path, monkeypatch):
-        """When no .lockfile-hash exists, venv is rebuilt."""
+        """When no .pyproject-hash exists, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_bin = venv_dir / "bin"
@@ -760,7 +847,7 @@ class TestEnsureDaemonVenvHashDetection:
         python_path = venv_bin / "python"
         python_path.write_text("#!/usr/bin/env python3")
 
-        # No .lockfile-hash file exists
+        # No .pyproject-hash file exists
 
         monkeypatch.setattr(
             "installer.components.mcp.get_daemon_venv_dir",
@@ -771,20 +858,30 @@ class TestEnsureDaemonVenvHashDetection:
             lambda: python_path,
         )
 
-        with patch("installer.components.mcp.stop_daemon"), \
-             patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            ensure_daemon_venv(tmp_path / "spellbook")
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
 
-        assert mock_run.called
+        run_called = []
 
-    def test_missing_lockfile_returns_failure(self, tmp_path):
-        """Returns (False, message) when lockfile doesn't exist."""
+        monkeypatch.setattr("installer.components.mcp.stop_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *a, **kw: (run_called.append(True), FakeResult())[-1],
+        )
+
+        ensure_daemon_venv(tmp_path / "spellbook")
+
+        assert len(run_called) > 0
+
+    def test_missing_pyproject_returns_failure(self, tmp_path):
+        """Returns (False, message) when pyproject.toml doesn't exist."""
         from installer.components.mcp import ensure_daemon_venv
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        # No daemon/requirements.txt
+        # No pyproject.toml
 
         success, msg = ensure_daemon_venv(sb_dir)
 
@@ -795,13 +892,13 @@ class TestEnsureDaemonVenvHashDetection:
         """When daemon python binary doesn't exist, venv is rebuilt."""
         from installer.components.mcp import ensure_daemon_venv
 
-        daemon_dir = tmp_path / "spellbook" / "daemon"
-        daemon_dir.mkdir(parents=True)
-        lockfile = daemon_dir / "requirements.txt"
-        lockfile.write_text("fastmcp==1.0\n")
+        sb_dir = tmp_path / "spellbook"
+        sb_dir.mkdir(parents=True)
+        pyproject = sb_dir / "pyproject.toml"
+        pyproject.write_text("[project]\nname = 'spellbook'\n")
 
         # Compute matching hash
-        h = hashlib.sha256(lockfile.read_bytes()).hexdigest()
+        h = hashlib.sha256(pyproject.read_bytes()).hexdigest()
 
         venv_dir = tmp_path / "config" / "daemon-venv"
         venv_dir.mkdir(parents=True)
@@ -809,7 +906,7 @@ class TestEnsureDaemonVenvHashDetection:
         # Python binary does NOT exist
         python_path = venv_dir / "bin" / "python"
 
-        hash_file = venv_dir / ".lockfile-hash"
+        hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
         monkeypatch.setattr(
@@ -821,13 +918,23 @@ class TestEnsureDaemonVenvHashDetection:
             lambda: python_path,
         )
 
-        with patch("installer.components.mcp.stop_daemon"), \
-             patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            ensure_daemon_venv(tmp_path / "spellbook")
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        run_called = []
+
+        monkeypatch.setattr("installer.components.mcp.stop_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda *a, **kw: (run_called.append(True), FakeResult())[-1],
+        )
+
+        ensure_daemon_venv(tmp_path / "spellbook")
 
         # Should rebuild because python binary is missing
-        assert mock_run.called
+        assert len(run_called) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -843,17 +950,22 @@ class TestInstallDaemonTtsInclusion:
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
-        with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
-             patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
-             patch("spellbook.daemon.manager.install_service"), \
-             patch("spellbook.core.config.config_get", return_value=True):
-            install_daemon(sb_dir, dry_run=False)
 
-        # Verify include_tts=True was passed
-        mock_venv.assert_called_once()
-        _, kwargs = mock_venv.call_args
-        assert kwargs.get("include_tts") is True or mock_venv.call_args[1].get("include_tts") is True
+        captured_kwargs = {}
+
+        def fake_ensure_venv(*args, **kwargs):
+            captured_kwargs.update(kwargs)
+            return (True, "ok")
+
+        monkeypatch.setattr("installer.components.mcp.ensure_daemon_venv", fake_ensure_venv)
+        monkeypatch.setattr("installer.components.mcp.uninstall_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "ok"))
+        monkeypatch.setattr("spellbook.daemon.manager.install_service", lambda *a, **kw: None)
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda key: True)
+
+        install_daemon(sb_dir, dry_run=False)
+
+        assert captured_kwargs.get("include_tts") is True
 
     def test_excludes_tts_when_config_disabled(self, tmp_path, monkeypatch):
         """install_daemon passes include_tts=False when tts_enabled config is False."""
@@ -862,35 +974,46 @@ class TestInstallDaemonTtsInclusion:
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
 
-        with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
-             patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
-             patch("spellbook.daemon.manager.install_service"), \
-             patch("spellbook.core.config.config_get", return_value=False):
-            install_daemon(sb_dir, dry_run=False)
+        captured_kwargs = {}
 
-        mock_venv.assert_called_once()
-        _, kwargs = mock_venv.call_args
-        assert kwargs.get("include_tts") is False
+        def fake_ensure_venv(*args, **kwargs):
+            captured_kwargs.update(kwargs)
+            return (True, "ok")
+
+        monkeypatch.setattr("installer.components.mcp.ensure_daemon_venv", fake_ensure_venv)
+        monkeypatch.setattr("installer.components.mcp.uninstall_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "ok"))
+        monkeypatch.setattr("spellbook.daemon.manager.install_service", lambda *a, **kw: None)
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda key: False)
+
+        install_daemon(sb_dir, dry_run=False)
+
+        assert captured_kwargs.get("include_tts") is False
 
     def test_excludes_tts_when_config_import_fails(self, tmp_path, monkeypatch):
         """install_daemon passes include_tts=False when config_tools import fails."""
         from installer.components.mcp import install_daemon
+        import sys
 
         sb_dir = tmp_path / "spellbook"
         sb_dir.mkdir()
 
-        # Make config_get raise ImportError by patching the import
-        with patch("installer.components.mcp.ensure_daemon_venv", return_value=(True, "ok")) as mock_venv, \
-             patch("installer.components.mcp.uninstall_daemon"), \
-             patch("installer.components.mcp.check_daemon_health", return_value=(True, "ok")), \
-             patch("spellbook.daemon.manager.install_service"), \
-             patch.dict("sys.modules", {"spellbook.core.config": None}):
-            install_daemon(sb_dir, dry_run=False)
+        captured_kwargs = {}
 
-        mock_venv.assert_called_once()
-        _, kwargs = mock_venv.call_args
-        assert kwargs.get("include_tts") is False
+        def fake_ensure_venv(*args, **kwargs):
+            captured_kwargs.update(kwargs)
+            return (True, "ok")
+
+        monkeypatch.setattr("installer.components.mcp.ensure_daemon_venv", fake_ensure_venv)
+        monkeypatch.setattr("installer.components.mcp.uninstall_daemon", lambda *a, **kw: None)
+        monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "ok"))
+        monkeypatch.setattr("spellbook.daemon.manager.install_service", lambda *a, **kw: None)
+        # Simulate ImportError by temporarily breaking the module
+        monkeypatch.setitem(sys.modules, "spellbook.core.config", None)
+
+        install_daemon(sb_dir, dry_run=False)
+
+        assert captured_kwargs.get("include_tts") is False
 
 
 # ---------------------------------------------------------------------------
@@ -900,49 +1023,80 @@ class TestInstallDaemonTtsInclusion:
 class TestSetupTtsReinstall:
     """Test that setup_tts() reinstalls TTS deps when previously enabled but missing."""
 
-    def test_reinstalls_tts_when_enabled_but_missing(self, tmp_path):
+    def test_reinstalls_tts_when_enabled_but_missing(self, tmp_path, monkeypatch):
         """setup_tts reinstalls TTS deps when config says enabled but kokoro is missing."""
         import install as install_mod
 
-        with patch.object(install_mod, "check_tts_available", return_value=False), \
-             patch.object(install_mod, "_install_tts_deps", return_value=True) as mock_install, \
-             patch.object(install_mod, "_preload_tts_model") as mock_preload, \
-             patch("spellbook.core.config.config_get", return_value=True):
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+
+        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+        mock_check.returns(False)
+        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
+        mock_install.returns(True)
+        mock_preload = bigfoot.mock.object(install_mod, "_preload_tts_model")
+        mock_preload.returns(None)
+
+        with bigfoot:
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_install.assert_called_once_with(tmp_path)
-        mock_preload.assert_called_once_with(tmp_path)
+        mock_check.assert_call(args=(), kwargs={})
+        mock_install.assert_call(args=(tmp_path,), kwargs={})
+        mock_preload.assert_call(args=(tmp_path,), kwargs={})
 
-    def test_no_reinstall_when_tts_available(self, tmp_path):
+    def test_no_reinstall_when_tts_available(self, tmp_path, monkeypatch):
         """setup_tts does nothing extra when TTS is already available."""
         import install as install_mod
 
-        with patch.object(install_mod, "check_tts_available", return_value=True), \
-             patch.object(install_mod, "_install_tts_deps") as mock_install, \
-             patch("spellbook.core.config.config_get", return_value=True):
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+
+        install_called = []
+
+        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+        mock_check.returns(True)
+        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
+        mock_install.__call__.required(False).calls(lambda *a, **kw: install_called.append(True))
+
+        with bigfoot:
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_install.assert_not_called()
+        mock_check.assert_call(args=(), kwargs={})
+        assert len(install_called) == 0
 
-    def test_no_reinstall_when_tts_disabled(self, tmp_path):
+    def test_no_reinstall_when_tts_disabled(self, tmp_path, monkeypatch):
         """setup_tts does nothing when TTS was explicitly disabled."""
         import install as install_mod
 
-        with patch.object(install_mod, "check_tts_available", return_value=False), \
-             patch.object(install_mod, "_install_tts_deps") as mock_install, \
-             patch("spellbook.core.config.config_get", return_value=False):
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: False)
+
+        install_called = []
+
+        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+        mock_check.returns(False)
+        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
+        mock_install.__call__.required(False).calls(lambda *a, **kw: install_called.append(True))
+
+        with bigfoot:
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_install.assert_not_called()
+        mock_check.assert_call(args=(), kwargs={})
+        assert len(install_called) == 0
 
-    def test_warns_on_reinstall_failure(self, tmp_path, capsys):
+    def test_warns_on_reinstall_failure(self, tmp_path, capsys, monkeypatch):
         """setup_tts warns when TTS reinstall fails."""
         import install as install_mod
 
-        with patch.object(install_mod, "check_tts_available", return_value=False), \
-             patch.object(install_mod, "_install_tts_deps", return_value=False), \
-             patch("spellbook.core.config.config_get", return_value=True):
+        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
+
+        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+        mock_check.returns(False)
+        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
+        mock_install.returns(False)
+
+        with bigfoot:
             install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
+
+        mock_check.assert_call(args=(), kwargs={})
+        mock_install.assert_call(args=(tmp_path,), kwargs={})
 
         captured = capsys.readouterr()
         assert "TTS reinstall failed" in captured.out or "failed" in captured.out.lower()

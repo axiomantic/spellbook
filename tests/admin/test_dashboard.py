@@ -1,64 +1,77 @@
 """Tests for the dashboard API endpoint."""
 
 from contextlib import asynccontextmanager
-from unittest.mock import patch, AsyncMock, MagicMock
-import pytest
+from dataclasses import dataclass
 
-from spellbook.db.spellbook_models import SecurityEvent, Memory
+import bigfoot
+from dirty_equals import IsInstance
+
+
+
+def _async_return(value):
+    """Return an async function that returns value (for mocking async callables)."""
+    async def _fn(*args, **kwargs):
+        return value
+    return _fn
 
 
 def test_dashboard_returns_200(client):
     """Dashboard endpoint returns health, counts, and activity."""
-    with patch(
-        "spellbook.admin.routes.dashboard.get_dashboard_data",
-        new_callable=AsyncMock,
-    ) as mock:
-        mock.return_value = {
-            "health": {
-                "status": "ok",
-                "version": "0.30.5",
-                "uptime_seconds": 100.0,
-                "db_size_bytes": 1024,
-                "event_bus_subscribers": 0,
-                "event_bus_dropped_events": 0,
+    dashboard_data = {
+        "health": {
+            "status": "ok",
+            "version": "0.30.5",
+            "uptime_seconds": 100.0,
+            "db_size_bytes": 1024,
+            "event_bus_subscribers": 0,
+            "event_bus_dropped_events": 0,
+        },
+        "counts": {
+            "active_sessions": 1,
+            "total_memories": 100,
+            "security_events_24h": 5,
+            "running_swarms": 0,
+            "open_experiments": 1,
+            "fractal_graphs": 2,
+        },
+        "recent_activity": [
+            {
+                "type": "security_event",
+                "timestamp": "2026-03-14T10:00:00Z",
+                "summary": "Login from new IP",
             },
-            "counts": {
-                "active_sessions": 1,
-                "total_memories": 100,
-                "security_events_24h": 5,
-                "running_swarms": 0,
-                "open_experiments": 1,
-                "fractal_graphs": 2,
-            },
-            "recent_activity": [
-                {
-                    "type": "security_event",
-                    "timestamp": "2026-03-14T10:00:00Z",
-                    "summary": "Login from new IP",
-                },
-            ],
-        }
+        ],
+    }
+    mock_get = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_dashboard_data",
+    )
+    mock_get.calls(_async_return(dashboard_data))
+
+    with bigfoot:
         response = client.get("/api/dashboard")
-        assert response.status_code == 200
-        data = response.json()
-        assert "health" in data
-        assert "counts" in data
-        assert "recent_activity" in data
-        assert data["health"]["status"] == "ok"
-        assert data["health"]["version"] == "0.30.5"
-        assert data["health"]["uptime_seconds"] == 100.0
-        assert data["health"]["db_size_bytes"] == 1024
-        assert data["health"]["event_bus_subscribers"] == 0
-        assert data["health"]["event_bus_dropped_events"] == 0
-        assert data["counts"]["active_sessions"] == 1
-        assert data["counts"]["total_memories"] == 100
-        assert data["counts"]["security_events_24h"] == 5
-        assert data["counts"]["running_swarms"] == 0
-        assert data["counts"]["open_experiments"] == 1
-        assert data["counts"]["fractal_graphs"] == 2
-        assert len(data["recent_activity"]) == 1
-        assert data["recent_activity"][0]["type"] == "security_event"
-        assert data["recent_activity"][0]["summary"] == "Login from new IP"
+
+    mock_get.assert_call()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "health" in data
+    assert "counts" in data
+    assert "recent_activity" in data
+    assert data["health"]["status"] == "ok"
+    assert data["health"]["version"] == "0.30.5"
+    assert data["health"]["uptime_seconds"] == 100.0
+    assert data["health"]["db_size_bytes"] == 1024
+    assert data["health"]["event_bus_subscribers"] == 0
+    assert data["health"]["event_bus_dropped_events"] == 0
+    assert data["counts"]["active_sessions"] == 1
+    assert data["counts"]["total_memories"] == 100
+    assert data["counts"]["security_events_24h"] == 5
+    assert data["counts"]["running_swarms"] == 0
+    assert data["counts"]["open_experiments"] == 1
+    assert data["counts"]["fractal_graphs"] == 2
+    assert len(data["recent_activity"]) == 1
+    assert data["recent_activity"][0]["type"] == "security_event"
+    assert data["recent_activity"][0]["summary"] == "Login from new IP"
 
 
 def test_dashboard_requires_auth(unauthenticated_client):
@@ -69,158 +82,213 @@ def test_dashboard_requires_auth(unauthenticated_client):
 
 def test_dashboard_response_schema(client):
     """DashboardResponse schema validates all required fields and types."""
-    with patch(
-        "spellbook.admin.routes.dashboard.get_dashboard_data",
-        new_callable=AsyncMock,
-    ) as mock:
-        mock.return_value = {
-            "health": {
-                "status": "degraded",
-                "version": "0.30.5",
-                "uptime_seconds": 0.0,
-                "db_size_bytes": 0,
-                "event_bus_subscribers": 3,
-                "event_bus_dropped_events": 12,
-            },
-            "counts": {
-                "active_sessions": 0,
-                "total_memories": 0,
-                "security_events_24h": 0,
-                "running_swarms": 0,
-                "open_experiments": 0,
-                "fractal_graphs": 0,
-            },
-            "recent_activity": [],
-        }
+    dashboard_data = {
+        "health": {
+            "status": "degraded",
+            "version": "0.30.5",
+            "uptime_seconds": 0.0,
+            "db_size_bytes": 0,
+            "event_bus_subscribers": 3,
+            "event_bus_dropped_events": 12,
+        },
+        "counts": {
+            "active_sessions": 0,
+            "total_memories": 0,
+            "security_events_24h": 0,
+            "running_swarms": 0,
+            "open_experiments": 0,
+            "fractal_graphs": 0,
+        },
+        "recent_activity": [],
+    }
+    mock_get = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_dashboard_data",
+    )
+    mock_get.calls(_async_return(dashboard_data))
+
+    with bigfoot:
         response = client.get("/api/dashboard")
-        assert response.status_code == 200
-        data = response.json()
 
-        # Verify health fields and types
-        health = data["health"]
-        assert isinstance(health["status"], str)
-        assert isinstance(health["version"], str)
-        assert isinstance(health["uptime_seconds"], (int, float))
-        assert isinstance(health["db_size_bytes"], int)
-        assert isinstance(health["event_bus_subscribers"], int)
-        assert isinstance(health["event_bus_dropped_events"], int)
+    mock_get.assert_call()
 
-        # Verify counts fields and types
-        counts = data["counts"]
-        assert isinstance(counts["active_sessions"], int)
-        assert isinstance(counts["total_memories"], int)
-        assert isinstance(counts["security_events_24h"], int)
-        assert isinstance(counts["running_swarms"], int)
-        assert isinstance(counts["open_experiments"], int)
-        assert isinstance(counts["fractal_graphs"], int)
+    assert response.status_code == 200
+    data = response.json()
 
-        # Verify activity is a list
-        assert isinstance(data["recent_activity"], list)
+    # Verify health fields and types
+    health = data["health"]
+    assert isinstance(health["status"], str)
+    assert isinstance(health["version"], str)
+    assert isinstance(health["uptime_seconds"], (int, float))
+    assert isinstance(health["db_size_bytes"], int)
+    assert isinstance(health["event_bus_subscribers"], int)
+    assert isinstance(health["event_bus_dropped_events"], int)
+
+    # Verify counts fields and types
+    counts = data["counts"]
+    assert isinstance(counts["active_sessions"], int)
+    assert isinstance(counts["total_memories"], int)
+    assert isinstance(counts["security_events_24h"], int)
+    assert isinstance(counts["running_swarms"], int)
+    assert isinstance(counts["open_experiments"], int)
+    assert isinstance(counts["fractal_graphs"], int)
+
+    # Verify activity is a list
+    assert isinstance(data["recent_activity"], list)
+
+
+@dataclass
+class _FakeEventBus:
+    """Lightweight stand-in for event_bus with the attributes the dashboard reads."""
+    subscriber_count: int = 0
+    total_dropped_events: int = 0
+
+
+class _FakeResult:
+    """Minimal stand-in for an ORM execute() result."""
+
+    def __init__(self, value):
+        self._value = value
+
+    def scalar_one(self):
+        return self._value
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return self._value
 
 
 def _make_orm_session_ctx(scalars_results):
-    """Build an async context manager that yields a mock ORM session.
+    """Build an async context manager that yields a fake ORM session.
 
     scalars_results: list where each entry is either an int (for scalar_one)
     or a list (for scalars().all()). Each session.execute() call consumes
     the next entry.
     """
     call_index = [0]
+    execute_count = [0]
 
     async def _execute(query):
         idx = call_index[0]
         call_index[0] += 1
-        result_mock = MagicMock()
-        value = scalars_results[idx]
-        if isinstance(value, int):
-            result_mock.scalar_one.return_value = value
-        else:
-            scalars_mock = MagicMock()
-            scalars_mock.all.return_value = value
-            result_mock.scalars.return_value = scalars_mock
-        return result_mock
+        execute_count[0] += 1
+        return _FakeResult(scalars_results[idx])
 
-    session = MagicMock()
-    session.execute = AsyncMock(side_effect=_execute)
-    session.commit = AsyncMock()
-    session.rollback = AsyncMock()
-    session.close = AsyncMock()
+    class _FakeSession:
+        async def execute(self, query):
+            return await _execute(query)
+
+        async def commit(self):
+            pass
+
+        async def rollback(self):
+            pass
+
+        async def close(self):
+            pass
+
+    session = _FakeSession()
 
     @asynccontextmanager
     async def _ctx():
         yield session
 
-    return _ctx, session
+    return _ctx, execute_count
 
 
-def test_dashboard_cross_db_aggregation(client):
+def test_dashboard_cross_db_aggregation(client, monkeypatch):
     """get_dashboard_data queries all databases in parallel via ORM sessions."""
-    sec_event = MagicMock(spec=SecurityEvent)
-    sec_event.event_type = "canary_check"
-    sec_event.created_at = "2026-03-14T12:00:00Z"
-    sec_event.detail = "Canary verified"
 
-    mem = MagicMock(spec=Memory)
-    mem.created_at = "2026-03-14T11:00:00Z"
-    mem.content = "Stored a new memory about testing"
+    @dataclass
+    class _FakeSecurityEvent:
+        event_type: str = "canary_check"
+        created_at: str = "2026-03-14T12:00:00Z"
+        detail: str = "Canary verified"
 
-    spellbook_ctx, spellbook_session = _make_orm_session_ctx([
-        200,            # active memories count
-        10,             # security events 24h count
-        1,              # open experiments count
-        [sec_event],    # recent security events
-        [mem],          # recent memories
+    @dataclass
+    class _FakeMemory:
+        created_at: str = "2026-03-14T11:00:00Z"
+        content: str = "Stored a new memory about testing"
+
+    spellbook_ctx, spellbook_exec_count = _make_orm_session_ctx([
+        200,                       # active memories count
+        10,                        # security events 24h count
+        1,                         # open experiments count
+        [_FakeSecurityEvent()],    # recent security events
+        [_FakeMemory()],           # recent memories
     ])
-    coord_ctx, coord_session = _make_orm_session_ctx([2])
-    fractal_ctx, fractal_session = _make_orm_session_ctx([4])
+    coord_ctx, coord_exec_count = _make_orm_session_ctx([2])
+    fractal_ctx, fractal_exec_count = _make_orm_session_ctx([4])
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=spellbook_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=coord_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=fractal_ctx,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=2048,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        return_value=3,
-    ):
-        mock_bus.subscriber_count = 2
-        mock_bus.total_dropped_events = 5
+    fake_bus = _FakeEventBus(subscriber_count=2, total_dropped_events=5)
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.event_bus", fake_bus,
+    )
 
+    mock_spellbook = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_spellbook_session",
+    )
+    mock_spellbook.calls(spellbook_ctx)
+
+    mock_coord = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_coordination_session",
+    )
+    mock_coord.calls(coord_ctx)
+
+    mock_fractal = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_fractal_session",
+    )
+    mock_fractal.calls(fractal_ctx)
+
+    mock_version = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:pkg_version",
+    )
+    mock_version.returns("0.30.5")
+
+    mock_db_size = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:_get_db_size",
+    )
+    mock_db_size.returns(2048)
+
+    mock_count_sessions = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:_count_session_files",
+    )
+    mock_count_sessions.returns(3)
+
+    with bigfoot:
         response = client.get("/api/dashboard")
-        assert response.status_code == 200
-        data = response.json()
 
-        assert data["health"]["version"] == "0.30.5"
-        assert data["health"]["db_size_bytes"] == 2048
-        assert data["health"]["event_bus_subscribers"] == 2
-        assert data["health"]["event_bus_dropped_events"] == 5
-        assert data["counts"]["active_sessions"] == 3
-        assert data["counts"]["total_memories"] == 200
-        assert data["counts"]["security_events_24h"] == 10
-        assert data["counts"]["running_swarms"] == 2
-        assert data["counts"]["open_experiments"] == 1
-        assert data["counts"]["fractal_graphs"] == 4
-        assert len(data["recent_activity"]) == 2
+    with bigfoot.in_any_order():
+        mock_version.assert_call(args=("spellbook",))
+        mock_count_sessions.assert_call()
+        mock_spellbook.assert_call()
+        mock_coord.assert_call()
+        mock_fractal.assert_call()
+        mock_db_size.assert_call()
 
-        # Verify ORM sessions were used
-        assert spellbook_session.execute.call_count == 5
-        assert coord_session.execute.call_count == 1
-        assert fractal_session.execute.call_count == 1
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["health"]["version"] == "0.30.5"
+    assert data["health"]["db_size_bytes"] == 2048
+    assert data["health"]["event_bus_subscribers"] == 2
+    assert data["health"]["event_bus_dropped_events"] == 5
+    assert data["counts"]["active_sessions"] == 3
+    assert data["counts"]["total_memories"] == 200
+    assert data["counts"]["security_events_24h"] == 10
+    assert data["counts"]["running_swarms"] == 2
+    assert data["counts"]["open_experiments"] == 1
+    assert data["counts"]["fractal_graphs"] == 4
+    assert len(data["recent_activity"]) == 2
+
+    # Verify ORM sessions were used
+    assert spellbook_exec_count[0] == 5
+    assert coord_exec_count[0] == 1
+    assert fractal_exec_count[0] == 1
 
 
-def test_dashboard_handles_db_errors_gracefully(client):
+def test_dashboard_handles_db_errors_gracefully(client, monkeypatch):
     """Dashboard returns safe defaults when ORM sessions raise exceptions."""
 
     @asynccontextmanager
@@ -228,39 +296,62 @@ def test_dashboard_handles_db_errors_gracefully(client):
         raise Exception("DB locked")
         yield  # pragma: no cover
 
-    with patch(
-        "spellbook.admin.routes.dashboard.get_spellbook_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_fractal_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.get_coordination_session",
-        side_effect=_failing_session,
-    ), patch(
-        "spellbook.admin.routes.dashboard.event_bus",
-    ) as mock_bus, patch(
-        "spellbook.admin.routes.dashboard.pkg_version",
-        return_value="0.30.5",
-    ), patch(
-        "spellbook.admin.routes.dashboard._get_db_size",
-        return_value=0,
-    ), patch(
-        "spellbook.admin.routes.dashboard._count_session_files",
-        side_effect=Exception("Filesystem error"),
-    ):
-        mock_bus.subscriber_count = 0
-        mock_bus.total_dropped_events = 0
+    fake_bus = _FakeEventBus(subscriber_count=0, total_dropped_events=0)
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.event_bus", fake_bus,
+    )
 
+    mock_spellbook = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_spellbook_session",
+    )
+    mock_spellbook.calls(_failing_session)
+
+    mock_fractal = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_fractal_session",
+    )
+    mock_fractal.calls(_failing_session)
+
+    mock_coord = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:get_coordination_session",
+    )
+    mock_coord.calls(_failing_session)
+
+    mock_version = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:pkg_version",
+    )
+    mock_version.returns("0.30.5")
+
+    mock_db_size = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:_get_db_size",
+    )
+    mock_db_size.returns(0)
+
+    mock_count_sessions = bigfoot.mock(
+        "spellbook.admin.routes.dashboard:_count_session_files",
+    )
+    mock_count_sessions.raises(Exception("Filesystem error"))
+
+    with bigfoot:
         response = client.get("/api/dashboard")
-        assert response.status_code == 200
-        data = response.json()
 
-        # All counts should fall back to 0
-        assert data["counts"]["active_sessions"] == 0
-        assert data["counts"]["total_memories"] == 0
-        assert data["counts"]["security_events_24h"] == 0
-        assert data["counts"]["running_swarms"] == 0
-        assert data["counts"]["open_experiments"] == 0
-        assert data["counts"]["fractal_graphs"] == 0
-        assert data["recent_activity"] == []
+    with bigfoot.in_any_order():
+        mock_version.assert_call(args=("spellbook",))
+        mock_count_sessions.assert_call(
+            raised=IsInstance(Exception),
+        )
+        mock_spellbook.assert_call()
+        mock_fractal.assert_call()
+        mock_coord.assert_call()
+        mock_db_size.assert_call()
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # All counts should fall back to 0
+    assert data["counts"]["active_sessions"] == 0
+    assert data["counts"]["total_memories"] == 0
+    assert data["counts"]["security_events_24h"] == 0
+    assert data["counts"]["running_swarms"] == 0
+    assert data["counts"]["open_experiments"] == 0
+    assert data["counts"]["fractal_graphs"] == 0
+    assert data["recent_activity"] == []

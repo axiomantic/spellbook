@@ -6,6 +6,7 @@ These tests verify the complete workflow from session discovery to output.
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -72,7 +73,7 @@ def test_small_session_no_chunking(mock_claude_config):
     # Test list-sessions via CLI
     script_path = mock_claude_config / "scripts" / "distill_session.py"
     result = subprocess.run(
-        ['python3', str(script_path), 'list-sessions', str(project_dir)],
+        [sys.executable, str(script_path), 'list-sessions', str(project_dir)],
         capture_output=True,
         text=True,
         timeout=30,
@@ -119,7 +120,7 @@ def test_session_with_existing_compact(mock_claude_config):
     # Test get-last-compact
     script_path = mock_claude_config / "scripts" / "distill_session.py"
     result = subprocess.run(
-        ['python3', str(script_path), 'get-last-compact', str(session_file)],
+        [sys.executable, str(script_path), 'get-last-compact', str(session_file)],
         capture_output=True,
         text=True,
         timeout=30,
@@ -158,7 +159,7 @@ def test_large_session_chunking(mock_claude_config):
     # Test split-by-char-limit
     script_path = mock_claude_config / "scripts" / "distill_session.py"
     result = subprocess.run(
-        ['python3', str(script_path), 'split-by-char-limit', str(session_file),
+        [sys.executable, str(script_path), 'split-by-char-limit', str(session_file),
          '--start-line', '0', '--char-limit', '300000'],
         capture_output=True,
         text=True,
@@ -192,7 +193,7 @@ def test_extract_chunk_range(mock_claude_config):
     # Extract chunk from lines 3-7
     script_path = mock_claude_config / "scripts" / "distill_session.py"
     result = subprocess.run(
-        ['python3', str(script_path), 'extract-chunk', str(session_file),
+        [sys.executable, str(script_path), 'extract-chunk', str(session_file),
          '--start-line', '3', '--end-line', '7'],
         capture_output=True,
         text=True,

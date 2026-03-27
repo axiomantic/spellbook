@@ -1,17 +1,16 @@
 import pytest
-from unittest.mock import patch
 import secrets
 
 
 @pytest.fixture(autouse=True)
-def mock_mcp_token(tmp_path):
+def mock_mcp_token(monkeypatch):
     """Mock the MCP token for all admin tests."""
     token = secrets.token_urlsafe(32)
-    token_path = tmp_path / ".mcp-token"
-    token_path.write_text(token)
-    with patch("spellbook.admin.auth.load_token", return_value=token), \
-         patch("spellbook.admin.routes.auth.load_token", return_value=token):
-        yield token
+
+    monkeypatch.setattr("spellbook.admin.auth.load_token", lambda: token)
+    monkeypatch.setattr("spellbook.admin.routes.auth.load_token", lambda: token)
+
+    yield token
 
 
 @pytest.fixture
@@ -28,10 +27,10 @@ def client(admin_app, mock_mcp_token):
     from fastapi.testclient import TestClient
     from spellbook.admin.auth import create_session_cookie
 
-    client = TestClient(admin_app)
-    cookie = create_session_cookie("test-session")
-    client.cookies.set("spellbook_admin_session", cookie)
-    return client
+    with TestClient(admin_app) as client:
+        cookie = create_session_cookie("test-session")
+        client.cookies.set("spellbook_admin_session", cookie)
+        yield client
 
 
 @pytest.fixture
@@ -39,4 +38,5 @@ def unauthenticated_client(admin_app):
     """Test client without auth cookie."""
     from fastapi.testclient import TestClient
 
-    return TestClient(admin_app)
+    with TestClient(admin_app) as client:
+        yield client

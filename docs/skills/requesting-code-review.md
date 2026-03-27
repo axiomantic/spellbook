@@ -4,7 +4,7 @@ Pre-PR structured review that assembles context, dispatches review agents, triag
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when implementation is done and you need a structured pre-PR review workflow. Triggers: 'ready for review', 'review my changes before PR', 'pre-merge check', 'is this ready', 'submit for review'. Orchestrates multi-phase review (planning, context assembly, dispatch, triage, fix, gate). Dispatches code-review internally. NOT the same as finishing-a-development-branch (which handles merge/PR decisions after review passes).
+> Use when implementation is done and you need a structured pre-PR review workflow. Triggers: 'ready for review', 'review my changes before PR', 'pre-merge check', 'is this ready', 'submit for review'. NOT for: post-merge review (use code-review) or deciding how to integrate (use finishing-a-development-branch).
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

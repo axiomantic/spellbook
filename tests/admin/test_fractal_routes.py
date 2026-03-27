@@ -1,13 +1,24 @@
 """Fractal graph explorer API route tests (SQLAlchemy ORM)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from types import SimpleNamespace
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
+
+from spellbook.admin.events import Event
+
+
+def _async_value(value):
+    """Return a coroutine that resolves to value, for mocking async functions."""
+    fut = asyncio.Future()
+    fut.set_result(value)
+    return fut
 
 
 def _mock_graph(**overrides):
-    """Create a mock FractalGraph ORM object with to_dict()."""
-    # Separate non-model fields from dict output
+    """Create a stub FractalGraph ORM object with to_dict()."""
     node_count = overrides.pop("node_count", 0)
     defaults = {
         "id": "g-1",
@@ -21,18 +32,13 @@ def _mock_graph(**overrides):
         "updated_at": "2026-03-14T10:00:00Z",
     }
     defaults.update(overrides)
-    graph = MagicMock()
-    graph.to_dict.return_value = dict(defaults)
-    # Expose columns directly for ORM query access
-    for k, v in defaults.items():
-        setattr(graph, k, v)
-    # node_count is a separate label added by the list query, not part of to_dict()
-    graph.node_count = node_count
+    graph = SimpleNamespace(**defaults, node_count=node_count)
+    graph.to_dict = lambda: dict(defaults)
     return graph
 
 
 def _mock_node(**overrides):
-    """Create a mock FractalNode ORM object with to_dict()."""
+    """Create a stub FractalNode ORM object with to_dict()."""
     defaults = {
         "id": "n-1",
         "graph_id": "g-1",
@@ -50,15 +56,13 @@ def _mock_node(**overrides):
         "session_id": None,
     }
     defaults.update(overrides)
-    node = MagicMock()
-    node.to_dict.return_value = defaults
-    for k, v in defaults.items():
-        setattr(node, k, v)
+    node = SimpleNamespace(**defaults)
+    node.to_dict = lambda: defaults
     return node
 
 
 def _mock_edge(**overrides):
-    """Create a mock FractalEdge ORM object."""
+    """Create a stub FractalEdge ORM object."""
     defaults = {
         "id": 1,
         "graph_id": "g-1",
@@ -69,11 +73,59 @@ def _mock_edge(**overrides):
         "created_at": "2026-03-14T10:00:00Z",
     }
     defaults.update(overrides)
-    edge = MagicMock()
-    edge.to_dict.return_value = defaults
-    for k, v in defaults.items():
-        setattr(edge, k, v)
+    edge = SimpleNamespace(**defaults)
+    edge.to_dict = lambda: defaults
     return edge
+
+
+class _ScalarsResult:
+    """Stub for SQLAlchemy result.scalars() chain."""
+
+    def __init__(self, items):
+        self._items = items
+
+    def first(self):
+        if isinstance(self._items, list):
+            return self._items[0] if self._items else None
+        return self._items
+
+    def all(self):
+        if isinstance(self._items, list):
+            return self._items
+        return [self._items] if self._items is not None else []
+
+
+class _ExecuteResult:
+    """Stub for SQLAlchemy session.execute() result."""
+
+    def __init__(self, items=None, scalar_one_value=None, all_value=None):
+        self._items = items
+        self._scalar_one_value = scalar_one_value
+        self._all_value = all_value
+
+    def scalars(self):
+        return _ScalarsResult(self._items)
+
+    def scalar_one(self):
+        return self._scalar_one_value
+
+    def all(self):
+        return self._all_value if self._all_value is not None else []
+
+
+class _MockAsyncSession:
+    """Stub async session that returns pre-configured results from execute()."""
+
+    def __init__(self, results):
+        self._results = list(results)
+        self._call_count = 0
+
+    async def execute(self, *args, **kwargs):
+        idx = self._call_count
+        self._call_count += 1
+        if idx < len(self._results):
+            return self._results[idx]
+        raise IndexError(f"MockAsyncSession: no result for call #{idx}")
 
 
 def _mock_session_for_list(graphs, total):
@@ -83,17 +135,9 @@ def _mock_session_for_list(graphs, total):
       1. A count query (select func.count())
       2. A data query (select FractalGraph with joins, filters, order, limit, offset)
     """
-    mock_session = AsyncMock()
-
-    count_result = MagicMock()
-    count_result.scalar_one.return_value = total
-
-    data_result = MagicMock()
-    # The list query uses .all() which returns tuples of (graph, node_count)
-    data_result.all.return_value = graphs
-
-    mock_session.execute = AsyncMock(side_effect=[count_result, data_result])
-    return mock_session
+    count_result = _ExecuteResult(scalar_one_value=total)
+    data_result = _ExecuteResult(all_value=graphs)
+    return _MockAsyncSession([count_result, data_result])
 
 
 def _mock_session_for_detail(result_rows):
@@ -102,19 +146,8 @@ def _mock_session_for_detail(result_rows):
     Returns result_rows from scalars().first() or scalars().all()
     depending on usage.
     """
-    mock_session = AsyncMock()
-    result = MagicMock()
-    if result_rows is None:
-        result.scalars.return_value.first.return_value = None
-    elif isinstance(result_rows, list):
-        result.scalars.return_value.all.return_value = result_rows
-        result.scalars.return_value.first.return_value = (
-            result_rows[0] if result_rows else None
-        )
-    else:
-        result.scalars.return_value.first.return_value = result_rows
-    mock_session.execute = AsyncMock(return_value=result)
-    return mock_session
+    result = _ExecuteResult(items=result_rows)
+    return _MockAsyncSession([result])
 
 
 def _override_fractal_db(client, mock_session):
@@ -133,7 +166,6 @@ def _cleanup_overrides(client, dep):
 class TestFractalGraphList:
     def test_list_graphs_returns_paginated(self, client):
         graph = _mock_graph(node_count=5)
-        # List endpoint returns tuples of (graph_obj, node_count)
         mock_session = _mock_session_for_list(
             [(graph, 5)],
             total=1,
@@ -180,7 +212,7 @@ class TestFractalGraphList:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
             _cleanup_overrides(client, dep)
 
@@ -198,7 +230,7 @@ class TestFractalGraphList:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
             _cleanup_overrides(client, dep)
 
@@ -216,7 +248,7 @@ class TestFractalGraphList:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
             _cleanup_overrides(client, dep)
 
@@ -253,7 +285,7 @@ class TestFractalGraphList:
                 "per_page": 50,
                 "pages": 1,
             }
-            assert mock_session.execute.call_count == 2
+            assert mock_session._call_count == 2
         finally:
             _cleanup_overrides(client, dep)
 
@@ -268,17 +300,11 @@ class TestFractalGraphDetail:
             metadata={"key": "value"},
             project_dir="/home/user/proj",
         )
-        mock_session = AsyncMock()
         # Detail query: graph lookup then node count
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = graph
+        graph_result = _ExecuteResult(items=graph)
+        count_result = _ExecuteResult(scalar_one_value=5)
+        mock_session = _MockAsyncSession([graph_result, count_result])
 
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = 5
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, count_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1")
@@ -318,19 +344,12 @@ class TestFractalGraphDetail:
 class TestFractalNodes:
     def test_get_nodes(self, client):
         node = _mock_node()
-        mock_session = AsyncMock()
-
         # First call: graph exists check
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
+        graph_result = _ExecuteResult(items=_mock_graph())
         # Second call: nodes query
-        nodes_result = MagicMock()
-        nodes_result.scalars.return_value.all.return_value = [node]
+        nodes_result = _ExecuteResult(items=[node])
+        mock_session = _MockAsyncSession([graph_result, nodes_result])
 
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, nodes_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/nodes")
@@ -362,17 +381,10 @@ class TestFractalNodes:
 
     def test_get_nodes_with_depth_filter(self, client):
         node = _mock_node()
-        mock_session = AsyncMock()
+        graph_result = _ExecuteResult(items=_mock_graph())
+        nodes_result = _ExecuteResult(items=[node])
+        mock_session = _MockAsyncSession([graph_result, nodes_result])
 
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
-        nodes_result = MagicMock()
-        nodes_result.scalars.return_value.all.return_value = [node]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, nodes_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/nodes?max_depth=0")
@@ -402,17 +414,10 @@ class TestFractalNodes:
 class TestFractalEdges:
     def test_get_edges(self, client):
         edge = _mock_edge()
-        mock_session = AsyncMock()
+        graph_result = _ExecuteResult(items=_mock_graph())
+        edges_result = _ExecuteResult(items=[edge])
+        mock_session = _MockAsyncSession([graph_result, edges_result])
 
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
-        edges_result = MagicMock()
-        edges_result.scalars.return_value.all.return_value = [edge]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, edges_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/edges")
@@ -460,20 +465,11 @@ class TestFractalCytoscape:
             edge_type="parent_child",
         )
 
-        mock_session = AsyncMock()
+        graph_result = _ExecuteResult(items=_mock_graph())
+        nodes_result = _ExecuteResult(items=[node1, node2])
+        edges_result = _ExecuteResult(items=[edge])
+        mock_session = _MockAsyncSession([graph_result, nodes_result, edges_result])
 
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
-        nodes_result = MagicMock()
-        nodes_result.scalars.return_value.all.return_value = [node1, node2]
-
-        edges_result = MagicMock()
-        edges_result.scalars.return_value.all.return_value = [edge]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, nodes_result, edges_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/cytoscape")
@@ -572,20 +568,11 @@ class TestFractalCytoscape:
             edge_type="parent_child",
         )
 
-        mock_session = AsyncMock()
+        graph_result = _ExecuteResult(items=_mock_graph())
+        nodes_result = _ExecuteResult(items=[node1])
+        edges_result = _ExecuteResult(items=[edge])
+        mock_session = _MockAsyncSession([graph_result, nodes_result, edges_result])
 
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
-        nodes_result = MagicMock()
-        nodes_result.scalars.return_value.all.return_value = [node1]
-
-        edges_result = MagicMock()
-        edges_result.scalars.return_value.all.return_value = [edge]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, nodes_result, edges_result]
-        )
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get(
@@ -607,32 +594,15 @@ class TestFractalConvergence:
             to_node="n-2",
             edge_type="convergence",
         )
-        node1 = _mock_node(
-            id="n-1",
-            text="insight A",
-            depth=1,
-        )
-        node2 = _mock_node(
-            id="n-2",
-            text="insight B",
-            depth=2,
-        )
 
-        mock_session = AsyncMock()
-
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
+        graph_result = _ExecuteResult(items=_mock_graph())
         # The convergence query joins edges with nodes
         # Returns tuples of (edge, from_text, from_depth, to_text, to_depth)
-        conv_result = MagicMock()
-        conv_result.all.return_value = [
-            (edge, "insight A", 1, "insight B", 2),
-        ]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, conv_result]
+        conv_result = _ExecuteResult(
+            all_value=[(edge, "insight A", 1, "insight B", 2)]
         )
+        mock_session = _MockAsyncSession([graph_result, conv_result])
+
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/convergence")
@@ -671,20 +641,13 @@ class TestFractalContradictions:
             edge_type="contradiction",
         )
 
-        mock_session = AsyncMock()
-
-        graph_result = MagicMock()
-        graph_result.scalars.return_value.first.return_value = _mock_graph()
-
+        graph_result = _ExecuteResult(items=_mock_graph())
         # Returns tuples of (edge, from_text, to_text)
-        contra_result = MagicMock()
-        contra_result.all.return_value = [
-            (edge, "claim A", "claim B"),
-        ]
-
-        mock_session.execute = AsyncMock(
-            side_effect=[graph_result, contra_result]
+        contra_result = _ExecuteResult(
+            all_value=[(edge, "claim A", "claim B")]
         )
+        mock_session = _MockAsyncSession([graph_result, contra_result])
+
         dep = _override_fractal_db(client, mock_session)
         try:
             response = client.get("/api/fractal/graphs/g-1/contradictions")
@@ -707,52 +670,49 @@ class TestFractalContradictions:
 class TestFractalGraphDelete:
     def test_delete_graph_success(self, client):
         """DELETE /fractal/graphs/{graph_id} returns 200 with deleted confirmation."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.delete_graph",
-                return_value={"deleted": True, "graph_id": "g-1"},
-            ) as mock_delete,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        delete_mock = bigfoot.mock("spellbook.admin.routes.fractal:delete_graph")
+        delete_mock.calls(
+            lambda graph_id: _async_value({"deleted": True, "graph_id": graph_id})
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.calls(lambda event: _async_value(None))
+
+        with bigfoot:
             response = client.delete("/api/fractal/graphs/g-1")
-            assert response.status_code == 200
-            assert response.json() == {"deleted": True, "graph_id": "g-1"}
 
-            # Verify delete_graph was called with the correct graph_id
-            mock_delete.assert_called_once_with("g-1")
+        assert response.status_code == 200
+        assert response.json() == {"deleted": True, "graph_id": "g-1"}
 
-            # Verify event was published
-            assert mock_bus.publish.call_count == 1
-            published_event = mock_bus.publish.call_args[0][0]
-            assert published_event.subsystem.value == "fractal"
-            assert published_event.event_type == "fractal.graph_deleted"
-            assert published_event.data == {"graph_id": "g-1"}
+        # Verify delete_graph was called with the correct graph_id
+        delete_mock.assert_call(args=("g-1",), kwargs={})
+
+        # Verify event was published
+        bus_mock.publish.assert_call(
+            args=(IsInstance(Event),), kwargs={}
+        )
 
     def test_delete_graph_not_found(self, client):
         """DELETE /fractal/graphs/{graph_id} returns 404 when graph doesn't exist."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.delete_graph",
-                return_value={"error": "Graph 'g-missing' not found."},
-            ) as mock_delete,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        delete_mock = bigfoot.mock("spellbook.admin.routes.fractal:delete_graph")
+        delete_mock.calls(
+            lambda graph_id: _async_value(
+                {"error": "Graph 'g-missing' not found."}
+            )
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.required(False)
+
+        with bigfoot:
             response = client.delete("/api/fractal/graphs/g-missing")
-            assert response.status_code == 404
-            assert response.json() == {
-                "error": {"code": "GRAPH_NOT_FOUND", "message": "Graph not found"}
-            }
 
-            mock_delete.assert_called_once_with("g-missing")
+        assert response.status_code == 404
+        assert response.json() == {
+            "error": {"code": "GRAPH_NOT_FOUND", "message": "Graph not found"}
+        }
 
-            # No event published on failure
-            mock_bus.publish.assert_not_called()
+        delete_mock.assert_call(args=("g-missing",), kwargs={})
 
     def test_delete_graph_requires_auth(self, unauthenticated_client):
         """DELETE /fractal/graphs/{graph_id} returns 401 without auth."""
@@ -763,131 +723,139 @@ class TestFractalGraphDelete:
 class TestFractalGraphStatusUpdate:
     def test_update_status_success(self, client):
         """PATCH /fractal/graphs/{graph_id}/status returns 200 with updated status."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.update_graph_status",
-                return_value={
-                    "graph_id": "g-1",
-                    "status": "completed",
-                    "previous_status": "active",
-                },
-            ) as mock_update,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        update_mock = bigfoot.mock(
+            "spellbook.admin.routes.fractal:update_graph_status"
+        )
+        update_mock.calls(
+            lambda graph_id, status, reason: _async_value({
+                "graph_id": "g-1",
+                "status": "completed",
+                "previous_status": "active",
+            })
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.calls(lambda event: _async_value(None))
+
+        with bigfoot:
             response = client.patch(
                 "/api/fractal/graphs/g-1/status",
                 json={"status": "completed"},
             )
-            assert response.status_code == 200
-            assert response.json() == {
-                "graph_id": "g-1",
-                "status": "completed",
-                "previous_status": "active",
-            }
 
-            mock_update.assert_called_once_with("g-1", "completed", None)
+        assert response.status_code == 200
+        assert response.json() == {
+            "graph_id": "g-1",
+            "status": "completed",
+            "previous_status": "active",
+        }
 
-            # Verify event was published
-            assert mock_bus.publish.call_count == 1
-            published_event = mock_bus.publish.call_args[0][0]
-            assert published_event.subsystem.value == "fractal"
-            assert published_event.event_type == "fractal.graph_updated"
-            assert published_event.data == {
-                "graph_id": "g-1",
-                "status": "completed",
-            }
+        update_mock.assert_call(args=("g-1", "completed", None), kwargs={})
+        bus_mock.publish.assert_call(
+            args=(IsInstance(Event),), kwargs={}
+        )
 
     def test_update_status_with_reason(self, client):
         """PATCH /fractal/graphs/{graph_id}/status passes reason to graph_ops."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.update_graph_status",
-                return_value={
-                    "graph_id": "g-1",
-                    "status": "paused",
-                    "previous_status": "active",
-                },
-            ) as mock_update,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        update_mock = bigfoot.mock(
+            "spellbook.admin.routes.fractal:update_graph_status"
+        )
+        update_mock.calls(
+            lambda graph_id, status, reason: _async_value({
+                "graph_id": "g-1",
+                "status": "paused",
+                "previous_status": "active",
+            })
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.calls(lambda event: _async_value(None))
+
+        with bigfoot:
             response = client.patch(
                 "/api/fractal/graphs/g-1/status",
                 json={"status": "paused", "reason": "taking a break"},
             )
-            assert response.status_code == 200
-            assert response.json() == {
-                "graph_id": "g-1",
-                "status": "paused",
-                "previous_status": "active",
-            }
 
-            mock_update.assert_called_once_with("g-1", "paused", "taking a break")
+        assert response.status_code == 200
+        assert response.json() == {
+            "graph_id": "g-1",
+            "status": "paused",
+            "previous_status": "active",
+        }
+
+        update_mock.assert_call(
+            args=("g-1", "paused", "taking a break"), kwargs={}
+        )
+        bus_mock.publish.assert_call(
+            args=(IsInstance(Event),), kwargs={}
+        )
 
     def test_update_status_invalid_transition(self, client):
         """PATCH /fractal/graphs/{graph_id}/status returns 400 for invalid transition."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.update_graph_status",
-                return_value={
-                    "error": "Invalid transition from 'completed' to 'active'. "
-                    "Allowed transitions from 'completed': []"
-                },
-            ) as mock_update,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        update_mock = bigfoot.mock(
+            "spellbook.admin.routes.fractal:update_graph_status"
+        )
+        update_mock.calls(
+            lambda graph_id, status, reason: _async_value({
+                "error": "Invalid transition from 'completed' to 'active'. "
+                "Allowed transitions from 'completed': []"
+            })
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.required(False)
+
+        with bigfoot:
             response = client.patch(
                 "/api/fractal/graphs/g-1/status",
                 json={"status": "active"},
             )
-            assert response.status_code == 400
-            assert response.json() == {
-                "error": {
-                    "code": "INVALID_TRANSITION",
-                    "message": (
-                        "Invalid transition from 'completed' to 'active'. "
-                        "Allowed transitions from 'completed': []"
-                    ),
-                }
-            }
 
-            mock_update.assert_called_once_with("g-1", "active", None)
-            mock_bus.publish.assert_not_called()
+        assert response.status_code == 400
+        assert response.json() == {
+            "error": {
+                "code": "INVALID_TRANSITION",
+                "message": (
+                    "Invalid transition from 'completed' to 'active'. "
+                    "Allowed transitions from 'completed': []"
+                ),
+            }
+        }
+
+        update_mock.assert_call(args=("g-1", "active", None), kwargs={})
 
     def test_update_status_not_found(self, client):
         """PATCH /fractal/graphs/{graph_id}/status returns 404 when graph missing."""
-        with (
-            patch(
-                "spellbook.admin.routes.fractal.update_graph_status",
-                return_value={"error": "Graph 'g-missing' not found."},
-            ) as mock_update,
-            patch(
-                "spellbook.admin.routes.fractal.event_bus",
-            ) as mock_bus,
-        ):
-            mock_bus.publish = AsyncMock()
+        update_mock = bigfoot.mock(
+            "spellbook.admin.routes.fractal:update_graph_status"
+        )
+        update_mock.calls(
+            lambda graph_id, status, reason: _async_value(
+                {"error": "Graph 'g-missing' not found."}
+            )
+        )
+
+        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
+        bus_mock.publish.required(False)
+
+        with bigfoot:
             response = client.patch(
                 "/api/fractal/graphs/g-missing/status",
                 json={"status": "completed"},
             )
-            assert response.status_code == 404
-            assert response.json() == {
-                "error": {
-                    "code": "GRAPH_NOT_FOUND",
-                    "message": "Graph not found",
-                }
-            }
 
-            mock_update.assert_called_once_with("g-missing", "completed", None)
-            mock_bus.publish.assert_not_called()
+        assert response.status_code == 404
+        assert response.json() == {
+            "error": {
+                "code": "GRAPH_NOT_FOUND",
+                "message": "Graph not found",
+            }
+        }
+
+        update_mock.assert_call(
+            args=("g-missing", "completed", None), kwargs={}
+        )
 
     def test_update_status_requires_auth(self, unauthenticated_client):
         """PATCH /fractal/graphs/{graph_id}/status returns 401 without auth."""

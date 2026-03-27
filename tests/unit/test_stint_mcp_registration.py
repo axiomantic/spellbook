@@ -3,7 +3,8 @@
 import inspect
 import sys
 from pathlib import Path
-from unittest.mock import patch
+import bigfoot
+from dirty_equals import IsStr
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
@@ -125,10 +126,10 @@ class TestStintPushBehavioralMode:
             fn = fn.__wrapped__
 
         mock_result = {"success": True, "depth": 1, "stack": []}
-        with patch(
-            "spellbook.coordination.stint.push_stint",
-            return_value=mock_result,
-        ) as mock_push:
+        mock_push = bigfoot.mock("spellbook.coordination.stint:push_stint")
+        mock_push.__call__.returns(mock_result)
+
+        with bigfoot:
             result = fn(
                 project_path="/tmp/test",
                 name="test-stint",
@@ -137,15 +138,23 @@ class TestStintPushBehavioralMode:
                 behavioral_mode="ORCHESTRATOR: dispatch subagents",
                 metadata=None,
             )
-            mock_push.assert_called_once_with(
-                project_path="/tmp/test",
-                name="test-stint",
-                stint_type="custom",
-                purpose="testing",
-                behavioral_mode="ORCHESTRATOR: dispatch subagents",
-                metadata=None,
-            )
-            assert result == {"success": True, "depth": 1, "stack": []}
+
+        mock_push.__call__.assert_call(
+            kwargs={
+                "project_path": "/tmp/test",
+                "name": "test-stint",
+                "stint_type": "custom",
+                "purpose": "testing",
+                "behavioral_mode": "ORCHESTRATOR: dispatch subagents",
+                "metadata": None,
+            },
+        )
+        bigfoot.log_mock.assert_log(
+            "WARNING",
+            IsStr(regex=r"(No event loop available|Event loop not running) for publish_sync, dropping event"),
+            "spellbook.admin.events",
+        )
+        assert result == {"success": True, "depth": 1, "stack": []}
 
     def test_stint_push_still_accepts_type_parameter(self):
         """type parameter should still be accepted for backward compatibility."""

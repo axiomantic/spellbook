@@ -1,7 +1,6 @@
 ---
 name: reflexion
-description: |
-  Use when roundtable returns ITERATE verdict during development. Analyzes feedback to extract root causes, stores reflections in the workflow database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
+description: "Invoked by develop when iteration feedback requires a retry, not directly by users. Prevents repeating the same mistakes across attempts. Also relevant when: 'why did this fail again', 'same error twice', 'what should I do differently', 'keep making the same mistake'."
 ---
 
 # Reflexion

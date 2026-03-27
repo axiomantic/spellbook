@@ -5,7 +5,7 @@ import os
 import pytest
 import time
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from types import SimpleNamespace
 
 
 @pytest.fixture
@@ -271,16 +271,17 @@ class TestHealthCheckFullMode:
         monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
 
         # Mock gh to avoid actual CLI calls
-        mock_gh_result = MagicMock()
-        mock_gh_result.stdout = "gh version 2.45.0 (2024-01-01)"
-        mock_gh_result.returncode = 0
+        mock_gh_result = SimpleNamespace(
+            stdout="gh version 2.45.0 (2024-01-01)",
+            returncode=0,
+        )
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
 
         # Mock coordination config
         mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        mock_load = MagicMock(return_value=mock_config)
         monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config",
+            lambda: mock_config,
         )
 
         # Call without full parameter - first call should be full
@@ -366,16 +367,17 @@ class TestHealthCheckFullMode:
         monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
 
         # Mock gh to avoid actual CLI calls
-        mock_gh_result = MagicMock()
-        mock_gh_result.stdout = "gh version 2.45.0 (2024-01-01)"
-        mock_gh_result.returncode = 0
+        mock_gh_result = SimpleNamespace(
+            stdout="gh version 2.45.0 (2024-01-01)",
+            returncode=0,
+        )
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
 
         # Mock coordination config
         mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        mock_load = MagicMock(return_value=mock_config)
         monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
+            "spellbook.health.checker.load_coordination_config",
+            lambda: mock_config,
         )
 
         # Simulate first call already done, but interval has expired

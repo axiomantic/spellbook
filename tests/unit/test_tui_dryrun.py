@@ -1,6 +1,6 @@
 """Tests for TUI dry-run mode and terminal fallback."""
+import sys
 from io import StringIO
-from unittest.mock import patch
 
 
 def test_dry_run_banner_visible():
@@ -33,28 +33,35 @@ def test_progress_steps_show_all_states():
     assert "Step D" in output
 
 
-def test_supports_rich_false_when_dumb_terminal():
+def test_supports_rich_false_when_dumb_terminal(monkeypatch):
     """supports_rich must return False for TERM=dumb."""
     from installer.tui import supports_rich
-    with patch.dict("os.environ", {"TERM": "dumb"}):
-        assert supports_rich() is False
+    monkeypatch.setenv("TERM", "dumb")
+    assert supports_rich() is False
 
 
-def test_supports_rich_false_when_rich_missing():
+def test_supports_rich_false_when_rich_missing(monkeypatch):
     """supports_rich must return False if Rich is not importable."""
-    from installer.tui import supports_rich
+    import importlib
+    import installer.tui
 
-    # Temporarily make rich unimportable
-    real_import = __builtins__.__import__ if hasattr(__builtins__, '__import__') else __import__
+    # Remove rich from sys.modules so the import inside supports_rich retries
+    saved = sys.modules.pop("rich", None)
+    # Block re-import of rich by inserting None (triggers ImportError)
+    monkeypatch.setitem(sys.modules, "rich", None)
 
-    def mock_import(name, *args, **kwargs):
-        if name == "rich":
-            raise ImportError("mocked")
-        return real_import(name, *args, **kwargs)
-
-    with patch("builtins.__import__", side_effect=mock_import):
-        result = supports_rich()
+    # Reload the module so the top-level state is fresh
+    importlib.reload(installer.tui)
+    try:
+        result = installer.tui.supports_rich()
         assert result is False
+    finally:
+        # Restore rich so other tests are unaffected
+        if saved is not None:
+            sys.modules["rich"] = saved
+        else:
+            sys.modules.pop("rich", None)
+        importlib.reload(installer.tui)
 
 
 def test_plain_text_fallback_header():

@@ -4,9 +4,9 @@ These tests verify the end-to-end flow from hook capture through
 consolidation to MEMORY.md regeneration.
 """
 
+import bigfoot
 import pytest
 from pathlib import Path
-from unittest.mock import patch
 
 from spellbook.core.db import init_db, close_all_connections
 from spellbook.memory.store import insert_memory, get_unconsolidated_events
@@ -51,17 +51,37 @@ class TestMemoryBridgeIntegration:
             "session_id": "integration-test-1",
         }
 
-        # Simulate what the endpoint does when the hook dispatches to it
-        with patch("hooks.spellbook_hook._http_post") as mock_post, \
-             patch("hooks.spellbook_hook._resolve_git_context",
-                   return_value=("/Users/alice/project", "main")):
+        # Capture call args from _http_post
+        post_calls = []
+        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post.calls(lambda *a, **kw: post_calls.append((a, kw))).calls(
+            lambda *a, **kw: post_calls.append((a, kw))
+        )
+        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git.returns(("/Users/alice/project", "main"))
+
+        with bigfoot:
             _memory_bridge("Write", data)
 
-            # Verify two HTTP calls were dispatched
-            assert mock_post.call_count == 2
+        # Verify two HTTP calls were dispatched
+        assert len(post_calls) == 2
 
-            # Now simulate what the endpoint does with the content payload
-            content_payload = mock_post.call_args_list[1][0][1]
+        with bigfoot.in_any_order():
+            mock_git.assert_call(
+                args=(data["cwd"],),
+                kwargs={},
+            )
+            mock_post.assert_call(
+                args=(post_calls[0][0][0], post_calls[0][0][1]),
+                kwargs=post_calls[0][1],
+            )
+            mock_post.assert_call(
+                args=(post_calls[1][0][0], post_calls[1][0][1]),
+                kwargs=post_calls[1][1],
+            )
+
+        # Now simulate what the endpoint does with the content payload
+        content_payload = post_calls[1][0][1]
 
         # Replay the endpoint logic: store the brief-summary event
         result = do_log_event(
@@ -70,7 +90,7 @@ class TestMemoryBridgeIntegration:
             project=content_payload["project"],
             tool_name="auto_memory_bridge",
             subject=content_payload["file_path"],
-            summary=f"MEMORY.md updated: 3 lines, sections: Key Facts",
+            summary="MEMORY.md updated: 3 lines, sections: Key Facts",
             tags="auto-memory,bridge,memory",
             event_type="auto_memory_bridge",
             branch=content_payload["branch"],
@@ -115,13 +135,19 @@ class TestMemoryBridgeIntegration:
         """
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        with patch("spellbook.memory.bootstrap._resolve_auto_memory_dir",
-                    return_value=auto_memory_dir), \
-             patch("spellbook.memory.bootstrap.get_db_path",
-                    return_value=Path(db)), \
-             patch("spellbook.memory.bootstrap.encode_cwd",
-                    return_value="tmp-test"):
+        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve.returns(auto_memory_dir)
+        mock_db_path = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db_path.returns(Path(db))
+        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode.returns("tmp-test")
+
+        with bigfoot:
             regenerate_memory_md_for_project("/tmp/test")
+
+        mock_resolve.assert_call(args=("/tmp/test",), kwargs={})
+        mock_db_path.assert_call(args=(), kwargs={})
+        mock_encode.assert_call(args=("/tmp/test",), kwargs={})
 
         memory_md = auto_memory_dir / "MEMORY.md"
         assert memory_md.exists()
