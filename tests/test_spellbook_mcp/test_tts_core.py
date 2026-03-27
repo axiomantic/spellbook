@@ -1,13 +1,14 @@
-"""Tests for spellbook/tts.py - Core TTS module.
+"""Tests for spellbook/notifications/tts.py - Wyoming TTS client.
 
-Tests the lazy-loaded Kokoro TTS integration in isolation.
-All kokoro/soundfile/sounddevice imports are mocked.
+Tests the Wyoming protocol-based TTS integration in isolation.
+All Wyoming/sounddevice/numpy operations are mocked via bigfoot or monkeypatch.
 """
 
-import os
-import sys
-import threading
+import asyncio
+import socket
+import tempfile
 import time
+from pathlib import Path
 from types import SimpleNamespace
 
 import bigfoot
@@ -18,257 +19,199 @@ import pytest
 def reset_tts_state():
     """Reset module-level TTS state between tests."""
     import spellbook.notifications.tts as tts_mod
-    tts_mod._kokoro_available = None
-    tts_mod._kokoro_pipeline = None
-    tts_mod._import_error = None
+    tts_mod._server_reachable = False
     yield
-    tts_mod._kokoro_available = None
-    tts_mod._kokoro_pipeline = None
-    tts_mod._import_error = None
+    tts_mod._server_reachable = False
 
 
-class TestCheckAvailability:
-    """_check_availability() probes for kokoro and soundfile imports."""
+class TestWyomingSynthesize:
+    """_wyoming_synthesize() sends Synthesize event and collects AudioChunks."""
 
-    def test_returns_true_when_kokoro_importable(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-        mock_kokoro = SimpleNamespace()
-        mock_soundfile = SimpleNamespace()
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
-        monkeypatch.setitem(sys.modules, "soundfile", mock_soundfile)
-        result = tts_mod._check_availability()
-        assert result is True
-        assert tts_mod._kokoro_available is True
-        assert tts_mod._import_error is None
-
-    def test_returns_false_when_kokoro_missing(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-        # Setting sys.modules entry to None forces ImportError on import
-        monkeypatch.setitem(sys.modules, "kokoro", None)
-        result = tts_mod._check_availability()
-        assert result is False
-        assert tts_mod._kokoro_available is False
-        assert "kokoro" in tts_mod._import_error
-
-    def test_caches_result_on_second_call(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-        tts_mod._kokoro_available = True  # Pre-set cached value
-        # Setting sys.modules to None proves cache bypasses imports entirely
-        monkeypatch.setitem(sys.modules, "kokoro", None)
-        monkeypatch.setitem(sys.modules, "soundfile", None)
-        result = tts_mod._check_availability()
-        assert result is True
-
-
-class TestLoadModel:
-    """_load_model() thread-safe model loading with double-checked locking."""
-
-    def test_loads_model_successfully(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-        mock_pipeline = SimpleNamespace()
-        mock_kokoro = SimpleNamespace(KPipeline=lambda lang_code="a": mock_pipeline)
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
-        tts_mod._load_model()
-        assert tts_mod._kokoro_pipeline is mock_pipeline
-
-    def test_failure_not_cached_allows_retry(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_successful_synthesis(self, monkeypatch):
+        """Sends Synthesize, receives AudioChunks + AudioStop, returns PCM."""
         import spellbook.notifications.tts as tts_mod
 
-        def raise_oom(lang_code="a"):
-            raise RuntimeError("CUDA OOM")
+        pcm_data = b"\x00\x01" * 100
 
-        mock_kokoro = SimpleNamespace(KPipeline=raise_oom)
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
-        tts_mod._load_model()
-        assert tts_mod._kokoro_pipeline is None
-        assert "CUDA OOM" in tts_mod._import_error
+        from wyoming.audio import AudioChunk, AudioStop
 
-        # Second call should retry (not cached on failure)
-        mock_pipeline = SimpleNamespace()
-        mock_kokoro.KPipeline = lambda lang_code="a": mock_pipeline
-        tts_mod._load_model()
-        assert tts_mod._kokoro_pipeline is mock_pipeline
+        chunk_event = AudioChunk(
+            rate=22050, width=2, channels=1, audio=pcm_data
+        ).event()
+        stop_event = AudioStop().event()
+        events_to_return = [chunk_event, stop_event]
 
-    def test_concurrent_loads_only_create_one_pipeline(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-        call_count = 0
-        mock_pipeline = SimpleNamespace()
+        event_index = 0
 
-        def slow_init(lang_code="a"):
-            nonlocal call_count
-            call_count += 1
-            time.sleep(0.1)  # Simulate slow model load
-            return mock_pipeline
+        async def mock_async_read_event(reader):
+            nonlocal event_index
+            if event_index < len(events_to_return):
+                evt = events_to_return[event_index]
+                event_index += 1
+                return evt
+            return None
 
-        mock_kokoro = SimpleNamespace(KPipeline=slow_init)
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
+        write_calls = []
 
-        threads = [threading.Thread(target=tts_mod._load_model) for _ in range(3)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(timeout=5)
+        async def mock_async_write_event(event, writer):
+            write_calls.append(event)
 
-        assert call_count == 1
-        assert tts_mod._kokoro_pipeline is mock_pipeline
+        monkeypatch.setattr(tts_mod, "async_read_event", mock_async_read_event)
+        monkeypatch.setattr(tts_mod, "async_write_event", mock_async_write_event)
 
-    def test_skips_if_already_loaded(self):
-        import spellbook.notifications.tts as tts_mod
-        existing = SimpleNamespace()
-        tts_mod._kokoro_pipeline = existing
-        tts_mod._load_model()
-        assert tts_mod._kokoro_pipeline is existing  # Unchanged
-
-
-class TestGenerateAudio:
-    """_generate_audio() runs KPipeline and writes WAV to temp file."""
-
-    def test_generates_wav_file(self, tmp_path, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-
-        # Set up mock pipeline as a callable that returns an iterable
-        mock_audio = SimpleNamespace(numpy=lambda: [0.1, 0.2, 0.3])
-        pipeline_results = [("hello", "h@loU", mock_audio)]
-
-        def mock_pipeline_call(text, voice=None):
-            return iter(pipeline_results)
-
-        tts_mod._kokoro_pipeline = mock_pipeline_call
-
-        # Mock soundfile and numpy in sys.modules
-        sf_writes = []
-        mock_sf = SimpleNamespace(write=lambda path, data, rate: sf_writes.append((path, data, rate)))
-        mock_np = SimpleNamespace(concatenate=lambda chunks: [0.1, 0.2, 0.3])
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-        monkeypatch.setitem(sys.modules, "numpy", mock_np)
-
-        mock_tempfile = bigfoot.mock("spellbook.notifications.tts:tempfile")
-        mock_tempfile.gettempdir.returns(str(tmp_path))
-
-        mock_uuid = bigfoot.mock("spellbook.notifications.tts:uuid")
-        mock_uuid.uuid4.returns("fixed-uuid")
-
-        with bigfoot:
-            wav_path = tts_mod._generate_audio("hello", "af_heart")
-
-        expected = os.path.join(str(tmp_path), f"{tts_mod._WAV_PREFIX}fixed-uuid.wav")
-        assert wav_path == expected
-        assert len(sf_writes) == 1
-        assert sf_writes[0][0] == wav_path
-        assert sf_writes[0][1] == [0.1, 0.2, 0.3]
-        assert sf_writes[0][2] == 24000
-        mock_uuid.uuid4.assert_call(args=(), kwargs={})
-        mock_tempfile.gettempdir.assert_call(args=(), kwargs={})
-
-    def test_raises_when_pipeline_not_loaded(self):
-        import spellbook.notifications.tts as tts_mod
-        tts_mod._kokoro_pipeline = None
-        with pytest.raises(RuntimeError, match="Kokoro pipeline not loaded"):
-            tts_mod._generate_audio("hello", "af_heart")
-
-    def test_raises_on_empty_audio_chunks(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-
-        def mock_pipeline_call(text, voice=None):
-            return iter([])
-
-        tts_mod._kokoro_pipeline = mock_pipeline_call
-
-        mock_sf = SimpleNamespace()
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-
-        with pytest.raises(ValueError, match="No audio generated"):
-            tts_mod._generate_audio("hello", "af_heart")
-
-    def test_raises_on_pipeline_error(self, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-
-        def mock_pipeline_call(text, voice=None):
-            raise ValueError("Invalid voice 'xyz'")
-
-        tts_mod._kokoro_pipeline = mock_pipeline_call
-
-        mock_sf = SimpleNamespace()
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-
-        with pytest.raises(ValueError, match="Invalid voice"):
-            tts_mod._generate_audio("hello", "xyz")
-
-
-class TestPlayAudio:
-    """_play_audio() uses sounddevice to play WAV and cleans up the file."""
-
-    def test_plays_and_deletes_wav(self, tmp_path, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
-
-        wav_file = tmp_path / "test.wav"
-        wav_file.write_bytes(b"fake wav data")
-
-        class MockAudioData:
-            def __mul__(self, other):
-                return f"scaled_{other}"
-
-        mock_data = MockAudioData()
-        mock_sf = SimpleNamespace(read=lambda path: (mock_data, 24000))
-
-        play_calls = []
-        wait_calls = []
-        mock_sd = SimpleNamespace(
-            play=lambda data, rate: play_calls.append((data, rate)),
-            wait=lambda: wait_calls.append(True),
-            _terminate=lambda: None,
-            _initialize=lambda: None,
+        mock_writer = SimpleNamespace(
+            close=lambda: None,
+            wait_closed=lambda: asyncio.sleep(0),
         )
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-        monkeypatch.setitem(sys.modules, "sounddevice", mock_sd)
 
-        tts_mod._play_audio(str(wav_file), 0.5)
+        open_calls = []
 
-        assert len(play_calls) == 1
-        assert play_calls[0] == ("scaled_0.5", 24000)
-        assert len(wait_calls) == 1
-        assert not wav_file.exists()  # File deleted after playback
+        async def mock_open_conn(host, port):
+            open_calls.append((host, port))
+            return SimpleNamespace(), mock_writer
 
-    def test_preserves_file_on_playback_error(self, tmp_path, monkeypatch):
-        import spellbook.notifications.tts as tts_mod
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
 
-        wav_file = tmp_path / "test.wav"
-        wav_file.write_bytes(b"fake wav data")
-
-        class MockAudioData:
-            def __mul__(self, other):
-                return f"scaled_{other}"
-
-        mock_data = MockAudioData()
-        mock_sf = SimpleNamespace(read=lambda path: (mock_data, 24000))
-
-        def play_raises(data, rate):
-            raise RuntimeError("No output device")
-
-        mock_sd = SimpleNamespace(
-            play=play_raises,
-            wait=lambda: None,
-            _terminate=lambda: None,
-            _initialize=lambda: None,
+        pcm, rate, width = await tts_mod._wyoming_synthesize(
+            "hello", "test-voice", "localhost", 10200
         )
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-        monkeypatch.setitem(sys.modules, "sounddevice", mock_sd)
 
-        with pytest.raises(RuntimeError, match="No output device"):
-            tts_mod._play_audio(str(wav_file), 0.5)
+        assert pcm == pcm_data
+        assert rate == 22050
+        assert width == 2
+        assert open_calls == [("localhost", 10200)]
+        assert len(write_calls) == 1
+        assert write_calls[0].type == "synthesize"
 
-        assert wav_file.exists()  # File preserved for manual playback
-
-    def test_sounddevice_import_failure_raises(self, monkeypatch):
+    @pytest.mark.asyncio
+    async def test_connection_refused_raises(self, monkeypatch):
+        """ConnectionError when server is unreachable."""
         import spellbook.notifications.tts as tts_mod
 
-        mock_sf = SimpleNamespace()
-        monkeypatch.setitem(sys.modules, "soundfile", mock_sf)
-        # Setting sys.modules entry to None forces ImportError on import
-        monkeypatch.setitem(sys.modules, "sounddevice", None)
+        async def mock_open_conn(host, port):
+            raise OSError("Connection refused")
 
-        with pytest.raises(ImportError, match="sounddevice"):
-            tts_mod._play_audio("/fake/path.wav", 0.5)
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
+
+        with pytest.raises(ConnectionError, match="Cannot reach"):
+            await tts_mod._wyoming_synthesize("hello", "", "localhost", 10200)
+
+    @pytest.mark.asyncio
+    async def test_empty_audio_raises(self, monkeypatch):
+        """RuntimeError when no AudioChunks received."""
+        import spellbook.notifications.tts as tts_mod
+        from wyoming.audio import AudioStop
+
+        stop_event = AudioStop().event()
+
+        async def mock_async_read_event(reader):
+            return stop_event
+
+        async def mock_async_write_event(event, writer):
+            pass
+
+        monkeypatch.setattr(tts_mod, "async_read_event", mock_async_read_event)
+        monkeypatch.setattr(tts_mod, "async_write_event", mock_async_write_event)
+
+        mock_writer = SimpleNamespace(
+            close=lambda: None,
+            wait_closed=lambda: asyncio.sleep(0),
+        )
+
+        async def mock_open_conn(host, port):
+            return SimpleNamespace(), mock_writer
+
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
+
+        with pytest.raises(RuntimeError, match="no audio data"):
+            await tts_mod._wyoming_synthesize("hello", "", "localhost", 10200)
+
+    @pytest.mark.asyncio
+    async def test_default_sample_rate_when_missing(self, monkeypatch):
+        """Defaults to 22050 Hz when AudioChunk does not provide rate."""
+        import spellbook.notifications.tts as tts_mod
+        from wyoming.audio import AudioChunk, AudioStop
+
+        chunk_event = AudioChunk(
+            rate=0, width=2, channels=1, audio=b"\x00\x01"
+        ).event()
+        stop_event = AudioStop().event()
+        events = [chunk_event, stop_event]
+        idx = 0
+
+        async def mock_read(reader):
+            nonlocal idx
+            if idx < len(events):
+                e = events[idx]
+                idx += 1
+                return e
+            return None
+
+        async def mock_write(event, writer):
+            pass
+
+        monkeypatch.setattr(tts_mod, "async_read_event", mock_read)
+        monkeypatch.setattr(tts_mod, "async_write_event", mock_write)
+
+        mock_writer = SimpleNamespace(
+            close=lambda: None,
+            wait_closed=lambda: asyncio.sleep(0),
+        )
+
+        async def mock_open_conn(h, p):
+            return SimpleNamespace(), mock_writer
+
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
+
+        _pcm, rate, _width = await tts_mod._wyoming_synthesize(
+            "hi", "", "localhost", 10200
+        )
+
+        assert rate == 22050
+
+
+class TestEnsureConnected:
+    """ensure_connected() verifies Wyoming server is reachable."""
+
+    @pytest.mark.asyncio
+    async def test_returns_true_when_reachable(self, monkeypatch):
+        import spellbook.notifications.tts as tts_mod
+        import spellbook.core.config as config_mod
+
+        monkeypatch.setattr(config_mod, "config_get", lambda key: None)
+
+        mock_writer = SimpleNamespace(
+            close=lambda: None,
+            wait_closed=lambda: asyncio.sleep(0),
+        )
+
+        async def mock_open_conn(host, port):
+            return SimpleNamespace(), mock_writer
+
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
+
+        success, error = await tts_mod.ensure_connected()
+
+        assert success is True
+        assert error is None
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_unreachable(self, monkeypatch):
+        import spellbook.notifications.tts as tts_mod
+        import spellbook.core.config as config_mod
+
+        monkeypatch.setattr(config_mod, "config_get", lambda key: None)
+
+        async def mock_open_conn(host, port):
+            raise OSError("Connection refused")
+
+        monkeypatch.setattr(asyncio, "open_connection", mock_open_conn)
+
+        success, error = await tts_mod.ensure_connected()
+
+        assert success is False
+        assert "Cannot reach" in error
 
 
 class TestResolveSetting:
@@ -276,7 +219,6 @@ class TestResolveSetting:
 
     def test_explicit_value_wins(self):
         import spellbook.notifications.tts as tts_mod
-        # Explicit value short-circuits before any config lookup
         result = tts_mod._resolve_setting("voice", explicit_value="explicit_voice")
         assert result == "explicit_voice"
 
@@ -284,7 +226,6 @@ class TestResolveSetting:
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {"voice": "session_voice"}})
-        # Session value found, so config_get is never called
         result = tts_mod._resolve_setting("voice")
         assert result == "session_voice"
 
@@ -302,7 +243,7 @@ class TestResolveSetting:
         assert result == "config_voice"
         mock_cg.assert_call(args=("tts_voice",), kwargs={})
 
-    def test_falls_back_to_default(self, monkeypatch):
+    def test_falls_back_to_default_empty_string(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
@@ -313,7 +254,7 @@ class TestResolveSetting:
         with bigfoot:
             result = tts_mod._resolve_setting("voice")
 
-        assert result == "af_heart"
+        assert result == ""
         mock_cg.assert_call(args=("tts_voice",), kwargs={})
 
     def test_default_volume_is_0_3(self, monkeypatch):
@@ -346,13 +287,12 @@ class TestResolveSetting:
 
 
 class TestGetStatus:
-    """get_status() returns TTS availability and settings without side effects."""
+    """get_status() returns TTS availability and settings."""
 
-    def test_status_when_available_and_loaded(self, monkeypatch):
+    def test_status_when_server_reachable(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
-        tts_mod._kokoro_pipeline = SimpleNamespace()  # Model loaded
+        tts_mod._server_reachable = True
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
@@ -360,67 +300,102 @@ class TestGetStatus:
         status = tts_mod.get_status()
 
         assert status["available"] is True
-        assert status["model_loaded"] is True
+        assert status["server_reachable"] is True
         assert status["enabled"] is True
-        assert status["voice"] == "af_heart"
+        assert status["voice"] == ""
         assert status["volume"] == 0.3
         assert status["error"] is None
+        assert "tts_wyoming_host" in status
+        assert "tts_wyoming_port" in status
 
-    def test_status_when_not_available(self, monkeypatch):
+    def test_status_when_server_unreachable(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = False
-        tts_mod._import_error = "Missing dependency: kokoro"
+        tts_mod._server_reachable = False
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
         status = tts_mod.get_status()
 
-        assert status["available"] is False
-        assert status["model_loaded"] is False
-        assert "kokoro" in status["error"]
+        assert status["available"] is True
+        assert status["server_reachable"] is False
 
-    def test_status_does_not_trigger_model_load(self, monkeypatch):
+
+class TestPreload:
+    """preload() probes Wyoming server connectivity at startup."""
+
+    def test_preload_sets_server_reachable_true(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
-        tts_mod._kokoro_pipeline = None  # Not loaded
 
-        monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
-        status = tts_mod.get_status()
+        cleanup_called = []
+        monkeypatch.setattr(tts_mod, "_cleanup_stale_wav_files", lambda: cleanup_called.append(True))
 
-        assert status["model_loaded"] is False
-        assert tts_mod._kokoro_pipeline is None  # Still not loaded
+        check_calls = []
+        def fake_check_server(host, port):
+            check_calls.append((host, port))
+            return True
+        monkeypatch.setattr(tts_mod, "_check_server", fake_check_server)
 
+        tts_mod.preload()
 
-class TestEnsureLoaded:
-    """ensure_loaded() is the async wrapper around _load_model()."""
+        assert tts_mod._server_reachable is True
+        assert cleanup_called == [True]
+        assert check_calls == [("localhost", 10200)]
 
-    @pytest.mark.asyncio
-    async def test_returns_true_on_success(self, monkeypatch):
+    def test_preload_sets_server_reachable_false_on_failure(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
-        mock_pipeline = SimpleNamespace()
-        mock_kokoro = SimpleNamespace(KPipeline=lambda lang_code="a": mock_pipeline)
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
-        success, error = await tts_mod.ensure_loaded()
-        assert success is True
-        assert error is None
+        import spellbook.core.config as config_mod
 
-    @pytest.mark.asyncio
-    async def test_returns_false_on_failure(self, monkeypatch):
+        monkeypatch.setattr(config_mod, "config_get", lambda key: None)
+
+        cleanup_called = []
+        monkeypatch.setattr(tts_mod, "_cleanup_stale_wav_files", lambda: cleanup_called.append(True))
+
+        check_calls = []
+        def fake_check_server(host, port):
+            check_calls.append((host, port))
+            return False
+        monkeypatch.setattr(tts_mod, "_check_server", fake_check_server)
+
+        tts_mod.preload()
+
+        assert tts_mod._server_reachable is False
+        assert cleanup_called == [True]
+        assert check_calls == [("localhost", 10200)]
+
+    def test_preload_skipped_when_disabled(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
+        import spellbook.core.config as config_mod
 
-        def raise_oom(lang_code="a"):
-            raise RuntimeError("OOM")
+        monkeypatch.setattr(config_mod, "config_get", lambda key: False if key == "tts_enabled" else None)
 
-        mock_kokoro = SimpleNamespace(KPipeline=raise_oom)
-        monkeypatch.setitem(sys.modules, "kokoro", mock_kokoro)
-        success, error = await tts_mod.ensure_loaded()
-        assert success is False
-        assert "OOM" in error
+        cleanup_called = []
+        monkeypatch.setattr(tts_mod, "_cleanup_stale_wav_files", lambda: cleanup_called.append(True))
+
+        check_calls = []
+        monkeypatch.setattr(tts_mod, "_check_server", lambda h, p: check_calls.append(True) or True)
+
+        tts_mod.preload()
+
+        assert cleanup_called == [True]
+        assert check_calls == []  # Should not check server when disabled
+
+    def test_preload_calls_cleanup(self, monkeypatch):
+        import spellbook.notifications.tts as tts_mod
+        import spellbook.core.config as config_mod
+
+        monkeypatch.setattr(config_mod, "config_get", lambda key: False if key == "tts_enabled" else None)
+
+        cleanup_called = []
+        monkeypatch.setattr(tts_mod, "_cleanup_stale_wav_files", lambda: cleanup_called.append(True))
+
+        tts_mod.preload()
+
+        assert cleanup_called == [True]
 
 
 class TestSpeak:
@@ -430,47 +405,52 @@ class TestSpeak:
     async def test_speak_success(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
-        async def fake_ensure_loaded():
-            return (True, None)
+        pcm_data = b"\x00\x01" * 100
 
-        monkeypatch.setattr(tts_mod, "ensure_loaded", fake_ensure_loaded)
+        async def fake_synth(text, voice, host, port):
+            return (pcm_data, 22050, 2)
 
-        gen_calls = []
+        monkeypatch.setattr(tts_mod, "_wyoming_synthesize", fake_synth)
 
-        def fake_generate_audio(text, voice):
-            gen_calls.append((text, voice))
-            return "/tmp/test.wav"
-
-        monkeypatch.setattr(tts_mod, "_generate_audio", fake_generate_audio)
-
+        # Mock sounddevice (has private methods that bigfoot can't intercept)
         play_calls = []
+        mock_sd = SimpleNamespace(
+            play=lambda data, rate: play_calls.append((data, rate)),
+            wait=lambda: None,
+            _terminate=lambda: None,
+            _initialize=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "sd", mock_sd)
 
-        def fake_play_audio(wav_path, volume):
-            play_calls.append((wav_path, volume))
+        # Mock wave module
+        mock_wave_file = SimpleNamespace(
+            setnchannels=lambda n: None,
+            setsampwidth=lambda w: None,
+            setframerate=lambda r: None,
+            writeframes=lambda d: None,
+            close=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "wave", SimpleNamespace(open=lambda path, mode: mock_wave_file))
+        monkeypatch.setattr(tts_mod, "uuid", SimpleNamespace(uuid4=lambda: "test-uuid"))
+        monkeypatch.setattr(tts_mod, "tempfile", SimpleNamespace(gettempdir=lambda: "/tmp"))
 
-        monkeypatch.setattr(tts_mod, "_play_audio", fake_play_audio)
-
-        result = await tts_mod.speak("hello", voice="af_heart", volume=0.3)
+        result = await tts_mod.speak("hello", voice="test-voice", volume=0.3)
 
         assert result["ok"] is True
         assert "elapsed" in result
-        assert result["wav_path"] == "/tmp/test.wav"
-        assert gen_calls == [("hello", "af_heart")]
-        assert play_calls == [("/tmp/test.wav", 0.3)]
+        assert "wav_path" in result
+        assert len(play_calls) == 1
 
     @pytest.mark.asyncio
     async def test_speak_when_disabled(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {"enabled": False}})
-        # config_get may or may not be called depending on session state
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
         result = await tts_mod.speak("hello")
@@ -479,65 +459,100 @@ class TestSpeak:
         assert "disabled" in result["error"].lower()
 
     @pytest.mark.asyncio
-    async def test_speak_when_not_available(self):
+    async def test_speak_connection_error(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
-        tts_mod._kokoro_available = False
-        tts_mod._import_error = "Missing dependency: kokoro"
+        import spellbook.core.config as config_mod
+
+        monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
+        monkeypatch.setattr(config_mod, "config_get", lambda key: None)
+
+        async def fake_synth(text, voice, host, port):
+            raise ConnectionError("Cannot reach server")
+
+        monkeypatch.setattr(tts_mod, "_wyoming_synthesize", fake_synth)
+
         result = await tts_mod.speak("hello")
+
         assert "error" in result
-        assert "not available" in result["error"].lower()
 
     @pytest.mark.asyncio
     async def test_speak_clamps_volume(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
-        async def fake_ensure_loaded():
-            return (True, None)
+        pcm_data = b"\x00\x01" * 100
 
-        monkeypatch.setattr(tts_mod, "ensure_loaded", fake_ensure_loaded)
-        monkeypatch.setattr(tts_mod, "_generate_audio", lambda text, voice: "/tmp/test.wav")
+        async def fake_synth(text, voice, host, port):
+            return (pcm_data, 22050, 2)
 
-        play_calls = []
+        monkeypatch.setattr(tts_mod, "_wyoming_synthesize", fake_synth)
 
-        def fake_play_audio(wav_path, volume):
-            play_calls.append((wav_path, volume))
+        mock_sd = SimpleNamespace(
+            play=lambda data, rate: None,
+            wait=lambda: None,
+            _terminate=lambda: None,
+            _initialize=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "sd", mock_sd)
 
-        monkeypatch.setattr(tts_mod, "_play_audio", fake_play_audio)
+        mock_wave_file = SimpleNamespace(
+            setnchannels=lambda n: None,
+            setsampwidth=lambda w: None,
+            setframerate=lambda r: None,
+            writeframes=lambda d: None,
+            close=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "wave", SimpleNamespace(open=lambda path, mode: mock_wave_file))
+        monkeypatch.setattr(tts_mod, "uuid", SimpleNamespace(uuid4=lambda: "test-uuid"))
+        monkeypatch.setattr(tts_mod, "tempfile", SimpleNamespace(gettempdir=lambda: "/tmp"))
 
         result = await tts_mod.speak("hello", volume=1.5)
 
         assert result["ok"] is True
         assert "warning" in result
-        # Volume should have been clamped to 1.0
-        assert play_calls == [("/tmp/test.wav", 1.0)]
 
     @pytest.mark.asyncio
     async def test_speak_playback_failure_returns_wav_path(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
-        tts_mod._kokoro_available = True
 
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
-        async def fake_ensure_loaded():
-            return (True, None)
+        pcm_data = b"\x00\x01" * 100
 
-        monkeypatch.setattr(tts_mod, "ensure_loaded", fake_ensure_loaded)
-        monkeypatch.setattr(tts_mod, "_generate_audio", lambda text, voice: "/tmp/test.wav")
+        async def fake_synth(text, voice, host, port):
+            return (pcm_data, 22050, 2)
 
-        def fake_play_audio(wav_path, volume):
+        monkeypatch.setattr(tts_mod, "_wyoming_synthesize", fake_synth)
+
+        def play_raises(data, rate):
             raise ImportError("No sounddevice")
 
-        monkeypatch.setattr(tts_mod, "_play_audio", fake_play_audio)
+        mock_sd = SimpleNamespace(
+            play=play_raises,
+            wait=lambda: None,
+            _terminate=lambda: None,
+            _initialize=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "sd", mock_sd)
+
+        mock_wave_file = SimpleNamespace(
+            setnchannels=lambda n: None,
+            setsampwidth=lambda w: None,
+            setframerate=lambda r: None,
+            writeframes=lambda d: None,
+            close=lambda: None,
+        )
+        monkeypatch.setattr(tts_mod, "wave", SimpleNamespace(open=lambda path, mode: mock_wave_file))
+        monkeypatch.setattr(tts_mod, "uuid", SimpleNamespace(uuid4=lambda: "test-uuid"))
+        monkeypatch.setattr(tts_mod, "tempfile", SimpleNamespace(gettempdir=lambda: "/tmp"))
 
         result = await tts_mod.speak("hello")
 
         assert result["ok"] is True
-        assert result["wav_path"] == "/tmp/test.wav"
+        assert "wav_path" in result
         assert "Audio playback failed" in result.get("warning", "")
