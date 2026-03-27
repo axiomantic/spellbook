@@ -315,8 +315,10 @@ end tell
 class TestMCPToolE2E:
     """End-to-end tests for MCP tool integration."""
 
-    def test_spawn_workflow_auto_detection(self):
+    def test_spawn_workflow_auto_detection(self, monkeypatch):
         """Test spawn workflow with auto terminal detection (tests underlying functions)."""
+        # Force macOS path so AppleScript assertions work on all platforms
+        monkeypatch.setattr("sys.platform", "darwin")
         from spellbook.daemon.terminal import spawn_terminal_window, _escape_for_applescript
 
         prompt = "/execute-work-packet /path/to/packet.md"
@@ -359,8 +361,10 @@ end tell
             kwargs={"stdout": subprocess.PIPE, "stderr": subprocess.PIPE},
         )
 
-    def test_spawn_workflow_explicit_terminal(self):
+    def test_spawn_workflow_explicit_terminal(self, monkeypatch):
         """Test spawn workflow with explicit terminal."""
+        # Force macOS path so AppleScript assertions work on all platforms
+        monkeypatch.setattr("sys.platform", "darwin")
         from spellbook.daemon.terminal import spawn_terminal_window, _escape_for_applescript
 
         prompt = "/execute-work-packet test.md"
