@@ -70,7 +70,7 @@ class TestToolRegistrationCount:
             "fractal_create_graph",  # fractal
             "mcp_swarm_create",      # coordination
             "experiment_create",     # experiments
-            "kokoro_speak",          # notifications
+            "tts_speak",             # notifications
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
             "tooling_discover",      # tooling

@@ -1,7 +1,7 @@
 """Tests for TTS session state and config in config_tools.py.
 
 Tests the TTS sub-dict in session state, tts_session_set, and tts_session_get
-functions. These are the settings layer only -- no kokoro availability checks.
+functions. These are the settings layer only -- no TTS server availability checks.
 """
 
 from datetime import datetime

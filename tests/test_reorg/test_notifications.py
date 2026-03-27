@@ -20,12 +20,11 @@ class TestNotificationsTTS:
         [
             "get_status",
             "preload",
-            "ensure_loaded",
+            "ensure_connected",
             "speak",
-            "_check_availability",
-            "_load_model",
-            "_generate_audio",
-            "_play_audio",
+            "_wyoming_synthesize",
+            "_cleanup_stale_wav_files",
+            "_check_server",
             "_resolve_setting",
         ],
     )
