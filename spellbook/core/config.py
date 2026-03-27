@@ -499,8 +499,10 @@ def session_mode_get(session_id: Optional[str] = None) -> dict:
 
 # TTS defaults (used when neither session nor config has a value)
 TTS_DEFAULT_ENABLED = True
-TTS_DEFAULT_VOICE = "af_heart"
+TTS_DEFAULT_VOICE = ""               # Empty = use Wyoming server default
 TTS_DEFAULT_VOLUME = 0.3
+WYOMING_DEFAULT_HOST = "localhost"
+WYOMING_DEFAULT_PORT = 10200
 
 # Notification defaults (used when neither session nor config has a value)
 NOTIFY_DEFAULT_ENABLED = True
@@ -778,40 +780,30 @@ def _get_repairs() -> list[dict]:
         message: Human-readable description
         fix_command: Command the user can run to fix the issue
 
-    Uses importlib.util.find_spec for dependency checks instead of
-    full imports. Full imports (e.g. kokoro -> spacy -> thinc) can
-    take 30+ seconds and should only happen when TTS is actually used.
+    Uses a socket probe to check Wyoming TTS server connectivity
+    when TTS is enabled.
     """
-    import importlib.util
-
     repairs = []
 
-    # Check TTS: enabled but dependencies missing
+    # Check TTS: enabled but Wyoming server unreachable
     tts_enabled = config_get("tts_enabled")
     if tts_enabled is True:
         try:
-            kokoro_installed = importlib.util.find_spec("kokoro") is not None
-            soundfile_installed = importlib.util.find_spec("soundfile") is not None
-            if not (kokoro_installed and soundfile_installed):
-                repairs.append({
-                    "id": "tts-deps-missing",
-                    "severity": "warning",
-                    "message": "TTS is enabled but kokoro is not installed",
-                    "fix_command": "uv pip install 'spellbook[tts]'",
-                })
-        except Exception:
-            pass
-
-    # Check TTS: kokoro installed but pip missing (spaCy#13747 workaround)
-    if tts_enabled is True and not repairs:
-        try:
-            if importlib.util.find_spec("kokoro") and not importlib.util.find_spec("pip"):
-                repairs.append({
-                    "id": "tts-pip-missing",
-                    "severity": "warning",
-                    "message": "TTS requires pip in the venv (spaCy workaround). TTS will hang without it",
-                    "fix_command": "uv pip install pip",
-                })
+            import socket
+            host = config_get("tts_wyoming_host") or WYOMING_DEFAULT_HOST
+            port = config_get("tts_wyoming_port") or WYOMING_DEFAULT_PORT
+            s = socket.create_connection((host, port), timeout=2.0)
+            s.close()
+        except (OSError, socket.timeout):
+            repairs.append({
+                "id": "tts-server-unreachable",
+                "severity": "warning",
+                "message": f"TTS enabled but Wyoming server not reachable at {host}:{port}",
+                "fix_command": (
+                    "Start a Wyoming TTS server (e.g., wyoming-piper or wyoming-kokoro) "
+                    f"listening on {host}:{port}"
+                ),
+            })
         except Exception:
             pass
 

@@ -159,7 +159,7 @@ class TestTtsSessionGet:
         result = tts_session_get()
 
         assert result["enabled"] is True
-        assert result["voice"] == "af_heart"
+        assert result["voice"] == ""
         assert result["volume"] == 0.3
         assert result["source_enabled"] == "default"
         assert result["source_voice"] == "default"
@@ -300,3 +300,15 @@ class TestTtsSessionGet:
 
         _session_states.clear()
         _session_activity.clear()
+
+
+class TestTtsDefaultVoiceEmpty:
+    """TTS_DEFAULT_VOICE should be empty string (server default)."""
+
+    def test_default_voice_is_empty_string(self):
+        from spellbook.core.config import TTS_DEFAULT_VOICE
+        assert TTS_DEFAULT_VOICE == ""
+
+    def test_default_voice_not_kokoro(self):
+        from spellbook.core.config import TTS_DEFAULT_VOICE
+        assert TTS_DEFAULT_VOICE != "af_heart"
