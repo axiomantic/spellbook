@@ -280,6 +280,7 @@ Reusable workflows for structured development:
 | [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
 | [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
 | [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
+| [/docs-audit] | Phase 1 project analysis for documentation planning |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
 | [/feature-config] | Phase 0 configuration wizard for feature workflow |
@@ -374,6 +375,7 @@ Reusable workflows for structured development:
 [/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
 [/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/
 [/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
+[/docs-audit]: https://axiomantic.github.io/spellbook/latest/commands/docs-audit/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/
