@@ -229,6 +229,7 @@ nav:
       - commands/deep-research-plan.md
       - commands/design-assessment.md
       - commands/docs-audit.md
+      - commands/docs-plan.md
       - commands/distill-session.md
       - commands/encyclopedia-build.md
       - commands/encyclopedia-validate.md
