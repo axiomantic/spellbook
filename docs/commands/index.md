@@ -98,6 +98,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/test-bar-remove](test-bar-remove.md) | Remove test bar artifacts injected by /test-bar. Use when user says /test-bar-re... | spellbook |
 | [/verify](verify.md) | Run verification commands and confirm output before making success claims. Use b... | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan with bite-sized tasks. Use when starting any... | [superpowers](https://github.com/obra/superpowers) |
+| [/write-readme](write-readme.md) | Standalone README generation for any project. Triggers: '/write-readme', 'write ... | spellbook |
 | [/write-skill-test](write-skill-test.md) | RED-GREEN-REFACTOR implementation for writing-skills: Baseline testing, minimal ... | spellbook |
 | [/writing-commands-create](writing-commands-create.md) | Create a new command file following the command schema. Use when writing-command... | spellbook |
 | [/writing-commands-paired](writing-commands-paired.md) | Create paired commands (create + remove) with proper artifact contracts. Use whe... | spellbook |

@@ -293,6 +293,7 @@ nav:
       - commands/test-bar-remove.md
       - commands/verify.md
       - commands/write-plan.md
+      - commands/write-readme.md
       - commands/write-skill-test.md
       - commands/writing-commands-create.md
       - commands/writing-commands-paired.md

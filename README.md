@@ -49,7 +49,7 @@
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
   - [Skills (56 total)](#skills-56-total)
-  - [Commands (91 total)](#commands-91-total)
+  - [Commands (92 total)](#commands-92-total)
   - [Agents (7 total)](#agents-7-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -263,7 +263,7 @@ Reusable workflows for structured development:
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
-### Commands (91 total)
+### Commands (92 total)
 
 | Command | Description |
 |---------|-------------|
@@ -363,6 +363,7 @@ Reusable workflows for structured development:
 | [/ie-tool-docs] | Guidance for writing tool/function documentation |
 | [/sharpen-audit] | Audit prompts for ambiguity with executor predictions |
 | [/sharpen-improve] | Rewrite prompts to eliminate ambiguity |
+| [/write-readme] | Standalone README generation with anti-AI-tone enforcement |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -461,6 +462,7 @@ Reusable workflows for structured development:
 [/ie-tool-docs]: https://axiomantic.github.io/spellbook/latest/commands/ie-tool-docs/
 [/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
 [/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
+[/write-readme]: https://axiomantic.github.io/spellbook/latest/commands/write-readme/
 
 ### Agents (7 total)
 
