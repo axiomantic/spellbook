@@ -283,6 +283,7 @@ Reusable workflows for structured development:
 | [/docs-audit] | Phase 1 project analysis for documentation planning |
 | [/docs-plan] | Phase 2 TOC generation, tone assignment, and build config |
 | [/docs-write] | Phase 3 documentation generation with adaptive tone per section |
+| [/docs-review] | Phase 4 documentation quality gate with 8 measurable criteria and iteration |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
 | [/feature-config] | Phase 0 configuration wizard for feature workflow |
@@ -380,6 +381,7 @@ Reusable workflows for structured development:
 [/docs-audit]: https://axiomantic.github.io/spellbook/latest/commands/docs-audit/
 [/docs-plan]: https://axiomantic.github.io/spellbook/latest/commands/docs-plan/
 [/docs-write]: https://axiomantic.github.io/spellbook/latest/commands/docs-write/
+[/docs-review]: https://axiomantic.github.io/spellbook/latest/commands/docs-review/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/
