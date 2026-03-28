@@ -230,6 +230,7 @@ nav:
       - commands/design-assessment.md
       - commands/docs-audit.md
       - commands/docs-plan.md
+      - commands/docs-write.md
       - commands/distill-session.md
       - commands/encyclopedia-build.md
       - commands/encyclopedia-validate.md

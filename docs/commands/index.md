@@ -36,6 +36,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
 | [/docs-audit](docs-audit.md) | Phase 1 of documenting-projects: Project analysis for documentation planning. Tr... | spellbook |
 | [/docs-plan](docs-plan.md) | Phase 2 of documenting-projects: TOC generation, tone assignment, and build conf... | spellbook |
+| [/docs-write](docs-write.md) | Phase 3 of documenting-projects: Generate documentation with adaptive tone per s... | spellbook |
 | [/encyclopedia-build](encyclopedia-build.md) | [DEPRECATED] Build encyclopedia content: glossary, architecture, decisions, and ... | spellbook |
 | [/encyclopedia-validate](encyclopedia-validate.md) | [DEPRECATED] Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
 | [/execute-plan](execute-plan.md) | Execute implementation plans with structured review checkpoints. Use when you ha... | [superpowers](https://github.com/obra/superpowers) |
