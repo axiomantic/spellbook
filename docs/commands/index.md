@@ -34,6 +34,10 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
 | [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
+| [/docs-audit](docs-audit.md) | Phase 1 of documenting-projects: Project analysis for documentation planning. Tr... | spellbook |
+| [/docs-plan](docs-plan.md) | Phase 2 of documenting-projects: TOC generation, tone assignment, and build conf... | spellbook |
+| [/docs-review](docs-review.md) | Phase 4 of documenting-projects: Quality gate with 8 measurable criteria and ite... | spellbook |
+| [/docs-write](docs-write.md) | Phase 3 of documenting-projects: Generate documentation with adaptive tone per s... | spellbook |
 | [/encyclopedia-build](encyclopedia-build.md) | [DEPRECATED] Build encyclopedia content: glossary, architecture, decisions, and ... | spellbook |
 | [/encyclopedia-validate](encyclopedia-validate.md) | [DEPRECATED] Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
 | [/execute-plan](execute-plan.md) | Execute implementation plans with structured review checkpoints. Use when you ha... | [superpowers](https://github.com/obra/superpowers) |
@@ -94,6 +98,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/test-bar-remove](test-bar-remove.md) | Remove test bar artifacts injected by /test-bar. Use when user says /test-bar-re... | spellbook |
 | [/verify](verify.md) | Run verification commands and confirm output before making success claims. Use b... | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan with bite-sized tasks. Use when starting any... | [superpowers](https://github.com/obra/superpowers) |
+| [/write-readme](write-readme.md) | Standalone README generation for any project. Triggers: '/write-readme', 'write ... | spellbook |
 | [/write-skill-test](write-skill-test.md) | RED-GREEN-REFACTOR implementation for writing-skills: Baseline testing, minimal ... | spellbook |
 | [/writing-commands-create](writing-commands-create.md) | Create a new command file following the command schema. Use when writing-command... | spellbook |
 | [/writing-commands-paired](writing-commands-paired.md) | Create paired commands (create + remove) with proper artifact contracts. Use whe... | spellbook |

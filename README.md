@@ -48,8 +48,8 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (56 total)](#skills-56-total)
-  - [Commands (91 total)](#commands-91-total)
+  - [Skills (57 total)](#skills-57-total)
+  - [Commands (96 total)](#commands-96-total)
   - [Agents (7 total)](#agents-7-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -180,7 +180,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (56 total)
+### Skills (57 total)
 
 Reusable workflows for structured development:
 
@@ -191,7 +191,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [security-trust-tiers], [generating-diagrams], [shared-references], [tooling-discovery] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [testing-strategy], [opportunity-awareness], [branch-context] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -237,6 +237,7 @@ Reusable workflows for structured development:
 [polish-repo]: https://axiomantic.github.io/spellbook/latest/skills/polish-repo/
 [analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
 [documenting-tools]: https://axiomantic.github.io/spellbook/latest/skills/documenting-tools/
+[documenting-projects]: https://axiomantic.github.io/spellbook/latest/skills/documenting-projects/
 [writing-commands]: https://axiomantic.github.io/spellbook/latest/skills/writing-commands/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
@@ -263,7 +264,7 @@ Reusable workflows for structured development:
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
-### Commands (91 total)
+### Commands (96 total)
 
 | Command | Description |
 |---------|-------------|
@@ -280,6 +281,10 @@ Reusable workflows for structured development:
 | [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
 | [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
 | [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
+| [/docs-audit] | Phase 1 project analysis for documentation planning |
+| [/docs-plan] | Phase 2 TOC generation, tone assignment, and build config |
+| [/docs-write] | Phase 3 documentation generation with adaptive tone per section |
+| [/docs-review] | Phase 4 documentation quality gate with 8 measurable criteria and iteration |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
 | [/feature-config] | Phase 0 configuration wizard for feature workflow |
@@ -359,6 +364,7 @@ Reusable workflows for structured development:
 | [/ie-tool-docs] | Guidance for writing tool/function documentation |
 | [/sharpen-audit] | Audit prompts for ambiguity with executor predictions |
 | [/sharpen-improve] | Rewrite prompts to eliminate ambiguity |
+| [/write-readme] | Standalone README generation with anti-AI-tone enforcement |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -374,6 +380,10 @@ Reusable workflows for structured development:
 [/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
 [/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/
 [/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
+[/docs-audit]: https://axiomantic.github.io/spellbook/latest/commands/docs-audit/
+[/docs-plan]: https://axiomantic.github.io/spellbook/latest/commands/docs-plan/
+[/docs-write]: https://axiomantic.github.io/spellbook/latest/commands/docs-write/
+[/docs-review]: https://axiomantic.github.io/spellbook/latest/commands/docs-review/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/
@@ -453,6 +463,7 @@ Reusable workflows for structured development:
 [/ie-tool-docs]: https://axiomantic.github.io/spellbook/latest/commands/ie-tool-docs/
 [/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
 [/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
+[/write-readme]: https://axiomantic.github.io/spellbook/latest/commands/write-readme/
 
 ### Agents (7 total)
 

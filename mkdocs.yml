@@ -155,6 +155,7 @@ nav:
       - skills/devils-advocate.md
       - skills/dispatching-parallel-agents.md
       - skills/distilling-prs.md
+      - skills/documenting-projects.md
       - skills/documenting-tools.md
       - skills/emotional-stakes.md
       - skills/enforcing-code-quality.md
@@ -228,6 +229,10 @@ nav:
       - commands/decompose-claims.md
       - commands/deep-research-plan.md
       - commands/design-assessment.md
+      - commands/docs-audit.md
+      - commands/docs-plan.md
+      - commands/docs-write.md
+      - commands/docs-review.md
       - commands/distill-session.md
       - commands/encyclopedia-build.md
       - commands/encyclopedia-validate.md
@@ -289,6 +294,7 @@ nav:
       - commands/test-bar-remove.md
       - commands/verify.md
       - commands/write-plan.md
+      - commands/write-readme.md
       - commands/write-skill-test.md
       - commands/writing-commands-create.md
       - commands/writing-commands-paired.md
