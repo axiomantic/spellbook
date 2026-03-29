@@ -124,7 +124,7 @@ The writing phase regenerates only the specified sections and merges into the ex
 **Self-Check:**
 - review-result.json exists with all 8 criteria evaluated
 - If `overall_pass == true`: announce completion, offer hosting config
-- If `overall_pass == false` and `iteration_count < 2`: write `sections-filter.json`, re-dispatch Phase 3
+- If `overall_pass == false` and `iteration_count < 2`: write `sections-filter.json`, re-dispatch Phase 3 (/docs-write), then re-dispatch Phase 4 (/docs-review)
 - If `overall_pass == false` and `iteration_count >= 2`: escalate to user
 
 ---

@@ -122,8 +122,8 @@ Phrases requiring word-boundary matching to avoid false positives: "Just" (flag 
 
 For each file in the written manifest:
 1. Read the file via Read tool.
-2. Parse all fenced code blocks (lines matching `` ^\s{0,3}``` `` -- code blocks may be indented up to 3 spaces per CommonMark spec, or deeper inside list items).
-3. Check 2a: Does each opening fence have a language tag? (e.g., `` ```python `` not bare `` ``` ``).
+2. Parse opening fences (lines matching `` ^\s{0,3}``` `` -- code blocks may be indented up to 3 spaces per CommonMark spec, or deeper inside list items). For each, extract the info string (text after the backticks).
+3. Check 2a fails if the info string is empty (no language tag). A valid fence has a language identifier after the backticks (e.g., `` ```python ``); a bare `` ``` `` with no info string fails this check.
 4. Check 2b: Does each code block contain at least one non-empty line between the fences?
 5. Check 2c: Is each language tag one of: the project's primary language, `bash`/`shell`/`sh`, `json`, `yaml`/`yml`, `toml`, `markdown`/`md`, `text`, `console`, or a documented project dependency?
 6. **Pass condition:** All three checks pass on every code block in every file.

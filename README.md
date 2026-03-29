@@ -49,7 +49,7 @@
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
   - [Skills (56 total)](#skills-56-total)
-  - [Commands (92 total)](#commands-92-total)
+  - [Commands (96 total)](#commands-96-total)
   - [Agents (7 total)](#agents-7-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -264,7 +264,7 @@ Reusable workflows for structured development:
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
-### Commands (92 total)
+### Commands (96 total)
 
 | Command | Description |
 |---------|-------------|

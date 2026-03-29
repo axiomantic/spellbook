@@ -81,7 +81,7 @@ One to three lines immediately after `# [Project Name]`. State what the project 
 
 ### Section 2: Badges (optional)
 
-Build status, version, license, test coverage if available. Use shields.io format. Only include badges that link to real, working URLs.
+Build status, version, license, test coverage if available. Use shields.io format. Construct badge URLs from information in package manifests, CI config files, or git remote. Omit badges if the source information is not available.
 
 If badge URLs cannot be determined from the project's CI config or manifest, omit this section entirely. Do not generate broken badge links.
 

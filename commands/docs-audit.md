@@ -147,9 +147,9 @@ Task:
     coverage: number  # 0-100 percentage
 ```
 
-### Step 4: Project Metadata Extraction
+### Step 4: Project Metadata Fallback
 
-Consolidate metadata from Step 1 results. If any field is missing:
+Fill in any metadata fields the Step 1 subagent could not populate (e.g., license from LICENSE file, repo URL from git remote):
 
 1. Check git remote for repo URL: `git -C {PROJECT_ROOT} remote get-url origin 2>/dev/null`
 2. Check license file: `ls {PROJECT_ROOT}/LICENSE* 2>/dev/null`

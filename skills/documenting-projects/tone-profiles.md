@@ -5,7 +5,7 @@
 **Voice:** Precise, authoritative, never chatty.
 **Sentence structure:** Short declarative sentences. Facts, not opinions.
 **Code examples:** Realistic (not `foo/bar`), with inline annotations.
-**Layout mental model:** Three-column: nav | content | code. Structure content so code and explanation sit side by side.
+**Layout mental model:** Structure content so code examples appear immediately adjacent to their explanations. Use tables for parameter documentation. Keep narrative text and corresponding code blocks in close proximity.
 **Characteristics:**
 - Every parameter documented with type, default, and constraints
 - Tables over prose for structured data

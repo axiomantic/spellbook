@@ -125,9 +125,11 @@ Transform audit results into TOC entries using the following algorithm:
 5. Assign default tone profile per the Tone-to-Type Mapping.
 6. Collect source hints from relevant modules.
 
+**README is ALWAYS included in the TOC regardless of quality.** If an existing README has quality="good", include it as a TOC entry with `existing_doc_path` set for preservation/improvement. README entries always have priority="mvp".
+
 **For existing docs (when mode is `audit_improve` or `additive_only`):**
-- For `audit_improve`: include existing docs with quality="stale" or quality="poor" as TOC entries with `existing_doc_path` set.
-- For `additive_only`: do not create TOC entries for existing docs. Only add entries for gaps.
+- For `audit_improve`: include existing docs with quality="stale" or quality="poor" as TOC entries with `existing_doc_path` set. Also include quality="good" README (see above).
+- For `additive_only`: do not create TOC entries for existing docs. Only add entries for gaps. Exception: README is always included.
 - For `start_fresh`: create all TOC entries from scratch. Do not set `existing_doc_path`.
 
 ### Step 4: Generate Build Config
