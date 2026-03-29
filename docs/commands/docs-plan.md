@@ -134,7 +134,11 @@ Transform audit results into TOC entries using the following algorithm:
 
 ### Step 4: Generate Build Config
 
-For MVP, generate `mkdocs.yml` with MkDocs Material theme.
+In MVP (Tier 1), default to MkDocs regardless of audit recommendation. The audit's `build_tool_recommendation` informs Tier 2+ expansion to Sphinx or Docusaurus.
+
+Check `audit_result.build_configs` first. If the project already has a working build config (e.g., existing `mkdocs.yml`), offer to reuse it instead of generating a new one.
+
+Generate `mkdocs.yml` with MkDocs Material theme.
 
 ```yaml
 site_name: {project_metadata.name} Documentation
@@ -169,7 +173,7 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.highlight:
-      anchor_liners: true
+      anchor_linenums: true
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true

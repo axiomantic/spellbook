@@ -311,7 +311,7 @@ IF overall_pass == false AND iteration_count < 2:
       Failing sections: {list}
       Failed criteria: {summary}
       Re-dispatching /docs-write for failing sections."
-  5. STOP. The orchestrator re-dispatches /docs-write, then re-runs /docs-review.
+  5. STOP. `/docs-review` writes `sections-filter.json`; the orchestrator re-dispatches `/docs-write` (which reads it), then re-runs `/docs-review`.
 
 ELIF overall_pass == false AND iteration_count >= 2:
   1. Write review-result.json with current results

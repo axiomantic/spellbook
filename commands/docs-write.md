@@ -33,7 +33,7 @@ Before writing, determine:
 | Source | Path | Tool |
 |--------|------|------|
 | Documentation plan | `~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json` | Read |
-| Audit result | `~/.local/spellbook/docs/{project-encoded}/doc-state/audit-result.json` | Read |
+| Audit result | `~/.local/spellbook/docs/{project-encoded}/doc-state/audit-result.json` | Read (used only for `api_surface.modules` source hint resolution and `existing_docs` content to preserve in `audit_improve` mode; all other context comes from plan.json) |
 | Sections filter (optional) | `~/.local/spellbook/docs/{project-encoded}/doc-state/sections-filter.json` | Read |
 | Existing manifest (optional) | `~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json` | Read |
 | Tone profiles | `$SPELLBOOK_DIR/skills/documenting-projects/tone-profiles.md` | Read |

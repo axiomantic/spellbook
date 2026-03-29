@@ -153,8 +153,8 @@ All phase outputs are stored as JSON at `~/.local/spellbook/docs/{project-encode
 | `/docs-write` | `plan.json`, `sections-filter.json` (optional) | `written-manifest.json` |
 | `/docs-review` | `written-manifest.json`, `plan.json` | `review-result.json` |
 
-**Iteration state:** When `/docs-review` identifies failing sections, the orchestrator writes
-`sections-filter.json` (a `string[]` of output paths to regenerate) before re-dispatching `/docs-write`.
+**Iteration state:** When `/docs-review` identifies failing sections, it writes
+`sections-filter.json` (a `string[]` of output paths to regenerate). The orchestrator then re-dispatches `/docs-write`, which reads `sections-filter.json` to regenerate only those sections.
 
 ---
 
@@ -242,8 +242,8 @@ Phase 2: Dispatch subagent -> Skill("docs-plan") -> verify plan.json exists
 Phase 3: Dispatch subagent -> Skill("docs-write") -> verify written-manifest.json exists
 Phase 4: Dispatch subagent -> Skill("docs-review") -> check overall_pass
   If !overall_pass && iteration < 2:
-    Write sections-filter.json from failing_sections
-    Re-dispatch Phase 3 (docs-write with filter)
+    docs-review writes sections-filter.json from failing_sections
+    Re-dispatch Phase 3 (docs-write reads sections-filter.json)
     Re-dispatch Phase 4 (docs-review)
   If !overall_pass && iteration >= 2:
     Escalate to user with specific failures
