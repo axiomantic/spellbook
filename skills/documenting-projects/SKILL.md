@@ -213,7 +213,7 @@ Each Task dispatch MUST specify a strict JSON result schema.
   "framework": "string",
   "build_tool_recommendation": "string",
   "existing_docs": [{"path": "string", "type": "string", "quality": "string", "staleness": "string"}],
-  "api_surface": {"modules": ["string"], "coverage": "string"},
+  "api_surface": {"modules": ["string"], "coverage": "number"},
   "gaps": ["string"]
 }
 ```
@@ -221,7 +221,7 @@ Each Task dispatch MUST specify a strict JSON result schema.
 **Writing subagent:**
 ```json
 {
-  "files_written": [{"path": "string", "diataxis_type": "string", "tone_profile": "string", "word_count": "number"}]
+  "files_written": [{"path": "string", "diataxis_type": "string", "tone_profile": "string", "word_count": "number", "last_verified_date": "string"}]
 }
 ```
 

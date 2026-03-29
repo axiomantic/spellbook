@@ -32,6 +32,8 @@ Before analyzing, determine:
 
 ```bash
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+# Follows the spellbook project-encoded path convention (see managing-artifacts skill):
+# strip leading slash, replace remaining slashes with dashes.
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 mkdir -p ~/.local/spellbook/docs/$PROJECT_ENCODED/doc-state/
 ```
@@ -103,7 +105,7 @@ Task:
     For each doc found, assess:
     - path: relative to project root
     - type: Diataxis type ("tutorial", "howto", "reference", "explanation") or "unknown"
-    - quality: "good" (complete, current), "stale" (>6 months behind code), "poor" (incomplete/broken)
+    - quality: "good" (complete, current), "stale" (outdated or no longer current), "poor" (incomplete/broken)
     - staleness: human-readable (e.g., "6 months since last update")
 
     Project root: {PROJECT_ROOT}
@@ -210,9 +212,10 @@ interface DocsAuditResult {
   language: string;                    // Primary language detected
   framework: string | null;            // Framework if detected
   build_tool_recommendation: "mkdocs" | "sphinx" | "docusaurus";
+  build_configs: string[];                // Existing build configs found (e.g., "mkdocs.yml", "conf.py")
   existing_docs: Array<{
     path: string;
-    type: string;                      // Diataxis type or "unknown"
+    type: "tutorial" | "howto" | "reference" | "explanation" | "unknown";
     quality: "good" | "stale" | "poor";
     staleness: string;                 // e.g., "6 months since last update"
   }>;

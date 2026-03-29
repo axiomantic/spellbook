@@ -174,6 +174,7 @@ Task:
         diataxis_type: string
         tone_profile: string
         word_count: number
+        last_verified_date: string  # ISO date for tutorials, empty for others
 ```
 
 **Parallelization:** Sections without cross-references to each other MAY be dispatched in parallel. Sections with `[CROSS-REF: section-name]` placeholders MUST be written after their targets.
@@ -258,6 +259,7 @@ Task:
         diataxis_type: string
         tone_profile: string
         word_count: number
+        last_verified_date: string  # ISO date for tutorials, empty for others
 ```
 
 Record the README result alongside other section results.

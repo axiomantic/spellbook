@@ -122,7 +122,7 @@ Phrases requiring word-boundary matching to avoid false positives: "Just" (flag 
 
 For each file in the written manifest:
 1. Read the file via Read tool.
-2. Parse all fenced code blocks (lines matching `` ^``` ``).
+2. Parse all fenced code blocks (lines matching `` ^\s{0,3}``` `` -- code blocks may be indented up to 3 spaces per CommonMark spec, or deeper inside list items).
 3. Check 2a: Does each opening fence have a language tag? (e.g., `` ```python `` not bare `` ``` ``).
 4. Check 2b: Does each code block contain at least one non-empty line between the fences?
 5. Check 2c: Is each language tag one of: the project's primary language, `bash`/`shell`/`sh`, `json`, `yaml`/`yml`, `toml`, `markdown`/`md`, `text`, `console`, or a documented project dependency?
@@ -157,9 +157,10 @@ For each file in the written manifest:
    - **Exit 0:** Criterion 3 passes.
    - **Non-zero exit:** Record the full error output. Criterion 3 fails. Include the error text in the `details` field.
 
-3. If `mkdocs` is not installed, attempt installation first:
+3. If `mkdocs` is not installed, attempt installation using the project's package manager (detected from audit: `uv pip install` if uv detected, `pip install` otherwise):
    ```bash
-   pip install mkdocs mkdocs-material 2>&1
+   # Use uv if available, otherwise fall back to pip
+   (command -v uv >/dev/null && uv pip install mkdocs mkdocs-material || pip install mkdocs mkdocs-material) 2>&1
    ```
    Then retry the build. If installation fails, record: "Build tool not available. Install mkdocs to validate." Mark criterion 3 as failed with this detail.
 
@@ -252,10 +253,10 @@ Task:
 
 | Profile | Vocabulary Density | Code-to-Prose Ratio |
 |---------|-------------------|---------------------|
-| Stripe-like | High density, short declarative sentences, tables over prose | High code ratio (>40% of content) |
-| React-like | Moderate density, explanatory, concept-building sentences | Balanced (~25-40% code) |
-| Tailwind-like | Direct, imperative, visual hierarchy, minimal prose | High code ratio (>40% of content) |
-| Adaptive | Progressive disclosure, varies by section | Moderate (~20-35% code) |
+| Stripe-like | High density, short declarative sentences, tables over prose. Avg sentence length <20 words. | Code-to-prose ratio >40% of content |
+| React-like | Moderate density, explanatory, concept-building sentences. Avg sentence length 15-25 words. | Code-to-prose ratio 25-40% |
+| Tailwind-like | Direct, imperative, visual hierarchy, minimal prose. Avg sentence length 15-25 words. Must contain at least one before/after comparison. | Code-to-prose ratio 30-50% |
+| Adaptive | Progressive disclosure, varies by section. Avg sentence length varies by section type. | Moderate (~20-35% code) |
 
 ### Step 5: Fact-Checking Dispatch
 
