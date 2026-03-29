@@ -48,7 +48,7 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (56 total)](#skills-56-total)
+  - [Skills (57 total)](#skills-57-total)
   - [Commands (96 total)](#commands-96-total)
   - [Agents (7 total)](#agents-7-total)
 - [Creative Modes](#creative-modes)
@@ -180,7 +180,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (56 total)
+### Skills (57 total)
 
 Reusable workflows for structured development:
 
