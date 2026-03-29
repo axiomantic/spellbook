@@ -155,6 +155,6 @@ flowchart TD
 |-------|-----------------|---------|
 | `fractal-thinking` | Phase 4 (Aggregate Boundary Detection) | Invariants span 3+ entities; intensity `pulse` |
 | `designing-workflows` | Phase 7 recommendation | Domain has complex state machines |
-| `brainstorming` | Phase 7 recommendation | Multiple bounded contexts detected |
+| `design-exploration` | Phase 7 recommendation | Multiple bounded contexts detected |
 | `gathering-requirements` | Phase 7 recommendation | Security-sensitive domain (PII, auth) |
 | `test-driven-development` | Phase 7 recommendation | Complex aggregates with many invariants |

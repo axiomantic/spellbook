@@ -1,5 +1,5 @@
-<!-- diagram-meta: {"source": "skills/brainstorming/SKILL.md","generated_at": "2026-03-19T00:00:00Z","generator": "claude","source_hash": "sha256:8b9de7666bffcd4e2b0097af7563ee0db7127d4804872534294b7f7644b3bf26","stamped_at": "2026-03-19T06:31:44Z"} -->
-# Diagram: brainstorming
+<!-- diagram-meta: {"source": "skills/design-exploration/SKILL.md", "generated_at": "2026-03-19T00:00:00Z", "generator": "claude", "source_hash": "sha256:ac66c262bb8a9c428d5da7aed1b75059f396218815317924c4296d1be8c88ad7", "stamped_at": "2026-03-29T17:32:05Z"} -->
+# Diagram: design-exploration
 
 Two-mode design exploration skill. **Synthesis mode** (context pre-collected) skips discovery and designs autonomously. **Interactive mode** discovers requirements through one-question-at-a-time collaboration. Both converge on design documentation, quality assessment, self-check, and optional implementation setup.
 
@@ -16,7 +16,7 @@ flowchart TD
         Lgate{{"Quality Gate"}}:::gate
     end
 
-    Start([Brainstorming invoked]) --> Input["Receive inputs:<br>feature_idea, constraints,<br>existing_patterns, mode_override"]
+    Start([Design exploration invoked]) --> Input["Receive inputs:<br>feature_idea, constraints,<br>existing_patterns, mode_override"]
     Input --> ModeDetect{"Context contains<br>SYNTHESIS MODE signals?<br>(line 45-48)"}
 
     %% ===== SYNTHESIS MODE =====

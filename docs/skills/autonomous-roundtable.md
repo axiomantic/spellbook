@@ -80,7 +80,7 @@ graph TD
 
     SELECT --> STAGE{Current stage?}
     STAGE -->|DISCOVER| S1[/gathering-requirements/]
-    STAGE -->|DESIGN| S2[/brainstorming/]
+    STAGE -->|DESIGN| S2[/design-exploration/]
     STAGE -->|PLAN| S3[/writing-plans/]
     STAGE -->|IMPLEMENT| S4[/develop/]
     STAGE -->|COMPLETE| S5[Final roundtable]

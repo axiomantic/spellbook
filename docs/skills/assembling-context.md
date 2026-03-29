@@ -143,7 +143,7 @@ Context Curator. Deliver precisely the right information at the right time. Too 
 
 | Purpose | Tier 1 Focus | Budget Split | Use With |
 |---------|--------------|--------------|----------|
-| **Design** | Requirements, decisions, constraints, integration points | 50/30/20 | brainstorming, writing-plans |
+| **Design** | Requirements, decisions, constraints, integration points | 50/30/20 | design-exploration, writing-plans |
 | **Implementation** | Task spec, acceptance criteria, interfaces, test expectations | 60/25/15 | test-driven-development, executing-plans |
 | **Review** | Code diff, requirements traced, test results | 55/30/15 | code-review, fact-checking |
 | **Handoff** | Current position, pending work, active decisions, blocking issues | 70/20/10 | session boundaries, compaction |

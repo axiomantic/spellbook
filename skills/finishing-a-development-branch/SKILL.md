@@ -1,8 +1,8 @@
 ---
 name: finishing-a-development-branch
-description: "Use when implementation is complete, tests pass, and you need to decide the integration path. Triggers: 'done with this branch', 'ready to merge', 'ship it', 'wrap this up', 'how should I integrate this', 'what next after implementation'. NOT for: PR creation mechanics (use creating-issues-and-pull-requests)."
+description: "Use when implementation is complete, tests pass, and you need to decide the integration path. Also use when asked to prepare a branch for release: 'update changelog', 'bump version', 'bump patch version', 'make sure changelog is correct', 'make sure version is correct', 'prepare for release'. When any of these are requested, treat it as 'prepare this branch for release' and always do BOTH changelog and version together. Changelog: derive entries from the branch diff (git diff merge-base...HEAD), one entry per logical user-facing change, Keep a Changelog format, under the new version heading when bumping or under [Unreleased] when not. Version: compare against origin/main, only bump if not already bumped, infer level (major/minor/patch) from changes, confirm with user if major. Other triggers: 'done with this branch', 'ready to merge', 'ship it', 'wrap this up', 'how should I integrate this', 'what next after implementation'. NOT for: PR creation mechanics (use creating-issues-and-pull-requests)."
 intro: |
-  End-of-branch workflow covering final verification, PR creation, merge strategy selection, and cleanup. Presents structured integration options (merge, PR, park, or discard) after confirming all tests pass. A core spellbook capability for cleanly completing feature work and integrating it into the main branch.
+  End-of-branch workflow covering final verification, changelog/version release prep, PR creation, merge strategy selection, and cleanup. Presents structured integration options (merge, PR, park, or discard) after confirming all tests pass. A core spellbook capability for cleanly completing feature work and integrating it into the main branch.
 ---
 
 # Finishing a Development Branch
@@ -74,6 +74,34 @@ Changelogs, PR titles, PR descriptions, commit messages, and code comments descr
 - Test: "Does this comment make sense to someone reading the code for the first time, with no knowledge of prior implementation?" If no, delete it.
 
 **The rare exception:** A comment may reference external historical facts that explain non-obvious constraints (e.g., "SQLite < 3.35 doesn't support RETURNING"). Reframe as a present-tense constraint, not a change narrative.
+
+---
+
+## Release Prep: Changelog and Version
+
+When the user says "update changelog", "bump version", "make sure version is correct", or any variation, treat it as **prepare this branch for release**. Always do both changelog and version together.
+
+### Changelog
+
+1. Compute the branch diff: `git diff $(git merge-base HEAD <target>)...HEAD`
+2. Derive entries from that diff. Each logical user-facing change gets one entry.
+3. Use [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format with the project's existing categories (Added, Changed, Fixed, etc.).
+4. If bumping the version, entries go under the new version heading (e.g., `## [1.2.3] - YYYY-MM-DD`). If not bumping, entries go under `[Unreleased]`.
+5. If the project does not have a CHANGELOG.md, check the project's AGENTS.md for changelog conventions before creating one.
+
+### Version Bump
+
+1. Compare the version in `pyproject.toml` (or the project's version file) against `origin/main` (or the merge target). If already bumped, trust it.
+2. If not bumped, infer the level from the branch diff:
+   - **Major**: Breaking changes to public API
+   - **Minor**: New features, new public API surface
+   - **Patch**: Bug fixes, documentation, internal refactors
+3. If you cannot confidently infer the level, ask the user.
+4. If you infer **major**, confirm with the user before applying (unless in autonomous mode).
+
+### "Make sure X is correct"
+
+"Make sure changelog is correct" and "make sure version is correct" mean the same as "update changelog" and "bump version". Derive from the branch diff, fix what is wrong, add what is missing.
 
 ---
 

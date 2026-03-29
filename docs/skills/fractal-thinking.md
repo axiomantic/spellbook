@@ -4,7 +4,7 @@ Recursive question decomposition that builds a persistent graph of questions and
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by brainstorming, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution.
+> Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by design-exploration, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution.
 ## Skill Content
 
 ``````````markdown
@@ -55,7 +55,7 @@ root node's synthesis IS the final summary.
 
 - When a skill needs deep exploration of uncertainty before proceeding
 - When a claim needs systematic verification from multiple angles
-- When brainstorming needs structured decomposition beyond a flat list
+- When design-exploration needs structured decomposition beyond a flat list
 - When debugging needs to explore multiple hypotheses in parallel
 - When NOT to use: simple factual lookups, linear task execution, code review
 

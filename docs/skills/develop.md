@@ -177,7 +177,7 @@ flowchart TD
 | 1.5.5: GATE: 11/11 | SKILL.md L430, `/feature-discover` command | 11 validation functions for completeness |
 | 1.5.6: Understanding Doc | SKILL.md L431 | Artifact at `~/.local/spellbook/docs/<project>/understanding/` |
 | 1.6: Devil's Advocate | SKILL.md L432, `/feature-discover` command | `devils-advocate` skill |
-| 2.1: Create Design | SKILL.md L435, `/feature-design` command | `brainstorming` skill (SYNTHESIS MODE) |
+| 2.1: Create Design | SKILL.md L435, `/feature-design` command | `design-exploration` skill (SYNTHESIS MODE) |
 | 2.2: Review Design | SKILL.md L436, `/feature-design` command | `reviewing-design-docs` skill |
 | 2.4: Fix Findings | SKILL.md L438, `/feature-design` command | `executing-plans` skill |
 | 3.1: Create Plan | SKILL.md L441, `/feature-implement` command | `writing-plans` skill |
@@ -411,7 +411,7 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 1.2   | Research                 | explore agent (Task tool)        | FORBIDDEN        |
 | 1.5.7 | Dehallucination gate     | dehallucination                  | FORBIDDEN        |
 | 1.6   | Devil's advocate         | devils-advocate                  | FORBIDDEN        |
-| 2.1   | Design creation          | brainstorming (SYNTHESIS MODE)   | FORBIDDEN        |
+| 2.1   | Design creation          | design-exploration (SYNTHESIS MODE) | FORBIDDEN     |
 | 2.2   | Design review            | reviewing-design-docs            | FORBIDDEN        |
 | 2.5   | Assumption verification  | fact-checking                    | FORBIDDEN        |
 | 2.4   | Fix design               | executing-plans                  | FORBIDDEN        |
@@ -717,7 +717,7 @@ Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
   └─ 1.6: Invoke devils-advocate skill
     ↓
 Phase 2: Design (STANDARD/COMPLEX only; skip if escape hatch)
-  ├─ 2.1: Subagent invokes brainstorming (SYNTHESIS MODE)
+  ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
   ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
   ├─ 2.4: Subagent invokes executing-plans to fix

@@ -34,8 +34,8 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 
 ## Key Conventions
 
-- **AGENTS.md** is this file: spellbook's own development instructions for AI assistants working on the spellbook repo itself
-- **AGENTS.spellbook.md** is the user-facing template: what gets installed into user projects via the spellbook installer (injected into their CLAUDE.md)
+- **AGENTS.md** (this file) is for working **on the spellbook repo itself**. Only update it when changing the development workflow for this specific project (build commands, test conventions, architecture notes). It is NOT installed anywhere.
+- **AGENTS.spellbook.md** is the **global user-facing template** that gets installed into `~/.claude/CLAUDE.md` (or equivalent) via the spellbook installer. It contains global directives, instructions, skill references, and behavioral rules that apply to ALL projects. This is where cross-project instructions belong.
 - **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
 - **Commands** go in `commands/<name>.md` with YAML frontmatter
 - **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
