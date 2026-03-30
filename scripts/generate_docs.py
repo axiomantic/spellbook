@@ -26,7 +26,7 @@ DIAGRAMS_DIR = DOCS_DIR / "diagrams"
 
 # Skills that came from superpowers
 SUPERPOWERS_SKILLS = {
-    "brainstorming",
+    "design-exploration",
     "dispatching-parallel-agents",
     "executing-plans",
     "finishing-a-development-branch",
@@ -41,7 +41,7 @@ SUPERPOWERS_SKILLS = {
     "writing-skills",
 }
 
-SUPERPOWERS_COMMANDS = {"brainstorm", "execute-plan", "write-plan"}
+SUPERPOWERS_COMMANDS = {"design-explore", "execute-plan", "write-plan"}
 
 SUPERPOWERS_AGENTS = {"code-reviewer"}
 

@@ -132,7 +132,7 @@ Every substantial skill runs as a sequence of phases with mandatory gates betwee
 
 ### Composition
 
-Skills invoke skills. [`develop`][develop] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its scope, it splits into a thin orchestrator and supporting commands.
+Skills invoke skills. [`develop`][develop] orchestrates [design-exploration], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its scope, it splits into a thin orchestrator and supporting commands.
 
 ### Self-improvement
 
@@ -158,7 +158,7 @@ The system classifies your request by complexity using mechanical heuristics -- 
 
 1. **Research** -- Subagent explores your codebase. Answers come with confidence levels and `file:line` evidence. Every unknown is catalogued.
 2. **Discovery** -- Each ambiguity becomes a specific question. In autonomous mode, it answers its own questions with further research. A devil's advocate reviews the understanding document before design begins.
-3. **Design** -- Architecture brainstorming with tradeoff analysis. A design doc auditor checks whether someone could implement from the doc without guessing, and flags every gap.
+3. **Design** -- Architecture design exploration with tradeoff analysis. A design doc auditor checks whether someone could implement from the doc without guessing, and flags every gap.
 4. **Planning** -- Atomic implementation plan with TDD steps. A plan auditor verifies interface contracts, behavior assumptions, and cross-task dependencies.
 5. **Implementation** -- Test-driven execution with per-task code review, fact-checking, and completion verification. Parallel tracks can run in isolated git worktrees with dependency-ordered smart merge.
 6. **Verification** -- Green mirage audit: would these tests catch real regressions? Comprehensive claim validation against design and plan. Full test suite.
@@ -186,7 +186,7 @@ Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
-| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
+| **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
@@ -196,7 +196,7 @@ Reusable workflows for structured development:
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
-[brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
+[design-exploration]: https://axiomantic.github.io/spellbook/latest/skills/design-exploration/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
 [executing-plans]: https://axiomantic.github.io/spellbook/latest/skills/executing-plans/
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
@@ -305,7 +305,7 @@ Reusable workflows for structured development:
 | [/verify]† | Verification before completion |
 | [/systematic-debugging]† | Methodical debugging workflow |
 | [/scientific-debugging] | Hypothesis-driven debugging |
-| [/brainstorm]† | Design exploration |
+| [/design-explore]† | Design exploration |
 | [/write-plan]† | Create implementation plan |
 | [/execute-plan]† | Execute implementation plan |
 | [/execute-work-packet] | Execute a single work packet with TDD |
@@ -404,7 +404,7 @@ Reusable workflows for structured development:
 [/verify]: https://axiomantic.github.io/spellbook/latest/commands/verify/
 [/systematic-debugging]: https://axiomantic.github.io/spellbook/latest/commands/systematic-debugging/
 [/scientific-debugging]: https://axiomantic.github.io/spellbook/latest/commands/scientific-debugging/
-[/brainstorm]: https://axiomantic.github.io/spellbook/latest/commands/brainstorm/
+[/design-explore]: https://axiomantic.github.io/spellbook/latest/commands/design-explore/
 [/write-plan]: https://axiomantic.github.io/spellbook/latest/commands/write-plan/
 [/execute-plan]: https://axiomantic.github.io/spellbook/latest/commands/execute-plan/
 [/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
@@ -857,7 +857,7 @@ Split work across isolated branches, merge when complete.
 ```
 > Let's design a new notification system
 
-Skill(brainstorming)
+Skill(design-exploration)
 
   I'll explore the notification system requirements with you.
 
@@ -1057,7 +1057,7 @@ Spellbook includes content derived from [obra/superpowers](https://github.com/ob
 
 | Type | Current Name | Original Name |
 |------|--------------|---------------|
-| Skill | brainstorming | brainstorming |
+| Skill | design-exploration | brainstorming |
 | Skill | dispatching-parallel-agents | dispatching-parallel-agents |
 | Skill | executing-plans | executing-plans + subagent-driven-development |
 | Skill | finishing-a-development-branch | finishing-a-development-branch |
@@ -1068,7 +1068,7 @@ Spellbook includes content derived from [obra/superpowers](https://github.com/ob
 | Skill | using-skills | using-superpowers |
 | Skill | writing-plans | writing-plans |
 | Skill | writing-skills | writing-skills |
-| Command | /brainstorm | brainstorm |
+| Command | /design-explore | brainstorm |
 | Command | /write-plan | write-plan |
 | Command | /execute-plan | execute-plan |
 | Command | /verify | verification-before-completion (skill) |

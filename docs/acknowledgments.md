@@ -10,7 +10,7 @@ The following components originated from the superpowers project:
 
 | Skill | Description |
 |-------|-------------|
-| [brainstorming](skills/brainstorming.md) | Collaborative design exploration before coding |
+| [design-exploration](skills/design-exploration.md) | Collaborative design exploration before coding |
 | [dispatching-parallel-agents](skills/dispatching-parallel-agents.md) | Orchestrating multiple subagents for parallel work |
 | [executing-plans](skills/executing-plans.md) | Systematic plan execution with checkpoints |
 | [finishing-a-development-branch](skills/finishing-a-development-branch.md) | Completing and integrating feature work |
@@ -34,7 +34,7 @@ The following items originated as skills in superpowers but have been converted 
 
 | Command | Description |
 |---------|-------------|
-| [/brainstorm](commands/brainstorm.md) | Invoke brainstorming skill |
+| [/design-explore](commands/design-explore.md) | Invoke design-exploration skill |
 | [/execute-plan](commands/execute-plan.md) | Execute an implementation plan |
 | [/write-plan](commands/write-plan.md) | Create an implementation plan |
 

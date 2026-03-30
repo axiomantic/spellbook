@@ -2,7 +2,7 @@
 
 ## Workflow Diagram
 
-Phase 2 of develop: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.
+Phase 2 of develop: Create design document via design-exploration skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.
 
 ```mermaid
 flowchart TD
@@ -13,7 +13,7 @@ flowchart TD
     EscapeCheck{Escape hatch type?}
     SkipAll([Skip to Phase 3])
 
-    CreateDesign[Dispatch brainstorming subagent]
+    CreateDesign[Dispatch design-exploration subagent]
     SynthMode[Synthesis mode: no questions]
     SaveDesign[Save design document]
 
@@ -136,7 +136,7 @@ echo "Required: Devil's advocate review completed"
 ## Invariant Principles
 
 1. **Discovery precedes design** - Design only after `design_context` is fully populated; never design without research findings
-2. **Synthesis mode for subagents** - Brainstorming subagent receives complete context; no interactive discovery in design phase
+2. **Synthesis mode for subagents** - Design-exploration subagent receives complete context; no interactive discovery in design phase
 3. **Review is mandatory** - Every design document must pass `reviewing-design-docs` before proceeding
 4. **Approval gates respect mode** - Interactive mode pauses for user; autonomous mode auto-fixes all findings
 
@@ -160,7 +160,7 @@ Phase behavior depends on escape hatch:
 Task:
   description: "Create design document"
   prompt: |
-    First, invoke the brainstorming skill using the Skill tool.
+    First, invoke the design-exploration skill using the Skill tool.
     Then follow its complete workflow.
 
     IMPORTANT: SYNTHESIS MODE -- all discovery is complete.
@@ -178,7 +178,7 @@ Task:
 
     ## Task
 
-    Using the brainstorming skill in synthesis mode:
+    Using the design-exploration skill in synthesis mode:
     1. Skip "Understanding the idea" phase -- context is complete
     2. Skip "Exploring approaches" questions -- decisions are made
     3. Go directly to "Presenting the design"
@@ -186,7 +186,7 @@ Task:
     5. Save to: ~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 ```
 
-**Subagent failure:** If brainstorming subagent fails, HALT and report to user. Do not attempt inline design work.
+**Subagent failure:** If design-exploration subagent fails, HALT and report to user. Do not attempt inline design work.
 
 ### 2.2 Review Design Document
 
@@ -281,8 +281,8 @@ Task:
 ```
 
 <FORBIDDEN>
-- Performing brainstorming, design review, or plan execution in main context instead of subagents
-- Asking discovery questions during the brainstorming subagent (synthesis mode is mandatory)
+- Performing design exploration, design review, or plan execution in main context instead of subagents
+- Asking discovery questions during the design-exploration subagent (synthesis mode is mandatory)
 - Skipping the Prerequisite Verification before beginning Phase 2 work
 - Proceeding to Phase 3 with unchecked items in the transition gate
 - Dispatching 2.4 fix subagent with fix_strategy other than "most_complete" in autonomous mode
@@ -301,7 +301,7 @@ Before proceeding to Phase 3, verify Phase 2 is complete:
 ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 ```
 
-- [ ] Brainstorming subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
+- [ ] Design-exploration subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
 - [ ] Design document created and saved
 - [ ] Design review subagent (reviewing-design-docs) DISPATCHED
 - [ ] Approval gate handled per autonomous_mode

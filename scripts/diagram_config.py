@@ -53,7 +53,7 @@ MANDATORY_SKILLS: set[str] = {
     "analyzing-domains",
     "auditing-green-mirage",
     "autonomous-roundtable",
-    "brainstorming",
+    "design-exploration",
     "code-review",
     "debugging",
     "deep-research",

@@ -1,11 +1,11 @@
-<!-- diagram-meta: {"source": "commands/brainstorm.md","source_hash": "sha256:af96623cf09273a6457774a7baa847e7b8797911131ea864647b2c540f09b7a2","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
-# Diagram: brainstorm
+<!-- diagram-meta: {"source": "commands/design-explore.md","source_hash": "sha256:af96623cf09273a6457774a7baa847e7b8797911131ea864647b2c540f09b7a2","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+# Diagram: design-explore
 
-Enforce structured exploration before creative work by delegating to the brainstorming skill.
+Enforce structured exploration before creative work by delegating to the design-exploration skill.
 
 ```mermaid
 flowchart TD
-    Start([Start]) --> LoadSkill[/Load Brainstorming Skill/]
+    Start([Start]) --> LoadSkill[/Load Design Exploration Skill/]
     LoadSkill --> DetectMode{Detect Mode}
     DetectMode -->|Synthesis| Synthesis[Autonomous Synthesis]
     DetectMode -->|Interactive| Interactive[Interactive Discovery]

@@ -37,7 +37,7 @@ All items conform to their respective schemas:
 | Name | Tokens | Lines | Status | Notes |
 |------|--------|-------|--------|-------|
 | async-await-patterns | 953 | 137 | PASS | |
-| brainstorming | 1,007 | 118 | PASS | |
+| design-exploration | 1,007 | 118 | PASS | |
 | debugging | 1,135 | 158 | PASS | |
 | reviewing-design-docs | 1,466 | 203 | PASS | |
 | devils-advocate | 1,250 | 153 | PASS | |
@@ -71,7 +71,7 @@ All items conform to their respective schemas:
 |------|--------|-------|--------|-------|
 | address-pr-feedback | 1,236 | 146 | PASS | Over budget |
 | audit-green-mirage | 404 | 55 | PASS | |
-| brainstorm | 261 | 37 | PASS | |
+| design-explore | 261 | 37 | PASS | |
 | crystallize | 1,287 | 165 | PASS | Over budget (meta) |
 | distill-session | 1,289 | 146 | PASS | Over budget |
 | execute-plan | 318 | 48 | PASS | |
@@ -96,7 +96,7 @@ All items conform to their respective schemas:
 ```
 develop (orchestrator)
 ├── devils-advocate
-├── brainstorming
+├── design-exploration
 ├── reviewing-design-docs
 ├── writing-plans
 ├── reviewing-impl-plans

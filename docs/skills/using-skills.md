@@ -218,7 +218,7 @@ Follow skill exactly → Respond
 
 ## Skill Priority
 
-1. **Process skills** (brainstorming, debugging): Determine approach
+1. **Process skills** (design-exploration, debugging): Determine approach
 2. **Implementation skills** (frontend-design, mcp-builder): Guide execution
 
 ## Skill Types

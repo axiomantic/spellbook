@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/finishing-a-development-branch/SKILL.md","source_hash": "sha256:276e633fa4db497cfe3fd17ea8db8c6b42f20284b41c188e75c7ee902af393d6","generator": "stamp"} -->
+<!-- diagram-meta: {"source": "skills/finishing-a-development-branch/SKILL.md", "source_hash": "sha256:724357d4426b30488947d5a5251d5fa67aab5b180caec4b2a310f6f219e7b9e0", "generator": "stamp", "stamped_at": "2026-03-29T17:31:57Z"} -->
 # Finishing a Development Branch - Diagrams
 
 Workflow for completing a development branch: verifies tests pass, determines base branch, presents 4 structured integration options (merge, PR, keep, discard), executes the chosen option via subagent, and performs worktree cleanup where applicable.
