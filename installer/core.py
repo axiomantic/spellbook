@@ -297,6 +297,20 @@ class Installer:
             "claude_config_dirs": claude_dirs,
         }
 
+        # Pre-resolve all dirs to compute accurate total count and
+        # initialize the progress display before the daemon install so
+        # the user sees status output during the (potentially slow)
+        # daemon venv build and health-check loop.
+        platform_dirs: list[tuple[str, list[Path]]] = []
+        total = 0
+        for platform in platforms:
+            cli_dirs = (config_dir_overrides or {}).get(platform)
+            dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
+            platform_dirs.append((platform, dirs))
+            total += max(len(dirs), 1)  # Count at least 1 for skip message
+
+        renderer.render_progress_start(total)
+
         # Install MCP daemon once, before any platform installations.
         # All platforms connect to this shared daemon via HTTP.
         from .components.mcp import install_daemon
@@ -332,17 +346,6 @@ class Installer:
         renderer.render_step("result", {"result": daemon_result})
         if on_progress:
             on_progress("result", {"result": daemon_result})
-
-        # Pre-resolve all dirs to compute accurate total count
-        platform_dirs: list[tuple[str, list[Path]]] = []
-        total = 0
-        for platform in platforms:
-            cli_dirs = (config_dir_overrides or {}).get(platform)
-            dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
-            platform_dirs.append((platform, dirs))
-            total += max(len(dirs), 1)  # Count at least 1 for skip message
-
-        renderer.render_progress_start(total)
 
         install_index = 0
         for platform, dirs in platform_dirs:
