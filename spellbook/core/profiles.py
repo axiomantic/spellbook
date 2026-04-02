@@ -120,7 +120,7 @@ def load_profile(slug: str) -> Optional[str]:
     Resolution order: custom directory first, then bundled directory.
 
     Args:
-        slug: Profile identifier (e.g. ``"radical-collaborator"``).
+        slug: Profile identifier (e.g. ``"thought-partner"``).
 
     Returns:
         Profile body content (without frontmatter), or ``None`` if not

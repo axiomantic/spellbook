@@ -27,10 +27,6 @@ import sys
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select
-
-from spellbook.db.engines import get_sync_session
-from spellbook.db.spellbook_models import SecurityEvent, SecurityMode
 from spellbook.security.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
@@ -201,6 +197,11 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
         db_path = str(get_db_path())
 
     try:
+        from sqlalchemy import select
+
+        from spellbook.db.engines import get_sync_session
+        from spellbook.db.spellbook_models import SecurityMode
+
         with get_sync_session(db_path) as session:
             row = session.execute(
                 select(SecurityMode).where(SecurityMode.id == 1)
@@ -259,6 +260,8 @@ def log_audit_event(
         db_path = str(get_db_path())
 
     from spellbook.core.db import init_db
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SecurityEvent
 
     init_db(db_path)
 

@@ -364,7 +364,7 @@ class TestRichRendererProfileWizard:
 
         discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
-            ProfileInfo(slug="radical-collaborator", name="Radical Collaborator", description="Partnership", path=Path("/fake"), is_custom=False),
+            ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
         is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
@@ -380,9 +380,9 @@ class TestRichRendererProfileWizard:
         is_set.assert_call(args=("profile.default",))
         prompt.assert_call(args=(
             "Select a session profile:",
-            ["None (no session profile)", "Radical Collaborator - Partnership"],
+            ["None (no session profile)", "Thought Partner - Thinks alongside you with candor, shared uncertainty, and honest pushback"],
         ), kwargs={"default": 0})
-        assert result == {"profile.default": "radical-collaborator"}
+        assert result == {"profile.default": "thought-partner"}
 
     def test_selects_none_returns_empty_string(self):
         import bigfoot
@@ -393,7 +393,7 @@ class TestRichRendererProfileWizard:
 
         discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
-            ProfileInfo(slug="radical-collaborator", name="Radical Collaborator", description="Partnership", path=Path("/fake"), is_custom=False),
+            ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
         is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
@@ -409,7 +409,7 @@ class TestRichRendererProfileWizard:
         is_set.assert_call(args=("profile.default",))
         prompt.assert_call(args=(
             "Select a session profile:",
-            ["None (no session profile)", "Radical Collaborator - Partnership"],
+            ["None (no session profile)", "Thought Partner - Thinks alongside you with candor, shared uncertainty, and honest pushback"],
         ), kwargs={"default": 0})
         assert result == {"profile.default": ""}
 
@@ -449,7 +449,7 @@ class TestPlainTextRendererProfileWizard:
 
         discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
-            ProfileInfo(slug="radical-collaborator", name="Radical Collaborator", description="Partnership", path=Path("/fake"), is_custom=False),
+            ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
         is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
@@ -465,6 +465,6 @@ class TestPlainTextRendererProfileWizard:
         is_set.assert_call(args=("profile.default",))
         prompt.assert_call(args=(
             "Select a session profile:",
-            ["None (no session profile)", "Radical Collaborator - Partnership"],
+            ["None (no session profile)", "Thought Partner - Thinks alongside you with candor, shared uncertainty, and honest pushback"],
         ), kwargs={"default": 0})
-        assert result == {"profile.default": "radical-collaborator"}
+        assert result == {"profile.default": "thought-partner"}
