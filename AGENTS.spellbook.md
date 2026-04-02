@@ -46,7 +46,7 @@ If `OPENCODE=1`, track and propagate agent type to all subagents.
 
 If `session_init` returns a `profile` field, read and internalize its behavioral instructions.
 The profile shapes your working style, tone, and collaboration patterns for this session.
-Profile instructions have LOWER priority than explicit user instructions in CLAUDE.md.
+Profile instructions have a lower priority than explicit user instructions and other core rules in this document.
 
 ### Step 2: Project Knowledge Check
 
