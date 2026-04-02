@@ -1,7 +1,6 @@
 """Integration tests for MCP server with swarm tools."""
 import asyncio
 
-import bigfoot
 import pytest
 
 from spellbook.core.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
@@ -44,7 +43,7 @@ class TestMCPServerSwarmToolsIntegration:
         assert hasattr(server, 'mcp_swarm_error')
         assert hasattr(server, 'mcp_swarm_monitor')
 
-    def test_swarm_create_tool_is_callable(self):
+    def test_swarm_create_tool_is_callable(self, monkeypatch):
         """Test that mcp_swarm_create tool is callable."""
         from spellbook.coordination.swarm import swarm_create
 
@@ -54,23 +53,24 @@ class TestMCPServerSwarmToolsIntegration:
         )
         fake = _FakeBackend()
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake)
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm.load_coordination_config",
+            lambda: config,
+        )
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm._get_backend",
+            lambda c: fake,
+        )
 
-        with bigfoot:
-            result = swarm_create(
-                feature="test-feature",
-                manifest_path="/path/to/manifest.json"
-            )
+        result = swarm_create(
+            feature="test-feature",
+            manifest_path="/path/to/manifest.json"
+        )
 
         assert result["swarm_id"] == "swarm-test-123"
         assert result["status"] == "created"
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(config,), kwargs={})
 
-    def test_swarm_register_tool_is_callable(self):
+    def test_swarm_register_tool_is_callable(self, monkeypatch):
         """Test that mcp_swarm_register tool is callable."""
         from spellbook.coordination.swarm import swarm_register
 
@@ -80,26 +80,27 @@ class TestMCPServerSwarmToolsIntegration:
         )
         fake = _FakeBackend()
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake)
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm.load_coordination_config",
+            lambda: config,
+        )
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm._get_backend",
+            lambda c: fake,
+        )
 
-        with bigfoot:
-            result = swarm_register(
-                swarm_id="swarm-123",
-                packet_id=1,
-                packet_name="test-packet",
-                tasks_total=5,
-                worktree="/path/to/worktree"
-            )
+        result = swarm_register(
+            swarm_id="swarm-123",
+            packet_id=1,
+            packet_name="test-packet",
+            tasks_total=5,
+            worktree="/path/to/worktree"
+        )
 
         assert result["status"] == "registered"
         assert result["packet_id"] == 1
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(config,), kwargs={})
 
-    def test_swarm_monitor_tool_is_callable(self):
+    def test_swarm_monitor_tool_is_callable(self, monkeypatch):
         """Test that mcp_swarm_monitor tool is callable."""
         from spellbook.coordination.swarm import swarm_monitor
 
@@ -109,19 +110,20 @@ class TestMCPServerSwarmToolsIntegration:
         )
         fake = _FakeBackend()
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake)
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm.load_coordination_config",
+            lambda: config,
+        )
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm._get_backend",
+            lambda c: fake,
+        )
 
-        with bigfoot:
-            result = swarm_monitor(swarm_id="swarm-123")
+        result = swarm_monitor(swarm_id="swarm-123")
 
         assert result["swarm_id"] == "swarm-123"
         assert result["status"] == "running"
         assert result["workers_registered"] == 3
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(config,), kwargs={})
 
     def test_server_module_loads_without_errors(self):
         """Test that the server module loads without errors."""

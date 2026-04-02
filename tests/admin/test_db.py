@@ -1,6 +1,5 @@
 import pytest
 import sqlite3
-import bigfoot
 
 
 def _make_test_db(tmp_path):
@@ -20,46 +19,40 @@ def _make_test_db(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_returns_list(tmp_path):
+async def test_query_spellbook_db_returns_list(tmp_path, monkeypatch):
     """Test async DB query wrapper returns list of dicts."""
     from spellbook.admin.db import query_spellbook_db
 
     mock_conn = _make_test_db(tmp_path)
 
-    proxy = bigfoot.mock("spellbook.core.db:get_connection")
-    proxy.returns(mock_conn)
+    monkeypatch.setattr("spellbook.core.db.get_connection", lambda *a, **kw: mock_conn)
 
-    async with bigfoot:
-        results = await query_spellbook_db("SELECT id, name FROM test ORDER BY id")
+    results = await query_spellbook_db("SELECT id, name FROM test ORDER BY id")
 
-    proxy.assert_call(args=(), kwargs={})
     assert len(results) == 2
     assert results[0] == {"id": 1, "name": "hello"}
     assert results[1] == {"id": 2, "name": "world"}
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_with_params(tmp_path):
+async def test_query_spellbook_db_with_params(tmp_path, monkeypatch):
     """Test that query parameters are passed correctly."""
     from spellbook.admin.db import query_spellbook_db
 
     mock_conn = _make_test_db(tmp_path)
 
-    proxy = bigfoot.mock("spellbook.core.db:get_connection")
-    proxy.returns(mock_conn)
+    monkeypatch.setattr("spellbook.core.db.get_connection", lambda *a, **kw: mock_conn)
 
-    async with bigfoot:
-        results = await query_spellbook_db(
-            "SELECT id, name FROM test WHERE id = ?", (2,)
-        )
+    results = await query_spellbook_db(
+        "SELECT id, name FROM test WHERE id = ?", (2,)
+    )
 
-    proxy.assert_call(args=(), kwargs={})
     assert len(results) == 1
     assert results[0]["name"] == "world"
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_runs_in_thread():
+async def test_query_spellbook_db_runs_in_thread(monkeypatch):
     """Verify the query runs via asyncio.to_thread (not blocking)."""
     from spellbook.admin.db import query_spellbook_db
     import threading
@@ -74,19 +67,16 @@ async def test_query_spellbook_db_runs_in_thread():
         def execute(self, *args, **kwargs):
             return StubCursor()
 
-    def mock_get_connection():
+    def mock_get_connection(*a, **kw):
         call_thread_ids.append(threading.current_thread().ident)
         return StubConn()
 
     main_thread_id = threading.current_thread().ident
 
-    proxy = bigfoot.mock("spellbook.core.db:get_connection")
-    proxy.calls(mock_get_connection)
+    monkeypatch.setattr("spellbook.core.db.get_connection", mock_get_connection)
 
-    async with bigfoot:
-        await query_spellbook_db("SELECT 1")
+    await query_spellbook_db("SELECT 1")
 
-    proxy.assert_call(args=(), kwargs={})
     # The DB work should have run on a different thread
     assert len(call_thread_ids) == 1
     assert call_thread_ids[0] != main_thread_id

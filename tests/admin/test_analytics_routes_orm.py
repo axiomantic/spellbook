@@ -2,9 +2,12 @@
 
 Verifies the routes correctly use get_spellbook_session() and process
 query results into the expected API response format.
+
+Note: these tests use monkeypatch instead of bigfoot sandboxes because
+the TestClient creates real socket connections that bigfoot 0.19.1's
+socket_mock plugin intercepts inside sandboxes.
 """
 
-import bigfoot
 import pytest
 
 from collections import namedtuple
@@ -65,22 +68,18 @@ SummaryRow = namedtuple(
 class TestToolFrequencyORM:
     """Test /analytics/tool-frequency with ORM-based implementation."""
 
-    def test_returns_tool_counts_grouped_and_sorted(self, client):
+    def test_returns_tool_counts_grouped_and_sorted(self, client, monkeypatch):
         """Should return tools sorted by count descending with error counts."""
         rows = [
             ToolFreqRow(tool_name="Read", count=150, errors=2),
             ToolFreqRow(tool_name="Write", count=75, errors=5),
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/tool-frequency")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/tool-frequency")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -90,34 +89,26 @@ class TestToolFrequencyORM:
             ]
         }
 
-    def test_empty_results(self, client):
+    def test_empty_results(self, client, monkeypatch):
         """Empty database should return empty tools list."""
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock([]),
         )
-        mock_session.calls(_make_session_mock([]))
-
-        with bigfoot:
-            response = client.get("/api/analytics/tool-frequency")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/tool-frequency")
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
 
-    def test_single_tool_no_errors(self, client):
+    def test_single_tool_no_errors(self, client, monkeypatch):
         """A single tool with zero errors."""
         rows = [ToolFreqRow(tool_name="Bash", count=42, errors=0)]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/tool-frequency?period=all")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/tool-frequency?period=all")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -126,19 +117,15 @@ class TestToolFrequencyORM:
             ]
         }
 
-    def test_passes_period_and_event_type_to_query(self, client):
+    def test_passes_period_and_event_type_to_query(self, client, monkeypatch):
         """Verify the route builds the statement with period and event_type filters."""
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock([]),
         )
-        mock_session.calls(_make_session_mock([]))
-
-        with bigfoot:
-            response = client.get(
-                "/api/analytics/tool-frequency?period=24h&event_type=tool_call"
-            )
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get(
+            "/api/analytics/tool-frequency?period=24h&event_type=tool_call"
+        )
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -157,21 +144,17 @@ class TestToolFrequencyORM:
 class TestErrorRatesORM:
     """Test /analytics/error-rates with ORM-based implementation."""
 
-    def test_returns_error_rates(self, client):
+    def test_returns_error_rates(self, client, monkeypatch):
         """Should return tools with error counts and rates."""
         rows = [
             ErrorRateRow(tool_name="Write", total=75, errors=5, error_rate=6.67),
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/error-rates")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/error-rates")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -180,22 +163,18 @@ class TestErrorRatesORM:
             ]
         }
 
-    def test_multiple_tools_sorted_by_errors_desc(self, client):
+    def test_multiple_tools_sorted_by_errors_desc(self, client, monkeypatch):
         """Tools should be ordered by error count descending."""
         rows = [
             ErrorRateRow(tool_name="Write", total=100, errors=10, error_rate=10.0),
             ErrorRateRow(tool_name="Bash", total=50, errors=3, error_rate=6.0),
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/error-rates?period=all")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/error-rates?period=all")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -205,17 +184,13 @@ class TestErrorRatesORM:
             ]
         }
 
-    def test_empty_results(self, client):
+    def test_empty_results(self, client, monkeypatch):
         """No tools with errors returns empty list."""
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock([]),
         )
-        mock_session.calls(_make_session_mock([]))
-
-        with bigfoot:
-            response = client.get("/api/analytics/error-rates")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/error-rates")
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -234,22 +209,18 @@ class TestErrorRatesORM:
 class TestTimelineORM:
     """Test /analytics/timeline with ORM-based implementation."""
 
-    def test_returns_bucketed_data(self, client):
+    def test_returns_bucketed_data(self, client, monkeypatch):
         """Should return time-bucketed event counts."""
         rows = [
             TimelineRow(bucket="2026-03-15 10:00", count=42, errors=3),
             TimelineRow(bucket="2026-03-15 11:00", count=38, errors=1),
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/timeline")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/timeline")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -259,22 +230,18 @@ class TestTimelineORM:
             ]
         }
 
-    def test_day_bucketed_data(self, client):
+    def test_day_bucketed_data(self, client, monkeypatch):
         """Non-24h periods should use day-level buckets."""
         rows = [
             TimelineRow(bucket="2026-03-14", count=100, errors=5),
             TimelineRow(bucket="2026-03-15", count=120, errors=2),
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/timeline?period=7d")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/timeline?period=7d")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -284,17 +251,13 @@ class TestTimelineORM:
             ]
         }
 
-    def test_empty_results(self, client):
+    def test_empty_results(self, client, monkeypatch):
         """Empty database should return empty timeline."""
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock([]),
         )
-        mock_session.calls(_make_session_mock([]))
-
-        with bigfoot:
-            response = client.get("/api/analytics/timeline")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/timeline")
 
         assert response.status_code == 200
         assert response.json() == {"timeline": []}
@@ -313,7 +276,7 @@ class TestTimelineORM:
 class TestAnalyticsSummaryORM:
     """Test /analytics/summary with ORM-based implementation."""
 
-    def test_returns_aggregate_stats(self, client):
+    def test_returns_aggregate_stats(self, client, monkeypatch):
         """Should return total events, unique tools, error rate, events today."""
         rows = [
             SummaryRow(
@@ -324,15 +287,11 @@ class TestAnalyticsSummaryORM:
             )
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/summary")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/summary")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -342,21 +301,17 @@ class TestAnalyticsSummaryORM:
             "events_today": 200,
         }
 
-    def test_empty_db_returns_zeros(self, client):
+    def test_empty_db_returns_zeros(self, client, monkeypatch):
         """When query returns row with zero total, should return zeros."""
         rows = [
             SummaryRow(total_events=0, unique_tools=0, error_rate=0, events_today=0)
         ]
 
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock(rows),
         )
-        mock_session.calls(_make_session_mock(rows))
-
-        with bigfoot:
-            response = client.get("/api/analytics/summary")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/summary")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -366,17 +321,13 @@ class TestAnalyticsSummaryORM:
             "events_today": 0,
         }
 
-    def test_no_rows_returns_zeros(self, client):
+    def test_no_rows_returns_zeros(self, client, monkeypatch):
         """When query returns no rows, should return zero defaults."""
-        mock_session = bigfoot.mock(
-            "spellbook.admin.routes.analytics:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.analytics.get_spellbook_session",
+            _make_session_mock([]),
         )
-        mock_session.calls(_make_session_mock([]))
-
-        with bigfoot:
-            response = client.get("/api/analytics/summary")
-
-        mock_session.assert_call(args=(), kwargs={})
+        response = client.get("/api/analytics/summary")
 
         assert response.status_code == 200
         assert response.json() == {

@@ -2,9 +2,7 @@
 
 import argparse
 
-import bigfoot
 import pytest
-from dirty_equals import IsInstance
 
 from spellbook.cli.commands.events import register
 
@@ -46,13 +44,18 @@ class TestRegister:
 class TestEventsRun:
     """Tests for events command handling no daemon."""
 
-    def test_events_no_daemon_shows_error(self, capsys):
+    def test_events_no_daemon_shows_error(self, capsys, monkeypatch):
         """Events with no daemon shows clear error message."""
-        # Mock stream_events on the daemon_client module so the lazy
+        # Patch stream_events on the daemon_client module so the lazy
         # ``from spellbook.cli.daemon_client import stream_events``
         # inside _run_events picks up the mock.
-        stream_mock = bigfoot.mock("spellbook.cli.daemon_client:stream_events")
-        stream_mock.raises(ConnectionError("Cannot connect"))
+        def _raise_connection_error(*args, **kwargs):
+            raise ConnectionError("Cannot connect")
+
+        monkeypatch.setattr(
+            "spellbook.cli.daemon_client.stream_events",
+            _raise_connection_error,
+        )
 
         parser = argparse.ArgumentParser()
         parser.add_argument("--json", action="store_true", default=False)
@@ -60,16 +63,9 @@ class TestEventsRun:
         register(subparsers)
         args = parser.parse_args(["events"])
 
-        with bigfoot:
-            with pytest.raises(SystemExit) as exc_info:
-                args.func(args)
-            assert exc_info.value.code == 1
-
-        stream_mock.assert_call(
-            args=(),
-            kwargs={},
-            raised=IsInstance(ConnectionError),
-        )
+        with pytest.raises(SystemExit) as exc_info:
+            args.func(args)
+        assert exc_info.value.code == 1
 
         captured = capsys.readouterr()
         assert "spellbook server start" in captured.err

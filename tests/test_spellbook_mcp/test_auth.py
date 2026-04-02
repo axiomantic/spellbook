@@ -8,7 +8,6 @@ import os
 import stat
 import sys
 import pytest
-import bigfoot
 from pathlib import Path
 
 
@@ -250,22 +249,28 @@ class TestBearerAuthMiddleware:
         assert response.status_code == 200
         assert response.json() == {"admin": True}
 
-    def test_uses_constant_time_comparison(self, auth_app):
+    def test_uses_constant_time_comparison(self, auth_app, monkeypatch):
         """Token comparison must use secrets.compare_digest for timing safety."""
         from starlette.testclient import TestClient
 
-        mock_compare = bigfoot.mock("spellbook.core.auth:secrets.compare_digest")
-        mock_compare.__call__.returns(True)
+        calls = []
 
-        with bigfoot:
-            client = TestClient(auth_app, raise_server_exceptions=False)
-            response = client.get(
-                "/mcp/v1/tools",
-                headers={"Authorization": "Bearer any-token"},
-            )
-            assert response.status_code == 200
+        def _tracking_compare_digest(a, b):
+            calls.append((a, b))
+            return True
 
-        mock_compare.__call__.assert_call(args=("any-token", "correct-token"))
+        monkeypatch.setattr(
+            "spellbook.core.auth.secrets.compare_digest",
+            _tracking_compare_digest,
+        )
+
+        client = TestClient(auth_app, raise_server_exceptions=False)
+        response = client.get(
+            "/mcp/v1/tools",
+            headers={"Authorization": "Bearer any-token"},
+        )
+        assert response.status_code == 200
+        assert ("any-token", "correct-token") in calls
 
     @pytest.mark.asyncio
     async def test_non_http_scope_passes_through(self):

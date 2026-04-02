@@ -2,15 +2,13 @@
 
 import json
 
-import bigfoot
-from dirty_equals import IsInstance
 import pytest
 
 
 class TestConfigGet:
     """GET /api/config returns all config as a dict."""
 
-    def test_get_config_returns_dict(self, client):
+    def test_get_config_returns_dict(self, client, monkeypatch):
         mock_config = {
             "tts_enabled": True,
             "tts_voice": "bf_emma",
@@ -18,11 +16,12 @@ class TestConfigGet:
             "notify_enabled": True,
             "admin_enabled": True,
         }
-        mock_get = bigfoot.mock("spellbook.admin.routes.config:get_all_config")
-        mock_get.returns(mock_config)
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: mock_config,
+        )
 
-        with bigfoot:
-            response = client.get("/api/config")
+        response = client.get("/api/config")
 
         assert response.status_code == 200
         data = response.json()
@@ -33,14 +32,14 @@ class TestConfigGet:
         assert data["config"]["tts_volume"] == 0.8
         # Defaults are present for non-explicit keys
         assert data["config"]["notify_title"] == "Spellbook"
-        mock_get.assert_call(args=(), kwargs={})
 
-    def test_get_config_returns_defaults_when_no_file(self, client):
-        mock_get = bigfoot.mock("spellbook.admin.routes.config:get_all_config")
-        mock_get.returns({})
+    def test_get_config_returns_defaults_when_no_file(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {},
+        )
 
-        with bigfoot:
-            response = client.get("/api/config")
+        response = client.get("/api/config")
 
         assert response.status_code == 200
         config = response.json()["config"]
@@ -50,7 +49,6 @@ class TestConfigGet:
         assert config["tts_volume"] == 0.3
         assert config["notify_enabled"] is True
         assert config["notify_title"] == "Spellbook"
-        mock_get.assert_call(args=(), kwargs={})
 
     def test_get_config_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/config")
@@ -88,41 +86,47 @@ class TestConfigSchema:
 class TestConfigUpdate:
     """PUT /api/config/{key} updates a single config key."""
 
-    def test_update_known_key(self, client):
-        mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")
-        mock_set.returns({"status": "ok", "config": {"tts_enabled": False}})
+    def test_update_known_key(self, client, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_enabled": False}}),
+        )
 
-        with bigfoot:
-            response = client.put(
-                "/api/config/tts_enabled", json={"value": False}
-            )
-
-        assert response.status_code == 200
-        mock_set.assert_call(args=("tts_enabled", False), kwargs={})
-
-    def test_update_string_key(self, client):
-        mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")
-        mock_set.returns({"status": "ok", "config": {"tts_voice": "af_heart"}})
-
-        with bigfoot:
-            response = client.put(
-                "/api/config/tts_voice", json={"value": "af_heart"}
-            )
+        response = client.put(
+            "/api/config/tts_enabled", json={"value": False}
+        )
 
         assert response.status_code == 200
-        mock_set.assert_call(args=("tts_voice", "af_heart"), kwargs={})
+        assert calls == [("tts_enabled", False)]
 
-    def test_update_number_key(self, client):
-        mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")
-        mock_set.returns({"status": "ok", "config": {"tts_volume": 0.5}})
+    def test_update_string_key(self, client, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_voice": "af_heart"}}),
+        )
 
-        with bigfoot:
-            response = client.put(
-                "/api/config/tts_volume", json={"value": 0.5}
-            )
+        response = client.put(
+            "/api/config/tts_voice", json={"value": "af_heart"}
+        )
 
         assert response.status_code == 200
-        mock_set.assert_call(args=("tts_volume", 0.5), kwargs={})
+        assert calls == [("tts_voice", "af_heart")]
+
+    def test_update_number_key(self, client, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_volume": 0.5}}),
+        )
+
+        response = client.put(
+            "/api/config/tts_volume", json={"value": 0.5}
+        )
+
+        assert response.status_code == 200
+        assert calls == [("tts_volume", 0.5)]
 
     def test_update_unknown_key_returns_404(self, client):
         response = client.put(
@@ -142,30 +146,29 @@ class TestConfigUpdate:
 class TestConfigUpdateEvent:
     """Config mutations publish config.updated events to the event bus."""
 
-    def test_event_published_on_update(self, client):
-        mock_set = bigfoot.mock("spellbook.admin.routes.config:set_config_value")
-        mock_set.returns({"status": "ok", "config": {"tts_enabled": False}})
+    def test_event_published_on_update(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: {"status": "ok", "config": {"tts_enabled": False}},
+        )
 
         captured_events = []
 
-        mock_bus = bigfoot.mock("spellbook.admin.routes.config:event_bus")
+        from spellbook.admin.routes.config import event_bus as real_event_bus
+
+        original_publish = real_event_bus.publish
 
         async def capture_publish(event):
             captured_events.append(event)
+            return await original_publish(event)
 
-        mock_bus.publish.calls(capture_publish)
+        monkeypatch.setattr(real_event_bus, "publish", capture_publish)
 
-        with bigfoot:
-            response = client.put(
-                "/api/config/tts_enabled", json={"value": False}
-            )
+        response = client.put(
+            "/api/config/tts_enabled", json={"value": False}
+        )
 
         assert response.status_code == 200
-        mock_set.assert_call(args=("tts_enabled", False), kwargs={})
-        mock_bus.publish.assert_call(
-            args=(IsInstance[object],),
-            kwargs={},
-        )
 
         assert len(captured_events) == 1
         event = captured_events[0]
@@ -177,24 +180,26 @@ class TestConfigUpdateEvent:
 class TestConfigBatchUpdate:
     """PUT /api/config (batch) updates multiple keys."""
 
-    def test_batch_update_known_keys(self, client):
-        mock_batch = bigfoot.mock("spellbook.admin.routes.config:batch_set_config")
-        mock_batch.returns({
-            "status": "ok",
-            "config": {"tts_enabled": False, "notify_enabled": True},
-        })
+    def test_batch_update_known_keys(self, client, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: (
+                calls.append(updates)
+                or {
+                    "status": "ok",
+                    "config": {"tts_enabled": False, "notify_enabled": True},
+                }
+            ),
+        )
 
-        with bigfoot:
-            response = client.put(
-                "/api/config",
-                json={"updates": {"tts_enabled": False, "notify_enabled": True}},
-            )
+        response = client.put(
+            "/api/config",
+            json={"updates": {"tts_enabled": False, "notify_enabled": True}},
+        )
 
         assert response.status_code == 200
-        mock_batch.assert_call(
-            args=({"tts_enabled": False, "notify_enabled": True},),
-            kwargs={},
-        )
+        assert calls == [{"tts_enabled": False, "notify_enabled": True}]
 
     def test_batch_update_rejects_unknown_keys(self, client):
         response = client.put(
