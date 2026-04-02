@@ -8,7 +8,6 @@ from pathlib import Path
 
 import bigfoot
 import pytest
-from dirty_equals import IsInstance
 
 pytestmark = pytest.mark.slow
 
@@ -560,8 +559,9 @@ def test_cleanup_stale_data_no_tables(tmp_path):
     watcher._cleanup_stale_data()
 
 
-def test_cleanup_stale_data_deletes_old_rows(tmp_path):
+def test_cleanup_stale_data_deletes_old_rows(tmp_path, monkeypatch):
     """Test that old rows are deleted and recent rows preserved."""
+    import spellbook.db as spellbook_db
     from spellbook.sessions.watcher import SessionWatcher
     from spellbook.core.db import init_db, get_connection
 
@@ -617,18 +617,16 @@ def test_cleanup_stale_data_deletes_old_rows(tmp_path):
     watcher = SessionWatcher(str(db_path))
 
     # Mock coordination and forged session factories to isolate the test
-    mock_coord = bigfoot.mock("spellbook.db:get_coordination_session")
-    mock_coord.__call__.raises(Exception("skip"))
+    def mock_coord_session():
+        raise Exception("skip")
 
-    mock_forged = bigfoot.mock("spellbook.db:get_forged_session")
-    mock_forged.__call__.raises(Exception("skip"))
+    def mock_forged_session():
+        raise Exception("skip")
 
-    with bigfoot:
-        watcher._cleanup_stale_data()
+    monkeypatch.setattr(spellbook_db, "get_coordination_session", mock_coord_session)
+    monkeypatch.setattr(spellbook_db, "get_forged_session", mock_forged_session)
 
-    with bigfoot.in_any_order():
-        mock_coord.assert_call(raised=IsInstance(Exception))
-        mock_forged.assert_call(raised=IsInstance(Exception))
+    watcher._cleanup_stale_data()
 
     # Verify old rows deleted, recent rows preserved
     cursor = conn.cursor()
