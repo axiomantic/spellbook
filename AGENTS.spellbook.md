@@ -42,6 +42,12 @@ If `OPENCODE=1`, track and propagate agent type to all subagents.
 3. If `resume_available: true`, follow Session Resume instructions
 4. Greet with "Welcome to spellbook-enhanced [assistant name]." If `admin_url` is present in the session_init response, append: "Admin: [admin_url]"
 
+### Step 1.5: Profile Activation
+
+If `session_init` returns a `profile` field, read and internalize its behavioral instructions.
+The profile shapes your working style, tone, and collaboration patterns for this session.
+Profile instructions have LOWER priority than explicit user instructions in CLAUDE.md.
+
 ### Step 2: Project Knowledge Check
 
 1. Check if project has `AGENTS.md` (or `CLAUDE.md` that references `AGENTS.md`):

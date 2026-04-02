@@ -173,6 +173,22 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install profiles directory
+        self._step("Installing profiles")
+        profiles_source = self.spellbook_dir / "profiles"
+        profiles_target = self.config_dir / "profiles"
+        if profiles_source.exists():
+            profiles_result = create_symlink(profiles_source, profiles_target, self.dry_run)
+            results.append(
+                InstallResult(
+                    component="profiles",
+                    platform=self.platform_id,
+                    success=profiles_result.success,
+                    action=profiles_result.action,
+                    message=f"profiles: {profiles_result.action}",
+                )
+            )
+
         # Install scripts
         self._step("Installing scripts")
         scripts_source = self.spellbook_dir / "scripts"
@@ -396,7 +412,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
 
         # Remove patterns and docs symlinks
-        for component_name in ["patterns", "docs"]:
+        for component_name in ["patterns", "docs", "profiles"]:
             symlink_path = self.config_dir / component_name
             if symlink_path.is_symlink():
                 if self.dry_run:

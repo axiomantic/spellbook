@@ -129,6 +129,29 @@ class InstallerRenderer(ABC):
         """
         ...
 
+    @abstractmethod
+    def render_profile_wizard(self, reconfigure: bool = False) -> dict[str, Any]:
+        """Run the session profile selection wizard.
+
+        Presents available profiles (from ``discover_profiles()``) and lets
+        the user pick one. Called post-install (after TTS wizard) and during
+        ``--reconfigure``.
+
+        When ``self.auto_yes`` is ``True``, no profiles are available, or
+        the profile is already configured (and not reconfiguring), returns
+        ``{}`` without prompting.
+
+        Args:
+            reconfigure: If ``True``, always prompt even if already
+                configured. Shows the current profile as the default.
+
+        Returns:
+            Dict with ``"profile.default"`` key set to a slug string
+            (profile selected), ``""`` (user chose "None"), or empty dict
+            ``{}`` when the wizard was skipped entirely.
+        """
+        ...
+
     # ------------------------------------------------------------------
     # Progress display
     # ------------------------------------------------------------------
@@ -481,6 +504,47 @@ class RichRenderer(InstallerRenderer):
                 )
                 return {"tts_enabled": False}
 
+    def render_profile_wizard(self, reconfigure: bool = False) -> dict[str, Any]:
+        if self.auto_yes:
+            return {}
+
+        from spellbook.core.profiles import discover_profiles
+        from spellbook.core.config import config_is_explicitly_set
+
+        profiles = discover_profiles()
+        if not profiles:
+            return {}
+
+        # Skip if already configured and not reconfiguring
+        if not reconfigure and config_is_explicitly_set("profile.default"):
+            return {}
+
+        # Build choices: "None" first, then each profile
+        choices = ["None (no session profile)"]
+        slugs = [""]  # empty string sentinel for "None"
+        for p in profiles:
+            label = f"{p.name} - {p.description}" if p.description else p.name
+            if p.is_custom:
+                label += " (custom)"
+            choices.append(label)
+            slugs.append(p.slug)
+
+        # Determine default selection
+        default_idx = 0
+        if reconfigure:
+            try:
+                from spellbook.core.config import config_get
+                current = config_get("profile.default")
+                if current and current in slugs:
+                    default_idx = slugs.index(current)
+            except (ImportError, Exception):
+                pass
+
+        selected = self.prompt_choice(
+            "Select a session profile:", choices, default=default_idx
+        )
+        return {"profile.default": slugs[selected]}
+
     # ------------------------------------------------------------------
     # Progress display
     # ------------------------------------------------------------------
@@ -737,6 +801,44 @@ class PlainTextRenderer(InstallerRenderer):
             else:
                 print("TTS skipped. Install later via installer.components.mcp.")
                 return {"tts_enabled": False}
+
+    def render_profile_wizard(self, reconfigure: bool = False) -> dict[str, Any]:
+        if self.auto_yes:
+            return {}
+
+        from spellbook.core.profiles import discover_profiles
+        from spellbook.core.config import config_is_explicitly_set
+
+        profiles = discover_profiles()
+        if not profiles:
+            return {}
+
+        if not reconfigure and config_is_explicitly_set("profile.default"):
+            return {}
+
+        choices = ["None (no session profile)"]
+        slugs = [""]
+        for p in profiles:
+            label = f"{p.name} - {p.description}" if p.description else p.name
+            if p.is_custom:
+                label += " (custom)"
+            choices.append(label)
+            slugs.append(p.slug)
+
+        default_idx = 0
+        if reconfigure:
+            try:
+                from spellbook.core.config import config_get
+                current = config_get("profile.default")
+                if current and current in slugs:
+                    default_idx = slugs.index(current)
+            except (ImportError, Exception):
+                pass
+
+        selected = self.prompt_choice(
+            "Select a session profile:", choices, default=default_idx
+        )
+        return {"profile.default": slugs[selected]}
 
     # ------------------------------------------------------------------
     # Progress display

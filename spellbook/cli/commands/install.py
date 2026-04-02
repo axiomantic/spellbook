@@ -119,11 +119,23 @@ def run(args: argparse.Namespace) -> None:
 
     # Handle --reconfigure: run config wizard for unset keys only
     if getattr(args, "reconfigure", False):
-        from spellbook.core.config import get_unset_config_keys
+        is_dry_run = getattr(args, "dry_run", False)
+        from spellbook.core.config import get_unset_config_keys, config_set
+
         unset_keys = get_unset_config_keys()
         if unset_keys and renderer is not None:
-            renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
-        elif not unset_keys:
+            selections = renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
+            if not is_dry_run:
+                for key, value in selections.items():
+                    config_set(key, value)
+
+        # Offer profile selection during reconfigure
+        if renderer is not None:
+            profile_config = renderer.render_profile_wizard(reconfigure=True)
+            if "profile.default" in profile_config and not is_dry_run:
+                config_set("profile.default", profile_config["profile.default"])
+
+        if not unset_keys:
             print("All config keys are already set.")
         return
 
@@ -172,6 +184,17 @@ def run(args: argparse.Namespace) -> None:
                         from spellbook.core.config import config_set as _cfg_set
                         _cfg_set("tts_enabled", True)
                 except (ImportError, Exception):
+                    pass
+
+    # Profile selection runs after TTS
+    if not getattr(args, "dry_run", False):
+        if renderer is not None:
+            profile_config = renderer.render_profile_wizard()
+            if "profile.default" in profile_config:
+                try:
+                    from spellbook.core.config import config_set as _cfg_set
+                    _cfg_set("profile.default", profile_config["profile.default"])
+                except ImportError:
                     pass
 
     json_mode = getattr(args, "json", False)

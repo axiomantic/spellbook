@@ -120,9 +120,30 @@ def _get_config_value(key: str, default=None):
     return default
 
 
+def _log_hook_error(event: str, tool: str, exc: Exception) -> None:
+    """Log a hook error to the hook-errors log file."""
+    import traceback as _tb
+
+    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "hook-errors.log"
+    with open(log_file, "a") as f:
+        f.write(f"\n{'=' * 60}\n")
+        f.write(f"{datetime.now(timezone.utc).isoformat()}\n")
+        f.write(f"event={event} tool={tool}\n")
+        _tb.print_exception(type(exc), exc, exc.__traceback__, file=f)
+
+
 def _fire_and_forget(fn, *args):
     """Run a function in a daemon thread (dies with process)."""
-    t = threading.Thread(target=fn, args=args, daemon=True)
+
+    def _wrapper():
+        try:
+            fn(*args)
+        except Exception as e:
+            _log_hook_error("fire_and_forget", fn.__name__, e)
+
+    t = threading.Thread(target=_wrapper, daemon=True)
     t.start()
 
 
@@ -1098,9 +1119,12 @@ def main():
 
     tool_name = data.get("tool_name", "")
 
-    output = dispatch(event_name, tool_name, data)
-    if output:
-        print(output)
+    try:
+        output = dispatch(event_name, tool_name, data)
+        if output:
+            print(output)
+    except Exception as e:
+        _log_hook_error(event_name, tool_name, e)
 
 
 if __name__ == "__main__":
