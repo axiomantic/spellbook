@@ -113,6 +113,10 @@ Returns: `FractalResult { graph_id, seed, status, summary, node_count, edge_coun
 
 ## MCP Tools Reference
 
+**Valid parameter values:**
+- `intensity`: `pulse` | `explore` | `deep`
+- `checkpoint_mode`: `autonomous` | `convergence` | `interactive` | `depth:N` (where N is a positive integer)
+
 Graph lifecycle:
 - `fractal_create_graph(seed, intensity, checkpoint_mode, metadata?)` -> `{graph_id, root_node_id, intensity, checkpoint_mode, budget, status}`
 - `fractal_resume_graph(graph_id)` -> full graph snapshot

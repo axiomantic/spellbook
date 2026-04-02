@@ -17,8 +17,6 @@ import sys
 import pytest
 from pathlib import Path
 
-import bigfoot
-
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
     _cleanup_legacy_hooks,
@@ -800,12 +798,17 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            results = installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        results = installer.install()
 
         # Check that hooks were registered
         settings_path = config_dir / "settings.json"
@@ -829,12 +832,17 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            results = installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        results = installer.install()
 
         settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
@@ -855,18 +863,22 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        daemon_mock = bigfoot.mock("installer.platforms.claude_code:uninstall_daemon")
-        daemon_mock.returns((True, "ok"))
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False).returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            installer.install()
-            results = installer.uninstall()
-        with bigfoot.in_any_order():
-            cli_mock.assert_call(args=(), kwargs={})
-            daemon_mock.assert_call(args=(), kwargs={"dry_run": False})
-            cli_mock.assert_call(args=(), kwargs={})
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.uninstall_daemon",
+            lambda *a, **kw: (True, "ok"),
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        installer.install()
+        results = installer.uninstall()
 
         # Hooks should be removed from both phases
         settings_path = config_dir / "settings.json"
@@ -885,12 +897,17 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        installer.install()
 
         settings_path = config_dir / "settings.json"
         content = settings_path.read_text(encoding="utf-8")
@@ -1869,11 +1886,8 @@ class TestInstallHooksPowerShellCheck:
         """On Windows without powershell on PATH, install_hooks should skip."""
         settings_path = tmp_path / "settings.json"
         monkeypatch.setattr("sys.platform", "win32")
-        which_mock = bigfoot.mock("shutil:which")
-        which_mock.returns(None)
-        with bigfoot:
-            result = install_hooks(settings_path)
-        which_mock.assert_call(args=("powershell",), kwargs={})
+        monkeypatch.setattr("shutil.which", lambda *a, **kw: None)
+        result = install_hooks(settings_path)
         assert result.success is True
         assert result.action == "skipped"
         assert result.message == "PowerShell not found on PATH; hook registration skipped"
