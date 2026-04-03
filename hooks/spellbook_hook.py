@@ -273,15 +273,15 @@ def _gate_bash(data: dict) -> None:
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
-        # Security module unavailable (e.g., running under system Python
-        # without spellbook installed). Degrade gracefully: allow the tool
-        # call through rather than blocking all tool use.
-        return
+    except ImportError as e:
+        _log_hook_error("gate_bash", "Bash", e)
+        print(json.dumps({"error": "Security check failed: security module not available"}))
+        sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        return
+        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        sys.exit(2)
 
     result = check_tool_input("Bash", tool_input)
     if not result["safe"]:
@@ -291,19 +291,21 @@ def _gate_bash(data: dict) -> None:
 
 
 def _gate_spawn(data: dict) -> None:
-    """Security: validate spawn prompts. FAIL-CLOSED when available.
+    """Security: validate spawn prompts. FAIL-CLOSED.
 
     Normalizes tool_name from MCP prefix to bare name before checking.
-    Degrades gracefully if the security module is not importable.
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
-        return
+    except ImportError as e:
+        _log_hook_error("gate_spawn", "spawn_claude_session", e)
+        print(json.dumps({"error": "Security check failed: security module not available"}))
+        sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        return
+        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        sys.exit(2)
 
     result = check_tool_input("spawn_claude_session", tool_input)
     if not result["safe"]:
@@ -313,19 +315,21 @@ def _gate_spawn(data: dict) -> None:
 
 
 def _gate_state_sanitize(data: dict) -> None:
-    """Security: validate workflow state. FAIL-CLOSED when available.
+    """Security: validate workflow state. FAIL-CLOSED.
 
     Normalizes tool_name from MCP prefix to bare name before checking.
-    Degrades gracefully if the security module is not importable.
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
-        return
+    except ImportError as e:
+        _log_hook_error("gate_state_sanitize", "workflow_state_save", e)
+        print(json.dumps({"error": "Security check failed: security module not available"}))
+        sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        return
+        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        sys.exit(2)
 
     result = check_tool_input("workflow_state_save", tool_input)
     if not result["safe"]:

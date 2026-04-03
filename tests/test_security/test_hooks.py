@@ -199,8 +199,8 @@ class TestSpawnGuardAntiReflection:
 class TestSpawnGuardFailClosed:
     """Verify fail-closed: if security module is unavailable, the hook blocks."""
 
-    def test_missing_tool_input_returns_gracefully(self):
-        """When tool_input is missing, the hook degrades gracefully (exit 0)."""
+    def test_missing_tool_input_blocks(self):
+        """When tool_input is missing, the hook fails closed (exit 2)."""
         payload = {
             "hook_event_name": "PreToolUse",
             "tool_name": "spawn_claude_session",
@@ -215,7 +215,7 @@ class TestSpawnGuardFailClosed:
             env=env,
             timeout=30,
         )
-        assert proc.returncode == 0
+        assert proc.returncode == 2
 
     def test_empty_stdin_exits_zero(self):
         """When stdin is empty, the unified hook exits 0 (no event to process)."""
@@ -404,10 +404,10 @@ class TestBashGateAntiReflection:
 class TestBashGateFailClosed:
     """Verify fail-closed: if security module is unavailable, the hook blocks."""
 
-    def test_missing_tool_input_returns_gracefully(self):
-        """When tool_input is empty, the hook degrades gracefully (exit 0)."""
+    def test_missing_tool_input_blocks(self):
+        """When tool_input is empty, the hook fails closed (exit 2)."""
         proc = _run_bash_gate({})
-        assert proc.returncode == 0
+        assert proc.returncode == 2
 
 
 # #############################################################################
