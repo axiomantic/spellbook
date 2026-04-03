@@ -13,11 +13,11 @@ if PROJECT_ROOT not in sys.path:
 from installer.components.hooks import install_hooks, _get_hook_path
 
 
-def _expected_unified_command(prefix="$SPELLBOOK_DIR"):
+def _expected_unified_command(prefix="$SPELLBOOK_DIR", config_prefix="$SPELLBOOK_CONFIG_DIR"):
     """Return the expected unified hook command for the current platform."""
     if sys.platform == "win32":
         return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/spellbook_hook.ps1"
-    return f"{prefix}/hooks/spellbook_hook.py"
+    return f"{config_prefix}/daemon-venv/bin/python {prefix}/hooks/spellbook_hook.py"
 
 
 class TestUpgradeFromShellHooks:
@@ -202,7 +202,7 @@ class TestUpgradeFromShellHooks:
             )
             assert entries[0]["hooks"][0]["command"] == expected_cmd
 
-    def test_upgrade_with_expanded_paths(self, tmp_path):
+    def test_upgrade_with_expanded_paths(self, tmp_path, monkeypatch):
         """Upgrade with spellbook_dir should clean old hooks and use expanded paths."""
         settings_path = tmp_path / "settings.json"
         spellbook_dir = tmp_path / "spellbook"
@@ -210,6 +210,9 @@ class TestUpgradeFromShellHooks:
         (spellbook_dir / ".version").write_text("1.0.0")
         hooks_dir = spellbook_dir / "hooks"
         hooks_dir.mkdir()
+
+        config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: config_dir)
 
         old_settings = {
             "hooks": {
@@ -233,6 +236,8 @@ class TestUpgradeFromShellHooks:
 
         # No $SPELLBOOK_DIR literal paths
         assert "$SPELLBOOK_DIR" not in content
+        # No $SPELLBOOK_CONFIG_DIR literal paths
+        assert "$SPELLBOOK_CONFIG_DIR" not in content
         # No old hook references
         assert "bash-gate" not in content
 
@@ -240,5 +245,5 @@ class TestUpgradeFromShellHooks:
         pre_tool_use = updated["hooks"]["PreToolUse"]
         assert len(pre_tool_use) == 1
         assert "matcher" not in pre_tool_use[0]
-        expected = _expected_unified_command(str(spellbook_dir))
+        expected = _expected_unified_command(str(spellbook_dir), str(config_dir))
         assert pre_tool_use[0]["hooks"][0]["command"] == expected

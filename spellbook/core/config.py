@@ -950,6 +950,20 @@ def session_init(
     if admin_url:
         result["admin_url"] = admin_url
 
+    # Load session profile
+    profile_slug = config_get("profile.default")
+    if profile_slug:  # truthy: skips None (unconfigured) and "" (no profile)
+        try:
+            from spellbook.core.profiles import load_profile
+
+            profile_content = load_profile(profile_slug)
+            if profile_content:
+                result["profile"] = profile_content
+            else:
+                logger.warning("Profile '%s' not found, skipping", profile_slug)
+        except Exception:
+            logger.warning("Failed to load profile '%s'", profile_slug, exc_info=True)
+
     # Add repair suggestions
     repairs = _get_repairs()
     if repairs:

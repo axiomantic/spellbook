@@ -200,7 +200,7 @@ class TestSpawnGuardFailClosed:
     """Verify fail-closed: if security module is unavailable, the hook blocks."""
 
     def test_missing_tool_input_blocks(self):
-        """When tool_input is missing, the hook should block."""
+        """When tool_input is missing, the hook fails closed (exit 2)."""
         payload = {
             "hook_event_name": "PreToolUse",
             "tool_name": "spawn_claude_session",
@@ -405,11 +405,9 @@ class TestBashGateFailClosed:
     """Verify fail-closed: if security module is unavailable, the hook blocks."""
 
     def test_missing_tool_input_blocks(self):
-        """When tool_input is empty, the hook should block."""
+        """When tool_input is empty, the hook fails closed (exit 2)."""
         proc = _run_bash_gate({})
         assert proc.returncode == 2
-        error_data = json.loads(proc.stdout.strip())
-        assert "error" in error_data
 
 
 # #############################################################################

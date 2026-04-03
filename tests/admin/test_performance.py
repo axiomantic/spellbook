@@ -13,7 +13,6 @@ import asyncio
 import time
 from types import SimpleNamespace
 
-import bigfoot
 import pytest
 
 from spellbook.admin.events import Event, EventBus, Subsystem
@@ -128,7 +127,7 @@ class TestMemorySearchPerformance:
 
 @pytest.mark.slow
 class TestDashboardPerformance:
-    def test_dashboard_load_time(self, client):
+    def test_dashboard_load_time(self, client, monkeypatch):
         """Dashboard endpoint should respond within 1 second."""
         dashboard_data = {
             "health": {
@@ -149,17 +148,14 @@ class TestDashboardPerformance:
             },
             "recent_activity": [],
         }
-        mock_get = bigfoot.mock(
-            "spellbook.admin.routes.dashboard:get_dashboard_data",
+        monkeypatch.setattr(
+            "spellbook.admin.routes.dashboard.get_dashboard_data",
+            _async_return(dashboard_data),
         )
-        mock_get.calls(_async_return(dashboard_data))
 
-        with bigfoot:
-            start = time.monotonic()
-            response = client.get("/api/dashboard")
-            elapsed_ms = (time.monotonic() - start) * 1000
-
-        mock_get.assert_call()
+        start = time.monotonic()
+        response = client.get("/api/dashboard")
+        elapsed_ms = (time.monotonic() - start) * 1000
 
         assert response.status_code == 200
         assert elapsed_ms < 1000, f"Dashboard took {elapsed_ms:.0f}ms, budget is 1000ms"

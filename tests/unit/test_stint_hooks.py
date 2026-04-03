@@ -175,7 +175,7 @@ class TestPreToolUseBashGate:
         assert proc.returncode == 0
 
     def test_bash_gate_blocks_empty_tool_input(self):
-        """Bash gate is FAIL-CLOSED: missing tool_input should block."""
+        """Bash gate fails closed: missing tool_input exits 2."""
         proc = _run_hook({
             "tool_name": "Bash",
         })

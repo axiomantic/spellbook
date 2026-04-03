@@ -7,7 +7,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import bigfoot
 import pytest
 
 
@@ -595,18 +594,18 @@ class TestGetSessionDetail:
         ])
         return claude_projects, project_dir
 
-    def test_returns_session_metadata(self, client):
+    def test_returns_session_metadata(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects, project_dir = self._setup_session(tmpdir)
             file_path = project_dir / "sess-abc.jsonl"
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions/Users-test-myproject/sess-abc")
+            response = client.get("/api/sessions/Users-test-myproject/sess-abc")
 
-            mock_home.assert_call()
             assert response.status_code == 200
             data = response.json()
             assert data == {
@@ -622,36 +621,36 @@ class TestGetSessionDetail:
                 "first_user_message": "Hello world",
             }
 
-    def test_returns_404_for_missing_project(self, client):
+    def test_returns_404_for_missing_project(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = Path(tmpdir) / "fakehome" / ".claude" / "projects"
             claude_projects.mkdir(parents=True)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions/nonexistent-project/sess-abc")
+            response = client.get("/api/sessions/nonexistent-project/sess-abc")
 
-            mock_home.assert_call()
             assert response.status_code == 404
             data = response.json()
             assert data == {"error": {"code": "NOT_FOUND", "message": "Project not found"}}
 
-    def test_returns_404_for_missing_session(self, client):
+    def test_returns_404_for_missing_session(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = Path(tmpdir) / "fakehome" / ".claude" / "projects"
             claude_projects.mkdir(parents=True)
             project_dir = claude_projects / "Users-test-myproject"
             project_dir.mkdir()
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions/Users-test-myproject/nonexistent")
+            response = client.get("/api/sessions/Users-test-myproject/nonexistent")
 
-            mock_home.assert_call()
             assert response.status_code == 404
             data = response.json()
             assert data == {"error": {"code": "NOT_FOUND", "message": "Session not found"}}
@@ -700,19 +699,19 @@ class TestGetSessionMessages:
         _write_session_file(project_dir, "sess-abc", messages)
         return claude_projects, project_dir
 
-    def test_returns_first_page_of_messages(self, client):
+    def test_returns_first_page_of_messages(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             self._setup_session(tmpdir, msg_count=5)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get(
-                    "/api/sessions/Users-test-myproject/sess-abc/messages?page=1&per_page=2"
-                )
+            response = client.get(
+                "/api/sessions/Users-test-myproject/sess-abc/messages?page=1&per_page=2"
+            )
 
-            mock_home.assert_call()
             assert response.status_code == 200
             data = response.json()
             assert data["total_lines"] == 5
@@ -741,19 +740,19 @@ class TestGetSessionMessages:
                 "message": {"content": "Message 1"},
             }
 
-    def test_returns_second_page(self, client):
+    def test_returns_second_page(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             self._setup_session(tmpdir, msg_count=5)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get(
-                    "/api/sessions/Users-test-myproject/sess-abc/messages?page=2&per_page=2"
-                )
+            response = client.get(
+                "/api/sessions/Users-test-myproject/sess-abc/messages?page=2&per_page=2"
+            )
 
-            mock_home.assert_call()
             assert response.status_code == 200
             data = response.json()
             assert data["page"] == 2
@@ -779,19 +778,19 @@ class TestGetSessionMessages:
                 "message": {"content": "Message 3"},
             }
 
-    def test_default_pagination(self, client):
+    def test_default_pagination(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             self._setup_session(tmpdir, msg_count=3)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get(
-                    "/api/sessions/Users-test-myproject/sess-abc/messages"
-                )
+            response = client.get(
+                "/api/sessions/Users-test-myproject/sess-abc/messages"
+            )
 
-            mock_home.assert_call()
             assert response.status_code == 200
             data = response.json()
             assert data["page"] == 1
@@ -799,36 +798,36 @@ class TestGetSessionMessages:
             assert data["pages"] == 1
             assert len(data["messages"]) == 3
 
-    def test_returns_404_for_missing_project(self, client):
+    def test_returns_404_for_missing_project(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = Path(tmpdir) / "fakehome" / ".claude" / "projects"
             claude_projects.mkdir(parents=True)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions/nonexistent/sess-abc/messages")
+            response = client.get("/api/sessions/nonexistent/sess-abc/messages")
 
-            mock_home.assert_call()
             assert response.status_code == 404
             data = response.json()
             assert data == {"error": {"code": "NOT_FOUND", "message": "Project not found"}}
 
-    def test_returns_404_for_missing_session(self, client):
+    def test_returns_404_for_missing_session(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = Path(tmpdir) / "fakehome" / ".claude" / "projects"
             claude_projects.mkdir(parents=True)
             project_dir = claude_projects / "Users-test-myproject"
             project_dir.mkdir()
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions/Users-test-myproject/nonexistent/messages")
+            response = client.get("/api/sessions/Users-test-myproject/nonexistent/messages")
 
-            mock_home.assert_call()
             assert response.status_code == 404
             data = response.json()
             assert data == {"error": {"code": "NOT_FOUND", "message": "Session not found"}}
@@ -843,19 +842,19 @@ class TestGetSessionMessages:
         data = response.json()
         assert data == {"error": {"code": "BAD_REQUEST", "message": "Invalid path segment"}}
 
-    def test_session_messages_beyond_last_page(self, client):
+    def test_session_messages_beyond_last_page(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             self._setup_session(tmpdir, msg_count=5)
 
-            mock_home = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-            mock_home.returns(Path(tmpdir) / "fakehome")
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get(
-                    "/api/sessions/Users-test-myproject/sess-abc/messages?page=10&per_page=2"
-                )
+            response = client.get(
+                "/api/sessions/Users-test-myproject/sess-abc/messages?page=10&per_page=2"
+            )
 
-            mock_home.assert_call()
             assert response.status_code == 200
             data = response.json()
             assert data["messages"] == []

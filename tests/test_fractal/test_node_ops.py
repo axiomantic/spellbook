@@ -280,6 +280,25 @@ class TestAddNode:
                 db_path=graph_with_root["db_path"],
             )
 
+    async def test_add_node_invalid_node_type_lists_valid_options(self, graph_with_root):
+        """add_node error for invalid node_type must list valid options."""
+        from spellbook.fractal.models import VALID_NODE_TYPES
+        from spellbook.fractal.node_ops import add_node
+
+        with pytest.raises(ValueError, match="Must be one of") as exc_info:
+            await add_node(
+                graph_id=graph_with_root["graph_id"],
+                parent_id=graph_with_root["root_node_id"],
+                node_type="insight",
+                text="Bad type",
+                db_path=graph_with_root["db_path"],
+            )
+
+        error_msg = str(exc_info.value)
+        assert "insight" in error_msg
+        for valid in VALID_NODE_TYPES:
+            assert valid in error_msg
+
     async def test_add_node_parent_not_found_rejected(self, graph_with_root):
         """add_node with nonexistent parent_id must raise ValueError."""
         from spellbook.fractal.node_ops import add_node
@@ -858,6 +877,32 @@ class TestMarkSaturated:
                 reason="not_a_valid_reason",
                 db_path=graph_with_root["db_path"],
             )
+
+    async def test_mark_saturated_invalid_reason_lists_valid_options(self, graph_with_root):
+        """mark_saturated error for invalid reason must list valid options."""
+        from spellbook.fractal.models import VALID_SATURATION_REASONS
+        from spellbook.fractal.node_ops import add_node, mark_saturated
+
+        node = await add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Invalid reason options test",
+            db_path=graph_with_root["db_path"],
+        )
+
+        with pytest.raises(ValueError, match="Must be one of") as exc_info:
+            await mark_saturated(
+                graph_id=graph_with_root["graph_id"],
+                node_id=node["node_id"],
+                reason="boredom",
+                db_path=graph_with_root["db_path"],
+            )
+
+        error_msg = str(exc_info.value)
+        assert "boredom" in error_msg
+        for valid in VALID_SATURATION_REASONS:
+            assert valid in error_msg
 
     async def test_mark_saturated_already_saturated_rejected(self, graph_with_root):
         """mark_saturated on already-saturated node must raise ValueError."""

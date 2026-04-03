@@ -153,6 +153,23 @@ class TestCreateGraph:
         cursor.execute("SELECT COUNT(*) FROM graphs")
         assert cursor.fetchone()[0] == 0
 
+    async def test_create_graph_invalid_intensity_lists_valid_options(self, fractal_db):
+        """create_graph error for invalid intensity must list valid options."""
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.models import VALID_INTENSITIES
+
+        result = await create_graph(
+            seed="Test",
+            intensity="turbo",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+
+        error_msg = result["error"]
+        assert "turbo" in error_msg
+        for valid in VALID_INTENSITIES:
+            assert valid in error_msg
+
     async def test_create_graph_invalid_checkpoint_mode(self, fractal_db):
         """create_graph must return error dict for invalid checkpoint mode and create no graph."""
         from spellbook.fractal.graph_ops import create_graph
@@ -172,6 +189,24 @@ class TestCreateGraph:
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM graphs")
         assert cursor.fetchone()[0] == 0
+
+    async def test_create_graph_invalid_checkpoint_mode_lists_valid_options(self, fractal_db):
+        """create_graph error for invalid checkpoint_mode must list valid options."""
+        from spellbook.fractal.graph_ops import create_graph
+        from spellbook.fractal.models import VALID_CHECKPOINT_MODES
+
+        result = await create_graph(
+            seed="Test",
+            intensity="pulse",
+            checkpoint_mode="auto",
+            db_path=fractal_db,
+        )
+
+        error_msg = result["error"]
+        assert "auto" in error_msg
+        for valid in VALID_CHECKPOINT_MODES:
+            assert valid in error_msg
+        assert "depth:N" in error_msg
 
     async def test_create_graph_with_metadata(self, fractal_db):
         """create_graph must store metadata_json in graphs table."""
@@ -573,6 +608,19 @@ class TestUpdateGraphStatus:
         cursor = conn.cursor()
         cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
         assert cursor.fetchone()[0] == "completed"
+
+    async def test_invalid_transition_lists_allowed_transitions(self, fractal_db):
+        """update_graph_status error for invalid transition must list allowed transitions."""
+        from spellbook.fractal.graph_ops import update_graph_status
+
+        graph_id = await self._create_test_graph(fractal_db, status="paused")
+
+        result = await update_graph_status(graph_id, "completed", db_path=fractal_db)
+
+        error_msg = result["error"]
+        assert "paused" in error_msg
+        assert "completed" in error_msg
+        assert "active" in error_msg  # the only valid transition from paused
 
     async def test_error_to_active_rejected(self, fractal_db):
         """update_graph_status must reject error -> active transition and leave status unchanged."""

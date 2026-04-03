@@ -12,6 +12,7 @@ from sqlalchemy import delete, select, func
 from spellbook.db.fractal_models import FractalEdge, FractalGraph, FractalNode
 from spellbook.fractal.models import (
     INTENSITY_BUDGETS,
+    VALID_CHECKPOINT_MODES,
     VALID_INTENSITIES,
     validate_checkpoint_mode,
 )
@@ -46,11 +47,14 @@ async def create_graph(seed, intensity, checkpoint_mode, metadata_json=None, pro
     if intensity not in VALID_INTENSITIES:
         return {
             "error": f"Invalid intensity '{intensity}'. "
-            f"Must be one of: {VALID_INTENSITIES}"
+            f"Must be one of: {', '.join(VALID_INTENSITIES)}"
         }
 
     if not validate_checkpoint_mode(checkpoint_mode):
-        return {"error": f"Invalid checkpoint_mode '{checkpoint_mode}'."}
+        return {
+            "error": f"Invalid checkpoint_mode '{checkpoint_mode}'. "
+            f"Must be one of: {', '.join(VALID_CHECKPOINT_MODES)} or 'depth:N' where N is a positive integer"
+        }
 
     if metadata_json is None:
         metadata_json = "{}"

@@ -8,7 +8,6 @@ verifies the fix detects the correct format.
 import json
 import os
 
-import bigfoot
 import pytest
 
 from spellbook.sessions.compaction import check_for_compaction, CompactionEvent
@@ -60,7 +59,7 @@ def _write_session_file(session_base, messages):
 class TestCompactionDetection:
     """Tests for the compaction detection logic in check_for_compaction()."""
 
-    def test_detects_isCompactSummary_true(self, session_dir):
+    def test_detects_isCompactSummary_true(self, session_dir, monkeypatch):
         """New-format compaction messages (isCompactSummary=True) must be detected."""
         project_path, session_base = session_dir
         messages = [
@@ -74,14 +73,12 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        session_dir_mock = bigfoot.mock(
-            "spellbook.sessions.compaction:_get_claude_session_dir",
-        ).returns(session_base)
+        monkeypatch.setattr(
+            "spellbook.sessions.compaction._get_claude_session_dir",
+            lambda project_path_arg: session_base,
+        )
 
-        with bigfoot:
-            event = check_for_compaction(project_path)
-
-        session_dir_mock.assert_call(args=(project_path,))
+        event = check_for_compaction(project_path)
 
         assert event is not None
         assert isinstance(event, CompactionEvent)
@@ -91,7 +88,7 @@ class TestCompactionDetection:
         assert event.project_path == project_path
         assert event.injected is False
 
-    def test_old_type_summary_not_detected(self, session_dir):
+    def test_old_type_summary_not_detected(self, session_dir, monkeypatch):
         """The old type=='summary' format is not used by Claude Code and should NOT be detected."""
         project_path, session_base = session_dir
         messages = [
@@ -99,18 +96,16 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        session_dir_mock = bigfoot.mock(
-            "spellbook.sessions.compaction:_get_claude_session_dir",
-        ).returns(session_base)
+        monkeypatch.setattr(
+            "spellbook.sessions.compaction._get_claude_session_dir",
+            lambda project_path_arg: session_base,
+        )
 
-        with bigfoot:
-            event = check_for_compaction(project_path)
-
-        session_dir_mock.assert_call(args=(project_path,))
+        event = check_for_compaction(project_path)
 
         assert event is None
 
-    def test_isCompactSummary_false_not_detected(self, session_dir):
+    def test_isCompactSummary_false_not_detected(self, session_dir, monkeypatch):
         """Messages with isCompactSummary=False must NOT be detected as compaction."""
         project_path, session_base = session_dir
         messages = [
@@ -118,18 +113,16 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        session_dir_mock = bigfoot.mock(
-            "spellbook.sessions.compaction:_get_claude_session_dir",
-        ).returns(session_base)
+        monkeypatch.setattr(
+            "spellbook.sessions.compaction._get_claude_session_dir",
+            lambda project_path_arg: session_base,
+        )
 
-        with bigfoot:
-            event = check_for_compaction(project_path)
-
-        session_dir_mock.assert_call(args=(project_path,))
+        event = check_for_compaction(project_path)
 
         assert event is None
 
-    def test_regular_messages_not_detected(self, session_dir):
+    def test_regular_messages_not_detected(self, session_dir, monkeypatch):
         """Normal user/assistant messages without compaction markers must not trigger detection."""
         project_path, session_base = session_dir
         messages = [
@@ -138,18 +131,16 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        session_dir_mock = bigfoot.mock(
-            "spellbook.sessions.compaction:_get_claude_session_dir",
-        ).returns(session_base)
+        monkeypatch.setattr(
+            "spellbook.sessions.compaction._get_claude_session_dir",
+            lambda project_path_arg: session_base,
+        )
 
-        with bigfoot:
-            event = check_for_compaction(project_path)
-
-        session_dir_mock.assert_call(args=(project_path,))
+        event = check_for_compaction(project_path)
 
         assert event is None
 
-    def test_realistic_compaction_shape(self, session_dir):
+    def test_realistic_compaction_shape(self, session_dir, monkeypatch):
         """Realistic Claude Code compaction message with conversation history before it."""
         project_path, session_base = session_dir
         messages = [
@@ -164,14 +155,12 @@ class TestCompactionDetection:
         ]
         _write_session_file(session_base, messages)
 
-        session_dir_mock = bigfoot.mock(
-            "spellbook.sessions.compaction:_get_claude_session_dir",
-        ).returns(session_base)
+        monkeypatch.setattr(
+            "spellbook.sessions.compaction._get_claude_session_dir",
+            lambda project_path_arg: session_base,
+        )
 
-        with bigfoot:
-            event = check_for_compaction(project_path)
-
-        session_dir_mock.assert_call(args=(project_path,))
+        event = check_for_compaction(project_path)
 
         assert event is not None
         assert isinstance(event, CompactionEvent)

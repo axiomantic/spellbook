@@ -5,7 +5,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import bigfoot
 import pytest
 
 
@@ -25,15 +24,8 @@ def _setup_projects_dir(tmpdir: str) -> Path:
     return claude_projects
 
 
-def _mock_home(tmpdir: str):
-    """Set up bigfoot mock for Path.home() to use tmpdir/fakehome."""
-    mock = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-    mock.__call__.returns(Path(tmpdir) / "fakehome")
-    return mock
-
-
 class TestSessionList:
-    def test_list_sessions_returns_items_key(self, client):
+    def test_list_sessions_returns_items_key(self, client, monkeypatch):
         """Response uses 'items' key (standardized), not 'sessions'."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -47,12 +39,12 @@ class TestSessionList:
                  "message": {"content": [{"type": "text", "text": "Hi"}]}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions")
 
             assert response.status_code == 200
             data = response.json()
@@ -78,7 +70,7 @@ class TestSessionList:
             assert isinstance(sess["size_bytes"], int)
             assert sess["size_bytes"] > 0
 
-    def test_list_sessions_filters_by_project(self, client):
+    def test_list_sessions_filters_by_project(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
 
@@ -96,12 +88,12 @@ class TestSessionList:
                  "message": {"content": "Project B"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions?project=projA")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions?project=projA")
 
             assert response.status_code == 200
             data = response.json()
@@ -109,7 +101,7 @@ class TestSessionList:
             assert len(data["items"]) == 1
             assert data["items"][0]["id"] == "sess-a"
 
-    def test_list_sessions_pagination(self, client):
+    def test_list_sessions_pagination(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
             proj = claude_projects / "Users-test-proj"
@@ -121,12 +113,12 @@ class TestSessionList:
                      "message": {"content": f"Message {i}"}},
                 ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions?page=2&per_page=2")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions?page=2&per_page=2")
 
             assert response.status_code == 200
             data = response.json()
@@ -140,23 +132,23 @@ class TestSessionList:
         response = unauthenticated_client.get("/api/sessions")
         assert response.status_code == 401
 
-    def test_list_sessions_empty_when_no_projects(self, client):
+    def test_list_sessions_empty_when_no_projects(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions")
 
             assert response.status_code == 200
             data = response.json()
             assert data["items"] == []
             assert data["total"] == 0
 
-    def test_list_sessions_skips_empty_files(self, client):
+    def test_list_sessions_skips_empty_files(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
             proj = claude_projects / "Users-test-proj"
@@ -168,19 +160,19 @@ class TestSessionList:
                  "message": {"content": "Hello"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions")
 
             assert response.status_code == 200
             data = response.json()
             assert data["total"] == 1
             assert data["items"][0]["id"] == "valid-sess"
 
-    def test_list_sessions_default_sort_last_activity_desc(self, client):
+    def test_list_sessions_default_sort_last_activity_desc(self, client, monkeypatch):
         """Default sort is last_activity descending (most recent first)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -196,19 +188,19 @@ class TestSessionList:
                  "message": {"content": "New"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions")
 
             assert response.status_code == 200
             data = response.json()
             assert data["items"][0]["id"] == "new-sess"
             assert data["items"][1]["id"] == "old-sess"
 
-    def test_list_sessions_sort_last_activity_asc(self, client):
+    def test_list_sessions_sort_last_activity_asc(self, client, monkeypatch):
         """sort=last_activity&order=asc returns oldest first."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -224,19 +216,19 @@ class TestSessionList:
                  "message": {"content": "New"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions?sort=last_activity&order=asc")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions?sort=last_activity&order=asc")
 
             assert response.status_code == 200
             data = response.json()
             assert data["items"][0]["id"] == "old-sess"
             assert data["items"][1]["id"] == "new-sess"
 
-    def test_list_sessions_sort_created_at(self, client):
+    def test_list_sessions_sort_created_at(self, client, monkeypatch):
         """sort=created_at sorts by session creation time."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -258,20 +250,20 @@ class TestSessionList:
                  "message": {"content": "Quick reply"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                # Descending by created_at: late-create first
-                response = client.get("/api/sessions?sort=created_at&order=desc")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            # Descending by created_at: late-create first
+            response = client.get("/api/sessions?sort=created_at&order=desc")
 
             assert response.status_code == 200
             data = response.json()
             assert data["items"][0]["id"] == "sess-late-create"
             assert data["items"][1]["id"] == "sess-early-create"
 
-    def test_list_sessions_sort_message_count(self, client):
+    def test_list_sessions_sort_message_count(self, client, monkeypatch):
         """sort=message_count sorts by number of messages."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -291,13 +283,13 @@ class TestSessionList:
                  "message": {"content": "Third"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                # Desc: most messages first
-                response = client.get("/api/sessions?sort=message_count&order=desc")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            # Desc: most messages first
+            response = client.get("/api/sessions?sort=message_count&order=desc")
 
             assert response.status_code == 200
             data = response.json()
@@ -306,7 +298,7 @@ class TestSessionList:
             assert data["items"][1]["id"] == "sess-few"
             assert data["items"][1]["message_count"] == 1
 
-    def test_list_sessions_sort_size_bytes(self, client):
+    def test_list_sessions_sort_size_bytes(self, client, monkeypatch):
         """sort=size_bytes sorts by file size."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -326,13 +318,13 @@ class TestSessionList:
                  "message": {"content": "C" * 500}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                # Desc: largest first
-                response = client.get("/api/sessions?sort=size_bytes&order=desc")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            # Desc: largest first
+            response = client.get("/api/sessions?sort=size_bytes&order=desc")
 
             assert response.status_code == 200
             data = response.json()
@@ -340,7 +332,7 @@ class TestSessionList:
             assert data["items"][1]["id"] == "sess-small"
             assert data["items"][0]["size_bytes"] > data["items"][1]["size_bytes"]
 
-    def test_list_sessions_invalid_sort_defaults_to_last_activity(self, client):
+    def test_list_sessions_invalid_sort_defaults_to_last_activity(self, client, monkeypatch):
         """Invalid sort value falls back to last_activity."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -356,20 +348,20 @@ class TestSessionList:
                  "message": {"content": "New"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                # Invalid sort param should fall back to last_activity desc
-                response = client.get("/api/sessions?sort=INVALID_FIELD&order=desc")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            # Invalid sort param should fall back to last_activity desc
+            response = client.get("/api/sessions?sort=INVALID_FIELD&order=desc")
 
             assert response.status_code == 200
             data = response.json()
             assert data["items"][0]["id"] == "new-sess"
             assert data["items"][1]["id"] == "old-sess"
 
-    def test_list_sessions_invalid_order_defaults_to_desc(self, client):
+    def test_list_sessions_invalid_order_defaults_to_desc(self, client, monkeypatch):
         """Invalid order value falls back to desc."""
         with tempfile.TemporaryDirectory() as tmpdir:
             claude_projects = _setup_projects_dir(tmpdir)
@@ -385,12 +377,12 @@ class TestSessionList:
                  "message": {"content": "New"}},
             ])
 
-            mock_home = _mock_home(tmpdir)
+            monkeypatch.setattr(
+                "spellbook.admin.routes.sessions.Path.home",
+                lambda: Path(tmpdir) / "fakehome",
+            )
 
-            with bigfoot:
-                response = client.get("/api/sessions?order=BOGUS")
-
-            mock_home.__call__.assert_call(args=(), kwargs={})
+            response = client.get("/api/sessions?order=BOGUS")
 
             assert response.status_code == 200
             data = response.json()

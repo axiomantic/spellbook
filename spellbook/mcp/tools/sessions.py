@@ -170,19 +170,28 @@ async def spawn_session(
     prompt: str,
     working_directory: str = None,
     terminal: str = None,
-    provider: str = None
+    provider: str = None,
+    headless: bool = True,
+    allowed_tools: list[str] = None,
+    disallowed_tools: list[str] = None,
 ) -> dict:
     """
-    Open a new terminal window with an interactive AI assistant session.
+    Spawn an AI assistant session, either as a terminal window or headless subprocess.
 
     Args:
         prompt: Initial prompt/command to send to the assistant
         working_directory: Directory to start in (defaults to client cwd)
-        terminal: Terminal program (auto-detected if not specified)
+        terminal: Terminal program (auto-detected if not specified, ignored if headless)
         provider: Provider name (claude or gemini). Auto-detected if not specified.
+        headless: If true, run as a subprocess with -p flag instead of opening a terminal.
+            Returns the session output directly. Useful for fractal workers and automated tasks.
+        allowed_tools: List of tool names to allow in the spawned session
+            (e.g. ["mcp__spellbook__fractal_claim_work", "Read", "Grep"]).
+        disallowed_tools: List of tool names to deny in the spawned session.
 
     Returns:
-        {"status": "spawned", "terminal": str, "pid": int | None}
+        Terminal mode: {"status": "spawned", "terminal": str, "pid": int | None}
+        Headless mode: {"status": "completed", "output": str, "pid": int}
     """
     # --- MCP-level security guard ---
     import sqlite3 as _sqlite3
@@ -308,8 +317,15 @@ async def spawn_session(
             return {"success": False, "error": str(e)}
 
     # Use SDK to spawn
-    options = AgentOptions(cwd=Path(working_directory) if working_directory else Path.cwd())
+    options = AgentOptions(
+        cwd=Path(working_directory) if working_directory else Path.cwd(),
+        allowed_tools=allowed_tools,
+        disallowed_tools=disallowed_tools,
+    )
     client = get_agent_client(provider, options)
+
+    if headless:
+        return await client.run_subprocess(prompt)
     return client.spawn_session(prompt, terminal=terminal)
 
 

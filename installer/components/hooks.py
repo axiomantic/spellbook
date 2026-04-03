@@ -44,7 +44,7 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                    "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 15,
                 },
             ],
@@ -60,7 +60,7 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                    "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 15,
                 },
             ],
@@ -71,7 +71,7 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                    "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 5,
                 },
             ],
@@ -82,7 +82,7 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                    "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 10,
                 },
             ],
@@ -102,11 +102,22 @@ def _get_hook_path_for_platform(hook_path: str) -> str:
     On Windows:
     - .sh hooks become .ps1 hooks wrapped in PowerShell invocation
     - .py hooks use their .ps1 wrapper (which delegates to the .py script)
+    - Commands with a venv python prefix (e.g. ``$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python
+      $SPELLBOOK_DIR/hooks/spellbook_hook.py``) strip the prefix and use
+      just the .ps1 wrapper, since the PS1 wrapper handles Python discovery itself.
     On Unix, returns the original path unchanged.
     """
     import sys
 
     if sys.platform == "win32":
+        # Handle venv-prefixed commands: extract the .py path and convert to .ps1
+        # The PS1 wrapper handles Python invocation itself, so the venv prefix is dropped.
+        if " " in hook_path and hook_path.endswith(".py"):
+            # Split on last space to get the .py script path
+            py_path = hook_path.rsplit(" ", 1)[-1]
+            if py_path.endswith(".py"):
+                ps1_path = py_path.replace(".py", ".ps1")
+                return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
         if hook_path.endswith(".sh"):
             ps1_path = hook_path.replace(".sh", ".ps1")
             return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
@@ -172,12 +183,13 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
     path = _get_hook_path(hook)
     # Normalize to forward slashes for consistent comparison across platforms
     normalized_path = path.replace("\\", "/")
-    if normalized_path.startswith(_SPELLBOOK_HOOK_PREFIX):
+    # Check both starts-with (legacy bare path) and contains (venv python prefix)
+    if _SPELLBOOK_HOOK_PREFIX in normalized_path:
         return True
     if spellbook_dir is not None:
         # Normalize spellbook_dir to forward slashes as well
         expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
-        if normalized_path.startswith(expanded_prefix):
+        if expanded_prefix in normalized_path:
             return True
     return False
 
@@ -246,13 +258,31 @@ def _cleanup_legacy_hooks(settings: Dict, spellbook_dir: Optional[Path] = None) 
 
 
 def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path) -> Union[str, Dict[str, Any]]:
-    """Replace $SPELLBOOK_DIR with the actual spellbook directory path."""
+    """Replace $SPELLBOOK_DIR and $SPELLBOOK_CONFIG_DIR with actual paths.
+
+    On Windows, also replaces ``daemon-venv/bin/python`` with
+    ``daemon-venv/Scripts/python.exe`` so the venv Python resolves correctly.
+    """
+    import platform as _platform
+
+    from ..config import get_spellbook_config_dir
+
     spellbook_str = str(spellbook_dir)
+    config_str = str(get_spellbook_config_dir())
+
+    def _expand(s: str) -> str:
+        result = s.replace("$SPELLBOOK_DIR", spellbook_str).replace(
+            "$SPELLBOOK_CONFIG_DIR", config_str
+        )
+        if _platform.system() == "Windows":
+            result = result.replace("daemon-venv/bin/python", "daemon-venv/Scripts/python.exe")
+        return result
+
     if isinstance(hook, str):
-        return hook.replace("$SPELLBOOK_DIR", spellbook_str)
+        return _expand(hook)
     expanded = dict(hook)
     if "command" in expanded:
-        expanded["command"] = expanded["command"].replace("$SPELLBOOK_DIR", spellbook_str)
+        expanded["command"] = _expand(expanded["command"])
     return expanded
 
 

@@ -13,9 +13,9 @@ class TestSessionInitMemoryRegeneration:
         mock_session_state = bigfoot.mock("spellbook.core.config:_get_session_state")
         mock_session_state.returns({})
 
-        # config_get is called twice: once for "session_mode", once for "fun_mode"
+        # config_get is called three times: "session_mode", "fun_mode", "profile.default"
         mock_config_get = bigfoot.mock("spellbook.core.config:config_get")
-        mock_config_get.returns("none").returns(None)
+        mock_config_get.returns("none").returns(None).returns(None)
 
         mock_update_notif = bigfoot.mock("spellbook.core.config:_add_update_notification")
         mock_update_notif.returns(None)
@@ -44,6 +44,7 @@ class TestSessionInitMemoryRegeneration:
         mock_regen.assert_call(args=("/Users/alice/project",), kwargs={})
         mock_resume.assert_call(args=(None, "/Users/alice/project"), kwargs={})
         mock_admin_url.assert_call(args=(), kwargs={})
+        mock_config_get.assert_call(args=("profile.default",), kwargs={})
         mock_repairs.assert_call(args=(), kwargs={})
 
     def test_skips_when_project_path_none(self):

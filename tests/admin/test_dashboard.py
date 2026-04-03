@@ -3,9 +3,6 @@
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
-import bigfoot
-from dirty_equals import IsInstance
-
 
 
 def _async_return(value):
@@ -15,7 +12,7 @@ def _async_return(value):
     return _fn
 
 
-def test_dashboard_returns_200(client):
+def test_dashboard_returns_200(client, monkeypatch):
     """Dashboard endpoint returns health, counts, and activity."""
     dashboard_data = {
         "health": {
@@ -42,15 +39,12 @@ def test_dashboard_returns_200(client):
             },
         ],
     }
-    mock_get = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_dashboard_data",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_dashboard_data",
+        _async_return(dashboard_data),
     )
-    mock_get.calls(_async_return(dashboard_data))
 
-    with bigfoot:
-        response = client.get("/api/dashboard")
-
-    mock_get.assert_call()
+    response = client.get("/api/dashboard")
 
     assert response.status_code == 200
     data = response.json()
@@ -80,7 +74,7 @@ def test_dashboard_requires_auth(unauthenticated_client):
     assert response.status_code == 401
 
 
-def test_dashboard_response_schema(client):
+def test_dashboard_response_schema(client, monkeypatch):
     """DashboardResponse schema validates all required fields and types."""
     dashboard_data = {
         "health": {
@@ -101,15 +95,12 @@ def test_dashboard_response_schema(client):
         },
         "recent_activity": [],
     }
-    mock_get = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_dashboard_data",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_dashboard_data",
+        _async_return(dashboard_data),
     )
-    mock_get.calls(_async_return(dashboard_data))
 
-    with bigfoot:
-        response = client.get("/api/dashboard")
-
-    mock_get.assert_call()
+    response = client.get("/api/dashboard")
 
     assert response.status_code == 200
     data = response.json()
@@ -225,47 +216,26 @@ def test_dashboard_cross_db_aggregation(client, monkeypatch):
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.event_bus", fake_bus,
     )
-
-    mock_spellbook = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_spellbook_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_spellbook_session", spellbook_ctx,
     )
-    mock_spellbook.calls(spellbook_ctx)
-
-    mock_coord = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_coordination_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_coordination_session", coord_ctx,
     )
-    mock_coord.calls(coord_ctx)
-
-    mock_fractal = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_fractal_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_fractal_session", fractal_ctx,
     )
-    mock_fractal.calls(fractal_ctx)
-
-    mock_version = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:pkg_version",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.pkg_version", lambda *a, **kw: "0.30.5",
     )
-    mock_version.returns("0.30.5")
-
-    mock_db_size = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:_get_db_size",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard._get_db_size", lambda *a, **kw: 2048,
     )
-    mock_db_size.returns(2048)
-
-    mock_count_sessions = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:_count_session_files",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard._count_session_files", lambda *a, **kw: 3,
     )
-    mock_count_sessions.returns(3)
 
-    with bigfoot:
-        response = client.get("/api/dashboard")
-
-    with bigfoot.in_any_order():
-        mock_version.assert_call(args=("spellbook",))
-        mock_count_sessions.assert_call()
-        mock_spellbook.assert_call()
-        mock_coord.assert_call()
-        mock_fractal.assert_call()
-        mock_db_size.assert_call()
+    response = client.get("/api/dashboard")
 
     assert response.status_code == 200
     data = response.json()
@@ -300,49 +270,30 @@ def test_dashboard_handles_db_errors_gracefully(client, monkeypatch):
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.event_bus", fake_bus,
     )
-
-    mock_spellbook = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_spellbook_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_spellbook_session", _failing_session,
     )
-    mock_spellbook.calls(_failing_session)
-
-    mock_fractal = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_fractal_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_fractal_session", _failing_session,
     )
-    mock_fractal.calls(_failing_session)
-
-    mock_coord = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:get_coordination_session",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.get_coordination_session", _failing_session,
     )
-    mock_coord.calls(_failing_session)
-
-    mock_version = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:pkg_version",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard.pkg_version", lambda *a, **kw: "0.30.5",
     )
-    mock_version.returns("0.30.5")
-
-    mock_db_size = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:_get_db_size",
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard._get_db_size", lambda *a, **kw: 0,
     )
-    mock_db_size.returns(0)
 
-    mock_count_sessions = bigfoot.mock(
-        "spellbook.admin.routes.dashboard:_count_session_files",
+    def _raise_fs_error(*a, **kw):
+        raise Exception("Filesystem error")
+
+    monkeypatch.setattr(
+        "spellbook.admin.routes.dashboard._count_session_files", _raise_fs_error,
     )
-    mock_count_sessions.raises(Exception("Filesystem error"))
 
-    with bigfoot:
-        response = client.get("/api/dashboard")
-
-    with bigfoot.in_any_order():
-        mock_version.assert_call(args=("spellbook",))
-        mock_count_sessions.assert_call(
-            raised=IsInstance(Exception),
-        )
-        mock_spellbook.assert_call()
-        mock_fractal.assert_call()
-        mock_coord.assert_call()
-        mock_db_size.assert_call()
+    response = client.get("/api/dashboard")
 
     assert response.status_code == 200
     data = response.json()

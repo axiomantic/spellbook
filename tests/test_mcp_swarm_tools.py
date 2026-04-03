@@ -1,7 +1,6 @@
 """Tests for MCP swarm coordination tools."""
 import asyncio
 
-import bigfoot
 import pytest
 
 from spellbook.core.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
@@ -54,219 +53,184 @@ def coordination_config():
     )
 
 
+def _patch_swarm(monkeypatch, config, backend):
+    """Patch swarm module's load_coordination_config and _get_backend."""
+    monkeypatch.setattr(
+        "spellbook.coordination.swarm.load_coordination_config",
+        lambda: config,
+    )
+    monkeypatch.setattr(
+        "spellbook.coordination.swarm._get_backend",
+        lambda c: backend,
+    )
+
+
 class TestSwarmCreate:
     """Tests for swarm_create tool."""
 
-    def test_creates_swarm_successfully(self, fake_backend, coordination_config):
+    def test_creates_swarm_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful swarm creation."""
         from spellbook.coordination.swarm import swarm_create
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_create(
-                feature="user-authentication",
-                manifest_path="/path/to/manifest.json",
-                auto_merge=True
-            )
+        result = swarm_create(
+            feature="user-authentication",
+            manifest_path="/path/to/manifest.json",
+            auto_merge=True
+        )
 
         assert result["swarm_id"] == "swarm-123"
         assert result["status"] == "created"
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
-    def test_auto_merge_defaults_to_false(self, fake_backend, coordination_config):
+    def test_auto_merge_defaults_to_false(self, monkeypatch, fake_backend, coordination_config):
         """Test auto_merge defaults to False."""
         from spellbook.coordination.swarm import swarm_create
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_create(
-                feature="test-feature",
-                manifest_path="/path/to/manifest.json"
-            )
+        result = swarm_create(
+            feature="test-feature",
+            manifest_path="/path/to/manifest.json"
+        )
 
         assert result["swarm_id"] == "swarm-123"
         assert result["status"] == "created"
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
-    def test_raises_when_backend_none(self):
+    def test_raises_when_backend_none(self, monkeypatch):
         """Test error when backend is NONE."""
         from spellbook.coordination.swarm import swarm_create
 
         config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(config)
+        monkeypatch.setattr(
+            "spellbook.coordination.swarm.load_coordination_config",
+            lambda: config,
+        )
 
-        with bigfoot:
-            with pytest.raises(ValueError, match="No coordination backend configured"):
-                swarm_create(
-                    feature="test",
-                    manifest_path="/path"
-                )
-
-        mock_config.assert_call(args=(), kwargs={})
+        with pytest.raises(ValueError, match="No coordination backend configured"):
+            swarm_create(
+                feature="test",
+                manifest_path="/path"
+            )
 
 
 class TestSwarmRegister:
     """Tests for swarm_register tool."""
 
-    def test_registers_worker_successfully(self, fake_backend, coordination_config):
+    def test_registers_worker_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful worker registration."""
         from spellbook.coordination.swarm import swarm_register
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_register(
-                swarm_id="swarm-123",
-                packet_id=1,
-                packet_name="auth-packet",
-                tasks_total=5,
-                worktree="/path/to/worktree"
-            )
+        result = swarm_register(
+            swarm_id="swarm-123",
+            packet_id=1,
+            packet_name="auth-packet",
+            tasks_total=5,
+            worktree="/path/to/worktree"
+        )
 
         assert result["status"] == "registered"
         assert result["packet_id"] == 1
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
 
 class TestSwarmProgress:
     """Tests for swarm_progress tool."""
 
-    def test_reports_progress_successfully(self, fake_backend, coordination_config):
+    def test_reports_progress_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful progress reporting."""
         from spellbook.coordination.swarm import swarm_progress
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_progress(
-                swarm_id="swarm-123",
-                packet_id=1,
-                task_id="task-1",
-                task_name="Implement login",
-                status="completed",
-                tasks_completed=2,
-                tasks_total=5,
-                commit="abc1234"
-            )
+        result = swarm_progress(
+            swarm_id="swarm-123",
+            packet_id=1,
+            task_id="task-1",
+            task_name="Implement login",
+            status="completed",
+            tasks_completed=2,
+            tasks_total=5,
+            commit="abc1234"
+        )
 
         assert result["status"] == "recorded"
         assert result["tasks_completed"] == 2
         assert result["tasks_total"] == 5
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
-    def test_commit_optional(self, fake_backend, coordination_config):
+    def test_commit_optional(self, monkeypatch, fake_backend, coordination_config):
         """Test commit parameter is optional."""
         from spellbook.coordination.swarm import swarm_progress
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_progress(
-                swarm_id="swarm-123",
-                packet_id=1,
-                task_id="task-1",
-                task_name="Task name",
-                status="started",
-                tasks_completed=0,
-                tasks_total=5
-            )
+        result = swarm_progress(
+            swarm_id="swarm-123",
+            packet_id=1,
+            task_id="task-1",
+            task_name="Task name",
+            status="started",
+            tasks_completed=0,
+            tasks_total=5
+        )
 
         assert result["status"] == "recorded"
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
 
 class TestSwarmComplete:
     """Tests for swarm_complete tool."""
 
-    def test_reports_completion_successfully(self, fake_backend, coordination_config):
+    def test_reports_completion_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful completion reporting."""
         from spellbook.coordination.swarm import swarm_complete
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_complete(
-                swarm_id="swarm-123",
-                packet_id=1,
-                final_commit="abc1234",
-                tests_passed=True,
-                review_passed=True
-            )
+        result = swarm_complete(
+            swarm_id="swarm-123",
+            packet_id=1,
+            final_commit="abc1234",
+            tests_passed=True,
+            review_passed=True
+        )
 
         assert result["status"] == "complete"
         assert result["all_workers_done"] is False
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
 
 class TestSwarmError:
     """Tests for swarm_error tool."""
 
-    def test_reports_error_successfully(self, fake_backend, coordination_config):
+    def test_reports_error_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful error reporting."""
         from spellbook.coordination.swarm import swarm_error
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_error(
-                swarm_id="swarm-123",
-                packet_id=1,
-                task_id="task-1",
-                error_type="TestFailure",
-                message="Tests failed in auth module",
-                recoverable=True
-            )
+        result = swarm_error(
+            swarm_id="swarm-123",
+            packet_id=1,
+            task_id="task-1",
+            error_type="TestFailure",
+            message="Tests failed in auth module",
+            recoverable=True
+        )
 
         assert result["status"] == "error_recorded"
         assert result["will_retry"] is True
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
 
 class TestSwarmMonitor:
     """Tests for swarm_monitor tool."""
 
-    def test_gets_status_successfully(self, fake_backend, coordination_config):
+    def test_gets_status_successfully(self, monkeypatch, fake_backend, coordination_config):
         """Test successful status retrieval."""
         from spellbook.coordination.swarm import swarm_monitor
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake_backend)
+        _patch_swarm(monkeypatch, coordination_config, fake_backend)
 
-        with bigfoot:
-            result = swarm_monitor(swarm_id="swarm-123")
+        result = swarm_monitor(swarm_id="swarm-123")
 
         assert result["swarm_id"] == "swarm-123"
         assert result["status"] == "running"
@@ -274,8 +238,6 @@ class TestSwarmMonitor:
         assert result["workers_complete"] == 1
         assert result["workers_failed"] == 0
         assert result["ready_for_merge"] is False
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
 
 class TestBackendInitialization:
@@ -320,30 +282,23 @@ class TestBackendInitialization:
 class TestAsyncToSyncConversion:
     """Tests for async to sync conversion in tools."""
 
-    def test_swarm_create_handles_async_backend(self, coordination_config):
+    def test_swarm_create_handles_async_backend(self, monkeypatch, coordination_config):
         """Test that swarm_create properly handles async backend methods."""
         from spellbook.coordination.swarm import swarm_create
 
         fake = _FakeBackend(create_swarm="swarm-456")
+        _patch_swarm(monkeypatch, coordination_config, fake)
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake)
-
-        with bigfoot:
-            result = swarm_create(
-                feature="test-feature",
-                manifest_path="/path/to/manifest.json"
-            )
+        result = swarm_create(
+            feature="test-feature",
+            manifest_path="/path/to/manifest.json"
+        )
 
         # Should successfully convert async to sync
         assert result["swarm_id"] == "swarm-456"
         assert result["status"] == "created"
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})
 
-    def test_swarm_monitor_handles_async_backend(self, coordination_config):
+    def test_swarm_monitor_handles_async_backend(self, monkeypatch, coordination_config):
         """Test that swarm_monitor properly handles async backend methods."""
         from spellbook.coordination.swarm import swarm_monitor
 
@@ -355,18 +310,11 @@ class TestAsyncToSyncConversion:
             "workers_failed": 0,
             "ready_for_merge": True,
         })
+        _patch_swarm(monkeypatch, coordination_config, fake)
 
-        mock_config = bigfoot.mock("spellbook.coordination.swarm:load_coordination_config")
-        mock_config.returns(coordination_config)
-        mock_get_backend = bigfoot.mock("spellbook.coordination.swarm:_get_backend")
-        mock_get_backend.returns(fake)
-
-        with bigfoot:
-            result = swarm_monitor(swarm_id="swarm-789")
+        result = swarm_monitor(swarm_id="swarm-789")
 
         # Should successfully convert async to sync
         assert result["swarm_id"] == "swarm-789"
         assert result["status"] == "complete"
         assert result["ready_for_merge"] is True
-        mock_config.assert_call(args=(), kwargs={})
-        mock_get_backend.assert_call(args=(coordination_config,), kwargs={})

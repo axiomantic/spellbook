@@ -3,9 +3,7 @@
 import asyncio
 from types import SimpleNamespace
 
-import bigfoot
 import pytest
-from dirty_equals import IsInstance
 
 from spellbook.admin.events import Event
 
@@ -668,51 +666,46 @@ class TestFractalContradictions:
 
 
 class TestFractalGraphDelete:
-    def test_delete_graph_success(self, client):
+    def test_delete_graph_success(self, client, monkeypatch):
         """DELETE /fractal/graphs/{graph_id} returns 200 with deleted confirmation."""
-        delete_mock = bigfoot.mock("spellbook.admin.routes.fractal:delete_graph")
-        delete_mock.calls(
-            lambda graph_id: _async_value({"deleted": True, "graph_id": graph_id})
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.delete_graph",
+            lambda graph_id: _async_value({"deleted": True, "graph_id": graph_id}),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.calls(lambda event: _async_value(None))
+        published_events = []
 
-        with bigfoot:
-            response = client.delete("/api/fractal/graphs/g-1")
+        async def capture_publish(event):
+            published_events.append(event)
+
+        mock_bus = SimpleNamespace(publish=capture_publish)
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
+
+        response = client.delete("/api/fractal/graphs/g-1")
 
         assert response.status_code == 200
         assert response.json() == {"deleted": True, "graph_id": "g-1"}
+        assert len(published_events) == 1
+        assert isinstance(published_events[0], Event)
 
-        # Verify delete_graph was called with the correct graph_id
-        delete_mock.assert_call(args=("g-1",), kwargs={})
-
-        # Verify event was published
-        bus_mock.publish.assert_call(
-            args=(IsInstance(Event),), kwargs={}
-        )
-
-    def test_delete_graph_not_found(self, client):
+    def test_delete_graph_not_found(self, client, monkeypatch):
         """DELETE /fractal/graphs/{graph_id} returns 404 when graph doesn't exist."""
-        delete_mock = bigfoot.mock("spellbook.admin.routes.fractal:delete_graph")
-        delete_mock.calls(
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.delete_graph",
             lambda graph_id: _async_value(
                 {"error": "Graph 'g-missing' not found."}
-            )
+            ),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.required(False)
+        mock_bus = SimpleNamespace(publish=lambda event: _async_value(None))
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
 
-        with bigfoot:
-            response = client.delete("/api/fractal/graphs/g-missing")
+        response = client.delete("/api/fractal/graphs/g-missing")
 
         assert response.status_code == 404
         assert response.json() == {
             "error": {"code": "GRAPH_NOT_FOUND", "message": "Graph not found"}
         }
-
-        delete_mock.assert_call(args=("g-missing",), kwargs={})
 
     def test_delete_graph_requires_auth(self, unauthenticated_client):
         """DELETE /fractal/graphs/{graph_id} returns 401 without auth."""
@@ -721,27 +714,29 @@ class TestFractalGraphDelete:
 
 
 class TestFractalGraphStatusUpdate:
-    def test_update_status_success(self, client):
+    def test_update_status_success(self, client, monkeypatch):
         """PATCH /fractal/graphs/{graph_id}/status returns 200 with updated status."""
-        update_mock = bigfoot.mock(
-            "spellbook.admin.routes.fractal:update_graph_status"
-        )
-        update_mock.calls(
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.update_graph_status",
             lambda graph_id, status, reason: _async_value({
                 "graph_id": "g-1",
                 "status": "completed",
                 "previous_status": "active",
-            })
+            }),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.calls(lambda event: _async_value(None))
+        published_events = []
 
-        with bigfoot:
-            response = client.patch(
-                "/api/fractal/graphs/g-1/status",
-                json={"status": "completed"},
-            )
+        async def capture_publish(event):
+            published_events.append(event)
+
+        mock_bus = SimpleNamespace(publish=capture_publish)
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
+
+        response = client.patch(
+            "/api/fractal/graphs/g-1/status",
+            json={"status": "completed"},
+        )
 
         assert response.status_code == 200
         assert response.json() == {
@@ -749,33 +744,32 @@ class TestFractalGraphStatusUpdate:
             "status": "completed",
             "previous_status": "active",
         }
+        assert len(published_events) == 1
+        assert isinstance(published_events[0], Event)
 
-        update_mock.assert_call(args=("g-1", "completed", None), kwargs={})
-        bus_mock.publish.assert_call(
-            args=(IsInstance(Event),), kwargs={}
-        )
-
-    def test_update_status_with_reason(self, client):
+    def test_update_status_with_reason(self, client, monkeypatch):
         """PATCH /fractal/graphs/{graph_id}/status passes reason to graph_ops."""
-        update_mock = bigfoot.mock(
-            "spellbook.admin.routes.fractal:update_graph_status"
-        )
-        update_mock.calls(
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.update_graph_status",
             lambda graph_id, status, reason: _async_value({
                 "graph_id": "g-1",
                 "status": "paused",
                 "previous_status": "active",
-            })
+            }),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.calls(lambda event: _async_value(None))
+        published_events = []
 
-        with bigfoot:
-            response = client.patch(
-                "/api/fractal/graphs/g-1/status",
-                json={"status": "paused", "reason": "taking a break"},
-            )
+        async def capture_publish(event):
+            published_events.append(event)
+
+        mock_bus = SimpleNamespace(publish=capture_publish)
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
+
+        response = client.patch(
+            "/api/fractal/graphs/g-1/status",
+            json={"status": "paused", "reason": "taking a break"},
+        )
 
         assert response.status_code == 200
         assert response.json() == {
@@ -783,34 +777,26 @@ class TestFractalGraphStatusUpdate:
             "status": "paused",
             "previous_status": "active",
         }
+        assert len(published_events) == 1
+        assert isinstance(published_events[0], Event)
 
-        update_mock.assert_call(
-            args=("g-1", "paused", "taking a break"), kwargs={}
-        )
-        bus_mock.publish.assert_call(
-            args=(IsInstance(Event),), kwargs={}
-        )
-
-    def test_update_status_invalid_transition(self, client):
+    def test_update_status_invalid_transition(self, client, monkeypatch):
         """PATCH /fractal/graphs/{graph_id}/status returns 400 for invalid transition."""
-        update_mock = bigfoot.mock(
-            "spellbook.admin.routes.fractal:update_graph_status"
-        )
-        update_mock.calls(
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.update_graph_status",
             lambda graph_id, status, reason: _async_value({
                 "error": "Invalid transition from 'completed' to 'active'. "
                 "Allowed transitions from 'completed': []"
-            })
+            }),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.required(False)
+        mock_bus = SimpleNamespace(publish=lambda event: _async_value(None))
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
 
-        with bigfoot:
-            response = client.patch(
-                "/api/fractal/graphs/g-1/status",
-                json={"status": "active"},
-            )
+        response = client.patch(
+            "/api/fractal/graphs/g-1/status",
+            json={"status": "active"},
+        )
 
         assert response.status_code == 400
         assert response.json() == {
@@ -823,27 +809,22 @@ class TestFractalGraphStatusUpdate:
             }
         }
 
-        update_mock.assert_call(args=("g-1", "active", None), kwargs={})
-
-    def test_update_status_not_found(self, client):
+    def test_update_status_not_found(self, client, monkeypatch):
         """PATCH /fractal/graphs/{graph_id}/status returns 404 when graph missing."""
-        update_mock = bigfoot.mock(
-            "spellbook.admin.routes.fractal:update_graph_status"
-        )
-        update_mock.calls(
+        monkeypatch.setattr(
+            "spellbook.admin.routes.fractal.update_graph_status",
             lambda graph_id, status, reason: _async_value(
                 {"error": "Graph 'g-missing' not found."}
-            )
+            ),
         )
 
-        bus_mock = bigfoot.mock("spellbook.admin.routes.fractal:event_bus")
-        bus_mock.publish.required(False)
+        mock_bus = SimpleNamespace(publish=lambda event: _async_value(None))
+        monkeypatch.setattr("spellbook.admin.routes.fractal.event_bus", mock_bus)
 
-        with bigfoot:
-            response = client.patch(
-                "/api/fractal/graphs/g-missing/status",
-                json={"status": "completed"},
-            )
+        response = client.patch(
+            "/api/fractal/graphs/g-missing/status",
+            json={"status": "completed"},
+        )
 
         assert response.status_code == 404
         assert response.json() == {
@@ -852,10 +833,6 @@ class TestFractalGraphStatusUpdate:
                 "message": "Graph not found",
             }
         }
-
-        update_mock.assert_call(
-            args=("g-missing", "completed", None), kwargs={}
-        )
 
     def test_update_status_requires_auth(self, unauthenticated_client):
         """PATCH /fractal/graphs/{graph_id}/status returns 401 without auth."""

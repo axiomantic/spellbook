@@ -2,7 +2,6 @@
 
 from types import SimpleNamespace
 
-import bigfoot
 import pytest
 
 

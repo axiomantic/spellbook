@@ -120,9 +120,63 @@ def _get_config_value(key: str, default=None):
     return default
 
 
+_log_lock = threading.Lock()
+
+
+_LOG_MAX_BYTES = 1_000_000  # 1 MB
+_LOG_BACKUP_COUNT = 3
+
+
+def _rotate_log(log_file: Path) -> None:
+    """Rotate log file if it exceeds _LOG_MAX_BYTES.
+
+    Keeps up to _LOG_BACKUP_COUNT backups: hook-errors.log.1, .2, .3.
+    """
+    try:
+        if not log_file.exists() or log_file.stat().st_size < _LOG_MAX_BYTES:
+            return
+        for i in range(_LOG_BACKUP_COUNT, 0, -1):
+            src = log_file.with_suffix(f".log.{i}") if i > 0 else log_file
+            if i == _LOG_BACKUP_COUNT:
+                src = log_file.with_suffix(f".log.{i}")
+                if src.exists():
+                    src.unlink()
+            else:
+                src = log_file.with_suffix(f".log.{i}")
+                dst = log_file.with_suffix(f".log.{i + 1}")
+                if src.exists():
+                    src.rename(dst)
+        log_file.rename(log_file.with_suffix(".log.1"))
+    except OSError:
+        pass  # Best-effort rotation
+
+
+def _log_hook_error(event: str, tool: str, exc: Exception) -> None:
+    """Log a hook error to the hook-errors log file with rotation."""
+    import traceback as _tb
+
+    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "hook-errors.log"
+    with _log_lock:
+        _rotate_log(log_file)
+        with open(log_file, "a") as f:
+            f.write(f"\n{'=' * 60}\n")
+            f.write(f"{datetime.now(timezone.utc).isoformat()}\n")
+            f.write(f"event={event} tool={tool}\n")
+            _tb.print_exception(type(exc), exc, exc.__traceback__, file=f)
+
+
 def _fire_and_forget(fn, *args):
     """Run a function in a daemon thread (dies with process)."""
-    t = threading.Thread(target=fn, args=args, daemon=True)
+
+    def _wrapper():
+        try:
+            fn(*args)
+        except Exception as e:
+            _log_hook_error("fire_and_forget", fn.__name__, e)
+
+    t = threading.Thread(target=_wrapper, daemon=True)
     t.start()
 
 
@@ -249,7 +303,8 @@ def _gate_bash(data: dict) -> None:
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
+    except ImportError as e:
+        _log_hook_error("gate_bash", "Bash", e)
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
 
@@ -272,7 +327,8 @@ def _gate_spawn(data: dict) -> None:
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
+    except ImportError as e:
+        _log_hook_error("gate_spawn", "spawn_claude_session", e)
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
 
@@ -295,7 +351,8 @@ def _gate_state_sanitize(data: dict) -> None:
     """
     try:
         from spellbook.security.check import check_tool_input
-    except ImportError:
+    except ImportError as e:
+        _log_hook_error("gate_state_sanitize", "workflow_state_save", e)
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
 
@@ -1098,9 +1155,12 @@ def main():
 
     tool_name = data.get("tool_name", "")
 
-    output = dispatch(event_name, tool_name, data)
-    if output:
-        print(output)
+    try:
+        output = dispatch(event_name, tool_name, data)
+        if output:
+            print(output)
+    except Exception as e:
+        _log_hook_error(event_name, tool_name, e)
 
 
 if __name__ == "__main__":

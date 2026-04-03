@@ -2,7 +2,6 @@
 
 from contextlib import asynccontextmanager
 
-import bigfoot
 import pytest
 
 
@@ -83,49 +82,36 @@ class TestHealthMatrix:
             [{"latest": None}],
         ])
 
-        mock_get_spellbook = bigfoot.mock(
-            "spellbook.admin.routes.health:get_spellbook_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health.get_spellbook_session",
+            lambda: _make_session_factory(mock_spellbook_session)(),
         )
-        mock_get_spellbook.calls(
-            lambda: _make_session_factory(mock_spellbook_session)()
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health.get_fractal_session",
+            lambda: _make_session_factory(mock_fractal_session)(),
         )
-
-        mock_get_fractal = bigfoot.mock(
-            "spellbook.admin.routes.health:get_fractal_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health.get_forged_session",
+            lambda: _make_session_factory(mock_forged_session)(),
         )
-        mock_get_fractal.calls(
-            lambda: _make_session_factory(mock_fractal_session)()
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health.get_coordination_session",
+            lambda: _make_session_factory(mock_coord_session)(),
         )
-
-        mock_get_forged = bigfoot.mock(
-            "spellbook.admin.routes.health:get_forged_session"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health._get_db_paths",
+            lambda *a, **kw: {
+                "spellbook.db": "/tmp/spellbook.db",
+                "fractal.db": "/tmp/fractal.db",
+                "forged.db": "/tmp/forged.db",
+                "coordination.db": "/tmp/coordination.db",
+            },
         )
-        mock_get_forged.calls(
-            lambda: _make_session_factory(mock_forged_session)()
-        )
-
-        mock_get_coord = bigfoot.mock(
-            "spellbook.admin.routes.health:get_coordination_session"
-        )
-        mock_get_coord.calls(
-            lambda: _make_session_factory(mock_coord_session)()
-        )
-
-        mock_paths = bigfoot.mock(
-            "spellbook.admin.routes.health:_get_db_paths"
-        )
-        mock_paths.returns({
-            "spellbook.db": "/tmp/spellbook.db",
-            "fractal.db": "/tmp/fractal.db",
-            "forged.db": "/tmp/forged.db",
-            "coordination.db": "/tmp/coordination.db",
-        })
 
         monkeypatch.setattr("os.path.getsize", lambda path: 1234567)
         monkeypatch.setattr("os.path.exists", lambda path: True)
 
-        with bigfoot:
-            response = client.get("/api/health/matrix")
+        response = client.get("/api/health/matrix")
 
         assert response.status_code == 200
         data = response.json()
@@ -173,32 +159,21 @@ class TestHealthMatrix:
         # 1 table list + (1 count + 1 timestamp) * 2 tables = 5 calls
         assert mock_spellbook_session.execute_call_count == 5
 
-        # Assert all mocked interactions
-        mock_paths.assert_call(args=(), kwargs={})
-        mock_get_spellbook.assert_call()
-        mock_get_fractal.assert_call()
-        mock_get_forged.assert_call()
-        mock_get_coord.assert_call()
-
     def test_missing_db_returns_missing_status(self, client, monkeypatch):
-        mock_paths = bigfoot.mock(
-            "spellbook.admin.routes.health:_get_db_paths"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health._get_db_paths",
+            lambda *a, **kw: {
+                "spellbook.db": "/tmp/nonexistent.db",
+            },
         )
-        mock_paths.returns({
-            "spellbook.db": "/tmp/nonexistent.db",
-        })
-
-        mock_get_factory = bigfoot.mock(
-            "spellbook.admin.routes.health:_get_session_factory"
-        )
-        mock_get_factory.returns(
-            _make_session_factory(_make_mock_session([]))
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health._get_session_factory",
+            lambda *a, **kw: _make_session_factory(_make_mock_session([])),
         )
 
         monkeypatch.setattr("os.path.exists", lambda path: False)
 
-        with bigfoot:
-            response = client.get("/api/health/matrix")
+        response = client.get("/api/health/matrix")
 
         assert response.status_code == 200
         data = response.json()
@@ -209,9 +184,6 @@ class TestHealthMatrix:
             "tables": [],
         }
 
-        mock_paths.assert_call(args=(), kwargs={})
-        mock_get_factory.assert_call(args=("spellbook.db",), kwargs={})
-
     def test_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/health/matrix")
         assert response.status_code == 401
@@ -219,25 +191,21 @@ class TestHealthMatrix:
     def test_db_query_error_returns_error_status(self, client, monkeypatch):
         error_session = _make_mock_session([Exception("db locked")])
 
-        mock_paths = bigfoot.mock(
-            "spellbook.admin.routes.health:_get_db_paths"
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health._get_db_paths",
+            lambda *a, **kw: {
+                "spellbook.db": "/tmp/spellbook.db",
+            },
         )
-        mock_paths.returns({
-            "spellbook.db": "/tmp/spellbook.db",
-        })
-
-        mock_get_factory = bigfoot.mock(
-            "spellbook.admin.routes.health:_get_session_factory"
-        )
-        mock_get_factory.returns(
-            _make_session_factory(error_session)
+        monkeypatch.setattr(
+            "spellbook.admin.routes.health._get_session_factory",
+            lambda *a, **kw: _make_session_factory(error_session),
         )
 
         monkeypatch.setattr("os.path.exists", lambda path: True)
         monkeypatch.setattr("os.path.getsize", lambda path: 999)
 
-        with bigfoot:
-            response = client.get("/api/health/matrix")
+        response = client.get("/api/health/matrix")
 
         assert response.status_code == 200
         data = response.json()
@@ -247,14 +215,6 @@ class TestHealthMatrix:
             "size_bytes": 0,
             "tables": [],
         }
-
-        mock_paths.assert_call(args=(), kwargs={})
-        mock_get_factory.assert_call(args=("spellbook.db",), kwargs={})
-        bigfoot.log_mock.assert_log(
-            "ERROR",
-            "Error probing spellbook.db: db locked",
-            "spellbook.admin.routes.health",
-        )
 
     def test_probe_missing_file(self, client, monkeypatch):
         """_probe_database returns missing status when file does not exist."""

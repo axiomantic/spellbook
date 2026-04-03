@@ -1092,12 +1092,22 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     # Handle --reconfigure: run config wizard for unset keys only
     if args.reconfigure:
-        from spellbook.core.config import get_unset_config_keys
+        from spellbook.core.config import config_set, get_unset_config_keys
         unset_keys = get_unset_config_keys()
         if unset_keys and renderer is not None:
-            renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
+            selections = renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
+            if selections:
+                for key, value in selections.items():
+                    config_set(key, value)
         elif not unset_keys:
             print_success("All config keys are already set.")
+
+        # Offer profile selection during reconfigure
+        if renderer is not None:
+            profile_config = renderer.render_profile_wizard(reconfigure=True)
+            if "profile.default" in profile_config:
+                config_set("profile.default", profile_config["profile.default"])
+
         return 0
 
     is_upgrade = False  # Will be refined after installer.run() returns
@@ -1225,6 +1235,17 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 auto_yes=getattr(args, "yes", False),
                 spellbook_dir=spellbook_dir,
             )
+
+    # Profile selection runs after TTS
+    if not args.dry_run and renderer is not None:
+        profile_config = renderer.render_profile_wizard()
+        if "profile.default" in profile_config:
+            try:
+                from spellbook.core.config import config_set as _cfg_set
+
+                _cfg_set("profile.default", profile_config["profile.default"])
+            except ImportError:
+                print("  Warning: could not save profile selection (spellbook.core.config not available)")
 
     # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()

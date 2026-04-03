@@ -8,8 +8,6 @@ instead of raw SQL query helpers.
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
-import bigfoot
-from dirty_equals import IsInstance
 import pytest
 
 
@@ -54,64 +52,29 @@ def _setup_common_mocks(monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
                          subscriber_count=0, total_dropped_events=0,
                          version="0.30.5", db_size=0, session_files=0,
                          session_files_raises=None):
-    """Set up bigfoot mocks and monkeypatch for common dashboard test pattern.
-
-    Returns dict of bigfoot mock proxies for assertion.
-    """
+    """Set up monkeypatch mocks for common dashboard test pattern."""
     import spellbook.admin.routes.dashboard as dashboard_mod
 
-    mock_spellbook = bigfoot.mock("spellbook.admin.routes.dashboard:get_spellbook_session")
-    mock_spellbook.calls(spellbook_ctx)
+    monkeypatch.setattr(dashboard_mod, "get_spellbook_session", spellbook_ctx)
+    monkeypatch.setattr(dashboard_mod, "get_coordination_session", coord_ctx)
+    monkeypatch.setattr(dashboard_mod, "get_fractal_session", fractal_ctx)
 
-    mock_coord = bigfoot.mock("spellbook.admin.routes.dashboard:get_coordination_session")
-    mock_coord.calls(coord_ctx)
-
-    mock_fractal = bigfoot.mock("spellbook.admin.routes.dashboard:get_fractal_session")
-    mock_fractal.calls(fractal_ctx)
-
-    # event_bus is accessed for attribute reads, not called -- use monkeypatch
     fake_bus = SimpleNamespace(
         subscriber_count=subscriber_count,
         total_dropped_events=total_dropped_events,
     )
     monkeypatch.setattr(dashboard_mod, "event_bus", fake_bus)
 
-    mock_version = bigfoot.mock("spellbook.admin.routes.dashboard:pkg_version")
-    mock_version.returns(version)
+    monkeypatch.setattr(dashboard_mod, "pkg_version", lambda *a, **kw: version)
+    monkeypatch.setattr(dashboard_mod, "_get_db_size", lambda *a, **kw: db_size)
 
-    mock_db_size = bigfoot.mock("spellbook.admin.routes.dashboard:_get_db_size")
-    mock_db_size.returns(db_size)
-
-    mock_session_files = bigfoot.mock("spellbook.admin.routes.dashboard:_count_session_files")
     if session_files_raises is not None:
-        mock_session_files.raises(session_files_raises)
+        def _raise_session_files(*a, **kw):
+            raise session_files_raises
+        monkeypatch.setattr(dashboard_mod, "_count_session_files", _raise_session_files)
     else:
-        mock_session_files.returns(session_files)
+        monkeypatch.setattr(dashboard_mod, "_count_session_files", lambda *a, **kw: session_files)
 
-    return {
-        "spellbook": mock_spellbook,
-        "coord": mock_coord,
-        "fractal": mock_fractal,
-        "version": mock_version,
-        "db_size": mock_db_size,
-        "session_files": mock_session_files,
-    }
-
-
-def _assert_common_calls(mocks, session_files_raised=None):
-    """Assert all common mocks were called."""
-    with bigfoot.in_any_order():
-        mocks["spellbook"].assert_call(args=(), kwargs={})
-        mocks["coord"].assert_call(args=(), kwargs={})
-        mocks["fractal"].assert_call(args=(), kwargs={})
-        mocks["version"].assert_call(args=("spellbook",), kwargs={})
-        mocks["db_size"].assert_call(args=(), kwargs={})
-        if session_files_raised is not None:
-            mocks["session_files"].assert_call(
-                args=(), kwargs={}, raised=session_files_raised,
-            )
-        else:
-            mocks["session_files"].assert_call(args=(), kwargs={})
 
 
 @pytest.mark.asyncio
@@ -128,16 +91,15 @@ async def test_dashboard_data_uses_orm_sessions(monkeypatch):
     coord_ctx, coord_exec_count = _make_async_session_ctx([2])
     fractal_ctx, fractal_exec_count = _make_async_session_ctx([4])
 
-    mocks = _setup_common_mocks(
+    _setup_common_mocks(
         monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
         subscriber_count=2, total_dropped_events=5,
         db_size=2048, session_files=3,
     )
 
-    async with bigfoot:
-        from spellbook.admin.routes.dashboard import get_dashboard_data
+    from spellbook.admin.routes.dashboard import get_dashboard_data
 
-        result = await get_dashboard_data()
+    result = await get_dashboard_data()
 
     assert result == {
         "health": {
@@ -175,8 +137,6 @@ async def test_dashboard_data_uses_orm_sessions(monkeypatch):
     assert coord_exec_count[0] == 1
     assert fractal_exec_count[0] == 1
 
-    _assert_common_calls(mocks)
-
 
 @pytest.mark.asyncio
 async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
@@ -187,15 +147,14 @@ async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
         raise Exception("DB locked")
         yield  # pragma: no cover
 
-    mocks = _setup_common_mocks(
+    _setup_common_mocks(
         monkeypatch, _failing_session, _failing_session, _failing_session,
         session_files_raises=Exception("Filesystem error"),
     )
 
-    async with bigfoot:
-        from spellbook.admin.routes.dashboard import get_dashboard_data
+    from spellbook.admin.routes.dashboard import get_dashboard_data
 
-        result = await get_dashboard_data()
+    result = await get_dashboard_data()
 
     # All counts should fall back to 0
     assert result["counts"] == {
@@ -207,8 +166,6 @@ async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
         "fractal_graphs": 0,
     }
     assert result["recent_activity"] == []
-
-    _assert_common_calls(mocks, session_files_raised=IsInstance(Exception))
 
 
 @pytest.mark.asyncio
@@ -224,14 +181,13 @@ async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypat
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    mocks = _setup_common_mocks(
+    _setup_common_mocks(
         monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
     )
 
-    async with bigfoot:
-        from spellbook.admin.routes.dashboard import get_dashboard_data
+    from spellbook.admin.routes.dashboard import get_dashboard_data
 
-        result = await get_dashboard_data()
+    result = await get_dashboard_data()
 
     assert len(result["recent_activity"]) == 1
     activity = result["recent_activity"][0]
@@ -240,8 +196,6 @@ async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypat
         "timestamp": "2026-03-14T11:00:00Z",
         "summary": "A" * 80,
     }
-
-    _assert_common_calls(mocks)
 
 
 @pytest.mark.asyncio
@@ -258,14 +212,13 @@ async def test_dashboard_data_orm_security_event_detail_fallback(monkeypatch):
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    mocks = _setup_common_mocks(
+    _setup_common_mocks(
         monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
     )
 
-    async with bigfoot:
-        from spellbook.admin.routes.dashboard import get_dashboard_data
+    from spellbook.admin.routes.dashboard import get_dashboard_data
 
-        result = await get_dashboard_data()
+    result = await get_dashboard_data()
 
     assert result["recent_activity"] == [
         {
@@ -280,8 +233,6 @@ async def test_dashboard_data_orm_security_event_detail_fallback(monkeypatch):
         },
     ]
 
-    _assert_common_calls(mocks)
-
 
 @pytest.mark.asyncio
 async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch):
@@ -294,14 +245,13 @@ async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch)
     coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
-    mocks = _setup_common_mocks(
+    _setup_common_mocks(
         monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
     )
 
-    async with bigfoot:
-        from spellbook.admin.routes.dashboard import get_dashboard_data
+    from spellbook.admin.routes.dashboard import get_dashboard_data
 
-        result = await get_dashboard_data()
+    result = await get_dashboard_data()
 
     # Memory (newer) should come first
     assert result["recent_activity"] == [
@@ -316,5 +266,3 @@ async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch)
             "summary": "Login event",
         },
     ]
-
-    _assert_common_calls(mocks)

@@ -68,7 +68,7 @@ class TestUnifiedHookRegistration:
         """Verify the exact command path for the unified hook."""
         commands = _extract_commands_from_phase("PreToolUse")
         unified = [c for c in commands if "spellbook_hook" in c]
-        assert unified[0] == "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
+        assert unified[0] == "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py"
 
     def test_pre_tool_use_is_synchronous(self):
         """PreToolUse must NOT have async: true (security gates must block)."""

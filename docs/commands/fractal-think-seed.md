@@ -33,6 +33,8 @@ There is no clustering; questions are added directly as flat children of the roo
 
 ### Creating a New Graph
 
+Valid values: `intensity` = `pulse` | `explore` | `deep`; `checkpoint_mode` = `autonomous` | `convergence` | `interactive` | `depth:N`
+
 ```
 fractal_create_graph(
   seed: <seed>,

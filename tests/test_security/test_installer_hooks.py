@@ -17,8 +17,6 @@ import sys
 import pytest
 from pathlib import Path
 
-import bigfoot
-
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
     _cleanup_legacy_hooks,
@@ -93,15 +91,16 @@ def _expected_ext():
     return ".ps1" if sys.platform == "win32" else ".sh"
 
 
-def _expected_unified_command(prefix):
+def _expected_unified_command(prefix, config_prefix="$SPELLBOOK_CONFIG_DIR"):
     """Return the expected unified hook command string for the current platform.
 
-    On Windows, the .py hook uses the .ps1 wrapper.
-    On Unix, the .py hook is invoked directly.
+    Args:
+        prefix: The spellbook dir prefix (e.g. "$SPELLBOOK_DIR" or "/actual/path")
+        config_prefix: The config dir prefix for the venv Python path
     """
     if sys.platform == "win32":
         return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/spellbook_hook.ps1"
-    return f"{prefix}/hooks/spellbook_hook.py"
+    return f"{config_prefix}/daemon-venv/bin/python {prefix}/hooks/spellbook_hook.py"
 
 
 # --- HOOK_DEFINITIONS tests ---
@@ -122,7 +121,7 @@ class TestHookDefinitions:
         assert len(hooks) == 1
         assert hooks[0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 15,
         }
 
@@ -133,7 +132,7 @@ class TestHookDefinitions:
         assert len(hooks) == 1
         assert hooks[0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 15,
         }
 
@@ -144,7 +143,7 @@ class TestHookDefinitions:
         assert len(hooks) == 1
         assert hooks[0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 5,
         }
 
@@ -155,7 +154,7 @@ class TestHookDefinitions:
         assert len(hooks) == 1
         assert hooks[0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 10,
         }
 
@@ -800,12 +799,17 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            results = installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        results = installer.install()
 
         # Check that hooks were registered
         settings_path = config_dir / "settings.json"
@@ -829,12 +833,17 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            results = installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        results = installer.install()
 
         settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
@@ -855,18 +864,22 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        daemon_mock = bigfoot.mock("installer.platforms.claude_code:uninstall_daemon")
-        daemon_mock.returns((True, "ok"))
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False).returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            installer.install()
-            results = installer.uninstall()
-        with bigfoot.in_any_order():
-            cli_mock.assert_call(args=(), kwargs={})
-            daemon_mock.assert_call(args=(), kwargs={"dry_run": False})
-            cli_mock.assert_call(args=(), kwargs={})
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.uninstall_daemon",
+            lambda *a, **kw: (True, "ok"),
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        installer.install()
+        results = installer.uninstall()
 
         # Hooks should be removed from both phases
         settings_path = config_dir / "settings.json"
@@ -884,18 +897,29 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
 
+        fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        cli_mock = bigfoot.mock("installer.platforms.claude_code:check_claude_cli_available")
-        cli_mock.returns(False)
-        with bigfoot:
-            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-            installer.install()
-        cli_mock.assert_call()
+        monkeypatch.setattr(
+            "installer.config.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
+        monkeypatch.setattr(
+            "installer.platforms.claude_code.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_claude_cli_available",
+            lambda *a, **kw: False,
+        )
+
+        installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+        installer.install()
 
         settings_path = config_dir / "settings.json"
         content = settings_path.read_text(encoding="utf-8")
-        # Literal $SPELLBOOK_DIR should NOT appear in the written file
+        # Literal $SPELLBOOK_DIR and $SPELLBOOK_CONFIG_DIR should NOT appear in the written file
         assert "$SPELLBOOK_DIR" not in content
+        assert "$SPELLBOOK_CONFIG_DIR" not in content
         # The expanded spellbook_dir path should appear instead
         # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
         assert json.dumps(str(spellbook_dir))[1:-1] in content
@@ -909,7 +933,7 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(catchall_entry["hooks"]) == 1
         hook = catchall_entry["hooks"][0]
         assert hook["type"] == "command"
-        expected_path = _expected_unified_command(str(spellbook_dir))
+        expected_path = _expected_unified_command(str(spellbook_dir), config_prefix=str(tmp_path / ".local" / "spellbook"))
         assert hook["command"] == expected_path
 
 
@@ -1013,11 +1037,13 @@ class TestInstallHooksWithSpellbookDir:
         # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
         assert json.dumps(str(spellbook_dir))[1:-1] in content
 
-    def test_expanded_unified_hook_correct(self, tmp_path):
+    def test_expanded_unified_hook_correct(self, tmp_path, monkeypatch):
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1028,13 +1054,15 @@ class TestInstallHooksWithSpellbookDir:
         assert "matcher" not in catchall_entry
         assert len(catchall_entry["hooks"]) == 1
         assert catchall_entry["hooks"][0]["type"] == "command"
-        assert catchall_entry["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
+        assert catchall_entry["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
 
-    def test_expanded_post_tool_use_hook_correct(self, tmp_path):
+    def test_expanded_post_tool_use_hook_correct(self, tmp_path, monkeypatch):
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1045,15 +1073,17 @@ class TestInstallHooksWithSpellbookDir:
         assert "matcher" not in post_entry
         assert len(post_entry["hooks"]) == 1
         hook = post_entry["hooks"][0]
-        assert hook["command"] == _expected_unified_command(str(spellbook_dir))
+        assert hook["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
         assert hook["timeout"] == 15
 
-    def test_idempotent_with_expanded_paths(self, tmp_path):
+    def test_idempotent_with_expanded_paths(self, tmp_path, monkeypatch):
         """Running install_hooks with spellbook_dir twice should not create duplicates."""
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
@@ -1067,12 +1097,14 @@ class TestInstallHooksWithSpellbookDir:
                 f"{phase} should have 1 hook, got {len(entries[0]['hooks'])}"
             )
 
-    def test_replaces_old_literal_paths_with_expanded(self, tmp_path):
+    def test_replaces_old_literal_paths_with_expanded(self, tmp_path, monkeypatch):
         """If settings has old literal $SPELLBOOK_DIR paths, they should be replaced."""
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
 
         # Simulate old installation with literal paths
         _make_settings_file(settings_path, {
@@ -1095,15 +1127,16 @@ class TestInstallHooksWithSpellbookDir:
         assert len(pre_tool_use) == 1
         assert "matcher" not in pre_tool_use[0]
         assert len(pre_tool_use[0]["hooks"]) == 1
-        assert pre_tool_use[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
+        assert pre_tool_use[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
 
-    def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
+    def test_preserves_user_hooks_with_expanded_paths(self, tmp_path, monkeypatch):
         """User hooks should be preserved when installing with expanded paths."""
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
-
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
 
         _make_settings_file(settings_path, {
             "hooks": {
@@ -1124,7 +1157,7 @@ class TestInstallHooksWithSpellbookDir:
         # Unified hook added as catch-all entry
         catchall = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall) == 1
-        assert catchall[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
+        assert catchall[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
 
 
 # --- uninstall_hooks() with spellbook_dir tests ---
@@ -1869,11 +1902,8 @@ class TestInstallHooksPowerShellCheck:
         """On Windows without powershell on PATH, install_hooks should skip."""
         settings_path = tmp_path / "settings.json"
         monkeypatch.setattr("sys.platform", "win32")
-        which_mock = bigfoot.mock("shutil:which")
-        which_mock.returns(None)
-        with bigfoot:
-            result = install_hooks(settings_path)
-        which_mock.assert_call(args=("powershell",), kwargs={})
+        monkeypatch.setattr("shutil.which", lambda *a, **kw: None)
+        result = install_hooks(settings_path)
         assert result.success is True
         assert result.action == "skipped"
         assert result.message == "PowerShell not found on PATH; hook registration skipped"

@@ -48,6 +48,11 @@ class AgentClient(abc.ABC):
         """Spawn an interactive terminal session."""
         pass
 
+    @abc.abstractmethod
+    async def run_subprocess(self, prompt: str) -> Dict[str, Any]:
+        """Run the CLI as a headless subprocess, returning output."""
+        pass
+
     @property
     @abc.abstractmethod
     def provider(self) -> str:
@@ -126,6 +131,60 @@ class ClaudeAgentClient(AgentClient):
             cli_command="claude"
         )
 
+    async def run_subprocess(self, prompt: str) -> Dict[str, Any]:
+        """Run Claude CLI as a headless subprocess with -p flag.
+
+        Uses the same permission_mode and allowed_tools from AgentOptions.
+        Returns {"status": "completed", "output": str} or raises on failure.
+        """
+        import asyncio
+
+        cmd = ["claude", "-p", prompt, "--output-format", "text"]
+
+        if self.options.permission_mode:
+            cmd.extend(["--permission-mode", self.options.permission_mode])
+
+        if self.options.allowed_tools:
+            cmd.extend(["--allowedTools"] + self.options.allowed_tools)
+
+        if self.options.disallowed_tools:
+            cmd.extend(["--disallowedTools"] + self.options.disallowed_tools)
+
+        if self.options.model:
+            cmd.extend(["--model", self.options.model])
+
+        if self.options.system_prompt:
+            cmd.extend(["--system-prompt", self.options.system_prompt])
+
+        if self.options.extra_args:
+            cmd.extend(self.options.extra_args)
+
+        env = self.options.env.copy()
+        # Prevent the subprocess from detecting it's inside Claude Code,
+        # which would cause recursive session detection issues.
+        for key in ("CLAUDE_CODE", "CLAUDE_PROJECT_DIR", "CLAUDE_ENV_FILE"):
+            env.pop(key, None)
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(self.options.cwd),
+            env=env,
+        )
+
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            err_text = stderr.decode().strip()
+            raise RuntimeError(f"Claude CLI failed (code {process.returncode}): {err_text}")
+
+        return {
+            "status": "completed",
+            "output": stdout.decode().strip(),
+            "pid": process.pid,
+        }
+
 class GeminiAgentClient(AgentClient):
     """Client for Gemini CLI, emulating the Claude SDK interface via async subprocess."""
 
@@ -194,6 +253,12 @@ class GeminiAgentClient(AgentClient):
             working_directory=str(self.options.cwd),
             cli_command="gemini"
         )
+
+    async def run_subprocess(self, prompt: str) -> Dict[str, Any]:
+        """Run Gemini CLI as a headless subprocess."""
+        # Reuse the existing query() method which already runs as a subprocess
+        result = await self.run(prompt)
+        return {"status": "completed", "output": result, "pid": None}
 
 def get_agent_client(provider: Optional[str] = None, options: Optional[AgentOptions] = None) -> AgentClient:
     """Factory to get the right client."""

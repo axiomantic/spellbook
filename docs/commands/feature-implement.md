@@ -548,6 +548,8 @@ When `SESSION_PREFERENCES.dialectic_mode == "roundtable"`:
 **At planning_and_gates level:**
 After each per-task quality gate (4.5 code review, 4.5.1 fact-checking), optionally invoke roundtable with 3-archetype fast mode:
 
+Valid values: `stage` = `DISCOVER` | `DESIGN` | `PLAN` | `IMPLEMENT` | `COMPLETE` | `ESCALATED`; `archetypes` from: `Magician`, `Priestess`, `Hermit`, `Fool`, `Chariot`, `Justice`, `Lovers`, `Hierophant`, `Emperor`, `Queen`
+
 ```
 forge_roundtable_convene(
     feature_name=feature_name,
