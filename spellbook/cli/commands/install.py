@@ -195,7 +195,7 @@ def run(args: argparse.Namespace) -> None:
                     from spellbook.core.config import config_set as _cfg_set
                     _cfg_set("profile.default", profile_config["profile.default"])
                 except ImportError:
-                    pass
+                    print("  Warning: could not save profile selection (spellbook.core.config not available)")
 
     json_mode = getattr(args, "json", False)
     if json_mode:

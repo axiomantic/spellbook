@@ -1245,7 +1245,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
                 _cfg_set("profile.default", profile_config["profile.default"])
             except ImportError:
-                pass
+                print("  Warning: could not save profile selection (spellbook.core.config not available)")
 
     # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()
