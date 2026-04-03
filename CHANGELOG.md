@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0] - 2026-04-03
+
+### Added
+- **Session profiles**: 8 bundled behavioral profiles (Thought Partner, Terse, Mentor, Critic, Rubber Duck, Ship It, Architect, Quiet) that shape AI assistant tone and collaboration style per session
+- **Profile selection wizard**: Installer and `--reconfigure` offer profile selection during setup; selected profile injected into sessions via `session_init`
+- **Profile auto-discovery**: Profiles from `profiles/` directory with custom overrides from `~/.local/spellbook/profiles/`
+- **Headless session spawning**: `spawn_session` defaults to subprocess mode (`claude -p`) instead of opening a terminal window; supports `allowed_tools` and `disallowed_tools` for tool restriction
+- **Hook error logging**: Errors in `spellbook_hook.py` logged to `~/.local/spellbook/logs/hook-errors.log` with 1MB rotation and 3 backups
+
+### Changed
+- **Hooks use daemon venv Python**: Hook commands now invoke the daemon venv interpreter instead of system Python, ensuring all spellbook dependencies are available
+- **Security gates fail-closed**: Hook security gates exit with code 2 when the security module is unavailable, with diagnostic logging
+- **Fractal error messages**: Validation errors for `intensity` and `checkpoint_mode` now list valid options
+- **Skill documentation**: Added valid parameter values for fractal intensity/checkpoint_mode and roundtable stage/archetypes to skill and command descriptions
+
+### Fixed
+- **Installer daemon progress**: Moved progress display initialization before daemon install so "Starting daemon..." appears during the venv build and health-check loop instead of a blank pause
+- **Reconfigure config persistence**: `--reconfigure` in both `install.py` and CLI now correctly persists config wizard selections (previously discarded)
+- **Security module imports**: Moved DB-dependent imports in `security/check.py` from module level into functions to avoid requiring `aiosqlite` at import time
+- **bigfoot 0.19.1 compatibility**: Migrated ~20 test files from bigfoot sandboxes to monkeypatch for subprocess/socket/database interception compatibility
+
 ## [0.38.0] - 2026-03-28
 
 ### Added
