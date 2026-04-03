@@ -166,7 +166,7 @@ class TestHookRegistration:
         assert len(pre_hooks[0]["hooks"]) == 1
         assert pre_hooks[0]["hooks"][0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 15,
         }
 
@@ -177,7 +177,7 @@ class TestHookRegistration:
         assert len(post_hooks[0]["hooks"]) == 1
         assert post_hooks[0]["hooks"][0] == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 15,
         }
 
@@ -254,11 +254,11 @@ class TestHookRegistration:
     def test_platform_transform_windows(self, monkeypatch):
         from installer.components.hooks import _get_hook_path_for_platform
         monkeypatch.setattr("sys.platform", "win32")
-        result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        result = _get_hook_path_for_platform("$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py")
         assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
 
     def test_platform_transform_unix(self, monkeypatch):
         from installer.components.hooks import _get_hook_path_for_platform
         monkeypatch.setattr("sys.platform", "linux")
-        result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
-        assert result == "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
+        result = _get_hook_path_for_platform("$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        assert result == "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py"

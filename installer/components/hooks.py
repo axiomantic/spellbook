@@ -102,11 +102,22 @@ def _get_hook_path_for_platform(hook_path: str) -> str:
     On Windows:
     - .sh hooks become .ps1 hooks wrapped in PowerShell invocation
     - .py hooks use their .ps1 wrapper (which delegates to the .py script)
+    - Commands with a venv python prefix (e.g. ``$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python
+      $SPELLBOOK_DIR/hooks/spellbook_hook.py``) strip the prefix and use
+      just the .ps1 wrapper, since the PS1 wrapper handles Python discovery itself.
     On Unix, returns the original path unchanged.
     """
     import sys
 
     if sys.platform == "win32":
+        # Handle venv-prefixed commands: extract the .py path and convert to .ps1
+        # The PS1 wrapper handles Python invocation itself, so the venv prefix is dropped.
+        if " " in hook_path and hook_path.endswith(".py"):
+            # Split on last space to get the .py script path
+            py_path = hook_path.rsplit(" ", 1)[-1]
+            if py_path.endswith(".py"):
+                ps1_path = py_path.replace(".py", ".ps1")
+                return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
         if hook_path.endswith(".sh"):
             ps1_path = hook_path.replace(".sh", ".ps1")
             return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"

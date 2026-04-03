@@ -45,7 +45,7 @@ def test_unified_hook_registered_in_post_tool_use():
     assert hook is not None, "spellbook_hook.py not found in PostToolUse hooks"
     assert hook == {
         "type": "command",
-        "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+        "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
         "timeout": 15,
     }
 
@@ -65,7 +65,7 @@ def test_unified_hook_registered_in_pre_tool_use():
     assert hook is not None, "spellbook_hook.py not found in PreToolUse hooks"
     assert hook == {
         "type": "command",
-        "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+        "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
         "timeout": 15,
     }
 

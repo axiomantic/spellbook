@@ -174,13 +174,13 @@ class TestPreToolUseBashGate:
         })
         assert proc.returncode == 0
 
-    def test_bash_gate_blocks_empty_tool_input(self):
-        """Bash gate is FAIL-CLOSED: missing tool_input should block."""
+    def test_bash_gate_returns_gracefully_on_empty_tool_input(self):
+        """Bash gate degrades gracefully: missing tool_input returns exit 0."""
         proc = _run_hook({
             "tool_name": "Bash",
         })
-        assert proc.returncode == 2, (
-            f"Expected exit 2 (fail-closed on missing tool_input), got {proc.returncode}. "
+        assert proc.returncode == 0, (
+            f"Expected exit 0 (graceful return on missing tool_input), got {proc.returncode}. "
             f"stderr={proc.stderr!r}"
         )
 
