@@ -489,7 +489,146 @@ class RichRenderer(InstallerRenderer):
         return selections
 
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
-        raise NotImplementedError  # Task 3 will implement this
+        from installer.wizard import _matches_unset_key
+
+        results = WizardResults()
+
+        try:
+            if context.auto_yes:
+                results.platforms = context.cli_platforms or context.available_platforms
+                if context.tts_disabled:
+                    results.tts_intent = False
+                return results
+
+            console = self._get_console()
+
+            # --- Section 1: Platform Selection ---
+            if context.cli_platforms is not None:
+                results.platforms = context.cli_platforms
+            elif context.no_interactive:
+                results.platforms = context.available_platforms
+            else:
+                results.platforms = self._wizard_platform_select(console, context)
+
+            # --- Section 2: Security Configuration ---
+            if context.security_level is not None:
+                results.security_selections = None
+            elif context.unset_security_keys:
+                results.security_selections = self._wizard_security(console, context)
+
+            # --- Section 3: TTS Intent ---
+            if context.tts_disabled:
+                results.tts_intent = False
+            elif not context.tts_already_configured:
+                results.tts_intent = self._wizard_tts_intent(console)
+
+            # --- Section 4: Profile Selection ---
+            if context.available_profiles and (
+                not context.profile_already_configured or context.reconfigure
+            ):
+                results.profile_selection = self._wizard_profile(console, context)
+
+            return results
+        except (KeyboardInterrupt, EOFError):
+            return None
+
+    def _wizard_platform_select(self, console: Any, context: WizardContext) -> list[str]:
+        """Rich-based platform selector with numbered toggle."""
+        from rich.table import Table
+        from rich.prompt import Prompt
+        from installer.config import PLATFORM_CONFIG
+
+        options: list[dict[str, Any]] = []
+        for pid in context.available_platforms:
+            name = PLATFORM_CONFIG.get(pid, {}).get("name", pid)
+            options.append({"id": pid, "name": name, "selected": True})
+
+        while True:
+            table = Table(title="Platform Selection", show_header=True)
+            table.add_column("#", width=3, justify="right")
+            table.add_column("Platform")
+            table.add_column("Status", justify="center")
+
+            for i, opt in enumerate(options):
+                status = "[green]selected[/green]" if opt["selected"] else "[dim]skipped[/dim]"
+                table.add_row(str(i + 1), opt["name"], status)
+
+            console.print(table)
+            console.print("[dim]Toggle: enter number | a=all | n=none | enter=confirm[/dim]")
+
+            choice = Prompt.ask("", default="", console=console).strip().lower()
+
+            if choice == "":
+                break
+            elif choice == "a":
+                for opt in options:
+                    opt["selected"] = True
+            elif choice == "n":
+                for opt in options:
+                    opt["selected"] = False
+            elif choice.isdigit():
+                idx = int(choice) - 1
+                if 0 <= idx < len(options):
+                    options[idx]["selected"] = not options[idx]["selected"]
+
+        return [o["id"] for o in options if o["selected"]]
+
+    def _wizard_tts_intent(self, console: Any) -> bool:
+        """Ask if user wants TTS."""
+        from rich.panel import Panel
+        from rich.prompt import Confirm
+
+        console.print(Panel(
+            "Kokoro text-to-speech provides spoken notifications.\n"
+            "Requires ~500MB download on first use.",
+            title="Text-to-Speech",
+            border_style="cyan",
+        ))
+
+        return Confirm.ask(
+            "Enable TTS notifications?",
+            default=False,
+            console=console,
+        )
+
+    def _wizard_security(self, console: Any, context: WizardContext) -> dict[str, bool]:
+        """Rich-based security feature configuration."""
+        from rich.panel import Panel
+        from rich.prompt import Confirm
+        from installer.tui import get_feature_groups
+        from installer.wizard import _matches_unset_key
+
+        console.print(Panel(
+            "Configure security features for this installation.",
+            title="Security Configuration",
+            border_style="yellow",
+        ))
+
+        selections: dict[str, bool] = {}
+        for group in get_feature_groups():
+            for feature in group["features"]:
+                config_key = f"security.{feature['id']}.enabled"
+                if not _matches_unset_key(feature["id"], context.unset_security_keys):
+                    continue
+                enabled = Confirm.ask(
+                    f"Enable {feature['name']}? {feature.get('description', '')}",
+                    default=feature.get("default", False),
+                    console=console,
+                )
+                selections[config_key] = enabled
+
+        return selections
+
+    def _wizard_profile(self, console: Any, context: WizardContext) -> str | None:
+        """Collect profile selection by delegating to render_profile_wizard().
+
+        Returns the profile slug, empty string for "None" choice, or None
+        if the wizard was skipped.
+        """
+        result = self.render_profile_wizard(
+            reconfigure=context.reconfigure,
+        )
+        return result.get("profile.default") if result else None
 
     def render_config_summary(
         self, config: dict[str, Any], confirmed: bool
@@ -778,7 +917,113 @@ class PlainTextRenderer(InstallerRenderer):
         return selections
 
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
-        raise NotImplementedError  # Task 4 will implement this
+        from installer.wizard import _matches_unset_key
+
+        results = WizardResults()
+
+        try:
+            if context.auto_yes:
+                results.platforms = context.cli_platforms or context.available_platforms
+                if context.tts_disabled:
+                    results.tts_intent = False
+                return results
+
+            # --- Section 1: Platform Selection ---
+            if context.cli_platforms is not None:
+                results.platforms = context.cli_platforms
+            elif context.no_interactive:
+                results.platforms = context.available_platforms
+            else:
+                results.platforms = self._wizard_platform_select_plain(context)
+
+            # --- Section 2: Security Configuration ---
+            if context.security_level is not None:
+                results.security_selections = None
+            elif context.unset_security_keys:
+                results.security_selections = self._wizard_security_plain(context)
+
+            # --- Section 3: TTS Intent ---
+            if context.tts_disabled:
+                results.tts_intent = False
+            elif not context.tts_already_configured:
+                answer = input("Enable TTS notifications? [y/N] ").strip().lower()
+                results.tts_intent = answer in ("y", "yes")
+
+            # --- Section 4: Profile Selection ---
+            if context.available_profiles and (
+                not context.profile_already_configured or context.reconfigure
+            ):
+                results.profile_selection = self._wizard_profile_plain(context)
+
+            return results
+        except (KeyboardInterrupt, EOFError):
+            return None
+
+    def _wizard_platform_select_plain(self, context: WizardContext) -> list[str]:
+        """Plain-text platform selector using numbered toggle."""
+        from installer.config import PLATFORM_CONFIG
+
+        options: list[dict[str, Any]] = []
+        for pid in context.available_platforms:
+            name = PLATFORM_CONFIG.get(pid, {}).get("name", pid)
+            options.append({"id": pid, "name": name, "selected": True})
+
+        while True:
+            print("\nPlatform Selection:")
+            for i, opt in enumerate(options):
+                status = "[x]" if opt["selected"] else "[ ]"
+                print(f"  {i + 1}. {status} {opt['name']}")
+            print("  Toggle: enter number | a=all | n=none | enter=confirm")
+
+            choice = input("> ").strip().lower()
+            if choice == "":
+                break
+            elif choice == "a":
+                for opt in options:
+                    opt["selected"] = True
+            elif choice == "n":
+                for opt in options:
+                    opt["selected"] = False
+            elif choice.isdigit():
+                idx = int(choice) - 1
+                if 0 <= idx < len(options):
+                    options[idx]["selected"] = not options[idx]["selected"]
+
+        return [o["id"] for o in options if o["selected"]]
+
+    def _wizard_security_plain(self, context: WizardContext) -> dict[str, bool]:
+        """Plain-text security feature configuration."""
+        from installer.tui import get_feature_groups
+        from installer.wizard import _matches_unset_key
+
+        print("\nSecurity Configuration:")
+        selections: dict[str, bool] = {}
+        for group in get_feature_groups():
+            for feature in group["features"]:
+                if not _matches_unset_key(feature["id"], context.unset_security_keys):
+                    continue
+                default = feature.get("default", False)
+                default_hint = "Y/n" if default else "y/N"
+                answer = input(
+                    f"  Enable {feature['name']}? [{default_hint}] "
+                ).strip().lower()
+                if default:
+                    enabled = answer not in ("n", "no")
+                else:
+                    enabled = answer in ("y", "yes")
+                selections[feature["id"]] = enabled
+
+        return selections
+
+    def _wizard_profile_plain(self, context: WizardContext) -> str | None:
+        """Collect profile selection by delegating to render_profile_wizard().
+
+        render_profile_wizard() returns {"profile.default": slug} or {} if skipped.
+        """
+        result = self.render_profile_wizard(
+            reconfigure=context.reconfigure,
+        )
+        return result.get("profile.default") if result else None
 
     def render_config_summary(
         self, config: dict[str, Any], confirmed: bool

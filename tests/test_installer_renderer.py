@@ -1455,3 +1455,427 @@ class TestPlainTextUpfrontWizardProfileDelegation:
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
         assert result.profile_selection is None
+
+
+# ---------------------------------------------------------------------------
+# RichRenderer: render_upfront_wizard
+# ---------------------------------------------------------------------------
+
+
+def _make_wizard_context_rich(**overrides):
+    """Build a WizardContext with sensible defaults for RichRenderer tests."""
+    from installer.wizard import WizardContext
+
+    defaults = dict(
+        available_platforms=["claude_code", "gemini"],
+        cli_platforms=None,
+        unset_security_keys=[],
+        existing_config={},
+        security_level=None,
+        tts_disabled=False,
+        tts_already_configured=True,
+        profile_already_configured=True,
+        available_profiles=[],
+        is_upgrade=False,
+        is_interactive=True,
+        auto_yes=False,
+        no_interactive=False,
+        reconfigure=False,
+    )
+    defaults.update(overrides)
+    return WizardContext(**defaults)
+
+
+def _make_rich_renderer(auto_yes=False):
+    """Create a RichRenderer with a StringIO console for testing."""
+    import io
+    from rich.console import Console
+    from installer.renderer import RichRenderer
+
+    console = Console(file=io.StringIO(), force_terminal=True)
+    return RichRenderer(auto_yes=auto_yes, console=console)
+
+
+@pytest.mark.skipif(not _has_rich, reason="Rich not installed")
+class TestRichRendererUpfrontWizardAutoYes:
+    """Tests for RichRenderer.render_upfront_wizard with auto_yes=True."""
+
+    def test_auto_yes_returns_all_platforms(self):
+        """auto_yes returns WizardResults with platforms=available_platforms."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(auto_yes=True)
+        renderer = _make_rich_renderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_cli_platforms_override(self):
+        """CLI platforms override available_platforms in auto_yes mode."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            auto_yes=True,
+            cli_platforms=["gemini"],
+        )
+        renderer = _make_rich_renderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_tts_disabled(self):
+        """--no-tts sets tts_intent=False even with auto_yes."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            auto_yes=True,
+            tts_disabled=True,
+            tts_already_configured=False,
+        )
+        renderer = _make_rich_renderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=False,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_security_level_skips(self):
+        """--security-level causes security_selections=None in auto_yes mode."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            auto_yes=True,
+            security_level="standard",
+            unset_security_keys=["security.crypto.enabled"],
+        )
+        renderer = _make_rich_renderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+
+@pytest.mark.skipif(not _has_rich, reason="Rich not installed")
+class TestRichRendererUpfrontWizardInteractive:
+    """Tests for RichRenderer.render_upfront_wizard interactive paths."""
+
+    def test_cli_platforms_skips_platform_prompt(self):
+        """When cli_platforms is set, platform section uses them without prompting."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(cli_platforms=["gemini"])
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_no_interactive_auto_selects_platforms(self):
+        """no_interactive=True auto-selects all available platforms."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(no_interactive=True)
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_tts_already_configured_skips(self):
+        """When TTS is already configured, tts_intent remains None."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            tts_already_configured=True,
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_keyboard_interrupt_returns_none(self, monkeypatch):
+        """KeyboardInterrupt during platform selection returns None."""
+        monkeypatch.setattr(
+            "rich.prompt.Prompt.ask",
+            lambda *a, **kw: (_ for _ in ()).throw(KeyboardInterrupt()),
+        )
+        ctx = _make_wizard_context_rich()
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result is None
+
+    def test_eof_error_returns_none(self, monkeypatch):
+        """EOFError during platform selection returns None."""
+        monkeypatch.setattr(
+            "rich.prompt.Prompt.ask",
+            lambda *a, **kw: (_ for _ in ()).throw(EOFError()),
+        )
+        ctx = _make_wizard_context_rich()
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result is None
+
+    def test_platform_select_confirm_all(self, monkeypatch):
+        """Pressing Enter confirms all platforms (all selected by default)."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "rich.prompt.Prompt.ask",
+            lambda *a, **kw: "",
+        )
+        ctx = _make_wizard_context_rich()
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_tts_intent_yes(self, monkeypatch):
+        """User says yes to TTS."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: True,
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            tts_already_configured=False,
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=True,
+            profile_selection=None,
+        )
+
+    def test_tts_intent_no(self, monkeypatch):
+        """User says no to TTS."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: False,
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            tts_already_configured=False,
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=False,
+            profile_selection=None,
+        )
+
+    def test_tts_disabled_skips_prompt(self):
+        """tts_disabled=True sets tts_intent=False without prompting."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            tts_disabled=True,
+            tts_already_configured=False,
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=False,
+            profile_selection=None,
+        )
+
+    def test_security_features_interactive(self, monkeypatch):
+        """Prompts for each unset security feature, returns dotted config keys."""
+        from installer.wizard import WizardResults
+
+        confirm_results = iter([True, False])
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: next(confirm_results),
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            unset_security_keys=["security.crypto.enabled", "security.sleuth.enabled"],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections={
+                "security.crypto.enabled": True,
+                "security.sleuth.enabled": False,
+            },
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_security_level_skips_security_section(self):
+        """security_level set causes security_selections=None."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            security_level="standard",
+            unset_security_keys=["security.crypto.enabled"],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_no_unset_security_keys_skips(self):
+        """Empty unset_security_keys skips security section."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            unset_security_keys=[],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_profile_delegation(self, monkeypatch):
+        """Profile section delegates to render_profile_wizard."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "installer.renderer.RichRenderer.render_profile_wizard",
+            lambda self, reconfigure=False: {"profile.default": "zen"},
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            profile_already_configured=False,
+            available_profiles=["zen", "default"],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection="zen",
+        )
+
+    def test_profile_skipped_when_already_configured(self):
+        """Profile section skipped when already configured and not reconfiguring."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            profile_already_configured=True,
+            available_profiles=["zen"],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_profile_shown_when_reconfigure(self, monkeypatch):
+        """Profile section shown when reconfigure=True even if already configured."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "installer.renderer.RichRenderer.render_profile_wizard",
+            lambda self, reconfigure=False: {"profile.default": "focused"},
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            profile_already_configured=True,
+            available_profiles=["focused"],
+            reconfigure=True,
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection="focused",
+        )
+
+    def test_no_profiles_available_skips(self):
+        """Profile section skipped when available_profiles is empty."""
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            profile_already_configured=False,
+            available_profiles=[],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_profile_wizard_returns_empty_dict(self, monkeypatch):
+        """When render_profile_wizard returns {}, profile_selection is None."""
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr(
+            "installer.renderer.RichRenderer.render_profile_wizard",
+            lambda self, reconfigure=False: {},
+        )
+        ctx = _make_wizard_context_rich(
+            cli_platforms=["claude_code"],
+            profile_already_configured=False,
+            available_profiles=["zen"],
+        )
+        renderer = _make_rich_renderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
