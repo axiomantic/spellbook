@@ -27,7 +27,7 @@ def test_dashboard_returns_200(client, monkeypatch):
             "active_sessions": 1,
             "total_memories": 100,
             "security_events_24h": 5,
-            "running_swarms": 0,
+
             "open_experiments": 1,
             "fractal_graphs": 2,
         },
@@ -60,7 +60,7 @@ def test_dashboard_returns_200(client, monkeypatch):
     assert data["counts"]["active_sessions"] == 1
     assert data["counts"]["total_memories"] == 100
     assert data["counts"]["security_events_24h"] == 5
-    assert data["counts"]["running_swarms"] == 0
+
     assert data["counts"]["open_experiments"] == 1
     assert data["counts"]["fractal_graphs"] == 2
     assert len(data["recent_activity"]) == 1
@@ -89,7 +89,7 @@ def test_dashboard_response_schema(client, monkeypatch):
             "active_sessions": 0,
             "total_memories": 0,
             "security_events_24h": 0,
-            "running_swarms": 0,
+
             "open_experiments": 0,
             "fractal_graphs": 0,
         },
@@ -119,7 +119,7 @@ def test_dashboard_response_schema(client, monkeypatch):
     assert isinstance(counts["active_sessions"], int)
     assert isinstance(counts["total_memories"], int)
     assert isinstance(counts["security_events_24h"], int)
-    assert isinstance(counts["running_swarms"], int)
+
     assert isinstance(counts["open_experiments"], int)
     assert isinstance(counts["fractal_graphs"], int)
 
@@ -209,7 +209,6 @@ def test_dashboard_cross_db_aggregation(client, monkeypatch):
         [_FakeSecurityEvent()],    # recent security events
         [_FakeMemory()],           # recent memories
     ])
-    coord_ctx, coord_exec_count = _make_orm_session_ctx([2])
     fractal_ctx, fractal_exec_count = _make_orm_session_ctx([4])
 
     fake_bus = _FakeEventBus(subscriber_count=2, total_dropped_events=5)
@@ -218,9 +217,6 @@ def test_dashboard_cross_db_aggregation(client, monkeypatch):
     )
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.get_spellbook_session", spellbook_ctx,
-    )
-    monkeypatch.setattr(
-        "spellbook.admin.routes.dashboard.get_coordination_session", coord_ctx,
     )
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.get_fractal_session", fractal_ctx,
@@ -247,14 +243,12 @@ def test_dashboard_cross_db_aggregation(client, monkeypatch):
     assert data["counts"]["active_sessions"] == 3
     assert data["counts"]["total_memories"] == 200
     assert data["counts"]["security_events_24h"] == 10
-    assert data["counts"]["running_swarms"] == 2
     assert data["counts"]["open_experiments"] == 1
     assert data["counts"]["fractal_graphs"] == 4
     assert len(data["recent_activity"]) == 2
 
     # Verify ORM sessions were used
     assert spellbook_exec_count[0] == 5
-    assert coord_exec_count[0] == 1
     assert fractal_exec_count[0] == 1
 
 
@@ -275,9 +269,6 @@ def test_dashboard_handles_db_errors_gracefully(client, monkeypatch):
     )
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.get_fractal_session", _failing_session,
-    )
-    monkeypatch.setattr(
-        "spellbook.admin.routes.dashboard.get_coordination_session", _failing_session,
     )
     monkeypatch.setattr(
         "spellbook.admin.routes.dashboard.pkg_version", lambda *a, **kw: "0.30.5",
@@ -302,7 +293,7 @@ def test_dashboard_handles_db_errors_gracefully(client, monkeypatch):
     assert data["counts"]["active_sessions"] == 0
     assert data["counts"]["total_memories"] == 0
     assert data["counts"]["security_events_24h"] == 0
-    assert data["counts"]["running_swarms"] == 0
+
     assert data["counts"]["open_experiments"] == 0
     assert data["counts"]["fractal_graphs"] == 0
     assert data["recent_activity"] == []

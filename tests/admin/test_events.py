@@ -118,7 +118,6 @@ async def test_subsystem_values():
     assert Subsystem.SESSION.value == "session"
     assert Subsystem.CONFIG.value == "config"
     assert Subsystem.FRACTAL.value == "fractal"
-    assert Subsystem.SWARM.value == "swarm"
     assert Subsystem.EXPERIMENT.value == "experiment"
     assert Subsystem.FORGE.value == "forge"
 

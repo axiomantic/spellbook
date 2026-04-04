@@ -22,7 +22,6 @@ from spellbook.db.base import (
 )
 
 # Import model modules so their tables are registered on the metadata
-import spellbook.db.coordination_models  # noqa: F401
 import spellbook.db.forged_models  # noqa: F401
 import spellbook.db.fractal_models  # noqa: F401
 import spellbook.db.spellbook_models  # noqa: F401

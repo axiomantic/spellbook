@@ -13,11 +13,9 @@ from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.events import event_bus
 from spellbook.admin.routes.schemas import DashboardResponse
 from spellbook.db import (
-    get_coordination_session,
     get_fractal_session,
     get_spellbook_session,
 )
-from spellbook.db.coordination_models import Swarm
 from spellbook.db.fractal_models import FractalGraph
 from spellbook.db.spellbook_models import Experiment, Memory, SecurityEvent
 
@@ -115,17 +113,6 @@ async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
     )
 
 
-async def _query_coordination_counts() -> int:
-    """Query coordination.db for running swarm count."""
-    async with get_coordination_session() as session:
-        result = await session.execute(
-            select(func.count()).select_from(Swarm).where(
-                Swarm.status == "running"
-            )
-        )
-        return result.scalar_one()
-
-
 async def _query_fractal_counts() -> int:
     """Query fractal.db for total graph count."""
     async with get_fractal_session() as session:
@@ -139,17 +126,15 @@ async def get_dashboard_data() -> dict:
     """Gather dashboard data from all databases in parallel."""
     version = pkg_version("spellbook")
 
-    # Parallel database queries across spellbook, coordination, and fractal DBs
+    # Parallel database queries across spellbook and fractal DBs
     # plus filesystem scan for session count (matches Sessions page data source)
     (
         session_count,
         spellbook_result,
-        swarms_result,
         graphs_result,
     ) = await asyncio.gather(
         asyncio.to_thread(_count_session_files),
         _query_spellbook_counts(),
-        _query_coordination_counts(),
         _query_fractal_counts(),
         return_exceptions=True,
     )
@@ -216,7 +201,6 @@ async def get_dashboard_data() -> dict:
             "active_sessions": safe_int(session_count),
             "total_memories": memories_count,
             "security_events_24h": security_count,
-            "running_swarms": safe_int(swarms_result),
             "open_experiments": experiments_count,
             "fractal_graphs": safe_int(graphs_result),
         },
