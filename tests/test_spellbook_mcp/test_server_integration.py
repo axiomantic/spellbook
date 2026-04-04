@@ -233,13 +233,17 @@ async def _async_noop(*args, **kwargs):
 
 
 def _patch_message_bus_for_shutdown(monkeypatch):
-    """Stub the message bus and asyncio loop so shutdown's async cleanup is a no-op.
+    """Stub the message bus and asyncio so shutdown's async cleanup is a no-op.
 
-    The shutdown() function imports message_bus and calls asyncio.run() when
-    there is no running event loop. Inside bigfoot's sandbox, asyncio.run()
-    triggers socket operations that bigfoot intercepts, causing spurious
-    failures. We avoid this by making asyncio.get_running_loop() return a
-    fake loop whose create_task() simply closes the coroutine.
+    The shutdown() function imports message_bus and calls asyncio.run() (or
+    loop.run_until_complete()) to clean up sessions. Inside bigfoot's sandbox
+    both paths trigger socket operations that bigfoot intercepts, causing
+    spurious failures. We neutralise this by:
+      1. Stubbing message_bus with no-op async methods.
+      2. Making get_running_loop() raise RuntimeError (no loop) so the code
+         falls through to the asyncio.run() path.
+      3. Replacing asyncio.run() with a function that just closes the
+         coroutine without executing it, preventing any I/O.
     """
     import asyncio
     import spellbook.messaging as _messaging_mod
@@ -247,8 +251,14 @@ def _patch_message_bus_for_shutdown(monkeypatch):
     _stub_bus = SimpleNamespace(list_sessions=_async_noop_list, unregister=_async_noop)
     monkeypatch.setattr(_messaging_mod, "message_bus", _stub_bus)
 
-    _fake_loop = SimpleNamespace(create_task=lambda coro: coro.close())
-    monkeypatch.setattr(asyncio, "get_running_loop", lambda: _fake_loop)
+    def _no_loop():
+        raise RuntimeError("no running event loop")
+
+    def _fake_run(coro, **kwargs):
+        coro.close()
+
+    monkeypatch.setattr(asyncio, "get_running_loop", _no_loop)
+    monkeypatch.setattr(asyncio, "run", _fake_run)
 
 
 def test_shutdown_cleanup_stops_watchers_and_closes_connections(monkeypatch):
