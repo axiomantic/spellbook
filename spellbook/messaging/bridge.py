@@ -98,7 +98,7 @@ class MessageBridge:
             try:
                 with os.fdopen(fd, "w") as f:
                     f.write(data)
-                os.rename(tmp_path, final_path)
+                os.replace(tmp_path, final_path)
             except Exception:
                 # Clean up temp file on failure
                 try:

@@ -86,6 +86,9 @@ class MessageBus:
         self._sessions: dict[str, SessionRegistration] = {}
         self._pending_correlations: dict[str, PendingCorrelation] = {}
         self._bridges: dict[str, MessageBridge] = {}
+        # Lock is created eagerly. This is safe because all async methods run
+        # in the same event loop. The shutdown path bypasses the lock directly
+        # (see server.py shutdown()) since atexit runs in a new event loop.
         self._lock = asyncio.Lock()
         self._queue_size = queue_size
         # Stats

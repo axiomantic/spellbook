@@ -173,15 +173,17 @@ def shutdown() -> None:
     if state.update_watcher is not None:
         state.update_watcher.stop()
 
-    # Clean up message bus sessions
+    # Clean up message bus sessions.
+    # Bypass the async lock: atexit runs after the event loop has stopped, so
+    # asyncio.run() creates a NEW loop. The lock was bound to the old loop and
+    # would raise RuntimeError. Since shutdown is single-threaded with no
+    # concurrent access, we can safely manipulate the data structures directly.
     try:
-        async def _cleanup_message_bus():
-            aliases = [s["alias"] for s in await message_bus.list_sessions()]
-            if aliases:
-                await asyncio.gather(*(message_bus.unregister(a) for a in aliases))
-
-        # atexit runs after the event loop has stopped, so asyncio.run() is safe
-        asyncio.run(_cleanup_message_bus())
+        for bridge in list(message_bus._bridges.values()):
+            bridge.stop()
+        message_bus._bridges.clear()
+        message_bus._sessions.clear()
+        message_bus._pending_correlations.clear()
     except Exception:
         logger.warning("Failed to clean up message bus sessions during shutdown", exc_info=True)
 
