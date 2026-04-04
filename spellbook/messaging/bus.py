@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 QUEUE_SIZE = 256
 DEFAULT_CORRELATION_TTL = 60  # seconds
+MAX_ALIAS_LENGTH = 64
 
 
 @dataclass
@@ -216,7 +217,7 @@ class MessageBus:
             # Case 3: different session, try suffixes
             for i in range(2, max_suffix + 1):
                 candidate = f"{base_alias}-{i}"
-                if len(candidate) > 64:
+                if len(candidate) > MAX_ALIAS_LENGTH:
                     break  # Would exceed alias max length
                 if candidate not in self._sessions:
                     self._register_locked(candidate, enable_sse, session_id)

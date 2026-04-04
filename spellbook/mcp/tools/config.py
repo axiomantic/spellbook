@@ -27,6 +27,12 @@ from spellbook.core.config import (
 )
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
+# detect_git_context, derive_messaging_alias, and message_bus are imported
+# inside spellbook_session_init() so that asyncio.to_thread() picks up
+# test mocks patched on the source module (bigfoot patches module attrs,
+# not caller-local references).
+import spellbook.core.path_utils as _path_utils
+import spellbook.messaging.bus as _bus
 
 logger = logging.getLogger(__name__)
 
@@ -134,23 +140,26 @@ async def spellbook_session_init(
 
     # 2. Auto-register for messaging (async, best-effort)
     try:
-        from spellbook.core.path_utils import detect_git_context, derive_messaging_alias
-        from spellbook.messaging.bus import message_bus
-
         # detect_git_context() runs sync subprocess calls.
         # Wrap in asyncio.to_thread() to avoid blocking the event loop.
         try:
-            git_ctx = await asyncio.to_thread(detect_git_context, project_path)
+            git_ctx = await asyncio.to_thread(
+                _path_utils.detect_git_context, project_path
+            )
         except Exception:
+            logger.debug("Git context detection failed", exc_info=True)
             git_ctx = None
 
-        base_alias = derive_messaging_alias(
+        # derive_messaging_alias may call resolve_repo_root (a single
+        # fast git command). The heavier subprocess work is already
+        # offloaded via detect_git_context above.
+        base_alias = _path_utils.derive_messaging_alias(
             project_path,
             session_name=session_name,
             git_context=git_ctx,
         )
 
-        actual_alias, was_replaced = await message_bus.register_with_suffix(
+        actual_alias, was_replaced = await _bus.message_bus.register_with_suffix(
             base_alias=base_alias,
             session_id=session_id,
             enable_sse=True,
