@@ -25,6 +25,7 @@ class GitContext:
     branch: Optional[str] = None
     worktree_name: Optional[str] = None
     is_worktree: bool = False
+    repo_root: Optional[str] = None
 
 
 def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
@@ -72,6 +73,7 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
         return GitContext()
 
     # Detect worktree status
+    main_worktree: Optional[str] = None
     try:
         wt_result = subprocess.run(
             ["git", "worktree", "list", "--porcelain"],
@@ -81,7 +83,6 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
         if wt_result.returncode == 0 and wt_result.stdout.strip():
             # Parse porcelain output: first "worktree <path>" is main worktree
             lines = wt_result.stdout.strip().split("\n")
-            main_worktree = None
             for line in lines:
                 if line.startswith("worktree "):
                     main_worktree = os.path.normpath(line[len("worktree "):])
@@ -95,10 +96,23 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass  # Worktree detection is best-effort
 
+    # Cache the repo root so callers avoid redundant subprocess calls.
+    # If we already parsed the main worktree, use it; otherwise fall back
+    # to resolve_repo_root() which runs its own git commands.
+    repo_root: Optional[str] = None
+    if main_worktree:
+        repo_root = main_worktree
+    else:
+        try:
+            repo_root = resolve_repo_root(project_path)
+        except Exception:
+            pass  # Best-effort; callers handle None
+
     return GitContext(
         branch=branch,
         worktree_name=worktree_name,
         is_worktree=is_worktree,
+        repo_root=repo_root,
     )
 
 
@@ -150,13 +164,13 @@ def derive_messaging_alias(
     if session_name:
         raw = session_name
     elif git_context and (git_context.worktree_name or git_context.branch):
-        repo_root = resolve_repo_root(project_path)
-        basename = os.path.basename(repo_root)
+        root = git_context.repo_root or resolve_repo_root(project_path)
+        basename = os.path.basename(root)
         suffix = git_context.worktree_name or git_context.branch
         raw = f"{basename}-{suffix}"
     else:
-        repo_root = resolve_repo_root(project_path)
-        raw = os.path.basename(repo_root)
+        root = (git_context.repo_root if git_context else None) or resolve_repo_root(project_path)
+        raw = os.path.basename(root)
 
     slug = slugify_alias(raw)
 

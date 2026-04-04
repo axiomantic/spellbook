@@ -27,10 +27,10 @@ from spellbook.core.config import (
 )
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
-# detect_git_context, derive_messaging_alias, and message_bus are imported
-# inside spellbook_session_init() so that asyncio.to_thread() picks up
-# test mocks patched on the source module (bigfoot patches module attrs,
-# not caller-local references).
+# detect_git_context, derive_messaging_alias, and message_bus are referenced
+# via their source modules (_path_utils, _bus) so that asyncio.to_thread()
+# picks up test mocks patched on the source module (bigfoot patches module
+# attrs, not caller-local references).
 import spellbook.core.path_utils as _path_utils
 import spellbook.messaging.bus as _bus
 
@@ -150,9 +150,9 @@ async def spellbook_session_init(
             logger.debug("Git context detection failed", exc_info=True)
             git_ctx = None
 
-        # derive_messaging_alias may call resolve_repo_root (a single
-        # fast git command). The heavier subprocess work is already
-        # offloaded via detect_git_context above.
+        # derive_messaging_alias uses git_context.repo_root (populated by
+        # detect_git_context above) so it avoids subprocess calls in the
+        # common case. No need for asyncio.to_thread here.
         base_alias = _path_utils.derive_messaging_alias(
             project_path,
             session_name=session_name,

@@ -58,6 +58,7 @@ class SessionRegistration:
     alias: str
     queue: asyncio.Queue
     registered_at: str
+    session_id: str = ""
 
 
 @dataclass
@@ -161,6 +162,7 @@ class MessageBus:
             alias=alias,
             queue=asyncio.Queue(maxsize=self._queue_size),
             registered_at=datetime.now(timezone.utc).isoformat(),
+            session_id=session_id,
         )
         self._sessions[alias] = reg
 
@@ -197,10 +199,8 @@ class MessageBus:
             enable_sse: Whether to spawn a MessageBridge.
 
         Returns:
-            (actual_alias, was_force_replaced) tuple.
-
-        Raises:
-            RuntimeError: If all suffix slots exhausted AND UUID fallback fails.
+            (actual_alias, was_force_replaced) tuple. Always succeeds
+            because the UUID fallback generates a unique alias.
         """
         async with self._lock:
             # Case 1: base_alias is free
@@ -209,7 +209,7 @@ class MessageBus:
                 return (base_alias, False)
 
             # Case 2: same session re-registering (compaction)
-            existing_session_id = self._read_session_marker(base_alias)
+            existing_session_id = self._sessions[base_alias].session_id
             if session_id and existing_session_id == session_id:
                 self._register_locked(base_alias, enable_sse, session_id, force=True)
                 return (base_alias, True)
@@ -223,8 +223,8 @@ class MessageBus:
                     self._register_locked(candidate, enable_sse, session_id)
                     return (candidate, False)
                 # Check if this suffix is owned by same session
-                marker = self._read_session_marker(candidate)
-                if session_id and marker == session_id:
+                existing_sid = self._sessions[candidate].session_id
+                if session_id and existing_sid == session_id:
                     self._register_locked(candidate, enable_sse, session_id, force=True)
                     return (candidate, True)
 
