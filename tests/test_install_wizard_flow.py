@@ -17,7 +17,6 @@ import argparse
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-from unittest import mock
 
 import pytest
 

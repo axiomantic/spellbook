@@ -1163,7 +1163,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         try:
             from spellbook.core.profiles import discover_profiles
             available_profiles = discover_profiles()
-        except (ImportError, Exception):
+        except (ImportError, Exception) as e:
+            print_warning(f"Could not discover profiles: {e}")
             available_profiles = []
 
         wizard_ctx = WizardContext(
@@ -1186,10 +1187,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         wizard_results = renderer.render_upfront_wizard(wizard_ctx)
         if wizard_results is None:
             # User cancelled (KeyboardInterrupt/EOFError)
-            if renderer is not None:
-                renderer.render_warning("Installation cancelled.")
-            else:
-                print_warning("Installation cancelled.")
+            renderer.render_warning("Installation cancelled.")
             return 1
 
         # Determine platforms from wizard results
