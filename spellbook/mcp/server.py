@@ -124,30 +124,38 @@ def startup() -> None:
     from spellbook.updates.watcher import UpdateWatcher
     from spellbook.forged.schema import init_forged_schema
     from spellbook.fractal.schema import init_fractal_schema
-    from spellbook.coordination.curator import init_curator_tables
+
+    timings: dict[str, float] = {}
+
+    def _timed(label: str, fn, *args, **kwargs):
+        t0 = time.monotonic()
+        result = fn(*args, **kwargs)
+        timings[label] = time.monotonic() - t0
+        return result
 
     # Initialize databases
     db_path = str(get_db_path())
-    init_db(db_path)
-    init_forged_schema()
-    init_fractal_schema()
-    init_curator_tables()
+    _timed("init_db", init_db, db_path)
+    _timed("init_forged_schema", init_forged_schema)
+    _timed("init_fractal_schema", init_fractal_schema)
 
     # Start session watcher with cross-domain cleanup hooks
-    watcher = SessionWatcher(db_path)
-    watcher.start()
+    watcher = _timed("session_watcher_init", SessionWatcher, db_path)
+    _timed("session_watcher_start", watcher.start)
     state.watcher = watcher
 
     # Start update watcher if auto-update is not explicitly disabled
     auto_update_enabled = config_get("auto_update")
     if auto_update_enabled is not False:
-        update_watcher = UpdateWatcher(
+        update_watcher = _timed(
+            "update_watcher_init",
+            UpdateWatcher,
             str(get_spellbook_dir()),
             check_interval=float(
                 os.environ.get("SPELLBOOK_UPDATE_INTERVAL", "86400")
             ),
         )
-        update_watcher.start()
+        _timed("update_watcher_start", update_watcher.start)
         state.update_watcher = update_watcher
 
     # Preload TTS model in background (non-blocking)
@@ -160,10 +168,12 @@ def startup() -> None:
         pass
 
     # Mount admin web interface
-    _mount_admin_app()
+    _timed("mount_admin", _mount_admin_app)
 
     # Mount messaging SSE sub-app
-    _mount_messaging_app()
+    _timed("mount_messaging", _mount_messaging_app)
+
+    logger.info("startup timings: %s", {k: f"{v:.3f}s" for k, v in timings.items()})
 
 
 def shutdown() -> None:

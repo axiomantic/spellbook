@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0] - 2026-04-04
+
+### Added
+- **Upfront installer wizard**: All configuration questions (platforms, security, TTS, profile) are now collected in a single wizard before installation begins, replacing the previous scattered prompts
+- **Rich-based platform selector**: Platform selection now uses Rich panels and prompts instead of raw termios, improving Windows compatibility and visual consistency
+- **Startup profiling**: Daemon startup phases are now individually timed and logged for performance visibility
+
+### Fixed
+- **Config wizard filtering bug**: `--reconfigure` security feature prompts now correctly match dotted config keys to bare feature IDs (previously always returned empty)
+
+### Removed
+- **init_curator_tables no-op**: Removed dead code from daemon startup (function was already a pass-through)
+
 ## [0.41.0] - 2026-04-04
 
 ### Added
