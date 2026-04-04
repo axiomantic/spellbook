@@ -170,6 +170,9 @@ def startup() -> None:
     # Mount admin web interface
     _mount_admin_app()
 
+    # Mount messaging SSE sub-app
+    _mount_messaging_app()
+
 
 def shutdown() -> None:
     """Stop watcher threads and close database connections on exit."""
@@ -177,6 +180,24 @@ def shutdown() -> None:
         state.watcher.stop()
     if state.update_watcher is not None:
         state.update_watcher.stop()
+
+    # Clean up message bus sessions
+    try:
+        import asyncio
+        from spellbook.messaging import message_bus
+
+        async def _cleanup_message_bus():
+            aliases = [s["alias"] for s in await message_bus.list_sessions()]
+            for alias in aliases:
+                await message_bus.unregister(alias)
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_cleanup_message_bus())
+        except RuntimeError:
+            asyncio.run(_cleanup_message_bus())
+    except Exception:
+        pass
 
     try:
         from spellbook.core.db import close_all_connections
@@ -221,6 +242,21 @@ def _mount_admin_app() -> None:
         logger.debug("Admin package not available, skipping mount")
     except Exception:
         logger.warning("Failed to mount admin interface", exc_info=True)
+
+
+def _mount_messaging_app() -> None:
+    """Mount the messaging SSE sub-app for cross-session communication."""
+    try:
+        from spellbook.messaging.sse import create_messaging_app
+        from starlette.routing import Mount
+
+        messaging_app = create_messaging_app()
+        mcp._additional_http_routes.append(Mount("/messaging", app=messaging_app))
+        logger.info("Messaging SSE interface mounted at /messaging")
+    except ImportError:
+        logger.debug("Messaging package not available, skipping mount")
+    except Exception:
+        logger.warning("Failed to mount messaging interface", exc_info=True)
 
 
 def build_http_run_kwargs() -> Dict[str, Any]:
