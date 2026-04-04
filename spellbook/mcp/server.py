@@ -4,6 +4,7 @@ Creates the FastMCP instance, registers tools, manages lifecycle (startup/shutdo
 and builds HTTP transport configuration. Replaces the 3,945-line monolith.
 """
 
+import asyncio
 import atexit
 import functools
 import logging
@@ -170,7 +171,7 @@ def shutdown() -> None:
 
     # Clean up message bus sessions
     try:
-        import asyncio
+        # Function-level import: messaging package is optional
         from spellbook.messaging import message_bus
 
         async def _cleanup_message_bus():
@@ -178,11 +179,8 @@ def shutdown() -> None:
             for alias in aliases:
                 await message_bus.unregister(alias)
 
-        try:
-            loop = asyncio.get_running_loop()
-            loop.run_until_complete(_cleanup_message_bus())
-        except RuntimeError:
-            asyncio.run(_cleanup_message_bus())
+        # atexit runs after the event loop has stopped, so asyncio.run() is safe
+        asyncio.run(_cleanup_message_bus())
     except Exception:
         logger.warning("Failed to clean up message bus sessions during shutdown", exc_info=True)
 

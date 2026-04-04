@@ -66,17 +66,20 @@ class MessageBridge:
                 with httpx.stream("GET", url, headers=headers, timeout=None) as response:
                     response.raise_for_status()
                     backoff = 1  # Reset on successful connect
+                    data_buffer: list[str] = []
                     for line in response.iter_lines():
                         if self._stop_event.is_set():
                             break
-                        # Explicit SSE line-type filtering
-                        if not line or line.startswith(":"):
-                            continue  # Empty line or comment (heartbeat)
-                        if line.startswith("event:") or line.startswith("id:"):
-                            continue  # Skip event type and id lines
+                        # SSE spec: accumulate data: lines, dispatch on empty line
                         if line.startswith("data:"):
-                            data = line[5:].lstrip(" ")
-                            self._write_to_inbox(data)
+                            value = line[5:]
+                            if value.startswith(" "):
+                                value = value[1:]
+                            data_buffer.append(value)
+                        elif line == "" and data_buffer:
+                            self._write_to_inbox("\n".join(data_buffer))
+                            data_buffer = []
+                        # Skip comment lines (:), event lines, id lines
             except Exception:
                 logger.debug(f"Bridge reconnecting in {backoff}s", exc_info=True)
                 self._stop_event.wait(backoff)

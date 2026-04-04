@@ -960,7 +960,7 @@ def _messaging_check(session_id: str = "") -> str | None:
                 # Delete after processing
                 msg_file.unlink()
             except Exception as e:
-                print(f"Error processing message file {msg_file}: {e}", file=sys.stderr)
+                _log_hook_error("process_inbox_message", str(msg_file), e)
                 try:
                     msg_file.unlink()
                 except OSError:
