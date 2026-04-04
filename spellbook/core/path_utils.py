@@ -27,6 +27,81 @@ class GitContext:
     is_worktree: bool = False
 
 
+def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
+    """Detect git branch and worktree context for alias derivation.
+
+    Uses subprocess calls with timeout to extract git state.
+    Returns GitContext with all-None fields on any failure.
+
+    Args:
+        project_path: Absolute path to the project directory.
+        timeout: Maximum seconds for each git subprocess call.
+
+    Returns:
+        GitContext with branch/worktree info. All fields may be None
+        if git is unavailable or the path is not a git repo.
+    """
+    branch: Optional[str] = None
+    worktree_name: Optional[str] = None
+    is_worktree = False
+
+    # Detect branch name
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=project_path,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if result.returncode == 0:
+            raw_branch = result.stdout.strip()
+            if raw_branch == "HEAD":
+                # Detached HEAD: use short commit hash instead
+                try:
+                    hash_result = subprocess.run(
+                        ["git", "rev-parse", "--short", "HEAD"],
+                        cwd=project_path,
+                        capture_output=True, text=True, timeout=timeout,
+                    )
+                    if hash_result.returncode == 0:
+                        branch = hash_result.stdout.strip()
+                except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+                    branch = "head"
+            else:
+                branch = raw_branch
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return GitContext()
+
+    # Detect worktree status
+    try:
+        wt_result = subprocess.run(
+            ["git", "worktree", "list", "--porcelain"],
+            cwd=project_path,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if wt_result.returncode == 0 and wt_result.stdout.strip():
+            # Parse porcelain output: first "worktree <path>" is main worktree
+            lines = wt_result.stdout.strip().split("\n")
+            main_worktree = None
+            for line in lines:
+                if line.startswith("worktree "):
+                    main_worktree = os.path.normpath(line[len("worktree "):])
+                    break  # First worktree entry is always the main one
+
+            if main_worktree:
+                normalized_project = os.path.normpath(project_path)
+                if normalized_project != main_worktree:
+                    is_worktree = True
+                    worktree_name = os.path.basename(normalized_project)
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass  # Worktree detection is best-effort
+
+    return GitContext(
+        branch=branch,
+        worktree_name=worktree_name,
+        is_worktree=is_worktree,
+    )
+
+
 def slugify_alias(name: str) -> str:
     """Convert a string to a valid messaging alias.
 
