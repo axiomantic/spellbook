@@ -41,14 +41,14 @@ class TestToolRegistrationCount:
             f"Missing tools need to be added to the appropriate tool module."
         )
 
-    def test_tool_count_exact_103(self):
-        """103 tools: 109 pre-swarm-removal - 6 swarm tools."""
+    def test_tool_count_exact_111(self):
+        """111 tools: 103 post-swarm-removal + 8 messaging."""
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 103, (
-            f"Expected exactly 103 tools, got {len(tool_names)}."
+        assert len(tool_names) == 111, (
+            f"Expected exactly 111 tools, got {len(tool_names)}."
         )
 
     def test_key_tools_present(self):
@@ -58,7 +58,7 @@ class TestToolRegistrationCount:
         register_all_tools()
         tool_names = set(_get_tool_names(mcp))
 
-        # One tool from each of the 14 modules
+        # One tool from each of the 15 modules
         expected_tools = [
             "find_session",          # sessions
             "spellbook_config_get",  # config
@@ -74,6 +74,7 @@ class TestToolRegistrationCount:
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
             "tooling_discover",      # tooling
+            "messaging_register",    # messaging
         ]
 
         for tool_name in expected_tools:

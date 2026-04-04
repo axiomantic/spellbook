@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - 2026-04-04
+
+### Added
+- **Cross-session messaging**: In-memory message bus with bounded queues, direct/broadcast/reply patterns, correlation tracking with TTL sweep, and SSE real-time delivery via MessageBridge
+- **Messaging MCP tools**: `messaging_register`, `messaging_send`, `messaging_broadcast`, `messaging_reply`, `messaging_poll`, `messaging_list`, `messaging_unregister` for inter-session communication
+- **File-based bridge**: MessageBridge writes messages to per-alias inbox directories and polls SSE streams for delivery, enabling hook-based message injection without daemon coupling
+- **Session-scoped inbox draining**: Hook `_messaging_check` only drains inboxes matching the current session ID via `.session_id` marker files
+
 ## [0.40.0] - 2026-04-04
 
 ### Removed

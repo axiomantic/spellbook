@@ -23,6 +23,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from spellbook.core.path_utils import get_spellbook_config_dir
+
 
 # ---------------------------------------------------------------------------
 # MCP Communication
@@ -897,6 +899,74 @@ def _stint_depth_check(data: dict) -> str | None:
     return "\n".join(parts) if parts else None
 
 
+def _messaging_check(session_id: str = "") -> str | None:
+    """Check messaging inbox for pending messages and format for injection.
+
+    Only drains inboxes for aliases that belong to this session (matched via
+    a ``.session_id`` marker written by ``messaging_register``).  If no
+    ``session_id`` is provided, no inboxes are drained to prevent one session
+    from consuming another session's messages.
+
+    Returns formatted message text or None if inbox is empty.
+    """
+    if not session_id:
+        return None
+
+    messaging_base = get_spellbook_config_dir() / "messaging"
+    if not messaging_base.exists():
+        return None
+
+    outputs = []
+    # Check only alias directories belonging to this session
+    for alias_dir in sorted(messaging_base.iterdir()):
+        if not alias_dir.is_dir():
+            continue
+
+        # Only drain inboxes with a matching .session_id marker
+        marker = alias_dir / ".session_id"
+        if not marker.exists():
+            continue
+        try:
+            marker_session_id = marker.read_text().strip()
+        except OSError:
+            continue
+        if marker_session_id != session_id:
+            continue
+
+        inbox = alias_dir / "inbox"
+        if not inbox.exists():
+            continue
+
+        for msg_file in sorted(inbox.glob("*.json")):
+            try:
+                data = json.loads(msg_file.read_text())
+                msg_type = data.get("message_type", "direct")
+                sender = data.get("sender", "unknown")
+                correlation_id = data.get("correlation_id")
+                payload = data.get("payload", {})
+                payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
+
+                corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
+                if msg_type == "broadcast":
+                    formatted = f"[BROADCAST from {sender}]\n{payload_str}"
+                elif msg_type == "reply":
+                    formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
+                else:
+                    formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
+
+                outputs.append(formatted)
+                # Delete after processing
+                msg_file.unlink()
+            except Exception as e:
+                _log_hook_error("process_inbox_message", str(msg_file), e)
+                try:
+                    msg_file.unlink()
+                except OSError as e:
+                    _log_hook_error("delete_failed_message", str(msg_file), e)
+
+    return "\n\n".join(outputs) if outputs else None
+
+
 def _build_recovery_directive(state: dict) -> str:
     """Build a recovery directive string from saved workflow state."""
     parts = []
@@ -1026,6 +1096,11 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     # Auto-memory bridge (specific matcher: Write to auto-memory paths)
     if tool_name == "Write":
         _fire_and_forget(_memory_bridge, tool_name, data)
+
+    # Messaging inbox check (catch-all, synchronous - injects into context)
+    out = _messaging_check(session_id=data.get("session_id", ""))
+    if out:
+        outputs.append(out)
 
     return outputs
 
