@@ -932,20 +932,19 @@ def _messaging_check() -> str | None:
                 payload = data.get("payload", {})
                 payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
 
+                corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
                 if msg_type == "broadcast":
                     formatted = f"[BROADCAST from {sender}]\n{payload_str}"
                 elif msg_type == "reply":
-                    corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
                     formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
                 else:
-                    corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
                     formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
 
                 outputs.append(formatted)
                 # Delete after processing
                 msg_file.unlink()
-            except Exception:
-                # Skip malformed files, delete to prevent re-processing
+            except Exception as e:
+                print(f"Error processing message file {msg_file}: {e}", file=sys.stderr)
                 try:
                     msg_file.unlink()
                 except OSError:

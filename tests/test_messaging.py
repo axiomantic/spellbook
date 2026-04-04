@@ -219,8 +219,9 @@ class TestReplyCorrelation:
         await bus_with_short_ttl.send(
             "req", "resp", {"q": 1}, correlation_id="expired-1", ttl=0,
         )
-        # TTL=0 means it expires immediately on next sweep
-        # Force a sweep by calling stats or reply
+        # Backdate the correlation so it appears expired regardless of timer resolution
+        pending = bus_with_short_ttl._pending_correlations["expired-1"]
+        pending.created_at = pending.created_at - 100
         result = await bus_with_short_ttl.reply("resp", "expired-1", {"a": 1})
         assert result["ok"] is False
         assert result["error"] == "correlation_not_found_or_expired"
@@ -245,6 +246,9 @@ class TestReplyCorrelation:
             "sweeper", "target", {"q": 1},
             correlation_id="sweep-test", ttl=0,
         )
+        # Backdate the correlation so it appears expired regardless of timer resolution
+        pending = bus._pending_correlations["sweep-test"]
+        pending.created_at = pending.created_at - 100
         # Sweep via stats
         stats = await bus.stats()
         assert stats["pending_correlations"] == 0  # TTL=0 -> swept

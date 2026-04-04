@@ -6,10 +6,15 @@ TTL sweep, and broadcast delivery. Thread safety via asyncio.Lock.
 
 import asyncio
 import logging
+import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
+
+from spellbook.core.auth import load_token
+from spellbook.messaging.bridge import MessageBridge
 
 logger = logging.getLogger(__name__)
 
@@ -137,12 +142,6 @@ class MessageBus:
 
     def _start_bridge(self, alias: str) -> None:
         """Start a MessageBridge for the given alias."""
-        import os
-        from pathlib import Path
-
-        from spellbook.core.auth import load_token
-        from spellbook.messaging.bridge import MessageBridge
-
         host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
         port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
         server_url = f"http://{host}:{port}"

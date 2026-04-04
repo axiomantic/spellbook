@@ -197,7 +197,7 @@ def shutdown() -> None:
         except RuntimeError:
             asyncio.run(_cleanup_message_bus())
     except Exception:
-        pass
+        logger.warning("Failed to clean up message bus sessions during shutdown", exc_info=True)
 
     try:
         from spellbook.core.db import close_all_connections
