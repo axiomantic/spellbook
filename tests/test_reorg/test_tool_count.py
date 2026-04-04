@@ -41,14 +41,14 @@ class TestToolRegistrationCount:
             f"Missing tools need to be added to the appropriate tool module."
         )
 
-    def test_tool_count_exact_109(self):
-        """109 tools: 101 original + forge_record_gate_completion + tooling_discover + 5 injection defense + mcp_curator_track_prune."""
+    def test_tool_count_exact_103(self):
+        """103 tools: 109 pre-swarm-removal - 6 swarm tools."""
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 109, (
-            f"Expected exactly 109 tools, got {len(tool_names)}."
+        assert len(tool_names) == 103, (
+            f"Expected exactly 103 tools, got {len(tool_names)}."
         )
 
     def test_key_tools_present(self):
@@ -68,7 +68,7 @@ class TestToolRegistrationCount:
             "pr_fetch",              # pr
             "forge_iteration_start", # forged
             "fractal_create_graph",  # fractal
-            "mcp_swarm_create",      # coordination
+            "stint_push",            # coordination
             "experiment_create",     # experiments
             "kokoro_speak",          # notifications
             "spellbook_check_for_updates",  # updates

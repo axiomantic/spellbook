@@ -184,7 +184,6 @@ class TestHealthCheckFullMode:
         """Full mode (full=True) checks all 6 domains."""
         from spellbook import server
         from spellbook.core.db import init_db
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -218,14 +217,6 @@ class TestHealthCheckFullMode:
 
         monkeypatch.setattr(subprocess, "run", mock_run)
 
-        # Mock coordination config
-        def mock_load():
-            return CoordinationConfig(backend=CoordinationBackend.NONE)
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
-
         result = server.spellbook_health_check.fn(full=True)
 
         # Full mode should check all domains
@@ -242,7 +233,6 @@ class TestHealthCheckFullMode:
         """First call after server start is automatically full mode."""
         from spellbook import server
         from spellbook.core.db import init_db
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -276,13 +266,6 @@ class TestHealthCheckFullMode:
             returncode=0,
         )
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
-
-        # Mock coordination config
-        mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config",
-            lambda: mock_config,
-        )
 
         # Call without full parameter - first call should be full
         result = server.spellbook_health_check.fn()
@@ -338,7 +321,6 @@ class TestHealthCheckFullMode:
         """Full check triggers automatically after interval expires."""
         from spellbook import server
         from spellbook.core.db import init_db
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -372,13 +354,6 @@ class TestHealthCheckFullMode:
             returncode=0,
         )
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
-
-        # Mock coordination config
-        mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config",
-            lambda: mock_config,
-        )
 
         # Simulate first call already done, but interval has expired
         server._first_health_check_done = True

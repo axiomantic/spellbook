@@ -48,7 +48,7 @@ def test_subpackage_importable(package: str) -> None:
         ),
         (
             "spellbook.coordination",
-            ["protocol", "retry", "server", "state", "worker"],
+            ["curator", "stint"],
         ),
         (
             "spellbook.code_review",

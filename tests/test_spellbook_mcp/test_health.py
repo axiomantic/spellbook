@@ -779,67 +779,15 @@ class TestGitHubCLICheck:
 class TestCoordinationCheck:
     """Test coordination domain health check."""
 
-    def test_coordination_not_configured(self, monkeypatch):
-        """Backend == NONE returns NOT_CONFIGURED."""
+    def test_coordination_not_configured(self):
+        """Coordination always returns NOT_CONFIGURED after swarm removal."""
         from spellbook.health.checker import _check_coordination, HealthStatus
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
-
-        def mock_load():
-            return CoordinationConfig(backend=CoordinationBackend.NONE)
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
 
         result = _check_coordination()
 
         assert result.domain == "coordination"
         assert result.status == HealthStatus.NOT_CONFIGURED
-        assert result.details["backend"] == "none"
         assert result.details["configured"] is False
-
-    def test_coordination_configured_mcp(self, monkeypatch):
-        """MCP backend configured returns HEALTHY."""
-        from spellbook.health.checker import _check_coordination, HealthStatus
-        from spellbook.core.preferences import (
-            CoordinationConfig,
-            CoordinationBackend,
-            MCPSSEConfig,
-        )
-
-        def mock_load():
-            return CoordinationConfig(
-                backend=CoordinationBackend.MCP_STREAMABLE_HTTP,
-                mcp_sse=MCPSSEConfig(port=3000, host="localhost"),
-            )
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
-
-        result = _check_coordination()
-
-        assert result.status == HealthStatus.HEALTHY
-        assert result.details["backend"] == "mcp-streamable-http"
-        assert result.details["configured"] is True
-
-    def test_coordination_config_error(self, monkeypatch):
-        """Config load error returns DEGRADED."""
-        from spellbook.health.checker import _check_coordination, HealthStatus
-
-        def mock_load():
-            raise ValueError("Invalid config")
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
-
-        result = _check_coordination()
-
-        assert result.status == HealthStatus.DEGRADED
-        assert "error" in result.details
-        # Verify actual error message is captured
-        assert "Invalid config" in result.details["error"]
 
 
 class TestSkillsCheck:
@@ -1086,7 +1034,6 @@ class TestRunHealthCheck:
         """Full mode checks all 6 domains."""
         from spellbook.health.checker import run_health_check, HealthStatus
         from spellbook.core.db import init_db
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -1119,14 +1066,6 @@ class TestRunHealthCheck:
             raise FileNotFoundError()
 
         monkeypatch.setattr(subprocess, "run", mock_run)
-
-        # Mock coordination config
-        def mock_load():
-            return CoordinationConfig(backend=CoordinationBackend.NONE)
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
 
         result = run_health_check(
             db_path=str(db_path),
@@ -1248,7 +1187,6 @@ class TestRunHealthCheck:
         """quick parameter defaults to False (full check)."""
         from spellbook.health.checker import run_health_check
         from spellbook.core.db import init_db
-        from spellbook.core.preferences import CoordinationConfig, CoordinationBackend
         import subprocess
 
         # Setup directories
@@ -1277,14 +1215,6 @@ class TestRunHealthCheck:
             return original_run(*args, **kwargs)
 
         monkeypatch.setattr(subprocess, "run", patched_run)
-
-        # Mock coordination config
-        def mock_load():
-            return CoordinationConfig(backend=CoordinationBackend.NONE)
-
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config", mock_load
-        )
 
         # Call without quick parameter - should default to False (full mode)
         result = run_health_check(

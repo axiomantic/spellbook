@@ -32,21 +32,17 @@ def test_session_tools_still_present():
     assert "spawn_claude_session" in tool_names, "spawn_claude_session should remain"
 
 
-def test_swarm_tools_still_present():
-    """Verify swarm coordination tools are still present after cleanup."""
+def test_swarm_tools_removed():
+    """Verify swarm coordination tools have been removed."""
     from spellbook import server
 
     # Get all attributes that have .fn method (FastMCP tools)
     tool_names = [name for name in dir(server)
                   if not name.startswith('_') and hasattr(getattr(server, name), 'fn')]
 
-    # Verify swarm tools are present
-    assert "mcp_swarm_create" in tool_names, "mcp_swarm_create should remain"
-    assert "mcp_swarm_register" in tool_names, "mcp_swarm_register should remain"
-    assert "mcp_swarm_progress" in tool_names, "mcp_swarm_progress should remain"
-    assert "mcp_swarm_complete" in tool_names, "mcp_swarm_complete should remain"
-    assert "mcp_swarm_error" in tool_names, "mcp_swarm_error should remain"
-    assert "mcp_swarm_monitor" in tool_names, "mcp_swarm_monitor should remain"
+    # Verify swarm tools are gone
+    swarm_tools = [name for name in tool_names if "swarm" in name]
+    assert swarm_tools == [], f"Swarm tools should be removed, found: {swarm_tools}"
 
 
 def test_skill_ops_module_does_not_exist():
