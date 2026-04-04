@@ -83,8 +83,8 @@ class TestFreshInstallFlow:
             return WizardResults(
                 platforms=["claude_code", "gemini"],
                 security_selections={
-                    "security.crypto.enabled": True,
-                    "security.sleuth.enabled": False,
+                    "crypto": True,
+                    "sleuth": False,
                 },
                 tts_intent=True,
                 profile_selection="zen",
@@ -112,8 +112,8 @@ class TestFreshInstallFlow:
         assert run_call_kwargs["platforms"] == ["claude_code", "gemini"]
         assert run_call_kwargs["dry_run"] is True
 
-    def test_fresh_install_security_selections_converted_and_passed(self, monkeypatch):
-        """Fresh install: dotted security keys converted to bare IDs for Installer.run()."""
+    def test_fresh_install_security_selections_passed(self, monkeypatch):
+        """Fresh install: bare security IDs passed to Installer.run()."""
         spellbook_dir = _spellbook_dir()
         args = _make_args(yes=True, dry_run=True)
 
@@ -123,8 +123,8 @@ class TestFreshInstallFlow:
             return WizardResults(
                 platforms=["claude_code"],
                 security_selections={
-                    "security.crypto.enabled": True,
-                    "security.sleuth.enabled": False,
+                    "crypto": True,
+                    "sleuth": False,
                 },
             )
 
@@ -504,48 +504,10 @@ class TestDryRunMode:
 
 
 class TestSecurityKeyConversion:
-    """Dotted keys from wizard become bare IDs for Installer.run()."""
+    """Security keys from wizard are passed as bare IDs to Installer.run()."""
 
-    def test_standard_dotted_key_conversion(self):
-        """security.crypto.enabled -> crypto, security.sleuth.enabled -> sleuth."""
-        wizard_selections = {
-            "security.crypto.enabled": True,
-            "security.sleuth.enabled": False,
-            "security.spotlighting.enabled": True,
-            "security.lodo.enabled": False,
-        }
-
-        bare = {}
-        for dotted_key, value in wizard_selections.items():
-            parts = dotted_key.split(".")
-            if len(parts) >= 2:
-                bare[parts[1]] = value
-            else:
-                bare[dotted_key] = value
-
-        assert bare == {
-            "crypto": True,
-            "sleuth": False,
-            "spotlighting": True,
-            "lodo": False,
-        }
-
-    def test_bare_key_passthrough(self):
-        """Keys without dots pass through unchanged."""
-        wizard_selections = {"crypto": True}
-
-        bare = {}
-        for dotted_key, value in wizard_selections.items():
-            parts = dotted_key.split(".")
-            if len(parts) >= 2:
-                bare[parts[1]] = value
-            else:
-                bare[dotted_key] = value
-
-        assert bare == {"crypto": True}
-
-    def test_conversion_in_run_installation(self, monkeypatch):
-        """run_installation() converts dotted wizard keys to bare IDs before Installer.run()."""
+    def test_bare_ids_passed_through_run_installation(self, monkeypatch):
+        """run_installation() passes bare feature IDs from wizard to Installer.run()."""
         spellbook_dir = _spellbook_dir()
         args = _make_args(yes=True, dry_run=True)
 
@@ -555,10 +517,10 @@ class TestSecurityKeyConversion:
             return WizardResults(
                 platforms=["claude_code"],
                 security_selections={
-                    "security.crypto.enabled": True,
-                    "security.sleuth.enabled": False,
-                    "security.spotlighting.enabled": True,
-                    "security.lodo.enabled": False,
+                    "crypto": True,
+                    "sleuth": False,
+                    "spotlighting": True,
+                    "lodo": False,
                 },
             )
 

@@ -1203,11 +1203,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except ImportError:
                 print("  Warning: could not save profile selection")
 
-        # Convert security_selections from wizard to the format
-        # Installer.run() expects. The wizard produces dotted config keys
-        # (e.g. "security.crypto.enabled": True), but Installer.run()
-        # passes them to apply_security_config() which expects bare
-        # feature IDs (e.g. "crypto": True).
+        # Resolve security_selections for Installer.run().
+        # --security-level flag takes priority over wizard selections.
+        # Both renderers now return bare feature IDs (e.g. "crypto"),
+        # but we normalize dotted keys as a safety net.
         security_selections = None
         if getattr(args, "security_level", None):
             try:
@@ -1217,15 +1216,12 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 print_error(f"Invalid security level: {e}")
                 return 1
         elif wizard_results.security_selections is not None:
-            # Convert dotted keys (security.crypto.enabled) to bare IDs (crypto)
             security_selections = {}
-            for dotted_key, value in wizard_results.security_selections.items():
-                # Extract bare ID from "security.<id>.enabled"
-                parts = dotted_key.split(".")
-                if len(parts) >= 2:
-                    security_selections[parts[1]] = value
-                else:
-                    security_selections[dotted_key] = value
+            for key, value in wizard_results.security_selections.items():
+                # Normalize: "security.crypto.enabled" -> "crypto", "crypto" -> "crypto"
+                parts = key.split(".")
+                bare_id = parts[1] if len(parts) >= 2 else key
+                security_selections[bare_id] = value
     else:
         # No renderer: fallback to old platform selection
         if args.platforms:

@@ -6,10 +6,9 @@ Verifies that run_installation() correctly:
 3. Extracts platforms, security_selections, tts_intent, profile from results
 4. Passes platforms and security_selections to Installer.run()
 5. Handles wizard cancellation (returns None -> exit code 1)
-6. Converts dotted security keys to bare IDs for Installer.run()
-7. Applies profile selection immediately
-8. Drives post-install TTS config from tts_intent
-9. Preserves --reconfigure path (unchanged)
+6. Applies profile selection immediately
+7. Drives post-install TTS config from tts_intent
+8. Preserves --reconfigure path (unchanged)
 """
 
 from __future__ import annotations
@@ -67,69 +66,6 @@ def _make_session(**overrides) -> SimpleNamespace:
 def _spellbook_dir() -> Path:
     """Get the real spellbook directory (repo root)."""
     return Path(__file__).resolve().parent.parent
-
-
-# ---------------------------------------------------------------------------
-# Test: dotted security key -> bare ID conversion logic
-# ---------------------------------------------------------------------------
-
-
-class TestDottedSecurityKeyConversion:
-    """Dotted security keys from wizard are converted to bare feature IDs.
-
-    This is the conversion logic that must live in run_installation():
-    "security.crypto.enabled" -> "crypto"
-    "security.sleuth.enabled" -> "sleuth"
-    """
-
-    def test_standard_dotted_keys(self):
-        """Standard dotted keys: security.<id>.enabled -> <id>."""
-        wizard_selections = {
-            "security.crypto.enabled": True,
-            "security.sleuth.enabled": False,
-            "security.spotlighting.enabled": True,
-            "security.lodo.enabled": False,
-        }
-        bare = {}
-        for dotted_key, value in wizard_selections.items():
-            parts = dotted_key.split(".")
-            if len(parts) >= 2:
-                bare[parts[1]] = value
-            else:
-                bare[dotted_key] = value
-
-        assert bare == {
-            "crypto": True,
-            "sleuth": False,
-            "spotlighting": True,
-            "lodo": False,
-        }
-
-    def test_bare_key_passthrough(self):
-        """Keys without dots pass through unchanged."""
-        wizard_selections = {"crypto": True}
-        bare = {}
-        for dotted_key, value in wizard_selections.items():
-            parts = dotted_key.split(".")
-            if len(parts) >= 2:
-                bare[parts[1]] = value
-            else:
-                bare[dotted_key] = value
-
-        assert bare == {"crypto": True}
-
-    def test_empty_selections(self):
-        """Empty selections produce empty result."""
-        wizard_selections: dict[str, bool] = {}
-        bare = {}
-        for dotted_key, value in wizard_selections.items():
-            parts = dotted_key.split(".")
-            if len(parts) >= 2:
-                bare[parts[1]] = value
-            else:
-                bare[dotted_key] = value
-
-        assert bare == {}
 
 
 # ---------------------------------------------------------------------------
@@ -215,11 +151,11 @@ class TestWizardPlatformsPassedToInstallerRun:
 # ---------------------------------------------------------------------------
 
 
-class TestSecuritySelectionsConvertedToBareIDs:
-    """Dotted security keys from wizard are converted to bare feature IDs."""
+class TestSecuritySelectionsPassedToInstallerRun:
+    """Security selections from wizard are passed as bare feature IDs."""
 
-    def test_dotted_keys_converted_to_bare_ids(self, monkeypatch):
-        """security.crypto.enabled -> crypto, security.sleuth.enabled -> sleuth."""
+    def test_bare_ids_passed_through(self, monkeypatch):
+        """Bare feature IDs from wizard pass through to Installer.run()."""
         spellbook_dir = _spellbook_dir()
         args = _make_args(yes=True, dry_run=True)
 
@@ -229,8 +165,8 @@ class TestSecuritySelectionsConvertedToBareIDs:
             return WizardResults(
                 platforms=["claude_code"],
                 security_selections={
-                    "security.crypto.enabled": True,
-                    "security.sleuth.enabled": False,
+                    "crypto": True,
+                    "sleuth": False,
                 },
                 tts_intent=None,
                 profile_selection=None,

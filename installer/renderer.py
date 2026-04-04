@@ -607,7 +607,6 @@ class RichRenderer(InstallerRenderer):
         selections: dict[str, bool] = {}
         for group in get_feature_groups():
             for feature in group["features"]:
-                config_key = f"security.{feature['id']}.enabled"
                 if not _matches_unset_key(feature["id"], context.unset_security_keys):
                     continue
                 enabled = Confirm.ask(
@@ -615,7 +614,7 @@ class RichRenderer(InstallerRenderer):
                     default=feature.get("default", False),
                     console=console,
                 )
-                selections[config_key] = enabled
+                selections[feature["id"]] = enabled
 
         return selections
 

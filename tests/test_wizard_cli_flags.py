@@ -148,11 +148,10 @@ class TestPlatformsFlag:
         result = renderer.render_upfront_wizard(ctx)
 
         assert result.platforms == ["claude_code"]
-        # No platform selection prompt should have been shown.
-        # The only possible input prompt is for security (crypto).
-        # Platform selection uses "> " as prompt; security uses
-        # something like "Enable ...". Verify no "> " prompt.
-        assert not any(p == "> " for p in input_prompts)
+        # Only the security prompt should have been shown (crypto).
+        # Platform selection uses "> " as prompt; security uses "Enable ...".
+        assert len(input_prompts) == 1
+        assert "Enable" in input_prompts[0] and "Cryptographic" in input_prompts[0]
 
     def test_cli_platforms_single_platform(self):
         """Single platform from CLI flag is used directly."""
@@ -229,8 +228,9 @@ class TestSecurityLevelFlag:
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
 
-        # Security section should have prompted for crypto
-        assert len(security_prompts) >= 1
+        # Security section should have prompted for exactly one feature (crypto)
+        assert len(security_prompts) == 1
+        assert "Enable" in security_prompts[0]
         assert result.security_selections is not None
 
 
@@ -269,8 +269,8 @@ class TestNoTTSFlag:
         result = renderer.render_upfront_wizard(ctx)
 
         assert result.tts_intent is False
-        # No TTS prompt should appear
-        assert not any("TTS" in p for p in input_prompts)
+        # No prompts at all: cli_platforms skips platform, no security keys, tts disabled
+        assert input_prompts == []
 
     def test_tts_not_disabled_and_not_configured_prompts(self, monkeypatch):
         """Without --no-tts and not already configured, TTS prompt appears."""

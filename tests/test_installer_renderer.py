@@ -1718,7 +1718,7 @@ class TestRichRendererUpfrontWizardInteractive:
         )
 
     def test_security_features_interactive(self, monkeypatch):
-        """Prompts for each unset security feature, returns dotted config keys."""
+        """Prompts for each unset security feature, returns bare feature IDs."""
         from installer.wizard import WizardResults
 
         confirm_results = iter([True, False])
@@ -1735,8 +1735,8 @@ class TestRichRendererUpfrontWizardInteractive:
         assert result == WizardResults(
             platforms=["claude_code"],
             security_selections={
-                "security.crypto.enabled": True,
-                "security.sleuth.enabled": False,
+                "crypto": True,
+                "sleuth": False,
             },
             tts_intent=None,
             profile_selection=None,
