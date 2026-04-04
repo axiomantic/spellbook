@@ -1,7 +1,7 @@
 """Tests for dashboard ORM migration.
 
 Verifies that get_dashboard_data() uses SQLAlchemy ORM sessions
-(get_spellbook_session, get_fractal_session, get_coordination_session)
+(get_spellbook_session, get_fractal_session)
 instead of raw SQL query helpers.
 """
 
@@ -48,7 +48,7 @@ def _make_async_session_ctx(scalars_results):
     return _ctx, execute_count
 
 
-def _setup_common_mocks(monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+def _setup_common_mocks(monkeypatch, spellbook_ctx, fractal_ctx,
                          subscriber_count=0, total_dropped_events=0,
                          version="0.30.5", db_size=0, session_files=0,
                          session_files_raises=None):
@@ -56,7 +56,6 @@ def _setup_common_mocks(monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
     import spellbook.admin.routes.dashboard as dashboard_mod
 
     monkeypatch.setattr(dashboard_mod, "get_spellbook_session", spellbook_ctx)
-    monkeypatch.setattr(dashboard_mod, "get_coordination_session", coord_ctx)
     monkeypatch.setattr(dashboard_mod, "get_fractal_session", fractal_ctx)
 
     fake_bus = SimpleNamespace(
@@ -88,11 +87,10 @@ async def test_dashboard_data_uses_orm_sessions(monkeypatch):
         [SimpleNamespace(created_at="2026-03-14T11:00:00Z", content="Stored a new memory about testing patterns and conventions")],
     ])
 
-    coord_ctx, coord_exec_count = _make_async_session_ctx([2])
     fractal_ctx, fractal_exec_count = _make_async_session_ctx([4])
 
     _setup_common_mocks(
-        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+        monkeypatch, spellbook_ctx, fractal_ctx,
         subscriber_count=2, total_dropped_events=5,
         db_size=2048, session_files=3,
     )
@@ -114,7 +112,6 @@ async def test_dashboard_data_uses_orm_sessions(monkeypatch):
             "active_sessions": 3,
             "total_memories": 200,
             "security_events_24h": 10,
-            "running_swarms": 2,
             "open_experiments": 1,
             "fractal_graphs": 4,
         },
@@ -134,7 +131,6 @@ async def test_dashboard_data_uses_orm_sessions(monkeypatch):
 
     # Verify ORM sessions were actually used (execute was called)
     assert spellbook_exec_count[0] == 5
-    assert coord_exec_count[0] == 1
     assert fractal_exec_count[0] == 1
 
 
@@ -148,7 +144,7 @@ async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
         yield  # pragma: no cover
 
     _setup_common_mocks(
-        monkeypatch, _failing_session, _failing_session, _failing_session,
+        monkeypatch, _failing_session, _failing_session,
         session_files_raises=Exception("Filesystem error"),
     )
 
@@ -161,7 +157,6 @@ async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
         "active_sessions": 0,
         "total_memories": 0,
         "security_events_24h": 0,
-        "running_swarms": 0,
         "open_experiments": 0,
         "fractal_graphs": 0,
     }
@@ -178,11 +173,10 @@ async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypat
         [],
         [SimpleNamespace(created_at="2026-03-14T11:00:00Z", content=long_content)],
     ])
-    coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
     _setup_common_mocks(
-        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+        monkeypatch, spellbook_ctx, fractal_ctx,
     )
 
     from spellbook.admin.routes.dashboard import get_dashboard_data
@@ -209,11 +203,10 @@ async def test_dashboard_data_orm_security_event_detail_fallback(monkeypatch):
         ],
         [],
     ])
-    coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
     _setup_common_mocks(
-        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+        monkeypatch, spellbook_ctx, fractal_ctx,
     )
 
     from spellbook.admin.routes.dashboard import get_dashboard_data
@@ -242,11 +235,10 @@ async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch)
         [SimpleNamespace(event_type="login", created_at="2026-03-14T10:00:00Z", detail="Login event")],
         [SimpleNamespace(created_at="2026-03-14T12:00:00Z", content="Recent memory")],
     ])
-    coord_ctx, _ = _make_async_session_ctx([0])
     fractal_ctx, _ = _make_async_session_ctx([0])
 
     _setup_common_mocks(
-        monkeypatch, spellbook_ctx, coord_ctx, fractal_ctx,
+        monkeypatch, spellbook_ctx, fractal_ctx,
     )
 
     from spellbook.admin.routes.dashboard import get_dashboard_data

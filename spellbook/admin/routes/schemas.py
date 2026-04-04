@@ -47,7 +47,6 @@ class DashboardCounts(BaseModel):
     active_sessions: int
     total_memories: int
     security_events_24h: int
-    running_swarms: int
     open_experiments: int
     fractal_graphs: int
 
