@@ -119,37 +119,119 @@ class MessageBus:
         Raises ValueError if alias is already taken and force=False.
         """
         async with self._lock:
-            if alias in self._sessions:
-                if not force:
-                    raise ValueError(f"Alias already registered: {alias}")
-                # Force: tear down old registration
-                old_reg = self._sessions[alias]
-                logger.warning(f"Force re-registering alias: {alias}")
-                try:
-                    old_reg.queue.put_nowait(_DISCONNECT)
-                except asyncio.QueueFull:
-                    pass  # Best-effort sentinel
-                # Stop old bridge if present
-                old_bridge = self._bridges.pop(alias, None)
-                if old_bridge is not None:
-                    old_bridge.stop()
+            return self._register_locked(alias, enable_sse, session_id, force=force)
 
-            reg = SessionRegistration(
-                alias=alias,
-                queue=asyncio.Queue(maxsize=self._queue_size),
-                registered_at=datetime.now(timezone.utc).isoformat(),
-            )
-            self._sessions[alias] = reg
+    def _register_locked(
+        self,
+        alias: str,
+        enable_sse: bool,
+        session_id: str,
+        force: bool = False,
+    ) -> SessionRegistration:
+        """Register while caller holds self._lock. Not async-safe on its own.
 
-            # Spawn bridge inside the lock to prevent race conditions
-            if enable_sse:
-                self._start_bridge(alias)
+        Args:
+            alias: Unique session name.
+            enable_sse: If True, spawn a MessageBridge for real-time delivery.
+            session_id: Caller's session identifier.
+            force: If True, replace existing registration.
 
-            # Write session_id marker so the hook only drains this session's inboxes
-            if session_id:
-                self._write_session_marker(alias, session_id)
+        Returns:
+            SessionRegistration for the newly registered session.
+
+        Raises:
+            ValueError: If alias is taken and force=False.
+        """
+        if alias in self._sessions:
+            if not force:
+                raise ValueError(f"Alias already registered: {alias}")
+            # Force: tear down old registration
+            old_reg = self._sessions[alias]
+            logger.warning(f"Force re-registering alias: {alias}")
+            try:
+                old_reg.queue.put_nowait(_DISCONNECT)
+            except asyncio.QueueFull:
+                pass  # Best-effort sentinel
+            # Stop old bridge if present
+            old_bridge = self._bridges.pop(alias, None)
+            if old_bridge is not None:
+                old_bridge.stop()
+
+        reg = SessionRegistration(
+            alias=alias,
+            queue=asyncio.Queue(maxsize=self._queue_size),
+            registered_at=datetime.now(timezone.utc).isoformat(),
+        )
+        self._sessions[alias] = reg
+
+        # Spawn bridge inside the lock to prevent race conditions
+        if enable_sse:
+            self._start_bridge(alias)
+
+        # Write session_id marker so the hook only drains this session's inboxes
+        if session_id:
+            self._write_session_marker(alias, session_id)
 
         return reg
+
+    async def register_with_suffix(
+        self,
+        base_alias: str,
+        session_id: str = "",
+        max_suffix: int = 100,
+        enable_sse: bool = True,
+    ) -> tuple[str, bool]:
+        """Register with automatic suffix for collision handling.
+
+        If base_alias is available, registers it directly.
+        If base_alias is taken by the SAME session_id, force-replaces (compaction).
+        If base_alias is taken by a DIFFERENT session, tries base_alias-2,
+        base_alias-3, ... up to base_alias-{max_suffix}.
+
+        All logic runs inside self._lock for atomicity.
+
+        Args:
+            base_alias: Preferred alias (already slugified/truncated).
+            session_id: Caller's session identifier for compaction detection.
+            max_suffix: Maximum suffix number to try before falling back to UUID.
+            enable_sse: Whether to spawn a MessageBridge.
+
+        Returns:
+            (actual_alias, was_force_replaced) tuple.
+
+        Raises:
+            RuntimeError: If all suffix slots exhausted AND UUID fallback fails.
+        """
+        async with self._lock:
+            # Case 1: base_alias is free
+            if base_alias not in self._sessions:
+                self._register_locked(base_alias, enable_sse, session_id)
+                return (base_alias, False)
+
+            # Case 2: same session re-registering (compaction)
+            existing_session_id = self._read_session_marker(base_alias)
+            if session_id and existing_session_id == session_id:
+                self._register_locked(base_alias, enable_sse, session_id, force=True)
+                return (base_alias, True)
+
+            # Case 3: different session, try suffixes
+            for i in range(2, max_suffix + 1):
+                candidate = f"{base_alias}-{i}"
+                if len(candidate) > 64:
+                    break  # Would exceed alias max length
+                if candidate not in self._sessions:
+                    self._register_locked(candidate, enable_sse, session_id)
+                    return (candidate, False)
+                # Check if this suffix is owned by same session
+                marker = self._read_session_marker(candidate)
+                if session_id and marker == session_id:
+                    self._register_locked(candidate, enable_sse, session_id, force=True)
+                    return (candidate, True)
+
+            # Case 4: all suffixes exhausted, use UUID fragment
+            fallback = f"{base_alias[:40]}-{uuid.uuid4().hex[:8]}"
+            self._register_locked(fallback, enable_sse, session_id)
+            return (fallback, False)
 
     def _write_session_marker(self, alias: str, session_id: str) -> None:
         """Write a .session_id marker so the hook only drains this session's inboxes."""
@@ -160,6 +242,22 @@ class MessageBus:
             marker.write_text(session_id)
         except OSError:
             logger.warning("Failed to write session marker for alias %s", alias)
+
+    def _read_session_marker(self, alias: str) -> Optional[str]:
+        """Read session_id from marker file for an existing registration.
+
+        Args:
+            alias: The session alias whose marker to read.
+
+        Returns:
+            The session_id string, or None if missing/empty/unreadable.
+        """
+        marker = get_spellbook_config_dir() / "messaging" / alias / ".session_id"
+        try:
+            text = marker.read_text().strip()
+            return text or None
+        except (FileNotFoundError, OSError):
+            return None
 
     def _remove_session_marker(self, alias: str) -> None:
         """Remove the .session_id marker for the given alias."""

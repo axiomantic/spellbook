@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import uuid
 
 import pytest
 
@@ -350,3 +351,155 @@ class TestMessageEnvelope:
             "reply_to": None,
             "ttl": 60,
         }
+
+
+# ---------------------------------------------------------------------------
+# _read_session_marker
+# ---------------------------------------------------------------------------
+
+class TestReadSessionMarker:
+    @pytest.mark.allow("subprocess")
+    def test_read_existing_marker(self, bus, tmp_path, monkeypatch):
+        """Read back a session_id written by _write_session_marker."""
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path))
+        bus._write_session_marker("test-alias", "session-123")
+        result = bus._read_session_marker("test-alias")
+        assert result == "session-123"
+
+    @pytest.mark.allow("subprocess")
+    def test_read_missing_marker(self, bus, tmp_path, monkeypatch):
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path))
+        result = bus._read_session_marker("nonexistent")
+        assert result is None
+
+    @pytest.mark.allow("subprocess")
+    def test_read_empty_marker(self, bus, tmp_path, monkeypatch):
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path))
+        alias_dir = tmp_path / "messaging" / "empty-alias"
+        alias_dir.mkdir(parents=True)
+        (alias_dir / ".session_id").write_text("")
+        result = bus._read_session_marker("empty-alias")
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# register_with_suffix
+# ---------------------------------------------------------------------------
+
+class TestRegisterWithSuffix:
+    @pytest.mark.asyncio
+    async def test_first_registration_gets_base_alias(self, bus):
+        actual, was_replaced = await bus.register_with_suffix(
+            "myapp-main", session_id="s1", enable_sse=False,
+        )
+        assert actual == "myapp-main"
+        assert was_replaced is False
+        sessions = await bus.list_sessions()
+        assert any(s["alias"] == "myapp-main" for s in sessions)
+
+    @pytest.mark.asyncio
+    async def test_different_session_gets_suffix(self, bus):
+        await bus.register_with_suffix(
+            "myapp-main", session_id="s1", enable_sse=False,
+        )
+        actual, was_replaced = await bus.register_with_suffix(
+            "myapp-main", session_id="s2", enable_sse=False,
+        )
+        assert actual == "myapp-main-2"
+        assert was_replaced is False
+
+    @pytest.mark.asyncio
+    async def test_third_session_gets_suffix_3(self, bus):
+        await bus.register_with_suffix(
+            "myapp-main", session_id="s1", enable_sse=False,
+        )
+        await bus.register_with_suffix(
+            "myapp-main", session_id="s2", enable_sse=False,
+        )
+        actual, _ = await bus.register_with_suffix(
+            "myapp-main", session_id="s3", enable_sse=False,
+        )
+        assert actual == "myapp-main-3"
+
+    @pytest.mark.asyncio
+    @pytest.mark.allow("subprocess")
+    async def test_same_session_gets_force_replacement(self, bus, tmp_path, monkeypatch):
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path))
+        await bus.register_with_suffix(
+            "myapp-main", session_id="s1", enable_sse=False,
+        )
+        actual, was_replaced = await bus.register_with_suffix(
+            "myapp-main", session_id="s1", enable_sse=False,
+        )
+        assert actual == "myapp-main"
+        assert was_replaced is True
+
+    @pytest.mark.asyncio
+    async def test_suffix_exhaustion_falls_back_to_uuid(self, bus):
+        # Register base + suffix-2 to exhaust max_suffix=2
+        await bus.register_with_suffix(
+            "app", session_id="s1", max_suffix=2, enable_sse=False,
+        )
+        await bus.register_with_suffix(
+            "app", session_id="s2", max_suffix=2, enable_sse=False,
+        )
+        # Third registration should get UUID fallback
+        actual, _ = await bus.register_with_suffix(
+            "app", session_id="s3", max_suffix=2, enable_sse=False,
+        )
+        assert actual.startswith("app-")
+        assert actual != "app-2"
+        # UUID fragment is 8 hex chars
+        assert len(actual.split("-")[-1]) == 8
+
+    @pytest.mark.asyncio
+    async def test_alias_length_check(self, bus):
+        # Base alias near max length (64 chars)
+        base = "a" * 62
+        await bus.register_with_suffix(
+            base, session_id="s1", enable_sse=False,
+        )
+        # Suffix "-2" would make it 64+1 = exceeds, so should go to UUID fallback
+        actual, _ = await bus.register_with_suffix(
+            base, session_id="s2", enable_sse=False,
+        )
+        # Should not be base-2 (would exceed 64)
+        assert len(actual) <= 64
+
+    @pytest.mark.asyncio
+    async def test_existing_register_still_works(self, bus):
+        """Verify the refactored register() delegates to _register_locked."""
+        reg = await bus.register("legacy-alias", enable_sse=False)
+        assert reg.alias == "legacy-alias"
+        sessions = await bus.list_sessions()
+        assert any(s["alias"] == "legacy-alias" for s in sessions)
+
+    @pytest.mark.asyncio
+    async def test_existing_register_force_still_works(self, bus):
+        """Verify force=True still works after refactor."""
+        await bus.register("dup", enable_sse=False)
+        reg = await bus.register("dup", enable_sse=False, force=True)
+        assert reg.alias == "dup"
+
+    @pytest.mark.asyncio
+    async def test_existing_register_duplicate_raises(self, bus):
+        """Verify error behavior preserved after refactor."""
+        await bus.register("dup2", enable_sse=False)
+        with pytest.raises(ValueError, match="Alias already registered"):
+            await bus.register("dup2", enable_sse=False)
+
+    @pytest.mark.asyncio
+    async def test_concurrent_registrations_unique(self, bus):
+        """10 concurrent register_with_suffix calls all get unique aliases."""
+        results = await asyncio.gather(*(
+            bus.register_with_suffix(
+                "shared", session_id=f"s{i}", enable_sse=False,
+            )
+            for i in range(10)
+        ))
+        aliases = [r[0] for r in results]
+        assert len(set(aliases)) == 10  # All unique
+        sessions = await bus.list_sessions()
+        registered_aliases = {s["alias"] for s in sessions}
+        for alias in aliases:
+            assert alias in registered_aliases
