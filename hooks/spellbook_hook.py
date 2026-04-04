@@ -897,15 +897,19 @@ def _stint_depth_check(data: dict) -> str | None:
     return "\n".join(parts) if parts else None
 
 
-def _messaging_check() -> str | None:
+def _messaging_check(session_id: str = "") -> str | None:
     """Check messaging inbox for pending messages and format for injection.
 
-    Reads all .json files from the session's messaging inbox directory,
-    formats each message per the messaging protocol templates, outputs
-    formatted text, then deletes each processed file.
+    Only drains inboxes for aliases that belong to this session (matched via
+    a ``.session_id`` marker written by ``messaging_register``).  If no
+    ``session_id`` is provided, no inboxes are drained to prevent one session
+    from consuming another session's messages.
 
     Returns formatted message text or None if inbox is empty.
     """
+    if not session_id:
+        return None
+
     config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR", "")
     if not config_dir:
         config_dir = str(Path.home() / ".local" / "spellbook")
@@ -915,10 +919,22 @@ def _messaging_check() -> str | None:
         return None
 
     outputs = []
-    # Check all alias directories for inbox messages
+    # Check only alias directories belonging to this session
     for alias_dir in sorted(messaging_base.iterdir()):
         if not alias_dir.is_dir():
             continue
+
+        # Only drain inboxes with a matching .session_id marker
+        marker = alias_dir / ".session_id"
+        if not marker.exists():
+            continue
+        try:
+            marker_session_id = marker.read_text().strip()
+        except OSError:
+            continue
+        if marker_session_id != session_id:
+            continue
+
         inbox = alias_dir / "inbox"
         if not inbox.exists():
             continue
@@ -1084,7 +1100,7 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
         _fire_and_forget(_memory_bridge, tool_name, data)
 
     # Messaging inbox check (catch-all, synchronous - injects into context)
-    out = _messaging_check()
+    out = _messaging_check(session_id=data.get("session_id", ""))
     if out:
         outputs.append(out)
 

@@ -72,6 +72,7 @@ async def messaging_register(
     alias: str,
     enable_sse: bool = True,
     force: bool = False,
+    session_id: str = "",
 ) -> dict:
     """Register this session for cross-session messaging.
 
@@ -87,6 +88,8 @@ async def messaging_register(
         force: If True, replace existing registration for this alias. Old
               queue is discarded (disconnect sentinel sent first for SSE
               cleanup) and a warning is logged.
+        session_id: Caller's session identifier. Used to write a marker file
+                   so the hook only drains inboxes belonging to this session.
 
     Returns:
         {"ok": true, "alias": str, "registered_at": str} on success
@@ -96,7 +99,7 @@ async def messaging_register(
     if err:
         return err
     try:
-        reg = await message_bus.register(alias, enable_sse=enable_sse, force=force)
+        reg = await message_bus.register(alias, enable_sse=enable_sse, force=force, session_id=session_id)
         return {"ok": True, "alias": reg.alias, "registered_at": reg.registered_at}
     except ValueError as e:
         return {"ok": False, "error": "alias_already_registered", "alias": alias, "detail": str(e)}

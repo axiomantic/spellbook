@@ -99,6 +99,7 @@ class MessageBus:
         alias: str,
         enable_sse: bool = True,
         force: bool = False,
+        session_id: str = "",
     ) -> SessionRegistration:
         """Register a session with the given alias.
 
@@ -108,6 +109,8 @@ class MessageBus:
             force: If True, replace existing registration. Puts _DISCONNECT
                 sentinel into old queue (for SSE cleanup), discards old
                 registration, and logs a warning.
+            session_id: Caller's session identifier. Written to a marker file
+                so the hook only drains inboxes belonging to its own session.
 
         Raises ValueError if alias is already taken and force=False.
         """
@@ -138,7 +141,31 @@ class MessageBus:
             if enable_sse:
                 self._start_bridge(alias)
 
+            # Write session_id marker so the hook only drains this session's inboxes
+            if session_id:
+                self._write_session_marker(alias, session_id)
+
         return reg
+
+    def _write_session_marker(self, alias: str, session_id: str) -> None:
+        """Write a .session_id marker so the hook only drains this session's inboxes."""
+        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+        alias_dir = Path(config_dir) / "messaging" / alias
+        alias_dir.mkdir(parents=True, exist_ok=True)
+        marker = alias_dir / ".session_id"
+        try:
+            marker.write_text(session_id)
+        except OSError:
+            logger.warning("Failed to write session marker for alias %s", alias)
+
+    def _remove_session_marker(self, alias: str) -> None:
+        """Remove the .session_id marker for the given alias."""
+        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+        marker = Path(config_dir) / "messaging" / alias / ".session_id"
+        try:
+            marker.unlink(missing_ok=True)
+        except OSError:
+            logger.warning("Failed to remove session marker for alias %s", alias)
 
     def _start_bridge(self, alias: str) -> None:
         """Start a MessageBridge for the given alias."""
@@ -172,6 +199,8 @@ class MessageBus:
             bridge = self._bridges.pop(alias, None)
             if bridge is not None:
                 bridge.stop()
+            # Remove session marker
+            self._remove_session_marker(alias)
             # Clean up any pending correlations from this session
             expired = [
                 cid
@@ -231,7 +260,7 @@ class MessageBus:
                 self._pending_correlations[correlation_id] = PendingCorrelation(
                     correlation_id=correlation_id,
                     sender=sender,
-                    created_at=asyncio.get_event_loop().time(),
+                    created_at=asyncio.get_running_loop().time(),
                     ttl=ttl,
                 )
 
@@ -394,7 +423,7 @@ class MessageBus:
 
     def _sweep_expired_correlations(self) -> int:
         """Remove expired correlations. Returns count removed. Caller holds lock."""
-        now = asyncio.get_event_loop().time()
+        now = asyncio.get_running_loop().time()
         expired = [
             cid
             for cid, pc in self._pending_correlations.items()

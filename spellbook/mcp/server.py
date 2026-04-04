@@ -180,7 +180,7 @@ def shutdown() -> None:
 
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(_cleanup_message_bus())
+            loop.run_until_complete(_cleanup_message_bus())
         except RuntimeError:
             asyncio.run(_cleanup_message_bus())
     except Exception:

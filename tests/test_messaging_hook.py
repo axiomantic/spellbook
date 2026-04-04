@@ -40,9 +40,21 @@ def inbox_env(tmp_path, monkeypatch):
     return tmp_path
 
 
-def _write_msg(inbox_dir: Path, msg: dict) -> Path:
-    """Write a message JSON file to the inbox directory."""
+_TEST_SESSION_ID = "test-session-001"
+
+
+def _write_msg(inbox_dir: Path, msg: dict, session_id: str = _TEST_SESSION_ID) -> Path:
+    """Write a message JSON file to the inbox directory.
+
+    Also writes a ``.session_id`` marker in the alias directory so the hook
+    recognises this inbox as belonging to the test session.
+    """
     inbox_dir.mkdir(parents=True, exist_ok=True)
+    # Write session marker in the alias directory (parent of inbox)
+    alias_dir = inbox_dir.parent
+    marker = alias_dir / ".session_id"
+    if not marker.exists():
+        marker.write_text(session_id)
     msg_id = msg.get("id", "msg-unknown")
     path = inbox_dir / f"{msg_id}.json"
     path.write_text(json.dumps(msg))
@@ -67,7 +79,7 @@ class TestMessagingCheckReadDelete:
         msg_path = _write_msg(inbox, msg)
         assert msg_path.exists()
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[MESSAGE from orchestrator]\n{\n  "task": "run auth tests"\n}'
         assert result == expected
@@ -86,7 +98,7 @@ class TestMessagingCheckReadDelete:
                 "timestamp": "2026-04-03T12:00:00Z",
             })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         # Files are sorted by name (msg-000, msg-001, msg-002), separated by \n\n
         expected = (
@@ -113,7 +125,7 @@ class TestMessagingCheckReadDelete:
                 "timestamp": "2026-04-03T12:00:00Z",
             })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         # Alias dirs sorted: session-a before session-b
         expected = (
@@ -122,6 +134,58 @@ class TestMessagingCheckReadDelete:
             '[MESSAGE from sender]\n{\n  "target": "session-b"\n}'
         )
         assert result == expected
+
+    def test_only_drains_own_session_inboxes(self, messaging_check, inbox_env):
+        """Messages for a different session_id are not consumed."""
+        # Write a message for a different session
+        other_alias_dir = inbox_env / "messaging" / "other-session"
+        other_inbox = other_alias_dir / "inbox"
+        other_inbox.mkdir(parents=True)
+        (other_alias_dir / ".session_id").write_text("different-session-999")
+        _write_msg(other_inbox, {
+            "id": "msg-other",
+            "sender": "someone",
+            "recipient": "other-session",
+            "payload": {"secret": "not for us"},
+            "message_type": "direct",
+            "timestamp": "2026-04-03T12:00:00Z",
+        }, session_id="different-session-999")
+
+        # Write a message for our session
+        own_inbox = inbox_env / "messaging" / "my-session" / "inbox"
+        _write_msg(own_inbox, {
+            "id": "msg-mine",
+            "sender": "friend",
+            "recipient": "my-session",
+            "payload": {"greeting": "hello"},
+            "message_type": "direct",
+            "timestamp": "2026-04-03T12:00:00Z",
+        })
+
+        result = messaging_check(session_id=_TEST_SESSION_ID)
+
+        # Should only see our message
+        expected = '[MESSAGE from friend]\n{\n  "greeting": "hello"\n}'
+        assert result == expected
+        # Other session's message should still be there
+        assert (other_inbox / "msg-other.json").exists()
+
+    def test_returns_none_without_session_id(self, messaging_check, inbox_env):
+        """Without session_id, no inboxes are drained."""
+        inbox = inbox_env / "messaging" / "my-session" / "inbox"
+        _write_msg(inbox, {
+            "id": "msg-001",
+            "sender": "orchestrator",
+            "recipient": "my-session",
+            "payload": {"task": "run tests"},
+            "message_type": "direct",
+            "timestamp": "2026-04-03T12:00:00Z",
+        })
+
+        result = messaging_check()
+        assert result is None
+        # Message should still be in inbox
+        assert (inbox / "msg-001.json").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +205,7 @@ class TestMessagingCheckFormatting:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[MESSAGE from alice] (correlation_id: corr-123)\n{\n  "question": "status?"\n}'
         assert result == expected
@@ -157,7 +221,7 @@ class TestMessagingCheckFormatting:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[MESSAGE from bob]\n{\n  "info": "done"\n}'
         assert result == expected
@@ -173,7 +237,7 @@ class TestMessagingCheckFormatting:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[BROADCAST from announcer]\n{\n  "info": "deploy starting"\n}'
         assert result == expected
@@ -190,7 +254,7 @@ class TestMessagingCheckFormatting:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[REPLY from responder] (correlation_id: corr-456)\n{\n  "answer": "feature/auth"\n}'
         assert result == expected
@@ -206,7 +270,7 @@ class TestMessagingCheckFormatting:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         expected = '[REPLY from responder]\n{\n  "answer": "ok"\n}'
         assert result == expected
@@ -219,28 +283,32 @@ class TestMessagingCheckFormatting:
 class TestMessagingCheckNoop:
     def test_returns_none_when_no_messaging_dir(self, messaging_check, inbox_env):
         """No messaging directory at all."""
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
         assert result is None
 
     def test_returns_none_when_messaging_dir_empty(self, messaging_check, inbox_env):
         """messaging/ exists but has no alias subdirs."""
         (inbox_env / "messaging").mkdir(parents=True)
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
         assert result is None
 
     def test_returns_none_when_inbox_empty(self, messaging_check, inbox_env):
-        """Alias dir exists with empty inbox."""
-        inbox = inbox_env / "messaging" / "my-session" / "inbox"
+        """Alias dir exists with empty inbox and valid session marker."""
+        alias_dir = inbox_env / "messaging" / "my-session"
+        inbox = alias_dir / "inbox"
         inbox.mkdir(parents=True)
-        result = messaging_check()
+        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
+        result = messaging_check(session_id=_TEST_SESSION_ID)
         assert result is None
 
     def test_returns_none_when_no_json_files(self, messaging_check, inbox_env):
         """Inbox has non-JSON files."""
-        inbox = inbox_env / "messaging" / "my-session" / "inbox"
+        alias_dir = inbox_env / "messaging" / "my-session"
+        inbox = alias_dir / "inbox"
         inbox.mkdir(parents=True)
+        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
         (inbox / "readme.txt").write_text("not a message")
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
         assert result is None
 
 
@@ -250,12 +318,14 @@ class TestMessagingCheckNoop:
 
 class TestMessagingCheckMalformed:
     def test_handles_invalid_json_gracefully(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "target" / "inbox"
+        alias_dir = inbox_env / "messaging" / "target"
+        inbox = alias_dir / "inbox"
         inbox.mkdir(parents=True)
+        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
         bad_file = inbox / "bad-msg.json"
         bad_file.write_text("this is not valid json {{{")
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         # Should not crash, returns None since no valid messages
         assert result is None
@@ -263,13 +333,15 @@ class TestMessagingCheckMalformed:
         assert not bad_file.exists()
 
     def test_handles_partial_json_gracefully(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "target" / "inbox"
+        alias_dir = inbox_env / "messaging" / "target"
+        inbox = alias_dir / "inbox"
         inbox.mkdir(parents=True)
+        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
         # Valid JSON but missing expected fields
         partial_file = inbox / "partial-msg.json"
         partial_file.write_text(json.dumps({"id": "partial-001"}))
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         # Should use defaults for missing fields
         expected = '[MESSAGE from unknown]\n{}'
@@ -278,8 +350,10 @@ class TestMessagingCheckMalformed:
         assert not partial_file.exists()
 
     def test_valid_and_invalid_mixed(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "target" / "inbox"
+        alias_dir = inbox_env / "messaging" / "target"
+        inbox = alias_dir / "inbox"
         inbox.mkdir(parents=True)
+        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
 
         # One bad file
         bad_file = inbox / "aaa-bad.json"
@@ -295,7 +369,7 @@ class TestMessagingCheckMalformed:
             "timestamp": "2026-04-03T12:00:00Z",
         })
 
-        result = messaging_check()
+        result = messaging_check(session_id=_TEST_SESSION_ID)
 
         # Good message should still be processed (bad file skipped)
         expected = '[MESSAGE from alice]\n{\n  "ok": true\n}'
