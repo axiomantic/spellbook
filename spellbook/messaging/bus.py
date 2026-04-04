@@ -134,9 +134,9 @@ class MessageBus:
             )
             self._sessions[alias] = reg
 
-        # Spawn bridge outside the lock (I/O)
-        if enable_sse:
-            self._start_bridge(alias)
+            # Spawn bridge inside the lock to prevent race conditions
+            if enable_sse:
+                self._start_bridge(alias)
 
         return reg
 
@@ -147,9 +147,8 @@ class MessageBus:
         server_url = f"http://{host}:{port}"
         token = load_token()
 
-        inbox_dir = (
-            Path.home() / ".local" / "spellbook" / "messaging" / alias / "inbox"
-        )
+        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+        inbox_dir = Path(config_dir) / "messaging" / alias / "inbox"
         bridge = MessageBridge(
             alias=alias,
             server_url=server_url,
@@ -228,6 +227,7 @@ class MessageBus:
 
             # Track correlation if present
             if correlation_id:
+                self._sweep_expired_correlations()
                 self._pending_correlations[correlation_id] = PendingCorrelation(
                     correlation_id=correlation_id,
                     sender=sender,

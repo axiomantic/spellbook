@@ -128,7 +128,7 @@ async def messaging_send(
     sender: str,
     recipient: str,
     payload: str,
-    correlation_id: str = None,
+    correlation_id: Optional[str] = None,
     ttl: int = 60,
 ) -> dict:
     """Send a direct message to another session.

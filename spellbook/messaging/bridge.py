@@ -64,6 +64,7 @@ class MessageBridge:
         while not self._stop_event.is_set():
             try:
                 with httpx.stream("GET", url, headers=headers, timeout=None) as response:
+                    response.raise_for_status()
                     backoff = 1  # Reset on successful connect
                     for line in response.iter_lines():
                         if self._stop_event.is_set():
@@ -73,8 +74,8 @@ class MessageBridge:
                             continue  # Empty line or comment (heartbeat)
                         if line.startswith("event:") or line.startswith("id:"):
                             continue  # Skip event type and id lines
-                        if line.startswith("data: "):
-                            data = line[6:]
+                        if line.startswith("data:"):
+                            data = line[5:].lstrip(" ")
                             self._write_to_inbox(data)
             except Exception:
                 logger.debug(f"Bridge reconnecting in {backoff}s", exc_info=True)
