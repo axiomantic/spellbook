@@ -809,3 +809,175 @@ class TestRichRendererAdminInfo:
         """render_admin_info with show_token does not raise."""
         renderer, _ = self._make_renderer()
         renderer.render_admin_info("http://localhost:8765/admin", show_token=True)
+
+
+# ---------------------------------------------------------------------------
+# Config wizard filtering bug fix (dotted keys vs bare feature IDs)
+# ---------------------------------------------------------------------------
+
+
+class TestConfigWizardFilteringBugFix:
+    """Verify that dotted config keys correctly match bare feature IDs.
+
+    The bug: render_config_wizard receives unset_keys as dotted strings
+    (e.g. "security.crypto.enabled") from get_unset_config_keys(), but
+    feature IDs in get_feature_groups() are bare (e.g. "crypto"). The
+    original code compared them directly, which never matched.
+    """
+
+    def test_rich_renderer_dotted_keys_match_features(self, monkeypatch):
+        """RichRenderer.render_config_wizard matches dotted keys to feature IDs.
+
+        Passes dotted keys like "security.crypto.enabled" as unset_keys.
+        Before the fix, the filtering produces no matching features and
+        returns {}. After the fix, features are matched and selections
+        are collected.
+        """
+        pytest.importorskip("rich", reason="Rich not installed")
+        import io
+        from rich.console import Console
+        from installer.renderer import RichRenderer
+
+        # Mock Confirm.ask to always return True
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: True,
+        )
+
+        console = Console(file=io.StringIO(), force_terminal=True)
+        renderer = RichRenderer(console=console)
+
+        result = renderer.render_config_wizard(
+            unset_keys=["security.crypto.enabled", "security.sleuth.enabled"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        # Before fix: {} (no features matched dotted keys)
+        # After fix: {"crypto": True, "sleuth": True}
+        assert result == {"crypto": True, "sleuth": True}
+
+    def test_rich_renderer_bare_keys_still_work(self, monkeypatch):
+        """RichRenderer.render_config_wizard still works with bare feature IDs.
+
+        Ensures backwards compatibility: bare IDs like "crypto" that match
+        feature IDs directly should continue to work.
+        """
+        pytest.importorskip("rich", reason="Rich not installed")
+        import io
+        from rich.console import Console
+        from installer.renderer import RichRenderer
+
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: True,
+        )
+
+        console = Console(file=io.StringIO(), force_terminal=True)
+        renderer = RichRenderer(console=console)
+
+        result = renderer.render_config_wizard(
+            unset_keys=["crypto"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        assert result == {"crypto": True}
+
+    def test_rich_renderer_mixed_dotted_and_bare_keys(self, monkeypatch):
+        """RichRenderer handles a mix of dotted and bare keys in unset_keys."""
+        pytest.importorskip("rich", reason="Rich not installed")
+        import io
+        from rich.console import Console
+        from installer.renderer import RichRenderer
+
+        monkeypatch.setattr(
+            "rich.prompt.Confirm.ask",
+            lambda *a, **kw: True,
+        )
+
+        console = Console(file=io.StringIO(), force_terminal=True)
+        renderer = RichRenderer(console=console)
+
+        result = renderer.render_config_wizard(
+            unset_keys=["security.crypto.enabled", "sleuth"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        assert result == {"crypto": True, "sleuth": True}
+
+    def test_plain_text_dotted_keys_match_features(self, monkeypatch):
+        """PlainTextRenderer.render_config_wizard matches dotted keys to feature IDs.
+
+        Before fix: _feature_meta.get("security.crypto.enabled") misses
+        and falls through to {"name": "security.crypto.enabled", "default": True},
+        returning {"security.crypto.enabled": True} instead of {"crypto": True}.
+        After fix: extracts "crypto" from the dotted key, looks it up in
+        _feature_meta, and returns {"crypto": True}.
+        """
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "y")
+
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["security.crypto.enabled"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        # After fix: key in result should be the bare feature ID
+        assert result == {"crypto": True}
+
+    def test_plain_text_dotted_keys_use_correct_metadata(self, monkeypatch):
+        """PlainTextRenderer uses correct feature metadata for dotted keys.
+
+        "security.sleuth.enabled" should map to the "sleuth" feature which
+        has default=False. When user presses Enter (empty input), the
+        default should be used.
+        """
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["security.sleuth.enabled"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        # sleuth's default is False
+        assert result == {"sleuth": False}
+
+    def test_plain_text_bare_keys_still_work(self, monkeypatch):
+        """PlainTextRenderer still works with bare feature IDs (backwards compat)."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "y")
+
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["crypto"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        assert result == {"crypto": True}
+
+    def test_plain_text_multiple_dotted_keys(self, monkeypatch):
+        """PlainTextRenderer handles multiple dotted keys correctly."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["y", "n"])
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        renderer = PlainTextRenderer()
+        result = renderer.render_config_wizard(
+            unset_keys=["security.spotlighting.enabled", "security.crypto.enabled"],
+            existing_config={},
+            is_upgrade=False,
+        )
+
+        assert result == {"spotlighting": True, "crypto": False}

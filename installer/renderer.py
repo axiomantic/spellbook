@@ -437,7 +437,12 @@ class RichRenderer(InstallerRenderer):
         filtered_groups = []
         for group in groups:
             filtered_features = [
-                f for f in group["features"] if f["id"] in unset_keys
+                f for f in group["features"]
+                if f["id"] in unset_keys
+                or any(
+                    f".{f['id']}." in k or k.startswith(f"{f['id']}.")
+                    for k in unset_keys
+                )
             ]
             if filtered_features:
                 filtered_groups.append({**group, "features": filtered_features})
@@ -728,16 +733,22 @@ class PlainTextRenderer(InstallerRenderer):
         print("\nSecurity feature configuration:")
         selections: dict[str, Any] = {}
         for key in unset_keys:
-            meta = _feature_meta.get(key, {"name": key, "default": True})
+            # Extract bare feature ID from dotted key
+            # e.g. "security.crypto.enabled" -> "crypto"
+            bare_id = key
+            parts = key.split(".")
+            if len(parts) >= 3 and parts[0] == "security":
+                bare_id = parts[1]
+            meta = _feature_meta.get(bare_id, _feature_meta.get(key, {"name": key, "default": True}))
             default = meta["default"]
             default_hint = "Y/n" if default else "y/N"
             answer = input(
                 f"  Enable {meta['name']}? [{default_hint}] "
             ).strip().lower()
             if answer == "":
-                selections[key] = default
+                selections[bare_id] = default
             else:
-                selections[key] = answer in ("y", "yes")
+                selections[bare_id] = answer in ("y", "yes")
         return selections
 
     def render_config_summary(
