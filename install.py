@@ -1124,30 +1124,145 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
-    # Determine platforms to install
-    if args.platforms:
-        platforms = args.platforms.split(",")
-    elif args.yes or args.no_interactive:
-        platforms = installer.detect_platforms()
-        installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
-        print()
-    else:
+    # ---- Assemble WizardContext and run upfront wizard ----
+    if renderer is not None:
+        from installer.wizard import WizardContext, WizardResults
+        from installer.tui import get_feature_groups
+
+        # Derive all security feature config keys from feature groups
+        all_security_keys = [
+            f"security.{f['id']}.enabled"
+            for group in get_feature_groups()
+            for f in group["features"]
+        ]
+
+        # Get unset config keys for security features
         try:
-            from installer.tui import interactive_platform_select
+            from spellbook.core.config import (
+                config_get as _cfg_get,
+                config_is_explicitly_set,
+            )
+            unset_security = [k for k in all_security_keys if not config_is_explicitly_set(k)]
+            existing_config = {}
+            for k in all_security_keys:
+                try:
+                    v = _cfg_get(k)
+                    if v is not None:
+                        existing_config[k] = v
+                except Exception:
+                    pass
+            tts_already_configured = _cfg_get("tts_enabled") is not None
+            profile_already_configured = config_is_explicitly_set("profile.default")
+        except ImportError:
+            unset_security = all_security_keys
+            existing_config = {}
+            tts_already_configured = False
+            profile_already_configured = False
 
-            platforms = interactive_platform_select()
+        # Discover available profiles
+        try:
+            from spellbook.core.profiles import discover_profiles
+            available_profiles = discover_profiles()
+        except (ImportError, Exception):
+            available_profiles = []
 
-            if platforms is None:
-                installer_print_warning("Installation cancelled")
+        wizard_ctx = WizardContext(
+            available_platforms=installer.detect_platforms(),
+            cli_platforms=args.platforms.split(",") if args.platforms else None,
+            unset_security_keys=unset_security,
+            existing_config=existing_config,
+            security_level=getattr(args, "security_level", None),
+            tts_disabled=getattr(args, "no_tts", False),
+            tts_already_configured=tts_already_configured,
+            profile_already_configured=profile_already_configured,
+            available_profiles=available_profiles,
+            is_upgrade=is_upgrade,
+            is_interactive=is_interactive(),
+            auto_yes=args.yes,
+            no_interactive=args.no_interactive,
+            reconfigure=False,
+        )
+
+        wizard_results = renderer.render_upfront_wizard(wizard_ctx)
+        if wizard_results is None:
+            # User cancelled (KeyboardInterrupt/EOFError)
+            if renderer is not None:
+                renderer.render_warning("Installation cancelled.")
+            else:
+                print_warning("Installation cancelled.")
+            return 1
+
+        # Determine platforms from wizard results
+        platforms = wizard_results.platforms or installer.detect_platforms()
+
+        # Apply profile selection immediately (before install)
+        if wizard_results.profile_selection is not None and not args.dry_run:
+            try:
+                from spellbook.core.config import config_set as _cfg_set
+                _cfg_set("profile.default", wizard_results.profile_selection)
+            except ImportError:
+                print("  Warning: could not save profile selection")
+
+        # Convert security_selections from wizard to the format
+        # Installer.run() expects. The wizard produces dotted config keys
+        # (e.g. "security.crypto.enabled": True), but Installer.run()
+        # passes them to apply_security_config() which expects bare
+        # feature IDs (e.g. "crypto": True).
+        security_selections = None
+        if getattr(args, "security_level", None):
+            try:
+                from installer.components.security import security_level_to_selections
+                security_selections = security_level_to_selections(args.security_level)
+            except (ImportError, ValueError) as e:
+                print_error(f"Invalid security level: {e}")
                 return 1
-
-            if not platforms:
-                installer_print_warning("No platforms selected")
-                return 1
-
-        except (ImportError, Exception) as e:
-            installer_print_warning(f"Interactive mode unavailable ({e}), using auto-detect")
+        elif wizard_results.security_selections is not None:
+            # Convert dotted keys (security.crypto.enabled) to bare IDs (crypto)
+            security_selections = {}
+            for dotted_key, value in wizard_results.security_selections.items():
+                # Extract bare ID from "security.<id>.enabled"
+                parts = dotted_key.split(".")
+                if len(parts) >= 2:
+                    security_selections[parts[1]] = value
+                else:
+                    security_selections[dotted_key] = value
+    else:
+        # No renderer: fallback to old platform selection
+        if args.platforms:
+            platforms = args.platforms.split(",")
+        elif args.yes or args.no_interactive:
             platforms = installer.detect_platforms()
+            installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
+            print()
+        else:
+            try:
+                from installer.tui import interactive_platform_select
+
+                platforms = interactive_platform_select()
+
+                if platforms is None:
+                    installer_print_warning("Installation cancelled")
+                    return 1
+
+                if not platforms:
+                    installer_print_warning("No platforms selected")
+                    return 1
+
+            except (ImportError, Exception) as e:
+                installer_print_warning(f"Interactive mode unavailable ({e}), using auto-detect")
+                platforms = installer.detect_platforms()
+
+        # Convert --security-level to security_selections dict (no-renderer path)
+        security_selections = None
+        if getattr(args, "security_level", None):
+            try:
+                from installer.components.security import security_level_to_selections
+                security_selections = security_level_to_selections(args.security_level)
+            except (ImportError, ValueError) as e:
+                print_error(f"Invalid security level: {e}")
+                return 1
+
+        wizard_results = None  # No wizard in no-renderer path
 
     # Show directory configuration
     print_directory_config(spellbook_dir, platforms)
@@ -1199,16 +1314,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             result = data["result"]
             _pending_results.append(result)
 
-    # Convert --security-level to security_selections dict
-    security_selections = None
-    if getattr(args, "security_level", None):
-        try:
-            from installer.components.security import security_level_to_selections
-            security_selections = security_level_to_selections(args.security_level)
-        except (ImportError, ValueError) as e:
-            print_error(f"Invalid security level: {e}")
-            return 1
-
     session = installer.run(
         platforms=platforms,
         force=args.force,
@@ -1219,33 +1324,42 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         renderer=renderer,
     )
 
-    # TTS setup runs after the install loop completes
-    if not args.dry_run and not getattr(args, "no_tts", False):
-        if renderer is not None:
-            tts_config = renderer.render_tts_wizard()
-            if tts_config.get("tts_enabled") is not None:
-                _set_tts_config(tts_config["tts_enabled"])
-            if tts_config.get("tts_install"):
-                if _install_tts_deps(spellbook_dir):
+    # Post-install TTS handling based on wizard results
+    if not args.dry_run:
+        if wizard_results is not None:
+            # Wizard-based flow: use tts_intent from upfront wizard
+            if wizard_results.tts_intent is True:
+                # User wants TTS; install deps and configure
+                if check_tts_available():
+                    _set_tts_config(True)
+                elif _install_tts_deps(spellbook_dir):
                     _preload_tts_model(spellbook_dir)
                     _set_tts_config(True)
-        else:
-            setup_tts(
-                dry_run=args.dry_run,
-                auto_yes=getattr(args, "yes", False),
-                spellbook_dir=spellbook_dir,
-            )
-
-    # Profile selection runs after TTS
-    if not args.dry_run and renderer is not None:
-        profile_config = renderer.render_profile_wizard()
-        if "profile.default" in profile_config:
-            try:
-                from spellbook.core.config import config_set as _cfg_set
-
-                _cfg_set("profile.default", profile_config["profile.default"])
-            except ImportError:
-                print("  Warning: could not save profile selection (spellbook.core.config not available)")
+                else:
+                    _set_tts_config(False)
+                    if renderer is not None:
+                        renderer.render_warning("TTS installation failed. TTS has been disabled.")
+                    else:
+                        print_warning("TTS installation failed. TTS has been disabled.")
+            elif wizard_results.tts_intent is False:
+                _set_tts_config(False)
+            # tts_intent is None means skipped; do nothing
+        elif not getattr(args, "no_tts", False):
+            # No-renderer fallback: use old TTS setup
+            if renderer is not None:
+                tts_config = renderer.render_tts_wizard()
+                if tts_config.get("tts_enabled") is not None:
+                    _set_tts_config(tts_config["tts_enabled"])
+                if tts_config.get("tts_install"):
+                    if _install_tts_deps(spellbook_dir):
+                        _preload_tts_model(spellbook_dir)
+                        _set_tts_config(True)
+            else:
+                setup_tts(
+                    dry_run=args.dry_run,
+                    auto_yes=getattr(args, "yes", False),
+                    spellbook_dir=spellbook_dir,
+                )
 
     # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()
