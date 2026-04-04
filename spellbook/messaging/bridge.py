@@ -103,8 +103,8 @@ class MessageBridge:
                 # Clean up temp file on failure
                 try:
                     os.unlink(tmp_path)
-                except OSError:
-                    pass
+                except OSError as e:
+                    logger.warning("Failed to clean up temporary message file: %s", e)
                 raise
         except Exception:
             logger.error("Failed to write to inbox", exc_info=True)

@@ -74,7 +74,7 @@ class TestToolRegistrationCount:
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
             "tooling_discover",      # tooling
-            "notify_send",           # messaging
+            "messaging_register",    # messaging
         ]
 
         for tool_name in expected_tools:

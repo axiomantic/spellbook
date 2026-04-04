@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from spellbook.core.auth import load_token
+from spellbook.core.path_utils import get_spellbook_config_dir
 from spellbook.messaging.bridge import MessageBridge
 
 logger = logging.getLogger(__name__)
@@ -149,8 +150,7 @@ class MessageBus:
 
     def _write_session_marker(self, alias: str, session_id: str) -> None:
         """Write a .session_id marker so the hook only drains this session's inboxes."""
-        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
-        alias_dir = Path(config_dir) / "messaging" / alias
+        alias_dir = get_spellbook_config_dir() / "messaging" / alias
         alias_dir.mkdir(parents=True, exist_ok=True)
         marker = alias_dir / ".session_id"
         try:
@@ -160,8 +160,7 @@ class MessageBus:
 
     def _remove_session_marker(self, alias: str) -> None:
         """Remove the .session_id marker for the given alias."""
-        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
-        marker = Path(config_dir) / "messaging" / alias / ".session_id"
+        marker = get_spellbook_config_dir() / "messaging" / alias / ".session_id"
         try:
             marker.unlink(missing_ok=True)
         except OSError:
@@ -174,8 +173,7 @@ class MessageBus:
         server_url = f"http://{host}:{port}"
         token = load_token()
 
-        config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
-        inbox_dir = Path(config_dir) / "messaging" / alias / "inbox"
+        inbox_dir = get_spellbook_config_dir() / "messaging" / alias / "inbox"
         bridge = MessageBridge(
             alias=alias,
             server_url=server_url,

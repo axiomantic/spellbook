@@ -910,11 +910,9 @@ def _messaging_check(session_id: str = "") -> str | None:
     if not session_id:
         return None
 
-    config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR", "")
-    if not config_dir:
-        config_dir = str(Path.home() / ".local" / "spellbook")
+    from spellbook.core.path_utils import get_spellbook_config_dir
 
-    messaging_base = Path(config_dir) / "messaging"
+    messaging_base = get_spellbook_config_dir() / "messaging"
     if not messaging_base.exists():
         return None
 
