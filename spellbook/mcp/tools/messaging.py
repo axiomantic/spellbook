@@ -17,13 +17,12 @@ import re
 from typing import Optional
 
 from spellbook.mcp.server import mcp
-from spellbook.messaging.bus import message_bus
+from spellbook.messaging.bus import MAX_ALIAS_LENGTH, message_bus
 from spellbook.sessions.injection import inject_recovery_context
 
 logger = logging.getLogger(__name__)
 
 _ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
-_ALIAS_MAX_LEN = 64
 _PAYLOAD_MAX_BYTES = 65536  # 64KB
 _TTL_MIN = 1
 _TTL_MAX = 300
@@ -32,11 +31,11 @@ _POLL_MAX = 50
 
 def _validate_alias(alias: str) -> Optional[dict]:
     """Return error dict if alias is invalid, else None."""
-    if not alias or len(alias) > _ALIAS_MAX_LEN or not _ALIAS_PATTERN.match(alias):
+    if not alias or len(alias) > MAX_ALIAS_LENGTH or not _ALIAS_PATTERN.match(alias):
         return {
             "ok": False,
             "error": "invalid_alias",
-            "detail": f"Alias must be 1-{_ALIAS_MAX_LEN} chars, alphanumeric/hyphens/underscores only.",
+            "detail": f"Alias must be 1-{MAX_ALIAS_LENGTH} chars, alphanumeric/hyphens/underscores only.",
         }
     return None
 

@@ -1,13 +1,191 @@
 """Path encoding and project directory resolution for session storage."""
 
+import hashlib
+import logging
 import os
+import re
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from fastmcp import Context
+
+MAX_ALIAS_BASE = 50  # Leave room for "-NNN" suffix (up to 4 chars)
+HASH_LEN = 4
+
+# Must match _ALIAS_PATTERN in spellbook/mcp/tools/messaging.py
+_ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+@dataclass
+class GitContext:
+    """Git context for a project directory."""
+    branch: Optional[str] = None
+    worktree_name: Optional[str] = None
+    is_worktree: bool = False
+    repo_root: Optional[str] = None
+
+
+def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
+    """Detect git branch and worktree context for alias derivation.
+
+    Uses subprocess calls with timeout to extract git state.
+    Returns GitContext with all-None fields on any failure.
+
+    Args:
+        project_path: Absolute path to the project directory.
+        timeout: Maximum seconds for each git subprocess call.
+
+    Returns:
+        GitContext with branch/worktree info. All fields may be None
+        if git is unavailable or the path is not a git repo.
+    """
+    branch: Optional[str] = None
+    worktree_name: Optional[str] = None
+    is_worktree = False
+
+    # Detect branch name
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=project_path,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if result.returncode == 0:
+            raw_branch = result.stdout.strip()
+            if raw_branch == "HEAD":
+                # Detached HEAD: use short commit hash instead
+                try:
+                    hash_result = subprocess.run(
+                        ["git", "rev-parse", "--short", "HEAD"],
+                        cwd=project_path,
+                        capture_output=True, text=True, timeout=timeout,
+                    )
+                    if hash_result.returncode == 0:
+                        branch = hash_result.stdout.strip()
+                except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+                    branch = "head"
+            else:
+                branch = raw_branch
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        logger.debug("Git branch detection failed for %s", project_path, exc_info=True)
+        return GitContext()
+
+    # Detect worktree status
+    main_worktree: Optional[str] = None
+    try:
+        wt_result = subprocess.run(
+            ["git", "worktree", "list", "--porcelain"],
+            cwd=project_path,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if wt_result.returncode == 0 and wt_result.stdout.strip():
+            # Parse porcelain output: first "worktree <path>" is main worktree
+            lines = wt_result.stdout.strip().split("\n")
+            for line in lines:
+                if line.startswith("worktree "):
+                    main_worktree = os.path.normpath(line[len("worktree "):])
+                    break  # First worktree entry is always the main one
+
+            if main_worktree:
+                normalized_project = os.path.normpath(project_path)
+                if normalized_project != main_worktree:
+                    is_worktree = True
+                    worktree_name = os.path.basename(normalized_project)
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        logger.debug("Git worktree detection failed for %s", project_path, exc_info=True)
+
+    # Cache the repo root so callers avoid redundant subprocess calls.
+    # If we already parsed the main worktree, use it; otherwise fall back
+    # to resolve_repo_root() which runs its own git commands.
+    repo_root: Optional[str] = None
+    if main_worktree:
+        repo_root = main_worktree
+    else:
+        try:
+            repo_root = resolve_repo_root(project_path)
+        except Exception:
+            logger.debug("Repo root resolution failed for %s", project_path, exc_info=True)
+
+    return GitContext(
+        branch=branch,
+        worktree_name=worktree_name,
+        is_worktree=is_worktree,
+        repo_root=repo_root,
+    )
+
+
+def slugify_alias(name: str) -> str:
+    """Convert a string to a valid messaging alias.
+
+    Rules:
+    1. Lowercase the input
+    2. Replace any character not matching [a-z0-9_-] with a hyphen
+    3. Collapse consecutive hyphens into one
+    4. Strip leading/trailing hyphens
+    5. If empty after processing, return "session"
+
+    Returns:
+        String matching ^[a-zA-Z0-9_-]+$ (lowercase subset).
+    """
+    slug = name.lower()
+    slug = re.sub(r"[^a-z0-9_-]", "-", slug)
+    slug = re.sub(r"-{2,}", "-", slug)
+    slug = slug.strip("-")
+    return slug if slug else "session"
+
+
+def derive_messaging_alias(
+    project_path: str,
+    session_name: Optional[str] = None,
+    git_context: Optional[GitContext] = None,
+) -> str:
+    """Derive a human-readable messaging alias.
+
+    Priority:
+    1. Explicit session_name (slugified), if non-empty
+    2. Git-derived: "{project_basename}-{branch_or_worktree}" (slugified)
+    3. Project directory basename (slugified)
+    4. "session" (fallback via slugify)
+
+    Truncation: if result > MAX_ALIAS_BASE chars, truncate to
+    (MAX_ALIAS_BASE - HASH_LEN - 1) chars and append "-{hash}" where
+    hash is first HASH_LEN hex chars of sha256(full_untruncated_alias).
+
+    Args:
+        project_path: Absolute path to the project directory.
+        session_name: Explicit alias override from user.
+        git_context: Pre-fetched git context (avoids redundant subprocess calls).
+
+    Returns:
+        Alias string, max MAX_ALIAS_BASE chars, valid per messaging alias rules.
+    """
+    if session_name:
+        raw = session_name
+    elif git_context and (git_context.worktree_name or git_context.branch):
+        root = git_context.repo_root or resolve_repo_root(project_path)
+        basename = os.path.basename(root)
+        suffix = git_context.worktree_name or git_context.branch
+        raw = f"{basename}-{suffix}"
+    else:
+        root = (git_context.repo_root if git_context else None) or resolve_repo_root(project_path)
+        raw = os.path.basename(root)
+
+    slug = slugify_alias(raw)
+
+    if not _ALIAS_PATTERN.fullmatch(slug):
+        slug = "session"
+
+    if len(slug) > MAX_ALIAS_BASE:
+        hash_hex = hashlib.sha256(slug.encode()).hexdigest()[:HASH_LEN]
+        slug = slug[:(MAX_ALIAS_BASE - HASH_LEN - 1)] + "-" + hash_hex
+
+    return slug
 
 
 def resolve_repo_root(path: str) -> str:
@@ -38,7 +216,7 @@ def resolve_repo_root(path: str) -> str:
             if first_line.startswith("worktree "):
                 return os.path.normpath(first_line[len("worktree "):])
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+        logger.debug("Git worktree list failed for %s", path, exc_info=True)
 
     # Fallback: try --show-toplevel (works for non-worktree repos)
     try:
@@ -50,7 +228,7 @@ def resolve_repo_root(path: str) -> str:
         if result.returncode == 0:
             return os.path.normpath(result.stdout.strip())
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+        logger.debug("Git show-toplevel failed for %s", path, exc_info=True)
 
     return path
 

@@ -11,6 +11,8 @@ __all__ = [
     "spellbook_telemetry_status",
 ]
 
+import asyncio
+import logging
 from typing import Optional
 
 from fastmcp import Context
@@ -25,6 +27,14 @@ from spellbook.core.config import (
 )
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
+# detect_git_context, derive_messaging_alias, and message_bus are referenced
+# via their source modules (_path_utils, _bus) so that asyncio.to_thread()
+# picks up test mocks patched on the source module (bigfoot patches module
+# attrs, not caller-local references).
+import spellbook.core.path_utils as _path_utils
+import spellbook.messaging.bus as _bus
+
+logger = logging.getLogger(__name__)
 
 
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
@@ -94,21 +104,81 @@ def spellbook_config_set(key: str, value) -> dict:
 
 @mcp.tool()
 @inject_recovery_context
-async def spellbook_session_init(ctx: Context) -> dict:
+async def spellbook_session_init(
+    ctx: Context,
+    session_name: Optional[str] = None,
+    continuation_message: Optional[str] = None,
+) -> dict:
     """
     Initialize a spellbook session.
 
     Checks session state first (in-memory), then config file.
     Returns mode information for fun-mode or tarot-mode if enabled.
+    Automatically registers the session for cross-session messaging.
+
+    Args:
+        session_name: Optional explicit alias for this session. If provided,
+            used as-is (after slugify) instead of git-derived alias.
+        continuation_message: User's first message for resume detection.
 
     Returns:
         {
             "mode": {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data},
-            "fun_mode": "yes"|"no"|"unset"  // legacy key
+            "fun_mode": "yes"|"no"|"unset",  // legacy key
+            "messaging": {"registered": bool, "alias": str|None, ...}
         }
     """
     project_path = await get_project_path_from_context(ctx)
-    return session_init(_get_session_id(ctx), project_path=project_path)
+    session_id = _get_session_id(ctx) or ""
+
+    # 1. Core session init (sync, unchanged)
+    result = session_init(
+        session_id or None,
+        continuation_message=continuation_message,
+        project_path=project_path,
+    )
+
+    # 2. Auto-register for messaging (async, best-effort)
+    try:
+        # Both detect_git_context() and derive_messaging_alias() may run
+        # sync subprocess calls. Bundle them in a single asyncio.to_thread()
+        # call to keep the event loop unblocked without issuing multiple
+        # thread pool submissions (which can interact badly with some test
+        # frameworks' context propagation).
+        def _resolve_alias():
+            try:
+                git_ctx = _path_utils.detect_git_context(project_path)
+            except Exception:
+                logger.debug("Git context detection failed", exc_info=True)
+                git_ctx = None
+            return _path_utils.derive_messaging_alias(
+                project_path,
+                session_name=session_name,
+                git_context=git_ctx,
+            )
+
+        base_alias = await asyncio.to_thread(_resolve_alias)
+
+        actual_alias, was_replaced = await _bus.message_bus.register_with_suffix(
+            base_alias=base_alias,
+            session_id=session_id,
+            enable_sse=True,
+        )
+
+        result["messaging"] = {
+            "registered": True,
+            "alias": actual_alias,
+            "was_compaction": was_replaced,
+        }
+
+    except Exception as exc:
+        logger.warning("Messaging auto-register failed: %s", exc)
+        result["messaging"] = {
+            "registered": False,
+            "error": str(exc),
+        }
+
+    return result
 
 
 @mcp.tool()

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.42.0] - 2026-04-04
 
 ### Added
+- **Messaging auto-registration**: Sessions are automatically registered for cross-session messaging during `spellbook_session_init` with human-readable aliases derived from git branch/worktree context
+- **Alias derivation**: Resolution order: explicit `session_name` param > git branch/worktree name (slugified, project-prefixed) > project directory basename > "session" fallback
+- **Atomic collision handling**: `MessageBus.register_with_suffix()` handles alias collisions with numeric suffixes under a single lock acquisition, with session-aware compaction detection
+- **Git context detection**: `detect_git_context()` utility detects branch name, worktree status, and handles detached HEAD with short commit hash fallback
+- **`continuation_message` parameter**: Now wired through the `spellbook_session_init` MCP tool to the core `session_init()` function
 - **Upfront installer wizard**: All configuration questions (platforms, security, TTS, profile) are now collected in a single wizard before installation begins, replacing the previous scattered prompts
 - **Rich-based platform selector**: Platform selection now uses Rich panels and prompts instead of raw termios, improving Windows compatibility and visual consistency
 - **Startup profiling**: Daemon startup phases are now individually timed and logged for performance visibility
