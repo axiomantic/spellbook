@@ -6,6 +6,7 @@ import pytest
 from dirty_equals import IsInstance, IsStr
 
 from spellbook.core.path_utils import GitContext
+from spellbook.mcp.tools.config import spellbook_session_init
 
 
 def _async_returns(value):
@@ -26,45 +27,6 @@ def _async_raises(exc):
     return _fn
 
 
-def _assert_common_interactions(
-    mock_ctx, ctx, mock_session_id, mock_init, session_id,
-    continuation_message, project_path, mock_git, mock_resolve,
-    mock_register, expected_alias, expected_session_id, expected_enable_sse=True,
-    register_raised=None, git_raised=None, has_resolve=True,
-):
-    """Assert common mock interactions in any order, handling optional logs."""
-    with bigfoot.in_any_order():
-        mock_ctx.assert_call(args=(ctx,))
-        mock_session_id.assert_call(args=(ctx,))
-        mock_init.assert_call(
-            args=(session_id,),
-            kwargs={"continuation_message": continuation_message, "project_path": project_path},
-        )
-
-        git_kwargs = {"args": ("/tmp/myrepo",)}
-        if git_raised is not None:
-            git_kwargs["raised"] = git_raised
-        mock_git.assert_call(**git_kwargs)
-
-        if has_resolve:
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
-
-        register_kwargs = {
-            "kwargs": {
-                "base_alias": expected_alias,
-                "session_id": expected_session_id,
-                "enable_sse": expected_enable_sse,
-            }
-        }
-        if register_raised is not None:
-            register_kwargs["raised"] = register_raised
-        mock_register.assert_call(**register_kwargs)
-
-        # asyncio.to_thread + bigfoot mocks may produce a harmless
-        # concurrent.futures ERROR log. Assert it if present.
-        bigfoot.log_mock.assert_log("ERROR", IsStr(), "concurrent.futures")
-
-
 class TestSessionInitMessaging:
     """Test the messaging auto-registration block in spellbook_session_init."""
 
@@ -83,15 +45,16 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.returns(GitContext(branch="main"))
 
-        mock_resolve = bigfoot.mock("spellbook.core.path_utils:resolve_repo_root")
-        mock_resolve.returns("/tmp/myrepo")
+        # derive_messaging_alias runs in asyncio.to_thread; mock it directly
+        # so the thread pool call resolves immediately (avoids bigfoot + nested
+        # mock deadlocks inside to_thread).
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("myrepo-main")
 
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_returns(("myrepo-main", False)))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-1"})()
 
@@ -110,7 +73,10 @@ class TestSessionInitMessaging:
                 kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": None, "git_context": GitContext(branch="main")},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "myrepo-main", "session_id": "test-session-1", "enable_sse": True},
             )
@@ -131,12 +97,13 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.returns(GitContext(branch="main"))
 
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("custom-name")
+
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_returns(("custom-name", False)))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-2"})()
 
@@ -153,6 +120,10 @@ class TestSessionInitMessaging:
                 kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": "custom-name", "git_context": GitContext(branch="main")},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "custom-name", "session_id": "test-session-2", "enable_sse": True},
             )
@@ -173,15 +144,13 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.returns(GitContext())
 
-        mock_resolve = bigfoot.mock("spellbook.core.path_utils:resolve_repo_root")
-        mock_resolve.returns("/tmp/myrepo")
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("myrepo")
 
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_returns(("myrepo", False)))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-3"})()
 
@@ -201,7 +170,10 @@ class TestSessionInitMessaging:
                 },
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": None, "git_context": GitContext()},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "myrepo", "session_id": "test-session-3", "enable_sse": True},
             )
@@ -222,15 +194,13 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.returns(GitContext(branch="main"))
 
-        mock_resolve = bigfoot.mock("spellbook.core.path_utils:resolve_repo_root")
-        mock_resolve.returns("/tmp/myrepo")
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("myrepo-main")
 
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_raises(RuntimeError("bus broken")))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-4"})()
 
@@ -250,7 +220,10 @@ class TestSessionInitMessaging:
                 kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": None, "git_context": GitContext(branch="main")},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "myrepo-main", "session_id": "test-session-4", "enable_sse": True},
             )
@@ -276,15 +249,14 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.raises(FileNotFoundError("git not found"))
 
-        mock_resolve = bigfoot.mock("spellbook.core.path_utils:resolve_repo_root")
-        mock_resolve.returns("/tmp/myrepo")
+        # When git context fails, derive_messaging_alias gets git_context=None
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("myrepo")
 
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_returns(("myrepo", False)))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-5"})()
 
@@ -305,7 +277,10 @@ class TestSessionInitMessaging:
                 args=("/tmp/myrepo",),
                 raised=IsInstance(FileNotFoundError),
             )
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": None, "git_context": None},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "myrepo", "session_id": "test-session-5", "enable_sse": True},
             )
@@ -326,15 +301,13 @@ class TestSessionInitMessaging:
         mock_git = bigfoot.mock("spellbook.core.path_utils:detect_git_context")
         mock_git.returns(GitContext(branch="main"))
 
-        mock_resolve = bigfoot.mock("spellbook.core.path_utils:resolve_repo_root")
-        mock_resolve.returns("/tmp/myrepo")
+        mock_derive = bigfoot.mock("spellbook.core.path_utils:derive_messaging_alias")
+        mock_derive.returns("myrepo-main")
 
         mock_register = bigfoot.mock(
             "spellbook.messaging.bus:message_bus.register_with_suffix"
         )
         mock_register.calls(_async_returns(("myrepo-main", True)))
-
-        from spellbook.mcp.tools.config import spellbook_session_init
 
         ctx = type("MockCtx", (), {"session_id": "test-session-6"})()
 
@@ -351,7 +324,10 @@ class TestSessionInitMessaging:
                 kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
-            mock_resolve.assert_call(args=("/tmp/myrepo",))
+            mock_derive.assert_call(
+                args=("/tmp/myrepo",),
+                kwargs={"session_name": None, "git_context": GitContext(branch="main")},
+            )
             mock_register.assert_call(
                 kwargs={"base_alias": "myrepo-main", "session_id": "test-session-6", "enable_sse": True},
             )

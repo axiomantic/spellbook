@@ -140,24 +140,24 @@ async def spellbook_session_init(
 
     # 2. Auto-register for messaging (async, best-effort)
     try:
-        # detect_git_context() runs sync subprocess calls.
-        # Wrap in asyncio.to_thread() to avoid blocking the event loop.
-        try:
-            git_ctx = await asyncio.to_thread(
-                _path_utils.detect_git_context, project_path
+        # Both detect_git_context() and derive_messaging_alias() may run
+        # sync subprocess calls. Bundle them in a single asyncio.to_thread()
+        # call to keep the event loop unblocked without issuing multiple
+        # thread pool submissions (which can interact badly with some test
+        # frameworks' context propagation).
+        def _resolve_alias():
+            try:
+                git_ctx = _path_utils.detect_git_context(project_path)
+            except Exception:
+                logger.debug("Git context detection failed", exc_info=True)
+                git_ctx = None
+            return _path_utils.derive_messaging_alias(
+                project_path,
+                session_name=session_name,
+                git_context=git_ctx,
             )
-        except Exception:
-            logger.debug("Git context detection failed", exc_info=True)
-            git_ctx = None
 
-        # derive_messaging_alias uses git_context.repo_root (populated by
-        # detect_git_context above) so it avoids subprocess calls in the
-        # common case. No need for asyncio.to_thread here.
-        base_alias = _path_utils.derive_messaging_alias(
-            project_path,
-            session_name=session_name,
-            git_context=git_ctx,
-        )
+        base_alias = await asyncio.to_thread(_resolve_alias)
 
         actual_alias, was_replaced = await _bus.message_bus.register_with_suffix(
             base_alias=base_alias,

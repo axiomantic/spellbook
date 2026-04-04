@@ -1,6 +1,7 @@
 """Path encoding and project directory resolution for session storage."""
 
 import hashlib
+import logging
 import os
 import re
 import subprocess
@@ -8,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -70,6 +73,7 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
             else:
                 branch = raw_branch
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        logger.debug("Git branch detection failed for %s", project_path, exc_info=True)
         return GitContext()
 
     # Detect worktree status
@@ -94,7 +98,7 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
                     is_worktree = True
                     worktree_name = os.path.basename(normalized_project)
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass  # Worktree detection is best-effort
+        logger.debug("Git worktree detection failed for %s", project_path, exc_info=True)
 
     # Cache the repo root so callers avoid redundant subprocess calls.
     # If we already parsed the main worktree, use it; otherwise fall back
@@ -106,7 +110,7 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
         try:
             repo_root = resolve_repo_root(project_path)
         except Exception:
-            pass  # Best-effort; callers handle None
+            logger.debug("Repo root resolution failed for %s", project_path, exc_info=True)
 
     return GitContext(
         branch=branch,
@@ -212,7 +216,7 @@ def resolve_repo_root(path: str) -> str:
             if first_line.startswith("worktree "):
                 return os.path.normpath(first_line[len("worktree "):])
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+        logger.debug("Git worktree list failed for %s", path, exc_info=True)
 
     # Fallback: try --show-toplevel (works for non-worktree repos)
     try:
@@ -224,7 +228,7 @@ def resolve_repo_root(path: str) -> str:
         if result.returncode == 0:
             return os.path.normpath(result.stdout.strip())
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        pass
+        logger.debug("Git show-toplevel failed for %s", path, exc_info=True)
 
     return path
 
