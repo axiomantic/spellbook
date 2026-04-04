@@ -1149,8 +1149,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     v = _cfg_get(k)
                     if v is not None:
                         existing_config[k] = v
-                except Exception:
-                    pass
+                except Exception as e:
+                    print_warning(f"Could not read config key {k}: {e}")
             tts_already_configured = _cfg_get("tts_enabled") is not None
             profile_already_configured = config_is_explicitly_set("profile.default")
         except ImportError:
