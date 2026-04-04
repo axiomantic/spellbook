@@ -236,25 +236,6 @@ class SessionWatcher(threading.Thread):
         except Exception:
             pass
 
-        # Clean up old swarm coordination data (async ORM)
-        try:
-            import asyncio
-            from spellbook.coordination.state import StateManager
-            from spellbook.db import get_coordination_session
-
-            async def _cleanup_swarms():
-                async with get_coordination_session() as session:
-                    sm = StateManager(session=session)
-                    await sm.cleanup_old_swarms(days=7)
-
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(_cleanup_swarms())
-            except RuntimeError:
-                asyncio.run(_cleanup_swarms())
-        except Exception:
-            pass
-
         # Clean up old forged workflow data (async ORM)
         try:
             from sqlalchemy import delete

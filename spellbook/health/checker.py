@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Any, Optional
 
 from spellbook.core.db import get_connection
-from spellbook.core.preferences import CoordinationBackend, load_coordination_config
 
 # =============================================================================
 # Constants
@@ -536,10 +535,7 @@ def _check_github_cli() -> DomainCheck:
 
 
 def _check_coordination() -> DomainCheck:
-    """Check coordination backend configuration.
-
-    NOTE: This check does NOT attempt network connections.
-    It only validates that the configuration is valid.
+    """Check coordination status.
 
     Returns:
         DomainCheck with status and details
@@ -547,41 +543,19 @@ def _check_coordination() -> DomainCheck:
     start = time.perf_counter()
 
     try:
-        config = load_coordination_config()
-
-        backend_value = (
-            config.backend.value
-            if isinstance(config.backend, CoordinationBackend)
-            else str(config.backend)
-        )
-
-        details = {
-            "backend": backend_value,
-            "configured": config.backend != CoordinationBackend.NONE,
-        }
-
-        if config.backend == CoordinationBackend.NONE:
-            return DomainCheck(
-                domain="coordination",
-                status=HealthStatus.NOT_CONFIGURED,
-                message="Coordination backend disabled",
-                latency_ms=(time.perf_counter() - start) * 1000,
-                details=details,
-            )
-
         return DomainCheck(
             domain="coordination",
-            status=HealthStatus.HEALTHY,
-            message=f"Coordination backend configured: {backend_value}",
+            status=HealthStatus.NOT_CONFIGURED,
+            message="Coordination backend not configured (swarm removed)",
             latency_ms=(time.perf_counter() - start) * 1000,
-            details=details,
+            details={"configured": False},
         )
 
     except Exception as e:
         return DomainCheck(
             domain="coordination",
             status=HealthStatus.DEGRADED,
-            message=f"Failed to load coordination config: {e}",
+            message=f"Failed to check coordination: {e}",
             latency_ms=(time.perf_counter() - start) * 1000,
             details={"error": str(e)},
         )

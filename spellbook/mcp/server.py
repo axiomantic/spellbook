@@ -77,19 +77,6 @@ def register_all_tools() -> None:
         logger.debug("spellbook.mcp.routes not yet available")
 
 
-async def _cleanup_coordination() -> None:
-    """Clean up old swarm coordination data (>7 days) using ORM."""
-    try:
-        from spellbook.coordination.state import StateManager
-        from spellbook.db import get_coordination_session
-
-        async with get_coordination_session() as session:
-            sm = StateManager(session=session)
-            await sm.cleanup_old_swarms(days=7)
-    except Exception:
-        pass
-
-
 async def _cleanup_forged() -> None:
     """Clean up old forged workflow data (>90 days) using ORM."""
     try:

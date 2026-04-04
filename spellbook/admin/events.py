@@ -20,7 +20,6 @@ class Subsystem(str, Enum):
     SESSION = "session"
     CONFIG = "config"
     FRACTAL = "fractal"
-    SWARM = "swarm"
     EXPERIMENT = "experiment"
     FORGE = "forge"
     FOCUS = "focus"
