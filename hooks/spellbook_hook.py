@@ -897,6 +897,63 @@ def _stint_depth_check(data: dict) -> str | None:
     return "\n".join(parts) if parts else None
 
 
+def _messaging_check() -> str | None:
+    """Check messaging inbox for pending messages and format for injection.
+
+    Reads all .json files from the session's messaging inbox directory,
+    formats each message per the messaging protocol templates, outputs
+    formatted text, then deletes each processed file.
+
+    Returns formatted message text or None if inbox is empty.
+    """
+    config_dir = os.environ.get("SPELLBOOK_CONFIG_DIR", "")
+    if not config_dir:
+        config_dir = str(Path.home() / ".local" / "spellbook")
+
+    messaging_base = Path(config_dir) / "messaging"
+    if not messaging_base.exists():
+        return None
+
+    outputs = []
+    # Check all alias directories for inbox messages
+    for alias_dir in sorted(messaging_base.iterdir()):
+        if not alias_dir.is_dir():
+            continue
+        inbox = alias_dir / "inbox"
+        if not inbox.exists():
+            continue
+
+        for msg_file in sorted(inbox.glob("*.json")):
+            try:
+                data = json.loads(msg_file.read_text())
+                msg_type = data.get("message_type", "direct")
+                sender = data.get("sender", "unknown")
+                correlation_id = data.get("correlation_id")
+                payload = data.get("payload", {})
+                payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
+
+                if msg_type == "broadcast":
+                    formatted = f"[BROADCAST from {sender}]\n{payload_str}"
+                elif msg_type == "reply":
+                    corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
+                    formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
+                else:
+                    corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
+                    formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
+
+                outputs.append(formatted)
+                # Delete after processing
+                msg_file.unlink()
+            except Exception:
+                # Skip malformed files, delete to prevent re-processing
+                try:
+                    msg_file.unlink()
+                except OSError:
+                    pass
+
+    return "\n\n".join(outputs) if outputs else None
+
+
 def _build_recovery_directive(state: dict) -> str:
     """Build a recovery directive string from saved workflow state."""
     parts = []
@@ -1026,6 +1083,11 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     # Auto-memory bridge (specific matcher: Write to auto-memory paths)
     if tool_name == "Write":
         _fire_and_forget(_memory_bridge, tool_name, data)
+
+    # Messaging inbox check (catch-all, synchronous - injects into context)
+    out = _messaging_check()
+    if out:
+        outputs.append(out)
 
     return outputs
 
