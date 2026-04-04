@@ -148,9 +148,17 @@ class TestBroadcast:
         assert result["delivered_count"] == 2
         # Sender excluded by default
         assert bus._sessions["broadcaster"].queue.empty()
-        # Listeners received
-        assert not reg_b.queue.empty()
-        assert not reg_c.queue.empty()
+        # Drain and verify envelope content for both listeners
+        env_b = reg_b.queue.get_nowait()
+        assert env_b.sender == "broadcaster"
+        assert env_b.recipient == "*"
+        assert env_b.payload == {"announcement": True}
+        assert env_b.message_type == "broadcast"
+        env_c = reg_c.queue.get_nowait()
+        assert env_c.sender == "broadcaster"
+        assert env_c.recipient == "*"
+        assert env_c.payload == {"announcement": True}
+        assert env_c.message_type == "broadcast"
 
     @pytest.mark.asyncio
     async def test_broadcast_include_self(self, bus):
@@ -158,7 +166,12 @@ class TestBroadcast:
         result = await bus.broadcast("self-bc", {"echo": True}, exclude_sender=False)
         assert result["ok"] is True
         assert result["delivered_count"] == 1
-        assert not reg.queue.empty()
+        # Drain and verify envelope content
+        env = reg.queue.get_nowait()
+        assert env.sender == "self-bc"
+        assert env.recipient == "*"
+        assert env.payload == {"echo": True}
+        assert env.message_type == "broadcast"
 
     @pytest.mark.asyncio
     async def test_broadcast_zero_recipients(self, bus):

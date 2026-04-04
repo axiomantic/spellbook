@@ -406,8 +406,8 @@ class TestFullMCPToolRoundtrip:
         stats = await messaging_stats.__wrapped__()
         assert stats["ok"] is True
         assert stats["sessions_registered"] == 2
-        assert stats["total_sent"] >= 3  # send + reply + broadcast
-        assert stats["total_delivered"] >= 3
+        assert stats["total_sent"] == 3  # send + reply + broadcast
+        assert stats["total_delivered"] == 3
         assert stats["total_errors"] == 0
 
         # Step 9: Unregister

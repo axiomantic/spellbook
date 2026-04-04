@@ -6,6 +6,7 @@ the module-level message_bus singleton with a fresh test bus per test.
 
 import asyncio
 import json
+from datetime import datetime
 
 import pytest
 
@@ -24,12 +25,27 @@ def bus():
 
 
 @pytest.fixture
+def large_bus():
+    """MessageBus with larger queue for overflow/clamping tests."""
+    return MessageBus(queue_size=64)
+
+
+@pytest.fixture
 def _patch_bus(bus, monkeypatch):
     """Replace message_bus in the tools module with the test bus fixture."""
     import spellbook.mcp.tools.messaging as tools_mod
 
     monkeypatch.setattr(tools_mod, "message_bus", bus)
     return bus
+
+
+@pytest.fixture
+def _patch_large_bus(large_bus, monkeypatch):
+    """Replace message_bus with a larger queue for clamping tests."""
+    import spellbook.mcp.tools.messaging as tools_mod
+
+    monkeypatch.setattr(tools_mod, "message_bus", large_bus)
+    return large_bus
 
 
 # ---------------------------------------------------------------------------
@@ -45,14 +61,12 @@ class TestMessagingRegister:
         result = await messaging_register.__wrapped__(
             alias="tool-test", enable_sse=False,
         )
-        assert result == {
-            "ok": True,
-            "alias": "tool-test",
-            "registered_at": result["registered_at"],  # dynamic timestamp
-        }
-        # Verify registered_at is a non-empty ISO timestamp string
-        assert isinstance(result["registered_at"], str)
-        assert len(result["registered_at"]) > 10
+        # Pop the dynamic timestamp and verify it independently
+        registered_at = result.pop("registered_at")
+        assert result == {"ok": True, "alias": "tool-test"}
+        # Verify registered_at parses as ISO 8601
+        parsed_dt = datetime.fromisoformat(registered_at)
+        assert parsed_dt is not None
 
     @pytest.mark.asyncio
     async def test_register_invalid_alias_special_chars(self, _patch_bus):
@@ -111,11 +125,10 @@ class TestMessagingRegister:
         result = await messaging_register.__wrapped__(
             alias="replaceable", enable_sse=False, force=True,
         )
-        assert result == {
-            "ok": True,
-            "alias": "replaceable",
-            "registered_at": result["registered_at"],
-        }
+        registered_at = result.pop("registered_at")
+        assert result == {"ok": True, "alias": "replaceable"}
+        parsed_dt = datetime.fromisoformat(registered_at)
+        assert parsed_dt is not None
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +301,26 @@ class TestMessagingSend:
         assert result["ok"] is False
         assert result["error"] == "sender_not_registered"
 
+    @pytest.mark.asyncio
+    async def test_send_payload_too_large(self, _patch_bus):
+        """Payload exceeding 64KB should be rejected."""
+        from spellbook.mcp.tools.messaging import messaging_register, messaging_send
+
+        await messaging_register.__wrapped__(alias="big-sender", enable_sse=False)
+        await messaging_register.__wrapped__(alias="big-receiver", enable_sse=False)
+        # Create a payload that exceeds 64KB (65536 bytes)
+        large_value = "x" * 70000
+        result = await messaging_send.__wrapped__(
+            sender="big-sender",
+            recipient="big-receiver",
+            payload=json.dumps({"data": large_value}),
+        )
+        assert result == {
+            "ok": False,
+            "error": "payload_too_large",
+            "detail": "Payload exceeds 65536 bytes.",
+        }
+
 
 # ---------------------------------------------------------------------------
 # messaging_broadcast
@@ -459,14 +492,24 @@ class TestMessagingPoll:
         assert result["remaining"] == 3
 
     @pytest.mark.asyncio
-    async def test_poll_clamps_max_messages(self, _patch_bus):
+    async def test_poll_clamps_max_messages(self, _patch_large_bus):
         """max_messages > 50 should be clamped to 50."""
-        from spellbook.mcp.tools.messaging import messaging_register, messaging_poll
+        from spellbook.mcp.tools.messaging import messaging_register, messaging_send, messaging_poll
 
+        await messaging_register.__wrapped__(alias="clamp-sender", enable_sse=False)
         await messaging_register.__wrapped__(alias="clamp-poller", enable_sse=False)
-        # Just verify it doesn't error -- clamping is internal
+        # Send 55 messages
+        for i in range(55):
+            await messaging_send.__wrapped__(
+                sender="clamp-sender",
+                recipient="clamp-poller",
+                payload=json.dumps({"i": i}),
+            )
+        # Poll with max_messages=999 -- should be clamped to 50
         result = await messaging_poll.__wrapped__(alias="clamp-poller", max_messages=999)
-        assert result == {"ok": True, "messages": [], "remaining": 0}
+        assert result["ok"] is True
+        assert len(result["messages"]) == 50
+        assert result["remaining"] == 5
 
     @pytest.mark.asyncio
     async def test_poll_unregistered_alias(self, _patch_bus):

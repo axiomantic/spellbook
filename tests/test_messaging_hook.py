@@ -69,9 +69,8 @@ class TestMessagingCheckReadDelete:
 
         result = messaging_check()
 
-        assert result is not None
-        assert "orchestrator" in result
-        assert "run auth tests" in result
+        expected = '[MESSAGE from orchestrator]\n{\n  "task": "run auth tests"\n}'
+        assert result == expected
         # File should be deleted after processing
         assert not msg_path.exists()
 
@@ -89,10 +88,15 @@ class TestMessagingCheckReadDelete:
 
         result = messaging_check()
 
-        assert result is not None
-        # All three messages should appear
-        for i in range(3):
-            assert f"sender-{i}" in result
+        # Files are sorted by name (msg-000, msg-001, msg-002), separated by \n\n
+        expected = (
+            '[MESSAGE from sender-0]\n{\n  "seq": 0\n}'
+            '\n\n'
+            '[MESSAGE from sender-1]\n{\n  "seq": 1\n}'
+            '\n\n'
+            '[MESSAGE from sender-2]\n{\n  "seq": 2\n}'
+        )
+        assert result == expected
         # All files deleted
         remaining = list(inbox.glob("*.json"))
         assert len(remaining) == 0
@@ -111,9 +115,13 @@ class TestMessagingCheckReadDelete:
 
         result = messaging_check()
 
-        assert result is not None
-        assert "session-a" in result
-        assert "session-b" in result
+        # Alias dirs sorted: session-a before session-b
+        expected = (
+            '[MESSAGE from sender]\n{\n  "target": "session-a"\n}'
+            '\n\n'
+            '[MESSAGE from sender]\n{\n  "target": "session-b"\n}'
+        )
+        assert result == expected
 
 
 # ---------------------------------------------------------------------------
@@ -135,9 +143,8 @@ class TestMessagingCheckFormatting:
 
         result = messaging_check()
 
-        assert "[MESSAGE from alice]" in result
-        assert "(correlation_id: corr-123)" in result
-        assert '"question": "status?"' in result
+        expected = '[MESSAGE from alice] (correlation_id: corr-123)\n{\n  "question": "status?"\n}'
+        assert result == expected
 
     def test_direct_message_no_correlation(self, messaging_check, inbox_env):
         inbox = inbox_env / "messaging" / "target" / "inbox"
@@ -152,8 +159,8 @@ class TestMessagingCheckFormatting:
 
         result = messaging_check()
 
-        assert "[MESSAGE from bob]" in result
-        assert "correlation_id" not in result
+        expected = '[MESSAGE from bob]\n{\n  "info": "done"\n}'
+        assert result == expected
 
     def test_broadcast_message_format(self, messaging_check, inbox_env):
         inbox = inbox_env / "messaging" / "listener" / "inbox"
@@ -168,8 +175,8 @@ class TestMessagingCheckFormatting:
 
         result = messaging_check()
 
-        assert "[BROADCAST from announcer]" in result
-        assert "deploy starting" in result
+        expected = '[BROADCAST from announcer]\n{\n  "info": "deploy starting"\n}'
+        assert result == expected
 
     def test_reply_message_format(self, messaging_check, inbox_env):
         inbox = inbox_env / "messaging" / "requester" / "inbox"
@@ -185,9 +192,8 @@ class TestMessagingCheckFormatting:
 
         result = messaging_check()
 
-        assert "[REPLY from responder]" in result
-        assert "(correlation_id: corr-456)" in result
-        assert "feature/auth" in result
+        expected = '[REPLY from responder] (correlation_id: corr-456)\n{\n  "answer": "feature/auth"\n}'
+        assert result == expected
 
     def test_reply_without_correlation(self, messaging_check, inbox_env):
         inbox = inbox_env / "messaging" / "requester" / "inbox"
@@ -202,8 +208,8 @@ class TestMessagingCheckFormatting:
 
         result = messaging_check()
 
-        assert "[REPLY from responder]" in result
-        assert "correlation_id" not in result
+        expected = '[REPLY from responder]\n{\n  "answer": "ok"\n}'
+        assert result == expected
 
 
 # ---------------------------------------------------------------------------
@@ -266,8 +272,8 @@ class TestMessagingCheckMalformed:
         result = messaging_check()
 
         # Should use defaults for missing fields
-        assert result is not None
-        assert "[MESSAGE from unknown]" in result
+        expected = '[MESSAGE from unknown]\n{}'
+        assert result == expected
         # File deleted after processing
         assert not partial_file.exists()
 
@@ -291,9 +297,9 @@ class TestMessagingCheckMalformed:
 
         result = messaging_check()
 
-        # Good message should still be processed
-        assert result is not None
-        assert "[MESSAGE from alice]" in result
+        # Good message should still be processed (bad file skipped)
+        expected = '[MESSAGE from alice]\n{\n  "ok": true\n}'
+        assert result == expected
         # Both files deleted
         assert not bad_file.exists()
         assert not (inbox / "zzz-good.json").exists()

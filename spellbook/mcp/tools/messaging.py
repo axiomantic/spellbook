@@ -129,7 +129,6 @@ async def messaging_send(
     recipient: str,
     payload: str,
     correlation_id: str = None,
-    reply_to: str = None,
     ttl: int = 60,
 ) -> dict:
     """Send a direct message to another session.
@@ -143,7 +142,6 @@ async def messaging_send(
         payload: JSON string with message content (will be parsed)
         correlation_id: Optional ID to track request/reply pairs. Recipient
                        can use messaging_reply with this ID.
-        reply_to: Optional alias to receive replies (defaults to sender)
         ttl: Seconds before correlation expires (default 60, max 300)
 
     Returns:
@@ -166,7 +164,6 @@ async def messaging_send(
         recipient=recipient,
         payload=parsed,
         correlation_id=correlation_id,
-        reply_to=reply_to,
         ttl=ttl,
     )
 
