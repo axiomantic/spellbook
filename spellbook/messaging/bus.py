@@ -85,7 +85,7 @@ class MessageBus:
     def __init__(self, queue_size: int = QUEUE_SIZE):
         self._sessions: dict[str, SessionRegistration] = {}
         self._pending_correlations: dict[str, PendingCorrelation] = {}
-        self._bridges: dict = {}
+        self._bridges: dict[str, MessageBridge] = {}
         self._lock = asyncio.Lock()
         self._queue_size = queue_size
         # Stats
@@ -290,16 +290,16 @@ class MessageBus:
             failed = 0
             errors = []
 
+            envelope = self._make_envelope(
+                sender=sender,
+                recipient="*",
+                payload=payload,
+                message_type="broadcast",
+            )
+
             for alias, reg in self._sessions.items():
                 if exclude_sender and alias == sender:
                     continue
-
-                envelope = self._make_envelope(
-                    sender=sender,
-                    recipient="*",
-                    payload=payload,
-                    message_type="broadcast",
-                )
 
                 try:
                     reg.queue.put_nowait(envelope)

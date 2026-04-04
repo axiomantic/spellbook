@@ -23,6 +23,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from spellbook.core.path_utils import get_spellbook_config_dir
+
 
 # ---------------------------------------------------------------------------
 # MCP Communication
@@ -909,8 +911,6 @@ def _messaging_check(session_id: str = "") -> str | None:
     """
     if not session_id:
         return None
-
-    from spellbook.core.path_utils import get_spellbook_config_dir
 
     messaging_base = get_spellbook_config_dir() / "messaging"
     if not messaging_base.exists():

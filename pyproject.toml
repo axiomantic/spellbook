@@ -23,6 +23,7 @@ daemon = [
     "fastmcp>=0.4.1",
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
+    "httpx>=0.25.0",
 ]
 tts = [
     "kokoro>=0.9.0",

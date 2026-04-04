@@ -17,6 +17,8 @@ import fastmcp as _fastmcp_module
 from fastmcp import FastMCP
 
 from spellbook.mcp import state
+from spellbook.messaging import message_bus
+from spellbook.messaging.sse import create_messaging_app
 
 logger = logging.getLogger(__name__)
 
@@ -171,9 +173,6 @@ def shutdown() -> None:
 
     # Clean up message bus sessions
     try:
-        # Function-level import: messaging package is optional
-        from spellbook.messaging import message_bus
-
         async def _cleanup_message_bus():
             aliases = [s["alias"] for s in await message_bus.list_sessions()]
             for alias in aliases:
@@ -232,7 +231,6 @@ def _mount_admin_app() -> None:
 def _mount_messaging_app() -> None:
     """Mount the messaging SSE sub-app for cross-session communication."""
     try:
-        from spellbook.messaging.sse import create_messaging_app
         from starlette.routing import Mount
 
         messaging_app = create_messaging_app()
