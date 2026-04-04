@@ -370,12 +370,17 @@ class MessageBus:
 
     # --- Receiving ---
 
-    async def poll(self, alias: str, max_messages: int = 10) -> list[dict]:
-        """Drain up to max_messages from the session's queue."""
+    async def poll(self, alias: str, max_messages: int = 10) -> tuple[list[dict], int]:
+        """Drain up to max_messages from the session's queue.
+
+        Returns:
+            (messages, remaining) where remaining is the queue size read
+            atomically right after draining.
+        """
         async with self._lock:
             reg = self._sessions.get(alias)
             if reg is None:
-                return []
+                return [], 0
             queue = reg.queue
 
         messages = []
@@ -387,7 +392,8 @@ class MessageBus:
                 messages.append(envelope.to_dict())
             except asyncio.QueueEmpty:
                 break
-        return messages
+        remaining = queue.qsize()
+        return messages, remaining
 
     async def get_queue(self, alias: str) -> Optional[asyncio.Queue]:
         """Get the raw queue for SSE streaming. Returns None if not registered."""

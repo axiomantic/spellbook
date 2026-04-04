@@ -265,24 +265,28 @@ class TestPolling:
         await bus.register("poller", enable_sse=False)
         await bus.send("poller-sender", "poller", {"msg": 1})
         await bus.send("poller-sender", "poller", {"msg": 2})
-        messages = await bus.poll("poller", max_messages=10)
+        messages, remaining = await bus.poll("poller", max_messages=10)
         assert len(messages) == 2
+        assert remaining == 0
         assert messages[0]["payload"] == {"msg": 1}
         assert messages[1]["payload"] == {"msg": 2}
         # Queue now empty
-        messages2 = await bus.poll("poller", max_messages=10)
+        messages2, remaining2 = await bus.poll("poller", max_messages=10)
         assert len(messages2) == 0
+        assert remaining2 == 0
 
     @pytest.mark.asyncio
     async def test_poll_empty(self, bus):
         await bus.register("empty-poller", enable_sse=False)
-        messages = await bus.poll("empty-poller", max_messages=10)
+        messages, remaining = await bus.poll("empty-poller", max_messages=10)
         assert messages == []
+        assert remaining == 0
 
     @pytest.mark.asyncio
     async def test_poll_unregistered(self, bus):
-        messages = await bus.poll("nonexistent", max_messages=10)
+        messages, remaining = await bus.poll("nonexistent", max_messages=10)
         assert messages == []
+        assert remaining == 0
 
     @pytest.mark.asyncio
     async def test_poll_respects_max(self, bus):
@@ -290,11 +294,13 @@ class TestPolling:
         await bus.register("limited-poller", enable_sse=False)
         for i in range(5):
             await bus.send("limited-sender", "limited-poller", {"i": i})
-        messages = await bus.poll("limited-poller", max_messages=2)
+        messages, remaining = await bus.poll("limited-poller", max_messages=2)
         assert len(messages) == 2
-        # 3 remaining
-        remaining = await bus.poll("limited-poller", max_messages=10)
-        assert len(remaining) == 3
+        assert remaining == 3
+        # Drain the rest
+        rest, remaining2 = await bus.poll("limited-poller", max_messages=10)
+        assert len(rest) == 3
+        assert remaining2 == 0
 
 
 # ---------------------------------------------------------------------------

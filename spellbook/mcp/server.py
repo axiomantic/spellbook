@@ -16,6 +16,8 @@ from typing import Any, Dict
 import fastmcp as _fastmcp_module
 from fastmcp import FastMCP
 
+from starlette.routing import Mount
+
 from spellbook.mcp import state
 from spellbook.messaging import message_bus
 from spellbook.messaging.sse import create_messaging_app
@@ -175,8 +177,8 @@ def shutdown() -> None:
     try:
         async def _cleanup_message_bus():
             aliases = [s["alias"] for s in await message_bus.list_sessions()]
-            for alias in aliases:
-                await message_bus.unregister(alias)
+            if aliases:
+                await asyncio.gather(*(message_bus.unregister(a) for a in aliases))
 
         # atexit runs after the event loop has stopped, so asyncio.run() is safe
         asyncio.run(_cleanup_message_bus())
@@ -217,7 +219,6 @@ def _mount_admin_app() -> None:
             return
 
         from spellbook.admin.app import create_admin_app
-        from starlette.routing import Mount
 
         admin_app = create_admin_app()
         mcp._additional_http_routes.append(Mount("/admin", app=admin_app))
@@ -231,8 +232,6 @@ def _mount_admin_app() -> None:
 def _mount_messaging_app() -> None:
     """Mount the messaging SSE sub-app for cross-session communication."""
     try:
-        from starlette.routing import Mount
-
         messaging_app = create_messaging_app()
         mcp._additional_http_routes.append(Mount("/messaging", app=messaging_app))
         logger.info("Messaging SSE interface mounted at /messaging")

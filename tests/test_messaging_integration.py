@@ -62,7 +62,7 @@ class TestDirectMessageExchange:
         assert "message_id" in send_result
 
         # B polls and gets the message
-        messages = await bus.poll("session-b", max_messages=10)
+        messages, _ = await bus.poll("session-b", max_messages=10)
         assert len(messages) == 1
 
         msg = messages[0]
@@ -86,8 +86,8 @@ class TestDirectMessageExchange:
         await bus.send("alice", "bob", {"msg": "hi bob"})
         await bus.send("bob", "alice", {"msg": "hi alice"})
 
-        alice_msgs = await bus.poll("alice", max_messages=10)
-        bob_msgs = await bus.poll("bob", max_messages=10)
+        alice_msgs, _ = await bus.poll("alice", max_messages=10)
+        bob_msgs, _ = await bus.poll("bob", max_messages=10)
 
         assert len(alice_msgs) == 1
         assert alice_msgs[0]["sender"] == "bob"
@@ -121,8 +121,8 @@ class TestBroadcastDiscovery:
         assert result["failed_count"] == 0
 
         # Both workers received the broadcast
-        w1_msgs = await bus.poll("worker-1", max_messages=10)
-        w2_msgs = await bus.poll("worker-2", max_messages=10)
+        w1_msgs, _ = await bus.poll("worker-1", max_messages=10)
+        w2_msgs, _ = await bus.poll("worker-2", max_messages=10)
 
         assert len(w1_msgs) == 1
         assert len(w2_msgs) == 1
@@ -136,7 +136,7 @@ class TestBroadcastDiscovery:
             }
 
         # Coordinator did NOT receive its own broadcast
-        coord_msgs = await bus.poll("coordinator", max_messages=10)
+        coord_msgs, _ = await bus.poll("coordinator", max_messages=10)
         assert len(coord_msgs) == 0
 
 
@@ -165,7 +165,7 @@ class TestOrchestratorRequestReply:
         assert send_result["ok"] is True
 
         # Worker-1 polls and gets the request
-        w1_msgs = await bus.poll("worker-1", max_messages=10)
+        w1_msgs, _ = await bus.poll("worker-1", max_messages=10)
         assert len(w1_msgs) == 1
         assert w1_msgs[0]["correlation_id"] == "req-001"
         assert w1_msgs[0]["payload"]["task"] == "run-tests"
@@ -179,7 +179,7 @@ class TestOrchestratorRequestReply:
         assert reply_result["ok"] is True
 
         # Orchestrator polls and gets the reply
-        orch_msgs = await bus.poll("orchestrator", max_messages=10)
+        orch_msgs, _ = await bus.poll("orchestrator", max_messages=10)
         assert len(orch_msgs) == 1
 
         reply_msg = orch_msgs[0]
@@ -190,7 +190,7 @@ class TestOrchestratorRequestReply:
         assert reply_msg["payload"] == {"status": "passed", "duration_ms": 1234}
 
         # Worker-2 was not involved, queue empty
-        w2_msgs = await bus.poll("worker-2", max_messages=10)
+        w2_msgs, _ = await bus.poll("worker-2", max_messages=10)
         assert len(w2_msgs) == 0
 
     @pytest.mark.asyncio
@@ -209,7 +209,7 @@ class TestOrchestratorRequestReply:
         await bus.reply("w2", "corr-type", {"result": "no errors"})
 
         # Orchestrator gets both replies
-        orch_msgs = await bus.poll("orch", max_messages=10)
+        orch_msgs, _ = await bus.poll("orch", max_messages=10)
         assert len(orch_msgs) == 2
 
         by_corr = {m["correlation_id"]: m for m in orch_msgs}

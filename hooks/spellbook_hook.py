@@ -961,8 +961,8 @@ def _messaging_check(session_id: str = "") -> str | None:
                 _log_hook_error("process_inbox_message", str(msg_file), e)
                 try:
                     msg_file.unlink()
-                except OSError:
-                    pass
+                except OSError as e:
+                    _log_hook_error("delete_failed_message", str(msg_file), e)
 
     return "\n\n".join(outputs) if outputs else None
 

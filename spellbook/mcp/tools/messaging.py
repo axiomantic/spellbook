@@ -250,10 +250,7 @@ async def messaging_poll(
         {"ok": true, "messages": list[MessageEnvelope], "remaining": int}
     """
     max_messages = max(1, min(max_messages, _POLL_MAX))
-    messages = await message_bus.poll(alias, max_messages=max_messages)
-    # Get remaining count
-    queue = await message_bus.get_queue(alias)
-    remaining = queue.qsize() if queue else 0
+    messages, remaining = await message_bus.poll(alias, max_messages=max_messages)
     return {"ok": True, "messages": messages, "remaining": remaining}
 
 
