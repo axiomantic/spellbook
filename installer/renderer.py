@@ -24,6 +24,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
+from installer.wizard import WizardContext, WizardResults
+
 
 class InstallerRenderer(ABC):
     """Abstract base class defining the full installer rendering contract.
@@ -92,6 +94,27 @@ class InstallerRenderer(ABC):
         Returns:
             Dict of security feature selections, or ``{}`` to skip security
             configuration entirely.
+        """
+        ...
+
+    @abstractmethod
+    def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
+        """Run the consolidated upfront wizard.
+
+        Collects all pre-determinable user decisions in a single
+        interactive flow. Each section is skipped when:
+        - The relevant CLI flag pre-answers the question
+        - auto_yes is True (return defaults)
+        - The config is already set and not reconfiguring
+
+        Returns None on KeyboardInterrupt/EOFError (user cancelled).
+
+        Args:
+            context: Pre-assembled wizard context with detected state
+                and CLI flag overrides.
+
+        Returns:
+            WizardResults with all collected decisions, or None if cancelled.
         """
         ...
 
@@ -465,6 +488,9 @@ class RichRenderer(InstallerRenderer):
 
         return selections
 
+    def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
+        raise NotImplementedError  # Task 3 will implement this
+
     def render_config_summary(
         self, config: dict[str, Any], confirmed: bool
     ) -> bool:
@@ -750,6 +776,9 @@ class PlainTextRenderer(InstallerRenderer):
             else:
                 selections[bare_id] = answer in ("y", "yes")
         return selections
+
+    def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
+        raise NotImplementedError  # Task 4 will implement this
 
     def render_config_summary(
         self, config: dict[str, Any], confirmed: bool

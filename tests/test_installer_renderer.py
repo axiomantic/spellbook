@@ -981,3 +981,477 @@ class TestConfigWizardFilteringBugFix:
         )
 
         assert result == {"spotlighting": True, "crypto": False}
+
+
+# ---------------------------------------------------------------------------
+# InstallerRenderer ABC: render_upfront_wizard
+# ---------------------------------------------------------------------------
+
+
+class TestInstallerRendererHasUpfrontWizard:
+    def test_abc_defines_render_upfront_wizard(self):
+        """InstallerRenderer ABC defines render_upfront_wizard as abstract."""
+        from installer.renderer import InstallerRenderer
+
+        assert hasattr(InstallerRenderer, "render_upfront_wizard")
+        # Verify it's in the abstract methods set
+        assert "render_upfront_wizard" in InstallerRenderer.__abstractmethods__
+
+    def test_render_upfront_wizard_signature_accepts_wizard_context(self):
+        """render_upfront_wizard signature accepts WizardContext and returns WizardResults | None."""
+        import inspect
+        import typing
+        from installer.renderer import InstallerRenderer
+        from installer.wizard import WizardContext, WizardResults
+
+        sig = inspect.signature(InstallerRenderer.render_upfront_wizard)
+        params = list(sig.parameters.keys())
+        # Should have self and context parameters
+        assert params == ["self", "context"]
+
+        # Resolve stringified annotations (from __future__ import annotations)
+        hints = typing.get_type_hints(InstallerRenderer.render_upfront_wizard)
+        assert hints["context"] is WizardContext
+
+        # Return type is WizardResults | None (a types.UnionType in 3.10+)
+        ret = hints["return"]
+        ret_args = getattr(ret, "__args__", ())
+        assert WizardResults in ret_args
+        assert type(None) in ret_args
+
+
+# ---------------------------------------------------------------------------
+# PlainTextRenderer: render_upfront_wizard
+# ---------------------------------------------------------------------------
+
+
+def _make_wizard_context(**overrides):
+    """Build a WizardContext with sensible defaults, applying overrides."""
+    from installer.wizard import WizardContext
+
+    defaults = dict(
+        available_platforms=["claude_code", "gemini"],
+        cli_platforms=None,
+        unset_security_keys=[],
+        existing_config={},
+        security_level=None,
+        tts_disabled=False,
+        tts_already_configured=False,
+        profile_already_configured=False,
+        available_profiles=[],
+        is_upgrade=False,
+        is_interactive=True,
+        auto_yes=False,
+        no_interactive=False,
+        reconfigure=False,
+    )
+    defaults.update(overrides)
+    return WizardContext(**defaults)
+
+
+class TestPlainTextUpfrontWizardAutoYes:
+    """auto_yes=True returns defaults without any prompting."""
+
+    def test_auto_yes_returns_defaults_all_platforms(self):
+        """auto_yes returns WizardResults with platforms=available_platforms."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context(auto_yes=True)
+        renderer = PlainTextRenderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_uses_cli_platforms_when_set(self):
+        """auto_yes with cli_platforms uses those instead of available."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context(auto_yes=True, cli_platforms=["gemini"])
+        renderer = PlainTextRenderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_tts_disabled_sets_false(self):
+        """auto_yes with tts_disabled=True sets tts_intent=False."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context(auto_yes=True, tts_disabled=True)
+        renderer = PlainTextRenderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=False,
+            profile_selection=None,
+        )
+
+    def test_auto_yes_security_level_keeps_none(self):
+        """auto_yes with security_level set still returns security_selections=None."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context(
+            auto_yes=True,
+            security_level="standard",
+            unset_security_keys=["security.crypto.enabled"],
+        )
+        renderer = PlainTextRenderer(auto_yes=True)
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+
+class TestPlainTextUpfrontWizardSkipSections:
+    """Test that sections are correctly skipped based on context flags."""
+
+    def test_cli_platforms_skips_platform_prompt(self, monkeypatch):
+        """cli_platforms set skips interactive platform selection."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        # input() should not be called at all
+        call_count = 0
+
+        def tracking_input(prompt):
+            nonlocal call_count
+            call_count += 1
+            raise AssertionError(f"Unexpected input() call: {prompt!r}")
+
+        monkeypatch.setattr("builtins.input", tracking_input)
+
+        ctx = _make_wizard_context(
+            cli_platforms=["gemini"],
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+        assert call_count == 0
+
+    def test_no_interactive_auto_selects_all_platforms(self):
+        """no_interactive=True auto-selects all available platforms."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        ctx = _make_wizard_context(
+            no_interactive=True,
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_tts_already_configured_skips(self, monkeypatch):
+        """tts_already_configured=True keeps tts_intent=None."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        # Platform prompt: confirm immediately
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_tts_disabled_sets_false_non_auto_yes(self, monkeypatch):
+        """tts_disabled=True sets tts_intent=False even without auto_yes."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        # Platform prompt: confirm immediately
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            tts_disabled=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=False,
+            profile_selection=None,
+        )
+
+    def test_security_level_skips_security_section(self, monkeypatch):
+        """security_level set causes security_selections=None."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            security_level="standard",
+            unset_security_keys=["security.crypto.enabled"],
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+    def test_no_unset_security_keys_skips_section(self, monkeypatch):
+        """Empty unset_security_keys skips security section entirely."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            unset_security_keys=[],
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result == WizardResults(
+            platforms=["claude_code", "gemini"],
+            security_selections=None,
+            tts_intent=None,
+            profile_selection=None,
+        )
+
+
+class TestPlainTextUpfrontWizardInteractivePlatforms:
+    """Interactive platform selection via numbered toggle."""
+
+    def test_confirm_immediately_selects_all(self, monkeypatch):
+        """Empty input (enter) confirms all platforms selected by default."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.platforms == ["claude_code", "gemini"]
+
+    def test_toggle_then_confirm(self, monkeypatch):
+        """Toggle platform 1 off, then confirm."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["1", ""])  # toggle #1, then confirm
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        # Platform 1 (claude_code) was toggled off
+        assert result.platforms == ["gemini"]
+
+    def test_select_none_then_all(self, monkeypatch):
+        """Press n (none), then a (all), then confirm."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["n", "a", ""])
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.platforms == ["claude_code", "gemini"]
+
+
+class TestPlainTextUpfrontWizardInteractiveTTS:
+    """Interactive TTS intent collection."""
+
+    def test_user_accepts_tts(self, monkeypatch):
+        """User enters 'y' for TTS prompt."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["", "y"])  # platform confirm, then TTS yes
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            tts_already_configured=False,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.tts_intent is True
+
+    def test_user_declines_tts(self, monkeypatch):
+        """User enters 'n' for TTS prompt."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["", "n"])  # platform confirm, then TTS no
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            tts_already_configured=False,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.tts_intent is False
+
+    def test_empty_input_defaults_to_no(self, monkeypatch):
+        """Empty input for TTS defaults to False (y/N default is N)."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["", ""])  # platform confirm, then TTS empty (default N)
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            tts_already_configured=False,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.tts_intent is False
+
+
+class TestPlainTextUpfrontWizardInteractiveSecurity:
+    """Interactive security feature configuration."""
+
+    def test_prompts_for_unset_features(self, monkeypatch):
+        """Prompts for each unset security feature using bare IDs."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["", "y", "y"])  # platform confirm, then 2 security prompts
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            unset_security_keys=["security.spotlighting.enabled", "security.crypto.enabled"],
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        # Security selections use bare feature IDs, not dotted keys
+        assert result.security_selections == {"spotlighting": True, "crypto": True}
+
+    def test_security_decline_features(self, monkeypatch):
+        """User declines security features."""
+        from installer.renderer import PlainTextRenderer
+
+        inputs = iter(["", "n"])  # platform confirm, then security no
+        monkeypatch.setattr("builtins.input", lambda _prompt: next(inputs))
+
+        ctx = _make_wizard_context(
+            unset_security_keys=["security.sleuth.enabled"],
+            tts_already_configured=True,
+            profile_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.security_selections == {"sleuth": False}
+
+
+class TestPlainTextUpfrontWizardCancellation:
+    """KeyboardInterrupt and EOFError return None."""
+
+    def test_keyboard_interrupt_returns_none(self, monkeypatch):
+        """KeyboardInterrupt during any prompt returns None."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr(
+            "builtins.input",
+            lambda _prompt: (_ for _ in ()).throw(KeyboardInterrupt()),
+        )
+
+        ctx = _make_wizard_context()
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result is None
+
+    def test_eof_error_returns_none(self, monkeypatch):
+        """EOFError during any prompt returns None."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr(
+            "builtins.input",
+            lambda _prompt: (_ for _ in ()).throw(EOFError()),
+        )
+
+        ctx = _make_wizard_context()
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result is None
+
+
+class TestPlainTextUpfrontWizardProfileDelegation:
+    """Profile selection delegates to render_profile_wizard."""
+
+    def test_profile_skipped_when_already_configured(self, monkeypatch):
+        """Profile section skipped when profile_already_configured=True."""
+        from installer.renderer import PlainTextRenderer
+        from installer.wizard import WizardResults
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            profile_already_configured=True,
+            available_profiles=["zen", "default"],
+            tts_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.profile_selection is None
+
+    def test_profile_skipped_when_no_profiles(self, monkeypatch):
+        """Profile section skipped when available_profiles is empty."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            profile_already_configured=False,
+            available_profiles=[],
+            tts_already_configured=True,
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.profile_selection is None
