@@ -10,7 +10,6 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Optional
 
 from spellbook.core.auth import load_token

@@ -1,6 +1,5 @@
 """Tests for path_utils: slugify_alias, derive_messaging_alias, detect_git_context."""
 
-import hashlib
 import re
 import subprocess
 
@@ -13,7 +12,6 @@ from spellbook.core.path_utils import (
     detect_git_context,
     GitContext,
     MAX_ALIAS_BASE,
-    HASH_LEN,
 )
 
 

@@ -1,6 +1,5 @@
 """Integration tests for messaging auto-registration in spellbook_session_init."""
 
-import asyncio
 
 import bigfoot
 import pytest
@@ -187,7 +186,7 @@ class TestSessionInitMessaging:
         ctx = type("MockCtx", (), {"session_id": "test-session-3"})()
 
         async with bigfoot:
-            result = await spellbook_session_init.fn(
+            await spellbook_session_init.fn(
                 ctx, continuation_message="where were we?"
             )
 

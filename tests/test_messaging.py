@@ -1,17 +1,12 @@
 """Unit and integration tests for cross-session messaging."""
 
 import asyncio
-import json
-import uuid
 
 import pytest
 
 from spellbook.messaging.bus import (
-    DEFAULT_CORRELATION_TTL,
-    QUEUE_SIZE,
     MessageBus,
     MessageEnvelope,
-    SessionRegistration,
     _DISCONNECT,
 )
 
