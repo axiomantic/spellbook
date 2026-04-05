@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import abc
+import asyncio
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, AsyncIterator, Union
+from typing import Any, Callable, Dict, List, Optional, AsyncIterator, Union
 
 @dataclass
 class AgentOptions:
@@ -18,6 +20,11 @@ class AgentOptions:
     disallowed_tools: Optional[List[str]] = None
     extra_args: List[str] = field(default_factory=list)
     env: Dict[str, str] = field(default_factory=lambda: os.environ.copy())
+    # Callback invoked with each text chunk as it streams from the model.
+    # Useful for showing progress in scripts. Receives plain text (not JSON).
+    on_text: Optional[Callable[[str], None]] = None
+    # Timeout in seconds for the entire run() call. None = no timeout.
+    timeout: Optional[float] = 120.0
 
 @dataclass
 class AgentMessage:
@@ -26,6 +33,32 @@ class AgentMessage:
     content: str
     type: str = "text"
     usage: Dict[str, int] = field(default_factory=dict)
+
+
+def _extract_text(content: Any) -> str:
+    """Extract plain text from an AssistantMessage's content blocks.
+
+    AssistantMessage.content is list[ContentBlock] where ContentBlock
+    can be TextBlock(text=str), ToolUseBlock, ThinkingBlock, etc.
+    We only care about TextBlock.text for output.
+    """
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return str(content) if content else ""
+    parts: list[str] = []
+    for block in content:
+        # TextBlock has a .text attribute
+        text = getattr(block, "text", None)
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
+
+
+def _stderr_printer(line: str) -> None:
+    """Default stderr callback: print to stderr."""
+    print(line, file=sys.stderr, flush=True)
+
 
 class AgentClient(abc.ABC):
     """Programmatic client for an AI Agent, mirroring claude-agent-sdk-python."""
@@ -76,11 +109,17 @@ class ClaudeAgentClient(AgentClient):
             permission_mode=self.options.permission_mode,
             allowed_tools=self.options.allowed_tools,
             disallowed_tools=self.options.disallowed_tools,
+            # Pass stderr through so CLI errors are visible
+            stderr=_stderr_printer,
         )
 
     async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        # Collect all messages inside the async with block to avoid yielding
-        # through anyio cancel scopes (which breaks on cross-task finalization).
+        """Send a prompt and stream response messages.
+
+        Collects all messages inside the async-with block to avoid yielding
+        through anyio cancel scopes (which breaks on cross-task finalization).
+        Streams text to on_text callback as it arrives.
+        """
         try:
             from claude_agent_sdk import ClaudeSDKClient
         except ImportError:
@@ -88,37 +127,53 @@ class ClaudeAgentClient(AgentClient):
                 "claude-agent-sdk not installed. Install with: uv pip install 'spellbook[claude]'"
             )
 
+        on_text = self.options.on_text
         messages: list[AgentMessage] = []
+
         async with ClaudeSDKClient(self._make_claude_options()) as client:
             await client.query(prompt)
             async for msg in client.receive_messages():
                 msg_type = type(msg).__name__
                 if msg_type == "AssistantMessage":
+                    text = _extract_text(getattr(msg, "content", ""))
+                    if on_text and text:
+                        on_text(text)
                     messages.append(AgentMessage(
                         role="assistant",
-                        content=getattr(msg, 'content', ''),
-                        usage=getattr(msg, 'usage', {})
+                        content=text,
+                        usage=getattr(msg, "usage", {}) or {},
                     ))
                 elif msg_type == "ResultMessage":
-                    result = getattr(msg, 'result', '')
+                    result = getattr(msg, "result", "") or ""
                     if result:
                         messages.append(AgentMessage(
                             role="result",
                             content=result,
-                            usage=getattr(msg, 'usage', {})
+                            usage=getattr(msg, "usage", {}) or {},
                         ))
 
         for msg in messages:
             yield msg
 
     async def run(self, prompt: str) -> str:
-        final_text = ""
-        async for msg in self.query(prompt):
-            if msg.role == "result":
-                return msg.content
-            if msg.role == "assistant":
-                final_text = msg.content
-        return final_text
+        """Run a single-turn prompt and return the final text.
+
+        Respects self.options.timeout (seconds). Raises asyncio.TimeoutError
+        if the timeout is exceeded.
+        """
+        async def _inner() -> str:
+            final_text = ""
+            async for msg in self.query(prompt):
+                if msg.role == "result":
+                    return msg.content
+                if msg.role == "assistant":
+                    final_text = msg.content
+            return final_text
+
+        timeout = self.options.timeout
+        if timeout is not None:
+            return await asyncio.wait_for(_inner(), timeout=timeout)
+        return await _inner()
 
     def spawn_session(self, prompt: str, terminal: Optional[str] = None) -> Dict[str, Any]:
         from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
@@ -137,8 +192,6 @@ class ClaudeAgentClient(AgentClient):
         Uses the same permission_mode and allowed_tools from AgentOptions.
         Returns {"status": "completed", "output": str} or raises on failure.
         """
-        import asyncio
-
         cmd = ["claude", "-p", prompt, "--output-format", "text"]
 
         if self.options.permission_mode:
@@ -194,21 +247,19 @@ class GeminiAgentClient(AgentClient):
 
     async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
         """Run gemini CLI asynchronously and yield a single response message."""
-        import asyncio
-        
         # Build command based on Unified AgentOptions
         cmd = ["gemini", "--prompt", prompt, "-o", "text"]
-        
+
         # Map permission modes
         if self.options.permission_mode == "dontAsk":
             cmd.append("--yolo")
         elif self.options.permission_mode == "acceptEdits":
             cmd.extend(["--approval-mode", "auto_edit"])
-        
+
         if self.options.model:
             cmd.extend(["--model", self.options.model])
-            
-        # If a system prompt is provided, we prepend it to the prompt 
+
+        # If a system prompt is provided, we prepend it to the prompt
         if self.options.system_prompt:
             cmd[2] = f"{self.options.system_prompt}\n\n{prompt}"
 
@@ -227,21 +278,32 @@ class GeminiAgentClient(AgentClient):
             cwd=str(self.options.cwd),
             env=env
         )
-        
+
         stdout, stderr = await process.communicate()
-        
+
         if process.returncode != 0:
             err_text = stderr.decode().strip()
             raise RuntimeError(f"Gemini CLI failed (code {process.returncode}): {err_text}")
-            
+
+        content = stdout.decode().strip()
+        on_text = self.options.on_text
+        if on_text and content:
+            on_text(content)
+
         yield AgentMessage(
             role="assistant",
-            content=stdout.decode().strip()
+            content=content
         )
 
     async def run(self, prompt: str) -> str:
-        msg_list = [m async for m in self.query(prompt)]
-        return msg_list[0].content if msg_list else ""
+        async def _inner() -> str:
+            msg_list = [m async for m in self.query(prompt)]
+            return msg_list[0].content if msg_list else ""
+
+        timeout = self.options.timeout
+        if timeout is not None:
+            return await asyncio.wait_for(_inner(), timeout=timeout)
+        return await _inner()
 
     def spawn_session(self, prompt: str, terminal: Optional[str] = None) -> Dict[str, Any]:
         from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
@@ -267,7 +329,7 @@ def get_agent_client(provider: Optional[str] = None, options: Optional[AgentOpti
             provider = "gemini"
         else:
             provider = "claude"
-            
+
     if provider == "claude":
         return ClaudeAgentClient(options)
     elif provider == "gemini":

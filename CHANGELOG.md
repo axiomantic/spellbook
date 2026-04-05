@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`finish-branch-execute`**: Added Option 3 handler that dispatches `pr-dance` subagent after PR creation
 
 ### Fixed
-- **Diagram generation script**: Classification and patching now use CLI subprocesses with inherited stderr instead of the SDK, so AI output is visible during `generate_diagrams.py --interactive` and calls have a 120s timeout instead of hanging indefinitely
+- **Unified SDK wrapper**: `ClaudeAgentClient` now properly extracts `TextBlock.text` from `AssistantMessage.content` instead of storing raw content block objects. Added `on_text` streaming callback and `timeout` (default 120s) to `AgentOptions`. CLI stderr is now piped through a visible callback instead of being swallowed.
+- **Diagram generation script**: Classification and patching use the fixed SDK wrapper with `on_text` streaming so AI output is visible during `generate_diagrams.py --interactive`
 
 ## [0.42.0] - 2026-04-04
 
