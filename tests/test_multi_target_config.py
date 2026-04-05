@@ -11,8 +11,8 @@ class TestPlatformConfigEntries:
     """Tests for PLATFORM_CONFIG structure and values."""
 
     def test_all_platforms_have_config_dir_env(self):
-        """All 5 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
-        assert len(PLATFORM_CONFIG) == 5
+        """All 4 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
+        assert len(PLATFORM_CONFIG) == 4
         for platform_id, config in PLATFORM_CONFIG.items():
             assert config["config_dir_env"] is not None, (
                 f"{platform_id} has None config_dir_env"
@@ -22,7 +22,7 @@ class TestPlatformConfigEntries:
             )
 
     def test_all_platforms_have_cli_flag_name(self):
-        """All 5 platforms have string cli_flag_name using hyphens (not underscores)."""
+        """All 4 platforms have string cli_flag_name using hyphens (not underscores)."""
         for platform_id, config in PLATFORM_CONFIG.items():
             flag = config["cli_flag_name"]
             assert isinstance(flag, str), (
@@ -42,7 +42,6 @@ class TestPlatformConfigEntries:
             "opencode": "OPENCODE_CONFIG_DIR",
             "codex": "CODEX_CONFIG_DIR",
             "gemini": "GEMINI_CONFIG_DIR",
-            "crush": "CRUSH_GLOBAL_CONFIG",
         }
         for platform_id, expected_env in expected.items():
             assert PLATFORM_CONFIG[platform_id]["config_dir_env"] == expected_env, (
@@ -57,7 +56,6 @@ class TestPlatformConfigEntries:
             "opencode": "opencode-config-dir",
             "codex": "codex-config-dir",
             "gemini": "gemini-config-dir",
-            "crush": "crush-config-dir",
         }
         for platform_id, expected_flag in expected.items():
             assert PLATFORM_CONFIG[platform_id]["cli_flag_name"] == expected_flag, (

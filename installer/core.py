@@ -146,12 +146,11 @@ def get_platform_installer(
         on_step: Callback for step progress.
         config_dir_override: If provided, use this dir instead of the
             platform default. Used by multi-target orchestration.
-        context: Cross-platform context dict (e.g., claude_config_dirs
-            for Crush installer).
+        context: Cross-platform context dict shared across installers
+            (e.g., claude_config_dirs consumed by the Claude Code installer).
     """
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
-    from .platforms.crush import CrushInstaller
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
 
@@ -162,7 +161,6 @@ def get_platform_installer(
         "opencode": OpenCodeInstaller,
         "codex": CodexInstaller,
         "gemini": GeminiInstaller,
-        "crush": CrushInstaller,
     }
 
     installer_class = installers.get(platform)
@@ -509,7 +507,7 @@ class Uninstaller:
         if platforms is None:
             platforms = self.detect_installed_platforms()
 
-        # Pre-resolve Claude dirs for cross-platform context (Crush needs these)
+        # Pre-resolve Claude dirs for cross-platform context shared with Claude Code installer
         claude_dirs = resolve_config_dirs(
             "claude_code",
             cli_dirs=(config_dir_overrides or {}).get("claude_code"),

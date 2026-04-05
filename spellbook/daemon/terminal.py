@@ -10,7 +10,7 @@ from typing import Optional
 import logging
 
 _ALLOWED_CLI_COMMANDS = frozenset({
-    'claude', 'codex', 'gemini', 'opencode', 'crush',
+    'claude', 'codex', 'gemini', 'opencode',
 })
 
 _logger = logging.getLogger(__name__)

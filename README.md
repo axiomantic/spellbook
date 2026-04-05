@@ -7,7 +7,7 @@
 
 <p align="center">
   <em>A structured skill system for AI coding assistants -- workflows, quality gates, and guardrails so they work more like experienced engineers.</em><br>
-  Primary platform: Claude Code. Basic support for OpenCode, Codex, Gemini CLI, and Crush.
+  Primary platform: Claude Code. Basic support for OpenCode, Codex, and Gemini CLI.
 </p>
 
 <p align="center">
@@ -522,7 +522,6 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | **OpenCode** | Basic support | Skills, MCP server, YOLO agents. Some hooks and MCP tools are Claude Code-specific. |
 | **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
 | **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |
-| **Crush** | Basic support | Skills (native Agent Skills format), MCP server. Some hooks may not be available. |
 
 Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose. These features are noted in their documentation. Contributions to extend coverage for other platforms are welcome -- see [Contributing](#contributing).
 
@@ -567,7 +566,6 @@ For fully automated workflows (no permission prompts), each platform has its own
 | OpenCode | `opencode --agent yolo-focused`[^2] | Spellbook agent, low temp for precision |
 | Codex | `codex --full-auto` | Workspace writes + on-request approval |
 | Codex | `codex --yolo` | Bypasses all approvals and sandbox |
-| Crush | `crush --yolo` | Bypasses all permission prompts |
 
 [^2]: The `yolo` and `yolo-focused` agents are provided by spellbook, not built into OpenCode. They are [OpenCode agent definitions](https://opencode.ai/docs/agents/) with `permission: "*": "*": allow` for all tools, installed to `~/.config/opencode/agent/` by the spellbook installer.
 
@@ -579,7 +577,7 @@ Without YOLO mode, you'll be prompted to approve each file write, command execut
 
 These agents grant "allow" permission for all tools (write, edit, bash, webfetch, task). They are symlinked from `spellbook/opencode/agent/` to `~/.config/opencode/agent/` during installation.
 
-See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/agents/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
+See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/agents/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli).
 
 ## Example Workflows
 
@@ -1051,7 +1049,7 @@ Spellbook requires **agent skills** support. Agent skills are prompt files that 
 
 If your assistant supports agent skills with description-based triggers, see the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) for instructions on adding support.
 
-**Improving platform coverage:** Claude Code is the primary supported platform. OpenCode, Codex, Gemini CLI, and Crush have basic support. Some MCP tools, hooks, and skills are Claude Code-specific, but they can usually be implemented for other platforms. If you use one of these platforms and want fuller coverage, contributions are welcome.
+**Improving platform coverage:** Claude Code is the primary supported platform. OpenCode, Codex, and Gemini CLI have basic support. Some MCP tools, hooks, and skills are Claude Code-specific, but they can usually be implemented for other platforms. If you use one of these platforms and want fuller coverage, contributions are welcome.
 
 ## Acknowledgments
 

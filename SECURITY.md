@@ -151,7 +151,7 @@ If you discover a security vulnerability in spellbook:
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `streamable-http`. |
-| `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command for spawned sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`, `crush`. |
+| `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command for spawned sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`. |
 
 ## Supported Versions
 

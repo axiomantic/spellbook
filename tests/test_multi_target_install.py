@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from installer.config import PLATFORM_CONFIG, resolve_config_dirs
+from installer.config import resolve_config_dirs
 from installer.core import Installer, Uninstaller
 
 
@@ -106,62 +106,6 @@ class TestBackwardCompatibility:
         assert param.default is None, (
             f"config_dir_overrides default should be None, got {param.default}"
         )
-
-
-# ---------------------------------------------------------------------------
-# TestCrushCrossPlatformCoupling
-# ---------------------------------------------------------------------------
-
-
-class TestCrushCrossPlatformCoupling:
-    """Tests for Crush's cross-platform skill sharing via context."""
-
-    @pytest.fixture
-    def spellbook_dir(self, tmp_path):
-        """Create a minimal spellbook directory."""
-        spellbook = tmp_path / "spellbook"
-        spellbook.mkdir()
-        (spellbook / ".version").write_text("0.1.0")
-        (spellbook / "spellbook").mkdir()
-        (spellbook / "spellbook" / "server.py").write_text("# stub")
-        (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook\n\nTest.")
-        return spellbook
-
-    def test_crush_uses_context_claude_dirs(self, spellbook_dir, tmp_path):
-        """CrushInstaller with context {"claude_config_dirs": [dir1, dir2]} returns 2 skills paths."""
-        from installer.platforms.crush import CrushInstaller
-
-        dir1 = tmp_path / "claude1"
-        dir2 = tmp_path / "claude2"
-        dir1.mkdir()
-        dir2.mkdir()
-
-        crush_dir = tmp_path / "crush"
-        crush_dir.mkdir()
-
-        context = {"claude_config_dirs": [dir1, dir2]}
-        installer = CrushInstaller(
-            spellbook_dir, crush_dir, "0.1.0", context=context
-        )
-
-        paths = installer.claude_skills_paths
-        assert len(paths) == 2
-        assert paths[0] == dir1 / "skills"
-        assert paths[1] == dir2 / "skills"
-
-    def test_crush_fallback_without_context(self, spellbook_dir, tmp_path):
-        """Without context, falls back to ~/.claude/skills."""
-        from installer.platforms.crush import CrushInstaller
-
-        crush_dir = tmp_path / "crush"
-        crush_dir.mkdir()
-
-        # No context (empty dict)
-        installer = CrushInstaller(spellbook_dir, crush_dir, "0.1.0")
-
-        paths = installer.claude_skills_paths
-        assert len(paths) == 1
-        assert paths[0] == Path.home() / ".claude" / "skills"
 
 
 # ---------------------------------------------------------------------------

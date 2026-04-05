@@ -5,7 +5,7 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
+  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
 </p>
 
 ## What is Spellbook?

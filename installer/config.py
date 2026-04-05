@@ -35,7 +35,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "crush"]
+SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -86,17 +86,6 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         # Extension at ~/.gemini/extensions/spellbook/ -> <repo>/extensions/gemini/
         "context_file": None,
         "mcp_supported": True,  # Via extension
-    },
-    "crush": {
-        "name": "Crush",
-        "config_dir_env": "CRUSH_GLOBAL_CONFIG",
-        "default_config_dir": Path.home() / ".local" / "share" / "crush",
-        "cli_flag_name": "crush-config-dir",
-        "context_file": "AGENTS.md",
-        # Note: Crush reads skills from options.skills_paths in crush.json
-        # We configure it to include ~/.claude/skills/ for shared skills
-        "mcp_supported": True,
-        "mcp_server_name": "spellbook",
     },
 }
 

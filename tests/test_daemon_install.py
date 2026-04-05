@@ -78,10 +78,6 @@ def home_dir(tmp_path):
     gemini_dir.mkdir()
     (gemini_dir / "extensions").mkdir()
 
-    # Crush config
-    crush_dir = home / ".local" / "share" / "crush"
-    crush_dir.mkdir(parents=True)
-
     return home
 
 
@@ -349,24 +345,6 @@ class TestPlatformInstallersNoInstallDaemon:
         )
 
         installer = GeminiInstaller(spellbook_dir, config_dir, "0.10.0")
-        installer.install()
-
-        assert len(daemon_called) == 0
-
-    def test_crush_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
-        """CrushInstaller.install() does not call install_daemon."""
-        from installer.platforms.crush import CrushInstaller
-
-        config_dir = home_dir / ".local" / "share" / "crush"
-        monkeypatch.setattr(Path, "home", lambda: home_dir)
-
-        daemon_called = []
-        monkeypatch.setattr(
-            "installer.components.mcp.install_daemon",
-            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
-        )
-
-        installer = CrushInstaller(spellbook_dir, config_dir, "0.10.0")
         installer.install()
 
         assert len(daemon_called) == 0

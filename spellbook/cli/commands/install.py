@@ -27,7 +27,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         "--platforms",
         nargs="+",
         default=None,
-        help="Platforms to install (e.g. claude_code opencode codex gemini crush)",
+        help="Platforms to install (e.g. claude_code opencode codex gemini)",
     )
     parser.add_argument(
         "--force",
