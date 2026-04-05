@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from spellbook.sdk.unified import get_agent_client, AgentOptions
+from spellbook.core.zai_models import get_registry
 
 from diagram_config import (
     AGENTS_DIR,
@@ -1027,24 +1028,44 @@ async def main_async() -> int:
     # Set default model based on provider
     provider = args.provider
     model = args.model
+    
+    # Use model registry for opencode provider
+    if provider == "opencode" and model is None:
+        registry = get_registry()
+        # Use the first general coding model as default
+        coding_models = registry.get_models_by_use_case("general_coding")
+        if coding_models:
+            model = coding_models[0].id
+        else:
+            # Fallback to most capable model
+            model = "zai-coding-plan/glm-5"
+    
+    # Set default models for other providers
     if model is None:
         if provider == "claude":
             model = "sonnet"
         elif provider == "gemini":
             model = "gemini-2.5-flash"
-        elif provider == "opencode":
-            model = "zai-coding-plan/glm-4.7"
     
     # Fast model for utility tasks (classification, patching)
     # Use the specified model if provided, otherwise default to a fast one
     fast_model = args.model
+    if provider == "opencode" and fast_model is None:
+        registry = get_registry()
+        # Use the first efficient processing model for fast tasks
+        efficient_models = registry.get_models_by_use_case("efficient_processing")
+        if efficient_models:
+            fast_model = efficient_models[0].id
+        else:
+            # Fallback to a known fast model
+            fast_model = "zai-coding-plan/glm-4.5-air"
+    
+    # Set default fast models for other providers
     if fast_model is None:
         if provider == "claude":
             fast_model = "haiku"
         elif provider == "gemini":
             fast_model = "gemini-2.5-flash"
-        elif provider == "opencode":
-            fast_model = "zai-coding-plan/glm-4.5-air"
 
     # Merge and filter
     all_items = all_skills + all_commands + all_agents

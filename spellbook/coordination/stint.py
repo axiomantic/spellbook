@@ -136,7 +136,7 @@ def _log_correction_event(
         pass  # Correction logging is best-effort; never block the caller
 
 
-def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
+def _update_stack(project_path: str, mutate_fn, db_path: str = None, session_id: str = None) -> dict:
     """Read-modify-write the stint stack atomically.
 
     Uses a dedicated connection with BEGIN IMMEDIATE to acquire a write
@@ -156,6 +156,8 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
             within the same transaction. Returns the tool result and
             the new stack to persist. If new_stack is None, no write.
         db_path: Optional database path (for testing).
+        session_id: Optional session identifier for session-scoped stints.
+            If None, uses project-scoped behavior for backward compatibility.
     """
     from spellbook.core.db import get_db_path
 
@@ -169,26 +171,52 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
         try:
             conn.execute("BEGIN IMMEDIATE")
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT stack_json FROM stint_stack WHERE project_path = ?",
-                (project_path,),
-            )
+            if session_id:
+                cursor.execute(
+                    "SELECT stack_json FROM stint_stack WHERE project_path = ? AND session_id = ?",
+                    (project_path, session_id),
+                )
+            else:
+                # For backward compatibility, get the row with NULL session_id
+                cursor.execute(
+                    "SELECT stack_json FROM stint_stack WHERE project_path = ? AND session_id IS NULL",
+                    (project_path,),
+                )
             row = cursor.fetchone()
             stack = json.loads(row[0]) if row else []
 
             result, new_stack = mutate_fn(stack, cursor)
 
             if new_stack is not None:
-                cursor.execute(
-                    """
-                    INSERT INTO stint_stack (project_path, stack_json, updated_at)
-                    VALUES (?, ?, CURRENT_TIMESTAMP)
-                    ON CONFLICT(project_path) DO UPDATE SET
-                        stack_json = excluded.stack_json,
-                        updated_at = excluded.updated_at
-                    """,
-                    (project_path, json.dumps(new_stack)),
-                )
+                if session_id:
+                    # For session-specific stints: insert (no conflict handling needed since no unique constraint)
+                    cursor.execute(
+                        """
+                        INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
+                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                        """,
+                        (project_path, session_id, json.dumps(new_stack)),
+                    )
+                else:
+                    # For backward compatibility (no session_id): update existing row or insert new one
+                    cursor.execute(
+                        """
+                        UPDATE stint_stack 
+                        SET stack_json = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE project_path = ? AND session_id IS NULL
+                        """,
+                        (json.dumps(new_stack), project_path),
+                    )
+                    
+                    # If no rows were updated, insert a new one
+                    if cursor.rowcount == 0:
+                        cursor.execute(
+                            """
+                            INSERT INTO stint_stack (project_path, stack_json, updated_at)
+                            VALUES (?, ?, CURRENT_TIMESTAMP)
+                            """,
+                            (project_path, json.dumps(new_stack)),
+                        )
             conn.commit()
             return result
         except sqlite3.OperationalError as e:
@@ -220,6 +248,7 @@ def push_stint(
     behavioral_mode: str = "",
     metadata: Optional[dict] = None,
     db_path: str = None,
+    session_id: str = None,
     # Deprecated parameters (accepted but ignored for backward compatibility)
     stint_type: str = "",
     success_criteria: str = "",
@@ -252,13 +281,14 @@ def push_stint(
         stack.append(entry)
         return {"success": True, "depth": len(stack), "stack": list(stack)}, stack
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)
 
 
 def pop_stint(
     project_path: str,
     name: Optional[str] = None,
     db_path: str = None,
+    session_id: str = None,
 ) -> dict:
     """Pop the top stint from the focus stack.
 
@@ -286,7 +316,7 @@ def pop_stint(
             "mismatch": mismatch,
         }, stack
 
-    result = _update_stack(project_path, mutate, db_path)
+    result = _update_stack(project_path, mutate, db_path, session_id)
 
     # Log correction event for mismatches (outside the transaction).
     # Classification is "llm_wrong": the LLM asked to pop a name that
@@ -308,6 +338,7 @@ def pop_stint(
 def check_stint(
     project_path: str,
     db_path: str = None,
+    session_id: str = None,
 ) -> dict:
     """Return the current stint stack. Read-only (no data mutation). Briefly acquires a write lock via BEGIN IMMEDIATE.
 
@@ -317,7 +348,7 @@ def check_stint(
     def mutate(stack: list, cursor) -> tuple[dict, list | None]:
         return {"success": True, "depth": len(stack), "stack": list(stack)}, None
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)
 
 
 def replace_stint(
@@ -325,6 +356,7 @@ def replace_stint(
     stack: list[dict],
     reason: str = "",
     db_path: str = None,
+    session_id: str = None,
 ) -> dict:
     """Replace the entire stint stack with a corrected version.
 
@@ -366,4 +398,4 @@ def replace_stint(
             "correction_logged": True,
         }, stack
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)

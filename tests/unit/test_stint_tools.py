@@ -47,20 +47,32 @@ class TestStintDatabaseSchema:
         expected = {"id", "project_path", "session_id", "stack_json", "updated_at"}
         assert expected.issubset(columns), f"Missing columns: {expected - columns}"
 
-    def test_stint_stack_project_path_unique(self, isolated_db):
+    def test_stint_stack_multiple_rows_per_project(self, isolated_db):
         conn = get_connection(isolated_db)
         cursor = conn.cursor()
+        
+        # Should be able to insert multiple rows for the same project with different session_ids
+        cursor.execute(
+            "INSERT INTO stint_stack (project_path, session_id, stack_json) VALUES (?, ?, ?)",
+            ("/test/project", "session-a", "[]"),
+        )
+        cursor.execute(
+            "INSERT INTO stint_stack (project_path, session_id, stack_json) VALUES (?, ?, ?)",
+            ("/test/project", "session-b", "[]"),
+        )
+        conn.commit()
+        
+        # Should be able to insert a row with NULL session_id too
         cursor.execute(
             "INSERT INTO stint_stack (project_path, stack_json) VALUES (?, ?)",
             ("/test/project", "[]"),
         )
         conn.commit()
-        with pytest.raises(sqlite3.IntegrityError):
-            cursor.execute(
-                "INSERT INTO stint_stack (project_path, stack_json) VALUES (?, ?)",
-                ("/test/project", "[]"),
-            )
-            conn.commit()
+        
+        # Verify all three rows exist
+        cursor.execute("SELECT COUNT(*) FROM stint_stack WHERE project_path = ?", ("/test/project",))
+        count = cursor.fetchone()[0]
+        assert count == 3, f"Expected 3 rows, got {count}"
 
     def test_stint_correction_events_table_exists(self, isolated_db):
         conn = get_connection(isolated_db)
@@ -109,6 +121,53 @@ from spellbook.coordination.stint import (
     _is_ordered_subsequence,
     _validate_stint_entry,
 )
+
+
+class TestSessionIsolation:
+    """Test that stints are properly isolated between sessions."""
+    
+    def test_session_isolation(self, isolated_db):
+        """Test that different sessions can have separate stint stacks for the same project."""
+        
+        # Session A pushes a stint
+        result_a1 = push_stint(
+            project_path="/test/project",
+            name="feature-a",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        assert result_a1["success"]
+        assert result_a1["depth"] == 1
+        assert result_a1["stack"][0]["name"] == "feature-a"
+        
+        # Session B pushes a different stint
+        result_b1 = push_stint(
+            project_path="/test/project",
+            name="feature-b", 
+            db_path=isolated_db,
+            session_id="session-b",
+        )
+        assert result_b1["success"]
+        assert result_b1["depth"] == 1
+        assert result_b1["stack"][0]["name"] == "feature-b"
+        
+        # Session A should only see its own stint
+        result_a_check = check_stint("/test/project", db_path=isolated_db, session_id="session-a")
+        assert result_a_check["success"]
+        assert result_a_check["depth"] == 1
+        assert result_a_check["stack"][0]["name"] == "feature-a"
+        
+        # Session B should only see its own stint
+        result_b_check = check_stint("/test/project", db_path=isolated_db, session_id="session-b")
+        assert result_b_check["success"]
+        assert result_b_check["depth"] == 1
+        assert result_b_check["stack"][0]["name"] == "feature-b"
+        
+        # Backward compatibility (no session_id) should see empty stack
+        result_backward = check_stint("/test/project", db_path=isolated_db)
+        assert result_backward["success"]
+        assert result_backward["depth"] == 0
+        assert result_backward["stack"] == []
 
 
 class TestPushStint:

@@ -42,6 +42,7 @@ OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents. Some Claud
 - MCP server for spellbook tools
 - Native skill discovery from `~/.claude/skills/*`
 - YOLO mode agents for autonomous execution
+- z.AI model detection and registry integration for dynamic model selection
 
 ### YOLO Mode
 

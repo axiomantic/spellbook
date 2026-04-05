@@ -346,6 +346,16 @@ class OpenCodeInstaller(PlatformInstaller):
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
+        # Detect z.AI models using model registry
+        zai_models_available = []
+        try:
+            registry = get_registry()
+            zai_models_available = [model.id for model in registry.get_all_models() 
+                                  if model.id.startswith("zai-coding-plan/")]
+        except Exception:
+            # If model registry is not available, no z.AI models detected
+            pass
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
@@ -358,12 +368,15 @@ class OpenCodeInstaller(PlatformInstaller):
                 "security_plugin_installed": has_security_plugin,
                 "system_prompt_installed": has_system_prompt,
                 "instructions_configured": has_instructions,
+                "zai_models_available": len(zai_models_available),
+                "zai_model_ids": zai_models_available[:5],  # Show first 5 to avoid flooding details
             },
         )
 
     def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Install OpenCode components."""
         from ..core import InstallResult
+        from spellbook.core.zai_models import get_registry
 
         results = []
 

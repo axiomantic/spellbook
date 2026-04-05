@@ -628,14 +628,21 @@ def init_db(db_path: str = None) -> None:
             project_path TEXT NOT NULL,
             session_id TEXT,
             stack_json TEXT NOT NULL DEFAULT '[]',
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(project_path)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_stint_stack_project
         ON stint_stack(project_path)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stint_stack_session
+        ON stint_stack(session_id)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stint_stack_project_session
+        ON stint_stack(project_path, session_id)
     """)
 
     cursor.execute("""
