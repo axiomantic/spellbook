@@ -27,7 +27,7 @@ uv run python scripts/update_context_files.py
 On session start in this project, check if there's a GitHub pre-release newer than the latest full release:
 
 ```bash
-gh release list --limit 5 --repo elijahrutschman/spellbook
+gh release list --limit 5 --repo axiomantic/spellbook
 ```
 
 If a pre-release exists that is newer than the last actual release, ask: "There's a pre-release (`vX.Y.Z`) ready. Want to promote it to a full release?"

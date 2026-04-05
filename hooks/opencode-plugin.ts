@@ -43,21 +43,20 @@ function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: bo
   }
 }
 
-export default {
-  name: 'spellbook-security',
-  setup(app: any) {
-    app.hook('tool.execute.before', async (ctx: any) => {
-      const toolName = ctx.tool_name || ctx.toolName || '';
-      const toolInput = ctx.tool_input || ctx.toolInput || {};
-
-      // Only check Bash and spawn_claude_session tools
+export default function spellbookSecurityPlugin(context: {
+  project: { name: string; path: string };
+  directory: string;
+  worktree: string;
+}): Record<string, (...args: any[]) => Promise<void>> {
+  return {
+    'tool.execute.before': async (toolName: string, input: any) => {
       if (toolName !== 'Bash' && toolName !== 'spawn_claude_session') {
         return;
       }
 
       const payload = JSON.stringify({
         tool_name: toolName,
-        tool_input: toolInput,
+        tool_input: input,
       });
 
       const result = runSecurityCheck(payload);
@@ -65,20 +64,16 @@ export default {
       if (!result.safe) {
         throw new Error(result.error || 'Blocked by spellbook security check');
       }
-    });
+    },
 
-    app.hook('tool.execute.after', async (ctx: any) => {
-      const toolName = ctx.tool_name || ctx.toolName || '';
-      const toolOutput = ctx.tool_output || ctx.toolOutput || ctx.output || '';
-
+    'tool.execute.after': async (toolName: string, _input: any, output: any) => {
       const payload = JSON.stringify({
         tool_name: toolName,
         tool_input: {},
-        tool_output: typeof toolOutput === 'string' ? toolOutput : JSON.stringify(toolOutput),
+        tool_output: typeof output === 'string' ? output : JSON.stringify(output),
       });
 
-      // Audit logging via --check-output; errors are non-blocking
       runSecurityCheck(payload, ['--check-output']);
-    });
-  },
-};
+    },
+  };
+}

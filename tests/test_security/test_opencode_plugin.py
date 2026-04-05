@@ -86,20 +86,15 @@ class TestPluginSourceStructure:
             f"Plugin source file not found at {PLUGIN_SOURCE}"
         )
 
-    def test_exports_default_object(self):
-        """Plugin must export a default object."""
+    def test_exports_default_function(self):
+        """Plugin must export a default function."""
         content = _read_plugin_source()
-        assert "export default" in content
+        assert "export default function" in content
 
-    def test_has_name_property(self):
-        """Plugin must declare name 'spellbook-security'."""
+    def test_has_plugin_function_name(self):
+        """Plugin function must be named spellbookSecurityPlugin."""
         content = _read_plugin_source()
-        assert "'spellbook-security'" in content or '"spellbook-security"' in content
-
-    def test_has_setup_function(self):
-        """Plugin must have a setup() function."""
-        content = _read_plugin_source()
-        assert "setup(" in content
+        assert "spellbookSecurityPlugin" in content
 
     def test_registers_before_hook(self):
         """Plugin must register a tool.execute.before hook."""
