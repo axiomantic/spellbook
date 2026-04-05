@@ -322,10 +322,137 @@ class GeminiAgentClient(AgentClient):
         result = await self.run(prompt)
         return {"status": "completed", "output": result, "pid": None}
 
+
+class OpencodeAgentClient(AgentClient):
+    """Client for OpenCode CLI via z.AI Coding Plan, emulating the Claude SDK interface via async subprocess.
+
+    Routes all model invocations through opencode run (headless one-shot mode).
+    No direct API calls to z.AI — everything goes through OpenCode.
+    """
+
+    @property
+    def provider(self) -> str:
+        return "opencode"
+
+    async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
+        """Run opencode run asynchronously and yield a single response message.
+        
+        Uses --format json for machine-parseable output.
+        """
+        # Set up on_text callback
+        on_text = self.options.on_text
+        
+        # Build command based on Unified AgentOptions
+        cmd = ["opencode", "run", "--format", "json"]
+        
+        # Model selection
+        if self.options.model:
+            cmd.extend(["-m", self.options.model])
+        else:
+            cmd.extend(["-m", "zai-coding-plan/glm-4.7"])
+        
+        # If a system prompt is provided, prepend it to the prompt
+        if self.options.system_prompt:
+            prompt = f"{self.options.system_prompt}\n\n{prompt}"
+        
+        cmd.append(prompt)
+        
+        # Permission mode is config-based in OpenCode, not CLI flag
+        # Just pass through extra_args for any custom flags
+        
+        if self.options.extra_args:
+            cmd.extend(self.options.extra_args)
+        
+        # Handle environment and prevent recursive CLI detection
+        env = self.options.env.copy()
+        if "OPENCODE" in env:
+            del env["OPENCODE"]
+        
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(self.options.cwd),
+            env=env
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode != 0:
+            err_text = stderr.decode().strip()
+            raise RuntimeError(f"OpenCode CLI failed (code {process.returncode}): {err_text}")
+        
+        # Parse JSONL output
+        content = ""
+        lines = stdout.decode().strip().split("\n")
+        
+        for line in lines:
+            if not line.strip():
+                continue
+            try:
+                import json
+                event = json.loads(line)
+                # OpenCode JSONL events: "message.delta.content.text.value" or similar
+                # We extract the final text content
+                if "message" in event and "delta" in event["message"]:
+                    delta = event["message"]["delta"]
+                    if "content" in delta and "text" in delta["content"]:
+                        text = delta["content"]["text"]
+                        if on_text:
+                            on_text(text)
+                        content += text
+            except json.JSONDecodeError:
+                # Skip non-JSON lines (shouldn't happen with --format json)
+                continue
+        
+        yield AgentMessage(
+            role="assistant",
+            content=content
+        )
+
+    async def run(self, prompt: str) -> str:
+        """Run a single-turn prompt and return the final text.
+        
+        Respects self.options.timeout (seconds). Raises asyncio.TimeoutError
+        if the timeout is exceeded.
+        """
+        async def _inner() -> str:
+            final_text = ""
+            async for msg in self.query(prompt):
+                final_text = msg.content
+            return final_text
+
+        timeout = self.options.timeout
+        if timeout is not None:
+            return await asyncio.wait_for(_inner(), timeout=timeout)
+        return await _inner()
+
+    def spawn_session(self, prompt: str, terminal: Optional[str] = None) -> Dict[str, Any]:
+        """Spawn an interactive terminal session with OpenCode."""
+        from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
+        if terminal is None:
+            terminal = detect_terminal()
+        return spawn_terminal_window(
+            terminal=terminal,
+            prompt=prompt,
+            working_directory=str(self.options.cwd),
+            cli_command="opencode"
+        )
+
+    async def run_subprocess(self, prompt: str) -> Dict[str, Any]:
+        """Run OpenCode CLI as a headless subprocess."""
+        # Reuse the existing query() method which already runs as a subprocess
+        result = await self.run(prompt)
+        return {"status": "completed", "output": result, "pid": None}
+
+
 def get_agent_client(provider: Optional[str] = None, options: Optional[AgentOptions] = None) -> AgentClient:
     """Factory to get the right client."""
     if provider is None:
-        if os.environ.get("GEMINI_CLI"):
+        # Check for OpenCode environment variable
+        if os.environ.get("OPENCODE"):
+            provider = "opencode"
+        elif os.environ.get("GEMINI_CLI"):
             provider = "gemini"
         else:
             provider = "claude"
@@ -334,5 +461,7 @@ def get_agent_client(provider: Optional[str] = None, options: Optional[AgentOpti
         return ClaudeAgentClient(options)
     elif provider == "gemini":
         return GeminiAgentClient(options)
+    elif provider == "opencode":
+        return OpencodeAgentClient(options)
     else:
         raise ValueError(f"Unsupported provider: {provider}")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate diagrams for skills and commands by invoking Claude Code in headless mode.
+Generate diagrams for skills and commands by invoking Claude Code, Gemini CLI, or OpenCode/z.AI in headless mode.
 
 Discovers all skills and commands, classifies them into mandatory/optional tiers,
 detects staleness via SHA256 hash comparison, and regenerates stale or missing
-diagrams using Claude headless with the generating-diagrams skill.
+diagrams using the provider headless with the generating-diagrams skill.
 
 By default, only mandatory-tier items are processed. Use --all to include optional items.
 
@@ -14,6 +14,8 @@ Usage:
     python3 scripts/generate_diagrams.py --interactive  # review each diff before accepting
     python3 scripts/generate_diagrams.py --dry-run
     python3 scripts/generate_diagrams.py --force
+    python3 scripts/generate_diagrams.py --provider opencode
+    python3 scripts/generate_diagrams.py --provider opencode --model "zai-coding-plan/glm-4.7"
     python3 scripts/generate_diagrams.py --filter "implementing-*"
     python3 scripts/generate_diagrams.py --verbose
 """
@@ -340,7 +342,7 @@ def generate_diagram(
     """Generate a diagram for a single item via an LLM provider.
 
     Args:
-        provider: "claude" or "gemini"
+        provider: "claude", "gemini", or "opencode" (z_AI Coding Plan)
         model: model name to pass to the provider
         provider_args: extra arguments for the provider CLI
         write: If True, write the diagram file. If False, return the content
@@ -372,6 +374,16 @@ def generate_diagram(
         ]
         if provider_args:
             cmd.extend(provider_args)
+    elif provider == "opencode":
+        cmd = [
+            "opencode",
+            "run",
+            "-m", model,
+            "--format", "json",
+        ]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
     else:
         return GenerationResult(
             item=item,
@@ -934,11 +946,11 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 
 async def main_async() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
+        description="Generate diagrams for skills and commands via LLM (Claude, Gemini, or OpenCode/z.AI)",
     )
     parser.add_argument(
         "--provider",
-        choices=["claude", "gemini"],
+        choices=["claude", "gemini", "opencode"],
         default="claude",
         help="LLM provider to use (default: %(default)s)",
     )
@@ -1020,6 +1032,8 @@ async def main_async() -> int:
             model = "sonnet"
         elif provider == "gemini":
             model = "gemini-2.5-flash"
+        elif provider == "opencode":
+            model = "zai-coding-plan/glm-4.7"
     
     # Fast model for utility tasks (classification, patching)
     # Use the specified model if provided, otherwise default to a fast one
@@ -1029,6 +1043,8 @@ async def main_async() -> int:
             fast_model = "haiku"
         elif provider == "gemini":
             fast_model = "gemini-2.5-flash"
+        elif provider == "opencode":
+            fast_model = "zai-coding-plan/glm-4.5-air"
 
     # Merge and filter
     all_items = all_skills + all_commands + all_agents
