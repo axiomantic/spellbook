@@ -520,7 +520,7 @@ class TestCLICommandAllowlist:
         """All known CLI commands are accepted."""
         from spellbook.daemon.terminal import _get_cli_command
 
-        for cmd in ["claude", "codex", "gemini", "opencode", "crush"]:
+        for cmd in ["claude", "codex", "gemini", "opencode"]:
             monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", cmd)
             result = _get_cli_command()
             assert result == cmd

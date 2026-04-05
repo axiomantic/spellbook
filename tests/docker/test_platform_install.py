@@ -1,10 +1,10 @@
 """Platform installation tests using the Python installer directly.
 
 Tests cover fresh installs, skill/command availability, context file creation,
-and edge cases for all five supported platforms: claude_code, opencode, codex,
-gemini, and crush.
+and edge cases for all four supported platforms: claude_code, opencode, codex,
+and gemini.
 
-CRITICAL CONSTRAINT: External CLIs (gemini, opencode, codex, crush) are NOT
+CRITICAL CONSTRAINT: External CLIs (gemini, opencode, codex) are NOT
 available in the test environment. Tests call the Python installer classes
 directly and verify the file/config output. For platforms that skip when
 their CLI is absent, the tests verify the skip behavior.
@@ -132,7 +132,7 @@ def _collect_result_components(results: List[InstallResult]) -> set:
 # ---------------------------------------------------------------------------
 
 # Platforms that require their config dir to pre-exist (everything except claude_code).
-_PLATFORMS_NEEDING_CONFIG = ["opencode", "codex", "gemini", "crush"]
+_PLATFORMS_NEEDING_CONFIG = ["opencode", "codex", "gemini"]
 
 
 @pytest.fixture()
@@ -147,7 +147,6 @@ def platform_config_dir(tmp_path: Path, request) -> Path:
         "opencode": tmp_path / ".config" / "opencode",
         "codex": tmp_path / ".codex",
         "gemini": tmp_path / ".gemini",
-        "crush": tmp_path / ".local" / "share" / "crush",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -167,7 +166,6 @@ def test_fresh_install(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
-        "crush": tmp_path / "home" / ".local" / "share" / "crush",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -200,7 +198,7 @@ def test_fresh_install(platform: str, spellbook_dir: Path, tmp_path: Path):
         # Gemini skips when CLI is not available
         if "platform" in actions:
             assert actions["platform"] == "skipped"
-    elif platform in ("opencode", "codex", "crush"):
+    elif platform in ("opencode", "codex"):
         # These platforms install AGENTS.md
         assert "AGENTS.md" in actions or "platform" in actions
 
@@ -217,7 +215,6 @@ def test_skills_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
-        "crush": tmp_path / "home" / ".local" / "share" / "crush",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -242,14 +239,6 @@ def test_skills_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         assert skills_dir.exists()
         skill_links = [p for p in skills_dir.iterdir() if p.is_symlink()]
         assert len(skill_links) >= 3
-
-    elif platform == "crush":
-        # Crush configures skills_paths in crush.json
-        crush_json = config_dir / "crush.json"
-        if crush_json.exists():
-            config = json.loads(crush_json.read_text())
-            skills_paths = config.get("options", {}).get("skills_paths", [])
-            assert len(skills_paths) > 0, "Crush should have skills_paths configured"
 
     elif platform == "opencode":
         # OpenCode uses its own Agent Skills system; skills are NOT symlinked
@@ -281,7 +270,6 @@ def test_commands_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
-        "crush": tmp_path / "home" / ".local" / "share" / "crush",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -299,7 +287,7 @@ def test_commands_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         for link in cmd_links:
             assert link.is_symlink(), f"{link.name} should be a symlink"
 
-    elif platform in ("opencode", "codex", "crush"):
+    elif platform in ("opencode", "codex"):
         # These platforms access commands via AGENTS.md content or MCP.
         # Verify install succeeded for context file component (excluding
         # MCP components that need real daemon infrastructure).
@@ -589,52 +577,6 @@ class TestGemini:
         )
 
 
-class TestCrush:
-    """Tests specific to Crush platform installation."""
-
-    def test_crush_agents_md(self, spellbook_dir: Path, tmp_path: Path):
-        """AGENTS.md is created for Crush with demarcation markers."""
-        config_dir = tmp_path / "home" / ".local" / "share" / "crush"
-        config_dir.mkdir(parents=True)
-
-        installer = get_platform_installer("crush", spellbook_dir, "1.0.0")
-        installer.config_dir = config_dir
-        results = installer.install()
-
-        agents_md = config_dir / "AGENTS.md"
-        assert agents_md.exists(), "AGENTS.md should be created for Crush"
-
-        content = agents_md.read_text()
-        assert MARKER_START_PATTERN.search(content) is not None
-        assert MARKER_END in content
-
-    def test_crush_config_json(self, spellbook_dir: Path, tmp_path: Path):
-        """Crush MCP and skills paths are configured in crush.json."""
-        config_dir = tmp_path / "home" / ".local" / "share" / "crush"
-        config_dir.mkdir(parents=True)
-
-        installer = get_platform_installer("crush", spellbook_dir, "1.0.0")
-        installer.config_dir = config_dir
-        installer.install()
-
-        crush_json = config_dir / "crush.json"
-        assert crush_json.exists(), "crush.json should be created"
-
-        config = json.loads(crush_json.read_text())
-        assert "mcp" in config
-        assert "spellbook" in config["mcp"]
-        assert config["mcp"]["spellbook"]["type"] == "http"
-        assert "url" in config["mcp"]["spellbook"]
-
-        # Skills path should be configured
-        skills_paths = config.get("options", {}).get("skills_paths", [])
-        assert len(skills_paths) > 0, "skills_paths should be configured"
-
-        # Context path should be configured
-        context_paths = config.get("options", {}).get("context_paths", [])
-        assert len(context_paths) > 0, "context_paths should be configured"
-
-
 # ---------------------------------------------------------------------------
 # Edge case tests
 # ---------------------------------------------------------------------------
@@ -680,19 +622,19 @@ class TestEdgeCases:
         """Installer.run() with explicit platforms list processes only those platforms."""
         installer = Installer(spellbook_dir)
 
-        # Run with only crush specified, but crush config dir does not exist.
+        # Run with only codex specified, but codex config dir does not exist.
         # The installer should detect it as unavailable and skip.
-        session = installer.run(platforms=["crush"])
+        session = installer.run(platforms=["codex"])
 
-        crush_results = [r for r in session.results if r.platform == "crush"]
-        assert len(crush_results) >= 1
+        codex_results = [r for r in session.results if r.platform == "codex"]
+        assert len(codex_results) >= 1
 
-        # Crush should be skipped since its config dir does not exist in
-        # the isolated environment (no ~/.local/share/crush), OR if crush
-        # IS available, all non-daemon results should succeed (daemon install
-        # requires system-level service setup that may fail in test envs)
-        skip_results = [r for r in crush_results if r.action == "skipped"]
-        non_daemon_results = [r for r in crush_results if r.component != "mcp_daemon"]
+        # Codex should be skipped since its config dir does not exist in
+        # the isolated environment (no ~/.codex), OR if codex IS available,
+        # all non-daemon results should succeed (daemon install requires
+        # system-level service setup that may fail in test envs)
+        skip_results = [r for r in codex_results if r.action == "skipped"]
+        non_daemon_results = [r for r in codex_results if r.component != "mcp_daemon"]
         assert len(skip_results) >= 1 or all(r.success for r in non_daemon_results)
 
     def test_detect_with_missing_config_dirs(self, spellbook_dir: Path, tmp_path: Path):

@@ -118,7 +118,7 @@ def _resolve_cli_tool_dirs(paths: list[str]) -> list[str]:
     tool.  This captures tools installed via mise, asdf, or other version
     managers whose shim directories are not in the hardcoded PATH list.
     """
-    cli_tools = ["gemini", "claude", "codex", "opencode", "crush"]
+    cli_tools = ["gemini", "claude", "codex", "opencode"]
     resolved = list(paths)
     seen = set(resolved)
     for tool in cli_tools:

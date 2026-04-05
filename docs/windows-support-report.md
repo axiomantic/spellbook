@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-Spellbook currently supports macOS and Linux across five coding agent platforms (Claude Code, OpenCode, Codex, Gemini CLI, Crush). Adding Windows support requires changes across four major areas:
+Spellbook currently supports macOS and Linux across four coding agent platforms (Claude Code, OpenCode, Codex, Gemini CLI). Adding Windows support requires changes across four major areas:
 
 1. **Path handling and config locations** — translating Unix conventions (`~/.local/`, `~/.config/`) to Windows equivalents (`%APPDATA%`, `%LOCALAPPDATA%`)
 2. **Symlink management** — Windows requires admin privileges or Developer Mode for symlinks; fallback strategies (junctions, copies) are needed
@@ -29,7 +29,6 @@ The core Python installer and MCP server are already cross-platform in structure
 | OpenCode | `~/.config/opencode/` | HTTP daemon | `installer/platforms/opencode.py` |
 | Codex | `~/.codex/` | HTTP daemon | `installer/platforms/codex.py` |
 | Gemini CLI | `~/.gemini/` | HTTP daemon | `installer/platforms/gemini.py` |
-| Crush | `~/.local/share/crush/` | HTTP daemon | `installer/platforms/crush.py` |
 
 ### How Installation Works Today
 
@@ -69,7 +68,6 @@ Current paths use Unix conventions via `Path.home()`. While `Path.home()` works 
 | OpenCode | `~/.config/opencode/` | `%APPDATA%\opencode\` |
 | Codex | `~/.codex/` | `%USERPROFILE%\.codex\` |
 | Gemini CLI | `~/.gemini/` | `%USERPROFILE%\.gemini\` |
-| Crush | `~/.local/share/crush/` | `%LOCALAPPDATA%\crush\` |
 
 **Implementation approach:**
 - Add a `get_platform_paths()` function in `installer/config.py` that returns OS-appropriate paths
@@ -267,7 +265,6 @@ Research needed to confirm actual Windows config paths for each tool:
 | OpenCode | `%APPDATA%\opencode\` | Check opencode source for Windows paths |
 | Codex | `%USERPROFILE%\.codex\` | Check codex source for Windows paths |
 | Gemini CLI | `%USERPROFILE%\.gemini\` | Check gemini-cli source for Windows paths |
-| Crush | `%LOCALAPPDATA%\crush\` | Check crush source for Windows paths |
 
 **Action item:** Before implementation, verify each tool's actual Windows config location by checking their source code or documentation. Some tools may use dot-directories under `%USERPROFILE%` even on Windows.
 
@@ -355,7 +352,7 @@ jobs:
 
 - [ ] Fresh Windows 10 install (no Developer Mode)
 - [ ] Fresh Windows 11 install (with Developer Mode)
-- [ ] Install with each supported tool (Claude Code, OpenCode, Codex, Gemini CLI, Crush)
+- [ ] Install with each supported tool (Claude Code, OpenCode, Codex, Gemini CLI)
 - [ ] Uninstall cleanly removes all artifacts
 - [ ] Auto-update works on Windows
 - [ ] MCP server survives restart
@@ -482,7 +479,6 @@ Windows Defender or other AV may flag the MCP server or hook scripts. May need t
 | `installer/platforms/opencode.py` | 2 | Use link abstraction |
 | `installer/platforms/codex.py` | 2 | Use link abstraction |
 | `installer/platforms/gemini.py` | 2 | Use link abstraction |
-| `installer/platforms/crush.py` | 2 | Use link abstraction |
 | `installer/core.py` | 3 | Windows uninstall logic |
 | `spellbook/terminal_utils.py` | 3 | Windows terminal detection |
 | `.github/workflows/test.yml` | 1 | Add windows-latest to matrix |

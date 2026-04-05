@@ -1,6 +1,6 @@
 # Platform Support
 
-Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and Crush have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.
+Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, and Gemini CLI have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.
 
 ## Claude Code
 
@@ -106,51 +106,6 @@ Gemini CLI integration via native extension system. Skills and MCP tools work, b
 - No `Task` tool for subagent orchestration. Skills requiring subagents will inform the user to use Claude Code.
 - Native skill discovery is pending upstream support ([gemini-cli#15327](https://github.com/google-gemini/gemini-cli/issues/15327)). Until then, skills are loaded via the MCP server.
 
-## Crush
-
-**Status:** Basic support
-
-Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills. Crush supports the same Agent Skills format as Claude Code, so skills work natively. Some hooks may not be available.
-
-### Setup
-
-1. Run the installer: `python3 install.py`
-2. The installer:
-   - Creates `~/.local/share/crush/AGENTS.md` with spellbook context
-   - Registers spellbook MCP server in `~/.local/share/crush/crush.json`
-   - Adds `~/.claude/skills` to `options.skills_paths` for shared skills
-   - Adds the context file to `options.context_paths`
-
-### Features
-
-- Context and instructions via AGENTS.md
-- MCP server for spellbook tools
-- Native Agent Skills support (same SKILL.md format as Claude Code)
-- Shared skills with Claude Code via `~/.claude/skills`
-
-### Notes
-
-Crush has native support for the Agent Skills open standard (the same format used by Claude Code). The installer configures Crush to read skills from the Claude Code skills directory (`~/.claude/skills`), so installing spellbook for Claude Code first ensures skills are available for both platforms.
-
-### Configuration
-
-Crush stores its configuration in `~/.local/share/crush/crush.json`. The installer adds:
-
-```json
-{
-  "options": {
-    "skills_paths": ["~/.claude/skills"],
-    "context_paths": ["~/.local/share/crush/AGENTS.md"]
-  },
-  "mcp": {
-    "spellbook": {
-      "type": "http",
-      "url": "http://127.0.0.1:8765/mcp"
-    }
-  }
-}
-```
-
 ## Contributing Platform Support
 
-If you use OpenCode, Codex, Gemini CLI, or Crush and want fuller Spellbook coverage, contributions are welcome. See the [Porting Guide](../contributing/porting-to-your-assistant.md) for how to add or extend platform support.
+If you use OpenCode, Codex, or Gemini CLI and want fuller Spellbook coverage, contributions are welcome. See the [Porting Guide](../contributing/porting-to-your-assistant.md) for how to add or extend platform support.

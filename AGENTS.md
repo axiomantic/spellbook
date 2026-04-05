@@ -56,7 +56,7 @@ When a pre-commit hook fails, it often generates or modifies files. Stage those 
 ## Architecture Notes
 
 - The MCP server (`spellbook/`) runs as a persistent daemon, not inline with the CLI
-- The installer (`installer/`) handles multi-platform installation (Claude Code, OpenCode, Codex, Gemini CLI, Crush)
+- The installer (`installer/`) handles multi-platform installation (Claude Code, OpenCode, Codex, Gemini CLI)
 - Skills and commands are markdown files with YAML frontmatter, loaded dynamically by the AI assistant
 - Hooks are bash/python scripts installed into the AI assistant's hook system
 - The `extensions/` directory contains platform-specific plugins (e.g., OpenCode workflow state)
@@ -81,9 +81,6 @@ Claude Code is the **primary** supported platform with full support. The others 
 | OpenCode | Basic | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
 | Codex | Basic | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
 | Gemini CLI | Basic | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
-| Crush | Basic | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
-
-**Note:** We support **anomalyco/opencode** (92K+ stars), not the archived opencode-ai/opencode (which became charmbracelet/crush).
 
 ## Invariant Principles
 
@@ -109,7 +106,7 @@ spellbook/
 ├── commands/            # Library commands (shipped)
 ├── agents/              # Agent definitions
 ├── installer/           # Multi-platform installer
-│   ├── platforms/       # claude_code, opencode, codex, gemini, crush
+│   ├── platforms/       # claude_code, opencode, codex, gemini
 │   └── components/      # context_files, symlinks, mcp
 ├── spellbook/           # Python package (three-layer architecture)
 │   ├── core/            # Config, DB, auth, models, compat
@@ -311,5 +308,5 @@ Before any commit, verify:
 3. Allow hooks to regenerate docs
 
 <FINAL_EMPHASIS>
-Every library change ships to users across five platforms. Skipping tests or documentation means breaking real developer environments. Run the checklist. Every time.
+Every library change ships to users across four platforms. Skipping tests or documentation means breaking real developer environments. Run the checklist. Every time.
 </FINAL_EMPHASIS>

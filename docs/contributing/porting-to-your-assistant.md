@@ -47,7 +47,6 @@ Your coding assistant must support **agent skills** (also called "agent prompts"
 | OpenCode | Reads from `~/.claude/skills/*` | Same format as Claude Code |
 | Codex | `AGENTS.md` with skill definitions | Intent-based matching |
 | Gemini CLI | Extension with skill files | Native extension system |
-| Crush | `~/.claude/skills/*` via config | Same format as Claude Code |
 
 ### What Does NOT Work
 
