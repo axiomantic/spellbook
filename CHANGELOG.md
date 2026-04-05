@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-04-04
+
+### Added
+- **`pr-dance` command**: New command that loops a PR through iterative CI + bot review cycles until merge-ready. Bot-agnostic with user-configurable review bot preferences stored in CLAUDE.md (project or global level)
+- **"Create PR + PR dance" integration option**: Option 3 in `finishing-a-development-branch` skill creates a PR and immediately starts the PR dance loop via subagent
+
+### Changed
+- **`finishing-a-development-branch`**: Expanded from 4 to 5 options (new option 3 for PR + dance, renumbered keep/discard to 4/5)
+- **`finish-branch-execute`**: Added Option 3 handler that dispatches `pr-dance` subagent after PR creation
+
+### Fixed
+- **Diagram generation script**: Classification and patching now use CLI subprocesses with inherited stderr instead of the SDK, so AI output is visible during `generate_diagrams.py --interactive` and calls have a 120s timeout instead of hanging indefinitely
+
 ## [0.42.0] - 2026-04-04
 
 ### Added

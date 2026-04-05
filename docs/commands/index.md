@@ -73,6 +73,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/polish-repo-identity](polish-repo-identity.md) | Phase 3 of polish-repo: Visual identity, badges, GitHub metadata, topics, and do... | spellbook |
 | [/polish-repo-naming](polish-repo-naming.md) | Phase 3 of polish-repo: Naming workshop, tagline crafting, and positioning strat... | spellbook |
 | [/polish-repo-readme](polish-repo-readme.md) | Phase 3 of polish-repo: README authoring from scratch, improvement, or replaceme... | spellbook |
+| [/pr-dance](pr-dance.md) | Loop a PR through CI and bot review until merge-ready. Use when user says '/pr-d... | spellbook |
 | [/pr-distill](pr-distill.md) | Analyze a PR and generate a review distillation report that categorizes changes ... | spellbook |
 | [/pr-distill-bless](pr-distill-bless.md) | Save a discovered pattern for future PR distillation, adding it to the blessed p... | spellbook |
 | [/reflexion-analyze](reflexion-analyze.md) | Steps 1-3 of reflexion: Parse feedback, categorize root causes, store reflection... | spellbook |

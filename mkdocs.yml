@@ -271,6 +271,7 @@ nav:
       - commands/polish-repo-readme.md
       - commands/pr-distill.md
       - commands/pr-distill-bless.md
+      - commands/pr-dance.md
       - commands/reflexion-analyze.md
       - commands/request-review-artifacts.md
       - commands/request-review-execute.md

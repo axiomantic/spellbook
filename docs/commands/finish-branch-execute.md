@@ -2,15 +2,14 @@
 
 ## Workflow Diagram
 
-Execute the user's chosen integration option: local merge, PR creation, keep as-is, or discard with explicit confirmation.
-
 ```mermaid
 flowchart TD
     Start([User Choice Received]) --> OptionSwitch{"Which Option?"}
     OptionSwitch -->|Option 1: Merge| CheckoutBase["Checkout Base Branch"]
     OptionSwitch -->|Option 2: PR| PushBranch["Push Branch\nto Origin"]
-    OptionSwitch -->|Option 3: Keep| ReportKeep([Report: Keeping\nBranch As-Is])
-    OptionSwitch -->|Option 4: Discard| ShowWarning["Show Discard\nWarning"]
+    OptionSwitch -->|Option 3: PR+Dance| PushBranch2["Push Branch\nto Origin"]
+    OptionSwitch -->|Option 4: Keep| ReportKeep([Report: Keeping\nBranch As-Is])
+    OptionSwitch -->|Option 5: Discard| ShowWarning["Show Discard\nWarning"]
     CheckoutBase --> PullLatest["Pull Latest\nBase Branch"]
     PullLatest --> MergeBranch["Merge Feature\nBranch"]
     MergeBranch --> PostMergeTest["Run Post-Merge\nTests"]
@@ -21,6 +20,10 @@ flowchart TD
     PushBranch --> CreatePR["Create PR\nvia gh"]
     CreatePR --> ReportURL["Report PR URL"]
     ReportURL --> ToCleanup2["Invoke\nfinish-branch-cleanup"]
+    PushBranch2 --> CreatePR2["Create PR\nvia gh"]
+    CreatePR2 --> ReportURL2["Report PR URL"]
+    ReportURL2 --> ExecutePRDance["Dispatch Subagent\nto Execute pr-dance"]
+    ExecutePRDance --> ToCleanup4["Invoke\nfinish-branch-cleanup"]
     ShowWarning --> TypeConfirm{"User Types\n'discard'?"}
     TypeConfirm -->|No / Partial| RejectDiscard([Discard Cancelled])
     TypeConfirm -->|Yes| CheckoutDiscard["Checkout Base\nBranch"]
@@ -29,6 +32,7 @@ flowchart TD
     ToCleanup1 --> Done([Integration Complete])
     ToCleanup2 --> Done
     ToCleanup3 --> Done
+    ToCleanup4 --> Done
 
     style Start fill:#4CAF50,color:#fff
     style Done fill:#4CAF50,color:#fff
@@ -43,25 +47,27 @@ flowchart TD
     style PushBranch fill:#2196F3,color:#fff
     style CreatePR fill:#2196F3,color:#fff
     style ReportURL fill:#2196F3,color:#fff
+    style PushBranch2 fill:#2196F3,color:#fff
+    style CreatePR2 fill:#2196F3,color:#fff
+    style ReportURL2 fill:#2196F3,color:#fff
+    style ExecutePRDance fill:#4CAF50,color:#fff
     style ShowWarning fill:#2196F3,color:#fff
     style CheckoutDiscard fill:#2196F3,color:#fff
     style ForceDelete fill:#2196F3,color:#fff
     style ToCleanup1 fill:#4CAF50,color:#fff
     style ToCleanup2 fill:#4CAF50,color:#fff
     style ToCleanup3 fill:#4CAF50,color:#fff
+    style ToCleanup4 fill:#4CAF50,color:#fff
     style OptionSwitch fill:#FF9800,color:#fff
     style TypeConfirm fill:#FF9800,color:#fff
     style MergeTestGate fill:#f44336,color:#fff
 ```
 
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+**Changes made:**
+- Added Option 3 branch (PR+Dance): `OptionSwitch -->|Option 3: PR+Dance| PushBranch2`
+- Created separate PR+Dance path: PushBranch2 → CreatePR2 → ReportURL2 → ExecutePRDance → ToCleanup4
+- Renumbered Option 3 (Keep) → Option 4, Option 4 (Discard) → Option 5
+- Styled ExecutePRDance as green (skill invocation) with ToCleanup4 convergence to Done
 
 ## Command Content
 
@@ -83,7 +89,7 @@ Release Engineer. Your reputation depends on clean integrations that never break
 - Auto-executing Option 4 (discard) in autonomous mode without typed confirmation
 </FORBIDDEN>
 
-Context: Steps 1-3 complete. You have: chosen option number, feature branch name, base branch name, worktree path (if applicable).
+Context: Steps 1-3 complete. You have: chosen option number (1-5), feature branch name, base branch name, worktree path (if applicable).
 
 ---
 
@@ -125,7 +131,19 @@ Report the PR URL to the user. After PR creation: invoke `finish-branch-cleanup`
 
 ---
 
-## Option 3: Keep As-Is
+## Option 3: Push, Create PR, and Do the PR Dance
+
+Execute Option 2 steps first (push + create PR). Then dispatch a subagent with command: `pr-dance`
+
+Provide context: PR number/URL from the PR just created, repo owner, feature branch name.
+
+The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See `pr-dance` command for the full protocol.
+
+After the subagent completes: invoke `finish-branch-cleanup`.
+
+---
+
+## Option 4: Keep As-Is
 
 Report: "Keeping branch `<name>`. Worktree preserved at `<path>`."
 
@@ -133,7 +151,7 @@ Report: "Keeping branch `<name>`. Worktree preserved at `<path>`."
 
 ---
 
-## Option 4: Discard
+## Option 5: Discard
 
 <CRITICAL>
 **Confirm first with explicit typed confirmation:**

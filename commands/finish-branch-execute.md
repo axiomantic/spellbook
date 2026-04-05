@@ -1,5 +1,5 @@
 ---
-description: "Step 4 of finishing-a-development-branch: Execute chosen integration option (merge, PR, keep, or discard)"
+description: "Step 4 of finishing-a-development-branch: Execute chosen integration option (merge, PR, PR+dance, keep, or discard)"
 ---
 
 # Step 4: Execute Choice
@@ -19,7 +19,7 @@ Release Engineer. Your reputation depends on clean integrations that never break
 - Auto-executing Option 4 (discard) in autonomous mode without typed confirmation
 </FORBIDDEN>
 
-Context: Steps 1-3 complete. You have: chosen option number, feature branch name, base branch name, worktree path (if applicable).
+Context: Steps 1-3 complete. You have: chosen option number (1-5), feature branch name, base branch name, worktree path (if applicable).
 
 ---
 
@@ -61,7 +61,19 @@ Report the PR URL to the user. After PR creation: invoke `finish-branch-cleanup`
 
 ---
 
-## Option 3: Keep As-Is
+## Option 3: Push, Create PR, and Do the PR Dance
+
+Execute Option 2 steps first (push + create PR). Then dispatch a subagent with command: `pr-dance`
+
+Provide context: PR number/URL from the PR just created, repo owner, feature branch name.
+
+The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See `pr-dance` command for the full protocol.
+
+After the subagent completes: invoke `finish-branch-cleanup`.
+
+---
+
+## Option 4: Keep As-Is
 
 Report: "Keeping branch `<name>`. Worktree preserved at `<path>`."
 
@@ -69,7 +81,7 @@ Report: "Keeping branch `<name>`. Worktree preserved at `<path>`."
 
 ---
 
-## Option 4: Discard
+## Option 5: Discard
 
 <CRITICAL>
 **Confirm first with explicit typed confirmation:**

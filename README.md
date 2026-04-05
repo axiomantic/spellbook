@@ -312,6 +312,7 @@ Reusable workflows for structured development:
 | [/execute-work-packets-seq] | Execute all packets sequentially |
 | [/merge-work-packets] | Merge completed packets with QA gates |
 | [/mode] | Switch session mode (fun/tarot/off) |
+| [/pr-dance] | Loop PR through CI + bot review until merge-ready |
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
 | [/polish-repo-audit] | Phases 0-1 of polish-repo: Reconnaissance gathering and audit scorecard generation |
@@ -411,6 +412,7 @@ Reusable workflows for structured development:
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
+[/pr-dance]: https://axiomantic.github.io/spellbook/latest/commands/pr-dance/
 [/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
 [/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
 [/polish-repo-audit]: https://axiomantic.github.io/spellbook/latest/commands/polish-repo-audit/

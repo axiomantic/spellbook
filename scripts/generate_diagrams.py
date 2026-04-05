@@ -30,8 +30,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
 
-from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
-
 from diagram_config import (
     AGENTS_DIR,
     COMMANDS_DIR,
@@ -526,7 +524,7 @@ def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
 # Smart update: diff retrieval, classification, and patching
 # ---------------------------------------------------------------------------
 
-# Classification and patching now use the Unified SDK (no subprocess timeouts needed)
+# Classification and patching use CLI subprocesses with stderr inherited for visibility
 
 CLASSIFICATION_PROMPT = """\
 You are classifying whether a source file change affects its workflow diagram.
@@ -612,6 +610,34 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
+def _clean_env() -> dict[str, str]:
+    """Environment dict with CLI-detection vars removed."""
+    return {k: v for k, v in os.environ.items()
+            if k not in ("CLAUDECODE", "GEMINI_CLI", "CLAUDE_CODE",
+                         "CLAUDE_PROJECT_DIR", "CLAUDE_ENV_FILE")}
+
+
+def _build_cli_cmd(
+    provider: str, model: str, prompt: str,
+    provider_args: list[str] | None = None,
+) -> list[str]:
+    """Build a CLI command for classification/patching."""
+    if provider == "claude":
+        cmd = ["claude", "--print", "--model", model,
+               "--dangerously-skip-permissions"]
+        if provider_args:
+            cmd.extend(provider_args)
+        cmd.append(prompt)
+    elif provider == "gemini":
+        cmd = ["gemini", "--prompt", prompt, "--model", model,
+               "--yolo", "-o", "text"]
+        if provider_args:
+            cmd.extend(provider_args)
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
+    return cmd
+
+
 async def classify_change(
     source_path: Path,
     diagram_path: Path,
@@ -620,34 +646,43 @@ async def classify_change(
     model: str = "haiku",
     provider_args: list[str] | None = None,
 ) -> str:
-    """Classify a source file change via Unified SDK."""
+    """Classify a source file change via CLI subprocess."""
     diff = get_source_diff(source_path)
     if not diff:
         return "REGENERATE"
 
     prompt = CLASSIFICATION_PROMPT.format(diff=diff)
-    
-    options = AgentOptions(
-        cwd=REPO_ROOT,
-        model=model,
-        extra_args=provider_args or []
-    )
-    client = get_agent_client(provider, options)
 
-    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
+    cmd = _build_cli_cmd(provider, model, prompt, provider_args)
+
+    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", flush=True)
 
     try:
-        classification = await client.run(prompt)
-        classification = classification.strip().upper()
-    except Exception:
-        print(" REGENERATE")
+        result = subprocess.run(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=None,  # inherit parent stderr so output is visible
+            text=True,
+            cwd=REPO_ROOT,
+            env=_clean_env(),
+            timeout=120,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        print(f"  -> REGENERATE ({e})")
         return "REGENERATE"
 
+    if result.returncode != 0:
+        print("  -> REGENERATE (non-zero exit)")
+        return "REGENERATE"
+
+    classification = result.stdout.strip().upper()
+
     if classification in ("STAMP", "PATCH", "REGENERATE"):
-        print(f" {classification}")
+        print(f"  -> {classification}")
         return classification
 
-    print(" REGENERATE")
+    print(f"  -> REGENERATE (unexpected output: {classification[:80]})")
     return "REGENERATE"
 
 
@@ -660,34 +695,43 @@ async def patch_diagram(
     model: str = "haiku",
     provider_args: list[str] | None = None,
 ) -> str | None:
-    """Surgically patch an existing diagram via Unified SDK."""
+    """Surgically patch an existing diagram via CLI subprocess."""
     if not diagram_path.exists():
         return None
 
     existing_diagram = diagram_path.read_text(encoding="utf-8")
     prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
-    
-    options = AgentOptions(
-        cwd=REPO_ROOT,
-        model=model,
-        extra_args=provider_args or []
-    )
-    client = get_agent_client(provider, options)
 
-    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
+    cmd = _build_cli_cmd(provider, model, prompt, provider_args)
+
+    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", flush=True)
 
     try:
-        output = await client.run(prompt)
-        output = output.strip()
-    except Exception:
-        print(" failed, falling back to regeneration")
+        result = subprocess.run(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=None,  # inherit parent stderr so output is visible
+            text=True,
+            cwd=REPO_ROOT,
+            env=_clean_env(),
+            timeout=120,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        print("  -> failed, falling back to regeneration")
         return None
+
+    if result.returncode != 0:
+        print("  -> failed, falling back to regeneration")
+        return None
+
+    output = result.stdout.strip()
 
     if not output or output == "CANNOT_PATCH":
-        print(" failed, falling back to regeneration")
+        print("  -> failed, falling back to regeneration")
         return None
 
-    print(" done")
+    print("  -> done")
     return output
 
 

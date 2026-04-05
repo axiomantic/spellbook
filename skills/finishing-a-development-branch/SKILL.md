@@ -16,9 +16,9 @@ Release Engineer. Your reputation depends on clean integrations that never break
 ## Invariant Principles
 
 1. **Tests Gate Everything** - Never present options until tests pass. Never merge without verifying tests on merged result.
-2. **Structured Choice Over Open Questions** - Present exactly 4 options, never "what should I do?"
-3. **Destruction Requires Proof** - Option 4 (Discard) demands typed "discard" confirmation. No shortcuts.
-4. **Worktree Lifecycle Matches Work State** - Cleanup only for Options 1 (merged) and 4 (discarded). Keep for Options 2 and 3.
+2. **Structured Choice Over Open Questions** - Present exactly 5 options, never "what should I do?"
+3. **Destruction Requires Proof** - Option 5 (Discard) demands typed "discard" confirmation. No shortcuts.
+4. **Worktree Lifecycle Matches Work State** - Cleanup only for Options 1 (merged) and 5 (discarded). Keep for Options 2, 3, and 4.
 
 ---
 
@@ -36,8 +36,8 @@ Release Engineer. Your reputation depends on clean integrations that never break
 | Output | Type | Description |
 |--------|------|-------------|
 | Integration result | Action | Merge, PR, preserved branch, or discarded branch |
-| PR URL | Inline | GitHub PR URL (Option 2 only) |
-| Worktree state | State | Removed (Options 1, 4) or preserved (Options 2, 3) |
+| PR URL | Inline | GitHub PR URL (Options 2, 3 only) |
+| Worktree state | State | Removed (Options 1, 5) or preserved (Options 2, 3, 4) |
 
 ---
 
@@ -55,7 +55,7 @@ Check context for autonomous mode indicators: "Mode: AUTONOMOUS", "autonomous mo
 <CRITICAL>
 **Circuit breakers (always pause):**
 - Tests failing - NEVER proceed
-- Option 4 (Discard) selected - ALWAYS require typed confirmation, never auto-execute
+- Option 5 (Discard) selected - ALWAYS require typed confirmation, never auto-execute
 </CRITICAL>
 
 ---
@@ -116,15 +116,16 @@ If the command fails or is ambiguous, ask: "This branch split from main - is tha
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+Present exactly these 5 options:
 
 ```
 Implementation complete. What would you like to do?
 
 1. Merge back to <base-branch> locally
 2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+3. Push, create a PR, and do the PR dance (iterative CI + bot review until merge-ready)
+4. Keep the branch as-is (I'll handle it later)
+5. Discard this work
 
 Which option?
 ```
@@ -141,7 +142,7 @@ Provide context: chosen option number, feature branch name, base branch name, wo
 
 **Dispatch subagent** with command: `finish-branch-cleanup`
 
-Provide context: chosen option number, worktree path. Note: Option 3 skips cleanup entirely.
+Provide context: chosen option number, worktree path. Note: Option 4 skips cleanup entirely.
 
 ---
 
@@ -151,8 +152,9 @@ Provide context: chosen option number, worktree path. Note: Option 3 skips clean
 |--------|-------|------|---------------|----------------|
 | 1. Merge locally | Yes | - | - | Yes |
 | 2. Create PR | - | Yes | Yes | - |
-| 3. Keep as-is | - | - | Yes | - |
-| 4. Discard | - | - | - | Yes (force) |
+| 3. Create PR + PR dance | - | Yes | Yes | - |
+| 4. Keep as-is | - | - | Yes | - |
+| 5. Discard | - | - | - | Yes (force) |
 
 ---
 
@@ -164,8 +166,8 @@ Provide context: chosen option number, worktree path. Note: Option 3 skips clean
 - Deleting branches without typed "discard" confirmation
 - Force-pushing without explicit user request
 - Presenting open-ended questions instead of structured options
-- Cleaning up worktrees for Options 2 or 3
-- Accepting partial confirmation for Option 4
+- Cleaning up worktrees for Options 2, 3, or 4
+- Accepting partial confirmation for Option 5
 </FORBIDDEN>
 
 ---
@@ -177,8 +179,8 @@ Before completing:
 - [ ] Tests pass on current branch
 - [ ] Tests pass after merge (Option 1 only)
 - [ ] User explicitly selected one of the 4 options
-- [ ] Typed "discard" received (Option 4 only)
-- [ ] Worktree cleaned only for Options 1 or 4
+- [ ] Typed "discard" received (Option 5 only)
+- [ ] Worktree cleaned only for Options 1 or 5
 
 IF ANY unchecked: STOP and fix.
 </reflection>
