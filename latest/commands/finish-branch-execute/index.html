@@ -5688,17 +5688,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#command-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6321,6 +6310,34 @@
     
   
     /pr-distill-bless
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pr-dance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /pr-dance
   
 
     
@@ -7741,17 +7758,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#command-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7784,13 +7790,13 @@
 
 <h1 id="finish-branch-execute">/finish-branch-execute<a class="headerlink" href="#finish-branch-execute" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Execute the user's chosen integration option: local merge, PR creation, keep as-is, or discard with explicit confirmation.</p>
 <pre class="mermaid"><code>flowchart TD
     Start([User Choice Received]) --&gt; OptionSwitch{"Which Option?"}
     OptionSwitch --&gt;|Option 1: Merge| CheckoutBase["Checkout Base Branch"]
     OptionSwitch --&gt;|Option 2: PR| PushBranch["Push Branch\nto Origin"]
-    OptionSwitch --&gt;|Option 3: Keep| ReportKeep([Report: Keeping\nBranch As-Is])
-    OptionSwitch --&gt;|Option 4: Discard| ShowWarning["Show Discard\nWarning"]
+    OptionSwitch --&gt;|Option 3: PR+Dance| PushBranch2["Push Branch\nto Origin"]
+    OptionSwitch --&gt;|Option 4: Keep| ReportKeep([Report: Keeping\nBranch As-Is])
+    OptionSwitch --&gt;|Option 5: Discard| ShowWarning["Show Discard\nWarning"]
     CheckoutBase --&gt; PullLatest["Pull Latest\nBase Branch"]
     PullLatest --&gt; MergeBranch["Merge Feature\nBranch"]
     MergeBranch --&gt; PostMergeTest["Run Post-Merge\nTests"]
@@ -7801,6 +7807,10 @@
     PushBranch --&gt; CreatePR["Create PR\nvia gh"]
     CreatePR --&gt; ReportURL["Report PR URL"]
     ReportURL --&gt; ToCleanup2["Invoke\nfinish-branch-cleanup"]
+    PushBranch2 --&gt; CreatePR2["Create PR\nvia gh"]
+    CreatePR2 --&gt; ReportURL2["Report PR URL"]
+    ReportURL2 --&gt; ExecutePRDance["Dispatch Subagent\nto Execute pr-dance"]
+    ExecutePRDance --&gt; ToCleanup4["Invoke\nfinish-branch-cleanup"]
     ShowWarning --&gt; TypeConfirm{"User Types\n'discard'?"}
     TypeConfirm --&gt;|No / Partial| RejectDiscard([Discard Cancelled])
     TypeConfirm --&gt;|Yes| CheckoutDiscard["Checkout Base\nBranch"]
@@ -7809,6 +7819,7 @@
     ToCleanup1 --&gt; Done([Integration Complete])
     ToCleanup2 --&gt; Done
     ToCleanup3 --&gt; Done
+    ToCleanup4 --&gt; Done
 
     style Start fill:#4CAF50,color:#fff
     style Done fill:#4CAF50,color:#fff
@@ -7823,42 +7834,25 @@
     style PushBranch fill:#2196F3,color:#fff
     style CreatePR fill:#2196F3,color:#fff
     style ReportURL fill:#2196F3,color:#fff
+    style PushBranch2 fill:#2196F3,color:#fff
+    style CreatePR2 fill:#2196F3,color:#fff
+    style ReportURL2 fill:#2196F3,color:#fff
+    style ExecutePRDance fill:#4CAF50,color:#fff
     style ShowWarning fill:#2196F3,color:#fff
     style CheckoutDiscard fill:#2196F3,color:#fff
     style ForceDelete fill:#2196F3,color:#fff
     style ToCleanup1 fill:#4CAF50,color:#fff
     style ToCleanup2 fill:#4CAF50,color:#fff
     style ToCleanup3 fill:#4CAF50,color:#fff
+    style ToCleanup4 fill:#4CAF50,color:#fff
     style OptionSwitch fill:#FF9800,color:#fff
     style TypeConfirm fill:#FF9800,color:#fff
     style MergeTestGate fill:#f44336,color:#fff</code></pre>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Color</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
-</tr>
-<tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
+<p><strong>Changes made:</strong>
+- Added Option 3 branch (PR+Dance): <code>OptionSwitch --&gt;|Option 3: PR+Dance| PushBranch2</code>
+- Created separate PR+Dance path: PushBranch2 → CreatePR2 → ReportURL2 → ExecutePRDance → ToCleanup4
+- Renumbered Option 3 (Keep) → Option 4, Option 4 (Discard) → Option 5
+- Styled ExecutePRDance as green (skill invocation) with ToCleanup4 convergence to Done</p>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Step 4: Execute Choice</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -7877,7 +7871,7 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Auto-executing Option 4 (discard) in autonomous mode without typed confirmation
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Context: Steps 1-3 complete. You have: chosen option number, feature branch name, base branch name, worktree path (if applicable).
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Context: Steps 1-3 complete. You have: chosen option number (1-5), feature branch name, base branch name, worktree path (if applicable).
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>---
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
@@ -7919,42 +7913,54 @@
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>---
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Option 3: Keep As-Is</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Option 3: Push, Create PR, and Do the PR Dance</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>Report: &quot;Keeping branch <span class="sb">`&lt;name&gt;`</span>. Worktree preserved at <span class="sb">`&lt;path&gt;`</span>.&quot;
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>Execute Option 2 steps first (push + create PR). Then dispatch a subagent with command: <span class="sb">`pr-dance`</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>Provide context: PR number/URL from the PR just created, repo owner, feature branch name.
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>---
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See <span class="sb">`pr-dance`</span> command for the full protocol.
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gu">## Option 4: Discard</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>After the subagent completes: invoke <span class="sb">`finish-branch-cleanup`</span>.
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="gs">**Confirm first with explicit typed confirmation:**</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">```</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">This will permanently delete:</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">- Branch &lt;name&gt;</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">- All commits: &lt;commit-list&gt;</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">- Worktree at &lt;path&gt;</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>---
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Option 4: Keep As-Is</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>Report: &quot;Keeping branch <span class="sb">`&lt;name&gt;`</span>. Worktree preserved at <span class="sb">`&lt;path&gt;`</span>.&quot;
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">Type &#39;discard&#39; to confirm.</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Wait for exact string <span class="sb">`discard`</span>. Do NOT proceed on partial match.
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>Do NOT auto-execute in autonomous mode. This is a circuit breaker.
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>If confirmed:
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>git<span class="w"> </span>checkout<span class="w"> </span>&lt;base-branch&gt;
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>&lt;feature-branch&gt;
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>After confirmed discard: invoke <span class="sb">`finish-branch-cleanup`</span>.
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>---
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Option 5: Discard</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Confirm first with explicit typed confirmation:**</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">```</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">This will permanently delete:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">- Branch &lt;name&gt;</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">- All commits: &lt;commit-list&gt;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">- Worktree at &lt;path&gt;</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">Type &#39;discard&#39; to confirm.</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">```</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>Execute the strategy the user chose — nothing more, nothing less. Clean integrations protect the team. When in doubt on discard: stop and ask again.
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Wait for exact string <span class="sb">`discard`</span>. Do NOT proceed on partial match.
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>Do NOT auto-execute in autonomous mode. This is a circuit breaker.
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>If confirmed:
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>git<span class="w"> </span>checkout<span class="w"> </span>&lt;base-branch&gt;
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>&lt;feature-branch&gt;
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">```</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>After confirmed discard: invoke <span class="sb">`finish-branch-cleanup`</span>.
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>Execute the strategy the user chose — nothing more, nothing less. Clean integrations protect the team. When in doubt on discard: stop and ask again.
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
