@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.1] - 2026-04-04
+
+### Fixed
+- **PromptSleuth installer description**: Changed "Requires an Anthropic API key" to "Requires an LLM provider (Claude Code or Gemini CLI)" since sleuth uses the unified SDK, not a direct API key
+- **Dead config key**: Removed vestigial `security.sleuth.api_key` config key and default that nothing read
+
 ## [0.43.0] - 2026-04-04
 
 ### Added

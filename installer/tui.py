@@ -121,7 +121,8 @@ def get_feature_groups() -> List[Dict[str, Any]]:
                     "name": "PromptSleuth Semantic Analysis",
                     "description": (
                         "LLM-based semantic intent classification for "
-                        "external content. Requires an Anthropic API key."
+                        "external content. Requires an LLM provider "
+                        "(Claude Code or Gemini CLI)."
                     ),
                     "default": False,
                 },

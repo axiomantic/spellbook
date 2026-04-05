@@ -36,7 +36,6 @@ def get_security_config_keys() -> List[str]:
         "security.crypto.auto_sign_on_install",
         # PromptSleuth
         "security.sleuth.enabled",
-        "security.sleuth.api_key",
         "security.sleuth.max_content_bytes",
         "security.sleuth.max_tokens_per_check",
         "security.sleuth.calls_per_session",
@@ -68,7 +67,6 @@ def get_default_security_config() -> Dict[str, Any]:
         "security.crypto.auto_sign_on_install": True,
         # PromptSleuth (disabled by default -- requires API key)
         "security.sleuth.enabled": False,
-        "security.sleuth.api_key": None,
         "security.sleuth.max_content_bytes": 50000,
         "security.sleuth.max_tokens_per_check": 1024,
         "security.sleuth.calls_per_session": 50,
