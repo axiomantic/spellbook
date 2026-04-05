@@ -507,7 +507,7 @@ class Uninstaller:
         if platforms is None:
             platforms = self.detect_installed_platforms()
 
-        # Pre-resolve Claude dirs for cross-platform context shared with Claude Code installer
+        # Pre-resolve Claude dirs for cross-platform context (used by ClaudeCodeInstaller to prevent redundant CLAUDE.md updates)
         claude_dirs = resolve_config_dirs(
             "claude_code",
             cli_dirs=(config_dir_overrides or {}).get("claude_code"),
