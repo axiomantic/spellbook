@@ -4,10 +4,13 @@ Canonical location for database utilities. This module was migrated from
 spellbook.core.db as part of the three-layer architecture reorganization.
 """
 
+import logging
 import os
 import sqlite3
 import time
 import threading
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 
 
@@ -85,6 +88,62 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
 
         _connections[db_path] = (conn, time.time())
         return conn
+
+
+def _migrate_stint_stack_schema(cursor):
+    """Ensure stint_stack has NOT NULL on session_id and UNIQUE constraint (idempotent).
+
+    SQLite doesn't support ALTER TABLE ADD CONSTRAINT or ALTER COLUMN, so we
+    must recreate the table if the schema doesn't match. Checks both conditions
+    in a single pass and rebuilds only if needed.
+    """
+    # Check if table exists
+    if not cursor.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='stint_stack'"
+    ).fetchone():
+        return  # Table doesn't exist yet; CREATE TABLE will handle it
+
+    # Check NOT NULL on session_id via PRAGMA
+    columns = cursor.execute("PRAGMA table_info(stint_stack)").fetchall()
+    session_col = next((c for c in columns if c[1] == "session_id"), None)
+    has_not_null = session_col is not None and session_col[3] == 1  # notnull flag
+
+    # Check for UNIQUE(project_path, session_id) via PRAGMA
+    has_correct_unique = False
+    for idx in cursor.execute("PRAGMA index_list(stint_stack)").fetchall():
+        if idx[2]:  # unique flag
+            idx_cols = [
+                r[2] for r in cursor.execute(f"PRAGMA index_info({idx[1]})").fetchall()
+            ]
+            if idx_cols == ["project_path", "session_id"]:
+                has_correct_unique = True
+                break
+
+    if has_not_null and has_correct_unique:
+        return  # Schema already matches target
+
+    cursor.execute("ALTER TABLE stint_stack RENAME TO _stint_stack_old")
+    cursor.execute("""
+        CREATE TABLE stint_stack (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_path TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            stack_json TEXT NOT NULL DEFAULT '[]',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(project_path, session_id)
+        )
+    """)
+    # Migrate legacy rows with NULL session_id to a default value
+    migrated = cursor.execute("SELECT COUNT(*) FROM _stint_stack_old WHERE session_id IS NULL").fetchone()[0]
+    if migrated:
+        logger.info("Migrating %d legacy stint_stack rows with NULL session_id to 'legacy'", migrated)
+    cursor.execute("UPDATE _stint_stack_old SET session_id = 'legacy' WHERE session_id IS NULL")
+    cursor.execute("""
+        INSERT INTO stint_stack (id, project_path, session_id, stack_json, updated_at)
+        SELECT id, project_path, session_id, stack_json, updated_at
+        FROM _stint_stack_old
+    """)
+    cursor.execute("DROP TABLE _stint_stack_old")
 
 
 def _migrate_trust_registry_v2(cursor):
@@ -626,16 +685,19 @@ def init_db(db_path: str = None) -> None:
         CREATE TABLE IF NOT EXISTS stint_stack (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_path TEXT NOT NULL,
-            session_id TEXT,
+            session_id TEXT NOT NULL,
             stack_json TEXT NOT NULL DEFAULT '[]',
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(project_path)
+            UNIQUE(project_path, session_id)
         )
     """)
 
+    # idx_stint_stack_project and idx_stint_stack_project_session are redundant
+    # with the UNIQUE(project_path, session_id) implicit index. Only session_id
+    # alone needs an explicit index for session-scoped lookups.
     cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_stint_stack_project
-        ON stint_stack(project_path)
+        CREATE INDEX IF NOT EXISTS idx_stint_stack_session
+        ON stint_stack(session_id)
     """)
 
     cursor.execute("""
@@ -722,6 +784,9 @@ def init_db(db_path: str = None) -> None:
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_hash ON sleuth_cache(content_hash)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_expires ON sleuth_cache(expires_at)")
+
+    # Migrate stint_stack: ensure NOT NULL + UNIQUE constraint on session_id
+    _migrate_stint_stack_schema(cursor)
 
     # Migrate trust_registry: add signature columns if missing
     _migrate_trust_registry_v2(cursor)

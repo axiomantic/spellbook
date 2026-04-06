@@ -7,6 +7,7 @@ from spellbook.sdk.unified import (
     AgentMessage,
     ClaudeAgentClient,
     GeminiAgentClient,
+    OpencodeAgentClient,
     get_agent_client,
 )
 
@@ -150,22 +151,37 @@ async def test_gemini_agent_client_run():
 
 
 def test_get_agent_client_factory(monkeypatch):
-    # Test auto-detection: with GEMINI_CLI set
+    # Clear all platform env vars to ensure isolation
+    monkeypatch.delenv("OPENCODE", raising=False)
+    monkeypatch.delenv("GEMINI_CLI", raising=False)
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("CLAUDE_ENV_FILE", raising=False)
+
+    # Test auto-detection: with GEMINI_CLI set (and no OPENCODE)
     monkeypatch.setenv("GEMINI_CLI", "1")
     client = get_agent_client()
     assert isinstance(client, GeminiAgentClient)
 
-    # Test auto-detection: without GEMINI_CLI
+    # Test auto-detection: without GEMINI_CLI (falls through to claude)
     monkeypatch.delenv("GEMINI_CLI", raising=False)
     client = get_agent_client()
     assert isinstance(client, ClaudeAgentClient)
 
-    # Test explicit provider
+    # Test auto-detection: with OPENCODE set
+    monkeypatch.setenv("OPENCODE", "1")
+    client = get_agent_client()
+    assert isinstance(client, OpencodeAgentClient)
+
+    # Test explicit provider overrides auto-detection
+    monkeypatch.delenv("OPENCODE", raising=False)
     client = get_agent_client(provider="gemini")
     assert isinstance(client, GeminiAgentClient)
 
     client = get_agent_client(provider="claude")
     assert isinstance(client, ClaudeAgentClient)
+
+    client = get_agent_client(provider="opencode")
+    assert isinstance(client, OpencodeAgentClient)
 
 
 def test_gemini_spawn_session():

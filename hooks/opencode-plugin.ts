@@ -9,10 +9,6 @@
 import { execSync } from 'child_process';
 
 function getCheckCommand(): string {
-  const spellbookDir = process.env.SPELLBOOK_DIR;
-  if (!spellbookDir) {
-    throw new Error('SPELLBOOK_DIR environment variable is not set');
-  }
   return 'python3 -m spellbook.security.check';
 }
 
