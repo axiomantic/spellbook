@@ -345,7 +345,7 @@ NAMING CONVENTIONS:
 | Type | Pattern | Examples |
 |------|---------|----------|
 | Commands | Imperative verb(-noun) | execute-plan, verify, write-plan |
-| Skills | Gerund (-ing) OR Noun-phrase | debugging, test-driven-development, brainstorming |
+| Skills | Gerund (-ing) OR Noun-phrase | debugging, test-driven-development, design-exploration |
 | Agents | Noun-agent (role) | code-reviewer, fact-checker |
 
 RATIONALE:

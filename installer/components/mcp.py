@@ -386,7 +386,7 @@ def ensure_daemon_venv(
         venv_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            # Create venv with --seed to ensure pip is available (required for spaCy workaround)
+            # Create venv with --seed to ensure pip is available
             result = subprocess.run(
                 ["uv", "venv", str(venv_dir), "--python", "3.12", "--seed"],
                 capture_output=True,
@@ -478,8 +478,6 @@ def ensure_daemon_venv(
 def install_tts_to_daemon_venv(spellbook_dir: Path) -> Tuple[bool, str]:
     """
     Install TTS dependencies from the tts dependency group in pyproject.toml.
-
-    Also installs the spacy language model required by misaki.
     """
     daemon_python = get_daemon_python()
     if not daemon_python.exists():
@@ -511,93 +509,7 @@ def install_tts_to_daemon_venv(spellbook_dir: Path) -> Tuple[bool, str]:
     except OSError as e:
         return (False, f"TTS group installation failed: {e}")
 
-    # Install spacy language model required by misaki
-    ok, msg = _install_spacy_model(daemon_python)
-    if not ok:
-        return (False, f"TTS group installed but spacy model failed: {msg}")
-
     return (True, "TTS dependencies installed into daemon venv")
-
-    # Install spacy language model required by misaki (kokoro's G2P engine).
-    # spacy.cli.download() uses pip internally which isn't available in a
-    # uv-managed venv, so we install the model package directly via uv.
-    ok, msg = _install_spacy_model(daemon_python)
-    if not ok:
-        return (False, f"TTS deps installed but spacy model failed: {msg}")
-
-    # Store TTS lockfile hash
-    venv_dir = get_daemon_venv_dir()
-    tts_hash_file = venv_dir / ".lockfile-tts-hash"
-    tts_hash_file.write_text(_hash_file(tts_lockfile))
-
-    return (True, "TTS dependencies installed into daemon venv")
-
-
-def _install_spacy_model(daemon_python: Path) -> Tuple[bool, str]:
-    """
-    Install the spacy en_core_web_sm model into the daemon venv.
-
-    Queries spacy for the compatible model version, then installs the
-    wheel directly from GitHub Releases via uv (bypassing spacy's pip-based
-    download which fails in uv-managed venvs).
-
-    Args:
-        daemon_python: Path to the daemon venv Python interpreter.
-
-    Returns: (success, message)
-    """
-    # Check if model is already installed
-    try:
-        result = subprocess.run(
-            [str(daemon_python), "-c",
-             "import spacy; print(spacy.util.is_package('en_core_web_sm'))"],
-            capture_output=True, text=True, timeout=30,
-        )
-        if result.returncode == 0 and result.stdout.strip() == "True":
-            return (True, "spacy model already installed")
-    except (subprocess.TimeoutExpired, OSError):
-        pass
-
-    # Get compatible model version from spacy
-    model_version = None
-    try:
-        result = subprocess.run(
-            [str(daemon_python), "-c",
-             "from spacy.cli.download import get_compatibility; "
-             "print(get_compatibility()['en_core_web_sm'][0])"],
-            capture_output=True, text=True, timeout=30,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            model_version = result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
-        pass
-
-    if not model_version:
-        return (False, "Could not determine compatible spacy model version")
-
-    # Install via uv from GitHub Releases wheel URL
-    wheel_url = (
-        f"https://github.com/explosion/spacy-models/releases/download/"
-        f"en_core_web_sm-{model_version}/"
-        f"en_core_web_sm-{model_version}-py3-none-any.whl"
-    )
-
-    try:
-        result = subprocess.run(
-            ["uv", "pip", "install", "--python", str(daemon_python), wheel_url],
-            capture_output=True, text=True, timeout=120,
-        )
-        if result.returncode != 0:
-            error = result.stderr.strip() or result.stdout.strip()
-            return (False, f"spacy model install failed: {error}")
-    except FileNotFoundError:
-        return (False, "uv not found")
-    except subprocess.TimeoutExpired:
-        return (False, "spacy model install timed out")
-    except OSError as e:
-        return (False, f"spacy model install failed: {e}")
-
-    return (True, f"spacy en_core_web_sm {model_version} installed")
 
 
 # =============================================================================

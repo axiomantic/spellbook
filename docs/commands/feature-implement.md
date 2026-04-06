@@ -1044,7 +1044,7 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | ------------------- | ------------------------------ | -------------------------------------------------------------------------- |
 | 1.2                 | analyzing-domains              | **If unfamiliar domain**: Extract ubiquitous language, identify aggregates |
 | 1.6                 | devils-advocate                | Challenge Understanding Document                                           |
-| 2.1                 | brainstorming                  | Create design doc                                                          |
+| 2.1                 | design-exploration             | Create design doc                                                          |
 | 2.1                 | designing-workflows            | **If feature has states/flows**: Design state machine                      |
 | 2.2                 | reviewing-design-docs          | Review design doc                                                          |
 | 2.4, 3.4            | executing-plans                | Fix findings                                                               |
@@ -1153,7 +1153,7 @@ Answer honestly: Did I dispatch subagents for ALL of these?
 |------|---------------------|----------------|
 | Research (1.2) | YES / NO | explore agent |
 | Devil's Advocate (1.6) | YES / NO | devils-advocate |
-| Design Creation (2.1) | YES / NO | brainstorming |
+| Design Creation (2.1) | YES / NO | design-exploration |
 | Design Review (2.2) | YES / NO | reviewing-design-docs |
 | Plan Creation (3.1) | YES / NO | writing-plans |
 | Plan Review (3.2) | YES / NO | reviewing-impl-plans |
@@ -1200,7 +1200,7 @@ Answer honestly: Did I dispatch subagents for ALL of these?
 
 ### Phase 2 (if not skipped)
 
-- [ ] Subagent invoked brainstorming in SYNTHESIS MODE
+- [ ] Subagent invoked design-exploration in SYNTHESIS MODE
 - [ ] Subagent invoked reviewing-design-docs
 - [ ] Handled approval gate per autonomous_mode
 - [ ] Subagent invoked executing-plans to fix

@@ -86,7 +86,7 @@ Artifact claims: "Use the existing UserValidator class in src/validators.py"
 
 ## Integration with Develop Workflow
 
-Invoke after: gathering-requirements (verify codebase claims), brainstorming (verify technical capabilities), writing-plans (verify implementation assumptions), roundtable flags hallucination concerns.
+Invoke after: gathering-requirements (verify codebase claims), design-exploration (verify technical capabilities), writing-plans (verify implementation assumptions), roundtable flags hallucination concerns.
 
 <FORBIDDEN>
 - Accepting claims without checking evidence

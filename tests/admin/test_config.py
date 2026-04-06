@@ -45,7 +45,7 @@ class TestConfigGet:
         config = response.json()["config"]
         # Should include defaults even when no explicit config exists
         assert config["tts_enabled"] is True
-        assert config["tts_voice"] == "af_heart"
+        assert config["tts_voice"] == ""
         assert config["tts_volume"] == 0.3
         assert config["notify_enabled"] is True
         assert config["notify_title"] == "Spellbook"

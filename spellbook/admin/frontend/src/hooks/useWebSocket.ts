@@ -16,9 +16,9 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
   const [state, setState] = useState<ConnectionState>('disconnected')
   const wsRef = useRef<WebSocket | null>(null)
   const backoffRef = useRef(INITIAL_BACKOFF)
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const enabledRef = useRef(enabled)
-  const scheduleReconnectRef = useRef<() => void>()
+  const scheduleReconnectRef = useRef<(() => void) | undefined>(undefined)
 
   useEffect(() => {
     enabledRef.current = enabled

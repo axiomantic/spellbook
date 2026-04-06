@@ -170,7 +170,7 @@ flowchart TD
 | 1.5.5: GATE: 11/11 | SKILL.md L430, `/feature-discover` command | 11 validation functions for completeness |
 | 1.5.6: Understanding Doc | SKILL.md L431 | Artifact at `~/.local/spellbook/docs/<project>/understanding/` |
 | 1.6: Devil's Advocate | SKILL.md L432, `/feature-discover` command | `devils-advocate` skill |
-| 2.1: Create Design | SKILL.md L435, `/feature-design` command | `brainstorming` skill (SYNTHESIS MODE) |
+| 2.1: Create Design | SKILL.md L435, `/feature-design` command | `design-exploration` skill (SYNTHESIS MODE) |
 | 2.2: Review Design | SKILL.md L436, `/feature-design` command | `reviewing-design-docs` skill |
 | 2.4: Fix Findings | SKILL.md L438, `/feature-design` command | `executing-plans` skill |
 | 3.1: Create Plan | SKILL.md L441, `/feature-implement` command | `writing-plans` skill |

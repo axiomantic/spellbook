@@ -735,7 +735,7 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
 
 def check_tts_available() -> bool:
-    """Check if kokoro TTS is installed in the daemon venv.
+    """Check if Wyoming TTS server is reachable.
 
     Delegates to ``installer.utils.check_tts_available`` so that installer
     sub-modules can import the function without ``sys.path`` manipulation.
@@ -755,105 +755,16 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
-def _install_tts_deps(spellbook_dir: Path, quiet: bool = False) -> bool:
-    """Install TTS dependencies into the daemon venv.
-
-    Installs:
-    1. Python packages from the TTS lockfile (kokoro, soundfile, sounddevice, etc.)
-    2. spacy language model (en_core_web_sm) required by misaki/kokoro for G2P
-
-    Uses the daemon-dedicated venv at ~/.local/spellbook/daemon-venv/.
-
-    Returns True if installation succeeded and kokoro is now importable.
-    """
-    if not quiet:
-        print_step("Installing TTS dependencies into daemon venv...")
-        print_info("Packages: kokoro, soundfile, sounddevice, spacy, misaki")
-    try:
-        from installer.components.mcp import install_tts_to_daemon_venv
-
-        success, msg = install_tts_to_daemon_venv(spellbook_dir)
-        if not success:
-            if not quiet:
-                print_error(f"TTS dependency installation failed: {msg}")
-            return False
-        if not quiet:
-            print_success("TTS packages and spacy model installed")
-        # Verify kokoro is now importable in the daemon venv
-        return check_tts_available()
-    except ImportError:
-        if not quiet:
-            print_error("Could not import installer components for daemon venv TTS install")
-        return False
-    except Exception as e:
-        if not quiet:
-            print_error(f"TTS dependency installation failed: {e}")
-        return False
-
-
-def _preload_tts_model(spellbook_dir: Path, quiet: bool = False) -> bool:
-    """Pre-download Kokoro TTS model so first speak() call is instant.
-
-    Checks if model is already cached before downloading.
-    Uses the daemon venv's Python to run the download.
-    """
-    try:
-        from installer.components.mcp import get_daemon_python
-    except ImportError:
-        if not quiet:
-            print_warning("Could not import daemon venv helpers, skipping model preload")
-        return False
-
-    daemon_python = get_daemon_python()
-    if not daemon_python.exists():
-        if not quiet:
-            print_warning("Daemon venv not found, skipping model preload")
-        return False
-
-    # Check if model is already cached
-    cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
-    if cache_dir.exists() and any(cache_dir.glob("models--hexgrad--Kokoro*")):
-        return True
-
-    if not quiet:
-        print_step("Pre-downloading Kokoro TTS model (~500MB)...")
-        print_info("This is a one-time download. Future installs will use the cached model.")
-
-    try:
-        result = subprocess.run(
-            [str(daemon_python), "-c",
-             "from kokoro import KPipeline; "
-             "KPipeline(lang_code='a', repo_id='hexgrad/Kokoro-82M'); "
-             "print('Model loaded successfully')"],
-            capture_output=True,
-            text=True,
-            timeout=600,  # 10 minutes for large model download
-        )
-        if result.returncode == 0:
-            if not quiet:
-                print_success("Kokoro model downloaded and cached")
-            return True
-        else:
-            if not quiet:
-                print_warning(f"Model pre-download failed: {result.stderr[:200]}")
-                print_info("The model will be downloaded on first TTS use instead.")
-            return False
-    except subprocess.TimeoutExpired:
-        if not quiet:
-            print_warning("Model download timed out (>10 minutes)")
-            print_info("The model will be downloaded on first TTS use instead.")
-        return False
-
 
 def setup_tts(
     dry_run: bool = False,
     auto_yes: bool = False,
     spellbook_dir: Path | None = None,
 ) -> None:
-    """Offer to install and enable TTS.
+    """Offer to enable TTS.
 
     Skipped during dry-run or if user already configured TTS previously.
-    If kokoro is installed, asks to enable. If not, offers to install it.
+    Checks if a Wyoming TTS server is reachable and asks to enable.
     """
     if dry_run:
         return
@@ -866,65 +777,35 @@ def setup_tts(
             if check_tts_available():
                 print_info(f"TTS already configured (enabled={existing})")
                 return
-            elif existing:
-                # TTS was enabled but deps are missing (venv was rebuilt).
-                # Reinstall TTS deps silently to honor the user's prior choice.
-                print_step("TTS was enabled but dependencies are missing. Reinstalling...")
-                if spellbook_dir and _install_tts_deps(spellbook_dir):
-                    _preload_tts_model(spellbook_dir)
-                    print_success("TTS dependencies reinstalled")
-                else:
-                    print_warning(
-                        "TTS reinstall failed. Run manually: "
-                        "uv pip install --python ~/.local/spellbook/daemon-venv/bin/python "
-                        "--requirement pyproject.toml --group tts"
-                    )
-                return
-            else:
-                # TTS was explicitly disabled, nothing to do
-                return
     except ImportError:
         pass
 
     print()
     if check_tts_available():
-        # Kokoro already installed, just ask to enable
+        # Wyoming server reachable, ask to enable
         enabled = prompt_yn(
-            "Kokoro TTS detected. Enable text-to-speech notifications?",
+            "Wyoming TTS server detected. Enable text-to-speech notifications?",
             default=True,
             auto_yes=auto_yes,
         )
         _set_tts_config(enabled)
         if enabled:
-            print_success("TTS enabled (voice: af_heart, volume: 0.3)")
+            print_success("TTS enabled")
             print_info("Change settings with tts_session_set or tts_config_set MCP tools")
         else:
             print_info("TTS disabled. Enable later with tts_config_set MCP tool")
     else:
-        # Kokoro not installed, offer to install
-        install = prompt_yn(
-            "Install text-to-speech notifications? (Kokoro TTS, ~500MB download)",
+        # Server not reachable, inform user
+        enabled = prompt_yn(
+            "Enable text-to-speech notifications? (Requires a Wyoming TTS server)",
             default=False,
-            auto_yes=False,  # Never auto-install heavy deps, even with --yes
+            auto_yes=False,  # Never auto-enable when server not available
         )
-        if install and spellbook_dir:
-            if _install_tts_deps(spellbook_dir):
-                _preload_tts_model(spellbook_dir)
-                _set_tts_config(True)
-                print_success("TTS fully installed and enabled")
-                print_info("  Packages: kokoro, soundfile, sounddevice, spacy, misaki")
-                print_info("  Models: Kokoro-82M (HuggingFace), en_core_web_sm (spacy)")
-                print_info("  Voice: af_heart, Volume: 0.3")
-                print_info("  Change settings with tts_session_set or tts_config_set MCP tools")
-            else:
-                print_error("TTS installation failed. Install manually:")
-                print_info("Install TTS deps into daemon venv via installer.components.mcp")
-        elif install:
-            print_warning("Cannot auto-install: spellbook directory unknown")
-            print_info("Install manually via installer.components.mcp.install_tts_to_daemon_venv()")
+        _set_tts_config(enabled)
+        if enabled:
+            print_info("TTS enabled. Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200")
         else:
-            _set_tts_config(False)
-            print_info("TTS skipped. Install later via installer.components.mcp.install_tts_to_daemon_venv()")
+            print_info("TTS skipped. Enable later with tts_config_set MCP tool")
 
 
 def _run_tts_setup(
@@ -959,7 +840,7 @@ def _run_tts_setup(
             live_display.complete_step(success=True)
         return True
 
-    # TTS is enabled - check if deps are available
+    # TTS is enabled - check if Wyoming server is reachable
     if check_tts_available():
         if live_display:
             live_display.add_step("TTS: available")
@@ -968,26 +849,12 @@ def _run_tts_setup(
             print_info("TTS already configured (enabled=True)")
         return True
 
-    # TTS enabled but deps missing - reinstall
+    # TTS enabled but server not reachable
     if live_display:
-        live_display.add_step("TTS: reinstalling dependencies...")
+        live_display.add_step("TTS: enabled but Wyoming server not reachable")
+        live_display.complete_step(success=False)
     else:
-        print_step("TTS was enabled but dependencies are missing. Reinstalling...")
-
-    quiet = live_display is not None
-    if spellbook_dir and _install_tts_deps(spellbook_dir, quiet=quiet):
-        _preload_tts_model(spellbook_dir, quiet=quiet)
-        if live_display:
-            live_display.complete_step(success=True)
-            live_display.add_step("TTS: dependencies restored")
-            live_display.complete_step(success=True)
-        else:
-            print_success("TTS dependencies reinstalled")
-    else:
-        if live_display:
-            live_display.complete_step(success=False)
-        else:
-            print_warning("TTS reinstall failed")
+        print_warning("TTS enabled but Wyoming server not reachable at configured host:port")
     return True
 
 
@@ -1107,7 +974,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             profile_config = renderer.render_profile_wizard(reconfigure=True)
             if "profile.default" in profile_config:
                 config_set("profile.default", profile_config["profile.default"])
-
         return 0
 
     is_upgrade = False  # Will be refined after installer.run() returns
@@ -1323,18 +1189,21 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if wizard_results is not None:
             # Wizard-based flow: use tts_intent from upfront wizard
             if wizard_results.tts_intent is True:
-                # User wants TTS; install deps and configure
+                # User wants TTS; check Wyoming server availability
                 if check_tts_available():
                     _set_tts_config(True)
-                elif _install_tts_deps(spellbook_dir):
-                    _preload_tts_model(spellbook_dir)
-                    _set_tts_config(True)
                 else:
-                    _set_tts_config(False)
+                    _set_tts_config(True)
                     if renderer is not None:
-                        renderer.render_warning("TTS installation failed. TTS has been disabled.")
+                        renderer.render_warning(
+                            "TTS enabled but Wyoming server not reachable. "
+                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
+                        )
                     else:
-                        print_warning("TTS installation failed. TTS has been disabled.")
+                        print_warning(
+                            "TTS enabled but Wyoming server not reachable. "
+                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
+                        )
             elif wizard_results.tts_intent is False:
                 _set_tts_config(False)
             # tts_intent is None means skipped; do nothing
@@ -1344,10 +1213,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 tts_config = renderer.render_tts_wizard()
                 if tts_config.get("tts_enabled") is not None:
                     _set_tts_config(tts_config["tts_enabled"])
-                if tts_config.get("tts_install"):
-                    if _install_tts_deps(spellbook_dir):
-                        _preload_tts_model(spellbook_dir)
-                        _set_tts_config(True)
             else:
                 setup_tts(
                     dry_run=args.dry_run,

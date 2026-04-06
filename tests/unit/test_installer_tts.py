@@ -1,20 +1,14 @@
 """Tests for TTS detection and setup in install.py.
 
-Task 16: The installer should detect whether kokoro is importable and,
-if available, prompt the user to enable TTS. The --yes flag auto-enables,
-dry-run skips, and declining sets tts_enabled=False.
+The installer checks whether a Wyoming TTS server is reachable and,
+if available, prompts the user to enable TTS. The --yes flag auto-enables
+when server is reachable, dry-run skips, and declining sets tts_enabled=False.
 
-When kokoro is NOT installed, the installer should offer to install it
-rather than silently skipping.
-
-Note: check_tts_available() now checks kokoro in the daemon venv by
-shelling out to the daemon venv Python, not by importing in-process.
-Tests mock get_daemon_python and subprocess.run accordingly.
+When the server is NOT reachable, the installer offers to enable anyway
+with a note about starting a Wyoming server.
 """
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 import bigfoot
@@ -23,44 +17,15 @@ import bigfoot
 from install import check_tts_available, setup_tts, _set_tts_config
 
 
-_FAKE_PYTHON_STR = "/fake/daemon-venv/bin/python"
-_KOKORO_IMPORT_CMD = [_FAKE_PYTHON_STR, "-c", "import kokoro"]
-
 # Prompt strings from install.py
-_ENABLE_PROMPT = "Kokoro TTS detected. Enable text-to-speech notifications?"
-_INSTALL_PROMPT = "Install text-to-speech notifications? (Kokoro TTS, ~500MB download)"
+_ENABLE_PROMPT = "Wyoming TTS server detected. Enable text-to-speech notifications?"
+_INSTALL_PROMPT = "Enable text-to-speech notifications? (Requires a Wyoming TTS server)"
 
-# Print messages from install.py (for TTS enabled path)
-_TTS_ENABLED_MSG = "TTS enabled (voice: af_heart, volume: 0.3)"
+# Print messages from install.py
+_TTS_ENABLED_MSG = "TTS enabled"
 _TTS_SETTINGS_MSG = "Change settings with tts_session_set or tts_config_set MCP tools"
 _TTS_DISABLED_MSG = "TTS disabled. Enable later with tts_config_set MCP tool"
-_TTS_INSTALLED_MSG = "TTS fully installed and enabled"
-_TTS_INSTALL_FAILED_MSG = "TTS installation failed. Install manually:"
-_TTS_INSTALL_INFO_MSG = "Install TTS deps into daemon venv via installer.components.mcp"
-_TTS_SKIPPED_MSG = (
-    "TTS skipped. Install later via installer.components.mcp.install_tts_to_daemon_venv()"
-)
-
-
-class _FakePath:
-    """Minimal Path-like object for testing."""
-
-    def __init__(self, path_str, exists=True):
-        self._path = path_str
-        self._exists = exists
-
-    def exists(self):
-        return self._exists
-
-    def __str__(self):
-        return self._path
-
-
-class _FakeResult:
-    """Minimal subprocess result for testing."""
-
-    def __init__(self, returncode):
-        self.returncode = returncode
+_TTS_SKIPPED_MSG = "TTS skipped. Enable later with tts_config_set MCP tool"
 
 
 def _mock_print_side_effects():
@@ -82,69 +47,46 @@ def _mock_print_side_effects():
 
 
 class TestCheckTtsAvailable:
-    """check_tts_available() returns True iff kokoro is importable in daemon venv."""
+    """check_tts_available() returns True iff Wyoming server is reachable."""
 
-    def test_returns_true_when_kokoro_importable(self):
-        """When daemon venv exists and kokoro imports successfully, return True."""
-        fake_python = _FakePath(_FAKE_PYTHON_STR, exists=True)
-        fake_result = _FakeResult(returncode=0)
+    def test_returns_true_when_server_reachable(self, monkeypatch):
+        """When Wyoming server accepts connection, return True."""
+        from types import SimpleNamespace
 
-        mock_gdp = bigfoot.mock("installer.components.mcp:get_daemon_python")
-        mock_gdp.returns(fake_python)
-        mock_run = bigfoot.mock("install:subprocess.run")
-        mock_run.returns(fake_result)
+        mock_conn = SimpleNamespace(close=lambda: None)
+        monkeypatch.setattr("socket.create_connection", lambda *a, **kw: mock_conn)
 
-        with bigfoot:
-            assert check_tts_available() is True
+        assert check_tts_available() is True
 
-        mock_gdp.assert_call(args=(), kwargs={})
-        mock_run.assert_call(
-            args=(_KOKORO_IMPORT_CMD,),
-            kwargs={"capture_output": True, "timeout": 30},
-        )
+    def test_returns_false_when_server_unreachable(self, monkeypatch):
+        """When Wyoming server refuses connection, return False."""
+        def raise_oserror(*a, **kw):
+            raise OSError("Connection refused")
 
-    def test_returns_false_when_kokoro_not_importable(self):
-        """When daemon venv exists but kokoro import fails, return False."""
-        fake_python = _FakePath(_FAKE_PYTHON_STR, exists=True)
-        fake_result = _FakeResult(returncode=1)
+        monkeypatch.setattr("socket.create_connection", raise_oserror)
 
-        mock_gdp = bigfoot.mock("installer.components.mcp:get_daemon_python")
-        mock_gdp.returns(fake_python)
-        mock_run = bigfoot.mock("install:subprocess.run")
-        mock_run.returns(fake_result)
+        assert check_tts_available() is False
 
-        with bigfoot:
-            assert check_tts_available() is False
+    def test_returns_false_on_import_error(self, monkeypatch):
+        """When config import fails, return False."""
+        def raise_exc(*a, **kw):
+            raise Exception("import failed")
 
-        mock_gdp.assert_call(args=(), kwargs={})
-        mock_run.assert_call(
-            args=(_KOKORO_IMPORT_CMD,),
-            kwargs={"capture_output": True, "timeout": 30},
-        )
+        monkeypatch.setattr("socket.create_connection", raise_exc)
 
-    def test_returns_false_when_daemon_venv_missing(self):
-        """When daemon venv Python does not exist, return False."""
-        fake_python = _FakePath(_FAKE_PYTHON_STR, exists=False)
-
-        mock_gdp = bigfoot.mock("installer.components.mcp:get_daemon_python")
-        mock_gdp.returns(fake_python)
-
-        with bigfoot:
-            assert check_tts_available() is False
-
-        mock_gdp.assert_call(args=(), kwargs={})
+        assert check_tts_available() is False
 
 
 # ---------------------------------------------------------------------------
-# setup_tts() - Interactive mode (kokoro available)
+# setup_tts() - Interactive mode (server available)
 # ---------------------------------------------------------------------------
 
 
 class TestSetupTtsInteractive:
     """setup_tts() in interactive mode should prompt and set config."""
 
-    def test_prompts_user_when_kokoro_available_and_interactive(self):
-        """When kokoro is available and running interactively, prompt user."""
+    def test_prompts_user_when_server_available_and_interactive(self):
+        """When server is available and running interactively, prompt user."""
         mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
         mock_cfg.returns(None)
         mock_check = bigfoot.mock("install:check_tts_available")
@@ -381,32 +323,54 @@ class TestSetupTtsSkipCases:
             )
 
     def test_existing_disabled_config_skips_prompt(self):
-        """When tts_enabled=False in config, skip prompting."""
+        """When tts_enabled=False in config and server unreachable, re-prompt user.
+
+        With Wyoming TTS, when the server is unreachable and TTS was previously
+        disabled, setup_tts falls through to the 'server not available' prompt
+        path (it only returns early when the server IS reachable).
+        """
         mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
         mock_cfg.returns(False)
+        # check_tts_available is called twice: once in the "already configured"
+        # block, and once in the main flow after falling through
         mock_check = bigfoot.mock("install:check_tts_available")
         mock_check.returns(False)
-        bigfoot.mock("install:prompt_yn").__call__.required(False).returns(True)
-        bigfoot.mock("install:_set_tts_config").__call__.required(False).returns(None)
+        mock_check.__call__.required(False).returns(False)
+        mock_prompt = bigfoot.mock("install:prompt_yn")
+        mock_prompt.returns(False)
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+        mock_pi.__call__.required(False).returns(None)
 
         with bigfoot:
             setup_tts(dry_run=False, auto_yes=False)
 
         with bigfoot.in_any_order():
             mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
+            # check_tts_available called twice: once in "already configured"
+            # check, once in main flow after falling through
             mock_check.assert_call(args=(), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_prompt.assert_call(
+                args=(_INSTALL_PROMPT,),
+                kwargs={"default": False, "auto_yes": False},
+            )
+            mock_config.assert_call(args=(False,), kwargs={})
+            mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
 
 
 # ---------------------------------------------------------------------------
-# setup_tts() - Kokoro not installed (offer to install)
+# setup_tts() - Server not available (offer to enable anyway)
 # ---------------------------------------------------------------------------
 
 
-class TestSetupTtsInstallOffer:
-    """When kokoro is not installed, setup_tts should offer to install it."""
+class TestSetupTtsServerUnavailable:
+    """When Wyoming server is not reachable, setup_tts should offer to enable anyway."""
 
-    def test_kokoro_unavailable_offers_install_interactive(self):
-        """When kokoro not available interactively, prompt to install."""
+    def test_server_unavailable_offers_enable(self):
+        """When server not available interactively, prompt to enable."""
         mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
         mock_cfg.returns(None)
         mock_check = bigfoot.mock("install:check_tts_available")
@@ -431,34 +395,8 @@ class TestSetupTtsInstallOffer:
             mock_config.assert_call(args=(False,), kwargs={})
             mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
 
-    def test_kokoro_unavailable_non_interactive_sets_disabled(self):
-        """In non-interactive mode, kokoro unavailable sets tts_enabled=False."""
-        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
-        mock_cfg.returns(None)
-        mock_check = bigfoot.mock("install:check_tts_available")
-        mock_check.returns(False)
-        mock_prompt = bigfoot.mock("install:prompt_yn")
-        mock_prompt.returns(False)
-        mock_config = bigfoot.mock("install:_set_tts_config")
-        mock_config.returns(None)
-        mock_pi = bigfoot.mock("install:print_info")
-        mock_pi.__call__.required(False).returns(None)
-
-        with bigfoot:
-            setup_tts(dry_run=False, auto_yes=False)
-
-        with bigfoot.in_any_order():
-            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
-            mock_check.assert_call(args=(), kwargs={})
-            mock_prompt.assert_call(
-                args=(_INSTALL_PROMPT,),
-                kwargs={"default": False, "auto_yes": False},
-            )
-            mock_config.assert_call(args=(False,), kwargs={})
-            mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
-
-    def test_kokoro_unavailable_auto_yes_does_not_auto_install(self):
-        """--yes should NOT auto-install heavy TTS deps."""
+    def test_server_unavailable_auto_yes_does_not_auto_enable(self):
+        """--yes should NOT auto-enable TTS when server is not available."""
         mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
         mock_cfg.returns(None)
         mock_check = bigfoot.mock("install:check_tts_available")
@@ -483,80 +421,6 @@ class TestSetupTtsInstallOffer:
             )
             mock_config.assert_call(args=(False,), kwargs={})
             mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
-
-    def test_kokoro_install_success_enables_tts(self):
-        """When user accepts install and it succeeds, enable TTS."""
-        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
-        mock_cfg.returns(None)
-        mock_check = bigfoot.mock("install:check_tts_available")
-        mock_check.returns(False)
-        mock_prompt = bigfoot.mock("install:prompt_yn")
-        mock_prompt.returns(True)
-        mock_install = bigfoot.mock("install:_install_tts_deps")
-        mock_install.returns(True)
-        mock_preload = bigfoot.mock("install:_preload_tts_model")
-        mock_preload.returns(None)
-        mock_config = bigfoot.mock("install:_set_tts_config")
-        mock_config.returns(None)
-        prints = _mock_print_side_effects()
-
-        with bigfoot:
-            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=Path("/fake"))
-
-        with bigfoot.in_any_order():
-            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
-            mock_check.assert_call(args=(), kwargs={})
-            mock_prompt.assert_call(
-                args=(_INSTALL_PROMPT,),
-                kwargs={"default": False, "auto_yes": False},
-            )
-            mock_install.assert_call(args=(Path("/fake"),), kwargs={})
-            mock_preload.assert_call(args=(Path("/fake"),), kwargs={})
-            mock_config.assert_call(args=(True,), kwargs={})
-            prints["print_success"].assert_call(args=(_TTS_INSTALLED_MSG,), kwargs={})
-            prints["print_info"].assert_call(
-                args=("  Packages: kokoro, soundfile, sounddevice, spacy, misaki",), kwargs={},
-            )
-            prints["print_info"].assert_call(
-                args=("  Models: Kokoro-82M (HuggingFace), en_core_web_sm (spacy)",), kwargs={},
-            )
-            prints["print_info"].assert_call(
-                args=("  Voice: af_heart, Volume: 0.3",), kwargs={},
-            )
-            prints["print_info"].assert_call(
-                args=("  Change settings with tts_session_set or tts_config_set MCP tools",),
-                kwargs={},
-            )
-
-    def test_kokoro_install_failure_shows_error(self):
-        """When install fails, show error message."""
-        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
-        mock_cfg.returns(None)
-        mock_check = bigfoot.mock("install:check_tts_available")
-        mock_check.returns(False)
-        mock_prompt = bigfoot.mock("install:prompt_yn")
-        mock_prompt.returns(True)
-        mock_install = bigfoot.mock("install:_install_tts_deps")
-        mock_install.returns(False)
-        bigfoot.mock("install:_set_tts_config").__call__.required(False).returns(None)
-        mock_error = bigfoot.mock("install:print_error")
-        mock_error.returns(None)
-        mock_pi = bigfoot.mock("install:print_info")
-        mock_pi.__call__.required(False).returns(None)
-
-        with bigfoot:
-            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=Path("/fake"))
-
-        with bigfoot.in_any_order():
-            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
-            mock_check.assert_call(args=(), kwargs={})
-            mock_prompt.assert_call(
-                args=(_INSTALL_PROMPT,),
-                kwargs={"default": False, "auto_yes": False},
-            )
-            mock_install.assert_call(args=(Path("/fake"),), kwargs={})
-            mock_error.assert_call(args=(_TTS_INSTALL_FAILED_MSG,), kwargs={})
-            mock_pi.assert_call(args=(_TTS_INSTALL_INFO_MSG,), kwargs={})
 
 
 # ---------------------------------------------------------------------------

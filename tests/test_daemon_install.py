@@ -555,18 +555,31 @@ class TestGetDaemonPython:
 # ---------------------------------------------------------------------------
 
 class TestGetRepairs:
-    """Test _get_repairs() uses find_spec instead of importing kokoro."""
+    """Test _get_repairs() checks Wyoming TTS server connectivity."""
 
-    def test_tts_enabled_kokoro_missing(self, monkeypatch):
-        """Returns tts-deps-missing repair when TTS enabled but kokoro not installed."""
+    def test_tts_enabled_server_unreachable(self, monkeypatch):
+        """Returns tts-server-unreachable repair when TTS enabled but server not reachable."""
         from spellbook.core.config import _get_repairs
 
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-        monkeypatch.setattr("importlib.util.find_spec", lambda name: None)
+        def mock_config_get(key, *args, **kwargs):
+            if key == "tts_enabled":
+                return True
+            if key == "tts_wyoming_host":
+                return "localhost"
+            if key == "tts_wyoming_port":
+                return 10200
+            return None
+
+        monkeypatch.setattr("spellbook.core.config.config_get", mock_config_get)
+
+        def raise_oserror(*a, **kw):
+            raise OSError("Connection refused")
+
+        monkeypatch.setattr("socket.create_connection", raise_oserror)
 
         repairs = _get_repairs()
 
-        tts_repairs = [r for r in repairs if r["id"] == "tts-deps-missing"]
+        tts_repairs = [r for r in repairs if r["id"] == "tts-server-unreachable"]
         assert len(tts_repairs) == 1
         assert tts_repairs[0]["severity"] == "warning"
 
@@ -581,45 +594,57 @@ class TestGetRepairs:
         tts_repairs = [r for r in repairs if "tts" in r.get("id", "")]
         assert len(tts_repairs) == 0
 
-    def test_tts_enabled_kokoro_installed(self, monkeypatch):
-        """No tts-deps-missing repair when both kokoro and soundfile are present."""
+    def test_tts_enabled_server_reachable(self, monkeypatch):
+        """No tts-server-unreachable repair when Wyoming server is reachable."""
         from spellbook.core.config import _get_repairs
+        from types import SimpleNamespace
 
-        class FakeSpec:
-            def __init__(self, name):
-                self.name = name
-
-        def mock_find_spec(name):
-            if name in ("kokoro", "soundfile", "pip"):
-                return FakeSpec(name)
+        def mock_config_get(key, *args, **kwargs):
+            if key == "tts_enabled":
+                return True
+            if key == "tts_wyoming_host":
+                return "localhost"
+            if key == "tts_wyoming_port":
+                return 10200
             return None
 
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-        monkeypatch.setattr("importlib.util.find_spec", mock_find_spec)
+        monkeypatch.setattr("spellbook.core.config.config_get", mock_config_get)
+        monkeypatch.setattr(
+            "socket.create_connection",
+            lambda *a, **kw: SimpleNamespace(close=lambda: None),
+        )
 
         repairs = _get_repairs()
 
-        tts_deps_repairs = [r for r in repairs if r["id"] == "tts-deps-missing"]
-        assert len(tts_deps_repairs) == 0
+        tts_repairs = [r for r in repairs if r["id"] == "tts-server-unreachable"]
+        assert len(tts_repairs) == 0
 
-    def test_find_spec_used_not_import(self, monkeypatch):
-        """Verify find_spec is called, not direct import of kokoro."""
+    def test_socket_probe_used_not_import(self, monkeypatch):
+        """Verify socket probe is used to check Wyoming server, not module imports."""
         from spellbook.core.config import _get_repairs
 
-        find_spec_calls = []
+        socket_calls = []
 
-        def tracking_find_spec(name):
-            find_spec_calls.append(name)
+        def tracking_create_connection(*args, **kwargs):
+            socket_calls.append(args)
+            raise OSError("Connection refused")
+
+        def mock_config_get(key, *args, **kwargs):
+            if key == "tts_enabled":
+                return True
+            if key == "tts_wyoming_host":
+                return "localhost"
+            if key == "tts_wyoming_port":
+                return 10200
             return None
 
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-        monkeypatch.setattr("importlib.util.find_spec", tracking_find_spec)
+        monkeypatch.setattr("spellbook.core.config.config_get", mock_config_get)
+        monkeypatch.setattr("socket.create_connection", tracking_create_connection)
 
         _get_repairs()
 
-        # find_spec should have been called with "kokoro"
-        kokoro_calls = [c for c in find_spec_calls if c == "kokoro"]
-        assert len(kokoro_calls) >= 1
+        # socket.create_connection should have been called
+        assert len(socket_calls) >= 1
 
 
 # ---------------------------------------------------------------------------
@@ -998,83 +1023,107 @@ class TestInstallDaemonTtsInclusion:
 # 9. setup_tts() reinstalls TTS when enabled but missing
 # ---------------------------------------------------------------------------
 
-class TestSetupTtsReinstall:
-    """Test that setup_tts() reinstalls TTS deps when previously enabled but missing."""
+class TestSetupTtsAlreadyConfigured:
+    """Test setup_tts() behavior when TTS was previously configured."""
 
-    def test_reinstalls_tts_when_enabled_but_missing(self, tmp_path, monkeypatch):
-        """setup_tts reinstalls TTS deps when config says enabled but kokoro is missing."""
-        import install as install_mod
-
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-
-        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
-        mock_check.returns(False)
-        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
-        mock_install.returns(True)
-        mock_preload = bigfoot.mock.object(install_mod, "_preload_tts_model")
-        mock_preload.returns(None)
-
-        with bigfoot:
-            install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
-
-        mock_check.assert_call(args=(), kwargs={})
-        mock_install.assert_call(args=(tmp_path,), kwargs={})
-        mock_preload.assert_call(args=(tmp_path,), kwargs={})
-
-    def test_no_reinstall_when_tts_available(self, tmp_path, monkeypatch):
-        """setup_tts does nothing extra when TTS is already available."""
-        import install as install_mod
-
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-
-        install_called = []
-
-        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+    def test_skips_when_already_enabled_and_server_reachable(self, tmp_path, monkeypatch):
+        """setup_tts prints 'already configured' when enabled and server is reachable."""
+        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
+        mock_cfg.returns(True)
+        mock_check = bigfoot.mock("install:check_tts_available")
         mock_check.returns(True)
-        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
-        mock_install.__call__.required(False).calls(lambda *a, **kw: install_called.append(True))
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
 
         with bigfoot:
-            install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
+            from install import setup_tts
+            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_check.assert_call(args=(), kwargs={})
-        assert len(install_called) == 0
+        with bigfoot.in_any_order():
+            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_pi.assert_call(
+                args=("TTS already configured (enabled=True)",), kwargs={},
+            )
 
-    def test_no_reinstall_when_tts_disabled(self, tmp_path, monkeypatch):
-        """setup_tts does nothing when TTS was explicitly disabled."""
-        import install as install_mod
-
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: False)
-
-        install_called = []
-
-        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+    def test_reprompts_when_enabled_but_server_unreachable(self, tmp_path, monkeypatch):
+        """setup_tts re-prompts when enabled but Wyoming server is unreachable."""
+        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
+        mock_cfg.returns(True)
+        # check_tts_available is called twice: once in "already configured" check,
+        # once in main flow after falling through
+        mock_check = bigfoot.mock("install:check_tts_available")
         mock_check.returns(False)
-        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
-        mock_install.__call__.required(False).calls(lambda *a, **kw: install_called.append(True))
+        mock_check.__call__.required(False).returns(False)
+        mock_prompt = bigfoot.mock("install:prompt_yn")
+        mock_prompt.returns(False)
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_ps = bigfoot.mock("install:print_success")
+        mock_ps.__call__.required(False).returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        for _ in range(6):
+            mock_pi.__call__.required(False).returns(None)
 
         with bigfoot:
-            install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
+            from install import setup_tts
+            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_check.assert_call(args=(), kwargs={})
-        assert len(install_called) == 0
+        # When existing config is True but server unreachable, it falls through
+        # to the "server not available" prompting path.
+        # check_tts_available is called twice, prompt_yn and _set_tts_config once each.
+        with bigfoot.in_any_order():
+            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_prompt.assert_call(
+                args=("Enable text-to-speech notifications? (Requires a Wyoming TTS server)",),
+                kwargs={"default": False, "auto_yes": False},
+            )
+            mock_config.assert_call(args=(False,), kwargs={})
+            mock_pi.assert_call(
+                args=("TTS skipped. Enable later with tts_config_set MCP tool",), kwargs={},
+            )
 
-    def test_warns_on_reinstall_failure(self, tmp_path, capsys, monkeypatch):
-        """setup_tts warns when TTS reinstall fails."""
-        import install as install_mod
+    def test_reprompts_when_disabled_and_server_unreachable(self, tmp_path, monkeypatch):
+        """setup_tts re-prompts when TTS disabled and server unreachable.
 
-        monkeypatch.setattr("spellbook.core.config.config_get", lambda *a, **kw: True)
-
-        mock_check = bigfoot.mock.object(install_mod, "check_tts_available")
+        With Wyoming TTS, when existing config is False and server is
+        unreachable, setup_tts falls through to the 'server not available'
+        prompt path rather than silently skipping.
+        """
+        mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
+        mock_cfg.returns(False)
+        # check_tts_available called twice: once in "already configured" check,
+        # once in main flow after falling through
+        mock_check = bigfoot.mock("install:check_tts_available")
         mock_check.returns(False)
-        mock_install = bigfoot.mock.object(install_mod, "_install_tts_deps")
-        mock_install.returns(False)
+        mock_check.__call__.required(False).returns(False)
+        mock_prompt = bigfoot.mock("install:prompt_yn")
+        mock_prompt.returns(False)
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
 
         with bigfoot:
-            install_mod.setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
+            from install import setup_tts
+            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=tmp_path)
 
-        mock_check.assert_call(args=(), kwargs={})
-        mock_install.assert_call(args=(tmp_path,), kwargs={})
+        with bigfoot.in_any_order():
+            mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_prompt.assert_call(
+                args=("Enable text-to-speech notifications? (Requires a Wyoming TTS server)",),
+                kwargs={"default": False, "auto_yes": False},
+            )
+            mock_config.assert_call(args=(False,), kwargs={})
+            mock_pi.assert_call(
+                args=("TTS skipped. Enable later with tts_config_set MCP tool",), kwargs={},
+            )
 
-        captured = capsys.readouterr()
-        assert "TTS reinstall failed" in captured.out or "failed" in captured.out.lower()
+    def test_dry_run_skips_entirely(self, tmp_path, monkeypatch):
+        """setup_tts does nothing on dry_run."""
+        from install import setup_tts
+        setup_tts(dry_run=True, auto_yes=False, spellbook_dir=tmp_path)

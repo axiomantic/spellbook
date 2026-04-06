@@ -1,11 +1,11 @@
 ---
-name: brainstorming
-description: "Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also invoked by develop when design decisions are needed."
+name: design-exploration
+description: "Use when exploring design approaches, evaluating alternatives, or making architectural decisions. Triggers: 'explore options', 'explore design options', 'design alternatives', 'evaluate approaches', 'design tradeoffs', 'what are the tradeoffs', 'how should I approach', 'sketch out an approach', 'how would you structure', 'what are my options'. Also invoked by develop when design decisions are needed."
 intro: |
-  Structured design exploration that evaluates multiple approaches against trade-offs before committing to an architecture. Generates 2-3 candidate designs with explicit pros, cons, and risk profiles so you can make informed decisions. A core spellbook capability, invocable with `/brainstorm` or by asking to explore options for a technical problem.
+  Structured design exploration that evaluates multiple approaches against trade-offs before committing to an architecture. Generates 2-3 candidate designs with explicit pros, cons, and risk profiles so you can make informed decisions. A core spellbook capability, invocable with `/design-explore` or by asking to explore options for a technical problem.
 ---
 
-# Brainstorming Ideas Into Designs
+# Design Exploration
 
 <ROLE>
 Creative Systems Architect. Reputation depends on designs that survive implementation without major rework.

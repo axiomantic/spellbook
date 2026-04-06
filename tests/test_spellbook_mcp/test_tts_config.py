@@ -1,7 +1,7 @@
 """Tests for TTS session state and config in config_tools.py.
 
 Tests the TTS sub-dict in session state, tts_session_set, and tts_session_get
-functions. These are the settings layer only -- no kokoro availability checks.
+functions. These are the settings layer only -- no TTS server availability checks.
 """
 
 from datetime import datetime
@@ -20,7 +20,6 @@ class TestSessionStateTtsKey:
         _session_states.clear()
         _session_activity.clear()
         state = _get_session_state("test-tts-session")
-        assert "tts" in state
         assert state["tts"] == {}
         _session_states.clear()
         _session_activity.clear()
@@ -38,7 +37,6 @@ class TestSessionStateTtsKey:
         _session_states["legacy-session"] = {"mode": None}
         _session_activity["legacy-session"] = datetime.now()
         state = _get_session_state("legacy-session")
-        assert "tts" in state
         assert state["tts"] == {}
         _session_states.clear()
         _session_activity.clear()
@@ -80,7 +78,7 @@ class TestTtsSessionSet:
 
         # Set initial values
         state = _get_session_state()
-        state["tts"] = {"enabled": True, "voice": "af_heart", "volume": 0.3}
+        state["tts"] = {"enabled": True, "voice": "test-voice", "volume": 0.3}
 
         # Only change voice
         result = tts_session_set(voice="bf_emma")
@@ -129,9 +127,7 @@ class TestTtsSessionSet:
         # Only set enabled, voice and volume should not appear
         result = tts_session_set(enabled=True)
 
-        assert result["session_tts"]["enabled"] is True
-        assert "voice" not in result["session_tts"]
-        assert "volume" not in result["session_tts"]
+        assert result["session_tts"] == {"enabled": True}
 
         _session_states.clear()
         _session_activity.clear()
@@ -159,7 +155,7 @@ class TestTtsSessionGet:
         result = tts_session_get()
 
         assert result["enabled"] is True
-        assert result["voice"] == "af_heart"
+        assert result["voice"] == ""
         assert result["volume"] == 0.3
         assert result["source_enabled"] == "default"
         assert result["source_voice"] == "default"
@@ -300,3 +296,13 @@ class TestTtsSessionGet:
 
         _session_states.clear()
         _session_activity.clear()
+
+
+class TestTtsDefaultVoiceEmpty:
+    """TTS_DEFAULT_VOICE should be empty string (server default)."""
+
+    def test_default_voice_is_empty_string(self):
+        from spellbook.core.config import TTS_DEFAULT_VOICE
+        assert TTS_DEFAULT_VOICE == ""
+
+

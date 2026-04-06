@@ -11,6 +11,11 @@ permissions:
 
 jobs:
   welcome:
+    if: >-
+      github.actor != 'dependabot[bot]'
+      && github.actor != 'renovate[bot]'
+      && github.actor != 'gemini-code-assist[bot]'
+      && !endsWith(github.actor, '[bot]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/first-interaction@v3

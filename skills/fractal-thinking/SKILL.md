@@ -1,6 +1,6 @@
 ---
 name: fractal-thinking
-description: "Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by brainstorming, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution."
+description: "Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by design-exploration, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution."
 intro: |
   Recursive question decomposition that builds a persistent graph of questions and answers, exploring topics at configurable depth with parallel workers. Breaks complex questions into sub-questions, answers them bottom-up, and synthesizes findings into coherent conclusions. This core spellbook skill is invoked by other skills when they need deep certainty about multi-faceted problems.
 ---
@@ -52,7 +52,7 @@ root node's synthesis IS the final summary.
 
 - When a skill needs deep exploration of uncertainty before proceeding
 - When a claim needs systematic verification from multiple angles
-- When brainstorming needs structured decomposition beyond a flat list
+- When design-exploration needs structured decomposition beyond a flat list
 - When debugging needs to explore multiple hypotheses in parallel
 - When NOT to use: simple factual lookups, linear task execution, code review
 

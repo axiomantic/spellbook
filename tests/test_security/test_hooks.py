@@ -49,6 +49,9 @@ def _run_hook(
     env = os.environ.copy()
     env["SPELLBOOK_DIR"] = PROJECT_ROOT
     env["PYTHONPATH"] = PROJECT_ROOT
+    # Use a non-existent config path to avoid interference from user config
+    # (e.g., crypto gate settings that require signed content provenance)
+    env.setdefault("SPELLBOOK_CONFIG_PATH", "/dev/null/nonexistent")
     if env_overrides:
         env.update(env_overrides)
 

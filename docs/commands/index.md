@@ -16,7 +16,6 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/audit-mirage-analyze](audit-mirage-analyze.md) | Phase 2-3 of auditing-green-mirage: Systematic line-by-line audit and 10 Green M... | spellbook |
 | [/audit-mirage-cross](audit-mirage-cross.md) | Phase 4 of auditing-green-mirage: Cross-test suite-level analysis | spellbook |
 | [/audit-mirage-report](audit-mirage-report.md) | Phase 5-6 of auditing-green-mirage: Findings report generation and output | spellbook |
-| [/brainstorm](brainstorm.md) | You MUST use this before any creative work - creating features, building compone... | [superpowers](https://github.com/obra/superpowers) |
 | [/code-review-feedback](code-review-feedback.md) | Feedback mode for code-review: Process received review feedback with categorizat... | spellbook |
 | [/code-review-give](code-review-give.md) | Give mode for code-review: Review someone else's code with multi-pass analysis a... | spellbook |
 | [/code-review-tarot](code-review-tarot.md) | Tarot integration for code-review: Roundtable dialogue with archetype personas f... | spellbook |
@@ -33,6 +32,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/deep-research-investigate](deep-research-investigate.md) | Phase 2 of deep-research: Triplet search engine with plateau detection and micro... | spellbook |
 | [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
 | [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
+| [/design-explore](design-explore.md) | Structured design exploration that evaluates approaches and trade-offs before im... | [superpowers](https://github.com/obra/superpowers) |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
 | [/docs-audit](docs-audit.md) | Phase 1 of documenting-projects: Project analysis for documentation planning. Tr... | spellbook |
 | [/docs-plan](docs-plan.md) | Phase 2 of documenting-projects: TOC generation, tone assignment, and build conf... | spellbook |

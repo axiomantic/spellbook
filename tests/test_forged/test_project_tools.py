@@ -333,7 +333,7 @@ class TestProjectGraph:
             depends_on=[],
             status="pending",
             estimated_complexity="small",
-            assigned_skill="brainstorming",
+            assigned_skill="design-exploration",
             artifacts=["/artifact.md"],
         )
 
@@ -641,7 +641,7 @@ class TestSkillSelection:
         assert skill == "gathering-requirements"
 
     def test_select_skill_for_design_stage(self):
-        """DESIGN stage should default to brainstorming skill."""
+        """DESIGN stage should default to design-exploration skill."""
         from spellbook.forged.skill_selection import select_skill
         from spellbook.forged.models import IterationState
 
@@ -652,7 +652,7 @@ class TestSkillSelection:
         )
 
         skill = select_skill(context)
-        assert skill == "brainstorming"
+        assert skill == "design-exploration"
 
     def test_select_skill_for_plan_stage(self):
         """PLAN stage should default to writing-plans skill."""
@@ -966,7 +966,7 @@ class TestSkillInvocation:
         invocation = SkillInvocation(
             id="inv-002",
             feature_id="feat-001",
-            skill_name="brainstorming",
+            skill_name="design-exploration",
             stage="DESIGN",
             iteration=1,
             started_at="2025-01-22T10:00:00",

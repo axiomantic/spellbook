@@ -33,7 +33,10 @@ MCP_HOST = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
 MCP_PORT = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
 MCP_URL = f"http://{MCP_HOST}:{MCP_PORT}/mcp"
 TOKEN_FILE = Path.home() / ".local" / "spellbook" / ".mcp-token"
-CONFIG_PATH = Path.home() / ".config" / "spellbook" / "spellbook.json"
+CONFIG_PATH = Path(os.environ.get(
+    "SPELLBOOK_CONFIG_PATH",
+    str(Path.home() / ".config" / "spellbook" / "spellbook.json"),
+))
 
 
 def _detect_platform() -> str:

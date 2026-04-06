@@ -5,116 +5,109 @@ All spellbook.notifications.tts functions are mocked. Tests verify tool behavior
 argument handling, and return contracts.
 """
 
+import bigfoot
 import pytest
 
 from spellbook import server
 
 
-class TestKokoroSpeak:
-    """kokoro_speak() MCP tool."""
+def _async_return(value):
+    """Create an async callable that returns value, for mocking async functions."""
+    async def _fn(*args, **kwargs):
+        return value
+    return _fn
+
+
+class TestTtsSpeak:
+    """tts_speak() MCP tool."""
 
     @pytest.mark.asyncio
-    async def test_success_returns_ok(self, monkeypatch):
+    async def test_success_returns_ok(self):
         mock_result = {"ok": True, "elapsed": 1.23, "wav_path": "/tmp/test.wav"}
+        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
+        mock_speak.calls(_async_return(mock_result))
 
-        async def _mock_speak(*args, **kwargs):
-            return mock_result
-
-        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
-
-        result = await server.kokoro_speak.fn(text="hello world")
+        async with bigfoot:
+            result = await server.tts_speak.fn(text="hello world")
 
         assert result["ok"] is True
         assert result["elapsed"] == 1.23
+        mock_speak.assert_call(args=("hello world",), kwargs={"voice": None, "volume": None, "session_id": None})
 
     @pytest.mark.asyncio
-    async def test_not_available_returns_error(self, monkeypatch):
-        mock_result = {"error": "TTS not available. Missing kokoro"}
+    async def test_not_available_returns_error(self):
+        mock_result = {"error": "TTS not available. Server unreachable"}
+        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
+        mock_speak.calls(_async_return(mock_result))
 
-        async def _mock_speak(*args, **kwargs):
-            return mock_result
+        async with bigfoot:
+            result = await server.tts_speak.fn(text="hello")
 
-        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
-
-        result = await server.kokoro_speak.fn(text="hello")
-
-        assert "error" in result
-        assert "not available" in result["error"].lower()
+        assert result == {"error": "TTS not available. Server unreachable"}
+        mock_speak.assert_call(args=("hello",), kwargs={"voice": None, "volume": None, "session_id": None})
 
     @pytest.mark.asyncio
-    async def test_passes_voice_and_volume(self, monkeypatch):
-        calls = []
+    async def test_passes_voice_and_volume(self):
+        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
+        mock_speak.calls(_async_return({"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}))
 
-        async def _mock_speak(*args, **kwargs):
-            calls.append((args, kwargs))
-            return {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
+        async with bigfoot:
+            await server.tts_speak.fn(text="hi", voice="test-voice", volume=0.5)
 
-        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
-
-        await server.kokoro_speak.fn(text="hi", voice="bf_emma", volume=0.5)
-
-        assert len(calls) == 1
-        assert calls[0][0] == ("hi",)
-        assert calls[0][1]["voice"] == "bf_emma"
-        assert calls[0][1]["volume"] == 0.5
+        mock_speak.assert_call(args=("hi",), kwargs={"voice": "test-voice", "volume": 0.5, "session_id": None})
 
     @pytest.mark.asyncio
-    async def test_passes_session_id(self, monkeypatch):
-        calls = []
+    async def test_passes_session_id(self):
+        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
+        mock_speak.calls(_async_return({"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}))
 
-        async def _mock_speak(*args, **kwargs):
-            calls.append((args, kwargs))
-            return {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
+        async with bigfoot:
+            await server.tts_speak.fn(text="hi", session_id="sess-123")
 
-        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
-
-        await server.kokoro_speak.fn(text="hi", session_id="sess-123")
-
-        assert len(calls) == 1
-        assert calls[0][1]["session_id"] == "sess-123"
+        mock_speak.assert_call(args=("hi",), kwargs={"voice": None, "volume": None, "session_id": "sess-123"})
 
 
-class TestKokoroStatus:
-    """kokoro_status() MCP tool."""
+class TestTtsStatus:
+    """tts_status() MCP tool."""
 
-    def test_returns_status_dict(self, monkeypatch):
+    def test_returns_status_dict(self):
         mock_status = {
             "available": True,
             "enabled": True,
-            "model_loaded": False,
-            "voice": "af_heart",
+            "server_reachable": False,
+            "voice": "",
             "volume": 0.3,
+            "tts_wyoming_host": "localhost",
+            "tts_wyoming_port": 10200,
             "error": None,
         }
-        monkeypatch.setattr(
-            "spellbook.notifications.tts.get_status",
-            lambda **kw: mock_status,
-        )
+        mock_get = bigfoot.mock("spellbook.notifications.tts:get_status")
+        mock_get.returns(mock_status)
 
-        result = server.kokoro_status.fn()
+        with bigfoot:
+            result = server.tts_status.fn()
 
         assert result == mock_status
+        mock_get.assert_call(kwargs={"session_id": None})
 
-    def test_passes_session_id(self, monkeypatch):
-        calls = []
+    def test_passes_session_id(self):
+        mock_status = {
+            "available": True,
+            "enabled": True,
+            "server_reachable": False,
+            "voice": "",
+            "volume": 0.3,
+            "tts_wyoming_host": "localhost",
+            "tts_wyoming_port": 10200,
+            "error": None,
+        }
+        mock_get = bigfoot.mock("spellbook.notifications.tts:get_status")
+        mock_get.returns(mock_status)
 
-        def _mock_get_status(**kwargs):
-            calls.append(kwargs)
-            return {
-                "available": True,
-                "enabled": True,
-                "model_loaded": False,
-                "voice": "af_heart",
-                "volume": 0.3,
-                "error": None,
-            }
+        with bigfoot:
+            server.tts_status.fn(session_id="sess-456")
 
-        monkeypatch.setattr("spellbook.notifications.tts.get_status", _mock_get_status)
-
-        server.kokoro_status.fn(session_id="sess-456")
-
-        assert len(calls) == 1
-        assert calls[0]["session_id"] == "sess-456"
+        mock_get.assert_call(kwargs={"session_id": "sess-456"})
 
 
 class TestTtsSessionSet:
@@ -144,7 +137,7 @@ class TestTtsSessionSet:
 
         # Set initial values
         state = _get_session_state()
-        state["tts"] = {"enabled": True, "voice": "af_heart", "volume": 0.3}
+        state["tts"] = {"enabled": True, "voice": "test-voice", "volume": 0.3}
 
         result = server.tts_session_set.fn(voice="bf_emma")  # Only change voice
 
@@ -164,28 +157,34 @@ class TestTtsConfigSet:
 
         config_file = tmp_path / "spellbook.json"
         config_file.write_text("{}")
-        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_file)
+        mock_config_path = bigfoot.mock("spellbook.core.config:get_config_path")
+        mock_config_path.returns(config_file)
         monkeypatch.setattr(config_mod, "CONFIG_LOCK_PATH", tmp_path / "config.lock")
 
-        result = server.tts_config_set.fn(enabled=True, voice="bf_emma", volume=0.5)
+        with bigfoot:
+            result = server.tts_config_set.fn(enabled=True, voice="bf_emma", volume=0.5)
 
         assert result["status"] == "ok"
         assert result["config"]["tts_enabled"] is True
         assert result["config"]["tts_voice"] == "bf_emma"
         assert result["config"]["tts_volume"] == 0.5
+        mock_config_path.assert_call(args=(), kwargs={})
 
     def test_partial_update_only_sets_provided(self, tmp_path, monkeypatch):
         import spellbook.core.config as config_mod
 
         config_file = tmp_path / "spellbook.json"
         config_file.write_text('{"tts_enabled": true}')
-        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_file)
+        mock_config_path = bigfoot.mock("spellbook.core.config:get_config_path")
+        mock_config_path.returns(config_file)
         monkeypatch.setattr(config_mod, "CONFIG_LOCK_PATH", tmp_path / "config.lock")
 
-        result = server.tts_config_set.fn(voice="am_adam")
+        with bigfoot:
+            result = server.tts_config_set.fn(voice="am_adam")
 
         assert result["config"]["tts_voice"] == "am_adam"
         assert result["config"]["tts_enabled"] is True  # Preserved
+        mock_config_path.assert_call(args=(), kwargs={})
 
 
 class TestApiSpeakEndpoint:
@@ -193,6 +192,10 @@ class TestApiSpeakEndpoint:
 
     Uses mcp.http_app() to obtain the Starlette ASGI app for TestClient.
     This creates a full HTTP transport app that includes all custom routes.
+
+    Note: These tests use monkeypatch instead of bigfoot because Starlette's
+    TestClient runs its own event loop, which deadlocks with bigfoot's
+    mock activation/deactivation lifecycle.
     """
 
     @pytest.fixture(autouse=True)
@@ -225,7 +228,7 @@ class TestApiSpeakEndpoint:
         client = TestClient(app)
         response = client.post("/api/speak", json={})
         assert response.status_code == 400
-        assert "no text" in response.json()["error"]
+        assert response.json()["error"] == "no text provided"
 
     def test_invalid_json_returns_400(self):
         from starlette.testclient import TestClient
@@ -238,7 +241,7 @@ class TestApiSpeakEndpoint:
             headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 400
-        assert "invalid JSON" in response.json()["error"]
+        assert response.json()["error"] == "invalid JSON"
 
     def test_passes_voice_and_volume_to_speak(self, monkeypatch):
         from starlette.testclient import TestClient

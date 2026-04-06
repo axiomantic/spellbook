@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate diagrams for skills and commands by invoking Claude Code, Gemini CLI, or OpenCode/z.AI in headless mode.
+Generate diagrams for skills and commands by invoking Claude Code in headless mode.
 
 Discovers all skills and commands, classifies them into mandatory/optional tiers,
 detects staleness via SHA256 hash comparison, and regenerates stale or missing
-diagrams using the provider headless with the generating-diagrams skill.
+diagrams using Claude headless with the generating-diagrams skill.
 
 By default, only mandatory-tier items are processed. Use --all to include optional items.
 
@@ -14,8 +14,6 @@ Usage:
     python3 scripts/generate_diagrams.py --interactive  # review each diff before accepting
     python3 scripts/generate_diagrams.py --dry-run
     python3 scripts/generate_diagrams.py --force
-    python3 scripts/generate_diagrams.py --provider opencode
-    python3 scripts/generate_diagrams.py --provider opencode --model "zai-coding-plan/glm-4.7"
     python3 scripts/generate_diagrams.py --filter "implementing-*"
     python3 scripts/generate_diagrams.py --verbose
 """
@@ -32,7 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
 
-from spellbook.sdk.unified import get_agent_client, AgentOptions
+from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
 
 from diagram_config import (
     AGENTS_DIR,
@@ -342,7 +340,7 @@ def generate_diagram(
     """Generate a diagram for a single item via an LLM provider.
 
     Args:
-        provider: "claude", "gemini", or "opencode" (z_AI Coding Plan)
+        provider: "claude" or "gemini"
         model: model name to pass to the provider
         provider_args: extra arguments for the provider CLI
         write: If True, write the diagram file. If False, return the content
@@ -374,16 +372,6 @@ def generate_diagram(
         ]
         if provider_args:
             cmd.extend(provider_args)
-    elif provider == "opencode":
-        cmd = [
-            "opencode",
-            "run",
-            "-m", model,
-            "--format", "json",
-        ]
-        if provider_args:
-            cmd.extend(provider_args)
-        cmd.append(prompt)
     else:
         return GenerationResult(
             item=item,
@@ -538,7 +526,7 @@ def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
 # Smart update: diff retrieval, classification, and patching
 # ---------------------------------------------------------------------------
 
-# Classification and patching use the Unified SDK with on_text streaming and 120s timeout
+# Classification and patching now use the Unified SDK (no subprocess timeouts needed)
 
 CLASSIFICATION_PROMPT = """\
 You are classifying whether a source file change affects its workflow diagram.
@@ -624,18 +612,6 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
-def _make_sdk_client(provider: str, model: str, provider_args: list[str] | None = None):
-    """Create a Unified SDK client for classification/patching."""
-    options = AgentOptions(
-        cwd=REPO_ROOT,
-        model=model,
-        extra_args=provider_args or [],
-        on_text=lambda t: print(f"  [ai] {t[:120]}", file=sys.stderr, flush=True),
-        timeout=120,
-    )
-    return get_agent_client(provider, options)
-
-
 async def classify_change(
     source_path: Path,
     diagram_path: Path,
@@ -650,9 +626,15 @@ async def classify_change(
         return "REGENERATE"
 
     prompt = CLASSIFICATION_PROMPT.format(diff=diff)
-    client = _make_sdk_client(provider, model, provider_args)
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
-    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", flush=True)
+    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         classification = await client.run(prompt)
@@ -662,10 +644,10 @@ async def classify_change(
         return "REGENERATE"
 
     if classification in ("STAMP", "PATCH", "REGENERATE"):
-        print(f"  -> {classification}")
+        print(f" {classification}")
         return classification
 
-    print(f"  -> REGENERATE (unexpected output: {classification[:80]})")
+    print(" REGENERATE")
     return "REGENERATE"
 
 
@@ -684,22 +666,28 @@ async def patch_diagram(
 
     existing_diagram = diagram_path.read_text(encoding="utf-8")
     prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
-    client = _make_sdk_client(provider, model, provider_args)
+    
+    options = AgentOptions(
+        cwd=REPO_ROOT,
+        model=model,
+        extra_args=provider_args or []
+    )
+    client = get_agent_client(provider, options)
 
-    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", flush=True)
+    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
 
     try:
         output = await client.run(prompt)
         output = output.strip()
-    except Exception:
-        print("  -> failed, falling back to regeneration")
+    except Exception as e:
+        print(f" failed ({type(e).__name__}: {e}), falling back to regeneration")
         return None
 
     if not output or output == "CANNOT_PATCH":
-        print("  -> failed, falling back to regeneration")
+        print(" failed, falling back to regeneration")
         return None
 
-    print("  -> done")
+    print(" done")
     return output
 
 
@@ -946,11 +934,11 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 
 async def main_async() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate diagrams for skills and commands via LLM (Claude, Gemini, or OpenCode/z.AI)",
+        description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
     )
     parser.add_argument(
         "--provider",
-        choices=["claude", "gemini", "opencode"],
+        choices=["claude", "gemini"],
         default="claude",
         help="LLM provider to use (default: %(default)s)",
     )
@@ -1032,8 +1020,6 @@ async def main_async() -> int:
             model = "sonnet"
         elif provider == "gemini":
             model = "gemini-2.5-flash"
-        elif provider == "opencode":
-            model = "zai-coding-plan/glm-4.7"
     
     # Fast model for utility tasks (classification, patching)
     # Use the specified model if provided, otherwise default to a fast one
@@ -1043,8 +1029,6 @@ async def main_async() -> int:
             fast_model = "haiku"
         elif provider == "gemini":
             fast_model = "gemini-2.5-flash"
-        elif provider == "opencode":
-            fast_model = "zai-coding-plan/glm-4.5-air"
 
     # Merge and filter
     all_items = all_skills + all_commands + all_agents

@@ -37,8 +37,8 @@ CONFIG_SCHEMA = [
     {
         "key": "tts_voice",
         "type": "string",
-        "description": "Kokoro voice ID for TTS (e.g. bf_emma, af_heart)",
-        "default": "af_heart",
+        "description": "Voice name for TTS (depends on your Wyoming TTS server)",
+        "default": "",
     },
     {
         "key": "tts_volume",

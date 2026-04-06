@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.46.0] - 2026-04-06
+
+### Breaking
+- **TTS MCP tools renamed**: `kokoro_speak` and `kokoro_status` renamed to `tts_speak` and `tts_status`
+- **TTS backend replaced**: TTS no longer uses in-process Kokoro. Requires a Wyoming protocol TTS server (e.g., wyoming-piper, wyoming-kokoro)
+
+### Changed
+- **TTS dependency group**: Now includes `wyoming`, `numpy`, `sounddevice` (removed `kokoro`, `soundfile`, `spacy`, `misaki`)
+- **`TTS_DEFAULT_VOICE`**: Changed from `af_heart` to empty string (uses server default)
+- **Admin frontend**: Upgraded React to v19, added `@testing-library/dom`, reverted tailwindcss v4 (requires CSS migration)
+- **Brainstorming skill**: Renamed to `design-exploration`
+
+### Added
+- **Wyoming TTS config keys**: `tts_wyoming_host` and `tts_wyoming_port` for connecting to Wyoming protocol TTS servers
+- **Hook config override**: `SPELLBOOK_CONFIG_PATH` env var for overriding hook config file path
+
+### Fixed
+- **Admin frontend build**: Fixed TypeScript errors from React 18/19 version mismatch and missing `@testing-library/dom` peer dep
+- **Content provenance tests**: Tests no longer fail when user machine has crypto verification enabled
+- **Welcome action**: Bot PRs/issues no longer trigger the first-time contributor welcome message
+- **Feature-research diagram**: Improved with subgraphs, cross-references, and completion checklist
+
+### Dependencies
+- Bumped `@opencode-ai/sdk` to 1.3.13 (context-curator, workflow-state)
+- Bumped `@opencode-ai/plugin` to 1.3.13 (context-curator, workflow-state)
+- Bumped `typescript` to 6.0.2 (context-curator, workflow-state, spellbook-forged)
+- Bumped `vitest` to 4.1.2 (tests/unit), 4.1.1 (admin frontend)
+- Bumped `typescript-eslint` to 8.57.2 (admin frontend)
+- Bumped `vite` to 8.0.2 (admin frontend)
+- Bumped `@eslint/js` to 10.0.1 (admin frontend)
+
 ## [0.45.0] - 2026-04-06
 
 ### Added
@@ -322,7 +355,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`--no-admin` installer flag** to skip admin frontend dependencies; frontend build staleness check via pre-commit hook
 - **"Signature Spells" in README and docs** - Five highlighted skills (develop, fractal-thinking, auditing-green-mirage, fact-checking, advanced-code-review) featured as signature capabilities
 - **Docs restructuring** - New task-oriented Guide section with curated skill selections, flattened reference navigation, intro paragraphs on guide-listed skill docs pages
-- **Quickstart rewrite** - Leads with `develop` skill workflow, links skill names to docs pages, removes outdated brainstorm/plan/execute sequence
+- **Quickstart rewrite** - Leads with `develop` skill workflow, links skill names to docs pages, removes outdated design-explore/plan/execute sequence
 - **Installer WHAT'S NEW display** - Shows changelog entries for new versions during upgrade
 - **Fractal session backfill script** (`scripts/backfill_fractal_sessions.py`) - Populates `session_id` and `timestamp` on existing fractal graph nodes by scanning JSONL session transcripts
 - **Shared diagram config** (`scripts/diagram_config.py`) - Centralized exclusion lists, aliases, and tiering config for diagram generation, freshness checking, and docs completeness
@@ -616,7 +649,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Fractal-thinking integration** - Added optional fractal exploration hooks to 14 existing skills, commands, and agents
-  - 5 high-value: brainstorming, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
+  - 5 high-value: design-exploration, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
   - 2 medium-high: analyzing-domains, review-design-verify
   - 7 medium: fact-check-verify, write-skill-test, reflexion-analyze, security-auditing, gathering-requirements, crystallize, hierophant-distiller
   - Consistent pattern: trigger condition, intensity level (pulse/explore), seed template, synthesis usage
@@ -767,7 +800,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **dispatching-parallel-agents skill** - Added Context Minimization Protocol and Subagent Dispatch Template sections (moved from CLAUDE.spellbook.md)
 - **finishing-a-development-branch skill** - Added Branch-Relative Documentation section (moved from CLAUDE.spellbook.md)
 - **writing-skills skill** - Added "Writing Effective Skill Descriptions" section with description anatomy, trigger phrase guidance, model descriptions, anti-patterns table, and overlap disambiguation guidelines
-- **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, brainstorming, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
+- **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, design-exploration, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
 
 ### Added
 - **Security hardening: defense-in-depth** - Comprehensive security layer for prompt injection, privilege escalation, and data exfiltration protection
@@ -870,7 +903,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detects target type (code, document, api, test, claim, artifact, readiness)
   - Generates dimension tables, severity levels, finding schemas, verdict logic
   - Supports autonomous and interactive modes
-  - Integrates with brainstorming, writing-skills, and writing-commands skills
+  - Integrates with design-exploration, writing-skills, and writing-commands skills
 
 ## [0.9.6] - 2026-02-03
 

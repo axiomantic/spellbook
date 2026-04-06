@@ -79,7 +79,7 @@ nav:
   - Guide:
     - Building Features:
       - skills/develop.md
-      - skills/brainstorming.md
+      - skills/design-exploration.md
       - skills/writing-plans.md
       - skills/executing-plans.md
       - skills/gathering-requirements.md
@@ -144,7 +144,7 @@ nav:
       - skills/async-await-patterns.md
       - skills/auditing-green-mirage.md
       - skills/autonomous-roundtable.md
-      - skills/brainstorming.md
+      - skills/design-exploration.md
       - skills/branch-context.md
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
@@ -212,7 +212,7 @@ nav:
       - commands/audit-mirage-analyze.md
       - commands/audit-mirage-cross.md
       - commands/audit-mirage-report.md
-      - commands/brainstorm.md
+      - commands/design-explore.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
       - commands/code-review-tarot.md

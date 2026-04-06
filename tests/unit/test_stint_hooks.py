@@ -21,6 +21,9 @@ def _run_hook(stdin_data: dict | str, env_overrides: dict | None = None, timeout
     # Ensure spellbook is importable by the subprocess
     existing_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = PROJECT_ROOT + (":" + existing_pythonpath if existing_pythonpath else "")
+    # Use a non-existent config path to avoid interference from user config
+    # (e.g., crypto gate settings that require signed content provenance)
+    env.setdefault("SPELLBOOK_CONFIG_PATH", "/dev/null/nonexistent")
     if env_overrides:
         env.update(env_overrides)
 
