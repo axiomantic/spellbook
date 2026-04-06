@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.1] - 2026-04-06
+
+### Fixed
+- **Security hook false positives**: LOW-severity entropy findings (ENTROPY-001) no longer block legitimate Bash commands. The entropy check is retained as an informational signal but no longer causes `check_tool_input` or `check_tool_output` to return `safe=False`.
+
 ## [0.46.0] - 2026-04-06
 
 ### Breaking

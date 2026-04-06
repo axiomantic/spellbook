@@ -92,8 +92,9 @@ def check_tool_input(
                 check_patterns(text, INJECTION_RULES, security_mode)
             )
 
+    blocking = [f for f in findings if f.get("severity") != "LOW"]
     return {
-        "safe": len(findings) == 0,
+        "safe": len(blocking) == 0,
         "findings": findings,
         "tool_name": tool_name,
     }
@@ -145,8 +146,9 @@ def check_tool_output(
         check_patterns(output_text, INJECTION_TRIGGERS, security_mode)
     )
 
+    blocking = [f for f in findings if f.get("severity") != "LOW"]
     return {
-        "safe": len(findings) == 0,
+        "safe": len(blocking) == 0,
         "findings": findings,
         "tool_name": tool_name,
     }
