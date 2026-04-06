@@ -440,9 +440,10 @@ class TestSpeak:
 
         result = await tts_mod.speak("hello", voice="test-voice", volume=0.3)
 
+        expected_wav = str(Path("/tmp") / "spellbook-tts-test-uuid.wav")
         assert result["ok"] is True
         assert isinstance(result["elapsed"], float)
-        assert result["wav_path"] == "/tmp/spellbook-tts-test-uuid.wav"
+        assert result["wav_path"] == expected_wav
         assert len(play_calls) == 1
 
     @pytest.mark.asyncio
@@ -555,6 +556,7 @@ class TestSpeak:
 
         result = await tts_mod.speak("hello")
 
+        expected_wav = str(Path("/tmp") / "spellbook-tts-test-uuid.wav")
         assert result["ok"] is True
-        assert result["wav_path"] == "/tmp/spellbook-tts-test-uuid.wav"
-        assert result["warning"] == "Audio playback failed: No sounddevice. WAV file saved to /tmp/spellbook-tts-test-uuid.wav"
+        assert result["wav_path"] == expected_wav
+        assert result["warning"] == f"Audio playback failed: No sounddevice. WAV file saved to {expected_wav}"
