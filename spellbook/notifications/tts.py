@@ -9,6 +9,7 @@ import asyncio
 import logging
 import socket
 import tempfile
+import threading
 import time
 import uuid
 import wave
@@ -43,6 +44,11 @@ _MAX_TEXT_LENGTH = 5000  # Character limit for synthesis requests
 
 # Module-level state
 _server_reachable = False
+
+# Lock protecting sounddevice re-initialization and playback.
+# PortAudio is not thread-safe, so concurrent _terminate/_initialize/play/wait
+# sequences must be serialized.
+_playback_lock = threading.Lock()
 
 
 def _cleanup_stale_wav_files() -> None:
@@ -99,7 +105,9 @@ async def _wyoming_synthesize(
         sample_width = 2  # default 16-bit
 
         while True:
-            event = await async_read_event(reader)
+            event = await asyncio.wait_for(
+                async_read_event(reader), timeout=_READ_TIMEOUT
+            )
             if event is None:
                 break
 
@@ -362,10 +370,16 @@ async def speak(
         # Re-initialize PortAudio so it picks up the current system default
         # output device. Without this, playback always targets whatever device
         # was default when the daemon (and thus PortAudio) first started.
-        sd._terminate()
-        sd._initialize()
-        sd.play(audio_array, sample_rate)
-        sd.wait()
+        # These are private methods but necessary for PortAudio re-init in
+        # long-running daemons; the lock serializes access to avoid races.
+        def _play_sync() -> None:
+            with _playback_lock:
+                sd._terminate()
+                sd._initialize()
+                sd.play(audio_array, sample_rate)
+                sd.wait()
+
+        await asyncio.to_thread(_play_sync)
 
         # Clean up WAV file after successful playback
         try:
@@ -378,5 +392,6 @@ async def speak(
 
     if warnings:
         result["warning"] = "; ".join(warnings)
+        result["warnings"] = warnings
 
     return result

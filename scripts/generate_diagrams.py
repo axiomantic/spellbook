@@ -639,8 +639,8 @@ async def classify_change(
     try:
         classification = await client.run(prompt)
         classification = classification.strip().upper()
-    except Exception:
-        print(" REGENERATE")
+    except Exception as e:
+        print(f"  -> REGENERATE ({type(e).__name__}: {e})")
         return "REGENERATE"
 
     if classification in ("STAMP", "PATCH", "REGENERATE"):
@@ -679,8 +679,8 @@ async def patch_diagram(
     try:
         output = await client.run(prompt)
         output = output.strip()
-    except Exception:
-        print(" failed, falling back to regeneration")
+    except Exception as e:
+        print(f" failed ({type(e).__name__}: {e}), falling back to regeneration")
         return None
 
     if not output or output == "CANNOT_PATCH":

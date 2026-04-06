@@ -780,8 +780,9 @@ def _get_repairs() -> list[dict]:
         message: Human-readable description
         fix_command: Command the user can run to fix the issue
 
-    Uses a socket probe to check Wyoming TTS server connectivity
-    when TTS is enabled.
+    Uses a blocking socket probe to check Wyoming TTS server connectivity
+    when TTS is enabled. This function is called from sync context
+    (session_init), so blocking I/O is acceptable here.
     """
     repairs = []
 
@@ -805,7 +806,7 @@ def _get_repairs() -> list[dict]:
                 ),
             })
         except Exception:
-            pass
+            logger.debug("TTS availability check failed", exc_info=True)
 
     return repairs
 
