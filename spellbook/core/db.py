@@ -87,12 +87,12 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
         return conn
 
 
-def _migrate_stint_stack_unique_constraint(cursor):
-    """Add UNIQUE(project_path, session_id) to stint_stack (idempotent).
+def _migrate_stint_stack_schema(cursor):
+    """Ensure stint_stack has NOT NULL on session_id and UNIQUE constraint (idempotent).
 
-    SQLite doesn't support ALTER TABLE ADD CONSTRAINT, so we must recreate
-    the table if the constraint is missing. We detect this by checking
-    whether the table's CREATE SQL already contains the UNIQUE clause.
+    SQLite doesn't support ALTER TABLE ADD CONSTRAINT or ALTER COLUMN, so we
+    must recreate the table if the schema doesn't match. Checks both conditions
+    in a single pass and rebuilds only if needed.
     """
     row = cursor.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='stint_stack'"
@@ -100,45 +100,10 @@ def _migrate_stint_stack_unique_constraint(cursor):
     if row is None:
         return  # Table doesn't exist yet; CREATE TABLE will handle it
     create_sql = row[0]
-    if "UNIQUE" in create_sql.upper():
-        return  # Constraint already present
-
-    cursor.execute("ALTER TABLE stint_stack RENAME TO _stint_stack_old")
-    cursor.execute("""
-        CREATE TABLE stint_stack (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_path TEXT NOT NULL,
-            session_id TEXT NOT NULL,
-            stack_json TEXT NOT NULL DEFAULT '[]',
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(project_path, session_id)
-        )
-    """)
-    # Delete legacy rows with NULL session_id (no longer valid)
-    cursor.execute("DELETE FROM _stint_stack_old WHERE session_id IS NULL")
-    cursor.execute("""
-        INSERT INTO stint_stack (id, project_path, session_id, stack_json, updated_at)
-        SELECT id, project_path, session_id, stack_json, updated_at
-        FROM _stint_stack_old
-    """)
-    cursor.execute("DROP TABLE _stint_stack_old")
-
-
-def _migrate_stint_stack_session_id_not_null(cursor):
-    """Make session_id NOT NULL in stint_stack (idempotent).
-
-    If the table already has NOT NULL on session_id, this is a no-op.
-    Otherwise, recreates the table with the constraint and deletes
-    legacy rows that have NULL session_id.
-    """
-    row = cursor.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='stint_stack'"
-    ).fetchone()
-    if row is None:
-        return  # Table doesn't exist yet; CREATE TABLE will handle it
-    create_sql = row[0]
-    if "session_id TEXT NOT NULL" in create_sql:
-        return  # Already NOT NULL
+    has_not_null = "session_id TEXT NOT NULL" in create_sql
+    has_unique = "UNIQUE" in create_sql.upper()
+    if has_not_null and has_unique:
+        return  # Schema already matches target
 
     cursor.execute("ALTER TABLE stint_stack RENAME TO _stint_stack_old")
     cursor.execute("""
@@ -805,11 +770,8 @@ def init_db(db_path: str = None) -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_hash ON sleuth_cache(content_hash)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_expires ON sleuth_cache(expires_at)")
 
-    # Migrate stint_stack: add composite unique constraint on (project_path, session_id)
-    _migrate_stint_stack_unique_constraint(cursor)
-
-    # Migrate stint_stack: make session_id NOT NULL
-    _migrate_stint_stack_session_id_not_null(cursor)
+    # Migrate stint_stack: ensure NOT NULL + UNIQUE constraint on session_id
+    _migrate_stint_stack_schema(cursor)
 
     # Migrate trust_registry: add signature columns if missing
     _migrate_trust_registry_v2(cursor)
