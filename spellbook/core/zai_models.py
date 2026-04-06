@@ -1,5 +1,6 @@
 """Zai model registry and dataclasses for OpenCode/z.AI support."""
 
+import logging
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 
@@ -238,6 +239,9 @@ class ModelRegistry:
                 self._models[model.id] = model
             except (KeyError, ValueError) as e:
                 # Skip invalid user models without crashing
+                logging.getLogger(__name__).warning(
+                    "Skipping invalid user model config: %s", model_config, exc_info=True
+                )
                 continue
     
     def get_all_models(self) -> List[ZaiModel]:

@@ -5,6 +5,7 @@ spellbook configuration and model-specific overrides via ModelRegistry.
 """
 
 import asyncio
+import logging
 from typing import Dict, Optional
 from spellbook.core.config import config_get
 
@@ -37,7 +38,9 @@ class ConcurrencyManager:
                 from spellbook.core.zai_models import get_registry
                 self._model_registry = get_registry()
             except ImportError:
-                pass
+                logging.getLogger(__name__).debug(
+                    "Could not import zai_models ModelRegistry", exc_info=True
+                )
         return self._model_registry
     
     def _get_semaphore_limit(self, model_id: str) -> int:

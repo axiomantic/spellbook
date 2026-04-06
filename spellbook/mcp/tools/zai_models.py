@@ -4,6 +4,8 @@ Provides tools for listing models, getting model details, configuring
 default models and task routing, setting API keys, and checking concurrency.
 """
 
+import logging
+
 __all__ = [
     "zai_list_models",
     "zai_get_model_info",
@@ -62,6 +64,7 @@ def zai_list_models(ctx: Context) -> dict:
             "models": [asdict(m) for m in models],
         }
     except Exception as e:
+        logging.getLogger(__name__).error("zai_list_models failed", exc_info=True)
         return {"error": str(e), "models": []}
 
 
@@ -236,4 +239,5 @@ def zai_concurrency_status(ctx: Context) -> dict:
 
         return {"models": models_info}
     except Exception as e:
+        logging.getLogger(__name__).error("zai_concurrency_status failed", exc_info=True)
         return {"error": str(e), "models": {}}
