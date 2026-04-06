@@ -3,6 +3,7 @@
 import json
 from types import SimpleNamespace
 
+import bigfoot
 import pytest
 
 from spellbook.core.db import init_db
@@ -53,6 +54,22 @@ class TestApiMemoryEventBranch:
 
         await routes.api_memory_event(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            log_event_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "session_id": "sess1",
+                    "project": "test-project",
+                    "tool_name": "Read",
+                    "subject": "/path/to/file.py",
+                    "summary": "Read file",
+                    "tags": "",
+                    "event_type": "tool_use",
+                    "branch": "feature-x",
+                },
+            )
         assert captured["branch"] == "feature-x"
         assert captured["db_path"] == str(db_path)
 
@@ -82,6 +99,22 @@ class TestApiMemoryEventBranch:
 
         await routes.api_memory_event(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            log_event_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "session_id": "sess1",
+                    "project": "test-project",
+                    "tool_name": "Read",
+                    "subject": "/path/to/file.py",
+                    "summary": "Read file",
+                    "tags": "",
+                    "event_type": "tool_use",
+                    "branch": "",
+                },
+            )
         assert captured["branch"] == ""
 
 
@@ -110,6 +143,20 @@ class TestApiMemoryRecallBranch:
 
         await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": "/path/to/file.py",
+                    "branch": "feature-x",
+                    "repo_path": "",
+                },
+            )
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
@@ -137,6 +184,20 @@ class TestApiMemoryRecallBranch:
 
         await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": None,
+                    "branch": "main",
+                    "repo_path": "/Users/test/repo",
+                },
+            )
         assert captured["branch"] == "main"
         assert captured["repo_path"] == "/Users/test/repo"
 
@@ -163,6 +224,20 @@ class TestApiMemoryRecallBranch:
 
         await routes.api_memory_recall(request)
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test",
+                    "namespace": "test-project",
+                    "limit": 5,
+                    "file_path": None,
+                    "branch": "",
+                    "repo_path": "",
+                },
+            )
         assert captured["branch"] == ""
         assert captured["repo_path"] == ""
 
@@ -210,6 +285,24 @@ class TestMcpMemoryRecallBranch:
             file_path="",
         )
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            project_mock.assert_call(args=(mock_ctx,), kwargs={})
+            repo_mock.assert_call(args=(fake_project_path,), kwargs={})
+            branch_mock.assert_call(args=("/Users/test/myproject",), kwargs={})
+            recall_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "query": "test query",
+                    "namespace": expected_namespace,
+                    "limit": 10,
+                    "file_path": None,
+                    "branch": "feature-branch",
+                    "repo_path": "/Users/test/myproject",
+                    "scope": "project",
+                },
+            )
         assert captured["branch"] == "feature-branch"
         assert captured["repo_path"] == "/Users/test/myproject"
         assert captured["namespace"] == expected_namespace
@@ -258,5 +351,20 @@ class TestMcpMemoryStoreMemoriesBranch:
             namespace="",
         )
 
+        with bigfoot.in_any_order():
+            db_mock.assert_call(args=(), kwargs={})
+            project_mock.assert_call(args=(mock_ctx,), kwargs={})
+            branch_mock.assert_call(args=(fake_project_path,), kwargs={})
+            store_mock.assert_call(
+                args=(),
+                kwargs={
+                    "db_path": str(db_path),
+                    "memories_json": '{"memories": []}',
+                    "event_ids_str": "",
+                    "namespace": expected_namespace,
+                    "branch": "dev-branch",
+                    "scope": "project",
+                },
+            )
         assert captured["branch"] == "dev-branch"
         assert captured["namespace"] == expected_namespace

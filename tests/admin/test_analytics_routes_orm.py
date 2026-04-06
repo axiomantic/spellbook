@@ -8,6 +8,7 @@ the TestClient creates real socket connections that bigfoot 0.19.1's
 socket_mock plugin intercepts inside sandboxes.
 """
 
+import bigfoot
 import pytest
 
 from collections import namedtuple
@@ -81,6 +82,8 @@ class TestToolFrequencyORM:
         )
         response = client.get("/api/analytics/tool-frequency")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "tools": [
@@ -97,6 +100,8 @@ class TestToolFrequencyORM:
         )
         response = client.get("/api/analytics/tool-frequency")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {"tools": []}
 
@@ -109,6 +114,8 @@ class TestToolFrequencyORM:
             _make_session_mock(rows),
         )
         response = client.get("/api/analytics/tool-frequency?period=all")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -126,6 +133,8 @@ class TestToolFrequencyORM:
         response = client.get(
             "/api/analytics/tool-frequency?period=24h&event_type=tool_call"
         )
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -156,6 +165,8 @@ class TestErrorRatesORM:
         )
         response = client.get("/api/analytics/error-rates")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "tools": [
@@ -176,6 +187,8 @@ class TestErrorRatesORM:
         )
         response = client.get("/api/analytics/error-rates?period=all")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "tools": [
@@ -191,6 +204,8 @@ class TestErrorRatesORM:
             _make_session_mock([]),
         )
         response = client.get("/api/analytics/error-rates")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -222,6 +237,8 @@ class TestTimelineORM:
         )
         response = client.get("/api/analytics/timeline")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "timeline": [
@@ -243,6 +260,8 @@ class TestTimelineORM:
         )
         response = client.get("/api/analytics/timeline?period=7d")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "timeline": [
@@ -258,6 +277,8 @@ class TestTimelineORM:
             _make_session_mock([]),
         )
         response = client.get("/api/analytics/timeline")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"timeline": []}
@@ -293,6 +314,8 @@ class TestAnalyticsSummaryORM:
         )
         response = client.get("/api/analytics/summary")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "total_events": 5000,
@@ -313,6 +336,8 @@ class TestAnalyticsSummaryORM:
         )
         response = client.get("/api/analytics/summary")
 
+        mock_session.assert_call(args=(), kwargs={})
+
         assert response.status_code == 200
         assert response.json() == {
             "total_events": 0,
@@ -328,6 +353,8 @@ class TestAnalyticsSummaryORM:
             _make_session_mock([]),
         )
         response = client.get("/api/analytics/summary")
+
+        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {

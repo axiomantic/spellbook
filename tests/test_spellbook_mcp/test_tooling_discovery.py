@@ -1,5 +1,6 @@
 """Tests for tooling discovery system."""
 
+import bigfoot
 import pytest
 import yaml
 from pathlib import Path
@@ -8,6 +9,13 @@ from pathlib import Path
 REGISTRY_PATH = str(
     Path(__file__).parent.parent.parent / "spellbook" / "data" / "tooling-registry.yaml"
 )
+
+
+def _chain(proxy, fn, n):
+    """Chain .calls(fn) n times on a bigfoot mock proxy."""
+    for _ in range(n):
+        proxy.calls(fn)
+    return proxy
 
 
 class TestRegistryLoads:
@@ -143,6 +151,7 @@ class TestCLIDetection:
         assert len(gh_tools) == 1
         assert gh_tools[0]["available"] is True
         assert "cli_available" in gh_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("gh",), kwargs={})
 
     def test_cli_not_detected_when_missing(self, monkeypatch):
         """CLI tool not marked available when binary not found."""
@@ -155,6 +164,10 @@ class TestCLIDetection:
         docker_tools = [t for t in result["tools"] if t["name"] == "Docker CLI"]
         assert len(docker_tools) == 1
         assert docker_tools[0]["available"] is False
+
+        with bigfoot.in_any_order():
+            mock_which.assert_call(args=("docker",), kwargs={})
+            mock_which.assert_call(args=("docker-compose",), kwargs={})
 
 
 class TestDepScanning:
@@ -177,6 +190,7 @@ class TestDepScanning:
         assert len(aws_tools) == 1
         assert aws_tools[0]["available"] is True
         assert "dep_detected" in aws_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("aws",), kwargs={})
 
     def test_dep_scanning_package_json(self, tmp_path, monkeypatch):
         """Detects npm deps from package.json."""
@@ -200,6 +214,7 @@ class TestDepScanning:
         assert len(stripe_tools) == 1
         assert stripe_tools[0]["available"] is True
         assert "dep_detected" in stripe_tools[0]["detection_methods"]
+        mock_which.assert_call(args=("stripe",), kwargs={})
 
 
 class TestMCPToolWrapper:

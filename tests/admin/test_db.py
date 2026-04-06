@@ -1,5 +1,6 @@
 import pytest
 import sqlite3
+import bigfoot
 
 
 def _make_test_db(tmp_path):
@@ -77,6 +78,7 @@ async def test_query_spellbook_db_runs_in_thread(monkeypatch):
 
     await query_spellbook_db("SELECT 1")
 
+    proxy.assert_call(args=(), kwargs={})
     # The DB work should have run on a different thread
     assert len(call_thread_ids) == 1
     assert call_thread_ids[0] != main_thread_id

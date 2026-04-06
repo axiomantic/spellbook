@@ -2,7 +2,9 @@
 
 import argparse
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 from spellbook.cli.commands.events import register
 

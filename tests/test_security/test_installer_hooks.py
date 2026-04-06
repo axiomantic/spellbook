@@ -17,6 +17,8 @@ import sys
 import pytest
 from pathlib import Path
 
+import bigfoot
+
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
     _cleanup_legacy_hooks,

@@ -25,41 +25,6 @@ class AgentOptions:
     on_text: Optional[Callable[[str], None]] = None
     # Timeout in seconds for the entire run() call. None = no timeout.
     timeout: Optional[float] = 120.0
-
-@dataclass
-class AgentMessage:
-    """A message in the agent conversation."""
-    role: str
-    content: str
-    type: str = "text"
-    usage: Dict[str, int] = field(default_factory=dict)
-
-
-def _extract_text(content: Any) -> str:
-    """Extract plain text from an AssistantMessage's content blocks.
-
-    AssistantMessage.content is list[ContentBlock] where ContentBlock
-    can be TextBlock(text=str), ToolUseBlock, ThinkingBlock, etc.
-    We only care about TextBlock.text for output.
-    """
-    if isinstance(content, str):
-        return content
-    if not isinstance(content, list):
-        return str(content) if content else ""
-    parts: list[str] = []
-    for block in content:
-        # TextBlock has a .text attribute
-        text = getattr(block, "text", None)
-        if text:
-            parts.append(text)
-    return "\n".join(parts)
-
-
-def _stderr_printer(line: str) -> None:
-    """Default stderr callback: print to stderr."""
-    print(line, file=sys.stderr, flush=True)
-
-
 class AgentClient(abc.ABC):
     """Programmatic client for an AI Agent, mirroring claude-agent-sdk-python."""
 
@@ -86,40 +51,6 @@ class AgentClient(abc.ABC):
         """Run the CLI as a headless subprocess, returning output."""
         pass
 
-    @property
-    @abc.abstractmethod
-    def provider(self) -> str:
-        """The provider name (claude or gemini)."""
-        pass
-
-class ClaudeAgentClient(AgentClient):
-    """Client using the official claude-agent-sdk-python."""
-
-    @property
-    def provider(self) -> str:
-        return "claude"
-
-    def _make_claude_options(self):
-        from claude_agent_sdk import ClaudeAgentOptions
-        return ClaudeAgentOptions(
-            system_prompt=self.options.system_prompt,
-            cwd=str(self.options.cwd),
-            model=self.options.model,
-            max_turns=self.options.max_turns,
-            permission_mode=self.options.permission_mode,
-            allowed_tools=self.options.allowed_tools,
-            disallowed_tools=self.options.disallowed_tools,
-            # Pass stderr through so CLI errors are visible
-            stderr=_stderr_printer,
-        )
-
-    async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        """Send a prompt and stream response messages.
-
-        Collects all messages inside the async-with block to avoid yielding
-        through anyio cancel scopes (which breaks on cross-task finalization).
-        Streams text to on_text callback as it arrives.
-        """
         try:
             from claude_agent_sdk import ClaudeSDKClient
         except ImportError:
@@ -237,18 +168,6 @@ class ClaudeAgentClient(AgentClient):
             "output": stdout.decode().strip(),
             "pid": process.pid,
         }
-
-class GeminiAgentClient(AgentClient):
-    """Client for Gemini CLI, emulating the Claude SDK interface via async subprocess."""
-
-    @property
-    def provider(self) -> str:
-        return "gemini"
-
-    async def query(self, prompt: str) -> AsyncIterator[AgentMessage]:
-        """Run gemini CLI asynchronously and yield a single response message."""
-        # Build command based on Unified AgentOptions
-        cmd = ["gemini", "--prompt", prompt, "-o", "text"]
 
         # Map permission modes
         if self.options.permission_mode == "dontAsk":

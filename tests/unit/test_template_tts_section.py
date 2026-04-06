@@ -2,7 +2,7 @@
 
 Task 17: The installable template should include an Audio and Notification
 Configuration section between Session Resume and Project Knowledge, referencing
-the audio-notifications skill for TTS (kokoro) and OS notification details.
+the audio-notifications skill for TTS (Wyoming protocol) and OS notification details.
 """
 
 from pathlib import Path
@@ -49,12 +49,12 @@ class TestAudioNotificationSection:
         section = self._get_section(content)
         assert "audio-notifications" in section
 
-    def test_mentions_tts_kokoro(self):
-        """The section should mention TTS and kokoro."""
+    def test_mentions_tts_wyoming(self):
+        """The section should mention TTS and Wyoming protocol."""
         content = self._read_template()
         section = self._get_section(content)
         assert "TTS" in section
-        assert "kokoro" in section
+        assert "Wyoming" in section
 
     def test_mentions_os_notifications(self):
         """The section should mention OS notification configuration."""

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
 pytestmark = pytest.mark.slow
 

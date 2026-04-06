@@ -2,6 +2,8 @@
 
 import json
 
+import bigfoot
+from dirty_equals import IsInstance
 import pytest
 
 

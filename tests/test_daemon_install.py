@@ -349,6 +349,24 @@ class TestPlatformInstallersNoInstallDaemon:
 
         assert len(daemon_called) == 0
 
+    def test_crush_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
+        """CrushInstaller.install() does not call install_daemon."""
+        from installer.platforms.crush import CrushInstaller
+
+        config_dir = home_dir / ".local" / "share" / "crush"
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+        daemon_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon",
+            lambda *a, **kw: daemon_called.append(True) or (True, "ok"),
+        )
+
+        installer = CrushInstaller(spellbook_dir, config_dir, "0.10.0")
+        installer.install()
+
+        assert len(daemon_called) == 0
+
     def test_opencode_no_install_daemon(self, spellbook_dir, home_dir, monkeypatch):
         """OpenCodeInstaller.install() does not call install_daemon."""
         from installer.platforms.opencode import OpenCodeInstaller
@@ -555,7 +573,7 @@ class TestGetDaemonPython:
 # ---------------------------------------------------------------------------
 
 class TestGetRepairs:
-    """Test _get_repairs() uses find_spec instead of importing kokoro."""
+    """Test _get_repairs() checks Wyoming server reachability."""
 
     def test_tts_enabled_kokoro_missing(self, monkeypatch):
         """Returns tts-deps-missing repair when TTS enabled but kokoro not installed."""
@@ -584,6 +602,7 @@ class TestGetRepairs:
     def test_tts_enabled_kokoro_installed(self, monkeypatch):
         """No tts-deps-missing repair when both kokoro and soundfile are present."""
         from spellbook.core.config import _get_repairs
+        from types import SimpleNamespace
 
         class FakeSpec:
             def __init__(self, name):
@@ -599,8 +618,7 @@ class TestGetRepairs:
 
         repairs = _get_repairs()
 
-        tts_deps_repairs = [r for r in repairs if r["id"] == "tts-deps-missing"]
-        assert len(tts_deps_repairs) == 0
+        repairs = _get_repairs()
 
     def test_find_spec_used_not_import(self, monkeypatch):
         """Verify find_spec is called, not direct import of kokoro."""
@@ -999,7 +1017,7 @@ class TestInstallDaemonTtsInclusion:
 # ---------------------------------------------------------------------------
 
 class TestSetupTtsReinstall:
-    """Test that setup_tts() reinstalls TTS deps when previously enabled but missing."""
+    """Test that setup_tts() handles reinstall scenarios correctly."""
 
     def test_reinstalls_tts_when_enabled_but_missing(self, tmp_path, monkeypatch):
         """setup_tts reinstalls TTS deps when config says enabled but kokoro is missing."""

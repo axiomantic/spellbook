@@ -8,6 +8,7 @@ verifies the fix detects the correct format.
 import json
 import os
 
+import bigfoot
 import pytest
 
 from spellbook.sessions.compaction import check_for_compaction, CompactionEvent
@@ -80,6 +81,8 @@ class TestCompactionDetection:
 
         event = check_for_compaction(project_path)
 
+        session_dir_mock.assert_call(args=(project_path,))
+
         assert event is not None
         assert isinstance(event, CompactionEvent)
         assert event.session_id == "test-session"
@@ -103,6 +106,8 @@ class TestCompactionDetection:
 
         event = check_for_compaction(project_path)
 
+        session_dir_mock.assert_call(args=(project_path,))
+
         assert event is None
 
     def test_isCompactSummary_false_not_detected(self, session_dir, monkeypatch):
@@ -119,6 +124,8 @@ class TestCompactionDetection:
         )
 
         event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is None
 
@@ -137,6 +144,8 @@ class TestCompactionDetection:
         )
 
         event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is None
 
@@ -161,6 +170,8 @@ class TestCompactionDetection:
         )
 
         event = check_for_compaction(project_path)
+
+        session_dir_mock.assert_call(args=(project_path,))
 
         assert event is not None
         assert isinstance(event, CompactionEvent)

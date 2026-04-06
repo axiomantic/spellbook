@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Breaking
+- **TTS MCP tools renamed**: `kokoro_speak` and `kokoro_status` renamed to `tts_speak` and `tts_status`
+- **TTS backend replaced**: TTS no longer uses in-process Kokoro. Requires a Wyoming protocol TTS server (e.g., wyoming-piper, wyoming-kokoro)
+
+### Changed
+- **TTS dependency group**: Now includes `wyoming`, `numpy`, `sounddevice` (removed `kokoro`, `soundfile`, `spacy`, `misaki`)
+- **`TTS_DEFAULT_VOICE`**: Changed from `af_heart` to empty string (uses server default)
+
+### Added
+- **Wyoming TTS config keys**: `tts_wyoming_host` and `tts_wyoming_port` for connecting to Wyoming protocol TTS servers
+
 ## [0.44.0] - 2026-04-04
 
 ### Removed

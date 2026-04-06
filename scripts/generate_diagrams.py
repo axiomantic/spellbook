@@ -384,161 +384,6 @@ def generate_diagram(
         if provider_args:
             cmd.extend(provider_args)
         cmd.append(prompt)
-    else:
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message=f"Unknown provider: {provider}",
-        ), None
-
-    if verbose:
-        print(f"  Command: {' '.join(cmd[:4])} [prompt truncated]")
-        print(f"  Stdin: {item.source_path}")
-
-    # Unset CLAUDECODE and GEMINI_CLI to allow spawning subprocesses from within
-    # an active session (e.g., when run via pre-commit hooks).
-    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
-
-    print(f"  Generating diagram for {item.source_path.name} via {provider} ({model})...", end="", flush=True)
-
-    try:
-        result = subprocess.run(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=None,  # inherit parent stderr so errors are visible
-            text=True,
-            cwd=REPO_ROOT,
-            env=env,
-        )
-    except FileNotFoundError:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message=f"'{cmd[0]}' command not found. Is it installed and on PATH?",
-        ), None
-
-    if result.returncode != 0:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message=f"{cmd[0]} exited with code {result.returncode} (stderr was printed above)",
-        ), None
-
-    diagram_content = result.stdout.strip()
-
-    # Check if Claude wrote to a DIAGRAM.md file instead of stdout.
-    # Common locations: source directory, repo root, or diagrams dir.
-    diagram_file_candidates = [
-        item.source_path.parent / "DIAGRAM.md",
-        REPO_ROOT / "DIAGRAM.md",
-        item.diagram_path.parent / f"{item.name}-DIAGRAM.md",
-    ]
-    for candidate in diagram_file_candidates:
-        if candidate.exists():
-            file_content = candidate.read_text(encoding="utf-8").strip()
-            if file_content:
-                if verbose:
-                    print(f"  Found LLM-written file: {candidate}")
-                if not diagram_content or "mermaid" not in diagram_content:
-                    diagram_content = file_content
-                candidate.unlink()
-            else:
-                candidate.unlink()
-
-    if not diagram_content:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message="Claude returned empty output",
-        ), None
-
-    # Accept both fenced (```mermaid) and raw mermaid output.
-    # Raw mermaid starts with a diagram type keyword (graph, flowchart,
-    # sequenceDiagram, stateDiagram, classDiagram, erDiagram, gantt, pie,
-    # journey, gitGraph, mindmap, timeline, etc.)
-    has_fenced = "```mermaid" in diagram_content
-    mermaid_keywords = (
-        "graph ", "graph\n", "flowchart ", "flowchart\n",
-        "sequenceDiagram", "stateDiagram", "classDiagram",
-        "erDiagram", "gantt", "pie", "journey", "gitGraph",
-        "mindmap", "timeline", "sankey", "xychart", "block-beta",
-    )
-    has_raw = any(diagram_content.lstrip().startswith(kw) for kw in mermaid_keywords)
-
-    if not has_fenced and not has_raw:
-        print(" failed")
-        return GenerationResult(
-            item=item,
-            status="failed",
-            message="Claude output does not contain mermaid content",
-        ), None
-
-    # Wrap raw mermaid in a fenced code block if needed
-    if has_raw and not has_fenced:
-        diagram_content = f"```mermaid\n{diagram_content}\n```"
-
-    # Build the output file with metadata header
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    meta = {
-        "source": source_rel,
-        "source_hash": f"sha256:{current_hash}",
-        "generated_at": now,
-        "generator": "generate_diagrams.py",
-    }
-    meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
-
-    output = f"{meta_line}\n# Diagram: {item.name}\n\n{diagram_content}\n"
-
-    if write:
-        # Ensure parent directory exists
-        item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
-        item.diagram_path.write_text(output, encoding="utf-8")
-
-    print(" done")
-    return GenerationResult(
-        item=item,
-        status="generated",
-        message=str(item.diagram_path.relative_to(REPO_ROOT)),
-    ), output
-
-
-# ---------------------------------------------------------------------------
-# Stamp existing diagram as fresh (update hash without changing content)
-# ---------------------------------------------------------------------------
-
-
-def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
-    """Update the source_hash in an existing diagram's metadata without changing content.
-
-    This marks the diagram as "reviewed and accepted" for the current source,
-    so it won't show as stale in future runs.
-    """
-    if not item.diagram_path.exists():
-        return
-
-    content = item.diagram_path.read_text(encoding="utf-8")
-    lines = content.split("\n", 1)
-
-    prefix = "<!-- diagram-meta: "
-    suffix = " -->"
-    if lines[0].startswith(prefix) and lines[0].rstrip().endswith(suffix):
-        meta = parse_diagram_meta(item.diagram_path)
-        meta["source_hash"] = f"sha256:{current_hash}"
-        meta["stamped_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        new_meta_line = f"{prefix}{json.dumps(meta)}{suffix}"
-        rest = lines[1] if len(lines) > 1 else ""
-        item.diagram_path.write_text(f"{new_meta_line}\n{rest}", encoding="utf-8")
-
-
-# ---------------------------------------------------------------------------
-# Smart update: diff retrieval, classification, and patching
-# ---------------------------------------------------------------------------
-
-# Classification and patching use the Unified SDK with on_text streaming and 120s timeout
 
 CLASSIFICATION_PROMPT = """\
 You are classifying whether a source file change affects its workflow diagram.
@@ -636,23 +481,6 @@ def _make_sdk_client(provider: str, model: str, provider_args: list[str] | None 
     return get_agent_client(provider, options)
 
 
-async def classify_change(
-    source_path: Path,
-    diagram_path: Path,
-    *,
-    provider: str = "claude",
-    model: str = "haiku",
-    provider_args: list[str] | None = None,
-) -> str:
-    """Classify a source file change via Unified SDK."""
-    diff = get_source_diff(source_path)
-    if not diff:
-        return "REGENERATE"
-
-    prompt = CLASSIFICATION_PROMPT.format(diff=diff)
-    client = _make_sdk_client(provider, model, provider_args)
-
-    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", flush=True)
 
     try:
         classification = await client.run(prompt)
@@ -1034,17 +862,6 @@ async def main_async() -> int:
             model = "gemini-2.5-flash"
         elif provider == "opencode":
             model = "zai-coding-plan/glm-4.7"
-    
-    # Fast model for utility tasks (classification, patching)
-    # Use the specified model if provided, otherwise default to a fast one
-    fast_model = args.model
-    if fast_model is None:
-        if provider == "claude":
-            fast_model = "haiku"
-        elif provider == "gemini":
-            fast_model = "gemini-2.5-flash"
-        elif provider == "opencode":
-            fast_model = "zai-coding-plan/glm-4.5-air"
 
     # Merge and filter
     all_items = all_skills + all_commands + all_agents

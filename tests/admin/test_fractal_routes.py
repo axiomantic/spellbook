@@ -3,7 +3,18 @@
 import asyncio
 from types import SimpleNamespace
 
+import bigfoot
 import pytest
+from dirty_equals import IsInstance
+
+from spellbook.admin.events import Event
+
+
+def _async_value(value):
+    """Return a coroutine that resolves to value, for mocking async functions."""
+    fut = asyncio.Future()
+    fut.set_result(value)
+    return fut
 
 from spellbook.admin.events import Event
 
@@ -833,6 +844,7 @@ class TestFractalGraphStatusUpdate:
                 "message": "Graph not found",
             }
         }
+
 
     def test_update_status_requires_auth(self, unauthenticated_client):
         """PATCH /fractal/graphs/{graph_id}/status returns 401 without auth."""

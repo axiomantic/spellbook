@@ -319,24 +319,6 @@ class TestMCPToolE2E:
         """Test spawn workflow with auto terminal detection (tests underlying functions)."""
         # Force macOS path so AppleScript assertions work on all platforms
         monkeypatch.setattr("sys.platform", "darwin")
-        from spellbook.daemon.terminal import spawn_terminal_window, _escape_for_applescript
-
-        prompt = "/execute-work-packet /path/to/packet.md"
-        wd = "/path/to/project"
-
-        mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
-        mock_detect.returns("iTerm2")
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
-        mock_popen.returns(types.SimpleNamespace(pid=12345))
-
-        with bigfoot:
-            # Step 1: Detect terminal (mocked)
-            from spellbook.daemon.terminal import detect_terminal
-            terminal = detect_terminal()
-            assert terminal == "iTerm2"
-
-            # Step 2: Spawn window
-            result = spawn_terminal_window(terminal, prompt, wd)
 
         assert result["status"] == "spawned"
         assert result["pid"] == 12345

@@ -13,6 +13,7 @@ import asyncio
 import time
 from types import SimpleNamespace
 
+import bigfoot
 import pytest
 
 from spellbook.admin.events import Event, EventBus, Subsystem

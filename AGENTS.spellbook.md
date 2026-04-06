@@ -79,7 +79,7 @@ When `resume_available: true`, load `session-resume` skill and execute `resume_b
 
 ## Audio and Notification Configuration
 
-Load `audio-notifications` skill for TTS (kokoro) and OS notification configuration, MCP tool tables, and quick commands. Auto-loads when TTS is enabled.
+Load `audio-notifications` skill for TTS (Wyoming protocol) and OS notification configuration, MCP tool tables, and quick commands. Auto-loads when TTS is enabled.
 
 ## Project Knowledge (AGENTS.md)
 

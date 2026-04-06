@@ -579,8 +579,8 @@ class RichRenderer(InstallerRenderer):
         from rich.prompt import Confirm
 
         console.print(Panel(
-            "Kokoro text-to-speech provides spoken notifications.\n"
-            "Requires ~500MB download on first use.",
+            "Wyoming protocol TTS provides spoken notifications.\n"
+            "Requires a running Wyoming TTS server (e.g., wyoming-piper).",
             title="Text-to-Speech",
             border_style="cyan",
         ))
@@ -662,53 +662,39 @@ class RichRenderer(InstallerRenderer):
         from installer.utils import check_tts_available
 
         if existing is not None:
-            if check_tts_available():
-                console.print(
-                    f"[dim]TTS already configured (enabled={existing})[/dim]"
-                )
-                return {}
-            elif existing:
-                console.print(
-                    "[yellow]TTS was enabled but dependencies are missing.[/yellow]"
-                )
-                return {}
-            else:
-                return {}
+            console.print(
+                f"[dim]TTS already configured (enabled={existing})[/dim]"
+            )
+            return {}
 
         from rich.prompt import Confirm
 
-        if check_tts_available():
-            enabled = Confirm.ask(
-                "Kokoro TTS detected. Enable text-to-speech notifications?",
-                default=True,
-                console=console,
-            )
-            if enabled:
-                from rich.panel import Panel
-                console.print(Panel(
-                    "[green]TTS enabled[/green]\n"
-                    "Voice: af_heart, Volume: 0.3\n"
-                    "Change settings with tts_session_set or tts_config_set MCP tools",
-                    title="Text-to-Speech",
-                    border_style="green",
-                    padding=(0, 2),
-                ))
+        server_available = check_tts_available()
+        enabled = Confirm.ask(
+            "Enable text-to-speech notifications? (Requires a Wyoming TTS server)",
+            default=server_available,
+            console=console,
+        )
+        if enabled:
+            from rich.panel import Panel
+            msg = "[green]TTS enabled[/green]\n"
+            if server_available:
+                msg += "Wyoming TTS server: detected\n"
             else:
-                console.print("[dim]TTS disabled. Enable later with tts_config_set MCP tool.[/dim]")
-            return {"tts_enabled": enabled}
+                msg += "Wyoming TTS server: not detected (start one on localhost:10200)\n"
+            msg += (
+                "Change settings with tts_session_set or tts_config_set MCP tools\n"
+                "[dim]Ensure a Wyoming-compatible TTS server (Piper, Kokoro, etc.) is running[/dim]"
+            )
+            console.print(Panel(
+                msg,
+                title="Text-to-Speech",
+                border_style="green",
+                padding=(0, 2),
+            ))
         else:
-            install = Confirm.ask(
-                "Install text-to-speech notifications? (Kokoro TTS, ~500MB download)",
-                default=False,
-                console=console,
-            )
-            if install:
-                return {"tts_install": True}
-            else:
-                console.print(
-                    "[dim]TTS skipped. Install later via installer.components.mcp.[/dim]"
-                )
-                return {"tts_enabled": False}
+            console.print("[dim]TTS disabled. Enable later with tts_config_set MCP tool.[/dim]")
+        return {"tts_enabled": enabled}
 
     # ------------------------------------------------------------------
     # Progress display
@@ -1050,37 +1036,20 @@ class PlainTextRenderer(InstallerRenderer):
         except (ImportError, Exception):
             existing = None
 
-        from installer.utils import check_tts_available
-
         if existing is not None:
-            if check_tts_available():
-                print(f"TTS already configured (enabled={existing})")
-                return {}
-            elif existing:
-                print("TTS was enabled but dependencies are missing.")
-                return {}
-            else:
-                return {}
+            print(f"TTS already configured (enabled={existing})")
+            return {}
 
-        if check_tts_available():
-            answer = input(
-                "Kokoro TTS detected. Enable text-to-speech notifications? [Y/n] "
-            ).strip().lower()
-            enabled = answer in ("", "y", "yes")
-            if enabled:
-                print("TTS enabled. Voice: af_heart, Volume: 0.3")
-            else:
-                print("TTS disabled. Enable later with tts_config_set MCP tool.")
-            return {"tts_enabled": enabled}
+        answer = input(
+            "Enable text-to-speech notifications? (Requires a Wyoming TTS server) [Y/n] "
+        ).strip().lower()
+        enabled = answer in ("", "y", "yes")
+        if enabled:
+            print("TTS enabled. Wyoming TTS server: localhost:10200")
+            print("Ensure a Wyoming-compatible TTS server (Piper, Kokoro, etc.) is running.")
         else:
-            answer = input(
-                "Install text-to-speech notifications? (Kokoro TTS, ~500MB download) [y/N] "
-            ).strip().lower()
-            if answer in ("y", "yes"):
-                return {"tts_install": True}
-            else:
-                print("TTS skipped. Install later via installer.components.mcp.")
-                return {"tts_enabled": False}
+            print("TTS disabled. Enable later with tts_config_set MCP tool.")
+        return {"tts_enabled": enabled}
 
     # ------------------------------------------------------------------
     # Progress display
