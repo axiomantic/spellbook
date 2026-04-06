@@ -21,7 +21,7 @@ from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
-from spellbook.core.db import get_connection
+from spellbook.core.db import get_connection, get_db_path
 
 MAX_STINT_DEPTH = 6
 
@@ -164,7 +164,7 @@ def _update_stack(project_path: str, mutate_fn: Callable[[list], list], db_path:
         db_path: Optional database path (for testing).
         session_id: Session identifier for session-scoped stints.
     """
-    from spellbook.core.db import get_db_path
+
 
     actual_path = db_path if db_path else str(get_db_path())
     max_retries = 10
