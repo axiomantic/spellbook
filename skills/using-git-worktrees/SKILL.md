@@ -257,7 +257,7 @@ Before reporting worktree ready — if ANY unchecked, STOP and resolve:
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) — REQUIRED when design is approved and implementation follows
+- **design-exploration** (Phase 4) — REQUIRED when design is approved and implementation follows
 - Any skill needing isolated workspace
 
 **Pairs with:**

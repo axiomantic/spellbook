@@ -88,7 +88,7 @@ For each state change: What happened? (past tense), Who cares? (handlers), What 
 | Characteristic | Signal | Recommended Skill |
 |----------------|--------|-------------------|
 | Complex state machines | Multiple status fields | designing-workflows |
-| Multiple bounded contexts | Different vocabularies | brainstorming |
+| Multiple bounded contexts | Different vocabularies | design-exploration |
 | Security-sensitive | PII, auth | gathering-requirements (Hermit) |
 | Complex aggregates | Many invariants | test-driven-development |
 

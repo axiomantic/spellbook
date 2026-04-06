@@ -24,8 +24,8 @@ Foundational skills for structured development (from [obra/superpowers](https://
 
 | Skill | When to Use |
 |-------|-------------|
-| [brainstorming](brainstorming.md) | Before coding - explore requirements and design |
-| [writing-plans](writing-plans.md) | After brainstorming - create implementation plan |
+| [design-exploration](design-exploration.md) | Before coding - explore requirements and design |
+| [writing-plans](writing-plans.md) | After design-exploration - create implementation plan |
 | [executing-plans](executing-plans.md) | Execute a written plan systematically |
 | [test-driven-development](test-driven-development.md) | Implementing any feature or fix |
 | [debugging](debugging.md) | **Unified debugging entry point** - routes to appropriate methodology |

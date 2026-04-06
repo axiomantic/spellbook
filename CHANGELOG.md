@@ -311,7 +311,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`--no-admin` installer flag** to skip admin frontend dependencies; frontend build staleness check via pre-commit hook
 - **"Signature Spells" in README and docs** - Five highlighted skills (develop, fractal-thinking, auditing-green-mirage, fact-checking, advanced-code-review) featured as signature capabilities
 - **Docs restructuring** - New task-oriented Guide section with curated skill selections, flattened reference navigation, intro paragraphs on guide-listed skill docs pages
-- **Quickstart rewrite** - Leads with `develop` skill workflow, links skill names to docs pages, removes outdated brainstorm/plan/execute sequence
+- **Quickstart rewrite** - Leads with `develop` skill workflow, links skill names to docs pages, removes outdated design-explore/plan/execute sequence
 - **Installer WHAT'S NEW display** - Shows changelog entries for new versions during upgrade
 - **Fractal session backfill script** (`scripts/backfill_fractal_sessions.py`) - Populates `session_id` and `timestamp` on existing fractal graph nodes by scanning JSONL session transcripts
 - **Shared diagram config** (`scripts/diagram_config.py`) - Centralized exclusion lists, aliases, and tiering config for diagram generation, freshness checking, and docs completeness
@@ -605,7 +605,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Fractal-thinking integration** - Added optional fractal exploration hooks to 14 existing skills, commands, and agents
-  - 5 high-value: brainstorming, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
+  - 5 high-value: design-exploration, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
   - 2 medium-high: analyzing-domains, review-design-verify
   - 7 medium: fact-check-verify, write-skill-test, reflexion-analyze, security-auditing, gathering-requirements, crystallize, hierophant-distiller
   - Consistent pattern: trigger condition, intensity level (pulse/explore), seed template, synthesis usage
@@ -756,7 +756,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **dispatching-parallel-agents skill** - Added Context Minimization Protocol and Subagent Dispatch Template sections (moved from CLAUDE.spellbook.md)
 - **finishing-a-development-branch skill** - Added Branch-Relative Documentation section (moved from CLAUDE.spellbook.md)
 - **writing-skills skill** - Added "Writing Effective Skill Descriptions" section with description anatomy, trigger phrase guidance, model descriptions, anti-patterns table, and overlap disambiguation guidelines
-- **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, brainstorming, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
+- **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, design-exploration, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
 
 ### Added
 - **Security hardening: defense-in-depth** - Comprehensive security layer for prompt injection, privilege escalation, and data exfiltration protection
@@ -859,7 +859,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detects target type (code, document, api, test, claim, artifact, readiness)
   - Generates dimension tables, severity levels, finding schemas, verdict logic
   - Supports autonomous and interactive modes
-  - Integrates with brainstorming, writing-skills, and writing-commands skills
+  - Integrates with design-exploration, writing-skills, and writing-commands skills
 
 ## [0.9.6] - 2026-02-03
 

@@ -7,7 +7,7 @@ invoked at each step of the development process.
 Selection Priority Order:
 1. Handle errors/failures (test errors -> fixing-tests, merge errors -> resolving-merge-conflicts)
 2. Handle feedback type (code_quality -> code-review --feedback, factual_accuracy -> fact-checking)
-3. Stage-based default (DISCOVER -> gathering-requirements, DESIGN -> brainstorming, etc.)
+3. Stage-based default (DISCOVER -> gathering-requirements, DESIGN -> design-exploration, etc.)
 """
 
 from typing import Optional
@@ -18,7 +18,7 @@ from spellbook.forged.models import IterationState, Feedback
 # Stage to default skill mapping
 STAGE_DEFAULT_SKILLS = {
     "DISCOVER": "gathering-requirements",
-    "DESIGN": "brainstorming",
+    "DESIGN": "design-exploration",
     "PLAN": "writing-plans",
     "IMPLEMENT": "develop",
     "COMPLETE": None,  # No skill needed for complete

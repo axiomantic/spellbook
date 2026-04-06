@@ -1,7 +1,7 @@
 <!-- diagram-meta: {"source": "commands/feature-design.md","source_hash": "sha256:3cbbaf74694aac56ddffa226d48ef3123b67d7518ee6d7cbb369b9d1ef09837c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: feature-design
 
-Phase 2 of develop: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.
+Phase 2 of develop: Create design document via design-exploration skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.
 
 ```mermaid
 flowchart TD
@@ -12,7 +12,7 @@ flowchart TD
     EscapeCheck{Escape hatch type?}
     SkipAll([Skip to Phase 3])
 
-    CreateDesign[Dispatch brainstorming subagent]
+    CreateDesign[Dispatch design-exploration subagent]
     SynthMode[Synthesis mode: no questions]
     SaveDesign[Save design document]
 
