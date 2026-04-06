@@ -119,7 +119,7 @@ export function createSessionCompactingHandler(
     );
     
     // Fetch stint stack
-    const stintResult = await mcpClient.stintCheck(getProjectPath());
+    const stintResult = await mcpClient.stintCheck(getProjectPath(), input.sessionID);
     state.stintStack = stintResult?.stack || [];
     
     // Build recovery context

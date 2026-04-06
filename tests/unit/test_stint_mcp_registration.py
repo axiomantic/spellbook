@@ -128,6 +128,8 @@ class TestStintPushBehavioralMode:
         mock_result = {"success": True, "depth": 1, "stack": []}
         mock_push = bigfoot.mock("spellbook.coordination.stint:push_stint")
         mock_push.__call__.returns(mock_result)
+        mock_get_session_id = bigfoot.mock("spellbook.mcp.tools.coordination:_get_session_id")
+        mock_get_session_id.__call__.returns("test-session-id")
 
         with bigfoot:
             result = fn(
@@ -139,6 +141,7 @@ class TestStintPushBehavioralMode:
                 metadata=None,
             )
 
+        mock_get_session_id.__call__.assert_call(args=(None,))
         mock_push.__call__.assert_call(
             kwargs={
                 "project_path": "/tmp/test",
@@ -147,7 +150,7 @@ class TestStintPushBehavioralMode:
                 "purpose": "testing",
                 "behavioral_mode": "ORCHESTRATOR: dispatch subagents",
                 "metadata": None,
-                "session_id": None,
+                "session_id": "test-session-id",
             },
         )
         bigfoot.log_mock.assert_log(

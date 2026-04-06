@@ -73,6 +73,8 @@ def stint_push(
     """
     from spellbook.coordination.stint import push_stint
     session_id = _get_session_id(ctx)
+    if session_id is None:
+        return {"error": "session_id is required. Stint operations require a session context."}
     result = push_stint(
         project_path=project_path,
         name=name,
@@ -123,6 +125,8 @@ def stint_pop(
     """
     from spellbook.coordination.stint import pop_stint
     session_id = _get_session_id(ctx)
+    if session_id is None:
+        return {"error": "session_id is required. Stint operations require a session context."}
     result = pop_stint(project_path=project_path, name=name, session_id=session_id)
     try:
         from spellbook.admin.events import Event, Subsystem, publish_sync
@@ -164,6 +168,8 @@ def stint_check(
     """
     from spellbook.coordination.stint import check_stint
     session_id = _get_session_id(ctx)
+    if session_id is None:
+        return {"error": "session_id is required. Stint operations require a session context."}
     return check_stint(project_path=project_path, session_id=session_id)
 
 
@@ -191,6 +197,8 @@ def stint_replace(
     """
     from spellbook.coordination.stint import replace_stint
     session_id = _get_session_id(ctx)
+    if session_id is None:
+        return {"error": "session_id is required. Stint operations require a session context."}
     result = replace_stint(
         project_path=project_path,
         stack=stack,
