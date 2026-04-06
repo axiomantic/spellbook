@@ -571,14 +571,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/brainstorming/" class="md-nav__link">
+      <a href="../../skills/design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -2674,14 +2674,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/brainstorming/" class="md-nav__link">
+      <a href="../../skills/design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -4609,14 +4609,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../brainstorm/" class="md-nav__link">
+      <a href="../design-explore/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /brainstorm
+    /design-explore
   
 
     
@@ -5625,17 +5625,6 @@
     <span class="md-ellipsis">
       
         Workflow Diagram
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
       
     </span>
   </a>
@@ -7757,17 +7746,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command Content
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7790,76 +7768,198 @@
 
 <h1 id="feature-research">/feature-research<a class="headerlink" href="#feature-research" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>I will generate a Mermaid diagram to visualize the <code>feature-research</code> command by following these steps:</p>
-<ol>
-<li><strong>Analyze <code>commands/feature-research.md</code></strong>: I'll read the markdown file to understand the process, its steps, decision points, and any referenced commands or skills. This will help determine the overall structure and complexity, and confirm that Mermaid is the appropriate diagramming tool.</li>
-<li><strong>Extract Content</strong>: I will systematically go through the markdown file, identifying all key actions, decisions, inputs, outputs, and any conditional logic. I will look for calls to other agents, skills, or commands, and note success/failure conditions.</li>
-<li><strong>Generate Diagram</strong>: Based on the extracted information, I will construct a Mermaid diagram. I'll use standard flow chart elements:<ul>
-<li>Rectangles for processes/steps.</li>
-<li>Diamonds for decision points.</li>
-<li>Stadium shapes for start/end points.</li>
-<li>Blue for subagent dispatches (<code>#4a9eff</code>).</li>
-<li>Red for quality gates/critical checks (<code>#ff6b6b</code>).</li>
-<li>Green for successful terminal conditions (<code>#51cf66</code>).
-I will also include a legend within the diagram.</li>
-</ul>
-</li>
-<li><strong>Verify Diagram</strong>: I will check the Mermaid code for syntax errors and ensure that the diagram accurately reflects the <code>feature-research</code> command as described in the markdown file, covering all branches and outcomes.
-<pre class="mermaid"><code>graph TD
-    %% Node Definitions
-    start((Start))
-    stop((Stop))
-    prereq_check{Prerequisite Verification}
-    prereq_fail_stop[Stop: Prerequisite Failed]:::red_stop
-    strategy_plan[1.1 Research Strategy Planning]
-    dispatch_subagent[1.2 Execute Research (Subagent)]:::blue_subagent
-    subagent_retry_check{Subagent First Failure?}
-    subagent_fail_2nd_stop[Subagent Failed Twice: Return UNKNOWN Findings]
-    extract_ambiguities[1.3 Ambiguity Extraction]
-    calc_quality_score[1.4 Research Quality Score Calculation]
-    quality_gate{Research Quality Score &gt;= 100%?}
-    user_choice[User Chooses Action]
-    phase1_complete_check{Phase 1 Complete Verification}
-    phase1_fail_stop[Stop: Phase 1 Incomplete]:::red_stop
-    proceed_to_1_5[/Proceed to Phase 1.5 (feature-discover)/]:::green_success
-
-    %% Graph Connections
-    start --&gt; prereq_check
-    prereq_check -- Any Check Fails --&gt; prereq_fail_stop
-    prereq_check -- All Checks Pass --&gt; strategy_plan
-    strategy_plan --&gt; dispatch_subagent
-    dispatch_subagent -- 1st Failure --&gt; subagent_retry_check
-    subagent_retry_check -- Yes --&gt; dispatch_subagent
-    subagent_retry_check -- No (2nd Failure) --&gt; subagent_fail_2nd_stop
-    subagent_fail_2nd_stop --&gt; extract_ambiguities
-    dispatch_subagent -- Success --&gt; extract_ambiguities
-    extract_ambiguities --&gt; calc_quality_score
-    calc_quality_score --&gt; quality_gate
-    quality_gate -- No (&lt;100%) --&gt; user_choice
-    user_choice -- Continue Anyway / Iterate / Skip --&gt; phase1_complete_check
-    quality_gate -- Yes (100%) --&gt; phase1_complete_check
-    phase1_complete_check -- Any Unchecked --&gt; phase1_fail_stop
-    phase1_complete_check -- All Checked --&gt; proceed_to_1_5
-
-    proceed_to_1_5 --&gt; stop
-    prereq_fail_stop --&gt; stop
-    phase1_fail_stop --&gt; stop
-
-
-    %% Styling
-    classDef red_stop fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff;
-    classDef green_success fill:#51cf66,stroke:#333,stroke-width:2px,color:#fff;
-    classDef blue_subagent fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff;
-
-    %% Legend
-    subgraph Legend
+<h1 id="feature-research-phase-1-flow-diagram">Feature Research (Phase 1) - Flow Diagram<a class="headerlink" href="#feature-research-phase-1-flow-diagram" title="Permanent link">&para;</a></h1>
+<p>Phase 1 of develop: prerequisite verification, parallel subagent dispatch for codebase research and tooling discovery, ambiguity extraction, quality scoring with a 100% threshold gate, and completion checklist.</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Legend [Legend]
         direction LR
-        A[Process] --&gt; B{Decision}
-        C[Stop/Failure]:::red_stop
-        D[Subagent Dispatch]:::blue_subagent
-        E[Success]:::green_success
-    end</code></pre></li>
-</ol>
+        L1[Process]
+        L2{{Decision}}
+        L3([Terminal])
+        L4[Subagent Dispatch]:::subagent
+        L5[Quality Gate]:::gate
+        L6([Success Terminal]):::success
+    end
+
+    START([Phase 1 Invoked]) --&gt; PREREQ
+
+    %% ── Prerequisite Verification ──────────────────────────────
+    subgraph PREREQ_GROUP [Prerequisite Verification]
+        PREREQ{{complexity_tier&lt;br&gt;in STANDARD or COMPLEX?}}
+        PREREQ -- No --&gt; HALT_TIER([STOP: Wrong tier.&lt;br&gt;TRIVIAL/SIMPLE do not&lt;br&gt;run this phase.])
+        PREREQ -- Yes --&gt; CHK_P0{{Phase 0&lt;br&gt;100% complete?}}
+        CHK_P0 -- No --&gt; HALT_P0([STOP: Return to Phase 0])
+        CHK_P0 -- Yes --&gt; CHK_ESC{{No impl_plan&lt;br&gt;escape hatch active?}}
+        CHK_ESC -- No --&gt; HALT_ESC([STOP: Escape hatch active,&lt;br&gt;skip to Phase 3+])
+    end
+
+    CHK_ESC -- Yes --&gt; STRAT
+
+    %% ── 1.1 Research Strategy Planning ─────────────────────────
+    subgraph STRAT_GROUP [1.1 Research Strategy Planning]
+        STRAT[Analyze feature request&lt;br&gt;for technical domains]
+        STRAT --&gt; GEN_Q[Generate codebase questions:&lt;br&gt;similar features, patterns,&lt;br&gt;integration points, edge cases]
+        GEN_Q --&gt; ID_GAPS[Identify knowledge gaps]
+    end
+
+    ID_GAPS --&gt; DISPATCH_BOTH
+
+    %% ── 1.2 + 1.2b Parallel Subagent Dispatch ─────────────────
+    subgraph DISPATCH_BOTH [Parallel Subagent Dispatch]
+        direction LR
+        SA_RESEARCH[1.2 Research Subagent:&lt;br&gt;Systematic search, read files,&lt;br&gt;extract patterns, flag ambiguities,&lt;br&gt;mark confidence per finding&lt;br&gt;HIGH / MEDIUM / LOW / UNKNOWN]:::subagent
+        SA_TOOLING[1.2b Tooling Scout Subagent:&lt;br&gt;Invoke tooling-discovery skill,&lt;br&gt;detect domain tools,&lt;br&gt;surface trust warnings]:::subagent
+    end
+
+    %% ── Error Handling for 1.2 ─────────────────────────────────
+    SA_RESEARCH --&gt; SA_OK{{Research subagent&lt;br&gt;succeeded?}}
+    SA_OK -- Yes --&gt; MERGE
+    SA_OK -- No --&gt; RETRY[Retry once with&lt;br&gt;same instructions]:::subagent
+    RETRY --&gt; RETRY_OK{{Retry succeeded?}}
+    RETRY_OK -- Yes --&gt; MERGE
+    RETRY_OK -- No --&gt; FALLBACK[Return all findings&lt;br&gt;as UNKNOWN, note failure.&lt;br&gt;Do NOT block.]
+
+    SA_TOOLING --&gt; MERGE
+    FALLBACK --&gt; MERGE
+
+    MERGE[Merge codebase findings&lt;br&gt;+ tooling discovery results]
+
+    %% ── 1.3 Ambiguity Extraction ──────────────────────────────
+    MERGE --&gt; AMBIG_EXTRACT
+
+    subgraph AMBIG_GROUP [1.3 Ambiguity Extraction]
+        AMBIG_EXTRACT[Extract all MEDIUM / LOW /&lt;br&gt;UNKNOWN confidence items&lt;br&gt;and flagged ambiguities]
+        AMBIG_EXTRACT --&gt; CATEGORIZE[Categorize by type:&lt;br&gt;Technical, Scope,&lt;br&gt;Integration, Terminology]
+        CATEGORIZE --&gt; PRIORITIZE[Prioritize by&lt;br&gt;design impact:&lt;br&gt;HIGH / MEDIUM / LOW]
+    end
+
+    PRIORITIZE --&gt; SCORE
+
+    %% ── 1.4 Research Quality Score ────────────────────────────
+    subgraph SCORE_GROUP [1.4 Research Quality Score]
+        SCORE[Compute four score components]:::gate
+        SCORE --&gt; S1[Coverage:&lt;br&gt;HIGH findings / total questions]
+        SCORE --&gt; S2[Ambiguity Resolution:&lt;br&gt;categorized / total ambiguities]
+        SCORE --&gt; S3[Evidence Quality:&lt;br&gt;findings with refs / answerable]
+        SCORE --&gt; S4[Unknown Detection:&lt;br&gt;flagged unknowns / LOW+UNKNOWN]
+        S1 --&gt; OVERALL[Overall = min of all four]:::gate
+        S2 --&gt; OVERALL
+        S3 --&gt; OVERALL
+        S4 --&gt; OVERALL
+    end
+
+    OVERALL --&gt; GATE
+
+    %% ── Gate Decision ─────────────────────────────────────────
+    GATE{{Score = 100%?}}:::gate
+    GATE -- Yes --&gt; CHECKLIST
+    GATE -- No --&gt; USER_CHOICE
+
+    USER_CHOICE{{User chooses}}
+    USER_CHOICE -- "A) Continue anyway&lt;br&gt;(bypass gate, accept risk)" --&gt; CHECKLIST
+    USER_CHOICE -- "B) Iterate: add more&lt;br&gt;questions, re-dispatch" --&gt; STRAT
+    USER_CHOICE -- "C) Skip ambiguous areas&lt;br&gt;(reduce scope)" --&gt; CHECKLIST
+
+    %% ── Phase Complete Checklist ──────────────────────────────
+    CHECKLIST[Phase 1 Complete Checklist:&lt;br&gt;1. Research subagent dispatched&lt;br&gt;2. Score 100% or user bypass&lt;br&gt;3. Ambiguities categorized&lt;br&gt;4. Findings stored in SESSION_CONTEXT]:::gate
+
+    CHECKLIST --&gt; COMPLETE_OK{{All items&lt;br&gt;checked?}}
+    COMPLETE_OK -- No --&gt; INCOMPLETE([STOP: Complete&lt;br&gt;remaining Phase 1 items])
+    COMPLETE_OK -- Yes --&gt; DONE([Phase 1 Complete:&lt;br&gt;Proceed to /feature-discover&lt;br&gt;- Phase 1.5 -]):::success
+
+    %% ── Styles ────────────────────────────────────────────────
+    classDef subagent fill:#4a9eff,stroke:#2d7cd6,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#d94f4f,color:#fff
+    classDef success fill:#51cf66,stroke:#3aad4e,color:#fff</code></pre>
+<h2 id="cross-references">Cross-References<a class="headerlink" href="#cross-references" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Diagram Node</th>
+<th>Source Section</th>
+<th>Lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prerequisite Verification (3 checks)</td>
+<td>Prerequisite Verification</td>
+<td>11-40</td>
+</tr>
+<tr>
+<td>1.1 Research Strategy Planning</td>
+<td>1.1 Research Strategy Planning</td>
+<td>53-77</td>
+</tr>
+<tr>
+<td>1.2 Research Subagent</td>
+<td>1.2 Execute Research (Subagent)</td>
+<td>79-127</td>
+</tr>
+<tr>
+<td>Error Handling / Retry / Fallback</td>
+<td>Error Handling</td>
+<td>128-132</td>
+</tr>
+<tr>
+<td>1.2b Tooling Scout Subagent</td>
+<td>1.2b Parallel Tooling Discovery</td>
+<td>134-153</td>
+</tr>
+<tr>
+<td>1.3 Ambiguity Extraction</td>
+<td>1.3 Ambiguity Extraction</td>
+<td>155-181</td>
+</tr>
+<tr>
+<td>1.4 Quality Score (4 components)</td>
+<td>1.4 Research Quality Score</td>
+<td>183-237</td>
+</tr>
+<tr>
+<td>Gate Decision (A/B/C)</td>
+<td>Gate Behavior</td>
+<td>239-257</td>
+</tr>
+<tr>
+<td>Phase 1 Complete Checklist</td>
+<td>Phase 1 Complete</td>
+<td>269-278</td>
+</tr>
+<tr>
+<td>Proceed to /feature-discover</td>
+<td>Next</td>
+<td>280</td>
+</tr>
+</tbody>
+</table>
+<h2 id="external-references">External References<a class="headerlink" href="#external-references" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Reference</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/feature-discover</code></td>
+<td>Command</td>
+<td>Phase 1.5 of develop; invoked after this phase completes</td>
+</tr>
+<tr>
+<td><code>tooling-discovery</code></td>
+<td>Skill</td>
+<td>Invoked by the 1.2b Tooling Scout subagent</td>
+</tr>
+<tr>
+<td><code>develop</code></td>
+<td>Skill</td>
+<td>Parent skill; this command is Phase 1</td>
+</tr>
+</tbody>
+</table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Feature Research (Phase 1)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>

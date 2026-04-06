@@ -571,14 +571,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/brainstorming/" class="md-nav__link">
+      <a href="../../skills/design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -2674,14 +2674,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/brainstorming/" class="md-nav__link">
+      <a href="../../skills/design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -4609,14 +4609,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../brainstorm/" class="md-nav__link">
+      <a href="../design-explore/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /brainstorm
+    /design-explore
   
 
     
@@ -7812,7 +7812,7 @@
 
 <h1 id="feature-design">/feature-design<a class="headerlink" href="#feature-design" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Phase 2 of develop: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.</p>
+<p>Phase 2 of develop: Create design document via design-exploration skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.</p>
 <pre class="mermaid"><code>flowchart TD
     Start([Phase 2 Start])
     PrereqCheck{Prerequisites met?}
@@ -7821,7 +7821,7 @@
     EscapeCheck{Escape hatch type?}
     SkipAll([Skip to Phase 3])
 
-    CreateDesign[Dispatch brainstorming subagent]
+    CreateDesign[Dispatch design-exploration subagent]
     SynthMode[Synthesis mode: no questions]
     SaveDesign[Save design document]
 
@@ -7958,7 +7958,7 @@
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">1.</span> <span class="gs">**Discovery precedes design**</span> - Design only after <span class="sb">`design_context`</span> is fully populated; never design without research findings
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">2.</span> <span class="gs">**Synthesis mode for subagents**</span> - Brainstorming subagent receives complete context; no interactive discovery in design phase
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">2.</span> <span class="gs">**Synthesis mode for subagents**</span> - Design-exploration subagent receives complete context; no interactive discovery in design phase
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">3.</span> <span class="gs">**Review is mandatory**</span> - Every design document must pass <span class="sb">`reviewing-design-docs`</span> before proceeding
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">4.</span> <span class="gs">**Approval gates respect mode**</span> - Interactive mode pauses for user; autonomous mode auto-fixes all findings
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
@@ -7982,7 +7982,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">Task:</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">  description: &quot;Create design document&quot;</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">  prompt: |</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">    First, invoke the brainstorming skill using the Skill tool.</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">    First, invoke the design-exploration skill using the Skill tool.</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">    Then follow its complete workflow.</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">    IMPORTANT: SYNTHESIS MODE -- all discovery is complete.</span>
@@ -8000,7 +8000,7 @@
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">    ## Task</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">    Using the brainstorming skill in synthesis mode:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">    Using the design-exploration skill in synthesis mode:</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">    1. Skip &quot;Understanding the idea&quot; phase -- context is complete</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">    2. Skip &quot;Exploring approaches&quot; questions -- decisions are made</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">    3. Go directly to &quot;Presenting the design&quot;</span>
@@ -8008,7 +8008,7 @@
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">    5. Save to: ~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-[feature-slug]-design.md</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">```</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Subagent failure:**</span> If brainstorming subagent fails, HALT and report to user. Do not attempt inline design work.
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Subagent failure:**</span> If design-exploration subagent fails, HALT and report to user. Do not attempt inline design work.
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gu">### 2.2 Review Design Document</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
@@ -8103,8 +8103,8 @@
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">```</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>Performing brainstorming, design review, or plan execution in main context instead of subagents
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">-</span><span class="w"> </span>Asking discovery questions during the brainstorming subagent (synthesis mode is mandatory)
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>Performing design exploration, design review, or plan execution in main context instead of subagents
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">-</span><span class="w"> </span>Asking discovery questions during the design-exploration subagent (synthesis mode is mandatory)
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="k">-</span><span class="w"> </span>Skipping the Prerequisite Verification before beginning Phase 2 work
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="k">-</span><span class="w"> </span>Proceeding to Phase 3 with unchecked items in the transition gate
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="k">-</span><span class="w"> </span>Dispatching 2.4 fix subagent with fix_strategy other than &quot;most_complete&quot; in autonomous mode
@@ -8123,7 +8123,7 @@
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>ls<span class="w"> </span>~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/*-design.md
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">```</span>
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="k">- [ ]</span> Brainstorming subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="k">- [ ]</span> Design-exploration subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="k">- [ ]</span> Design document created and saved
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="k">- [ ]</span> Design review subagent (reviewing-design-docs) DISPATCHED
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="k">- [ ]</span> Approval gate handled per autonomous_mode

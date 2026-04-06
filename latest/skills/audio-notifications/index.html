@@ -571,14 +571,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../brainstorming/" class="md-nav__link">
+      <a href="../design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -2732,14 +2732,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../brainstorming/" class="md-nav__link">
+      <a href="../design-exploration/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    brainstorming
+    design-exploration
   
 
     
@@ -4667,14 +4667,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/brainstorm/" class="md-nav__link">
+      <a href="../../commands/design-explore/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /brainstorm
+    /design-explore
   
 
     
@@ -7769,7 +7769,7 @@
 <h1 id="audio-notifications">audio-notifications<a class="headerlink" href="#audio-notifications" title="Permanent link">&para;</a></h1>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
-<p>Reference for TTS and OS notification configuration. Auto-loads when TTS is enabled (session_init reports TTS active). Also triggered by: 'mute', 'unmute', 'change voice', 'volume', 'notify', 'notification settings', '/tts', '/notify', 'kokoro', 'speak', 'audio feedback'.</p>
+<p>Reference for TTS and OS notification configuration. Auto-loads when TTS is enabled (session_init reports TTS active). Also triggered by: 'mute', 'unmute', 'change voice', 'volume', 'notify', 'notification settings', '/tts', '/notify', 'tts', 'speak', 'audio feedback'.</p>
 </blockquote>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;analysis&gt;
@@ -7790,14 +7790,14 @@
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Spellbook provides two feedback channels for long-running tool completions. Both auto-trigger via PostToolUse hooks when tools exceed 30 seconds (configurable).
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## TTS (Kokoro text-to-speech)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## TTS (Wyoming protocol)</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>Requires <span class="sb">`uv pip install spellbook[tts]`</span>. Threshold: <span class="sb">`SPELLBOOK_TTS_THRESHOLD`</span>. Interactive/management tools excluded (AskUserQuestion, TodoRead, TodoWrite, TaskCreate, TaskUpdate, TaskGet, TaskList).
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>Requires <span class="sb">`uv pip install spellbook[tts]`</span> and a running Wyoming TTS server. Threshold: <span class="sb">`SPELLBOOK_TTS_THRESHOLD`</span>. Interactive/management tools excluded (AskUserQuestion, TodoRead, TodoWrite, TaskCreate, TaskUpdate, TaskGet, TaskList).
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| MCP Tool | Purpose |
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|----------|---------|
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`kokoro_speak(text, voice?, volume?)`</span> | Speak text aloud |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`kokoro_status()`</span> | Check TTS availability |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`tts_speak(text, voice?, volume?)`</span> | Speak text aloud |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`tts_status()`</span> | Check TTS availability |
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`tts_session_set(enabled?, voice?, volume?)`</span> | Session override |
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`tts_config_set(enabled?, voice?, volume?)`</span> | Persistent settings |
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
@@ -7816,7 +7816,7 @@
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Mute session:**</span> <span class="sb">`*_session_set(enabled=false)`</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Unmute:**</span> <span class="sb">`*_session_set(enabled=true)`</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Change voice:**</span> <span class="sb">`tts_config_set(voice=&quot;bf_emma&quot;)`</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Change voice:**</span> <span class="sb">`tts_config_set(voice=&quot;en_US-lessac-medium&quot;)`</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Adjust volume:**</span> <span class="sb">`tts_config_set(volume=0.5)`</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Change title:**</span> <span class="sb">`notify_config_set(title=&quot;My Project&quot;)`</span>
 </code></pre></div>
