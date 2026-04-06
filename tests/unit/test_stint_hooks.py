@@ -188,12 +188,22 @@ class TestPreToolUseBashGate:
 class TestPreToolUseSpawnGuard:
     """Test that spawn guard logic is ported."""
 
-    def test_spawn_guard_allows_normal_prompt(self):
+    def test_spawn_guard_allows_normal_prompt(self, tmp_path):
+        """Spawn guard should exit 0 for normal prompts (no injection).
+
+        HOME is redirected to a tmp dir so the crypto gate (which reads
+        from ~/.config/spellbook/spellbook.json) is disabled.  This test
+        validates injection-detection only; crypto provenance is tested
+        separately.
+        """
         proc = _run_hook({
             "tool_name": "spawn_claude_session",
             "tool_input": {"prompt": "do something normal"},
-        })
-        assert proc.returncode == 0
+        }, env_overrides={"HOME": str(tmp_path)})
+        assert proc.returncode == 0, (
+            f"Expected exit 0 (allowed), got {proc.returncode}. "
+            f"stdout={proc.stdout!r}, stderr={proc.stderr!r}"
+        )
 
     def test_spawn_guard_blocks_injection(self):
         """Spawn guard should block injection patterns."""
@@ -207,15 +217,25 @@ class TestPreToolUseSpawnGuard:
 class TestPreToolUseStateSanitize:
     """Test that workflow state sanitization is ported."""
 
-    def test_state_sanitize_allows_clean_state(self):
+    def test_state_sanitize_allows_clean_state(self, tmp_path):
+        """State sanitize should exit 0 for clean state.
+
+        HOME is redirected to a tmp dir so the crypto gate (which reads
+        from ~/.config/spellbook/spellbook.json) is disabled.  This test
+        validates injection-detection only; crypto provenance is tested
+        separately.
+        """
         proc = _run_hook({
             "tool_name": "mcp__spellbook__workflow_state_save",
             "tool_input": {
                 "project_path": "/test",
                 "state": {"active_skill": "develop"},
             },
-        })
-        assert proc.returncode == 0
+        }, env_overrides={"HOME": str(tmp_path)})
+        assert proc.returncode == 0, (
+            f"Expected exit 0 (allowed), got {proc.returncode}. "
+            f"stdout={proc.stdout!r}, stderr={proc.stderr!r}"
+        )
 
     def test_state_sanitize_blocks_injection_in_state(self):
         """State sanitize should block injection patterns in workflow state."""

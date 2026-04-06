@@ -652,10 +652,14 @@ class StintStack(SpellbookBase):
     __tablename__ = "stint_stack"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    project_path: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
-    session_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    project_path: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False)
     stack_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     updated_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("project_path", "session_id"),
+    )
 
     def to_dict(self) -> dict:
         return {

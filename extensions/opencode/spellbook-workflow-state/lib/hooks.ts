@@ -2,7 +2,7 @@
  * OpenCode plugin hooks for workflow state management.
  */
 
-import type { PluginState, WorkflowState, SkillStackEntry, SubagentState } from './types.js';
+import type { PluginState, WorkflowState, SkillStackEntry, SubagentState, StintEntry } from './types.js';
 import type { McpClient } from './mcp-client.js';
 import { initializeWorkflowState } from './state.js';
 
@@ -102,10 +102,9 @@ export function createToolExecuteAfterHandler(
 export function createSessionCompactingHandler(
   state: PluginState,
   mcpClient: McpClient,
-  getProjectPath: () => string,
-  injectContext: (source: string, content: string) => Promise<void>
+  getProjectPath: () => string
 ) {
-  return async (): Promise<void> => {
+  return async (input: { sessionID: string }, output: { context: string[]; prompt?: string }): Promise<void> => {
     if (!state.workflowState) return;
     
     // Update compaction count
@@ -119,9 +118,13 @@ export function createSessionCompactingHandler(
       'auto'
     );
     
+    // Fetch stint stack
+    const stintResult = await mcpClient.stintCheck(getProjectPath(), input.sessionID);
+    state.stintStack = stintResult?.stack || [];
+    
     // Build recovery context
-    const recovery = formatRecoveryContext(state.workflowState);
-    await injectContext('spellbook-workflow', recovery);
+    const recovery = formatRecoveryContext(state.workflowState, state.stintStack);
+    output.context.push(recovery);
     
     console.log('[workflow-state] State preserved for recovery');
   };
@@ -163,7 +166,7 @@ ${topSkill.constraints.required.map(r => `- ${r}`).join('\n')}
   };
 }
 
-function formatRecoveryContext(ws: WorkflowState): string {
+function formatRecoveryContext(ws: WorkflowState, stintStack: StintEntry[]): string {
   const topSkill = ws.skill_stack[0];
   
   return `
@@ -185,6 +188,19 @@ ${topSkill?.resume_command || 'NO ACTIVE SKILL'}
 \`\`\`
 ${ws.documents.must_read.map(d => `Read("${d.path}")`).join('\n') || 'NO DOCUMENTS'}
 \`\`\`
+
+### Active Stints
+${stintStack.length > 0 ? stintStack.map((s, i) => 
+  `${i === 0 ? '→ ' : '  '}${s.name} | purpose: ${s.purpose} | mode: ${s.behavioral_mode} | entered: ${s.entered_at}`
+).join('\n') : 'None'}
+
+### Todo List
+${ws.todos.explicit.length > 0 ? ws.todos.explicit.map(t => 
+  `- [${t.status}] ${t.content}${t.priority !== 'medium' ? ` (${t.priority})` : ''}`
+).join('\n') : 'No active todos'}
+
+### Key Files
+${ws.documents.must_read.length > 0 ? ws.documents.must_read.map(d => `- ${d.path} (${d.why})`).join('\n') : 'None tracked'}
 
 ### Active Subagents
 ${ws.subagents.map(s => `- ${s.id}: ${s.task} (${s.status})`).join('\n') || 'None'}

@@ -13,12 +13,15 @@ are read fine -- Python dict access ignores extra keys.
 """
 
 import json
+import logging
 import sqlite3
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Callable, Optional
 
-from spellbook.core.db import get_connection
+logger = logging.getLogger(__name__)
+
+from spellbook.core.db import get_connection, get_db_path
 
 MAX_STINT_DEPTH = 6
 
@@ -106,7 +109,8 @@ def _log_correction_event(
     old_stack: list,
     new_stack: list,
     diff_summary: str = "",
-    db_path: str = None,
+    db_path: Optional[str] = None,
+    session_id: str = "",
 ) -> None:
     """Log a correction event to the stint_correction_events table.
 
@@ -120,11 +124,12 @@ def _log_correction_event(
         cursor.execute(
             """
             INSERT INTO stint_correction_events
-                (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
-            VALUES (?, ?, ?, ?, ?)
+                (project_path, session_id, correction_type, old_stack_json, new_stack_json, diff_summary)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 project_path,
+                session_id,
                 correction_type,
                 json.dumps(old_stack),
                 json.dumps(new_stack),
@@ -133,10 +138,11 @@ def _log_correction_event(
         )
         conn.commit()
     except Exception:
-        pass  # Correction logging is best-effort; never block the caller
+        # Best-effort: correction logging must never block the caller
+        logger.error("Failed to log stint correction event", exc_info=True)
 
 
-def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
+def _update_stack(project_path: str, mutate_fn: Callable[[list, sqlite3.Cursor], tuple[dict, Optional[list]]], db_path: Optional[str] = None, session_id: str = "") -> dict:
     """Read-modify-write the stint stack atomically.
 
     Uses a dedicated connection with BEGIN IMMEDIATE to acquire a write
@@ -156,8 +162,9 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
             within the same transaction. Returns the tool result and
             the new stack to persist. If new_stack is None, no write.
         db_path: Optional database path (for testing).
+        session_id: Session identifier for session-scoped stints.
     """
-    from spellbook.core.db import get_db_path
+
 
     actual_path = db_path if db_path else str(get_db_path())
     max_retries = 10
@@ -170,8 +177,8 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
             conn.execute("BEGIN IMMEDIATE")
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT stack_json FROM stint_stack WHERE project_path = ?",
-                (project_path,),
+                "SELECT stack_json FROM stint_stack WHERE project_path = ? AND session_id = ?",
+                (project_path, session_id),
             )
             row = cursor.fetchone()
             stack = json.loads(row[0]) if row else []
@@ -181,13 +188,13 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
             if new_stack is not None:
                 cursor.execute(
                     """
-                    INSERT INTO stint_stack (project_path, stack_json, updated_at)
-                    VALUES (?, ?, CURRENT_TIMESTAMP)
-                    ON CONFLICT(project_path) DO UPDATE SET
+                    INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_path, session_id) DO UPDATE SET
                         stack_json = excluded.stack_json,
                         updated_at = excluded.updated_at
                     """,
-                    (project_path, json.dumps(new_stack)),
+                    (project_path, session_id, json.dumps(new_stack)),
                 )
             conn.commit()
             return result
@@ -219,7 +226,9 @@ def push_stint(
     purpose: str = "",
     behavioral_mode: str = "",
     metadata: Optional[dict] = None,
-    db_path: str = None,
+    db_path: Optional[str] = None,
+    *,
+    session_id: str,
     # Deprecated parameters (accepted but ignored for backward compatibility)
     stint_type: str = "",
     success_criteria: str = "",
@@ -252,13 +261,15 @@ def push_stint(
         stack.append(entry)
         return {"success": True, "depth": len(stack), "stack": list(stack)}, stack
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)
 
 
 def pop_stint(
     project_path: str,
     name: Optional[str] = None,
-    db_path: str = None,
+    db_path: Optional[str] = None,
+    *,
+    session_id: str,
 ) -> dict:
     """Pop the top stint from the focus stack.
 
@@ -286,7 +297,7 @@ def pop_stint(
             "mismatch": mismatch,
         }, stack
 
-    result = _update_stack(project_path, mutate, db_path)
+    result = _update_stack(project_path, mutate, db_path, session_id)
 
     # Log correction event for mismatches (outside the transaction).
     # Classification is "llm_wrong": the LLM asked to pop a name that
@@ -300,6 +311,7 @@ def pop_stint(
             new_stack=[],
             diff_summary=f"Pop name mismatch: expected '{name}', found '{result['popped']['name']}'",
             db_path=db_path,
+            session_id=session_id,
         )
 
     return result
@@ -307,7 +319,9 @@ def pop_stint(
 
 def check_stint(
     project_path: str,
-    db_path: str = None,
+    db_path: Optional[str] = None,
+    *,
+    session_id: str,
 ) -> dict:
     """Return the current stint stack. Read-only (no data mutation). Briefly acquires a write lock via BEGIN IMMEDIATE.
 
@@ -317,14 +331,16 @@ def check_stint(
     def mutate(stack: list, cursor) -> tuple[dict, list | None]:
         return {"success": True, "depth": len(stack), "stack": list(stack)}, None
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)
 
 
 def replace_stint(
     project_path: str,
     stack: list[dict],
     reason: str = "",
-    db_path: str = None,
+    db_path: Optional[str] = None,
+    *,
+    session_id: str,
 ) -> dict:
     """Replace the entire stint stack with a corrected version.
 
@@ -348,11 +364,12 @@ def replace_stint(
         cursor.execute(
             """
             INSERT INTO stint_correction_events
-                (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
-            VALUES (?, ?, ?, ?, ?)
+                (project_path, session_id, correction_type, old_stack_json, new_stack_json, diff_summary)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 project_path,
+                session_id,
                 correction_type,
                 json.dumps(old_stack),
                 json.dumps(stack),
@@ -366,4 +383,4 @@ def replace_stint(
             "correction_logged": True,
         }, stack
 
-    return _update_stack(project_path, mutate, db_path)
+    return _update_stack(project_path, mutate, db_path, session_id)

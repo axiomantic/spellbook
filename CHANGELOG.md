@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] - 2026-04-06
+
+### Added
+- **Session-scoped stint support**: Stints now track behavioral mode (agent type) per session, enabling mode-aware focus context across OpenCode agent types
+- **OpenCode workflow-state extension improvements**: Enhanced workflow state handling for OpenCode platform integration
+- **OpencodeAgentClient test coverage**: New tests for the OpenCode agent client
+- **Expanded stint test coverage**: Additional tests for stint push, pop, replace, and session-scoped behavior
+
+### Fixed
+- **OpenCode security plugin**: Removed dead `SPELLBOOK_DIR` guard that blocked the security plugin from loading when the environment variable was unset
+
 ## [0.44.0] - 2026-04-04
 
 ### Removed
