@@ -97,15 +97,28 @@ def _migrate_stint_stack_schema(cursor):
     must recreate the table if the schema doesn't match. Checks both conditions
     in a single pass and rebuilds only if needed.
     """
-    row = cursor.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='stint_stack'"
-    ).fetchone()
-    if row is None:
+    # Check if table exists
+    if not cursor.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='stint_stack'"
+    ).fetchone():
         return  # Table doesn't exist yet; CREATE TABLE will handle it
-    create_sql = row[0]
-    has_not_null = "session_id TEXT NOT NULL" in create_sql
-    normalized_sql = " ".join(create_sql.upper().split())
-    has_correct_unique = "UNIQUE(PROJECT_PATH, SESSION_ID)" in normalized_sql.replace("UNIQUE (", "UNIQUE(")
+
+    # Check NOT NULL on session_id via PRAGMA
+    columns = cursor.execute("PRAGMA table_info(stint_stack)").fetchall()
+    session_col = next((c for c in columns if c[1] == "session_id"), None)
+    has_not_null = session_col is not None and session_col[3] == 1  # notnull flag
+
+    # Check for UNIQUE(project_path, session_id) via PRAGMA
+    has_correct_unique = False
+    for idx in cursor.execute("PRAGMA index_list(stint_stack)").fetchall():
+        if idx[2]:  # unique flag
+            idx_cols = [
+                r[2] for r in cursor.execute(f"PRAGMA index_info({idx[1]})").fetchall()
+            ]
+            if idx_cols == ["project_path", "session_id"]:
+                has_correct_unique = True
+                break
+
     if has_not_null and has_correct_unique:
         return  # Schema already matches target
 
