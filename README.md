@@ -519,7 +519,7 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | Platform | Support Level | Notes |
 |----------|---------------|-------|
 | **Claude Code** | Primary, full support | All features: skills, hooks, MCP tools, subagent orchestration |
-| **OpenCode** | Basic support | Skills, MCP server, YOLO agents. Some hooks and MCP tools are Claude Code-specific. |
+| **OpenCode** | Basic support | Skills, MCP server, YOLO agents, z.AI first-class support (18 GLM models, concurrency, routing). Some hooks and MCP tools are Claude Code-specific. |
 | **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
 | **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |
 

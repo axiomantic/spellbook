@@ -42,7 +42,34 @@ OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents. Some Claud
 - MCP server for spellbook tools
 - Native skill discovery from `~/.claude/skills/*`
 - YOLO mode agents for autonomous execution
-- z.AI model detection and registry integration for dynamic model selection
+- z.AI first-class support with model registry and concurrency management
+
+### z.AI Model Management
+
+OpenCode supports z.AI (GLM) models with a built-in registry of 18 models, per-model concurrency control, and runtime configuration via MCP tools.
+
+**MCP tools:**
+
+| Tool | Purpose |
+|------|---------|
+| `zai_list_models` | List all registered models with metadata |
+| `zai_get_model_info` | Get details and current concurrency for a model |
+| `zai_set_default_model` | Set the default model |
+| `zai_configure_task_routing` | Map task types to specific models |
+| `zai_set_api_key` | Set the z.AI API key |
+| `zai_concurrency_status` | Check per-model usage and limits |
+
+**Configuration:**
+
+Set the API key via environment variable (preferred) or MCP tool:
+
+```bash
+export ZAI_API_KEY="your-key"
+```
+
+The default model is `glm-4.7`. Override via `zai_set_default_model` or the `zai_default_model` config key.
+
+See the [z.AI Model Management Guide](../features/zai-model-management.md) for the full model catalog, concurrency tuning, task routing, and troubleshooting.
 
 ### YOLO Mode
 
