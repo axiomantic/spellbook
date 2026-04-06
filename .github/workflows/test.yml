@@ -57,8 +57,18 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v7
 
+    - name: Install PortAudio (required by sounddevice)
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          sudo apt-get update -q && sudo apt-get install -yq libportaudio2
+        elif [ "$RUNNER_OS" = "macOS" ]; then
+          brew install portaudio
+        fi
+      # Windows: sounddevice bundles PortAudio DLLs, no system install needed
+
     - name: Install dependencies
-      run: uv sync --all-extras --group dev
+      run: uv sync --all-extras --group dev --group tts
 
     - name: Run Python tests
       if: runner.os != 'Windows'
