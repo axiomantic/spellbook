@@ -138,6 +138,7 @@ def _log_correction_event(
         )
         conn.commit()
     except Exception:
+        # Best-effort: correction logging must never block the caller
         logger.error("Failed to log stint correction event", exc_info=True)
 
 

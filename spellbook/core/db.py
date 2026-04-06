@@ -4,10 +4,13 @@ Canonical location for database utilities. This module was migrated from
 spellbook.core.db as part of the three-layer architecture reorganization.
 """
 
+import logging
 import os
 import sqlite3
 import time
 import threading
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 
 
@@ -116,7 +119,10 @@ def _migrate_stint_stack_schema(cursor):
             UNIQUE(project_path, session_id)
         )
     """)
-    # Delete legacy rows with NULL session_id (no longer valid)
+    # Delete legacy rows with NULL session_id (no longer valid with mandatory sessions)
+    deleted = cursor.execute("SELECT COUNT(*) FROM _stint_stack_old WHERE session_id IS NULL").fetchone()[0]
+    if deleted:
+        logger.info("Dropping %d legacy stint_stack rows with NULL session_id", deleted)
     cursor.execute("DELETE FROM _stint_stack_old WHERE session_id IS NULL")
     cursor.execute("""
         INSERT INTO stint_stack (id, project_path, session_id, stack_json, updated_at)
