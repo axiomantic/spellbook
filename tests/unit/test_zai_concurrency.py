@@ -2,9 +2,9 @@
 
 import asyncio
 import pytest
-from unittest.mock import AsyncMock
 
 import bigfoot
+from dirty_equals import IsInstance
 from spellbook.core.concurrency import ConcurrencyManager
 
 
@@ -91,16 +91,15 @@ async def test_timeout_handling():
     manager._max_concurrent_per_model = 1
     manager._global_max_concurrent = 2
     
-    # Mock semaphore acquisition to raise TimeoutError directly
-    original_acquire = manager._global_semaphore.acquire
-    manager._global_semaphore.acquire = AsyncMock(side_effect=asyncio.TimeoutError())
+    # Mock semaphore acquisition to raise TimeoutError using bigfoot
+    mock_acquire = bigfoot.mock.object(manager._global_semaphore, "acquire")
+    mock_acquire.raises(asyncio.TimeoutError())
     
-    try:
+    async with bigfoot:
         result = await manager.acquire("test-model")
         assert result is None  # Should return None on timeout
-    finally:
-        # Restore original method
-        manager._global_semaphore.acquire = original_acquire
+    
+    mock_acquire.assert_call(args=(), kwargs={}, raised=IsInstance(asyncio.TimeoutError))
 
 
 @pytest.mark.asyncio

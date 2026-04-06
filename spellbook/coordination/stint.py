@@ -107,6 +107,7 @@ def _log_correction_event(
     new_stack: list,
     diff_summary: str = "",
     db_path: str = None,
+    session_id: str = None,
 ) -> None:
     """Log a correction event to the stint_correction_events table.
 
@@ -120,11 +121,12 @@ def _log_correction_event(
         cursor.execute(
             """
             INSERT INTO stint_correction_events
-                (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
-            VALUES (?, ?, ?, ?, ?)
+                (project_path, session_id, correction_type, old_stack_json, new_stack_json, diff_summary)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 project_path,
+                session_id,
                 correction_type,
                 json.dumps(old_stack),
                 json.dumps(new_stack),
@@ -189,14 +191,23 @@ def _update_stack(project_path: str, mutate_fn, db_path: str = None, session_id:
 
             if new_stack is not None:
                 if session_id:
-                    # For session-specific stints: insert (no conflict handling needed since no unique constraint)
+                    # Session-scoped: UPDATE existing row first, INSERT if none found
                     cursor.execute(
                         """
-                        INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                        UPDATE stint_stack 
+                        SET stack_json = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE project_path = ? AND session_id = ?
                         """,
-                        (project_path, session_id, json.dumps(new_stack)),
+                        (json.dumps(new_stack), project_path, session_id),
                     )
+                    if cursor.rowcount == 0:
+                        cursor.execute(
+                            """
+                            INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
+                            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                            """,
+                            (project_path, session_id, json.dumps(new_stack)),
+                        )
                 else:
                     # For backward compatibility (no session_id): update existing row or insert new one
                     cursor.execute(
@@ -330,6 +341,7 @@ def pop_stint(
             new_stack=[],
             diff_summary=f"Pop name mismatch: expected '{name}', found '{result['popped']['name']}'",
             db_path=db_path,
+            session_id=session_id,
         )
 
     return result
@@ -380,11 +392,12 @@ def replace_stint(
         cursor.execute(
             """
             INSERT INTO stint_correction_events
-                (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
-            VALUES (?, ?, ?, ?, ?)
+                (project_path, session_id, correction_type, old_stack_json, new_stack_json, diff_summary)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 project_path,
+                session_id,
                 correction_type,
                 json.dumps(old_stack),
                 json.dumps(stack),

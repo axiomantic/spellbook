@@ -9,7 +9,8 @@ __all__ = [
 ]
 
 from typing import Optional
-from spellbook.mcp.server import mcp, Context
+from fastmcp import Context
+from spellbook.mcp.server import mcp
 from spellbook.coordination.curator import curator_track_prune
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.mcp.tools.config import _get_session_id

@@ -10,6 +10,7 @@ export function createPluginState(): PluginState {
     workflowState: null,
     isTracking: false,
     lastCompaction: 0,
+    stintStack: [],
   };
 }
 
@@ -17,6 +18,7 @@ export function resetPluginState(state: PluginState): void {
   state.sessionId = null;
   state.workflowState = null;
   state.isTracking = false;
+  state.stintStack = [];
 }
 
 export function initializeWorkflowState(projectPath: string, sessionId: string): WorkflowState {
