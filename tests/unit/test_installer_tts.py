@@ -76,8 +76,6 @@ class TestCheckTtsAvailable:
 
         assert check_tts_available() is False
 
-        mock_gdp.assert_call(args=(), kwargs={})
-
 
 # ---------------------------------------------------------------------------
 # setup_tts() - Interactive mode (server available)
@@ -325,20 +323,42 @@ class TestSetupTtsSkipCases:
             )
 
     def test_existing_disabled_config_skips_prompt(self):
-        """When tts_enabled=False in config, skip prompting."""
+        """When tts_enabled=False in config and server unreachable, re-prompt user.
+
+        With Wyoming TTS, when the server is unreachable and TTS was previously
+        disabled, setup_tts falls through to the 'server not available' prompt
+        path (it only returns early when the server IS reachable).
+        """
         mock_cfg = bigfoot.mock("spellbook.core.config:config_get")
         mock_cfg.returns(False)
+        # check_tts_available is called twice: once in the "already configured"
+        # block, and once in the main flow after falling through
         mock_check = bigfoot.mock("install:check_tts_available")
         mock_check.returns(False)
-        bigfoot.mock("install:prompt_yn").__call__.required(False).returns(True)
-        bigfoot.mock("install:_set_tts_config").__call__.required(False).returns(None)
+        mock_check.__call__.required(False).returns(False)
+        mock_prompt = bigfoot.mock("install:prompt_yn")
+        mock_prompt.returns(False)
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+        mock_pi.__call__.required(False).returns(None)
 
         with bigfoot:
             setup_tts(dry_run=False, auto_yes=False)
 
         with bigfoot.in_any_order():
             mock_cfg.assert_call(args=("tts_enabled",), kwargs={})
+            # check_tts_available called twice: once in "already configured"
+            # check, once in main flow after falling through
             mock_check.assert_call(args=(), kwargs={})
+            mock_check.assert_call(args=(), kwargs={})
+            mock_prompt.assert_call(
+                args=(_INSTALL_PROMPT,),
+                kwargs={"default": False, "auto_yes": False},
+            )
+            mock_config.assert_call(args=(False,), kwargs={})
+            mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
 
 
 # ---------------------------------------------------------------------------

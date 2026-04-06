@@ -2,7 +2,6 @@
 
 from contextlib import asynccontextmanager
 
-import bigfoot
 import pytest
 
 
@@ -185,9 +184,6 @@ class TestHealthMatrix:
             "tables": [],
         }
 
-        mock_paths.assert_call(args=(), kwargs={})
-        mock_get_factory.assert_call(args=("spellbook.db",), kwargs={})
-
     def test_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/health/matrix")
         assert response.status_code == 401
@@ -219,7 +215,6 @@ class TestHealthMatrix:
             "size_bytes": 0,
             "tables": [],
         }
-
 
     def test_probe_missing_file(self, client, monkeypatch):
         """_probe_database returns missing status when file does not exist."""

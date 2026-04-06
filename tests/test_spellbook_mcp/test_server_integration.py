@@ -261,6 +261,16 @@ def _patch_message_bus_for_shutdown(monkeypatch):
     monkeypatch.setattr(asyncio, "run", _fake_run)
 
 
+def test_shutdown_cleanup_stops_watchers_and_closes_connections(monkeypatch):
+    """Test that _shutdown_cleanup calls stop() on watchers and close functions."""
+    from spellbook import server
+
+    mock_watcher = SimpleNamespace(stop=lambda: None)
+    mock_update_watcher = SimpleNamespace(stop=lambda: None)
+
+    monkeypatch.setattr(server, "_watcher", mock_watcher)
+    monkeypatch.setattr(server, "_update_watcher", mock_update_watcher)
+    _patch_message_bus_for_shutdown(monkeypatch)
 
     mock_watcher_stop = bigfoot.mock.object(mock_watcher, "stop")
     mock_watcher_stop.returns(None)
@@ -285,6 +295,30 @@ def _patch_message_bus_for_shutdown(monkeypatch):
 
 def test_shutdown_cleanup_handles_none_watchers(monkeypatch):
     """Test that _shutdown_cleanup handles None watchers gracefully."""
+    from spellbook import server
+
+    monkeypatch.setattr(server, "_watcher", None)
+    monkeypatch.setattr(server, "_update_watcher", None)
+    _patch_message_bus_for_shutdown(monkeypatch)
+
+    mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
+    mock_close_db.returns(None)
+    mock_close_forged = bigfoot.mock("spellbook.forged.schema:close_forged_connections")
+    mock_close_forged.returns(None)
+    mock_close_fractal = bigfoot.mock("spellbook.fractal.schema:close_all_fractal_connections")
+    mock_close_fractal.returns(None)
+
+    with bigfoot:
+        # Should not raise
+        server._shutdown_cleanup()
+
+    mock_close_db.assert_call()
+    mock_close_forged.assert_call()
+    mock_close_fractal.assert_call()
+
+
+def test_shutdown_cleanup_resilient_to_close_failures(monkeypatch):
+    """Test that _shutdown_cleanup doesn't raise even if close functions fail."""
     from spellbook import server
 
     monkeypatch.setattr(server, "_watcher", None)

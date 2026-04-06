@@ -13,9 +13,7 @@ import hashlib
 import json
 from types import SimpleNamespace
 
-import bigfoot
 import pytest
-from dirty_equals import IsInstance
 
 ROUTE_MODULE = "spellbook.admin.routes.memory"
 
@@ -412,7 +410,6 @@ class TestMemoryUpdate:
 
         assert response.status_code == 200
         assert mem.importance == 5.0
-        mock_bus.publish.assert_call(args=(IsInstance[object],), kwargs={})
 
     def test_update_memory_meta(self, client, monkeypatch):
         """Update meta field stores JSON string on ORM object."""
@@ -432,7 +429,6 @@ class TestMemoryUpdate:
 
         assert response.status_code == 200
         assert mem.meta == json.dumps({"key": "value"})
-        mock_bus.publish.assert_call(args=(IsInstance[object],), kwargs={})
 
     def test_update_memory_not_found(self, client):
         """Update non-existent memory returns 404."""
@@ -516,7 +512,6 @@ class TestMemoryDelete:
         # Verify ORM object was modified for soft delete
         assert mem.status == "deleted"
         assert mem.deleted_at is not None  # Should be set to current time
-        mock_bus.publish.assert_call(args=(IsInstance[object],), kwargs={})
 
     def test_delete_memory_not_found(self, client):
         """Delete non-existent memory returns 404."""

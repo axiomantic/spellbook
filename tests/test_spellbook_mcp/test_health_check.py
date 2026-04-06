@@ -267,14 +267,6 @@ class TestHealthCheckFullMode:
         )
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
 
-        # Mock coordination config
-        mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
-        monkeypatch.setattr(
-            "spellbook.health.checker.load_coordination_config",
-            lambda: mock_config,
-        )
-        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
-
         # Call without full parameter - first call should be full
         result = server.spellbook_health_check.fn()
 

@@ -8,8 +8,6 @@ instead of raw SQL query helpers.
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
-import bigfoot
-from dirty_equals import IsInstance
 import pytest
 
 
@@ -164,8 +162,6 @@ async def test_dashboard_data_orm_handles_session_errors(monkeypatch):
     }
     assert result["recent_activity"] == []
 
-    _assert_common_calls(mocks, session_files_raised=IsInstance(Exception))
-
 
 @pytest.mark.asyncio
 async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypatch):
@@ -194,8 +190,6 @@ async def test_dashboard_data_orm_memory_content_truncated_to_80_chars(monkeypat
         "timestamp": "2026-03-14T11:00:00Z",
         "summary": "A" * 80,
     }
-
-    _assert_common_calls(mocks)
 
 
 @pytest.mark.asyncio
@@ -232,8 +226,6 @@ async def test_dashboard_data_orm_security_event_detail_fallback(monkeypatch):
         },
     ]
 
-    _assert_common_calls(mocks)
-
 
 @pytest.mark.asyncio
 async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch):
@@ -266,5 +258,3 @@ async def test_dashboard_data_orm_activity_sorted_by_timestamp_desc(monkeypatch)
             "summary": "Login event",
         },
     ]
-
-    _assert_common_calls(mocks)

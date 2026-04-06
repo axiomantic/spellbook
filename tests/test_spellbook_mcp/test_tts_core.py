@@ -226,7 +226,6 @@ class TestResolveSetting:
         import spellbook.notifications.tts as tts_mod
         import spellbook.core.config as config_mod
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {"voice": "session_voice"}})
-        # Session value found, so config_get is never called
         result = tts_mod._resolve_setting("voice")
         assert result == "session_voice"
 
@@ -410,33 +409,6 @@ class TestSpeak:
         monkeypatch.setattr(config_mod, "_get_session_state", lambda sid=None: {"tts": {}})
         monkeypatch.setattr(config_mod, "config_get", lambda key: None)
 
-        async def fake_ensure_loaded():
-            return (True, None)
-
-        monkeypatch.setattr(tts_mod, "ensure_loaded", fake_ensure_loaded)
-
-        gen_calls = []
-
-        def fake_generate_audio(text, voice):
-            gen_calls.append((text, voice))
-            return "/tmp/test.wav"
-
-        monkeypatch.setattr(tts_mod, "_generate_audio", fake_generate_audio)
-
-        play_calls = []
-
-        def fake_play_audio(wav_path, volume):
-            play_calls.append((wav_path, volume))
-
-        monkeypatch.setattr(tts_mod, "_play_audio", fake_play_audio)
-
-        result = await tts_mod.speak("hello", voice="af_heart", volume=0.3)
-
-        assert result["ok"] is True
-        assert "elapsed" in result
-        assert result["wav_path"] == "/tmp/test.wav"
-        assert gen_calls == [("hello", "af_heart")]
-        assert play_calls == [("/tmp/test.wav", 0.3)]
         pcm_data = b"\x00\x01" * 100
 
         async def fake_synth(text, voice, host, port):

@@ -5,7 +5,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import bigfoot
 import pytest
 
 
@@ -23,13 +22,6 @@ def _setup_projects_dir(tmpdir: str) -> Path:
     claude_projects = Path(tmpdir) / "fakehome" / ".claude" / "projects"
     claude_projects.mkdir(parents=True)
     return claude_projects
-
-
-def _mock_home(tmpdir: str):
-    """Set up bigfoot mock for Path.home() to use tmpdir/fakehome."""
-    mock = bigfoot.mock("spellbook.admin.routes.sessions:Path.home")
-    mock.__call__.returns(Path(tmpdir) / "fakehome")
-    return mock
 
 
 class TestSessionList:

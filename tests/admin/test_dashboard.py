@@ -3,17 +3,6 @@
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
-import bigfoot
-from dirty_equals import IsInstance
-
-
-
-def _async_return(value):
-    """Return an async function that returns value (for mocking async callables)."""
-    async def _fn(*args, **kwargs):
-        return value
-    return _fn
-
 
 
 def _async_return(value):

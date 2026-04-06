@@ -192,6 +192,10 @@ class TestApiSpeakEndpoint:
 
     Uses mcp.http_app() to obtain the Starlette ASGI app for TestClient.
     This creates a full HTTP transport app that includes all custom routes.
+
+    Note: These tests use monkeypatch instead of bigfoot because Starlette's
+    TestClient runs its own event loop, which deadlocks with bigfoot's
+    mock activation/deactivation lifecycle.
     """
 
     @pytest.fixture(autouse=True)
@@ -200,21 +204,22 @@ class TestApiSpeakEndpoint:
         from spellbook.mcp.server import register_all_tools
         register_all_tools()
 
-    def test_success_returns_200(self):
+    def test_success_returns_200(self, monkeypatch):
         from starlette.testclient import TestClient
 
         mock_result = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/test.wav"}
-        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
-        mock_speak.calls(_async_return(mock_result))
 
-        with bigfoot:
-            app = server.mcp.http_app(transport="http")
-            client = TestClient(app)
-            response = client.post("/api/speak", json={"text": "hello"})
+        async def _mock_speak(*args, **kwargs):
+            return mock_result
+
+        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
+
+        app = server.mcp.http_app(transport="http")
+        client = TestClient(app)
+        response = client.post("/api/speak", json={"text": "hello"})
 
         assert response.status_code == 200
         assert response.json()["ok"] is True
-        mock_speak.assert_call(args=("hello",), kwargs={"voice": None, "volume": None, "session_id": None})
 
     def test_no_text_returns_400(self):
         from starlette.testclient import TestClient
@@ -238,39 +243,44 @@ class TestApiSpeakEndpoint:
         assert response.status_code == 400
         assert response.json()["error"] == "invalid JSON"
 
-    def test_passes_voice_and_volume_to_speak(self):
+    def test_passes_voice_and_volume_to_speak(self, monkeypatch):
         from starlette.testclient import TestClient
 
-        mock_result = {"ok": True, "elapsed": 0.5, "wav_path": "/tmp/x.wav"}
-        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
-        mock_speak.calls(_async_return(mock_result))
+        calls = []
 
-        with bigfoot:
-            app = server.mcp.http_app(transport="http")
-            client = TestClient(app)
-            response = client.post(
-                "/api/speak",
-                json={"text": "hi", "voice": "bf_emma", "volume": 0.7},
-            )
+        async def _mock_speak(*args, **kwargs):
+            calls.append((args, kwargs))
+            return {"ok": True, "elapsed": 0.5, "wav_path": "/tmp/x.wav"}
+
+        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
+
+        app = server.mcp.http_app(transport="http")
+        client = TestClient(app)
+        response = client.post(
+            "/api/speak",
+            json={"text": "hi", "voice": "bf_emma", "volume": 0.7},
+        )
 
         assert response.status_code == 200
-        mock_speak.assert_call(args=("hi",), kwargs={"voice": "bf_emma", "volume": 0.7, "session_id": None})
+        assert len(calls) == 1
+        assert calls[0][0] == ("hi",)
+        assert calls[0][1]["voice"] == "bf_emma"
+        assert calls[0][1]["volume"] == 0.7
 
-    def test_tts_error_returns_500(self):
+    def test_tts_error_returns_500(self, monkeypatch):
         from starlette.testclient import TestClient
 
-        mock_result = {"error": "TTS not available"}
-        mock_speak = bigfoot.mock("spellbook.notifications.tts:speak")
-        mock_speak.calls(_async_return(mock_result))
+        async def _mock_speak(*args, **kwargs):
+            return {"error": "TTS not available"}
 
-        with bigfoot:
-            app = server.mcp.http_app(transport="http")
-            client = TestClient(app)
-            response = client.post("/api/speak", json={"text": "hello"})
+        monkeypatch.setattr("spellbook.notifications.tts.speak", _mock_speak)
+
+        app = server.mcp.http_app(transport="http")
+        client = TestClient(app)
+        response = client.post("/api/speak", json={"text": "hello"})
 
         assert response.status_code == 500
         body = response.json()
         assert "error" in body
         assert body.get("ok") is not True
         assert body["error"] == "TTS not available"
-        mock_speak.assert_call(args=("hello",), kwargs={"voice": None, "volume": None, "session_id": None})

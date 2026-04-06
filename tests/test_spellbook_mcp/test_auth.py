@@ -8,7 +8,6 @@ import os
 import stat
 import sys
 import pytest
-import bigfoot
 from pathlib import Path
 
 

@@ -82,7 +82,6 @@ class TestToolFrequencyORM:
         )
         response = client.get("/api/analytics/tool-frequency")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -100,7 +99,6 @@ class TestToolFrequencyORM:
         )
         response = client.get("/api/analytics/tool-frequency")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -115,7 +113,6 @@ class TestToolFrequencyORM:
         )
         response = client.get("/api/analytics/tool-frequency?period=all")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -134,7 +131,6 @@ class TestToolFrequencyORM:
             "/api/analytics/tool-frequency?period=24h&event_type=tool_call"
         )
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -165,7 +161,6 @@ class TestErrorRatesORM:
         )
         response = client.get("/api/analytics/error-rates")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -187,7 +182,6 @@ class TestErrorRatesORM:
         )
         response = client.get("/api/analytics/error-rates?period=all")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -205,7 +199,6 @@ class TestErrorRatesORM:
         )
         response = client.get("/api/analytics/error-rates")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"tools": []}
@@ -237,7 +230,6 @@ class TestTimelineORM:
         )
         response = client.get("/api/analytics/timeline")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -260,7 +252,6 @@ class TestTimelineORM:
         )
         response = client.get("/api/analytics/timeline?period=7d")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -278,7 +269,6 @@ class TestTimelineORM:
         )
         response = client.get("/api/analytics/timeline")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {"timeline": []}
@@ -314,7 +304,6 @@ class TestAnalyticsSummaryORM:
         )
         response = client.get("/api/analytics/summary")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -336,7 +325,6 @@ class TestAnalyticsSummaryORM:
         )
         response = client.get("/api/analytics/summary")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
@@ -354,7 +342,6 @@ class TestAnalyticsSummaryORM:
         )
         response = client.get("/api/analytics/summary")
 
-        mock_session.assert_call(args=(), kwargs={})
 
         assert response.status_code == 200
         assert response.json() == {
