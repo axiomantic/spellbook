@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-04-06
+
 ### Breaking
 - **TTS MCP tools renamed**: `kokoro_speak` and `kokoro_status` renamed to `tts_speak` and `tts_status`
 - **TTS backend replaced**: TTS no longer uses in-process Kokoro. Requires a Wyoming protocol TTS server (e.g., wyoming-piper, wyoming-kokoro)
@@ -14,9 +16,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **TTS dependency group**: Now includes `wyoming`, `numpy`, `sounddevice` (removed `kokoro`, `soundfile`, `spacy`, `misaki`)
 - **`TTS_DEFAULT_VOICE`**: Changed from `af_heart` to empty string (uses server default)
+- **Admin frontend**: Upgraded React to v19, added `@testing-library/dom`, reverted tailwindcss v4 (requires CSS migration)
+- **Brainstorming skill**: Renamed to `design-exploration`
 
 ### Added
 - **Wyoming TTS config keys**: `tts_wyoming_host` and `tts_wyoming_port` for connecting to Wyoming protocol TTS servers
+- **Hook config override**: `SPELLBOOK_CONFIG_PATH` env var for overriding hook config file path
+
+### Fixed
+- **Admin frontend build**: Fixed TypeScript errors from React 18/19 version mismatch and missing `@testing-library/dom` peer dep
+- **Content provenance tests**: Tests no longer fail when user machine has crypto verification enabled
+- **Welcome action**: Bot PRs/issues no longer trigger the first-time contributor welcome message
+- **Feature-research diagram**: Improved with subgraphs, cross-references, and completion checklist
+
+### Dependencies
+- Bumped `@opencode-ai/sdk` to 1.3.13 (context-curator, workflow-state)
+- Bumped `@opencode-ai/plugin` to 1.3.13 (context-curator, workflow-state)
+- Bumped `typescript` to 6.0.2 (context-curator, workflow-state, spellbook-forged)
+- Bumped `vitest` to 4.1.2 (tests/unit), 4.1.1 (admin frontend)
+- Bumped `typescript-eslint` to 8.57.2 (admin frontend)
+- Bumped `vite` to 8.0.2 (admin frontend)
+- Bumped `@eslint/js` to 10.0.1 (admin frontend)
 
 ## [0.44.0] - 2026-04-04
 
