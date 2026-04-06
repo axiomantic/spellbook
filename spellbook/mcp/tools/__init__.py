@@ -20,4 +20,5 @@ from spellbook.mcp.tools import (  # noqa: F401
     sessions,
     tooling,
     updates,
+    zai_models,
 )
