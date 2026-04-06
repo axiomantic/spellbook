@@ -188,20 +188,14 @@ def _update_stack(project_path: str, mutate_fn: Callable[[list], list], db_path:
             if new_stack is not None:
                 cursor.execute(
                     """
-                    UPDATE stint_stack
-                    SET stack_json = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE project_path = ? AND session_id = ?
+                    INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_path, session_id) DO UPDATE SET
+                        stack_json = excluded.stack_json,
+                        updated_at = excluded.updated_at
                     """,
-                    (json.dumps(new_stack), project_path, session_id),
+                    (project_path, session_id, json.dumps(new_stack)),
                 )
-                if cursor.rowcount == 0:
-                    cursor.execute(
-                        """
-                        INSERT INTO stint_stack (project_path, session_id, stack_json, updated_at)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                        """,
-                        (project_path, session_id, json.dumps(new_stack)),
-                    )
             conn.commit()
             return result
         except sqlite3.OperationalError as e:

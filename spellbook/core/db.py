@@ -104,8 +104,9 @@ def _migrate_stint_stack_schema(cursor):
         return  # Table doesn't exist yet; CREATE TABLE will handle it
     create_sql = row[0]
     has_not_null = "session_id TEXT NOT NULL" in create_sql
-    has_unique = "UNIQUE" in create_sql.upper()
-    if has_not_null and has_unique:
+    normalized_sql = " ".join(create_sql.upper().split())
+    has_correct_unique = "UNIQUE(PROJECT_PATH, SESSION_ID)" in normalized_sql.replace("UNIQUE (", "UNIQUE(")
+    if has_not_null and has_correct_unique:
         return  # Schema already matches target
 
     cursor.execute("ALTER TABLE stint_stack RENAME TO _stint_stack_old")
