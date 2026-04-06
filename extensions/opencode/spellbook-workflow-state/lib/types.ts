@@ -27,6 +27,14 @@ export interface SubagentState {
   skill_stack: SkillStackEntry[];
 }
 
+export interface StintEntry {
+  name: string;
+  purpose: string;
+  behavioral_mode: string;
+  entered_at: string;
+  metadata?: Record<string, string>;
+}
+
 export interface TodoItem {
   id: string;
   content: string;
@@ -95,4 +103,5 @@ export interface PluginState {
   workflowState: WorkflowState | null;
   isTracking: boolean;
   lastCompaction: number;
+  stintStack: StintEntry[];
 }

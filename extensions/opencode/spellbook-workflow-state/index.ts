@@ -44,15 +44,7 @@ const plugin: Plugin = async (ctx) => {
       await handler(input.tool, output.metadata, output);
     },
     
-    'session.compacting': createSessionCompactingHandler(
-      state,
-      mcpClient,
-      getProjectPath,
-      async (_source, _content) => {
-        // Note: injectCompactionContext may not be available in all SDK versions
-        // The recovery context is still saved to MCP and can be retrieved on resume
-      }
-    ),
+    'session.compacting': createSessionCompactingHandler(state, mcpClient, getProjectPath),
     
     'experimental.chat.system.transform': createSystemPromptHandler(state, mcpClient),
   };

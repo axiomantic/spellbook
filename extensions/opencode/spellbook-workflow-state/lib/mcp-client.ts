@@ -7,6 +7,7 @@ export interface McpClient {
   workflowStateLoad(projectPath: string, maxAgeHours?: number): Promise<any>;
   workflowStateUpdate(projectPath: string, updates: object): Promise<any>;
   skillInstructionsGet(skillName: string, sections?: string[]): Promise<any>;
+  stintCheck(projectPath: string): Promise<any>;
 }
 
 export function createMcpClient(port: number): McpClient {
@@ -38,5 +39,7 @@ export function createMcpClient(port: number): McpClient {
       callTool('workflow_state_update', { project_path: projectPath, updates }),
     skillInstructionsGet: (skillName, sections) =>
       callTool('skill_instructions_get', { skill_name: skillName, sections }),
+    stintCheck: (projectPath) =>
+      callTool('stint_check', { project_path: projectPath }),
   };
 }

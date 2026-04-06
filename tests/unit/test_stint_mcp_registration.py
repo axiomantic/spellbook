@@ -147,6 +147,7 @@ class TestStintPushBehavioralMode:
                 "purpose": "testing",
                 "behavioral_mode": "ORCHESTRATOR: dispatch subagents",
                 "metadata": None,
+                "session_id": None,
             },
         )
         bigfoot.log_mock.assert_log(

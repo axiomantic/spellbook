@@ -8,9 +8,12 @@ __all__ = [
     "stint_replace",
 ]
 
+from typing import Optional
+from fastmcp import Context
 from spellbook.mcp.server import mcp
 from spellbook.coordination.curator import curator_track_prune
 from spellbook.sessions.injection import inject_recovery_context
+from spellbook.mcp.tools.config import _get_session_id
 
 
 # Context Curator Tools
@@ -49,6 +52,7 @@ def stint_push(
     purpose: str = "",
     behavioral_mode: str = "",
     metadata: dict | None = None,
+    ctx: Optional[Context] = None,
 ) -> dict:
     """Push a new stint onto the focus stack.
 
@@ -68,6 +72,7 @@ def stint_push(
         {"success": True, "depth": int, "stack": list}
     """
     from spellbook.coordination.stint import push_stint
+    session_id = _get_session_id(ctx)
     result = push_stint(
         project_path=project_path,
         name=name,
@@ -75,6 +80,7 @@ def stint_push(
         purpose=purpose,
         behavioral_mode=behavioral_mode,
         metadata=metadata,
+        session_id=session_id,
     )
     try:
         from spellbook.admin.events import Event, Subsystem, publish_sync
@@ -100,6 +106,7 @@ def stint_push(
 def stint_pop(
     project_path: str,
     name: str | None = None,
+    ctx: Optional[Context] = None,
 ) -> dict:
     """Pop the top stint from the focus stack.
 
@@ -115,7 +122,8 @@ def stint_pop(
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
     """
     from spellbook.coordination.stint import pop_stint
-    result = pop_stint(project_path=project_path, name=name)
+    session_id = _get_session_id(ctx)
+    result = pop_stint(project_path=project_path, name=name, session_id=session_id)
     try:
         from spellbook.admin.events import Event, Subsystem, publish_sync
 
@@ -141,6 +149,7 @@ def stint_pop(
 @inject_recovery_context
 def stint_check(
     project_path: str,
+    ctx: Optional[Context] = None,
 ) -> dict:
     """Return the current stint stack for verification.
 
@@ -154,7 +163,8 @@ def stint_check(
         {"success": True, "depth": int, "stack": list}
     """
     from spellbook.coordination.stint import check_stint
-    return check_stint(project_path=project_path)
+    session_id = _get_session_id(ctx)
+    return check_stint(project_path=project_path, session_id=session_id)
 
 
 @mcp.tool()
@@ -163,6 +173,7 @@ def stint_replace(
     project_path: str,
     stack: list[dict],
     reason: str = "",
+    ctx: Optional[Context] = None,
 ) -> dict:
     """Replace the entire stint stack with a corrected version.
 
@@ -179,10 +190,12 @@ def stint_replace(
         {"success": True, "depth": int, "correction_logged": True}
     """
     from spellbook.coordination.stint import replace_stint
+    session_id = _get_session_id(ctx)
     result = replace_stint(
         project_path=project_path,
         stack=stack,
         reason=reason,
+        session_id=session_id,
     )
     try:
         from spellbook.admin.events import Event, Subsystem, publish_sync

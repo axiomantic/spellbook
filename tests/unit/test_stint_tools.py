@@ -47,20 +47,32 @@ class TestStintDatabaseSchema:
         expected = {"id", "project_path", "session_id", "stack_json", "updated_at"}
         assert expected.issubset(columns), f"Missing columns: {expected - columns}"
 
-    def test_stint_stack_project_path_unique(self, isolated_db):
+    def test_stint_stack_multiple_rows_per_project(self, isolated_db):
         conn = get_connection(isolated_db)
         cursor = conn.cursor()
+        
+        # Should be able to insert multiple rows for the same project with different session_ids
+        cursor.execute(
+            "INSERT INTO stint_stack (project_path, session_id, stack_json) VALUES (?, ?, ?)",
+            ("/test/project", "session-a", "[]"),
+        )
+        cursor.execute(
+            "INSERT INTO stint_stack (project_path, session_id, stack_json) VALUES (?, ?, ?)",
+            ("/test/project", "session-b", "[]"),
+        )
+        conn.commit()
+        
+        # Should be able to insert a row with NULL session_id too
         cursor.execute(
             "INSERT INTO stint_stack (project_path, stack_json) VALUES (?, ?)",
             ("/test/project", "[]"),
         )
         conn.commit()
-        with pytest.raises(sqlite3.IntegrityError):
-            cursor.execute(
-                "INSERT INTO stint_stack (project_path, stack_json) VALUES (?, ?)",
-                ("/test/project", "[]"),
-            )
-            conn.commit()
+        
+        # Verify all three rows exist
+        cursor.execute("SELECT COUNT(*) FROM stint_stack WHERE project_path = ?", ("/test/project",))
+        count = cursor.fetchone()[0]
+        assert count == 3, f"Expected 3 rows, got {count}"
 
     def test_stint_correction_events_table_exists(self, isolated_db):
         conn = get_connection(isolated_db)
@@ -109,6 +121,302 @@ from spellbook.coordination.stint import (
     _is_ordered_subsequence,
     _validate_stint_entry,
 )
+
+
+class TestSessionIsolation:
+    """Test that stints are properly isolated between sessions."""
+    
+    def test_session_isolation(self, isolated_db):
+        """Test that different sessions can have separate stint stacks for the same project."""
+        
+        # Session A pushes a stint
+        result_a1 = push_stint(
+            project_path="/test/project",
+            name="feature-a",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        assert result_a1["success"]
+        assert result_a1["depth"] == 1
+        assert result_a1["stack"][0]["name"] == "feature-a"
+        
+        # Session B pushes a different stint
+        result_b1 = push_stint(
+            project_path="/test/project",
+            name="feature-b", 
+            db_path=isolated_db,
+            session_id="session-b",
+        )
+        assert result_b1["success"]
+        assert result_b1["depth"] == 1
+        assert result_b1["stack"][0]["name"] == "feature-b"
+        
+        # Session A should only see its own stint
+        result_a_check = check_stint("/test/project", db_path=isolated_db, session_id="session-a")
+        assert result_a_check["success"]
+        assert result_a_check["depth"] == 1
+        assert result_a_check["stack"][0]["name"] == "feature-a"
+        
+        # Session B should only see its own stint
+        result_b_check = check_stint("/test/project", db_path=isolated_db, session_id="session-b")
+        assert result_b_check["success"]
+        assert result_b_check["depth"] == 1
+        assert result_b_check["stack"][0]["name"] == "feature-b"
+        
+        # Backward compatibility (no session_id) should see empty stack
+        result_backward = check_stint("/test/project", db_path=isolated_db)
+        assert result_backward["success"]
+        assert result_backward["depth"] == 0
+        assert result_backward["stack"] == []
+
+    def test_session_scoped_push_updates_not_inserts(self, isolated_db):
+        """Multiple pushes to the same session must UPDATE the same row, not INSERT new rows.
+
+        This was the primary bug: _update_stack always INSERTed when session_id was set,
+        creating orphan rows. The SELECT would only find the first row, so subsequent
+        pushes appeared lost.
+        """
+        # Push first stint for session-a
+        push_stint(
+            project_path="/test/project",
+            name="task-1",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        # Push second stint for session-a — should update existing row
+        result = push_stint(
+            project_path="/test/project",
+            name="task-2",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        assert result["success"]
+        assert result["depth"] == 2
+        assert result["stack"][0]["name"] == "task-1"
+        assert result["stack"][1]["name"] == "task-2"
+
+        # Verify only ONE row exists for this project+session
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM stint_stack WHERE project_path = ? AND session_id = ?",
+            ("/test/project", "session-a"),
+        )
+        count = cursor.fetchone()[0]
+        assert count == 1, f"Expected 1 row for session-a, got {count} (orphan rows created)"
+
+    def test_session_scoped_pop_updates_not_inserts(self, isolated_db):
+        """Pop on a session-scoped stack must UPDATE, not create a new row."""
+        push_stint(
+            project_path="/test/project",
+            name="task-1",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        push_stint(
+            project_path="/test/project",
+            name="task-2",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        # Pop should update the row, not insert a new one
+        result = pop_stint(
+            project_path="/test/project",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        assert result["success"]
+        assert result["depth"] == 1
+        assert result["popped"]["name"] == "task-2"
+
+        # Verify only ONE row exists
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM stint_stack WHERE project_path = ? AND session_id = ?",
+            ("/test/project", "session-a"),
+        )
+        count = cursor.fetchone()[0]
+        assert count == 1, f"Expected 1 row after pop, got {count}"
+
+    def test_session_scoped_replace_updates_not_inserts(self, isolated_db):
+        """Replace on a session-scoped stack must UPDATE, not create a new row."""
+        push_stint(
+            project_path="/test/project",
+            name="task-1",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        result = replace_stint(
+            project_path="/test/project",
+            stack=[],
+            reason="clearing",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        assert result["success"]
+        assert result["depth"] == 0
+
+        # Verify only ONE row exists
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM stint_stack WHERE project_path = ? AND session_id = ?",
+            ("/test/project", "session-a"),
+        )
+        count = cursor.fetchone()[0]
+        assert count == 1, f"Expected 1 row after replace, got {count}"
+
+    def test_session_pop_includes_session_id_in_correction_event(self, isolated_db):
+        """Pop mismatch correction events should include session_id."""
+        push_stint(
+            project_path="/test/project",
+            name="task-1",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        pop_stint(
+            project_path="/test/project",
+            name="wrong-name",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT session_id FROM stint_correction_events WHERE project_path = ?",
+            ("/test/project",),
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "session-a", "Correction event should record session_id"
+
+    def test_session_replace_includes_session_id_in_correction_event(self, isolated_db):
+        """Replace correction events should include session_id."""
+        push_stint(
+            project_path="/test/project",
+            name="task-1",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        replace_stint(
+            project_path="/test/project",
+            stack=[],
+            reason="clearing",
+            db_path=isolated_db,
+            session_id="session-a",
+        )
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT session_id FROM stint_correction_events WHERE project_path = ?",
+            ("/test/project",),
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "session-a", "Correction event should record session_id"
+
+    def test_backward_compat_no_session_id_still_works(self, isolated_db):
+        """When session_id is None, the old UPDATE/INSERT behavior must still work."""
+        result = push_stint(
+            project_path="/test/project",
+            name="legacy-task",
+            db_path=isolated_db,
+        )
+        assert result["success"]
+        assert result["depth"] == 1
+
+        # Push again — should update, not insert
+        result = push_stint(
+            project_path="/test/project",
+            name="legacy-task-2",
+            db_path=isolated_db,
+        )
+        assert result["success"]
+        assert result["depth"] == 2
+
+        # Verify only ONE row with NULL session_id
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM stint_stack WHERE project_path = ? AND session_id IS NULL",
+            ("/test/project",),
+        )
+        count = cursor.fetchone()[0]
+        assert count == 1, f"Expected 1 row for NULL session_id, got {count}"
+
+    def test_three_sessions_same_project_independent(self, isolated_db):
+        """Three sessions on the same project should have completely independent stacks."""
+        # Session A: push 2 stints
+        push_stint("/test/project", "a1", db_path=isolated_db, session_id="s-a")
+        push_stint("/test/project", "a2", db_path=isolated_db, session_id="s-a")
+
+        # Session B: push 1 stint
+        push_stint("/test/project", "b1", db_path=isolated_db, session_id="s-b")
+
+        # Session C: push 3 stints
+        push_stint("/test/project", "c1", db_path=isolated_db, session_id="s-c")
+        push_stint("/test/project", "c2", db_path=isolated_db, session_id="s-c")
+        push_stint("/test/project", "c3", db_path=isolated_db, session_id="s-c")
+
+        # Verify each session sees only its own stack
+        a = check_stint("/test/project", db_path=isolated_db, session_id="s-a")
+        assert a["depth"] == 2
+        assert [e["name"] for e in a["stack"]] == ["a1", "a2"]
+
+        b = check_stint("/test/project", db_path=isolated_db, session_id="s-b")
+        assert b["depth"] == 1
+        assert b["stack"][0]["name"] == "b1"
+
+        c = check_stint("/test/project", db_path=isolated_db, session_id="s-c")
+        assert c["depth"] == 3
+        assert [e["name"] for e in c["stack"]] == ["c1", "c2", "c3"]
+
+        # Pop from session A should not affect B or C
+        pop_stint("/test/project", db_path=isolated_db, session_id="s-a")
+        a = check_stint("/test/project", db_path=isolated_db, session_id="s-a")
+        assert a["depth"] == 1
+        assert a["stack"][0]["name"] == "a1"
+
+        b = check_stint("/test/project", db_path=isolated_db, session_id="s-b")
+        assert b["depth"] == 1  # Unaffected
+        c = check_stint("/test/project", db_path=isolated_db, session_id="s-c")
+        assert c["depth"] == 3  # Unaffected
+
+    def test_session_scoped_replace_on_empty_stack_inserts(self, isolated_db):
+        """Replace on a brand new session (no row yet) should INSERT, then UPDATE."""
+        # No prior push — replace should create the row via INSERT
+        result = replace_stint(
+            project_path="/test/project",
+            stack=[{"name": "fresh", "purpose": "", "behavioral_mode": "", "metadata": {},
+                    "entered_at": datetime.now(timezone.utc).isoformat()}],
+            reason="fresh start",
+            db_path=isolated_db,
+            session_id="fresh-session",
+        )
+        assert result["success"]
+        assert result["depth"] == 1
+
+        # Replace again — should UPDATE the existing row
+        result = replace_stint(
+            project_path="/test/project",
+            stack=[],
+            reason="clearing",
+            db_path=isolated_db,
+            session_id="fresh-session",
+        )
+        assert result["success"]
+        assert result["depth"] == 0
+
+        # Verify only one row
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM stint_stack WHERE project_path = ? AND session_id = ?",
+            ("/test/project", "fresh-session"),
+        )
+        count = cursor.fetchone()[0]
+        assert count == 1, f"Expected 1 row, got {count}"
 
 
 class TestPushStint:
