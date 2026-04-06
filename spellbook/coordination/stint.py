@@ -135,7 +135,8 @@ def _log_correction_event(
         )
         conn.commit()
     except Exception:
-        pass  # Correction logging is best-effort; never block the caller
+        import logging
+        logging.getLogger(__name__).error("Failed to log stint correction event", exc_info=True)
 
 
 def _update_stack(project_path: str, mutate_fn, db_path: str = None, session_id: str = None) -> dict:

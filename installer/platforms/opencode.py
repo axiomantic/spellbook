@@ -353,8 +353,8 @@ class OpenCodeInstaller(PlatformInstaller):
             zai_models_available = [model.id for model in registry.get_all_models() 
                                   if model.id.startswith("zai-coding-plan/")]
         except Exception:
-            # If model registry is not available, no z.AI models detected
-            pass
+            import logging
+            logging.getLogger(__name__).debug("Model registry not available during detection", exc_info=True)
 
         return PlatformStatus(
             platform=self.platform_id,

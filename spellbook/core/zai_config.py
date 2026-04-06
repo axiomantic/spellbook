@@ -54,9 +54,9 @@ def get_zai_concurrency_limits() -> dict:
     return config_get("zai_concurrency_limits") or {}
 
 
-def get_zai_models_config() -> dict:
-    """Return user-configured model definitions, or empty dict if unset."""
-    return config_get("zai_models") or {}
+def get_zai_models_config() -> list:
+    """Return user-configured model definitions, or empty list if unset."""
+    return config_get("zai_models") or []
 
 
 def is_zai_configured() -> bool:

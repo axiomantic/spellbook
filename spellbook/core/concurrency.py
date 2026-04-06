@@ -34,11 +34,10 @@ class ConcurrencyManager:
         """Lazy import of ModelRegistry."""
         if self._model_registry is None:
             try:
-                from spellbook.core.zai_models import ModelRegistry
-                self._model_registry = ModelRegistry
+                from spellbook.core.zai_models import get_registry
+                self._model_registry = get_registry()
             except ImportError:
-                # Create a minimal registry for when zai_models isn't available yet
-                self._model_registry = None
+                pass
         return self._model_registry
     
     def _get_semaphore_limit(self, model_id: str) -> int:
@@ -57,10 +56,10 @@ class ConcurrencyManager:
         
         # If ModelRegistry is available, check model-specific limit
         registry = self._get_model_registry()
-        if registry and hasattr(registry, 'get_model_limit'):
-            model_limit = registry.get_model_limit(model_id)
-            if model_limit is not None:
-                limit = min(limit, model_limit)
+        if registry:
+            model = registry.get_model(model_id)
+            if model:
+                limit = min(limit, model.max_concurrent)
         
         # Apply global limit as the final constraint
         return min(limit, self._global_max_concurrent)
@@ -90,22 +89,24 @@ class ConcurrencyManager:
         Returns:
             The model semaphore if acquired, None on timeout
         """
+        acquired_global = False
         try:
             # Acquire global semaphore first
             await asyncio.wait_for(self._global_semaphore.acquire(), timeout=30.0)
-            
+            acquired_global = True
+
             # Then acquire model-specific semaphore
             model_semaphore = self._get_semaphore(model_id)
             await asyncio.wait_for(model_semaphore.acquire(), timeout=30.0)
-            
+
             # Track usage
             self._usage_counts[model_id] += 1
-            
+
             return model_semaphore
-            
+
         except asyncio.TimeoutError:
-            # If model semaphore times out, release global semaphore
-            if self._global_semaphore.locked():
+            # If we acquired the global semaphore but timed out on the model one, release global
+            if acquired_global:
                 self._global_semaphore.release()
             return None
     
@@ -116,13 +117,10 @@ class ConcurrencyManager:
             model_id: The model identifier
             semaphore: The model semaphore to release
         """
-        # Release model semaphore
-        if semaphore.locked():
-            semaphore.release()
-        
-        # Release global semaphore
-        if self._global_semaphore.locked():
-            self._global_semaphore.release()
+        # Release semaphores. Note: asyncio semaphores do not track ownership,
+        # so we rely on the caller to only call release if they successfully acquired.
+        semaphore.release()
+        self._global_semaphore.release()
         
         # Decrement usage count
         if model_id in self._usage_counts:

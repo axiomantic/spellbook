@@ -28,10 +28,15 @@ def _get_registry():
     return get_registry()
 
 
+_manager = None
+
 def _get_concurrency_manager():
     """Lazy import of ConcurrencyManager singleton."""
-    from spellbook.core.concurrency import ConcurrencyManager
-    return ConcurrencyManager()
+    global _manager
+    if _manager is None:
+        from spellbook.core.concurrency import ConcurrencyManager
+        _manager = ConcurrencyManager()
+    return _manager
 
 
 @mcp.tool()

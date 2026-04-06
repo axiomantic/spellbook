@@ -342,16 +342,16 @@ class TestGetZaiModelsConfig:
         assert result == expected
         mock_cg.assert_call(args=("zai_models",), kwargs={})
 
-    def test_returns_empty_dict_when_not_configured(self) -> None:
-        """Returns empty dict when config has no user models.
+    def test_returns_empty_list_when_not_configured(self) -> None:
+        """Returns empty list when config has no user models.
 
-        ESCAPE: test_returns_empty_dict_when_not_configured
-          CLAIM: Returns {} when config_get returns None
+        ESCAPE: test_returns_empty_list_when_not_configured
+          CLAIM: Returns [] when config_get returns None
           PATH:  config_get("zai_models") returns None
-          CHECK: result == {}
+          CHECK: result == []
           MUTATION: Returning None -> assertion fails
-          ESCAPE: None — {} != None
-          IMPACT: Callers must handle None instead of empty dict
+          ESCAPE: None — [] != None
+          IMPACT: Callers must handle None instead of empty list
         """
         mock_cg = bigfoot.mock("spellbook.core.zai_config:config_get")
         mock_cg.returns(None)
@@ -361,7 +361,7 @@ class TestGetZaiModelsConfig:
 
             result = get_zai_models_config()
 
-        assert result == {}
+        assert result == []
         mock_cg.assert_call(args=("zai_models",), kwargs={})
 
 
