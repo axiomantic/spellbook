@@ -100,9 +100,9 @@ class TestStintDatabaseSchema:
         conn = get_connection(isolated_db)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_stint_stack_project'"
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_stint_stack_session'"
         )
-        assert cursor.fetchone() is not None, "idx_stint_stack_project index not created"
+        assert cursor.fetchone() is not None, "idx_stint_stack_session index not created"
 
     def test_stint_corrections_indexes_exist(self, isolated_db):
         conn = get_connection(isolated_db)

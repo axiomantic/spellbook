@@ -133,11 +133,11 @@ def _migrate_stint_stack_schema(cursor):
             UNIQUE(project_path, session_id)
         )
     """)
-    # Delete legacy rows with NULL session_id (no longer valid with mandatory sessions)
-    deleted = cursor.execute("SELECT COUNT(*) FROM _stint_stack_old WHERE session_id IS NULL").fetchone()[0]
-    if deleted:
-        logger.info("Dropping %d legacy stint_stack rows with NULL session_id", deleted)
-    cursor.execute("DELETE FROM _stint_stack_old WHERE session_id IS NULL")
+    # Migrate legacy rows with NULL session_id to a default value
+    migrated = cursor.execute("SELECT COUNT(*) FROM _stint_stack_old WHERE session_id IS NULL").fetchone()[0]
+    if migrated:
+        logger.info("Migrating %d legacy stint_stack rows with NULL session_id to 'legacy'", migrated)
+    cursor.execute("UPDATE _stint_stack_old SET session_id = 'legacy' WHERE session_id IS NULL")
     cursor.execute("""
         INSERT INTO stint_stack (id, project_path, session_id, stack_json, updated_at)
         SELECT id, project_path, session_id, stack_json, updated_at
@@ -692,17 +692,12 @@ def init_db(db_path: str = None) -> None:
         )
     """)
 
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_stint_stack_project
-        ON stint_stack(project_path)
-    """)
+    # idx_stint_stack_project and idx_stint_stack_project_session are redundant
+    # with the UNIQUE(project_path, session_id) implicit index. Only session_id
+    # alone needs an explicit index for session-scoped lookups.
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_stint_stack_session
         ON stint_stack(session_id)
-    """)
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_stint_stack_project_session
-        ON stint_stack(project_path, session_id)
     """)
 
     cursor.execute("""

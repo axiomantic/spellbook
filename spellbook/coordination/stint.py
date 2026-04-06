@@ -142,7 +142,7 @@ def _log_correction_event(
         logger.error("Failed to log stint correction event", exc_info=True)
 
 
-def _update_stack(project_path: str, mutate_fn: Callable[[list], list], db_path: Optional[str] = None, session_id: str = "") -> dict:
+def _update_stack(project_path: str, mutate_fn: Callable[[list, sqlite3.Cursor], tuple[dict, Optional[list]]], db_path: Optional[str] = None, session_id: str = "") -> dict:
     """Read-modify-write the stint stack atomically.
 
     Uses a dedicated connection with BEGIN IMMEDIATE to acquire a write
