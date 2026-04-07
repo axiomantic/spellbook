@@ -41,6 +41,7 @@ def _make_args(**overrides) -> argparse.Namespace:
         update_only=False,
         bootstrapped=True,
         security_level=None,
+        security_wizard=False,
         no_tts=False,
         reconfigure=False,
     )

@@ -12,8 +12,6 @@ import json
 from pathlib import Path
 
 import bigfoot
-import re
-
 from dirty_equals import IsInstance, IsStr
 
 # install.py is the top-level script; we import from it directly
@@ -517,9 +515,8 @@ class TestProvisionTtsEager:
             args=(), kwargs={}, raised=IsInstance(RuntimeError),  # exception identity, not equality
         )
         mock_config.assert_call(args=(True,), kwargs={})
-        # The warning message now includes the traceback in the detail
         mock_pw.assert_call(
-            args=(IsStr(regex=r'TTS setup incomplete: venv creation failed\n.*You can retry later by setting tts_enabled=true', regex_flags=re.DOTALL),),
+            args=(IsStr(regex=r'TTS setup incomplete: venv creation failed\. You can retry later by setting tts_enabled=true'),),
             kwargs={},
         )
 

@@ -4,7 +4,9 @@ import asyncio
 
 import bigfoot
 import pytest
+from dirty_equals import IsInstance
 
+from spellbook.admin.events import Event
 from spellbook.mcp.tools.config import spellbook_config_set
 
 
@@ -23,6 +25,9 @@ class TestTtsProvisioningHook:
         mock_cfg_set = bigfoot.mock("spellbook.mcp.tools.config:config_set")
         mock_cfg_set.returns({"status": "ok", "config": {"tts_enabled": True}})
 
+        mock_publish = bigfoot.mock("spellbook.admin.events:publish_sync")
+        mock_publish.returns(None)
+
         mock_provision = bigfoot.mock("spellbook.mcp.tools.config:_provision_tts_async")
         mock_provision.calls(_async_return(None))
 
@@ -34,12 +39,16 @@ class TestTtsProvisioningHook:
 
         assert result == {"status": "ok", "config": {"tts_enabled": True}}
         mock_cfg_set.assert_call(args=("tts_enabled", True), kwargs={})
+        mock_publish.assert_call(args=(IsInstance(Event),), kwargs={})
         mock_provision.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
     async def test_tts_enabled_string_true_triggers_provisioning(self):
         mock_cfg_set = bigfoot.mock("spellbook.mcp.tools.config:config_set")
         mock_cfg_set.returns({"status": "ok", "config": {"tts_enabled": "true"}})
+
+        mock_publish = bigfoot.mock("spellbook.admin.events:publish_sync")
+        mock_publish.returns(None)
 
         mock_provision = bigfoot.mock("spellbook.mcp.tools.config:_provision_tts_async")
         mock_provision.calls(_async_return(None))
@@ -50,12 +59,16 @@ class TestTtsProvisioningHook:
 
         assert result == {"status": "ok", "config": {"tts_enabled": "true"}}
         mock_cfg_set.assert_call(args=("tts_enabled", "true"), kwargs={})
+        mock_publish.assert_call(args=(IsInstance(Event),), kwargs={})
         mock_provision.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
     async def test_tts_enabled_false_triggers_stop(self):
         mock_cfg_set = bigfoot.mock("spellbook.mcp.tools.config:config_set")
         mock_cfg_set.returns({"status": "ok", "config": {"tts_enabled": False}})
+
+        mock_publish = bigfoot.mock("spellbook.admin.events:publish_sync")
+        mock_publish.returns(None)
 
         mock_stop = bigfoot.mock("spellbook.mcp.tools.config:_stop_tts_async")
         mock_stop.calls(_async_return(None))
@@ -66,6 +79,7 @@ class TestTtsProvisioningHook:
 
         assert result == {"status": "ok", "config": {"tts_enabled": False}}
         mock_cfg_set.assert_call(args=("tts_enabled", False), kwargs={})
+        mock_publish.assert_call(args=(IsInstance(Event),), kwargs={})
         mock_stop.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
@@ -73,12 +87,16 @@ class TestTtsProvisioningHook:
         mock_cfg_set = bigfoot.mock("spellbook.mcp.tools.config:config_set")
         mock_cfg_set.returns({"status": "ok", "config": {"fun_mode": True}})
 
+        mock_publish = bigfoot.mock("spellbook.admin.events:publish_sync")
+        mock_publish.returns(None)
+
         # Do NOT mock _provision_tts_async: unmocked call would fail the test.
         async with bigfoot:
             result = await spellbook_config_set.__wrapped__("fun_mode", True)
 
         assert result == {"status": "ok", "config": {"fun_mode": True}}
         mock_cfg_set.assert_call(args=("fun_mode", True), kwargs={})
+        mock_publish.assert_call(args=(IsInstance(Event),), kwargs={})
 
 
 class TestProvisionTtsAsync:

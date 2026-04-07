@@ -1058,37 +1058,66 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
-    # ---- Assemble WizardContext and run upfront wizard ----
-    if renderer is not None:
-        from installer.wizard import WizardContext, WizardResults
-        from installer.tui import get_feature_groups
+    from installer.tui import get_feature_groups as _get_fg
+    from installer.wizard import WizardContext, WizardResults, _matches_unset_key
 
-        # Derive all security feature config keys from feature groups
-        all_security_keys = [
+    # Import config module early; may fail in bootstrap scenarios
+    try:
+        from spellbook.core.config import (
+            config_get as _cfg_get_early,
+            config_is_explicitly_set as _cfg_is_set,
+        )
+        _config_available = True
+    except ImportError:
+        _config_available = False
+        _cfg_get_early = None  # type: ignore[assignment]
+        _cfg_is_set = None  # type: ignore[assignment]
+
+    def _get_all_security_keys() -> list[str]:
+        """Return dotted config keys for all security features."""
+        return [
             f"security.{f['id']}.enabled"
-            for group in get_feature_groups()
+            for group in _get_fg()
             for f in group["features"]
         ]
 
-        # Get unset config keys for security features
-        try:
-            from spellbook.core.config import (
-                config_get as _cfg_get,
-                config_is_explicitly_set,
-            )
-            unset_security = [k for k in all_security_keys if not config_is_explicitly_set(k)]
+    def _get_unset_security_keys(all_keys: list[str]) -> list[str]:
+        """Return security config keys that have not been explicitly set."""
+        if not _config_available:
+            return all_keys
+        return [k for k in all_keys if not _cfg_is_set(k)]
+
+    def _get_default_security_selections(unset_keys: list[str]) -> dict[str, bool]:
+        """Return default security selections for any unset config keys.
+
+        Looks up the recommended default for each feature whose config key
+        appears in *unset_keys* and returns a ``{feature_id: default}`` dict.
+        """
+        selections: dict[str, bool] = {}
+        for group in _get_fg():
+            for feat in group["features"]:
+                if _matches_unset_key(feat["id"], unset_keys):
+                    selections[feat["id"]] = feat["default"]
+        return selections
+
+    # ---- Assemble WizardContext and run upfront wizard ----
+    if renderer is not None:
+        # Derive unset security config keys using shared helpers
+        all_security_keys = _get_all_security_keys()
+
+        unset_security = _get_unset_security_keys(all_security_keys)
+        if _config_available:
             existing_config = {}
             for k in all_security_keys:
                 try:
-                    v = _cfg_get(k)
+                    v = _cfg_get_early(k)
                     if v is not None:
                         existing_config[k] = v
                 except Exception as e:
                     print_warning(f"Could not read config key {k}: {e}")
-            tts_already_configured = _cfg_get("tts_enabled") is not None
-            profile_already_configured = config_is_explicitly_set("profile.default")
-        except ImportError:
-            unset_security = all_security_keys
+            tts_already_configured = _cfg_get_early("tts_enabled") is not None
+            profile_already_configured = _cfg_is_set("profile.default")
+        else:
             existing_config = {}
             tts_already_configured = False
             profile_already_configured = False
@@ -1107,6 +1136,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             unset_security_keys=unset_security,
             existing_config=existing_config,
             security_level=getattr(args, "security_level", None),
+            security_wizard=getattr(args, "security_wizard", False),
             tts_disabled=getattr(args, "no_tts", False),
             tts_already_configured=tts_already_configured,
             profile_already_configured=profile_already_configured,
@@ -1154,6 +1184,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 parts = key.split(".")
                 bare_id = parts[1] if len(parts) >= 2 else key
                 security_selections[bare_id] = value
+        elif unset_security and (not getattr(args, "security_wizard", False) or getattr(args, "yes", False)):
+            # Security wizard was not requested (or --yes overrides it) and
+            # there are unset keys: silently apply recommended defaults.
+            security_selections = _get_default_security_selections(unset_security)
     else:
         # No renderer: fallback to old platform selection
         if args.platforms:
@@ -1189,6 +1223,15 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except (ImportError, ValueError) as e:
                 print_error(f"Invalid security level: {e}")
                 return 1
+        elif not getattr(args, "security_wizard", False) or getattr(args, "yes", False) or not is_interactive():
+            # No --security-wizard, or --yes overrides it, or non-interactive:
+            # silently apply recommended defaults for any unset keys.
+            try:
+                _unset_nr = _get_unset_security_keys(_get_all_security_keys())
+                if _unset_nr:
+                    security_selections = _get_default_security_selections(_unset_nr)
+            except Exception as e:
+                print_warning(f"Could not apply security defaults: {e}")
 
         wizard_results = None  # No wizard in no-renderer path
 
@@ -1428,6 +1471,12 @@ Examples:
         choices=["minimal", "standard", "strict"],
         default=None,
         help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
+    )
+    parser.add_argument(
+        "--security-wizard",
+        action="store_true",
+        default=False,
+        help="Run interactive security feature selection wizard",
     )
     parser.add_argument(
         "--no-tts",
