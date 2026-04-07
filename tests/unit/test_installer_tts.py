@@ -511,8 +511,7 @@ class TestProvisionTtsEager:
             result = _provision_tts_eager(renderer=None)
 
         assert result["status"] == "error"
-        assert result["detail"].startswith("venv creation failed\nTraceback")
-        assert "RuntimeError: venv creation failed" in result["detail"]
+        assert result["detail"] == "venv creation failed"
         assert result["steps_completed"] == []
         mock_provision.assert_call(
             args=(), kwargs={}, raised=IsInstance(RuntimeError),  # exception identity, not equality

@@ -792,9 +792,10 @@ def _provision_tts_eager(renderer=None) -> dict:
         result = provision_sync()
     except Exception as exc:
         import traceback
+        print(f"Eager TTS provisioning failed:\n{traceback.format_exc()}", file=sys.stderr)
         result = {
             "status": "error",
-            "detail": f"{exc}\n{traceback.format_exc()}",
+            "detail": str(exc),
             "steps_completed": [],
         }
 
