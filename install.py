@@ -744,13 +744,20 @@ def check_tts_available() -> bool:
     sub-modules can import the function without ``sys.path`` manipulation.
     Re-exported here for backward compatibility with existing callers and
     test patches that reference ``install.check_tts_available``.
+
+    Function-level import: installer.utils is only available after
+    bootstrap adds spellbook_dir to sys.path (see run_installation).
     """
     from installer.utils import check_tts_available as _check
     return _check()
 
 
 def _set_tts_config(enabled: bool) -> None:
-    """Persist the tts_enabled config value via spellbook config_tools."""
+    """Persist the tts_enabled config value via spellbook config_tools.
+
+    Function-level import: spellbook.core.config is only available after
+    bootstrap adds spellbook_dir to sys.path (see run_installation).
+    """
     try:
         from spellbook.core.config import config_set as _cfg_set
         _cfg_set("tts_enabled", enabled)
@@ -768,6 +775,9 @@ def _provision_tts_eager(renderer=None) -> dict:
     Always sets ``tts_enabled=True`` regardless of outcome so that the
     user's intent is preserved. On failure the user can retry later
     via ``tts_config_set``.
+
+    Function-level import: spellbook.tts.provisioner is only available
+    after bootstrap adds spellbook_dir to sys.path (see run_installation).
 
     Args:
         renderer: Optional installer renderer for display output.

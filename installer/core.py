@@ -9,6 +9,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from installer.compat import ServiceManager, mcp_service_config, tts_service_config
+from spellbook.core.config import config_set as _config_set
+from spellbook.tts.venv import get_tts_data_dir, get_tts_venv_dir
+
 from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
 from .platforms.base import PlatformInstaller
 from .ui import shorten_home
@@ -586,8 +590,6 @@ class Uninstaller:
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the MCP server system service if installed."""
-        from installer.compat import ServiceManager, mcp_service_config
-
         manager = ServiceManager(mcp_service_config(self.spellbook_dir, 8765, "127.0.0.1"))
 
         if not manager.is_installed():
@@ -614,10 +616,6 @@ class Uninstaller:
 
     def _uninstall_tts_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the TTS service, remove venv, and reset config."""
-        from installer.compat import ServiceManager, tts_service_config
-        from spellbook.core.config import config_set
-        from spellbook.tts.venv import get_tts_data_dir, get_tts_venv_dir
-
         tts_venv_dir = get_tts_venv_dir()
         tts_data_dir = get_tts_data_dir()
 
@@ -652,9 +650,9 @@ class Uninstaller:
             )
 
         # Reset config keys
-        config_set("tts_enabled", False)
-        config_set("tts_deps_installed", False)
-        config_set("tts_service_installed", False)
+        _config_set("tts_enabled", False)
+        _config_set("tts_deps_installed", False)
+        _config_set("tts_service_installed", False)
 
         return InstallResult(
             component="tts_service",

@@ -141,6 +141,12 @@ async def ensure_provisioned(
                 steps_completed.append("deps")
 
             # Step 2: Install and start service if needed
+            #
+            # Known limitation: if service_installed is already True, changes
+            # to tts_voice or tts_device config won't take effect because the
+            # service install step is skipped entirely.
+            # Workaround: set tts_service_installed=false then re-provision
+            # to pick up new voice/device settings.
             if not service_installed:
                 _report("Configuring TTS service", 0.6)
 
@@ -202,7 +208,13 @@ async def ensure_provisioned(
                 # _health_probe() / _progressive_health_check().
                 if not manager.is_running():
                     _report("Starting TTS service", 0.8)
-                    manager.start()
+                    started, start_msg = manager.start()
+                    if not started:
+                        return {
+                            "status": "error",
+                            "detail": f"Service start failed: {start_msg}",
+                            "steps_completed": steps_completed,
+                        }
                     await _progressive_health_check("127.0.0.1", port)
 
             return {

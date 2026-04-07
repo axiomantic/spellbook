@@ -43,22 +43,22 @@ class TestUninstallTtsServiceInstalled:
         fake_config = object()
         fake_mgr = _FakeServiceManager()
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tts_data_dir)
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         mock_rmtree = bigfoot.mock("installer.core:shutil.rmtree")
         mock_rmtree.returns(None)
 
-        mock_config_set = bigfoot.mock("spellbook.core.config:config_set")
+        mock_config_set = bigfoot.mock("installer.core:_config_set")
         mock_config_set.returns({})  # tts_enabled
         mock_config_set.returns({})  # tts_deps_installed
         mock_config_set.returns({})  # tts_service_installed
@@ -100,16 +100,16 @@ class TestUninstallTtsServiceNotInstalled:
         fake_mgr = _FakeServiceManager()
         fake_mgr._installed = False
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tmp_path / "tts-data")
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         with bigfoot:
@@ -139,16 +139,16 @@ class TestUninstallTtsServiceDryRun:
         fake_config = object()
         fake_mgr = _FakeServiceManager()
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tmp_path / "tts-data")
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         with bigfoot:
@@ -183,21 +183,21 @@ class TestUninstallTtsServiceNoVenv:
         fake_config = object()
         fake_mgr = _FakeServiceManager()
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tmp_path / "tts-data")
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         # No rmtree mock -- venv doesn't exist so rmtree shouldn't be called
 
-        mock_config_set = bigfoot.mock("spellbook.core.config:config_set")
+        mock_config_set = bigfoot.mock("installer.core:_config_set")
         mock_config_set.returns({})  # tts_enabled
         mock_config_set.returns({})  # tts_deps_installed
         mock_config_set.returns({})  # tts_service_installed
@@ -240,22 +240,22 @@ class TestUninstallTtsServiceModelDataPreserved:
         fake_config = object()
         fake_mgr = _FakeServiceManager()
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tts_data_dir)
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         mock_rmtree = bigfoot.mock("installer.core:shutil.rmtree")
         mock_rmtree.returns(None)
 
-        mock_config_set = bigfoot.mock("spellbook.core.config:config_set")
+        mock_config_set = bigfoot.mock("installer.core:_config_set")
         mock_config_set.returns({})
         mock_config_set.returns({})
         mock_config_set.returns({})
@@ -369,22 +369,22 @@ class TestUninstallTtsServiceUninstallFails:
         fake_mgr = _FakeServiceManager()
         fake_mgr._uninstall_result = (False, "permission denied")
 
-        mock_venv_dir = bigfoot.mock("spellbook.tts.venv:get_tts_venv_dir")
+        mock_venv_dir = bigfoot.mock("installer.core:get_tts_venv_dir")
         mock_venv_dir.returns(tts_venv_dir)
 
-        mock_data_dir = bigfoot.mock("spellbook.tts.venv:get_tts_data_dir")
+        mock_data_dir = bigfoot.mock("installer.core:get_tts_data_dir")
         mock_data_dir.returns(tmp_path / "tts-data")
 
-        mock_tts_cfg = bigfoot.mock("installer.compat:tts_service_config")
+        mock_tts_cfg = bigfoot.mock("installer.core:tts_service_config")
         mock_tts_cfg.returns(fake_config)
 
-        mock_svc_cls = bigfoot.mock("installer.compat:ServiceManager")
+        mock_svc_cls = bigfoot.mock("installer.core:ServiceManager")
         mock_svc_cls.returns(fake_mgr)
 
         mock_rmtree = bigfoot.mock("installer.core:shutil.rmtree")
         mock_rmtree.returns(None)
 
-        mock_config_set = bigfoot.mock("spellbook.core.config:config_set")
+        mock_config_set = bigfoot.mock("installer.core:_config_set")
         mock_config_set.returns({})
         mock_config_set.returns({})
         mock_config_set.returns({})

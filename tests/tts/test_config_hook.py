@@ -53,17 +53,20 @@ class TestTtsProvisioningHook:
         mock_provision.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
-    async def test_tts_enabled_false_does_not_trigger(self):
+    async def test_tts_enabled_false_triggers_stop(self):
         mock_cfg_set = bigfoot.mock("spellbook.mcp.tools.config:config_set")
         mock_cfg_set.returns({"status": "ok", "config": {"tts_enabled": False}})
 
-        # Do NOT mock _provision_tts_async: if it were called, bigfoot's
-        # sandbox would raise UnmockedInteractionError, failing this test.
+        mock_stop = bigfoot.mock("spellbook.mcp.tools.config:_stop_tts_async")
+        mock_stop.calls(_async_return(None))
+
         async with bigfoot:
             result = await spellbook_config_set.__wrapped__("tts_enabled", False)
+            await asyncio.sleep(0.05)
 
         assert result == {"status": "ok", "config": {"tts_enabled": False}}
         mock_cfg_set.assert_call(args=("tts_enabled", False), kwargs={})
+        mock_stop.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
     async def test_other_key_does_not_trigger(self):
@@ -85,7 +88,7 @@ class TestProvisionTtsAsync:
     async def test_successful_provisioning_calls_ensure(self):
         from spellbook.mcp.tools.config import _provision_tts_async
 
-        mock_ensure = bigfoot.mock("spellbook.tts.provisioner:ensure_provisioned")
+        mock_ensure = bigfoot.mock("spellbook.mcp.tools.config:ensure_provisioned")
         mock_ensure.calls(_async_return({
             "status": "ok",
             "detail": "TTS fully provisioned",
@@ -102,7 +105,7 @@ class TestProvisionTtsAsync:
     async def test_provisioning_error_is_logged_not_raised(self):
         from spellbook.mcp.tools.config import _provision_tts_async
 
-        mock_ensure = bigfoot.mock("spellbook.tts.provisioner:ensure_provisioned")
+        mock_ensure = bigfoot.mock("spellbook.mcp.tools.config:ensure_provisioned")
         mock_ensure.calls(_async_return({
             "status": "error",
             "detail": "disk full",
@@ -127,7 +130,7 @@ class TestProvisionTtsAsync:
         async def _blow_up(*args, **kwargs):
             raise RuntimeError("kaboom")
 
-        mock_ensure = bigfoot.mock("spellbook.tts.provisioner:ensure_provisioned")
+        mock_ensure = bigfoot.mock("spellbook.mcp.tools.config:ensure_provisioned")
         mock_ensure.calls(_blow_up)
 
         async with bigfoot:

@@ -27,6 +27,10 @@ from spellbook.core.config import (
 )
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
+from spellbook.tts.provisioner import ensure_provisioned
+
+from installer.compat import ServiceManager, tts_service_config
+from spellbook.tts.venv import get_tts_venv_dir
 # detect_git_context, derive_messaging_alias, and message_bus are referenced
 # via their source modules (_path_utils, _bus) so that asyncio.to_thread()
 # picks up test mocks patched on the source module (bigfoot patches module
@@ -37,6 +41,23 @@ import spellbook.messaging.bus as _bus
 logger = logging.getLogger(__name__)
 
 
+async def _stop_tts_async() -> None:
+    """Fire-and-forget TTS service stop with error logging.
+
+    Called as a background task when tts_enabled is set to False.
+    Errors are logged but never propagated to the caller.
+    """
+    try:
+        tts_venv_dir = get_tts_venv_dir()
+        svc_config = tts_service_config(tts_venv_dir=tts_venv_dir)
+        manager = ServiceManager(svc_config)
+        if manager.is_installed() and manager.is_running():
+            await asyncio.to_thread(manager.stop)
+            logger.info("TTS service stopped (tts_enabled set to false)")
+    except Exception:
+        logger.exception("Failed to stop TTS service")
+
+
 async def _provision_tts_async() -> None:
     """Fire-and-forget TTS provisioning with error logging.
 
@@ -44,8 +65,6 @@ async def _provision_tts_async() -> None:
     Errors are logged but never propagated to the caller.
     """
     try:
-        from spellbook.tts.provisioner import ensure_provisioned
-
         result = await ensure_provisioned()
         if result["status"] == "error":
             logger.error("TTS provisioning failed: %s", result["detail"])
@@ -118,10 +137,13 @@ async def spellbook_config_set(key: str, value) -> dict:
     except Exception:
         logger.debug("Failed to publish config.updated event", exc_info=True)
 
-    # TTS provisioning hook: fire-and-forget background task
-    if key == "tts_enabled" and value in (True, "true"):
+    # TTS hooks: fire-and-forget background tasks
+    if key == "tts_enabled":
         loop = asyncio.get_running_loop()
-        loop.create_task(_provision_tts_async(), name="tts-provisioning")
+        if value in (True, "true"):
+            loop.create_task(_provision_tts_async(), name="tts-provisioning")
+        elif value in (False, "false"):
+            loop.create_task(_stop_tts_async(), name="tts-stop")
 
     return result
 
