@@ -758,6 +758,59 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
+def _provision_tts_eager(renderer=None) -> dict:
+    """Eagerly provision TTS: install deps, create service, update config.
+
+    Called when the wizard ``tts_intent`` is ``True``. Uses
+    ``provision_sync()`` to install the TTS venv, dependencies, and
+    OS service in one shot.
+
+    Always sets ``tts_enabled=True`` regardless of outcome so that the
+    user's intent is preserved. On failure the user can retry later
+    via ``tts_config_set``.
+
+    Args:
+        renderer: Optional installer renderer for display output.
+            When ``None``, falls back to plain ``print_*`` helpers.
+
+    Returns:
+        Dict with keys ``status``, ``detail``, ``steps_completed``
+        from :func:`~spellbook.tts.provisioner.provision_sync`.
+    """
+    try:
+        from spellbook.tts.provisioner import provision_sync
+        result = provision_sync()
+    except Exception as exc:
+        result = {
+            "status": "error",
+            "detail": str(exc),
+            "steps_completed": [],
+        }
+
+    # Always honour the user's intent
+    _set_tts_config(True)
+
+    status = result["status"]
+
+    if status == "ok":
+        print_success("TTS server installed and running")
+    elif status == "already_provisioning":
+        print_info(
+            "TTS provisioning already in progress. "
+            "Config set; service will finish in background"
+        )
+    else:
+        msg = (
+            f"TTS setup incomplete: {result['detail']}. "
+            "You can retry later by setting tts_enabled=true"
+        )
+        if renderer is not None:
+            renderer.render_warning(msg)
+        else:
+            print_warning(msg)
+
+    return result
+
 
 def setup_tts(
     dry_run: bool = False,
@@ -1192,21 +1245,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if wizard_results is not None:
             # Wizard-based flow: use tts_intent from upfront wizard
             if wizard_results.tts_intent is True:
-                # User wants TTS; check Wyoming server availability
-                if check_tts_available():
-                    _set_tts_config(True)
-                else:
-                    _set_tts_config(True)
-                    if renderer is not None:
-                        renderer.render_warning(
-                            "TTS enabled but Wyoming server not reachable. "
-                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
-                        )
-                    else:
-                        print_warning(
-                            "TTS enabled but Wyoming server not reachable. "
-                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
-                        )
+                # Eager provisioning: install TTS venv, deps, and service
+                _provision_tts_eager(renderer=renderer)
             elif wizard_results.tts_intent is False:
                 _set_tts_config(False)
             # tts_intent is None means skipped; do nothing
