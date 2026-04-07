@@ -121,7 +121,7 @@ async def spellbook_config_set(key: str, value) -> dict:
     # TTS provisioning hook: fire-and-forget background task
     if key == "tts_enabled" and value in (True, "true"):
         loop = asyncio.get_running_loop()
-        loop.create_task(_provision_tts_async())
+        loop.create_task(_provision_tts_async(), name="tts-provisioning")
 
     return result
 

@@ -77,7 +77,7 @@ class TestTtsStatus:
             "server_reachable": False,
             "voice": "",
             "volume": 0.3,
-            "tts_wyoming_host": "localhost",
+            "tts_wyoming_host": "127.0.0.1",
             "tts_wyoming_port": 10200,
             "error": None,
         }
@@ -97,7 +97,7 @@ class TestTtsStatus:
             "server_reachable": False,
             "voice": "",
             "volume": 0.3,
-            "tts_wyoming_host": "localhost",
+            "tts_wyoming_host": "127.0.0.1",
             "tts_wyoming_port": 10200,
             "error": None,
         }
