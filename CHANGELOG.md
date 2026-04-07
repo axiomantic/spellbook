@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.0] - 2026-04-06
+
+### Changed
+- **Installer tagline**: Updated from "Defense-in-depth security for AI coding assistants" to "Skills, commands, and MCP tools for AI coding assistants"
+- **Security prompts default to silent**: The installer no longer prompts for security feature configuration during install. Recommended defaults (spotlighting=on, crypto=on, sleuth=off, lodo=on) are applied silently. Use `--security-wizard` to opt into the interactive quiz, or change settings post-install via `spellbook config set` or the admin UI.
+
+### Added
+- **`--security-wizard` flag**: Opt-in flag for `install.py` to run the interactive security feature selection wizard
+
 ## [0.46.2] - 2026-04-06
 
 ### Fixed

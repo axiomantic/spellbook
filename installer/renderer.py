@@ -513,7 +513,7 @@ class RichRenderer(InstallerRenderer):
             # --- Section 2: Security Configuration ---
             if context.security_level is not None:
                 results.security_selections = None
-            elif context.unset_security_keys:
+            elif context.unset_security_keys and context.security_wizard:
                 results.security_selections = self._wizard_security(console, context)
 
             # --- Section 3: TTS Intent ---
@@ -924,7 +924,7 @@ class PlainTextRenderer(InstallerRenderer):
             # --- Section 2: Security Configuration ---
             if context.security_level is not None:
                 results.security_selections = None
-            elif context.unset_security_keys:
+            elif context.unset_security_keys and context.security_wizard:
                 results.security_selections = self._wizard_security_plain(context)
 
             # --- Section 3: TTS Intent ---

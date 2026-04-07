@@ -43,6 +43,7 @@ class WizardContext:
     auto_yes: bool
     no_interactive: bool
     reconfigure: bool
+    security_wizard: bool = False
 
 
 @dataclass

@@ -79,7 +79,7 @@ def render_welcome_panel(
     body_parts = [
         f"Version: {version}",
         "",
-        "Defense-in-depth security for AI coding assistants.",
+        "Skills, commands, and MCP tools for AI coding assistants.",
     ]
     body = Text("\n".join(body_parts))
     panel = Panel(body, title=title_text, border_style="cyan", padding=(1, 2))

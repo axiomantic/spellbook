@@ -143,6 +143,7 @@ class TestPlatformsFlag:
         ctx = _make_ctx(
             cli_platforms=["claude_code"],
             tts_already_configured=True,
+            security_wizard=True,
         )
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
@@ -224,6 +225,7 @@ class TestSecurityLevelFlag:
             unset_security_keys=["security.crypto.enabled"],
             cli_platforms=["claude_code"],
             tts_already_configured=True,
+            security_wizard=True,
         )
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
