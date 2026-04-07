@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.48.0] - 2026-04-06
+
+### Added
+- **TTS service management**: Managed TTS service via launchd (macOS), systemd (Linux), and Task Scheduler (Windows)
+- **ServiceConfig dataclass**: Parameterized service management replacing hardcoded MCP-only ServiceManager
+- **Dedicated TTS venv**: Isolated virtual environment with auto-device detection (mps/cuda/cpu)
+- **Lazy TTS provisioning**: `config_set` MCP tool triggers async fire-and-forget TTS provisioning
+- **Eager TTS provisioning**: Installer wizard provisions TTS service during setup
+- **TTS service cleanup**: Uninstaller removes TTS service, venv, and related artifacts
+- **Cross-process provisioning lock**: File-based lock prevents concurrent TTS provisioning
+
+### Changed
+- **ServiceManager refactored**: Accepts `ServiceConfig` instead of hardcoded MCP service assumptions
+- **WYOMING_DEFAULT_HOST**: Changed from `"localhost"` to `"127.0.0.1"` for IPv4 consistency
+
 ## [0.46.2] - 2026-04-06
 
 ### Fixed
