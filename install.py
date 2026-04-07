@@ -636,8 +636,11 @@ def bootstrap(args: argparse.Namespace) -> Path:
         if not _quiet:
             print_success(f"Found spellbook at {spellbook_dir}")
 
-        # Check if the found repo needs updating
-        if (spellbook_dir / ".git").is_dir():
+        # If running install.py from the source repo itself, skip the update check
+        script_path = get_script_path()
+        if script_path is not None and str(script_path).startswith(str(spellbook_dir.resolve())):
+            print_info("Running from source repository, skipping update check.")
+        elif (spellbook_dir / ".git").is_dir():
             if not _quiet:
                 print_step("Checking for updates...")
             needs_update, reason = check_repo_needs_update(spellbook_dir)
