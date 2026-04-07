@@ -515,6 +515,170 @@ class CrossPlatformLock:
 
 
 # ---------------------------------------------------------------------------
+# Service configuration
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ServiceConfig:
+    """Platform-agnostic service configuration.
+
+    Encapsulates all parameters needed to install, run, and manage a service
+    across macOS (launchd), Linux (systemd), and Windows (Task Scheduler).
+
+    health_check_port: When set, is_running() uses a TCP probe on this
+        port (preserving the existing MCP behavior of checking port health).
+        When None, is_running() falls back to platform-specific process
+        status checks (launchctl list / systemctl is-active).
+    health_check_host: Host for TCP health probe (default "127.0.0.1").
+    """
+
+    launchd_label: str
+    service_name: str
+    schtasks_name: str
+    description: str
+    executable: Path
+    args: list[str]
+    working_directory: Path
+    environment: dict[str, str]
+    log_stdout: Path
+    log_stderr: Path
+    pid_file: Optional[Path] = None
+    keep_alive: bool = True
+    health_check_port: Optional[int] = None
+    health_check_host: str = "127.0.0.1"
+
+
+def _get_daemon_python_for_config() -> Optional[str]:
+    """Get path to daemon venv Python, or None if not available.
+
+    Thin wrapper around spellbook.daemon._paths.get_daemon_python to
+    allow mocking in tests without requiring the full spellbook package.
+    """
+    from spellbook.daemon._paths import get_daemon_python
+
+    return get_daemon_python()
+
+
+def _get_daemon_path() -> str:
+    """Get platform-appropriate PATH for the daemon service."""
+    plat = get_platform()
+    if plat == Platform.MACOS:
+        from spellbook.daemon.service import _get_darwin_daemon_path
+
+        return _get_darwin_daemon_path()
+    elif plat == Platform.LINUX:
+        from spellbook.daemon.service import _get_linux_daemon_path
+
+        return _get_linux_daemon_path()
+    return os.environ.get("PATH", "")
+
+
+def mcp_service_config(spellbook_dir: Path, port: int, host: str) -> ServiceConfig:
+    """Build ServiceConfig for the MCP daemon (backward-compatible).
+
+    Args:
+        spellbook_dir: Path to the spellbook installation.
+        port: MCP server port (typically 8765).
+        host: MCP server host (typically "127.0.0.1").
+
+    Returns:
+        ServiceConfig with MCP daemon parameters.
+    """
+    daemon_path = _get_daemon_path()
+
+    daemon_python_str = _get_daemon_python_for_config()
+    if daemon_python_str and Path(daemon_python_str).exists():
+        executable = Path(daemon_python_str)
+        args = ["-m", "spellbook.mcp"]
+    else:
+        uv_path = shutil.which("uv") or "uv"
+        executable = Path(uv_path)
+        args = ["run", "python", "-m", "spellbook.mcp"]
+
+    config_dir = Path(
+        os.environ.get("SPELLBOOK_CONFIG_DIR", str(get_config_dir()))
+    )
+    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+
+    return ServiceConfig(
+        launchd_label="com.spellbook.mcp",
+        service_name="spellbook-mcp",
+        schtasks_name="SpellbookMCP",
+        description="Spellbook MCP Server",
+        executable=executable,
+        args=args,
+        working_directory=spellbook_dir,
+        environment={
+            "PATH": daemon_path,
+            "SPELLBOOK_MCP_TRANSPORT": "streamable-http",
+            "SPELLBOOK_MCP_HOST": host,
+            "SPELLBOOK_MCP_PORT": str(port),
+            "SPELLBOOK_DIR": str(spellbook_dir),
+        },
+        log_stdout=log_dir / "mcp.log",
+        log_stderr=log_dir / "mcp.err.log",
+        pid_file=config_dir / "spellbook-mcp.pid",
+        keep_alive=True,
+        health_check_port=port,
+        health_check_host=host,
+    )
+
+
+def tts_service_config(
+    tts_venv_dir: Path,
+    port: int = 10200,
+    device: str = "cpu",
+    voice: str = "af_heart",
+    data_dir: Optional[Path] = None,
+) -> ServiceConfig:
+    """Build ServiceConfig for the TTS server.
+
+    Args:
+        tts_venv_dir: Path to the TTS venv directory.
+        port: Wyoming server port (default 10200).
+        device: Compute device ("mps", "cuda", "cpu").
+        voice: Voice name for kokoro engine.
+        data_dir: Model data directory (default ~/.local/spellbook/tts-data).
+
+    Returns:
+        ServiceConfig with TTS server parameters.
+    """
+    if sys.platform == "win32":
+        python = tts_venv_dir / "Scripts" / "python.exe"
+    else:
+        python = tts_venv_dir / "bin" / "python"
+
+    if data_dir is None:
+        data_dir = Path.home() / ".local" / "spellbook" / "tts-data"
+
+    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+
+    return ServiceConfig(
+        launchd_label="com.spellbook.tts",
+        service_name="spellbook-tts",
+        schtasks_name="SpellbookTTS",
+        description="Spellbook TTS Server",
+        executable=python,
+        args=[
+            "-m", "wyoming_kokoro_torch",
+            "--uri", f"tcp://127.0.0.1:{port}",
+            "--device", device,
+            "--voice", voice,
+            "--data-dir", str(data_dir),
+        ],
+        working_directory=Path.home() / ".local" / "spellbook",
+        environment={},
+        log_stdout=log_dir / "tts.log",
+        log_stderr=log_dir / "tts.err.log",
+        pid_file=None,
+        keep_alive=True,
+        health_check_port=port,
+        health_check_host="127.0.0.1",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Service management
 # ---------------------------------------------------------------------------
 
