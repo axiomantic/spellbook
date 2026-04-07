@@ -996,6 +996,18 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     from installer.tui import get_feature_groups as _get_fg
     from installer.wizard import _matches_unset_key
 
+    # Import config module early; may fail in bootstrap scenarios
+    try:
+        from spellbook.core.config import (
+            config_get as _cfg_get_early,
+            config_is_explicitly_set as _cfg_is_set,
+        )
+        _config_available = True
+    except ImportError:
+        _config_available = False
+        _cfg_get_early = None  # type: ignore[assignment]
+        _cfg_is_set = None  # type: ignore[assignment]
+
     def _get_all_security_keys() -> list[str]:
         """Return dotted config keys for all security features."""
         return [
@@ -1006,8 +1018,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     def _get_unset_security_keys(all_keys: list[str]) -> list[str]:
         """Return security config keys that have not been explicitly set."""
-        from spellbook.core.config import config_is_explicitly_set
-        return [k for k in all_keys if not config_is_explicitly_set(k)]
+        if not _config_available:
+            return all_keys
+        return [k for k in all_keys if not _cfg_is_set(k)]
 
     def _get_default_security_selections(unset_keys: list[str]) -> dict[str, bool]:
         """Return default security selections for any unset config keys.
@@ -1029,24 +1042,19 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         # Derive unset security config keys using shared helpers
         all_security_keys = _get_all_security_keys()
 
-        try:
-            from spellbook.core.config import (
-                config_get as _cfg_get,
-                config_is_explicitly_set,
-            )
-            unset_security = _get_unset_security_keys(all_security_keys)
+        unset_security = _get_unset_security_keys(all_security_keys)
+        if _config_available:
             existing_config = {}
             for k in all_security_keys:
                 try:
-                    v = _cfg_get(k)
+                    v = _cfg_get_early(k)
                     if v is not None:
                         existing_config[k] = v
                 except Exception as e:
                     print_warning(f"Could not read config key {k}: {e}")
-            tts_already_configured = _cfg_get("tts_enabled") is not None
-            profile_already_configured = config_is_explicitly_set("profile.default")
-        except ImportError:
-            unset_security = all_security_keys
+            tts_already_configured = _cfg_get_early("tts_enabled") is not None
+            profile_already_configured = _cfg_is_set("profile.default")
+        else:
             existing_config = {}
             tts_already_configured = False
             profile_already_configured = False
@@ -1152,8 +1160,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except (ImportError, ValueError) as e:
                 print_error(f"Invalid security level: {e}")
                 return 1
-        elif not getattr(args, "security_wizard", False) or getattr(args, "yes", False):
-            # No --security-wizard (or --yes overrides it):
+        elif not getattr(args, "security_wizard", False) or getattr(args, "yes", False) or not is_interactive():
+            # No --security-wizard, or --yes overrides it, or non-interactive:
             # silently apply recommended defaults for any unset keys.
             try:
                 _unset_nr = _get_unset_security_keys(_get_all_security_keys())
