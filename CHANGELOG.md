@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.48.0] - 2026-04-06
+## [0.47.0] - 2026-04-06
 
 ### Added
 - **TTS service management**: Managed TTS service via launchd (macOS), systemd (Linux), and Task Scheduler (Windows)

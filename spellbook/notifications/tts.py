@@ -31,6 +31,7 @@ from spellbook.core.config import (
     WYOMING_DEFAULT_HOST,
     WYOMING_DEFAULT_PORT,
 )
+from spellbook.tts.venv import get_tts_data_dir, get_tts_venv_dir
 
 logger = logging.getLogger(__name__)
 
@@ -232,8 +233,8 @@ def get_status(session_id: str = None) -> dict:
             "service_installed": bool(service_installed),
             "device": config_tools.config_get("tts_device") or "unknown",
             "provisioning": False,
-            "data_dir": str(Path.home() / ".local" / "spellbook" / "tts-data"),
-            "venv_dir": str(Path.home() / ".local" / "spellbook" / "tts-venv"),
+            "data_dir": str(get_tts_data_dir()),
+            "venv_dir": str(get_tts_venv_dir()),
             "log_file": str(Path.home() / ".local" / "spellbook" / "logs" / "tts.log"),
         }
 

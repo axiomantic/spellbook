@@ -781,9 +781,10 @@ def _provision_tts_eager(renderer=None) -> dict:
         from spellbook.tts.provisioner import provision_sync
         result = provision_sync()
     except Exception as exc:
+        import traceback
         result = {
             "status": "error",
-            "detail": str(exc),
+            "detail": f"{exc}\n{traceback.format_exc()}",
             "steps_completed": [],
         }
 
