@@ -138,7 +138,7 @@ async def spellbook_config_set(key: str, value: Any) -> dict:
             )
         )
     except Exception:
-        logger.debug("Failed to publish config.updated event", exc_info=True)
+        logger.exception("Failed to publish config.updated event")
 
     # TTS hooks: fire-and-forget background tasks
     if key == "tts_enabled":
