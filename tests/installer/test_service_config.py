@@ -410,25 +410,26 @@ class TestServiceManagerStop:
     """stop() uses config.pid_file and config.service_name."""
 
     def test_stop_uses_config_pid_file(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
-
         pid_file = tmp_path / "test.pid"
-        pid_file.write_text("99999999")  # non-existent PID
+        pid_file.write_text("12345")
         config = _make_config(pid_file=pid_file)
         manager = ServiceManager(config)
 
-        # PID doesn't exist, so it should fall through to platform-specific stop.
-        # Mock get_platform to macOS and launchctl unload.
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+        # Mock _pid_exists to return True so the PID-based kill path is taken
+        mock_pid_exists = bigfoot.mock("installer.compat:_pid_exists")
+        mock_pid_exists.returns(True)
 
-        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
-        mock_plist.returns(tmp_path / "nonexistent.plist")
+        # Mock _kill_process to verify os.kill is attempted with the correct PID
+        mock_kill = bigfoot.mock.object(manager, "_kill_process")
+        mock_kill.returns(None)
 
         with bigfoot:
             success, msg = manager.stop()
 
         assert success is True
-        mock_plist.assert_call(args=(), kwargs={})
+        assert "12345" in msg
+        mock_pid_exists.assert_call(args=(12345,), kwargs={})
+        mock_kill.assert_call(args=(12345,), kwargs={})
 
     @pytest.mark.allow("subprocess")
     def test_stop_without_pid_file_uses_platform(self, tmp_path, monkeypatch):

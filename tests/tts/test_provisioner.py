@@ -23,12 +23,37 @@ class _FakeLockCtx:
 
 
 class _FakeManager:
+    def __init__(self):
+        self.install_called = False
+        self.start_called = False
+
     def install(self):
+        self.install_called = True
         return (True, "ok")
+
     def start(self):
+        self.start_called = True
         return (True, "ok")
+
     def is_running(self):
         return True
+
+
+class _FailingInstallManager:
+    def __init__(self):
+        self.install_called = False
+        self.start_called = False
+
+    def install(self):
+        self.install_called = True
+        return (False, "permission denied")
+
+    def start(self):
+        self.start_called = True
+        return (True, "ok")
+
+    def is_running(self):
+        return False
 
 
 class TestEnsureProvisioned:
@@ -67,8 +92,9 @@ class TestEnsureProvisioned:
         fake_config = object()
         mock_tts_cfg.returns(fake_config)
 
+        fake_manager = _FakeManager()
         mock_svc_cls = bigfoot.mock("spellbook.tts.provisioner:ServiceManager")
-        mock_svc_cls.returns(_FakeManager())
+        mock_svc_cls.returns(fake_manager)
 
         mock_health = bigfoot.mock("spellbook.tts.provisioner:_progressive_health_check")
         mock_health.calls(_async_return(True))
@@ -81,6 +107,9 @@ class TestEnsureProvisioned:
             "detail": "TTS fully provisioned",
             "steps_completed": ["deps", "service"],
         }
+
+        # Verify install() was actually invoked on the manager
+        assert fake_manager.install_called, "ServiceManager.install() was never called"
 
         # Assertions in timeline order
         mock_lock.assert_call(args=(), kwargs={})
@@ -265,6 +294,78 @@ class TestEnsureProvisioned:
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_get.assert_call(args=("tts_voice",), kwargs={})
         mock_port.assert_call(args=(10200,), kwargs={})
+
+    @pytest.mark.asyncio
+    async def test_install_failure_returns_error_and_skips_start(self):
+        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
+        mock_lock.returns(_FakeLockCtx())
+
+        mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
+        mock_venv_dir.returns(Path("/fake/tts-venv"))
+
+        mock_tts_python = bigfoot.mock("spellbook.tts.provisioner:get_tts_python")
+        mock_tts_python.returns(Path("/fake/tts-venv/bin/python"))
+
+        mock_get = bigfoot.mock("spellbook.tts.provisioner:config_get")
+        mock_get.returns(False)   # tts_deps_installed
+        mock_get.returns(False)   # tts_service_installed
+        mock_get.returns(10200)   # tts_wyoming_port
+        mock_get.returns("af_heart")  # tts_voice
+
+        mock_venv = bigfoot.mock("spellbook.tts.provisioner:create_tts_venv")
+        mock_venv.calls(_async_return((True, "ok")))
+
+        mock_set = bigfoot.mock("spellbook.tts.provisioner:config_set")
+        mock_set.returns(None)  # tts_deps_installed = True
+
+        mock_detect = bigfoot.mock("spellbook.tts.provisioner:detect_device")
+        mock_detect.returns("cpu")
+
+        mock_port = bigfoot.mock("spellbook.tts.provisioner:_check_port_available")
+        mock_port.returns(True)
+
+        mock_tts_cfg = bigfoot.mock("spellbook.tts.provisioner:tts_service_config")
+        fake_config = object()
+        mock_tts_cfg.returns(fake_config)
+
+        failing_manager = _FailingInstallManager()
+        mock_svc_cls = bigfoot.mock("spellbook.tts.provisioner:ServiceManager")
+        mock_svc_cls.returns(failing_manager)
+
+        async with bigfoot:
+            result = await ensure_provisioned()
+
+        assert result == {
+            "status": "error",
+            "detail": "Service install failed: permission denied",
+            "steps_completed": ["deps"],
+        }
+
+        # Verify install() was called but start() was NOT
+        assert failing_manager.install_called, "ServiceManager.install() was never called"
+        assert not failing_manager.start_called, (
+            "ServiceManager.start() should not be called after install failure"
+        )
+
+        mock_lock.assert_call(args=(), kwargs={})
+        mock_venv_dir.assert_call(args=(), kwargs={})
+        mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
+        mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
+        mock_get.assert_call(args=("tts_service_installed",), kwargs={})
+        mock_venv.assert_call(
+            args=(Path("/fake/tts-venv"),),
+            kwargs={"progress_callback": None},
+        )
+        mock_set.assert_call(args=("tts_deps_installed", True), kwargs={})
+        mock_detect.assert_call(args=(), kwargs={})
+        mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
+        mock_get.assert_call(args=("tts_voice",), kwargs={})
+        mock_port.assert_call(args=(10200,), kwargs={})
+        mock_tts_cfg.assert_call(
+            args=(),
+            kwargs={"tts_venv_dir": Path("/fake/tts-venv"), "port": 10200, "device": "cpu", "voice": "af_heart"},
+        )
+        mock_svc_cls.assert_call(args=(fake_config,), kwargs={})
 
 
 class _CoroutineOf:
