@@ -1,12 +1,19 @@
-"""Tests for ServiceConfig dataclass and factory functions."""
+"""Tests for ServiceConfig dataclass, factory functions, and ServiceManager."""
 
 import sys
 from pathlib import Path
+from xml.etree import ElementTree
 
 import bigfoot
 import pytest
 
-from installer.compat import ServiceConfig, mcp_service_config, tts_service_config
+from installer.compat import (
+    Platform,
+    ServiceConfig,
+    ServiceManager,
+    mcp_service_config,
+    tts_service_config,
+)
 
 
 class TestServiceConfig:
@@ -228,3 +235,222 @@ class TestTtsServiceConfig:
         log_dir = Path.home() / ".local" / "spellbook" / "logs"
         assert config.log_stdout == log_dir / "tts.log"
         assert config.log_stderr == log_dir / "tts.err.log"
+
+
+# ---------------------------------------------------------------------------
+# Task 2: ServiceManager with ServiceConfig
+# ---------------------------------------------------------------------------
+
+
+def _make_config(**overrides) -> ServiceConfig:
+    """Build a ServiceConfig with sensible test defaults."""
+    defaults = dict(
+        launchd_label="com.test.svc",
+        service_name="test-svc",
+        schtasks_name="TestSvc",
+        description="Test Service",
+        executable=Path("/usr/bin/python"),
+        args=["-m", "test"],
+        working_directory=Path("/tmp"),
+        environment={"KEY": "val"},
+        log_stdout=Path("/tmp/test.log"),
+        log_stderr=Path("/tmp/test.err.log"),
+    )
+    defaults.update(overrides)
+    return ServiceConfig(**defaults)
+
+
+class TestServiceManagerAcceptsConfig:
+    """ServiceManager.__init__ accepts a ServiceConfig."""
+
+    def test_accepts_service_config(self):
+        config = _make_config()
+        manager = ServiceManager(config)
+        assert manager.config is config
+
+    def test_plist_path_uses_config_label(self):
+        config = _make_config(launchd_label="com.custom.label")
+        manager = ServiceManager(config)
+        path = manager._launchd_plist_path()
+        assert path == (
+            Path.home() / "Library" / "LaunchAgents" / "com.custom.label.plist"
+        )
+
+    def test_systemd_path_uses_config_name(self):
+        config = _make_config(service_name="custom-svc")
+        manager = ServiceManager(config)
+        path = manager._systemd_service_path()
+        assert path == (
+            Path.home() / ".config" / "systemd" / "user" / "custom-svc.service"
+        )
+
+    def test_is_installed_macos_plist_exists(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
+
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+
+        plist = tmp_path / "com.test.svc.plist"
+        plist.write_text("<plist/>")
+        config = _make_config(launchd_label="com.test.svc")
+        manager = ServiceManager(config)
+
+        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
+        mock_plist.returns(plist)
+
+        with bigfoot:
+            result = manager.is_installed()
+
+        assert result is True
+        mock_plist.assert_call(args=(), kwargs={})
+
+    def test_is_installed_macos_plist_missing(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
+
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+
+        config = _make_config()
+        manager = ServiceManager(config)
+
+        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
+        mock_plist.returns(tmp_path / "nonexistent.plist")
+
+        with bigfoot:
+            result = manager.is_installed()
+
+        assert result is False
+        mock_plist.assert_call(args=(), kwargs={})
+
+    def test_is_installed_linux_service_exists(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
+
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
+
+        service_file = tmp_path / "test-svc.service"
+        service_file.write_text("[Unit]")
+        config = _make_config(service_name="test-svc")
+        manager = ServiceManager(config)
+
+        mock_svc = bigfoot.mock.object(manager, "_systemd_service_path")
+        mock_svc.returns(service_file)
+
+        with bigfoot:
+            result = manager.is_installed()
+
+        assert result is True
+        mock_svc.assert_call(args=(), kwargs={})
+
+
+class TestServiceManagerIsRunning:
+    """is_running() uses TCP probe when health_check_port is set."""
+
+    def test_is_running_with_health_check_port_false(self):
+        """Non-routable IP should fail TCP probe quickly."""
+        config = _make_config(health_check_port=9, health_check_host="192.0.2.1")
+        manager = ServiceManager(config)
+        assert manager.is_running() is False
+
+    @pytest.mark.allow("subprocess")
+    def test_is_running_without_health_check_port_falls_back_to_platform(
+        self, monkeypatch
+    ):
+        """When health_check_port is None, falls back to platform checks."""
+        import installer.compat as compat_mod
+
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+
+        config = _make_config(health_check_port=None)
+        manager = ServiceManager(config)
+
+        bigfoot.subprocess_mock.mock_run(
+            command=["launchctl", "list", "com.test.svc"],
+            returncode=1,
+        )
+
+        with bigfoot:
+            result = manager.is_running()
+
+        assert result is False
+        bigfoot.subprocess_mock.assert_run(
+            command=["launchctl", "list", "com.test.svc"],
+            returncode=1,
+            stdout="",
+            stderr="",
+        )
+
+
+class TestServiceManagerGenerateTaskXml:
+    """_generate_task_xml() uses config fields."""
+
+    def test_xml_contains_config_executable_and_args(self):
+        config = _make_config(
+            executable=Path("/usr/bin/python3"),
+            args=["-m", "myservice", "--port", "8080"],
+            working_directory=Path("/opt/myapp"),
+        )
+        manager = ServiceManager(config)
+        xml = manager._generate_task_xml()
+
+        root = ElementTree.fromstring(xml)
+        ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
+
+        command = root.find(".//t:Exec/t:Command", ns)
+        assert command is not None
+        assert command.text == "/usr/bin/python3"
+
+        arguments = root.find(".//t:Exec/t:Arguments", ns)
+        assert arguments is not None
+        assert arguments.text == "-m myservice --port 8080"
+
+        workdir = root.find(".//t:Exec/t:WorkingDirectory", ns)
+        assert workdir is not None
+        assert workdir.text == "/opt/myapp"
+
+
+class TestServiceManagerStop:
+    """stop() uses config.pid_file and config.service_name."""
+
+    def test_stop_uses_config_pid_file(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
+
+        pid_file = tmp_path / "test.pid"
+        pid_file.write_text("99999999")  # non-existent PID
+        config = _make_config(pid_file=pid_file)
+        manager = ServiceManager(config)
+
+        # PID doesn't exist, so it should fall through to platform-specific stop.
+        # Mock get_platform to macOS and launchctl unload.
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+
+        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
+        mock_plist.returns(tmp_path / "nonexistent.plist")
+
+        with bigfoot:
+            success, msg = manager.stop()
+
+        assert success is True
+        mock_plist.assert_call(args=(), kwargs={})
+
+    @pytest.mark.allow("subprocess")
+    def test_stop_without_pid_file_uses_platform(self, tmp_path, monkeypatch):
+        import installer.compat as compat_mod
+
+        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
+
+        config = _make_config(pid_file=None, service_name="my-svc")
+        manager = ServiceManager(config)
+
+        bigfoot.subprocess_mock.mock_run(
+            command=["systemctl", "--user", "stop", "my-svc"],
+            returncode=0,
+        )
+
+        with bigfoot:
+            success, msg = manager.stop()
+
+        assert success is True
+        bigfoot.subprocess_mock.assert_run(
+            command=["systemctl", "--user", "stop", "my-svc"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )

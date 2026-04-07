@@ -684,24 +684,17 @@ def tts_service_config(
 
 
 class ServiceManager:
-    """Manage spellbook daemon as an OS service.
+    """Manage an OS service. Platform-agnostic via ServiceConfig.
 
     Delegates to launchd (macOS), systemd (Linux), or
-    Task Scheduler + watchdog (Windows).
+    Task Scheduler (Windows).
 
     Args:
-        spellbook_dir: Path to the spellbook installation.
-        port: Port for the MCP server.
-        host: Host for the MCP server.
+        config: ServiceConfig with all service parameters.
     """
 
-    LAUNCHD_LABEL = "com.spellbook.mcp"
-    SERVICE_NAME = "spellbook-mcp"
-
-    def __init__(self, spellbook_dir: Path, port: int, host: str):
-        self.spellbook_dir = spellbook_dir
-        self.port = port
-        self.host = host
+    def __init__(self, config: ServiceConfig):
+        self.config = config
 
     def install(self) -> tuple[bool, str]:
         """Install the daemon as a system service."""
@@ -741,7 +734,7 @@ class ServiceManager:
                 return False, f"Failed to load: {result.stderr}"
             elif plat == Platform.LINUX:
                 result = subprocess.run(
-                    ["systemctl", "--user", "start", self.SERVICE_NAME],
+                    ["systemctl", "--user", "start", self.config.service_name],
                     capture_output=True,
                     text=True,
                 )
@@ -750,7 +743,7 @@ class ServiceManager:
                 return False, f"Failed to start: {result.stderr}"
             elif plat == Platform.WINDOWS:
                 result = subprocess.run(
-                    ["schtasks", "/Run", "/TN", "SpellbookMCP"],
+                    ["schtasks", "/Run", "/TN", self.config.schtasks_name],
                     capture_output=True,
                     text=True,
                 )
@@ -764,19 +757,12 @@ class ServiceManager:
     def stop(self) -> tuple[bool, str]:
         """Stop the service. Primary: PID-based. Fallback: platform-specific."""
         # Primary: PID-based stop
-        config_dir = Path(
-            os.environ.get(
-                "SPELLBOOK_CONFIG_DIR",
-                str(get_config_dir()),
-            )
-        )
-        pid_file = config_dir / f"{self.SERVICE_NAME}.pid"
-        if pid_file.exists():
+        if self.config.pid_file and self.config.pid_file.exists():
             try:
-                pid = int(pid_file.read_text(encoding="utf-8").strip())
+                pid = int(self.config.pid_file.read_text(encoding="utf-8").strip())
                 if _pid_exists(pid):
                     self._kill_process(pid)
-                    pid_file.unlink(missing_ok=True)
+                    self.config.pid_file.unlink(missing_ok=True)
                     return True, f"Stopped process {pid}"
             except (ValueError, OSError):
                 pass
@@ -794,7 +780,7 @@ class ServiceManager:
                 return True, "launchd service unloaded"
             elif plat == Platform.LINUX:
                 subprocess.run(
-                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
+                    ["systemctl", "--user", "stop", self.config.service_name],
                     capture_output=True,
                 )
                 return True, "systemd service stopped"
@@ -817,7 +803,7 @@ class ServiceManager:
         elif plat == Platform.WINDOWS:
             try:
                 result = subprocess.run(
-                    ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+                    ["schtasks", "/Query", "/TN", self.config.schtasks_name],
                     capture_output=True,
                 )
                 return result.returncode == 0
@@ -826,14 +812,50 @@ class ServiceManager:
         return False
 
     def is_running(self) -> bool:
-        """Check if the service is running."""
+        """Check if the service is running.
+
+        When health_check_port is set on the ServiceConfig, performs a TCP
+        probe to confirm the port is actually listening (service healthy).
+        This preserves the existing MCP behavior where is_running() checks
+        port health, not just process status.
+
+        When health_check_port is None, falls back to platform-specific
+        process/service status checks (launchctl list / systemctl is-active).
+        """
         import socket
 
-        try:
-            with socket.create_connection((self.host, self.port), timeout=2):
-                return True
-        except (OSError, TimeoutError):
-            return False
+        # TCP health probe when health_check_port is configured
+        if self.config.health_check_port is not None:
+            try:
+                with socket.create_connection(
+                    (self.config.health_check_host, self.config.health_check_port),
+                    timeout=2,
+                ):
+                    return True
+            except (OSError, TimeoutError):
+                return False
+
+        # Fallback: platform-specific service status check
+        plat = get_platform()
+        if plat == Platform.MACOS:
+            try:
+                result = subprocess.run(
+                    ["launchctl", "list", self.config.launchd_label],
+                    capture_output=True,
+                )
+                return result.returncode == 0
+            except FileNotFoundError:
+                return False
+        elif plat == Platform.LINUX:
+            try:
+                result = subprocess.run(
+                    ["systemctl", "--user", "is-active", self.config.service_name],
+                    capture_output=True,
+                )
+                return result.returncode == 0
+            except FileNotFoundError:
+                return False
+        return False
 
     # -- Private helpers --
 
@@ -842,7 +864,7 @@ class ServiceManager:
             Path.home()
             / "Library"
             / "LaunchAgents"
-            / f"{self.LAUNCHD_LABEL}.plist"
+            / f"{self.config.launchd_label}.plist"
         )
 
     def _systemd_service_path(self) -> Path:
@@ -851,41 +873,184 @@ class ServiceManager:
             / ".config"
             / "systemd"
             / "user"
-            / f"{self.SERVICE_NAME}.service"
+            / f"{self.config.service_name}.service"
         )
 
     def _install_macos(self) -> tuple[bool, str]:
-        """Install launchd service via spellbook.daemon.manager."""
+        """Install launchd service from ServiceConfig."""
+        plist_path = self._launchd_plist_path()
+        plist_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Unload existing if present
+        if plist_path.exists():
+            try:
+                subprocess.run(
+                    ["launchctl", "unload", str(plist_path)],
+                    capture_output=True,
+                )
+            except FileNotFoundError:
+                pass
+
+        # Build ProgramArguments array
+        prog_args = [str(self.config.executable)] + self.config.args
+        args_xml = "\n".join(
+            f"        <string>{xml_escape(a)}</string>" for a in prog_args
+        )
+
+        # Build EnvironmentVariables dict
+        env_xml = ""
+        if self.config.environment:
+            env_entries = "\n".join(
+                f"            <key>{xml_escape(k)}</key>\n"
+                f"            <string>{xml_escape(v)}</string>"
+                for k, v in self.config.environment.items()
+            )
+            env_xml = (
+                "\n    <key>EnvironmentVariables</key>\n"
+                "    <dict>\n"
+                f"{env_entries}\n"
+                "    </dict>"
+            )
+
+        keep_alive = "<true/>" if self.config.keep_alive else "<false/>"
+
+        plist_content = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"'
+            ' "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+            '<plist version="1.0">\n'
+            '<dict>\n'
+            '    <key>Label</key>\n'
+            f'    <string>{xml_escape(self.config.launchd_label)}</string>\n'
+            '\n'
+            '    <key>ProgramArguments</key>\n'
+            '    <array>\n'
+            f'{args_xml}\n'
+            '    </array>\n'
+            f'{env_xml}\n'
+            '\n'
+            '    <key>RunAtLoad</key>\n'
+            '    <true/>\n'
+            '\n'
+            '    <key>KeepAlive</key>\n'
+            f'    {keep_alive}\n'
+            '\n'
+            '    <key>StandardOutPath</key>\n'
+            f'    <string>{xml_escape(str(self.config.log_stdout))}</string>\n'
+            '\n'
+            '    <key>StandardErrorPath</key>\n'
+            f'    <string>{xml_escape(str(self.config.log_stderr))}</string>\n'
+            '\n'
+            '    <key>WorkingDirectory</key>\n'
+            f'    <string>{xml_escape(str(self.config.working_directory))}</string>\n'
+            '</dict>\n'
+            '</plist>\n'
+        )
+
         try:
-            import contextlib
-            import io
-            from spellbook.daemon.manager import install_service
-            with contextlib.redirect_stdout(io.StringIO()):
-                install_service()
+            plist_path.write_text(plist_content, encoding="utf-8")
+
+            result = subprocess.run(
+                ["launchctl", "load", str(plist_path)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return False, f"Failed to load: {result.stderr}"
             return True, "Installed launchd service"
-        except SystemExit:
-            return False, "Failed to install launchd service"
-        except Exception as e:
+        except OSError as e:
             return False, f"Failed: {e}"
 
     def _install_linux(self) -> tuple[bool, str]:
-        """Install systemd service via spellbook.daemon.manager."""
+        """Install systemd user service from ServiceConfig."""
+        service_path = self._systemd_service_path()
+        service_path.parent.mkdir(parents=True, exist_ok=True)
+
         try:
-            import contextlib
-            import io
-            from spellbook.daemon.manager import install_service
-            with contextlib.redirect_stdout(io.StringIO()):
-                install_service()
+            subprocess.run(
+                ["systemctl", "--user", "stop", self.config.service_name],
+                capture_output=True,
+            )
+        except FileNotFoundError:
+            pass
+
+        exec_start = " ".join(
+            [str(self.config.executable)] + self.config.args
+        )
+
+        env_lines = "\n".join(
+            f"Environment={k}={v}"
+            for k, v in self.config.environment.items()
+        )
+
+        restart_line = "Restart=always\nRestartSec=5" if self.config.keep_alive else ""
+
+        log_lines = (
+            f"StandardOutput=append:{self.config.log_stdout}\n"
+            f"StandardError=append:{self.config.log_stderr}"
+        )
+
+        service_content = (
+            "[Unit]\n"
+            f"Description={self.config.description}\n"
+            "After=network.target\n"
+            "\n"
+            "[Service]\n"
+            "Type=simple\n"
+            f"ExecStart={exec_start}\n"
+            f"WorkingDirectory={self.config.working_directory}\n"
+            f"{restart_line}\n"
+            f"{env_lines}\n"
+            f"{log_lines}\n"
+            "\n"
+            "[Install]\n"
+            "WantedBy=default.target\n"
+        )
+
+        try:
+            service_path.write_text(service_content, encoding="utf-8")
+
+            result = subprocess.run(
+                ["systemctl", "--user", "daemon-reload"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return False, f"Failed to reload systemd: {result.stderr}"
+
+            result = subprocess.run(
+                ["systemctl", "--user", "enable", self.config.service_name],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return False, f"Failed to enable service: {result.stderr}"
+
+            result = subprocess.run(
+                ["systemctl", "--user", "start", self.config.service_name],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return False, f"Failed to start service: {result.stderr}"
+
+            # Enable linger so user services survive logout
+            try:
+                subprocess.run(
+                    ["loginctl", "enable-linger", os.environ.get("USER", "")],
+                    capture_output=True,
+                )
+            except FileNotFoundError:
+                pass
+
             return True, "Installed systemd service"
-        except SystemExit:
-            return False, "Failed to install systemd service"
-        except Exception as e:
+        except OSError as e:
             return False, f"Failed: {e}"
 
     def _install_windows(self) -> tuple[bool, str]:
-        """Install Windows Task Scheduler task running the watchdog."""
+        """Install Windows Task Scheduler task from ServiceConfig."""
         xml_content = self._generate_task_xml()
-        xml_path = self.spellbook_dir / "scripts" / ".task-scheduler.xml"
+        xml_path = self.config.working_directory / ".task-scheduler.xml"
         try:
             xml_path.parent.mkdir(parents=True, exist_ok=True)
             xml_path.write_text(xml_content, encoding="utf-16")
@@ -894,7 +1059,7 @@ class ServiceManager:
                     "schtasks",
                     "/Create",
                     "/TN",
-                    "SpellbookMCP",
+                    self.config.schtasks_name,
                     "/XML",
                     str(xml_path),
                     "/F",
@@ -929,11 +1094,11 @@ class ServiceManager:
         if service_path.exists():
             try:
                 subprocess.run(
-                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
+                    ["systemctl", "--user", "stop", self.config.service_name],
                     capture_output=True,
                 )
                 subprocess.run(
-                    ["systemctl", "--user", "disable", self.SERVICE_NAME],
+                    ["systemctl", "--user", "disable", self.config.service_name],
                     capture_output=True,
                 )
             except FileNotFoundError:
@@ -952,7 +1117,7 @@ class ServiceManager:
     def _uninstall_windows(self) -> tuple[bool, str]:
         try:
             result = subprocess.run(
-                ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
+                ["schtasks", "/Delete", "/TN", self.config.schtasks_name, "/F"],
                 capture_output=True,
                 text=True,
             )
@@ -963,9 +1128,9 @@ class ServiceManager:
             return True, "Task Scheduler not available"
 
     def _generate_task_xml(self) -> str:
-        watchdog_path = xml_escape(str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py"))
-        working_dir = xml_escape(str(self.spellbook_dir))
-        python_exe = xml_escape(sys.executable)
+        exe = xml_escape(str(self.config.executable))
+        args = xml_escape(" ".join(self.config.args))
+        working_dir = xml_escape(str(self.config.working_directory))
         return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
@@ -973,8 +1138,8 @@ class ServiceManager:
   </Triggers>
   <Actions>
     <Exec>
-      <Command>{python_exe}</Command>
-      <Arguments>{watchdog_path}</Arguments>
+      <Command>{exe}</Command>
+      <Arguments>{args}</Arguments>
       <WorkingDirectory>{working_dir}</WorkingDirectory>
     </Exec>
   </Actions>
