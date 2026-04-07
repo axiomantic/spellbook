@@ -37,6 +37,24 @@ import spellbook.messaging.bus as _bus
 logger = logging.getLogger(__name__)
 
 
+async def _provision_tts_async() -> None:
+    """Fire-and-forget TTS provisioning with error logging.
+
+    Called as a background task when tts_enabled is set to True.
+    Errors are logged but never propagated to the caller.
+    """
+    try:
+        from spellbook.tts.provisioner import ensure_provisioned
+
+        result = await ensure_provisioned()
+        if result["status"] == "error":
+            logger.error("TTS provisioning failed: %s", result["detail"])
+        else:
+            logger.info("TTS provisioning: %s", result["status"])
+    except Exception:
+        logger.exception("TTS provisioning failed")
+
+
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
     """Extract session_id from Context if available.
 
@@ -71,7 +89,7 @@ def spellbook_config_get(key: str):
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_config_set(key: str, value) -> dict:
+async def spellbook_config_set(key: str, value) -> dict:
     """
     Write a config value to spellbook configuration.
 
@@ -99,6 +117,12 @@ def spellbook_config_set(key: str, value) -> dict:
         )
     except Exception:
         pass  # Never break MCP tool execution
+
+    # TTS provisioning hook: fire-and-forget background task
+    if key == "tts_enabled" and value in (True, "true"):
+        loop = asyncio.get_running_loop()
+        loop.create_task(_provision_tts_async())
+
     return result
 
 
