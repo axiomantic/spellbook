@@ -198,16 +198,21 @@ def get_status(session_id: str = None) -> dict:
     Reports whether the Wyoming TTS server was reachable at last probe.
     Does NOT attempt a new connection. Safe to call at any time.
 
+    When the TTS service is managed by spellbook (deps or service installed),
+    includes a ``service`` sub-dict with provisioning state, device info,
+    and filesystem paths.
+
     Args:
         session_id: Session ID for settings resolution.
 
     Returns:
         Dict with available, enabled, server_reachable, voice, volume,
-        tts_wyoming_host, tts_wyoming_port, and error keys.
+        tts_wyoming_host, tts_wyoming_port, error keys, and optionally
+        a service sub-dict when TTS service management is active.
     """
     host = config_tools.config_get("tts_wyoming_host") or WYOMING_DEFAULT_HOST
     port = config_tools.config_get("tts_wyoming_port") or WYOMING_DEFAULT_PORT
-    return {
+    result = {
         "available": True,
         "enabled": _resolve_setting("enabled", session_id=session_id),
         "server_reachable": _server_reachable,
@@ -217,6 +222,22 @@ def get_status(session_id: str = None) -> dict:
         "tts_wyoming_port": port,
         "error": None,
     }
+
+    # Add service health info if TTS service management is active
+    deps_installed = config_tools.config_get("tts_deps_installed")
+    service_installed = config_tools.config_get("tts_service_installed")
+    if deps_installed or service_installed:
+        result["service"] = {
+            "deps_installed": bool(deps_installed),
+            "service_installed": bool(service_installed),
+            "device": config_tools.config_get("tts_device") or "unknown",
+            "provisioning": False,
+            "data_dir": str(Path.home() / ".local" / "spellbook" / "tts-data"),
+            "venv_dir": str(Path.home() / ".local" / "spellbook" / "tts-venv"),
+            "log_file": str(Path.home() / ".local" / "spellbook" / "logs" / "tts.log"),
+        }
+
+    return result
 
 
 def preload() -> None:
