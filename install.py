@@ -994,7 +994,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
     from installer.tui import get_feature_groups as _get_fg
-    from installer.wizard import _matches_unset_key
+    from installer.wizard import WizardContext, WizardResults, _matches_unset_key
 
     # Import config module early; may fail in bootstrap scenarios
     try:
@@ -1037,8 +1037,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     # ---- Assemble WizardContext and run upfront wizard ----
     if renderer is not None:
-        from installer.wizard import WizardContext, WizardResults
-
         # Derive unset security config keys using shared helpers
         all_security_keys = _get_all_security_keys()
 
