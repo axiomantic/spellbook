@@ -13,7 +13,7 @@ __all__ = [
 
 import asyncio
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from fastmcp import Context
 
@@ -27,6 +27,10 @@ from spellbook.core.config import (
 )
 from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
+from spellbook.tts.provisioner import ensure_provisioned
+
+from spellbook.core.services import ServiceManager, tts_service_config
+from spellbook.tts.venv import get_tts_venv_dir
 # detect_git_context, derive_messaging_alias, and message_bus are referenced
 # via their source modules (_path_utils, _bus) so that asyncio.to_thread()
 # picks up test mocks patched on the source module (bigfoot patches module
@@ -35,6 +39,42 @@ import spellbook.core.path_utils as _path_utils
 import spellbook.messaging.bus as _bus
 
 logger = logging.getLogger(__name__)
+
+
+async def _stop_tts_async() -> None:
+    """Fire-and-forget TTS service stop with error logging.
+
+    Called as a background task when tts_enabled is set to False.
+    Errors are logged but never propagated to the caller.
+    """
+    try:
+        tts_venv_dir = get_tts_venv_dir()
+        svc_config = tts_service_config(tts_venv_dir=tts_venv_dir)
+        manager = ServiceManager(svc_config)
+        if manager.is_installed() and await asyncio.to_thread(manager.is_running):
+            await asyncio.to_thread(manager.stop)
+            logger.info("TTS service stopped (tts_enabled set to false)")
+    except Exception:
+        logger.exception("Failed to stop TTS service")
+
+
+async def _provision_tts_async(force: bool = False) -> None:
+    """Fire-and-forget TTS provisioning with error logging.
+
+    Called as a background task when tts_enabled is set to True, or
+    when TTS config values change while TTS is already enabled.
+
+    Args:
+        force: When True, reinstall service even if already installed.
+    """
+    try:
+        result = await ensure_provisioned(force=force)
+        if result["status"] == "error":
+            logger.error("TTS provisioning failed: %s", result["detail"])
+        else:
+            logger.info("TTS provisioning: %s", result["status"])
+    except Exception:
+        logger.exception("TTS provisioning failed")
 
 
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
@@ -71,7 +111,7 @@ def spellbook_config_get(key: str):
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_config_set(key: str, value) -> dict:
+async def spellbook_config_set(key: str, value: Any) -> dict:
     """
     Write a config value to spellbook configuration.
 
@@ -98,7 +138,23 @@ def spellbook_config_set(key: str, value) -> dict:
             )
         )
     except Exception:
-        pass  # Never break MCP tool execution
+        logger.exception("Failed to publish config.updated event")
+
+    # TTS hooks: fire-and-forget background tasks
+    if key == "tts_enabled":
+        loop = asyncio.get_running_loop()
+        if str(value).lower() in ("true", "1", "yes"):
+            loop.create_task(_provision_tts_async(), name="tts-provisioning")
+        elif str(value).lower() in ("false", "0", "no"):
+            loop.create_task(_stop_tts_async(), name="tts-stop")
+    elif key in ("tts_voice", "tts_device", "tts_wyoming_port"):
+        # Re-provision with force when TTS config changes while enabled
+        if config_get("tts_enabled"):
+            loop = asyncio.get_running_loop()
+            loop.create_task(
+                _provision_tts_async(force=True), name="tts-reprovision",
+            )
+
     return result
 
 

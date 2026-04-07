@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 import bigfoot
+from dirty_equals import IsInstance, IsStr
 
 # install.py is the top-level script; we import from it directly
 from install import check_tts_available, setup_tts, _set_tts_config
@@ -421,6 +422,193 @@ class TestSetupTtsServerUnavailable:
             )
             mock_config.assert_call(args=(False,), kwargs={})
             mock_pi.assert_call(args=(_TTS_SKIPPED_MSG,), kwargs={})
+
+
+# ---------------------------------------------------------------------------
+# _provision_tts_eager() - Wizard eager provisioning
+# ---------------------------------------------------------------------------
+
+
+class TestProvisionTtsEager:
+    """_provision_tts_eager() calls provision_sync and updates config."""
+
+    def test_calls_provision_sync_and_sets_config_on_success(self):
+        """When provision_sync succeeds, set tts_enabled=True and report success."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.returns({
+            "status": "ok",
+            "detail": "TTS fully provisioned",
+            "steps_completed": ["deps", "service"],
+        })
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_ps = bigfoot.mock("install:print_success")
+        mock_ps.__call__.required(False).returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=None)
+
+        assert result == {
+            "status": "ok",
+            "detail": "TTS fully provisioned",
+            "steps_completed": ["deps", "service"],
+        }
+        mock_provision.assert_call(args=(), kwargs={})
+        mock_config.assert_call(args=(True,), kwargs={})
+        mock_ps.assert_call(
+            args=("TTS server installed and running",), kwargs={},
+        )
+
+    def test_calls_provision_sync_and_warns_on_error(self):
+        """When provision_sync fails, still set tts_enabled=True but warn."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.returns({
+            "status": "error",
+            "detail": "Port 10200 is already in use",
+            "steps_completed": ["deps"],
+        })
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pw = bigfoot.mock("install:print_warning")
+        mock_pw.__call__.required(False).returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=None)
+
+        assert result == {
+            "status": "error",
+            "detail": "Port 10200 is already in use",
+            "steps_completed": ["deps"],
+        }
+        mock_provision.assert_call(args=(), kwargs={})
+        mock_config.assert_call(args=(True,), kwargs={})
+        mock_pw.assert_call(
+            args=("TTS setup incomplete: Port 10200 is already in use. You can retry later by setting tts_enabled=true",),
+            kwargs={},
+        )
+
+    def test_handles_provision_sync_exception(self):
+        """When provision_sync raises, set tts_enabled=True and warn."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.raises(RuntimeError("venv creation failed"))
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pw = bigfoot.mock("install:print_warning")
+        mock_pw.__call__.required(False).returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=None)
+
+        assert result["status"] == "error"
+        assert result["detail"] == "venv creation failed"
+        assert result["steps_completed"] == []
+        mock_provision.assert_call(
+            args=(), kwargs={}, raised=IsInstance(RuntimeError),  # exception identity, not equality
+        )
+        mock_config.assert_call(args=(True,), kwargs={})
+        mock_pw.assert_call(
+            args=(IsStr(regex=r'TTS setup incomplete: venv creation failed\. You can retry later by setting tts_enabled=true'),),
+            kwargs={},
+        )
+
+    def test_renderer_warning_on_error(self):
+        """When provision fails with renderer, use render_warning."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.returns({
+            "status": "error",
+            "detail": "Service install failed: permission denied",
+            "steps_completed": ["deps"],
+        })
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+
+        class FakeRenderer:
+            def __init__(self):
+                self.warnings = []
+            def render_warning(self, msg):
+                self.warnings.append(msg)
+
+        fake_renderer = FakeRenderer()
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=fake_renderer)
+
+        assert result == {
+            "status": "error",
+            "detail": "Service install failed: permission denied",
+            "steps_completed": ["deps"],
+        }
+        mock_provision.assert_call(args=(), kwargs={})
+        mock_config.assert_call(args=(True,), kwargs={})
+        assert fake_renderer.warnings == [
+            "TTS setup incomplete: Service install failed: permission denied. You can retry later by setting tts_enabled=true"
+        ]
+
+    def test_no_renderer_warning_on_error(self):
+        """When provision fails without renderer, use print_warning."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.returns({
+            "status": "error",
+            "detail": "Service install failed: permission denied",
+            "steps_completed": ["deps"],
+        })
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pw = bigfoot.mock("install:print_warning")
+        mock_pw.__call__.required(False).returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=None)
+
+        assert result == {
+            "status": "error",
+            "detail": "Service install failed: permission denied",
+            "steps_completed": ["deps"],
+        }
+        mock_provision.assert_call(args=(), kwargs={})
+        mock_config.assert_call(args=(True,), kwargs={})
+        mock_pw.assert_call(
+            args=("TTS setup incomplete: Service install failed: permission denied. You can retry later by setting tts_enabled=true",),
+            kwargs={},
+        )
+
+    def test_already_provisioning_sets_config_and_warns(self):
+        """When another process is provisioning, set config and warn."""
+        mock_provision = bigfoot.mock("spellbook.tts.provisioner:provision_sync")
+        mock_provision.returns({
+            "status": "already_provisioning",
+            "detail": "Another process is provisioning TTS",
+            "steps_completed": [],
+        })
+        mock_config = bigfoot.mock("install:_set_tts_config")
+        mock_config.returns(None)
+        mock_pi = bigfoot.mock("install:print_info")
+        mock_pi.__call__.required(False).returns(None)
+
+        with bigfoot:
+            from install import _provision_tts_eager
+            result = _provision_tts_eager(renderer=None)
+
+        assert result["status"] == "already_provisioning"
+        mock_provision.assert_call(args=(), kwargs={})
+        mock_config.assert_call(args=(True,), kwargs={})
+        mock_pi.assert_call(
+            args=("TTS provisioning already in progress. Config set; service will finish in background",),
+            kwargs={},
+        )
 
 
 # ---------------------------------------------------------------------------

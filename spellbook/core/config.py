@@ -501,7 +501,7 @@ def session_mode_get(session_id: Optional[str] = None) -> dict:
 TTS_DEFAULT_ENABLED = True
 TTS_DEFAULT_VOICE = ""               # Empty = use Wyoming server default
 TTS_DEFAULT_VOLUME = 0.3
-WYOMING_DEFAULT_HOST = "localhost"
+WYOMING_DEFAULT_HOST = "127.0.0.1"
 WYOMING_DEFAULT_PORT = 10200
 
 # Notification defaults (used when neither session nor config has a value)

@@ -540,9 +540,9 @@ def install_service() -> None:
     elif plat == "linux":
         success, msg = _install_systemd()
     elif plat == "windows":
-        from installer.compat import ServiceManager
+        from installer.compat import ServiceManager, mcp_service_config
 
-        mgr = ServiceManager(get_spellbook_dir(), get_port(), get_host())
+        mgr = ServiceManager(mcp_service_config(get_spellbook_dir(), get_port(), get_host()))
         success, msg = mgr.install()
     else:
         print(f"Error: Unsupported platform: {plat}", file=sys.stderr)
@@ -582,9 +582,9 @@ def uninstall_service() -> None:
     elif plat == "linux":
         success, msg = _uninstall_systemd()
     elif plat == "windows":
-        from installer.compat import ServiceManager
+        from installer.compat import ServiceManager, mcp_service_config
 
-        mgr = ServiceManager(get_spellbook_dir(), get_port(), get_host())
+        mgr = ServiceManager(mcp_service_config(get_spellbook_dir(), get_port(), get_host()))
         success, msg = mgr.uninstall()
     else:
         print(f"Error: Unsupported platform: {plat}", file=sys.stderr)

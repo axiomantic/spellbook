@@ -744,19 +744,84 @@ def check_tts_available() -> bool:
     sub-modules can import the function without ``sys.path`` manipulation.
     Re-exported here for backward compatibility with existing callers and
     test patches that reference ``install.check_tts_available``.
+
+    Function-level import: installer.utils is only available after
+    bootstrap adds spellbook_dir to sys.path (see run_installation).
     """
     from installer.utils import check_tts_available as _check
     return _check()
 
 
 def _set_tts_config(enabled: bool) -> None:
-    """Persist the tts_enabled config value via spellbook config_tools."""
+    """Persist the tts_enabled config value via spellbook config_tools.
+
+    Function-level import: spellbook.core.config is only available after
+    bootstrap adds spellbook_dir to sys.path (see run_installation).
+    """
     try:
         from spellbook.core.config import config_set as _cfg_set
         _cfg_set("tts_enabled", enabled)
     except ImportError:
         pass
 
+
+def _provision_tts_eager(renderer=None) -> dict:
+    """Eagerly provision TTS: install deps, create service, update config.
+
+    Called when the wizard ``tts_intent`` is ``True``. Uses
+    ``provision_sync()`` to install the TTS venv, dependencies, and
+    OS service in one shot.
+
+    Always sets ``tts_enabled=True`` regardless of outcome so that the
+    user's intent is preserved. On failure the user can retry later
+    via ``tts_config_set``.
+
+    Function-level import: spellbook.tts.provisioner is only available
+    after bootstrap adds spellbook_dir to sys.path (see run_installation).
+
+    Args:
+        renderer: Optional installer renderer for display output.
+            When ``None``, falls back to plain ``print_*`` helpers.
+
+    Returns:
+        Dict with keys ``status``, ``detail``, ``steps_completed``
+        from :func:`~spellbook.tts.provisioner.provision_sync`.
+    """
+    try:
+        from spellbook.tts.provisioner import provision_sync
+        result = provision_sync()
+    except Exception as exc:
+        import traceback
+        print(f"Eager TTS provisioning failed:\n{traceback.format_exc()}", file=sys.stderr)
+        result = {
+            "status": "error",
+            "detail": str(exc),
+            "steps_completed": [],
+        }
+
+    # Always honour the user's intent
+    _set_tts_config(True)
+
+    status = result["status"]
+
+    if status == "ok":
+        print_success("TTS server installed and running")
+    elif status == "already_provisioning":
+        print_info(
+            "TTS provisioning already in progress. "
+            "Config set; service will finish in background"
+        )
+    else:
+        msg = (
+            f"TTS setup incomplete: {result['detail']}. "
+            "You can retry later by setting tts_enabled=true"
+        )
+        if renderer is not None:
+            renderer.render_warning(msg)
+        else:
+            print_warning(msg)
+
+    return result
 
 
 def setup_tts(
@@ -1235,21 +1300,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if wizard_results is not None:
             # Wizard-based flow: use tts_intent from upfront wizard
             if wizard_results.tts_intent is True:
-                # User wants TTS; check Wyoming server availability
-                if check_tts_available():
-                    _set_tts_config(True)
-                else:
-                    _set_tts_config(True)
-                    if renderer is not None:
-                        renderer.render_warning(
-                            "TTS enabled but Wyoming server not reachable. "
-                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
-                        )
-                    else:
-                        print_warning(
-                            "TTS enabled but Wyoming server not reachable. "
-                            "Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200"
-                        )
+                # Eager provisioning: install TTS venv, deps, and service
+                _provision_tts_eager(renderer=renderer)
             elif wizard_results.tts_intent is False:
                 _set_tts_config(False)
             # tts_intent is None means skipped; do nothing

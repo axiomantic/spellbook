@@ -211,7 +211,7 @@ class TestEnsureConnected:
         success, error = await tts_mod.ensure_connected()
 
         assert success is False
-        assert error == "Cannot reach Wyoming TTS server at localhost:10200: Connection refused"
+        assert error == "Cannot reach Wyoming TTS server at 127.0.0.1:10200: Connection refused"
 
 
 class TestResolveSetting:
@@ -305,7 +305,7 @@ class TestGetStatus:
         assert status["voice"] == ""
         assert status["volume"] == 0.3
         assert status["error"] is None
-        assert status["tts_wyoming_host"] == "localhost"
+        assert status["tts_wyoming_host"] == "127.0.0.1"
         assert status["tts_wyoming_port"] == 10200
 
     def test_status_when_server_unreachable(self, monkeypatch):
@@ -344,7 +344,7 @@ class TestPreload:
 
         assert tts_mod._server_reachable is True
         assert cleanup_called == [True]
-        assert check_calls == [("localhost", 10200)]
+        assert check_calls == [("127.0.0.1", 10200)]
 
     def test_preload_sets_server_reachable_false_on_failure(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod
@@ -365,7 +365,7 @@ class TestPreload:
 
         assert tts_mod._server_reachable is False
         assert cleanup_called == [True]
-        assert check_calls == [("localhost", 10200)]
+        assert check_calls == [("127.0.0.1", 10200)]
 
     def test_preload_skipped_when_disabled(self, monkeypatch):
         import spellbook.notifications.tts as tts_mod

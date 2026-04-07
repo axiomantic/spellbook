@@ -31,6 +31,7 @@ from spellbook.core.config import (
     WYOMING_DEFAULT_HOST,
     WYOMING_DEFAULT_PORT,
 )
+from spellbook.tts.venv import get_tts_data_dir, get_tts_venv_dir
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,13 @@ _server_reachable = False
 # PortAudio is not thread-safe, so concurrent _terminate/_initialize/play/wait
 # sequences must be serialized.
 _playback_lock = threading.Lock()
+
+
+def _get_tts_log_path() -> Path:
+    """Get the TTS log file path using the platform-appropriate log directory."""
+    from spellbook.core.paths import get_log_dir
+
+    return get_log_dir() / "tts.log"
 
 
 def _cleanup_stale_wav_files() -> None:
@@ -198,16 +206,21 @@ def get_status(session_id: str = None) -> dict:
     Reports whether the Wyoming TTS server was reachable at last probe.
     Does NOT attempt a new connection. Safe to call at any time.
 
+    When the TTS service is managed by spellbook (deps or service installed),
+    includes a ``service`` sub-dict with provisioning state, device info,
+    and filesystem paths.
+
     Args:
         session_id: Session ID for settings resolution.
 
     Returns:
         Dict with available, enabled, server_reachable, voice, volume,
-        tts_wyoming_host, tts_wyoming_port, and error keys.
+        tts_wyoming_host, tts_wyoming_port, error keys, and optionally
+        a service sub-dict when TTS service management is active.
     """
     host = config_tools.config_get("tts_wyoming_host") or WYOMING_DEFAULT_HOST
     port = config_tools.config_get("tts_wyoming_port") or WYOMING_DEFAULT_PORT
-    return {
+    result = {
         "available": True,
         "enabled": _resolve_setting("enabled", session_id=session_id),
         "server_reachable": _server_reachable,
@@ -217,6 +230,24 @@ def get_status(session_id: str = None) -> dict:
         "tts_wyoming_port": port,
         "error": None,
     }
+
+    # Add service health info if TTS service management is active
+    deps_installed = config_tools.config_get("tts_deps_installed")
+    service_installed = config_tools.config_get("tts_service_installed")
+    if deps_installed or service_installed:
+        from spellbook.tts.lock import is_provisioning_locked
+
+        result["service"] = {
+            "deps_installed": bool(deps_installed),
+            "service_installed": bool(service_installed),
+            "device": config_tools.config_get("tts_device") or "unknown",
+            "provisioning": is_provisioning_locked(),
+            "data_dir": str(get_tts_data_dir()),
+            "venv_dir": str(get_tts_venv_dir()),
+            "log_file": str(_get_tts_log_path()),
+        }
+
+    return result
 
 
 def preload() -> None:

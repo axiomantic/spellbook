@@ -75,7 +75,16 @@ def tts_status(session_id: str = None) -> dict:
             "volume": float,           # effective volume
             "tts_wyoming_host": str,   # configured Wyoming server host
             "tts_wyoming_port": int,   # configured Wyoming server port
-            "error": str | None        # if not available, why
+            "error": str | None,       # if not available, why
+            "service": {               # present only when TTS service is managed
+                "deps_installed": bool,
+                "service_installed": bool,
+                "device": str,         # compute device (mps/cuda/cpu/unknown)
+                "provisioning": bool,  # true during active provisioning
+                "data_dir": str,       # model data directory path
+                "venv_dir": str,       # TTS venv directory path
+                "log_file": str        # TTS service log file path
+            } | absent
         }
     """
     return tts_module.get_status(session_id=session_id)

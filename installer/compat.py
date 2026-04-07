@@ -11,64 +11,27 @@ import errno
 import json
 import logging
 import os
-import platform
-import re
 import shutil
-import signal
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import Optional
-from xml.sax.saxutils import escape as xml_escape
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Platform detection
+# Platform detection (canonical source: spellbook.core.services)
 # ---------------------------------------------------------------------------
 
-
-class Platform(Enum):
-    """Supported operating systems."""
-
-    MACOS = "macos"
-    LINUX = "linux"
-    WINDOWS = "windows"
-
-
-class UnsupportedPlatformError(Exception):
-    """Raised when running on an unsupported OS."""
-
-    pass
-
-
-class LockHeldError(Exception):
-    """Raised when a lock cannot be acquired because another process holds it."""
-
-    pass
-
-
-def get_platform() -> Platform:
-    """Return the current OS as a Platform enum.
-
-    Returns:
-        Platform enum value for the current OS.
-
-    Raises:
-        UnsupportedPlatformError: If the OS is not macOS, Linux, or Windows.
-    """
-    system = platform.system().lower()
-    if system == "darwin":
-        return Platform.MACOS
-    elif system == "linux":
-        return Platform.LINUX
-    elif system == "windows":
-        return Platform.WINDOWS
-    raise UnsupportedPlatformError(f"Unsupported OS: {system}")
+from spellbook.core.services import (
+    LockHeldError,
+    Platform,
+    UnsupportedPlatformError,
+    get_platform,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -335,33 +298,7 @@ def create_link(
 # ---------------------------------------------------------------------------
 
 
-def _pid_exists(pid: int) -> bool:
-    """Check if a process with given PID exists.
-
-    Uses os.kill(pid, 0) on Unix, OpenProcess on Windows.
-    """
-    if sys.platform == "win32":
-        try:
-            import ctypes
-
-            kernel32 = ctypes.windll.kernel32
-            SYNCHRONIZE = 0x00100000
-            handle = kernel32.OpenProcess(SYNCHRONIZE, False, pid)
-            if handle:
-                kernel32.CloseHandle(handle)
-                return True
-            return False
-        except (OSError, AttributeError):
-            return False
-    else:
-        try:
-            os.kill(pid, 0)
-            return True
-        except PermissionError:
-            # Process exists but we lack permission to signal it
-            return True
-        except OSError:
-            return False
+from spellbook.core.services import _pid_exists  # noqa: E402
 
 
 class CrossPlatformLock:
@@ -515,362 +452,88 @@ class CrossPlatformLock:
 
 
 # ---------------------------------------------------------------------------
-# Service management
+# Service configuration and management (canonical source: spellbook.core.services)
 # ---------------------------------------------------------------------------
 
+# Re-export ServiceConfig, ServiceManager, and tts_service_config from
+# spellbook.core.services so existing installer.compat consumers keep working.
+from spellbook.core.services import ServiceConfig, ServiceManager, tts_service_config  # noqa: E402,F811
 
-class ServiceManager:
-    """Manage spellbook daemon as an OS service.
 
-    Delegates to launchd (macOS), systemd (Linux), or
-    Task Scheduler + watchdog (Windows).
+def _get_daemon_python_for_config() -> Optional[str]:
+    """Get path to daemon venv Python, or None if not available.
+
+    Thin wrapper around spellbook.daemon._paths.get_daemon_python to
+    allow mocking in tests without requiring the full spellbook package.
+    """
+    from spellbook.daemon._paths import get_daemon_python
+
+    return get_daemon_python()
+
+
+def _get_daemon_path() -> str:
+    """Get platform-appropriate PATH for the daemon service."""
+    plat = get_platform()
+    if plat == Platform.MACOS:
+        from spellbook.daemon.service import _get_darwin_daemon_path
+
+        return _get_darwin_daemon_path()
+    elif plat == Platform.LINUX:
+        from spellbook.daemon.service import _get_linux_daemon_path
+
+        return _get_linux_daemon_path()
+    return os.environ.get("PATH", "")
+
+
+def mcp_service_config(spellbook_dir: Path, port: int, host: str) -> ServiceConfig:
+    """Build ServiceConfig for the MCP daemon (backward-compatible).
 
     Args:
         spellbook_dir: Path to the spellbook installation.
-        port: Port for the MCP server.
-        host: Host for the MCP server.
+        port: MCP server port (typically 8765).
+        host: MCP server host (typically "127.0.0.1").
+
+    Returns:
+        ServiceConfig with MCP daemon parameters.
     """
+    daemon_path = _get_daemon_path()
 
-    LAUNCHD_LABEL = "com.spellbook.mcp"
-    SERVICE_NAME = "spellbook-mcp"
+    daemon_python_str = _get_daemon_python_for_config()
+    if daemon_python_str and Path(daemon_python_str).exists():
+        executable = Path(daemon_python_str)
+        args = ["-m", "spellbook.mcp"]
+    else:
+        uv_path = shutil.which("uv") or "uv"
+        executable = Path(uv_path)
+        args = ["run", "python", "-m", "spellbook.mcp"]
 
-    def __init__(self, spellbook_dir: Path, port: int, host: str):
-        self.spellbook_dir = spellbook_dir
-        self.port = port
-        self.host = host
+    config_dir = Path(
+        os.environ.get("SPELLBOOK_CONFIG_DIR", str(get_config_dir()))
+    )
+    log_dir = get_log_dir()
 
-    def install(self) -> tuple[bool, str]:
-        """Install the daemon as a system service."""
-        plat = get_platform()
-        if plat == Platform.MACOS:
-            return self._install_macos()
-        elif plat == Platform.LINUX:
-            return self._install_linux()
-        elif plat == Platform.WINDOWS:
-            return self._install_windows()
-        return False, f"Unsupported platform: {plat.value}"
-
-    def uninstall(self) -> tuple[bool, str]:
-        """Uninstall the system service."""
-        plat = get_platform()
-        if plat == Platform.MACOS:
-            return self._uninstall_macos()
-        elif plat == Platform.LINUX:
-            return self._uninstall_linux()
-        elif plat == Platform.WINDOWS:
-            return self._uninstall_windows()
-        return False, f"Unsupported platform: {plat.value}"
-
-    def start(self) -> tuple[bool, str]:
-        """Start the service."""
-        plat = get_platform()
-        try:
-            if plat == Platform.MACOS:
-                plist_path = self._launchd_plist_path()
-                result = subprocess.run(
-                    ["launchctl", "load", str(plist_path)],
-                    capture_output=True,
-                    text=True,
-                )
-                if result.returncode == 0:
-                    return True, "launchd service loaded"
-                return False, f"Failed to load: {result.stderr}"
-            elif plat == Platform.LINUX:
-                result = subprocess.run(
-                    ["systemctl", "--user", "start", self.SERVICE_NAME],
-                    capture_output=True,
-                    text=True,
-                )
-                if result.returncode == 0:
-                    return True, "systemd service started"
-                return False, f"Failed to start: {result.stderr}"
-            elif plat == Platform.WINDOWS:
-                result = subprocess.run(
-                    ["schtasks", "/Run", "/TN", "SpellbookMCP"],
-                    capture_output=True,
-                    text=True,
-                )
-                if result.returncode == 0:
-                    return True, "Task Scheduler task started"
-                return False, f"Failed to start: {result.stderr}"
-        except FileNotFoundError as e:
-            return False, f"Service manager not available: {e}"
-        return False, f"Unsupported platform: {plat.value}"
-
-    def stop(self) -> tuple[bool, str]:
-        """Stop the service. Primary: PID-based. Fallback: platform-specific."""
-        # Primary: PID-based stop
-        config_dir = Path(
-            os.environ.get(
-                "SPELLBOOK_CONFIG_DIR",
-                str(get_config_dir()),
-            )
-        )
-        pid_file = config_dir / f"{self.SERVICE_NAME}.pid"
-        if pid_file.exists():
-            try:
-                pid = int(pid_file.read_text(encoding="utf-8").strip())
-                if _pid_exists(pid):
-                    self._kill_process(pid)
-                    pid_file.unlink(missing_ok=True)
-                    return True, f"Stopped process {pid}"
-            except (ValueError, OSError):
-                pass
-
-        # Fallback: platform-specific
-        plat = get_platform()
-        try:
-            if plat == Platform.MACOS:
-                plist_path = self._launchd_plist_path()
-                if plist_path.exists():
-                    subprocess.run(
-                        ["launchctl", "unload", str(plist_path)],
-                        capture_output=True,
-                    )
-                return True, "launchd service unloaded"
-            elif plat == Platform.LINUX:
-                subprocess.run(
-                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
-                    capture_output=True,
-                )
-                return True, "systemd service stopped"
-        except FileNotFoundError:
-            return True, "Service manager not available, service assumed stopped"
-        if plat == Platform.WINDOWS:
-            pids = self._find_process_windows("spellbook")
-            for pid in pids:
-                self._kill_process(pid)
-            return True, f"Stopped {len(pids)} process(es)"
-        return False, f"Unsupported platform: {plat.value}"
-
-    def is_installed(self) -> bool:
-        """Check if the service is installed."""
-        plat = get_platform()
-        if plat == Platform.MACOS:
-            return self._launchd_plist_path().exists()
-        elif plat == Platform.LINUX:
-            return self._systemd_service_path().exists()
-        elif plat == Platform.WINDOWS:
-            try:
-                result = subprocess.run(
-                    ["schtasks", "/Query", "/TN", "SpellbookMCP"],
-                    capture_output=True,
-                )
-                return result.returncode == 0
-            except FileNotFoundError:
-                return False
-        return False
-
-    def is_running(self) -> bool:
-        """Check if the service is running."""
-        import socket
-
-        try:
-            with socket.create_connection((self.host, self.port), timeout=2):
-                return True
-        except (OSError, TimeoutError):
-            return False
-
-    # -- Private helpers --
-
-    def _launchd_plist_path(self) -> Path:
-        return (
-            Path.home()
-            / "Library"
-            / "LaunchAgents"
-            / f"{self.LAUNCHD_LABEL}.plist"
-        )
-
-    def _systemd_service_path(self) -> Path:
-        return (
-            Path.home()
-            / ".config"
-            / "systemd"
-            / "user"
-            / f"{self.SERVICE_NAME}.service"
-        )
-
-    def _install_macos(self) -> tuple[bool, str]:
-        """Install launchd service via spellbook.daemon.manager."""
-        try:
-            import contextlib
-            import io
-            from spellbook.daemon.manager import install_service
-            with contextlib.redirect_stdout(io.StringIO()):
-                install_service()
-            return True, "Installed launchd service"
-        except SystemExit:
-            return False, "Failed to install launchd service"
-        except Exception as e:
-            return False, f"Failed: {e}"
-
-    def _install_linux(self) -> tuple[bool, str]:
-        """Install systemd service via spellbook.daemon.manager."""
-        try:
-            import contextlib
-            import io
-            from spellbook.daemon.manager import install_service
-            with contextlib.redirect_stdout(io.StringIO()):
-                install_service()
-            return True, "Installed systemd service"
-        except SystemExit:
-            return False, "Failed to install systemd service"
-        except Exception as e:
-            return False, f"Failed: {e}"
-
-    def _install_windows(self) -> tuple[bool, str]:
-        """Install Windows Task Scheduler task running the watchdog."""
-        xml_content = self._generate_task_xml()
-        xml_path = self.spellbook_dir / "scripts" / ".task-scheduler.xml"
-        try:
-            xml_path.parent.mkdir(parents=True, exist_ok=True)
-            xml_path.write_text(xml_content, encoding="utf-16")
-            result = subprocess.run(
-                [
-                    "schtasks",
-                    "/Create",
-                    "/TN",
-                    "SpellbookMCP",
-                    "/XML",
-                    str(xml_path),
-                    "/F",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            xml_path.unlink(missing_ok=True)
-            if result.returncode == 0:
-                return True, "Task Scheduler task created"
-            return False, f"Failed: {result.stderr}"
-        except OSError as e:
-            xml_path.unlink(missing_ok=True)
-            return False, f"Failed to write task XML: {e}"
-
-    def _uninstall_macos(self) -> tuple[bool, str]:
-        plist_path = self._launchd_plist_path()
-        if plist_path.exists():
-            try:
-                subprocess.run(
-                    ["launchctl", "unload", str(plist_path)],
-                    capture_output=True,
-                )
-            except FileNotFoundError:
-                pass
-            plist_path.unlink(missing_ok=True)
-            return True, "Uninstalled launchd service"
-        return True, "Service was not installed"
-
-    def _uninstall_linux(self) -> tuple[bool, str]:
-        service_path = self._systemd_service_path()
-        if service_path.exists():
-            try:
-                subprocess.run(
-                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
-                    capture_output=True,
-                )
-                subprocess.run(
-                    ["systemctl", "--user", "disable", self.SERVICE_NAME],
-                    capture_output=True,
-                )
-            except FileNotFoundError:
-                pass
-            service_path.unlink(missing_ok=True)
-            try:
-                subprocess.run(
-                    ["systemctl", "--user", "daemon-reload"],
-                    capture_output=True,
-                )
-            except FileNotFoundError:
-                pass
-            return True, "Uninstalled systemd service"
-        return True, "Service was not installed"
-
-    def _uninstall_windows(self) -> tuple[bool, str]:
-        try:
-            result = subprocess.run(
-                ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0 or "does not exist" in result.stderr.lower():
-                return True, "Task Scheduler task removed"
-            return False, f"Failed: {result.stderr}"
-        except FileNotFoundError:
-            return True, "Task Scheduler not available"
-
-    def _generate_task_xml(self) -> str:
-        watchdog_path = xml_escape(str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py"))
-        working_dir = xml_escape(str(self.spellbook_dir))
-        python_exe = xml_escape(sys.executable)
-        return f"""<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <Triggers>
-    <LogonTrigger><Enabled>true</Enabled></LogonTrigger>
-  </Triggers>
-  <Actions>
-    <Exec>
-      <Command>{python_exe}</Command>
-      <Arguments>{watchdog_path}</Arguments>
-      <WorkingDirectory>{working_dir}</WorkingDirectory>
-    </Exec>
-  </Actions>
-  <Settings>
-    <AllowStartOnDemand>true</AllowStartOnDemand>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-  </Settings>
-</Task>"""
-
-    def _kill_process(self, pid: int) -> None:
-        """Kill a process by PID, cross-platform."""
-        if sys.platform == "win32":
-            subprocess.run(
-                ["taskkill", "/PID", str(pid)],
-                capture_output=True,
-            )
-            time.sleep(1)
-            if _pid_exists(pid):
-                subprocess.run(
-                    ["taskkill", "/F", "/PID", str(pid)],
-                    capture_output=True,
-                )
-        else:
-            try:
-                os.kill(pid, signal.SIGTERM)
-                for _ in range(10):
-                    time.sleep(0.5)
-                    if not _pid_exists(pid):
-                        return
-                os.kill(pid, signal.SIGKILL)
-            except OSError:
-                pass
-
-    def _find_process_windows(self, pattern: str) -> list[int]:
-        """Find PIDs matching a pattern on Windows using PowerShell."""
-        if not re.match(r'^[\w.\-]+$', pattern):
-            raise ValueError(f"Invalid process pattern: {pattern}")
-        if sys.platform != "win32":
-            return []
-        try:
-            result = subprocess.run(
-                [
-                    "powershell",
-                    "-NoProfile",
-                    "-Command",
-                    f"Get-CimInstance Win32_Process | "
-                    f"Where-Object {{$_.CommandLine -like '*{pattern}*'}} | "
-                    f"Select-Object -ExpandProperty ProcessId",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            return [
-                int(pid) for pid in result.stdout.strip().split("\n") if pid.strip()
-            ]
-        except (OSError, subprocess.TimeoutExpired, ValueError):
-            return []
+    return ServiceConfig(
+        launchd_label="com.spellbook.mcp",
+        service_name="spellbook-mcp",
+        schtasks_name="SpellbookMCP",
+        description="Spellbook MCP Server",
+        executable=executable,
+        args=args,
+        working_directory=spellbook_dir,
+        environment={
+            "PATH": daemon_path,
+            "SPELLBOOK_MCP_TRANSPORT": "streamable-http",
+            "SPELLBOOK_MCP_HOST": host,
+            "SPELLBOOK_MCP_PORT": str(port),
+            "SPELLBOOK_DIR": str(spellbook_dir),
+        },
+        log_stdout=log_dir / "mcp.log",
+        log_stderr=log_dir / "mcp.err.log",
+        pid_file=config_dir / "spellbook-mcp.pid",
+        keep_alive=True,
+        health_check_port=port,
+        health_check_host=host,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -887,24 +550,9 @@ def get_python_executable() -> str:
     return sys.executable
 
 
-def get_config_dir(app_name: str = "spellbook") -> Path:
-    """Get OS-appropriate config directory.
-
-    macOS:   ~/.config/{app_name}
-    Linux:   ~/.config/{app_name}
-    Windows: %APPDATA%/{app_name}
-
-    Args:
-        app_name: Application name for the config subdirectory.
-
-    Returns:
-        Path to the config directory.
-    """
-    if get_platform() == Platform.WINDOWS:
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            return Path(appdata) / app_name
-        return Path.home() / "AppData" / "Roaming" / app_name
-    return Path.home() / ".config" / app_name
+# Re-export path helpers from spellbook.core.paths (canonical source).
+# installer.compat consumers (including installer/ modules) can continue
+# importing get_data_dir, get_log_dir, get_config_dir from here.
+from spellbook.core.paths import get_config_dir, get_data_dir, get_log_dir
 
 
