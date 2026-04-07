@@ -1160,8 +1160,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 _unset_nr = [k for k in _all_sec_keys_nr if not _cies_nr(k)]
                 if _unset_nr:
                     security_selections = _get_default_security_selections(_unset_nr)
-            except ImportError:
-                pass  # Config module not available; skip defaults
+            except ImportError as e:
+                print_warning(f"Could not apply security defaults: {e}")
 
         wizard_results = None  # No wizard in no-renderer path
 
