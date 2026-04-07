@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.2] - 2026-04-06
+
+### Fixed
+- **Installer update prompt from source repo**: Running `./install.py` from within the git repo no longer prompts "Update to latest version?" against origin/main. The installer now detects when it is being run from the source repository and skips the update check.
+
 ## [0.46.1] - 2026-04-06
 
 ### Fixed
