@@ -9,11 +9,65 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-DEFAULT_LOCK_FILE = Path.home() / ".local" / "spellbook" / "tts-provision.lock"
+from spellbook.core.paths import get_data_dir
+
+DEFAULT_LOCK_FILE = get_data_dir() / "tts-provision.lock"
 
 
 class ProvisioningLocked(Exception):
     """Another process is already provisioning TTS."""
+
+
+def is_provisioning_locked(lock_file: Path = None) -> bool:
+    """Check whether the provisioning lock is currently held.
+
+    Attempts a non-blocking lock acquisition. If the lock cannot be
+    acquired, another process is provisioning TTS.
+
+    Args:
+        lock_file: Path to the lock file. Defaults to DEFAULT_LOCK_FILE.
+
+    Returns:
+        True if provisioning is in progress (lock held), False otherwise.
+    """
+    if lock_file is None:
+        lock_file = DEFAULT_LOCK_FILE
+
+    if not lock_file.exists():
+        return False
+
+    fd = None
+    try:
+        fd = os.open(str(lock_file), os.O_CREAT | os.O_RDWR)
+        if sys.platform == "win32":
+            import msvcrt
+
+            try:
+                msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                # Lock acquired: not held by another process
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                return False
+            except OSError:
+                return True
+        else:
+            import fcntl
+
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # Lock acquired: not held by another process
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                return False
+            except OSError:
+                return True
+    except OSError:
+        return False
+    finally:
+        if fd is not None:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
 
 
 @contextmanager

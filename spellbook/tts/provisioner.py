@@ -9,8 +9,8 @@ import logging
 from pathlib import Path
 from typing import Callable, Optional
 
-from installer.compat import ServiceManager, tts_service_config
 from spellbook.core.config import config_get, config_set
+from spellbook.core.services import ServiceManager, tts_service_config
 from spellbook.tts.constants import (
     TTS_DEFAULT_PORT,
     TTS_DEFAULT_VOICE,
@@ -108,7 +108,11 @@ async def ensure_provisioned(
         if progress_callback:
             progress_callback(stage, pct)
 
-    # Acquire provisioning lock (non-blocking)
+    # Acquire provisioning lock (non-blocking).
+    # The lock uses flock (Unix) / msvcrt (Windows) with LOCK_NB, so
+    # acquisition is a single non-blocking syscall (microseconds of file
+    # I/O). For truly async locking, asyncio.to_thread() could be used
+    # but is unnecessary for this use case.
     try:
         with provisioning_lock():
             tts_venv_dir = get_tts_venv_dir()

@@ -54,12 +54,9 @@ _playback_lock = threading.Lock()
 
 def _get_tts_log_path() -> Path:
     """Get the TTS log file path using the platform-appropriate log directory."""
-    try:
-        from installer.compat import get_log_dir
-        return get_log_dir() / "tts.log"
-    except ImportError:
-        # Fallback when installer module is not available
-        return Path.home() / ".local" / "spellbook" / "logs" / "tts.log"
+    from spellbook.core.paths import get_log_dir
+
+    return get_log_dir() / "tts.log"
 
 
 def _cleanup_stale_wav_files() -> None:
@@ -238,11 +235,13 @@ def get_status(session_id: str = None) -> dict:
     deps_installed = config_tools.config_get("tts_deps_installed")
     service_installed = config_tools.config_get("tts_service_installed")
     if deps_installed or service_installed:
+        from spellbook.tts.lock import is_provisioning_locked
+
         result["service"] = {
             "deps_installed": bool(deps_installed),
             "service_installed": bool(service_installed),
             "device": config_tools.config_get("tts_device") or "unknown",
-            "provisioning": False,
+            "provisioning": is_provisioning_locked(),
             "data_dir": str(get_tts_data_dir()),
             "venv_dir": str(get_tts_venv_dir()),
             "log_file": str(_get_tts_log_path()),

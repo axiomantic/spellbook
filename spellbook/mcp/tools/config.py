@@ -29,7 +29,7 @@ from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
 from spellbook.tts.provisioner import ensure_provisioned
 
-from installer.compat import ServiceManager, tts_service_config
+from spellbook.core.services import ServiceManager, tts_service_config
 from spellbook.tts.venv import get_tts_venv_dir
 # detect_git_context, derive_messaging_alias, and message_bus are referenced
 # via their source modules (_path_utils, _bus) so that asyncio.to_thread()
@@ -108,7 +108,7 @@ def spellbook_config_get(key: str):
 
 @mcp.tool()
 @inject_recovery_context
-async def spellbook_config_set(key: str, value) -> dict:
+async def spellbook_config_set(key: str, value: str | bool | int | float) -> dict:
     """
     Write a config value to spellbook configuration.
 
@@ -140,9 +140,9 @@ async def spellbook_config_set(key: str, value) -> dict:
     # TTS hooks: fire-and-forget background tasks
     if key == "tts_enabled":
         loop = asyncio.get_running_loop()
-        if value in (True, "true"):
+        if str(value).lower() in ("true", "1", "yes"):
             loop.create_task(_provision_tts_async(), name="tts-provisioning")
-        elif value in (False, "false"):
+        elif str(value).lower() in ("false", "0", "no"):
             loop.create_task(_stop_tts_async(), name="tts-stop")
 
     return result

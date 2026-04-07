@@ -68,7 +68,7 @@ class TestGetPlatform:
     def test_darwin_returns_macos(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
         mock_system.returns("Darwin")
 
         with bigfoot:
@@ -80,7 +80,7 @@ class TestGetPlatform:
     def test_linux_returns_linux(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
         mock_system.returns("Linux")
 
         with bigfoot:
@@ -92,7 +92,7 @@ class TestGetPlatform:
     def test_windows_returns_windows(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
         mock_system.returns("Windows")
 
         with bigfoot:
@@ -104,7 +104,7 @@ class TestGetPlatform:
     def test_unsupported_raises_error(self):
         from installer.compat import UnsupportedPlatformError, get_platform
 
-        mock_system = bigfoot.mock("installer.compat:platform.system")
+        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
         mock_system.returns("FreeBSD")
 
         with bigfoot:
@@ -766,10 +766,10 @@ class TestServiceManager:
         assert callable(mgr.is_running)
 
     def test_is_installed_macos_checks_plist(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
         from installer.compat import Platform, ServiceManager
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
         mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_plist = tmp_path / "com.spellbook.mcp.plist"
@@ -783,10 +783,10 @@ class TestServiceManager:
         mock_plist.assert_call(args=(), kwargs={})
 
     def test_is_installed_linux_checks_service_file(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
         from installer.compat import Platform, ServiceManager
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.LINUX)
         mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_service = tmp_path / "spellbook-mcp.service"
@@ -894,30 +894,23 @@ class TestGetConfigDir:
 
         assert isinstance(get_config_dir(), Path)
 
-    def test_unix_uses_dot_config(self):
-        from installer.compat import Platform, get_config_dir
+    def test_unix_uses_dot_config(self, monkeypatch):
+        from installer.compat import get_config_dir
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
-        mock_plat.returns(Platform.LINUX)
-
-        with bigfoot:
-            result = get_config_dir()
+        monkeypatch.setattr("spellbook.core.paths._is_windows", lambda: False)
+        result = get_config_dir()
 
         assert ".config" in str(result)
-        mock_plat.assert_call(args=(), kwargs={})
 
     def test_windows_uses_appdata(self, monkeypatch):
-        from installer.compat import Platform, get_config_dir
+        from installer.compat import get_config_dir
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
-        mock_plat.returns(Platform.WINDOWS)
+        monkeypatch.setattr("spellbook.core.paths._is_windows", lambda: True)
         monkeypatch.setenv("APPDATA", "/fake/appdata")
 
-        with bigfoot:
-            result = get_config_dir()
+        result = get_config_dir()
 
         assert "appdata" in str(result).lower()
-        mock_plat.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------

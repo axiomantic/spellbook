@@ -285,9 +285,9 @@ class TestServiceManagerAcceptsConfig:
         )
 
     def test_is_installed_macos_plist_exists(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
 
         plist = tmp_path / "com.test.svc.plist"
         plist.write_text("<plist/>")
@@ -304,9 +304,9 @@ class TestServiceManagerAcceptsConfig:
         mock_plist.assert_call(args=(), kwargs={})
 
     def test_is_installed_macos_plist_missing(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
 
         config = _make_config()
         manager = ServiceManager(config)
@@ -321,9 +321,9 @@ class TestServiceManagerAcceptsConfig:
         mock_plist.assert_call(args=(), kwargs={})
 
     def test_is_installed_linux_service_exists(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.LINUX)
 
         service_file = tmp_path / "test-svc.service"
         service_file.write_text("[Unit]")
@@ -354,9 +354,9 @@ class TestServiceManagerIsRunning:
         self, monkeypatch
     ):
         """When health_check_port is None, falls back to platform checks."""
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
 
         config = _make_config(health_check_port=None)
         manager = ServiceManager(config)
@@ -416,7 +416,7 @@ class TestServiceManagerStop:
         manager = ServiceManager(config)
 
         # Mock _pid_exists to return True so the PID-based kill path is taken
-        mock_pid_exists = bigfoot.mock("installer.compat:_pid_exists")
+        mock_pid_exists = bigfoot.mock("spellbook.core.services:_pid_exists")
         mock_pid_exists.returns(True)
 
         # Mock _kill_process to verify os.kill is attempted with the correct PID
@@ -433,9 +433,9 @@ class TestServiceManagerStop:
 
     @pytest.mark.allow("subprocess")
     def test_stop_without_pid_file_uses_platform(self, tmp_path, monkeypatch):
-        import installer.compat as compat_mod
+        import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
+        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.LINUX)
 
         config = _make_config(pid_file=None, service_name="my-svc")
         manager = ServiceManager(config)
