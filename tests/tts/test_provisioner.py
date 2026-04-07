@@ -15,11 +15,9 @@ def _async_return(value):
     return _fn
 
 
-class _FakeLockCtx:
-    def __enter__(self):
-        return self
-    def __exit__(self, *args):
-        pass
+class _FakeLockCm:
+    """Fake context manager returned by _acquire_provisioning_lock."""
+    pass
 
 
 class _FakeManager:
@@ -59,8 +57,11 @@ class _FailingInstallManager:
 class TestEnsureProvisioned:
     @pytest.mark.asyncio
     async def test_full_provision_from_scratch(self):
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
-        mock_lock.returns(_FakeLockCtx())
+        _fake_lock = _FakeLockCm()
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_async_return(_fake_lock))
+        mock_release = bigfoot.mock("spellbook.tts.provisioner:_release_provisioning_lock")
+        mock_release.calls(_async_return(None))
 
         mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
         mock_venv_dir.returns(Path("/fake/tts-venv"))
@@ -117,7 +118,7 @@ class TestEnsureProvisioned:
         assert fake_manager.install_called, "ServiceManager.install() was never called"
 
         # Assertions in timeline order
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
         mock_venv_dir.assert_call(args=(), kwargs={})
         mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
@@ -142,11 +143,15 @@ class TestEnsureProvisioned:
         mock_set.assert_call(args=("tts_service_config_hash", "new_hash"), kwargs={})
         mock_set.assert_call(args=("tts_device", "cpu"), kwargs={})
         mock_health.assert_call(args=("127.0.0.1", 10200), kwargs={})
+        mock_release.assert_call(args=(_fake_lock,), kwargs={})
 
     @pytest.mark.asyncio
     async def test_already_provisioned_service_running(self):
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
-        mock_lock.returns(_FakeLockCtx())
+        _fake_lock = _FakeLockCm()
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_async_return(_fake_lock))
+        mock_release = bigfoot.mock("spellbook.tts.provisioner:_release_provisioning_lock")
+        mock_release.calls(_async_return(None))
 
         mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
         mock_venv_dir.returns(Path("/fake/tts-venv"))
@@ -179,7 +184,7 @@ class TestEnsureProvisioned:
             "steps_completed": [],
         }
 
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
         mock_venv_dir.assert_call(args=(), kwargs={})
         mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
@@ -189,11 +194,15 @@ class TestEnsureProvisioned:
         mock_get.assert_call(args=("tts_service_config_hash",), kwargs={})
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_health.assert_call(args=("127.0.0.1", 10200), kwargs={})
+        mock_release.assert_call(args=(_fake_lock,), kwargs={})
 
     @pytest.mark.asyncio
     async def test_venv_creation_failure(self):
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
-        mock_lock.returns(_FakeLockCtx())
+        _fake_lock = _FakeLockCm()
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_async_return(_fake_lock))
+        mock_release = bigfoot.mock("spellbook.tts.provisioner:_release_provisioning_lock")
+        mock_release.calls(_async_return(None))
 
         mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
         mock_venv_dir.returns(Path("/fake/tts-venv"))
@@ -217,7 +226,7 @@ class TestEnsureProvisioned:
             "steps_completed": [],
         }
 
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
         mock_venv_dir.assert_call(args=(), kwargs={})
         mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
@@ -226,20 +235,17 @@ class TestEnsureProvisioned:
             args=(Path("/fake/tts-venv"),),
             kwargs={"progress_callback": None},
         )
+        mock_release.assert_call(args=(_fake_lock,), kwargs={})
 
     @pytest.mark.asyncio
     async def test_lock_contention_returns_already_provisioning(self):
         from spellbook.tts.lock import ProvisioningLocked
 
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
+        async def _raise_locked(*args, **kwargs):
+            raise ProvisioningLocked("TTS provisioning already in progress")
 
-        class FailingLockCtx:
-            def __enter__(self):
-                raise ProvisioningLocked("TTS provisioning already in progress")
-            def __exit__(self, *args):
-                pass
-
-        mock_lock.returns(FailingLockCtx())
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_raise_locked)
 
         async with bigfoot:
             result = await ensure_provisioned()
@@ -249,12 +255,15 @@ class TestEnsureProvisioned:
             "detail": "Another process is provisioning TTS",
             "steps_completed": [],
         }
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
     async def test_port_in_use_returns_error(self):
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
-        mock_lock.returns(_FakeLockCtx())
+        _fake_lock = _FakeLockCm()
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_async_return(_fake_lock))
+        mock_release = bigfoot.mock("spellbook.tts.provisioner:_release_provisioning_lock")
+        mock_release.calls(_async_return(None))
 
         mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
         mock_venv_dir.returns(Path("/fake/tts-venv"))
@@ -290,7 +299,7 @@ class TestEnsureProvisioned:
             "steps_completed": [],
         }
 
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
         mock_venv_dir.assert_call(args=(), kwargs={})
         mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
@@ -302,11 +311,15 @@ class TestEnsureProvisioned:
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_get.assert_call(args=("tts_voice",), kwargs={})
         mock_port.assert_call(args=(10200,), kwargs={})
+        mock_release.assert_call(args=(_fake_lock,), kwargs={})
 
     @pytest.mark.asyncio
     async def test_install_failure_returns_error_and_skips_start(self):
-        mock_lock = bigfoot.mock("spellbook.tts.provisioner:provisioning_lock")
-        mock_lock.returns(_FakeLockCtx())
+        _fake_lock = _FakeLockCm()
+        mock_acquire = bigfoot.mock("spellbook.tts.provisioner:_acquire_provisioning_lock")
+        mock_acquire.calls(_async_return(_fake_lock))
+        mock_release = bigfoot.mock("spellbook.tts.provisioner:_release_provisioning_lock")
+        mock_release.calls(_async_return(None))
 
         mock_venv_dir = bigfoot.mock("spellbook.tts.provisioner:get_tts_venv_dir")
         mock_venv_dir.returns(Path("/fake/tts-venv"))
@@ -359,7 +372,7 @@ class TestEnsureProvisioned:
             "ServiceManager.start() should not be called after install failure"
         )
 
-        mock_lock.assert_call(args=(), kwargs={})
+        mock_acquire.assert_call(args=(), kwargs={})
         mock_venv_dir.assert_call(args=(), kwargs={})
         mock_tts_python.assert_call(args=(Path("/fake/tts-venv"),), kwargs={})
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
@@ -380,6 +393,7 @@ class TestEnsureProvisioned:
             kwargs={"tts_venv_dir": Path("/fake/tts-venv"), "port": 10200, "device": "cpu", "voice": "af_heart"},
         )
         mock_svc_cls.assert_call(args=(fake_config,), kwargs={})
+        mock_release.assert_call(args=(_fake_lock,), kwargs={})
 
 
 class _CoroutineOf:

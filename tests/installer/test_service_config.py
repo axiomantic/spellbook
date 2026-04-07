@@ -393,13 +393,18 @@ class TestServiceManagerGenerateTaskXml:
         root = ElementTree.fromstring(xml)
         ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 
+        # Command wraps in cmd.exe for stdout/stderr redirection
         command = root.find(".//t:Exec/t:Command", ns)
         assert command is not None
-        assert command.text == "/usr/bin/python3"
+        assert command.text == "cmd.exe"
 
+        # Arguments contain the original command with log redirection
         arguments = root.find(".//t:Exec/t:Arguments", ns)
         assert arguments is not None
-        assert arguments.text == "-m myservice --port 8080"
+        assert "/usr/bin/python3" in arguments.text
+        assert "-m myservice --port 8080" in arguments.text
+        assert str(config.log_stdout) in arguments.text
+        assert str(config.log_stderr) in arguments.text
 
         workdir = root.find(".//t:Exec/t:WorkingDirectory", ns)
         assert workdir is not None

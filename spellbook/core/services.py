@@ -662,8 +662,18 @@ class ServiceManager:
             return True, "Task Scheduler not available"
 
     def _generate_task_xml(self) -> str:
-        exe = xml_escape(str(self.config.executable))
-        args = xml_escape(subprocess.list2cmdline(self.config.args))
+        # Windows Task Scheduler XML doesn't support stdout/stderr
+        # redirection natively. Wrap the command in cmd.exe /c with
+        # shell redirection so output is captured to log files.
+        inner_exe = str(self.config.executable)
+        inner_args = subprocess.list2cmdline(self.config.args)
+        stdout = str(self.config.log_stdout)
+        stderr = str(self.config.log_stderr)
+
+        exe = xml_escape("cmd.exe")
+        args = xml_escape(
+            f'/c "{inner_exe}" {inner_args} > "{stdout}" 2> "{stderr}"'
+        )
         working_dir = xml_escape(str(self.config.working_directory))
         return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">

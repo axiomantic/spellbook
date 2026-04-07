@@ -104,6 +104,25 @@ def _tts_config_hash() -> str:
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
+async def _acquire_provisioning_lock():
+    """Acquire the provisioning lock off the event loop thread.
+
+    Returns the context manager so it can be released later.
+    Raises ProvisioningLocked if the lock is already held.
+    """
+    def _enter():
+        cm = provisioning_lock()
+        cm.__enter__()
+        return cm
+
+    return await asyncio.to_thread(_enter)
+
+
+async def _release_provisioning_lock(cm) -> None:
+    """Release the provisioning lock off the event loop thread."""
+    await asyncio.to_thread(cm.__exit__, None, None, None)
+
+
 async def ensure_provisioned(
     progress_callback: Optional[Callable[[str, float], None]] = None,
     force: bool = False,
@@ -128,13 +147,11 @@ async def ensure_provisioned(
         if progress_callback:
             progress_callback(stage, pct)
 
-    # Acquire provisioning lock (non-blocking).
-    # The lock uses flock (Unix) / msvcrt (Windows) with LOCK_NB, so
-    # acquisition is a single non-blocking syscall (microseconds of file
-    # I/O). For truly async locking, asyncio.to_thread() could be used
-    # but is unnecessary for this use case.
+    # Acquire provisioning lock (non-blocking) off the event loop to
+    # avoid synchronous file I/O in async context.
     try:
-        with provisioning_lock():
+        lock_cm = await _acquire_provisioning_lock()
+        try:
             tts_venv_dir = get_tts_venv_dir()
             tts_python = get_tts_python(tts_venv_dir)
 
@@ -253,6 +270,8 @@ async def ensure_provisioned(
                 "detail": "TTS fully provisioned",
                 "steps_completed": steps_completed,
             }
+        finally:
+            await _release_provisioning_lock(lock_cm)
 
     except ProvisioningLocked:
         return {
