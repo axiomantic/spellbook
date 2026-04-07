@@ -309,7 +309,10 @@ class ServiceManager:
         except FileNotFoundError:
             return True, "Service manager not available, service assumed stopped"
         if plat == Platform.WINDOWS:
-            pids = self._find_process_windows("spellbook")
+            # Use the executable path for a specific match, avoiding killing
+            # unrelated processes that happen to contain "spellbook".
+            pattern = str(self.config.executable)
+            pids = self._find_process_windows(pattern)
             for pid in pids:
                 self._kill_process(pid)
             return True, f"Stopped {len(pids)} process(es)"
@@ -702,9 +705,17 @@ class ServiceManager:
                 pass
 
     def _find_process_windows(self, pattern: str) -> list[int]:
-        """Find PIDs matching a pattern on Windows using PowerShell."""
-        if not re.match(r'^[\w.\-]+$', pattern):
+        """Find PIDs matching a pattern on Windows using PowerShell.
+
+        Args:
+            pattern: A filesystem path or simple name to match against
+                process command lines. Path separators, colons, and spaces
+                are permitted. PowerShell wildcard characters are escaped.
+        """
+        if not re.match(r'^[\w.\-\\/:() ]+$', pattern):
             raise ValueError(f"Invalid process pattern: {pattern}")
+        # Escape PowerShell -like wildcard characters to match literally
+        safe = pattern.replace("[", "`[").replace("]", "`]")
         if sys.platform != "win32":
             return []
         try:
@@ -714,7 +725,7 @@ class ServiceManager:
                     "-NoProfile",
                     "-Command",
                     f"Get-CimInstance Win32_Process | "
-                    f"Where-Object {{$_.CommandLine -like '*{pattern}*'}} | "
+                    f"Where-Object {{$_.CommandLine -like '*{safe}*'}} | "
                     f"Select-Object -ExpandProperty ProcessId",
                 ],
                 capture_output=True,

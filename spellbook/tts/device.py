@@ -4,7 +4,7 @@ Detects the best available compute device without importing torch
 (which is heavy and lives in the TTS venv, not the daemon venv).
 """
 
-import platform as plat
+import platform
 import shutil
 import subprocess
 
@@ -28,7 +28,7 @@ def detect_device() -> str:
         return override
 
     # macOS Apple Silicon
-    if plat.system() == "Darwin" and plat.machine() == "arm64":
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
         return "mps"
 
     # NVIDIA CUDA (probe without importing torch)

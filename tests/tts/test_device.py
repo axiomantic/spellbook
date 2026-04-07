@@ -20,9 +20,9 @@ class TestDetectDevice:
     def test_apple_silicon_returns_mps(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns("auto")
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Darwin")
-        mock_machine = bigfoot.mock("spellbook.tts.device:plat.machine")
+        mock_machine = bigfoot.mock("spellbook.tts.device:platform.machine")
         mock_machine.returns("arm64")
 
         with bigfoot:
@@ -36,9 +36,9 @@ class TestDetectDevice:
     def test_intel_mac_no_gpu_returns_cpu(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns("auto")
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Darwin")
-        mock_machine = bigfoot.mock("spellbook.tts.device:plat.machine")
+        mock_machine = bigfoot.mock("spellbook.tts.device:platform.machine")
         mock_machine.returns("x86_64")
         mock_which = bigfoot.mock("spellbook.tts.device:shutil.which")
         mock_which.returns(None)
@@ -56,7 +56,7 @@ class TestDetectDevice:
     def test_nvidia_gpu_returns_cuda(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns("auto")
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Linux")
         mock_which = bigfoot.mock("spellbook.tts.device:shutil.which")
         mock_which.returns("/usr/bin/nvidia-smi")
@@ -84,7 +84,7 @@ class TestDetectDevice:
     def test_nvidia_smi_fails_returns_cpu(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns("auto")
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Linux")
         mock_which = bigfoot.mock("spellbook.tts.device:shutil.which")
         mock_which.returns("/usr/bin/nvidia-smi")
@@ -111,7 +111,7 @@ class TestDetectDevice:
     def test_linux_no_nvidia_smi_returns_cpu(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns("auto")
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Linux")
         mock_which = bigfoot.mock("spellbook.tts.device:shutil.which")
         mock_which.returns(None)
@@ -127,9 +127,9 @@ class TestDetectDevice:
     def test_none_config_treated_as_auto(self):
         mock_cfg = bigfoot.mock("spellbook.tts.device:config_get")
         mock_cfg.returns(None)
-        mock_system = bigfoot.mock("spellbook.tts.device:plat.system")
+        mock_system = bigfoot.mock("spellbook.tts.device:platform.system")
         mock_system.returns("Darwin")
-        mock_machine = bigfoot.mock("spellbook.tts.device:plat.machine")
+        mock_machine = bigfoot.mock("spellbook.tts.device:platform.machine")
         mock_machine.returns("arm64")
 
         with bigfoot:
