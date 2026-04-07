@@ -13,7 +13,7 @@ __all__ = [
 
 import asyncio
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from fastmcp import Context
 
@@ -111,7 +111,7 @@ def spellbook_config_get(key: str):
 
 @mcp.tool()
 @inject_recovery_context
-async def spellbook_config_set(key: str, value: str | bool | int | float) -> dict:
+async def spellbook_config_set(key: str, value: Any) -> dict:
     """
     Write a config value to spellbook configuration.
 

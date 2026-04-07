@@ -18,6 +18,29 @@ from spellbook.tts.constants import TTS_MIN_DISK_SPACE_BYTES
 logger = logging.getLogger(__name__)
 
 
+def _resolve_uv() -> str:
+    """Resolve the full path to the ``uv`` executable.
+
+    Checks ``shutil.which`` first (covers PATH), then falls back to
+    common installation locations so the daemon works even when PATH
+    is minimal.
+
+    Returns:
+        Absolute path to ``uv``, or ``"uv"`` as a last resort so the
+        caller still gets a clear ``FileNotFoundError``.
+    """
+    found = shutil.which("uv")
+    if found:
+        return found
+    for candidate in (
+        Path.home() / ".local" / "bin" / "uv",
+        Path.home() / ".cargo" / "bin" / "uv",
+    ):
+        if candidate.is_file():
+            return str(candidate)
+    return "uv"
+
+
 def get_tts_venv_dir() -> Path:
     """Return path to TTS-dedicated venv."""
     return get_data_dir() / "tts-venv"
@@ -78,10 +101,11 @@ async def create_tts_venv(
 
     # Create venv using current interpreter's major.minor version
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    uv = _resolve_uv()
 
     try:
         proc = await asyncio.create_subprocess_exec(
-            "uv", "venv", str(tts_venv_dir), "--python", python_version, "--seed",
+            uv, "venv", str(tts_venv_dir), "--python", python_version, "--seed",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -89,7 +113,7 @@ async def create_tts_venv(
         if proc.returncode != 0:
             return (False, f"Failed to create TTS venv: {stderr.decode().strip()}")
     except FileNotFoundError:
-        return (False, "uv not found; cannot create TTS venv")
+        return (False, f"uv not found at '{uv}'; cannot create TTS venv")
 
     _report("Installing wyoming-kokoro-torch", 0.3)
 
@@ -97,7 +121,7 @@ async def create_tts_venv(
     tts_python = get_tts_python(tts_venv_dir)
     try:
         proc = await asyncio.create_subprocess_exec(
-            "uv", "pip", "install",
+            uv, "pip", "install",
             "--python", str(tts_python),
             "wyoming-kokoro-torch>=3.0.0",
             stdout=asyncio.subprocess.PIPE,
@@ -110,7 +134,7 @@ async def create_tts_venv(
                 f"Failed to install wyoming-kokoro-torch: {stderr.decode().strip()}",
             )
     except FileNotFoundError:
-        return (False, "uv not found; cannot install TTS deps")
+        return (False, f"uv not found at '{uv}'; cannot install TTS deps")
 
     _report("TTS venv ready", 1.0)
     return (True, "TTS venv created and wyoming-kokoro-torch installed")

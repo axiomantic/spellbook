@@ -9,6 +9,7 @@ import pytest
 
 from spellbook.tts.venv import (
     TTS_MIN_DISK_SPACE_BYTES,
+    _resolve_uv,
     create_tts_venv,
     get_tts_python,
     get_tts_venv_dir,
@@ -62,6 +63,8 @@ class TestCreateTtsVenv:
     async def test_venv_creation_success(self, tmp_path):
         mock_du = bigfoot.mock("spellbook.tts.venv:shutil.disk_usage")
         mock_du.returns(DiskUsage(total=10_000_000_000, used=5_000_000_000, free=5_000_000_000))
+        mock_uv = bigfoot.mock("spellbook.tts.venv:_resolve_uv")
+        mock_uv.returns("uv")
 
         tts_python = get_tts_python(tmp_path / "tts-venv")
 
@@ -84,8 +87,9 @@ class TestCreateTtsVenv:
 
         assert success is True
         assert msg == "TTS venv created and wyoming-kokoro-torch installed"
-        # Assertions must be in timeline order: disk_usage first, then subprocesses
+        # Assertions must be in timeline order: disk_usage, _resolve_uv, then subprocesses
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
+        mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
             command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
             stdin=None,
@@ -107,6 +111,8 @@ class TestCreateTtsVenv:
     async def test_venv_creation_failure(self, tmp_path):
         mock_du = bigfoot.mock("spellbook.tts.venv:shutil.disk_usage")
         mock_du.returns(DiskUsage(total=10_000_000_000, used=5_000_000_000, free=5_000_000_000))
+        mock_uv = bigfoot.mock("spellbook.tts.venv:_resolve_uv")
+        mock_uv.returns("uv")
 
         bigfoot.async_subprocess_mock.new_session().expect(
             "spawn", returns=None,
@@ -120,6 +126,7 @@ class TestCreateTtsVenv:
         assert success is False
         assert msg == "Failed to create TTS venv: error: python 3.12 not found"
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
+        mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
             command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
             stdin=None,
@@ -131,6 +138,8 @@ class TestCreateTtsVenv:
     async def test_pip_install_failure(self, tmp_path):
         mock_du = bigfoot.mock("spellbook.tts.venv:shutil.disk_usage")
         mock_du.returns(DiskUsage(total=10_000_000_000, used=5_000_000_000, free=5_000_000_000))
+        mock_uv = bigfoot.mock("spellbook.tts.venv:_resolve_uv")
+        mock_uv.returns("uv")
 
         tts_python = get_tts_python(tmp_path / "tts-venv")
 
@@ -154,6 +163,7 @@ class TestCreateTtsVenv:
         assert success is False
         assert msg == "Failed to install wyoming-kokoro-torch: error: package not found"
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
+        mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
             command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
             stdin=None,
@@ -174,6 +184,8 @@ class TestCreateTtsVenv:
     async def test_progress_callback_called(self, tmp_path):
         mock_du = bigfoot.mock("spellbook.tts.venv:shutil.disk_usage")
         mock_du.returns(DiskUsage(total=10_000_000_000, used=5_000_000_000, free=5_000_000_000))
+        mock_uv = bigfoot.mock("spellbook.tts.venv:_resolve_uv")
+        mock_uv.returns("uv")
 
         tts_python = get_tts_python(tmp_path / "tts-venv")
 
@@ -203,6 +215,7 @@ class TestCreateTtsVenv:
         ]
         # Assertions in timeline order
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
+        mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
             command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
             stdin=None,

@@ -384,6 +384,11 @@ class ServiceManager:
                 return result.returncode == 0
             except FileNotFoundError:
                 return False
+        elif plat == Platform.WINDOWS:
+            # No health_check_port: check for a running process matching
+            # the configured executable via tasklist.
+            pids = self._find_process_windows(str(self.config.executable))
+            return len(pids) > 0
         return False
 
     # -- Private helpers --
