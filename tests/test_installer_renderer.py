@@ -1367,6 +1367,7 @@ class TestPlainTextUpfrontWizardInteractiveSecurity:
             unset_security_keys=["security.spotlighting.enabled", "security.crypto.enabled"],
             tts_already_configured=True,
             profile_already_configured=True,
+            security_wizard=True,
         )
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
@@ -1384,10 +1385,28 @@ class TestPlainTextUpfrontWizardInteractiveSecurity:
             unset_security_keys=["security.sleuth.enabled"],
             tts_already_configured=True,
             profile_already_configured=True,
+            security_wizard=True,
         )
         renderer = PlainTextRenderer()
         result = renderer.render_upfront_wizard(ctx)
         assert result.security_selections == {"sleuth": False}
+
+    def test_security_skipped_without_wizard_flag(self, monkeypatch):
+        """Security prompts are skipped when security_wizard=False (default)."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+        ctx = _make_wizard_context(
+            unset_security_keys=["security.spotlighting.enabled", "security.crypto.enabled"],
+            tts_already_configured=True,
+            profile_already_configured=True,
+            cli_platforms=["claude_code"],
+            # security_wizard defaults to False
+        )
+        renderer = PlainTextRenderer()
+        result = renderer.render_upfront_wizard(ctx)
+        assert result.security_selections is None
 
 
 class TestPlainTextUpfrontWizardCancellation:
@@ -1729,6 +1748,7 @@ class TestRichRendererUpfrontWizardInteractive:
         ctx = _make_wizard_context_rich(
             cli_platforms=["claude_code"],
             unset_security_keys=["security.crypto.enabled", "security.sleuth.enabled"],
+            security_wizard=True,
         )
         renderer = _make_rich_renderer()
         result = renderer.render_upfront_wizard(ctx)

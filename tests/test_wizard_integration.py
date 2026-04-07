@@ -38,6 +38,7 @@ def _make_args(**overrides) -> argparse.Namespace:
         update_only=False,
         bootstrapped=True,
         security_level=None,
+        security_wizard=False,
         no_tts=False,
         reconfigure=False,
     )
@@ -590,9 +591,9 @@ class TestSecurityKeyConversion:
         }
 
     def test_empty_security_selections_passes_none(self, monkeypatch):
-        """When wizard returns security_selections=None, Installer.run() gets None."""
+        """When wizard returns security_selections=None with --security-wizard, Installer.run() gets None."""
         spellbook_dir = _spellbook_dir()
-        args = _make_args(yes=True, dry_run=True)
+        args = _make_args(yes=True, dry_run=True, security_wizard=True)
 
         run_call_kwargs = {}
 

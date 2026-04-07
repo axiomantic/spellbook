@@ -1042,6 +1042,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             unset_security_keys=unset_security,
             existing_config=existing_config,
             security_level=getattr(args, "security_level", None),
+            security_wizard=getattr(args, "security_wizard", False),
             tts_disabled=getattr(args, "no_tts", False),
             tts_already_configured=tts_already_configured,
             profile_already_configured=profile_already_configured,
@@ -1089,6 +1090,16 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 parts = key.split(".")
                 bare_id = parts[1] if len(parts) >= 2 else key
                 security_selections[bare_id] = value
+        elif unset_security and not getattr(args, "security_wizard", False):
+            # Security wizard was not requested and there are unset keys:
+            # silently apply recommended defaults from get_feature_groups().
+            from installer.tui import get_feature_groups as _get_fg
+            from installer.wizard import _matches_unset_key
+            security_selections = {}
+            for group in _get_fg():
+                for feat in group["features"]:
+                    if _matches_unset_key(feat["id"], unset_security):
+                        security_selections[feat["id"]] = feat["default"]
     else:
         # No renderer: fallback to old platform selection
         if args.platforms:
@@ -1124,6 +1135,28 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except (ImportError, ValueError) as e:
                 print_error(f"Invalid security level: {e}")
                 return 1
+        elif not getattr(args, "security_wizard", False):
+            # No renderer, no --security-level, no --security-wizard:
+            # silently apply recommended defaults for any unset keys.
+            try:
+                from installer.tui import get_feature_groups as _get_fg_nr
+                from installer.wizard import _matches_unset_key as _muk_nr
+                from spellbook.core.config import config_is_explicitly_set as _cies_nr
+
+                _all_sec_keys_nr = [
+                    f"security.{f['id']}.enabled"
+                    for group in _get_fg_nr()
+                    for f in group["features"]
+                ]
+                _unset_nr = [k for k in _all_sec_keys_nr if not _cies_nr(k)]
+                if _unset_nr:
+                    security_selections = {}
+                    for group in _get_fg_nr():
+                        for feat in group["features"]:
+                            if _muk_nr(feat["id"], _unset_nr):
+                                security_selections[feat["id"]] = feat["default"]
+            except ImportError:
+                pass  # Config module not available; skip defaults
 
         wizard_results = None  # No wizard in no-renderer path
 
@@ -1376,6 +1409,12 @@ Examples:
         choices=["minimal", "standard", "strict"],
         default=None,
         help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
+    )
+    parser.add_argument(
+        "--security-wizard",
+        action="store_true",
+        default=False,
+        help="Run interactive security feature selection wizard",
     )
     parser.add_argument(
         "--no-tts",
