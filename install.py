@@ -993,6 +993,20 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
+    def _get_all_security_keys() -> list[str]:
+        """Return dotted config keys for all security features."""
+        from installer.tui import get_feature_groups as _get_fg
+        return [
+            f"security.{f['id']}.enabled"
+            for group in _get_fg()
+            for f in group["features"]
+        ]
+
+    def _get_unset_security_keys(all_keys: list[str]) -> list[str]:
+        """Return security config keys that have not been explicitly set."""
+        from spellbook.core.config import config_is_explicitly_set
+        return [k for k in all_keys if not config_is_explicitly_set(k)]
+
     def _get_default_security_selections(unset_keys: list[str]) -> dict[str, bool]:
         """Return default security selections for any unset config keys.
 
@@ -1012,22 +1026,16 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # ---- Assemble WizardContext and run upfront wizard ----
     if renderer is not None:
         from installer.wizard import WizardContext, WizardResults
-        from installer.tui import get_feature_groups
 
-        # Derive all security feature config keys from feature groups
-        all_security_keys = [
-            f"security.{f['id']}.enabled"
-            for group in get_feature_groups()
-            for f in group["features"]
-        ]
+        # Derive unset security config keys using shared helpers
+        all_security_keys = _get_all_security_keys()
 
-        # Get unset config keys for security features
         try:
             from spellbook.core.config import (
                 config_get as _cfg_get,
                 config_is_explicitly_set,
             )
-            unset_security = [k for k in all_security_keys if not config_is_explicitly_set(k)]
+            unset_security = _get_unset_security_keys(all_security_keys)
             existing_config = {}
             for k in all_security_keys:
                 try:
@@ -1149,18 +1157,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             # No renderer, no --security-level, no --security-wizard:
             # silently apply recommended defaults for any unset keys.
             try:
-                from installer.tui import get_feature_groups as _get_fg_nr
-                from spellbook.core.config import config_is_explicitly_set as _cies_nr
-
-                _all_sec_keys_nr = [
-                    f"security.{f['id']}.enabled"
-                    for group in _get_fg_nr()
-                    for f in group["features"]
-                ]
-                _unset_nr = [k for k in _all_sec_keys_nr if not _cies_nr(k)]
+                _unset_nr = _get_unset_security_keys(_get_all_security_keys())
                 if _unset_nr:
                     security_selections = _get_default_security_selections(_unset_nr)
-            except ImportError as e:
+            except Exception as e:
                 print_warning(f"Could not apply security defaults: {e}")
 
         wizard_results = None  # No wizard in no-renderer path
