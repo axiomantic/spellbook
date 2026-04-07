@@ -993,6 +993,22 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
+    def _get_default_security_selections(unset_keys: list[str]) -> dict[str, bool]:
+        """Return default security selections for any unset config keys.
+
+        Looks up the recommended default for each feature whose config key
+        appears in *unset_keys* and returns a ``{feature_id: default}`` dict.
+        """
+        from installer.tui import get_feature_groups as _get_fg
+        from installer.wizard import _matches_unset_key
+
+        selections: dict[str, bool] = {}
+        for group in _get_fg():
+            for feat in group["features"]:
+                if _matches_unset_key(feat["id"], unset_keys):
+                    selections[feat["id"]] = feat["default"]
+        return selections
+
     # ---- Assemble WizardContext and run upfront wizard ----
     if renderer is not None:
         from installer.wizard import WizardContext, WizardResults
@@ -1093,13 +1109,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         elif unset_security and not getattr(args, "security_wizard", False):
             # Security wizard was not requested and there are unset keys:
             # silently apply recommended defaults from get_feature_groups().
-            from installer.tui import get_feature_groups as _get_fg
-            from installer.wizard import _matches_unset_key
-            security_selections = {}
-            for group in _get_fg():
-                for feat in group["features"]:
-                    if _matches_unset_key(feat["id"], unset_security):
-                        security_selections[feat["id"]] = feat["default"]
+            security_selections = _get_default_security_selections(unset_security)
     else:
         # No renderer: fallback to old platform selection
         if args.platforms:
@@ -1140,7 +1150,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             # silently apply recommended defaults for any unset keys.
             try:
                 from installer.tui import get_feature_groups as _get_fg_nr
-                from installer.wizard import _matches_unset_key as _muk_nr
                 from spellbook.core.config import config_is_explicitly_set as _cies_nr
 
                 _all_sec_keys_nr = [
@@ -1150,11 +1159,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 ]
                 _unset_nr = [k for k in _all_sec_keys_nr if not _cies_nr(k)]
                 if _unset_nr:
-                    security_selections = {}
-                    for group in _get_fg_nr():
-                        for feat in group["features"]:
-                            if _muk_nr(feat["id"], _unset_nr):
-                                security_selections[feat["id"]] = feat["default"]
+                    security_selections = _get_default_security_selections(_unset_nr)
             except ImportError:
                 pass  # Config module not available; skip defaults
 

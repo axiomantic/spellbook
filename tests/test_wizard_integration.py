@@ -590,6 +590,56 @@ class TestSecurityKeyConversion:
             "lodo": False,
         }
 
+    def test_silent_defaults_applied_when_security_wizard_false(self, monkeypatch):
+        """When security_wizard=False (default) and no wizard selections, defaults are silently applied."""
+        spellbook_dir = _spellbook_dir()
+        args = _make_args(yes=True, dry_run=True, security_wizard=False)
+
+        run_call_kwargs = {}
+
+        def fake_render_upfront_wizard(self, ctx):
+            # Wizard returns no security selections (user was not asked)
+            return WizardResults(
+                platforms=["claude_code"],
+                security_selections=None,
+            )
+
+        def fake_installer_run(self, **kwargs):
+            run_call_kwargs.update(kwargs)
+            return _make_session()
+
+        # All security keys are unset so defaults should be applied
+        monkeypatch.setattr(
+            "spellbook.core.config.config_is_explicitly_set",
+            lambda key: False,
+        )
+        monkeypatch.setattr(
+            "spellbook.core.config.config_get",
+            lambda key, **kw: None,
+        )
+        monkeypatch.setattr(
+            "installer.renderer.PlainTextRenderer.render_upfront_wizard",
+            fake_render_upfront_wizard,
+        )
+        monkeypatch.setattr(
+            "installer.core.Installer.run",
+            fake_installer_run,
+        )
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False)
+
+        from install import run_installation
+
+        run_installation(spellbook_dir, args)
+
+        # Defaults from get_feature_groups(): spotlighting=True, crypto=True,
+        # sleuth=False, lodo=True
+        assert run_call_kwargs["security_selections"] == {
+            "spotlighting": True,
+            "crypto": True,
+            "sleuth": False,
+            "lodo": True,
+        }
+
     def test_empty_security_selections_passes_none(self, monkeypatch):
         """When wizard returns security_selections=None with --security-wizard, Installer.run() gets None."""
         spellbook_dir = _spellbook_dir()
