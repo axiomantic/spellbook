@@ -75,10 +75,12 @@ async def create_tts_venv(
 
     _report("Creating TTS venv", 0.1)
 
-    # Create venv
+    # Create venv using current interpreter's major.minor version
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+
     try:
         proc = await asyncio.create_subprocess_exec(
-            "uv", "venv", str(tts_venv_dir), "--python", "3.12", "--seed",
+            "uv", "venv", str(tts_venv_dir), "--python", python_version, "--seed",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

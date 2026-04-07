@@ -86,7 +86,7 @@ class TestEnsureProvisioned:
         mock_detect.returns("cpu")
 
         mock_port = bigfoot.mock("spellbook.tts.provisioner:_check_port_available")
-        mock_port.returns(True)
+        mock_port.calls(_async_return(True))
 
         mock_tts_cfg = bigfoot.mock("spellbook.tts.provisioner:tts_service_config")
         fake_config = object()
@@ -273,7 +273,7 @@ class TestEnsureProvisioned:
         mock_detect.returns("cpu")
 
         mock_port = bigfoot.mock("spellbook.tts.provisioner:_check_port_available")
-        mock_port.returns(False)  # Port in use
+        mock_port.calls(_async_return(False))  # Port in use
 
         async with bigfoot:
             result = await ensure_provisioned()
@@ -322,7 +322,7 @@ class TestEnsureProvisioned:
         mock_detect.returns("cpu")
 
         mock_port = bigfoot.mock("spellbook.tts.provisioner:_check_port_available")
-        mock_port.returns(True)
+        mock_port.calls(_async_return(True))
 
         mock_tts_cfg = bigfoot.mock("spellbook.tts.provisioner:tts_service_config")
         fake_config = object()

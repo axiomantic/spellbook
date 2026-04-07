@@ -116,7 +116,7 @@ async def spellbook_config_set(key: str, value) -> dict:
             )
         )
     except Exception:
-        pass  # Never break MCP tool execution
+        logger.debug("Failed to publish config.updated event", exc_info=True)
 
     # TTS provisioning hook: fire-and-forget background task
     if key == "tts_enabled" and value in (True, "true"):

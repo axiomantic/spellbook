@@ -6,7 +6,6 @@ Idempotent. Safe to call repeatedly. Uses cross-process lock.
 
 import asyncio
 import logging
-import socket
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -24,7 +23,7 @@ from spellbook.tts.venv import create_tts_venv, get_tts_python, get_tts_venv_dir
 logger = logging.getLogger(__name__)
 
 
-def _check_port_available(port: int, host: str = "127.0.0.1") -> bool:
+async def _check_port_available(port: int, host: str = "127.0.0.1") -> bool:
     """Check if a TCP port is available (nothing listening).
 
     Args:
@@ -35,9 +34,14 @@ def _check_port_available(port: int, host: str = "127.0.0.1") -> bool:
         True if the port is free, False if something is listening.
     """
     try:
-        with socket.create_connection((host, port), timeout=1):
-            return False  # Something is already listening
-    except (OSError, TimeoutError):
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port),
+            timeout=1,
+        )
+        writer.close()
+        await writer.wait_closed()
+        return False  # Something is already listening
+    except (OSError, asyncio.TimeoutError):
         return True  # Port is free
 
 
@@ -117,7 +121,9 @@ async def ensure_provisioned(
             if deps_installed and not tts_python.exists():
                 logger.warning("tts_deps_installed=true but venv python missing; resetting")
                 config_set("tts_deps_installed", False)
+                config_set("tts_service_installed", False)
                 deps_installed = False
+                service_installed = False
 
             # Step 1: Install deps if needed
             if not deps_installed:
@@ -143,7 +149,7 @@ async def ensure_provisioned(
                 voice = config_get("tts_voice") or TTS_DEFAULT_VOICE
 
                 # Check port availability
-                if not _check_port_available(port):
+                if not await _check_port_available(port):
                     return {
                         "status": "error",
                         "detail": f"Port {port} is already in use. "
@@ -190,6 +196,10 @@ async def ensure_provisioned(
                 svc_config = tts_service_config(tts_venv_dir=tts_venv_dir, port=port)
                 manager = ServiceManager(svc_config)
 
+                # is_running() uses blocking socket I/O (max 2s timeout).
+                # Acceptable here as the provisioner has no concurrent async
+                # work at this point. For truly async health checks, see
+                # _health_probe() / _progressive_health_check().
                 if not manager.is_running():
                     _report("Starting TTS service", 0.8)
                     manager.start()

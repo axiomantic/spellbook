@@ -8,11 +8,13 @@ No external dependencies beyond the Python standard library.
 """
 
 import errno
+import getpass
 import json
 import logging
 import os
 import platform
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -599,7 +601,7 @@ def mcp_service_config(spellbook_dir: Path, port: int, host: str) -> ServiceConf
     config_dir = Path(
         os.environ.get("SPELLBOOK_CONFIG_DIR", str(get_config_dir()))
     )
-    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+    log_dir = get_log_dir()
 
     return ServiceConfig(
         launchd_label="com.spellbook.mcp",
@@ -650,9 +652,9 @@ def tts_service_config(
         python = tts_venv_dir / "bin" / "python"
 
     if data_dir is None:
-        data_dir = Path.home() / ".local" / "spellbook" / "tts-data"
+        data_dir = get_data_dir() / "tts-data"
 
-    log_dir = Path.home() / ".local" / "spellbook" / "logs"
+    log_dir = get_log_dir()
 
     return ServiceConfig(
         launchd_label="com.spellbook.tts",
@@ -812,7 +814,7 @@ class ServiceManager:
         return False
 
     def is_running(self) -> bool:
-        """Check if the service is running.
+        """Check if the service is running (synchronous).
 
         When health_check_port is set on the ServiceConfig, performs a TCP
         probe to confirm the port is actually listening (service healthy).
@@ -821,6 +823,10 @@ class ServiceManager:
 
         When health_check_port is None, falls back to platform-specific
         process/service status checks (launchctl list / systemctl is-active).
+
+        Note: This method uses blocking I/O (socket.create_connection). Callers
+        in async contexts should wrap with ``asyncio.to_thread(manager.is_running)``
+        or use a dedicated async health probe (see provisioner._health_probe).
         """
         import socket
 
@@ -974,7 +980,7 @@ class ServiceManager:
         except FileNotFoundError:
             pass
 
-        exec_start = " ".join(
+        exec_start = shlex.join(
             [str(self.config.executable)] + self.config.args
         )
 
@@ -986,8 +992,8 @@ class ServiceManager:
         restart_line = "Restart=always\nRestartSec=5" if self.config.keep_alive else ""
 
         log_lines = (
-            f"StandardOutput=append:{self.config.log_stdout}\n"
-            f"StandardError=append:{self.config.log_stderr}"
+            f'StandardOutput=append:"{self.config.log_stdout}"\n'
+            f'StandardError=append:"{self.config.log_stderr}"'
         )
 
         service_content = (
@@ -1037,7 +1043,7 @@ class ServiceManager:
             # Enable linger so user services survive logout
             try:
                 subprocess.run(
-                    ["loginctl", "enable-linger", os.environ.get("USER", "")],
+                    ["loginctl", "enable-linger", getpass.getuser()],
                     capture_output=True,
                 )
             except FileNotFoundError:
@@ -1129,7 +1135,7 @@ class ServiceManager:
 
     def _generate_task_xml(self) -> str:
         exe = xml_escape(str(self.config.executable))
-        args = xml_escape(" ".join(self.config.args))
+        args = xml_escape(subprocess.list2cmdline(self.config.args))
         working_dir = xml_escape(str(self.config.working_directory))
         return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
@@ -1214,6 +1220,43 @@ def get_python_executable() -> str:
     Returns sys.executable which always works.
     """
     return sys.executable
+
+
+def get_data_dir(app_name: str = "spellbook") -> Path:
+    """Get OS-appropriate data directory.
+
+    macOS:   ~/.local/{app_name}
+    Linux:   ~/.local/{app_name}
+    Windows: %LOCALAPPDATA%/{app_name}
+
+    Args:
+        app_name: Application name for the data subdirectory.
+
+    Returns:
+        Path to the data directory.
+    """
+    if get_platform() == Platform.WINDOWS:
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        if local_appdata:
+            return Path(local_appdata) / app_name
+        return Path.home() / "AppData" / "Local" / app_name
+    return Path.home() / ".local" / app_name
+
+
+def get_log_dir(app_name: str = "spellbook") -> Path:
+    """Get OS-appropriate log directory.
+
+    macOS:   ~/.local/{app_name}/logs
+    Linux:   ~/.local/{app_name}/logs
+    Windows: %LOCALAPPDATA%/{app_name}/logs
+
+    Args:
+        app_name: Application name for the log subdirectory.
+
+    Returns:
+        Path to the log directory.
+    """
+    return get_data_dir(app_name) / "logs"
 
 
 def get_config_dir(app_name: str = "spellbook") -> Path:
