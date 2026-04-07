@@ -2,6 +2,8 @@
 Core orchestrator for spellbook installation.
 """
 
+import logging
+import shutil
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +13,8 @@ from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_di
 from .platforms.base import PlatformInstaller
 from .ui import shorten_home
 from .version import check_upgrade_needed, read_version
+
+logger = logging.getLogger(__name__)
 
 
 def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
@@ -573,6 +577,11 @@ class Uninstaller:
         if mcp_result:
             session.results.append(mcp_result)
 
+        # Uninstall TTS service if installed
+        tts_result = self._uninstall_tts_service(dry_run)
+        if tts_result:
+            session.results.append(tts_result)
+
         return session
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
@@ -601,4 +610,56 @@ class Uninstaller:
             success=success,
             action="removed" if success else "failed",
             message=f"MCP service: {msg}",
+        )
+
+    def _uninstall_tts_service(self, dry_run: bool = False) -> Optional[InstallResult]:
+        """Uninstall the TTS service, remove venv, and reset config."""
+        from installer.compat import ServiceManager, tts_service_config
+        from spellbook.core.config import config_set
+        from spellbook.tts.venv import get_tts_data_dir, get_tts_venv_dir
+
+        tts_venv_dir = get_tts_venv_dir()
+        tts_data_dir = get_tts_data_dir()
+
+        config = tts_service_config(tts_venv_dir=tts_venv_dir)
+        manager = ServiceManager(config)
+
+        if not manager.is_installed() and not tts_venv_dir.exists():
+            return None
+
+        if dry_run:
+            return InstallResult(
+                component="tts_service",
+                platform="system",
+                success=True,
+                action="removed",
+                message="TTS service: would uninstall service, remove venv, and reset config",
+            )
+
+        # Stop and uninstall the service
+        manager.stop()
+        success, msg = manager.uninstall()
+
+        # Remove TTS venv if it exists
+        if tts_venv_dir.exists():
+            shutil.rmtree(str(tts_venv_dir))
+
+        # Log about preserved model data
+        if tts_data_dir.exists():
+            logger.info(
+                "TTS model data preserved at %s (remove manually if not needed)",
+                tts_data_dir,
+            )
+
+        # Reset config keys
+        config_set("tts_enabled", False)
+        config_set("tts_deps_installed", False)
+        config_set("tts_service_installed", False)
+
+        return InstallResult(
+            component="tts_service",
+            platform="system",
+            success=success,
+            action="removed" if success else "failed",
+            message=f"TTS service: {msg}",
         )

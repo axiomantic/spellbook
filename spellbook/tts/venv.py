@@ -22,6 +22,11 @@ def get_tts_venv_dir() -> Path:
     return Path.home() / ".local" / "spellbook" / "tts-venv"
 
 
+def get_tts_data_dir() -> Path:
+    """Return path to TTS model data directory."""
+    return Path.home() / ".local" / "spellbook" / "tts-data"
+
+
 def get_tts_python(tts_venv_dir: Path) -> Path:
     """Return path to Python interpreter in TTS venv.
 
