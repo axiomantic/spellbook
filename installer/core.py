@@ -577,9 +577,9 @@ class Uninstaller:
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the MCP server system service if installed."""
-        from installer.compat import ServiceManager
+        from installer.compat import ServiceManager, mcp_service_config
 
-        manager = ServiceManager(self.spellbook_dir, 8765, "127.0.0.1")
+        manager = ServiceManager(mcp_service_config(self.spellbook_dir, 8765, "127.0.0.1"))
 
         if not manager.is_installed():
             return None

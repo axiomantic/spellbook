@@ -729,18 +729,35 @@ class TestCrossPlatformLock:
 class TestServiceManager:
     """ServiceManager provides cross-platform daemon management."""
 
+    def _make_mcp_config(self, tmp_path):
+        """Build an MCP-like ServiceConfig for tests."""
+        from installer.compat import ServiceConfig
+        return ServiceConfig(
+            launchd_label="com.spellbook.mcp",
+            service_name="spellbook-mcp",
+            schtasks_name="SpellbookMCP",
+            description="Spellbook MCP Server",
+            executable=Path(sys.executable),
+            args=["-m", "spellbook.mcp"],
+            working_directory=tmp_path,
+            environment={"PATH": "/usr/bin"},
+            log_stdout=tmp_path / "mcp.log",
+            log_stderr=tmp_path / "mcp.err.log",
+            health_check_port=8765,
+            health_check_host="127.0.0.1",
+        )
+
     def test_construction(self, tmp_path):
         from installer.compat import ServiceManager
 
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
-        assert mgr.spellbook_dir == tmp_path
-        assert mgr.port == 8765
-        assert mgr.host == "127.0.0.1"
+        config = self._make_mcp_config(tmp_path)
+        mgr = ServiceManager(config)
+        assert mgr.config is config
 
     def test_has_required_methods(self, tmp_path):
         from installer.compat import ServiceManager
 
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
         assert callable(mgr.install)
         assert callable(mgr.uninstall)
         assert callable(mgr.start)
@@ -748,18 +765,12 @@ class TestServiceManager:
         assert callable(mgr.is_installed)
         assert callable(mgr.is_running)
 
-    def test_class_constants(self):
-        from installer.compat import ServiceManager
-
-        assert ServiceManager.LAUNCHD_LABEL == "com.spellbook.mcp"
-        assert ServiceManager.SERVICE_NAME == "spellbook-mcp"
-
     def test_is_installed_macos_checks_plist(self, tmp_path, monkeypatch):
         import installer.compat as compat_mod
         from installer.compat import Platform, ServiceManager
 
         monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_plist = tmp_path / "com.spellbook.mcp.plist"
         mock_plist = bigfoot.mock.object(mgr, "_launchd_plist_path")
@@ -776,7 +787,7 @@ class TestServiceManager:
         from installer.compat import Platform, ServiceManager
 
         monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_service = tmp_path / "spellbook-mcp.service"
         mock_service = bigfoot.mock.object(mgr, "_systemd_service_path")
@@ -789,11 +800,24 @@ class TestServiceManager:
         mock_service.assert_call(args=(), kwargs={})
 
     def test_is_running_checks_port(self, tmp_path):
-        """is_running() should try to connect to host:port."""
-        from installer.compat import ServiceManager
+        """is_running() should try to connect to host:port via health_check_port."""
+        from installer.compat import ServiceConfig, ServiceManager
 
-        mgr = ServiceManager(tmp_path, 9, "192.0.2.1")  # non-routable IP
-        # Port 9 on a non-routable IP should not be running
+        config = ServiceConfig(
+            launchd_label="com.spellbook.mcp",
+            service_name="spellbook-mcp",
+            schtasks_name="SpellbookMCP",
+            description="Spellbook MCP Server",
+            executable=Path(sys.executable),
+            args=["-m", "spellbook.mcp"],
+            working_directory=tmp_path,
+            environment={},
+            log_stdout=tmp_path / "mcp.log",
+            log_stderr=tmp_path / "mcp.err.log",
+            health_check_port=9,
+            health_check_host="192.0.2.1",  # non-routable IP
+        )
+        mgr = ServiceManager(config)
         assert mgr.is_running() is False
 
     def test_generate_task_xml_format(self, tmp_path, monkeypatch):
@@ -802,11 +826,10 @@ class TestServiceManager:
         from installer.compat import Platform, ServiceManager
 
         monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.WINDOWS)
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
         xml = mgr._generate_task_xml()
 
         assert "LogonTrigger" in xml
-        assert "spellbook-watchdog.py" in xml
         assert str(tmp_path) in xml
 
     def test_launchd_plist_path(self, tmp_path, monkeypatch):
@@ -814,7 +837,7 @@ class TestServiceManager:
         from installer.compat import Platform, ServiceManager
 
         monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.MACOS)
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
         plist_path = mgr._launchd_plist_path()
 
         assert "LaunchAgents" in str(plist_path)
@@ -825,7 +848,7 @@ class TestServiceManager:
         from installer.compat import Platform, ServiceManager
 
         monkeypatch.setattr(compat_mod, "get_platform", lambda: Platform.LINUX)
-        mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
+        mgr = ServiceManager(self._make_mcp_config(tmp_path))
         service_path = mgr._systemd_service_path()
 
         assert "systemd" in str(service_path)
