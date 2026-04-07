@@ -641,9 +641,9 @@ class TestSecurityKeyConversion:
         }
 
     def test_empty_security_selections_passes_none(self, monkeypatch):
-        """When wizard returns security_selections=None with --security-wizard, Installer.run() gets None."""
+        """When wizard returns security_selections=None with --security-wizard (no --yes), Installer.run() gets None."""
         spellbook_dir = _spellbook_dir()
-        args = _make_args(yes=True, dry_run=True, security_wizard=True)
+        args = _make_args(dry_run=True, security_wizard=True)
 
         run_call_kwargs = {}
 

@@ -993,9 +993,11 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
+    from installer.tui import get_feature_groups as _get_fg
+    from installer.wizard import _matches_unset_key
+
     def _get_all_security_keys() -> list[str]:
         """Return dotted config keys for all security features."""
-        from installer.tui import get_feature_groups as _get_fg
         return [
             f"security.{f['id']}.enabled"
             for group in _get_fg()
@@ -1013,9 +1015,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         Looks up the recommended default for each feature whose config key
         appears in *unset_keys* and returns a ``{feature_id: default}`` dict.
         """
-        from installer.tui import get_feature_groups as _get_fg
-        from installer.wizard import _matches_unset_key
-
         selections: dict[str, bool] = {}
         for group in _get_fg():
             for feat in group["features"]:
@@ -1114,9 +1113,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 parts = key.split(".")
                 bare_id = parts[1] if len(parts) >= 2 else key
                 security_selections[bare_id] = value
-        elif unset_security and not getattr(args, "security_wizard", False):
-            # Security wizard was not requested and there are unset keys:
-            # silently apply recommended defaults from get_feature_groups().
+        elif unset_security and (not getattr(args, "security_wizard", False) or getattr(args, "yes", False)):
+            # Security wizard was not requested (or --yes overrides it) and
+            # there are unset keys: silently apply recommended defaults.
             security_selections = _get_default_security_selections(unset_security)
     else:
         # No renderer: fallback to old platform selection
@@ -1153,8 +1152,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except (ImportError, ValueError) as e:
                 print_error(f"Invalid security level: {e}")
                 return 1
-        elif not getattr(args, "security_wizard", False):
-            # No renderer, no --security-level, no --security-wizard:
+        elif not getattr(args, "security_wizard", False) or getattr(args, "yes", False):
+            # No --security-wizard (or --yes overrides it):
             # silently apply recommended defaults for any unset keys.
             try:
                 _unset_nr = _get_unset_security_keys(_get_all_security_keys())
