@@ -93,7 +93,7 @@ def check_tool_input(
             )
 
     return {
-        "safe": len(findings) == 0,
+        "safe": all(f.get("severity") == "LOW" for f in findings),
         "findings": findings,
         "tool_name": tool_name,
     }
@@ -146,7 +146,7 @@ def check_tool_output(
     )
 
     return {
-        "safe": len(findings) == 0,
+        "safe": all(f.get("severity") == "LOW" for f in findings),
         "findings": findings,
         "tool_name": tool_name,
     }

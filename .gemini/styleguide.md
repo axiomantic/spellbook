@@ -4,7 +4,7 @@
 
 Every PR must include:
 
-1. **A version bump in `pyproject.toml`** following semantic versioning:
+1. **A version bump in the `.version` file** (which `pyproject.toml` reads via `dynamic = ["version"]`) following semantic versioning:
    - **patch** (0.x.Y): bug fixes, internal refactors, test-only changes
    - **minor** (0.X.0): new features, new MCP tools, new skills/commands, behavioral changes
    - **major** (X.0.0): only when crossing the 1.0 threshold (project is pre-1.0)
