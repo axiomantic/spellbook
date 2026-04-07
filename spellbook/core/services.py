@@ -189,7 +189,7 @@ def tts_service_config(
             "--voice", voice,
             "--data-dir", str(data_dir),
         ],
-        working_directory=Path.home() / ".local" / "spellbook",
+        working_directory=get_data_dir(),
         environment={},
         log_stdout=log_dir / "tts.log",
         log_stderr=log_dir / "tts.err.log",

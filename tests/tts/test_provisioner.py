@@ -69,17 +69,22 @@ class TestEnsureProvisioned:
         mock_tts_python.returns(Path("/fake/tts-venv/bin/python"))
 
         mock_get = bigfoot.mock("spellbook.tts.provisioner:config_get")
-        mock_get.returns(False)   # tts_deps_installed
-        mock_get.returns(False)   # tts_service_installed
-        mock_get.returns(10200)   # tts_wyoming_port
+        mock_get.returns(False)       # tts_deps_installed
+        mock_get.returns(False)       # tts_service_installed
+        mock_get.returns(None)        # tts_service_config_hash (no stored hash)
+        mock_get.returns(10200)       # tts_wyoming_port
         mock_get.returns("af_heart")  # tts_voice
 
         mock_venv = bigfoot.mock("spellbook.tts.provisioner:create_tts_venv")
         mock_venv.calls(_async_return((True, "ok")))
 
+        mock_hash = bigfoot.mock("spellbook.tts.provisioner:_tts_config_hash")
+        mock_hash.returns("new_hash")
+
         mock_set = bigfoot.mock("spellbook.tts.provisioner:config_set")
         mock_set.returns(None)  # tts_deps_installed = True
         mock_set.returns(None)  # tts_service_installed = True
+        mock_set.returns(None)  # tts_service_config_hash
         mock_set.returns(None)  # tts_device = cpu
 
         mock_detect = bigfoot.mock("spellbook.tts.provisioner:detect_device")
@@ -122,6 +127,8 @@ class TestEnsureProvisioned:
             kwargs={"progress_callback": None},
         )
         mock_set.assert_call(args=("tts_deps_installed", True), kwargs={})
+        mock_hash.assert_call(args=(), kwargs={})
+        mock_get.assert_call(args=("tts_service_config_hash",), kwargs={})
         mock_detect.assert_call(args=(), kwargs={})
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_get.assert_call(args=("tts_voice",), kwargs={})
@@ -132,6 +139,7 @@ class TestEnsureProvisioned:
         )
         mock_svc_cls.assert_call(args=(fake_config,), kwargs={})
         mock_set.assert_call(args=("tts_service_installed", True), kwargs={})
+        mock_set.assert_call(args=("tts_service_config_hash", "new_hash"), kwargs={})
         mock_set.assert_call(args=("tts_device", "cpu"), kwargs={})
         mock_health.assert_call(args=("127.0.0.1", 10200), kwargs={})
 
@@ -149,22 +157,18 @@ class TestEnsureProvisioned:
         mock_get = bigfoot.mock("spellbook.tts.provisioner:config_get")
         mock_get.returns(True)    # tts_deps_installed
         mock_get.returns(True)    # tts_service_installed
+        mock_get.returns("same_hash")  # tts_service_config_hash
         mock_get.returns(10200)   # tts_wyoming_port (for service check)
 
         # Mock Path.exists to return True for the python check
         mock_exists = bigfoot.mock.object(Path, "exists")
         mock_exists.returns(True)
 
-        mock_tts_cfg = bigfoot.mock("spellbook.tts.provisioner:tts_service_config")
-        fake_config = object()
-        mock_tts_cfg.returns(fake_config)
+        mock_hash = bigfoot.mock("spellbook.tts.provisioner:_tts_config_hash")
+        mock_hash.returns("same_hash")
 
-        class RunningManager:
-            def is_running(self):
-                return True
-
-        mock_svc_cls = bigfoot.mock("spellbook.tts.provisioner:ServiceManager")
-        mock_svc_cls.returns(RunningManager())
+        mock_health = bigfoot.mock("spellbook.tts.provisioner:_health_probe")
+        mock_health.calls(_async_return(True))  # Service is running
 
         async with bigfoot:
             result = await ensure_provisioned()
@@ -181,12 +185,10 @@ class TestEnsureProvisioned:
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
         mock_get.assert_call(args=("tts_service_installed",), kwargs={})
         mock_exists.assert_call(args=(Path("/fake/tts-venv/bin/python"),), kwargs={})
+        mock_hash.assert_call(args=(), kwargs={})
+        mock_get.assert_call(args=("tts_service_config_hash",), kwargs={})
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
-        mock_tts_cfg.assert_call(
-            args=(),
-            kwargs={"tts_venv_dir": Path("/fake/tts-venv"), "port": 10200},
-        )
-        mock_svc_cls.assert_call(args=(fake_config,), kwargs={})
+        mock_health.assert_call(args=("127.0.0.1", 10200), kwargs={})
 
     @pytest.mark.asyncio
     async def test_venv_creation_failure(self):
@@ -263,11 +265,15 @@ class TestEnsureProvisioned:
         mock_get = bigfoot.mock("spellbook.tts.provisioner:config_get")
         mock_get.returns(True)    # tts_deps_installed
         mock_get.returns(False)   # tts_service_installed
+        mock_get.returns(None)    # tts_service_config_hash
         mock_get.returns(10200)   # tts_wyoming_port
         mock_get.returns("af_heart")  # tts_voice
 
         mock_exists = bigfoot.mock.object(Path, "exists")
         mock_exists.returns(True)
+
+        mock_hash = bigfoot.mock("spellbook.tts.provisioner:_tts_config_hash")
+        mock_hash.returns("some_hash")
 
         mock_detect = bigfoot.mock("spellbook.tts.provisioner:detect_device")
         mock_detect.returns("cpu")
@@ -290,6 +296,8 @@ class TestEnsureProvisioned:
         mock_get.assert_call(args=("tts_deps_installed",), kwargs={})
         mock_get.assert_call(args=("tts_service_installed",), kwargs={})
         mock_exists.assert_call(args=(Path("/fake/tts-venv/bin/python"),), kwargs={})
+        mock_hash.assert_call(args=(), kwargs={})
+        mock_get.assert_call(args=("tts_service_config_hash",), kwargs={})
         mock_detect.assert_call(args=(), kwargs={})
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_get.assert_call(args=("tts_voice",), kwargs={})
@@ -307,9 +315,10 @@ class TestEnsureProvisioned:
         mock_tts_python.returns(Path("/fake/tts-venv/bin/python"))
 
         mock_get = bigfoot.mock("spellbook.tts.provisioner:config_get")
-        mock_get.returns(False)   # tts_deps_installed
-        mock_get.returns(False)   # tts_service_installed
-        mock_get.returns(10200)   # tts_wyoming_port
+        mock_get.returns(False)       # tts_deps_installed
+        mock_get.returns(False)       # tts_service_installed
+        mock_get.returns(None)        # tts_service_config_hash
+        mock_get.returns(10200)       # tts_wyoming_port
         mock_get.returns("af_heart")  # tts_voice
 
         mock_venv = bigfoot.mock("spellbook.tts.provisioner:create_tts_venv")
@@ -317,6 +326,9 @@ class TestEnsureProvisioned:
 
         mock_set = bigfoot.mock("spellbook.tts.provisioner:config_set")
         mock_set.returns(None)  # tts_deps_installed = True
+
+        mock_hash = bigfoot.mock("spellbook.tts.provisioner:_tts_config_hash")
+        mock_hash.returns("some_hash")
 
         mock_detect = bigfoot.mock("spellbook.tts.provisioner:detect_device")
         mock_detect.returns("cpu")
@@ -357,6 +369,8 @@ class TestEnsureProvisioned:
             kwargs={"progress_callback": None},
         )
         mock_set.assert_call(args=("tts_deps_installed", True), kwargs={})
+        mock_hash.assert_call(args=(), kwargs={})
+        mock_get.assert_call(args=("tts_service_config_hash",), kwargs={})
         mock_detect.assert_call(args=(), kwargs={})
         mock_get.assert_call(args=("tts_wyoming_port",), kwargs={})
         mock_get.assert_call(args=("tts_voice",), kwargs={})

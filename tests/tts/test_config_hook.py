@@ -99,7 +99,7 @@ class TestProvisionTtsAsync:
             # Should complete without error
             await _provision_tts_async()
 
-        mock_ensure.assert_call(args=(), kwargs={})
+        mock_ensure.assert_call(args=(), kwargs={"force": False})
 
     @pytest.mark.asyncio
     async def test_provisioning_error_is_logged_not_raised(self):
@@ -116,7 +116,7 @@ class TestProvisionTtsAsync:
             # Should not raise even though provisioning "failed"
             await _provision_tts_async()
 
-        mock_ensure.assert_call(args=(), kwargs={})
+        mock_ensure.assert_call(args=(), kwargs={"force": False})
         bigfoot.log_mock.assert_log(
             "ERROR",
             "TTS provisioning failed: disk full",
@@ -137,7 +137,7 @@ class TestProvisionTtsAsync:
             # Should not raise
             await _provision_tts_async()
 
-        mock_ensure.assert_call(args=(), kwargs={})
+        mock_ensure.assert_call(args=(), kwargs={"force": False})
         bigfoot.log_mock.assert_log(
             "ERROR",
             "TTS provisioning failed",

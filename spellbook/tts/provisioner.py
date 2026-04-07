@@ -5,6 +5,8 @@ Idempotent. Safe to call repeatedly. Uses cross-process lock.
 """
 
 import asyncio
+import hashlib
+import json
 import logging
 from pathlib import Path
 from typing import Callable, Optional
@@ -87,8 +89,24 @@ async def _progressive_health_check(host: str, port: int) -> bool:
     return False
 
 
+def _tts_config_hash() -> str:
+    """Compute a hash of TTS config values that affect service installation.
+
+    Used to detect when voice, device, or port settings have changed since
+    the service was last installed, triggering a reinstall.
+    """
+    values = {
+        "tts_voice": config_get("tts_voice") or TTS_DEFAULT_VOICE,
+        "tts_wyoming_port": config_get("tts_wyoming_port") or TTS_DEFAULT_PORT,
+        "tts_device": config_get("tts_device") or "",
+    }
+    blob = json.dumps(values, sort_keys=True)
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
 async def ensure_provisioned(
     progress_callback: Optional[Callable[[str, float], None]] = None,
+    force: bool = False,
 ) -> dict:
     """Ensure TTS is fully provisioned: venv, deps, model, service.
 
@@ -96,6 +114,8 @@ async def ensure_provisioned(
 
     Args:
         progress_callback: Optional (stage_name, fraction) reporter.
+        force: When True, reinstall the service even if already installed.
+            Useful when TTS config (voice, device, port) has changed.
 
     Returns:
         {"status": "ok"|"error"|"already_provisioning",
@@ -146,11 +166,21 @@ async def ensure_provisioned(
 
             # Step 2: Install and start service if needed
             #
-            # Known limitation: if service_installed is already True, changes
-            # to tts_voice or tts_device config won't take effect because the
-            # service install step is skipped entirely.
-            # Workaround: set tts_service_installed=false then re-provision
-            # to pick up new voice/device settings.
+            # Config hash detects changes to voice/device/port since last
+            # install. When the hash differs (or force=True), the service
+            # is reinstalled to pick up the new settings.
+            current_hash = _tts_config_hash()
+            stored_hash = config_get("tts_service_config_hash")
+            config_changed = service_installed and current_hash != stored_hash
+
+            if force or config_changed:
+                logger.info(
+                    "Forcing TTS service reinstall (force=%s, config_changed=%s)",
+                    force, config_changed,
+                )
+                service_installed = False
+                config_set("tts_service_installed", False)
+
             if not service_installed:
                 _report("Configuring TTS service", 0.6)
 
@@ -186,6 +216,7 @@ async def ensure_provisioned(
                     }
 
                 config_set("tts_service_installed", True)
+                config_set("tts_service_config_hash", current_hash)
                 config_set("tts_device", device)
                 steps_completed.append("service")
 
@@ -206,11 +237,7 @@ async def ensure_provisioned(
                 svc_config = tts_service_config(tts_venv_dir=tts_venv_dir, port=port)
                 manager = ServiceManager(svc_config)
 
-                # is_running() uses blocking socket I/O (max 2s timeout).
-                # Acceptable here as the provisioner has no concurrent async
-                # work at this point. For truly async health checks, see
-                # _health_probe() / _progressive_health_check().
-                if not manager.is_running():
+                if not await _health_probe("127.0.0.1", port):
                     _report("Starting TTS service", 0.8)
                     started, start_msg = manager.start()
                     if not started:
@@ -244,6 +271,7 @@ async def ensure_provisioned(
 
 def provision_sync(
     progress_callback: Optional[Callable[[str, float], None]] = None,
+    force: bool = False,
 ) -> dict:
     """Synchronous wrapper for ensure_provisioned.
 
@@ -252,8 +280,11 @@ def provision_sync(
 
     Args:
         progress_callback: Optional progress reporter.
+        force: When True, reinstall the service even if already installed.
 
     Returns:
         Same dict as ensure_provisioned().
     """
-    return asyncio.run(ensure_provisioned(progress_callback=progress_callback))
+    return asyncio.run(ensure_provisioned(
+        progress_callback=progress_callback, force=force,
+    ))

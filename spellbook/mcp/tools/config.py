@@ -51,21 +51,24 @@ async def _stop_tts_async() -> None:
         tts_venv_dir = get_tts_venv_dir()
         svc_config = tts_service_config(tts_venv_dir=tts_venv_dir)
         manager = ServiceManager(svc_config)
-        if manager.is_installed() and manager.is_running():
+        if manager.is_installed() and await asyncio.to_thread(manager.is_running):
             await asyncio.to_thread(manager.stop)
             logger.info("TTS service stopped (tts_enabled set to false)")
     except Exception:
         logger.exception("Failed to stop TTS service")
 
 
-async def _provision_tts_async() -> None:
+async def _provision_tts_async(force: bool = False) -> None:
     """Fire-and-forget TTS provisioning with error logging.
 
-    Called as a background task when tts_enabled is set to True.
-    Errors are logged but never propagated to the caller.
+    Called as a background task when tts_enabled is set to True, or
+    when TTS config values change while TTS is already enabled.
+
+    Args:
+        force: When True, reinstall service even if already installed.
     """
     try:
-        result = await ensure_provisioned()
+        result = await ensure_provisioned(force=force)
         if result["status"] == "error":
             logger.error("TTS provisioning failed: %s", result["detail"])
         else:
@@ -144,6 +147,13 @@ async def spellbook_config_set(key: str, value: str | bool | int | float) -> dic
             loop.create_task(_provision_tts_async(), name="tts-provisioning")
         elif str(value).lower() in ("false", "0", "no"):
             loop.create_task(_stop_tts_async(), name="tts-stop")
+    elif key in ("tts_voice", "tts_device", "tts_wyoming_port"):
+        # Re-provision with force when TTS config changes while enabled
+        if config_get("tts_enabled"):
+            loop = asyncio.get_running_loop()
+            loop.create_task(
+                _provision_tts_async(force=True), name="tts-reprovision",
+            )
 
     return result
 

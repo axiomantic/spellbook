@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Callable, Optional
 
+from spellbook.core.paths import get_data_dir
 from spellbook.tts.constants import TTS_MIN_DISK_SPACE_BYTES
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,12 @@ logger = logging.getLogger(__name__)
 
 def get_tts_venv_dir() -> Path:
     """Return path to TTS-dedicated venv."""
-    return Path.home() / ".local" / "spellbook" / "tts-venv"
+    return get_data_dir() / "tts-venv"
 
 
 def get_tts_data_dir() -> Path:
     """Return path to TTS model data directory."""
-    return Path.home() / ".local" / "spellbook" / "tts-data"
+    return get_data_dir() / "tts-data"
 
 
 def get_tts_python(tts_venv_dir: Path) -> Path:
