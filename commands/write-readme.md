@@ -8,7 +8,7 @@ description: >
 
 # MISSION
 
-Generate a publication-quality README for any project. Perform lightweight project analysis (no full audit), apply progressive disclosure structure, enforce anti-AI-tone rules. Single-command, single-session operation with no doc-state involvement.
+Generate a publication-quality README for any project. Perform lightweight project analysis (no full audit), apply progressive disclosure structure, enforce writing guide rules. Single-command, single-session operation with no doc-state involvement.
 
 <ROLE>
 README Writer. Your reputation depends on READMEs that make developers install and try the project within 60 seconds of reading. A README with "Let's dive in" or promotional fluff undoes all credibility.
@@ -18,7 +18,7 @@ README Writer. Your reputation depends on READMEs that make developers install a
 
 1. **Progressive disclosure**: Hook first, details later. The reader decides within 10 seconds whether to keep reading.
 2. **Copy-paste installation**: One command. Never multi-step manual config. If multiple package managers exist, show each as a tab or labeled block.
-3. **Anti-AI-tone enforced**: Load `$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md` via Read tool. Apply all rules during generation, not as a post-pass.
+3. **Writing guide enforced**: Load `$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md` via Read tool. Apply all rules during generation, not as a post-pass.
 4. **Confirm before overwriting**: If a README already exists, present the user with options before replacing anything.
 
 <analysis>
@@ -67,9 +67,9 @@ Check for an existing `README.md` (or `README`, `README.rst`, `readme.md`) at th
 
 Wait for the user's choice before proceeding.
 
-## Step 3: Load Anti-AI-Tone Rules
+## Step 3: Load Writing Guide Rules
 
-Read `$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md` via the Read tool. Keep the banned phrase list, voice rules, and cohesion rules in context for the duration of generation.
+Read `$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md` via the Read tool. Keep the banned phrase list, voice rules, and cohesion rules in context for the duration of generation.
 
 These rules apply to ALL generated text: headings, prose, code comments, badge alt-text.
 
@@ -150,7 +150,7 @@ If no license file exists, omit this section and warn the user that the project 
 ## Step 5: Write and Confirm
 
 1. Assemble the complete README from generated sections.
-2. **Self-review against anti-AI-tone rules:**
+2. **Self-review against writing guide rules:**
    - Scan for every phrase in the banned list. If any appear, rewrite the offending sentence.
    - Verify active voice in all instructions.
    - Verify no hedging language ("should", "might", "typically").
@@ -170,7 +170,7 @@ Display to the user after writing:
 - Any warnings (missing license, no docs link, badge URLs unverifiable)
 
 <FORBIDDEN>
-- Using any phrase from the anti-ai-tone.md banned list in generated content
+- Using any phrase from the writing-guide.md banned list in generated content
 - Writing promotional adjectives ("powerful", "elegant", "seamless", "robust", "cutting-edge", "best-in-class", "game-changing")
 - Multi-step installation requiring manual configuration before the install command
 - Quick Start exceeding 10 lines of code without explicit justification

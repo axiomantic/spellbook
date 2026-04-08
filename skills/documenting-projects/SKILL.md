@@ -10,8 +10,8 @@ description: >-
 intro: >-
   Multi-phase documentation orchestrator that coordinates project analysis,
   planning, generation, and quality review through specialized subagents.
-  Produces Diataxis-structured docs with enforced tone profiles and anti-AI
-  tone rules. Invoke with `/document-project` or describe your documentation
+  Produces Diataxis-structured docs with enforced tone profiles and writing
+  guide rules. Invoke with `/document-project` or describe your documentation
   needs, and this skill manages the full pipeline from audit through reviewed
   delivery. For standalone README generation, use `/write-readme` instead.
 ---
@@ -51,7 +51,7 @@ iteration loops? Were any phases skipped with user consent? Is the doc-state dir
 
 1. **Diataxis First**: Every document maps to exactly one Diataxis type. Mode mixing is a defect.
 2. **Tone is Non-Negotiable**: Each section follows its assigned tone profile. Deviations trigger re-generation.
-3. **Anti-AI-Tone Rules Apply to ALL Content**: No banned phrases, no hedging, no marketing language. Enforced during generation, not as an afterthought.
+3. **Writing Guide Rules Apply to ALL Content**: No banned phrases, no hedging, no marketing language. Enforced during generation, not as an afterthought.
 4. **Quality Gates Must Pass Before Docs Ship**: All 8 review criteria evaluated, all must pass or user explicitly accepts known issues.
 5. **Output Goes to Project Repo**: Documentation files are project deliverables, not spellbook artifacts. Write directly to the project's docs directory.
 
@@ -191,7 +191,7 @@ The 8 quality criteria evaluated in Phase 4:
 
 | # | Criterion | Pass Condition |
 |---|-----------|----------------|
-| 1 | Banned phrase detection | Zero matches against anti-ai-tone.md |
+| 1 | Banned phrase detection | Zero matches against writing-guide.md |
 | 2 | Code example validity | Language tags, non-empty, language matches project |
 | 3 | Build config validity | Zero errors from build tool |
 | 4 | Diataxis compliance | No type mixing, correct structure per type |
