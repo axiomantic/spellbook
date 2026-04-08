@@ -104,13 +104,13 @@ class TestEventEmissionOnSend:
         received_notifications: list[Any] = []
 
         async with Client(server) as client_a:
-            session_a = list(server._active_sessions)[0]
+            session_a = list(server._active_sessions.values())[0]
             session_a_id = getattr(session_a, "_fastmcp_event_session_id")
 
             async with Client(server) as client_b:
                 # Find session B (the one that is not session A)
                 session_b = [
-                    s for s in server._active_sessions if s is not session_a
+                    s for s in server._active_sessions.values() if s is not session_a
                 ][0]
                 session_b_id = getattr(session_b, "_fastmcp_event_session_id")
 
@@ -161,7 +161,7 @@ class TestEventEmissionOnSend:
         sender_notifications: list[Any] = []
 
         async with Client(server) as client_a:
-            session_a = list(server._active_sessions)[0]
+            session_a = list(server._active_sessions.values())[0]
             session_a_id = getattr(session_a, "_fastmcp_event_session_id")
 
             # Subscribe session A to its OWN messages topic (not B's)
@@ -179,7 +179,7 @@ class TestEventEmissionOnSend:
 
             async with Client(server) as client_b:
                 session_b = [
-                    s for s in server._active_sessions if s is not session_a
+                    s for s in server._active_sessions.values() if s is not session_a
                 ][0]
                 session_b_id = getattr(session_b, "_fastmcp_event_session_id")
 
@@ -206,7 +206,7 @@ class TestEventEmissionOnSend:
         received: list[Any] = []
 
         async with Client(server) as client:
-            session = list(server._active_sessions)[0]
+            session = list(server._active_sessions.values())[0]
             session_id = getattr(session, "_fastmcp_event_session_id")
 
             # Subscribe with wildcard: all sessions' messages
