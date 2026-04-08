@@ -4,6 +4,11 @@ Verifies that:
 - Event topics are declared on the spellbook MCP server
 - messaging_send emits an EventEmitNotification alongside queue delivery
 - The event is delivered only to the subscribed recipient session, not the sender
+
+Note: These tests intentionally access private attributes (e.g., _event_topics,
+_active_sessions, _subscription_registry, _retained_store, _fastmcp_event_session_id,
+_session_state) to verify subscription and session state. No public API exposes this
+information yet.
 """
 
 import asyncio
@@ -70,7 +75,10 @@ class TestEventTopicDeclaration:
                 result.capabilities, "events", None
             )
             assert events_cap is not None
-            topics = events_cap.get("topics", []) if isinstance(events_cap, dict) else getattr(events_cap, "topics", [])
+            if isinstance(events_cap, dict):
+                topics = events_cap.get("topics", [])
+            else:
+                topics = getattr(events_cap, "topics", [])
             assert len(topics) >= 2
             # Convert topic dicts/objects to pattern strings for verification
             patterns = [

@@ -79,7 +79,11 @@ validator, and the pre-commit scanner.
 
 ## [0.48.0] - 2026-04-08
 
+### Added
+- **MCP events integration**: Event topics declared on the spellbook MCP server, messaging_send emits EventEmitNotification alongside queue delivery for cross-session event-driven communication
+
 ### Changed
+- **Dependencies**: Replaced local file:// path dependencies for mcp and fastmcp with git references to axiomantic/python-sdk and axiomantic/fastmcp mcp-events branches
 - Replace `anti-ai-tone.md` with comprehensive `writing-guide.md` covering structural dead tells, human signals, sniff test, and before/after examples
 - Update all references across commands, docs, and skills
 
