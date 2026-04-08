@@ -11,7 +11,6 @@ _session_state) to verify subscription and session state. No public API exposes 
 information yet.
 """
 
-import asyncio
 from typing import Any
 
 import pytest

@@ -21,7 +21,7 @@ gemini = []
 daemon = [
     "mcp @ git+https://github.com/axiomantic/python-sdk.git@mcp-events",
     "fastmcp @ git+https://github.com/axiomantic/fastmcp.git@mcp-events",
-    "python-ulid>=3.0.0",
+
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "httpx>=0.25.0",
@@ -42,7 +42,7 @@ dev = [
     "dirty-equals>=0.8.0",
     "mcp @ git+https://github.com/axiomantic/python-sdk.git@mcp-events",
     "fastmcp @ git+https://github.com/axiomantic/fastmcp.git@mcp-events",
-    "python-ulid>=3.0.0",
+
     "fastapi>=0.115.0",
     "pyyaml>=6.0",
 ]
