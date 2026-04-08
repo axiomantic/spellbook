@@ -204,7 +204,7 @@ async def messaging_send(
                 ],
             )
         except Exception:
-            logger.debug("Failed to emit event for message delivery", exc_info=True)
+            logger.warning("Failed to emit event for message delivery", exc_info=True)
 
     return result
 
