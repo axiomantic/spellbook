@@ -19,7 +19,10 @@ gemini = []
 
 [dependency-groups]
 daemon = [
-    "fastmcp>=0.4.1",
+    # TODO: Replace file:// path deps with published versions before merge
+    "mcp @ file:///Users/elijahrutschman/Development/python-sdk",
+    "fastmcp @ file:///Users/elijahrutschman/Development/fastmcp",
+    "python-ulid>=3.0.0",
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "httpx>=0.25.0",
@@ -38,7 +41,10 @@ dev = [
     "httpx>=0.25.0",
     "bigfoot>=0.19.1",
     "dirty-equals>=0.8.0",
-    "fastmcp>=0.4.1",
+    # TODO: Replace file:// path deps with published versions before merge
+    "mcp @ file:///Users/elijahrutschman/Development/python-sdk",
+    "fastmcp @ file:///Users/elijahrutschman/Development/fastmcp",
+    "python-ulid>=3.0.0",
     "fastapi>=0.115.0",
     "pyyaml>=6.0",
 ]

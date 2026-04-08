@@ -16,11 +16,27 @@ import logging
 import re
 from typing import Optional
 
+from fastmcp.server.events import EventEffect
+
 from spellbook.mcp.server import mcp
 from spellbook.messaging.bus import MAX_ALIAS_LENGTH, message_bus
 from spellbook.sessions.injection import inject_recovery_context
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Event topic declarations (MCP events integration)
+# ---------------------------------------------------------------------------
+
+mcp.declare_event(
+    "spellbook/sessions/{session_id}/messages",
+    description="Cross-session messages",
+)
+mcp.declare_event(
+    "spellbook/sessions/{session_id}/build/status",
+    description="Build status for this session's work",
+    retained=True,
+)
 
 _ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 _PAYLOAD_MAX_BYTES = 65536  # 64KB
@@ -161,13 +177,36 @@ async def messaging_send(
     if correlation_id and len(correlation_id) > 128:
         return {"ok": False, "error": "correlation_id_too_long", "detail": "Max 128 chars."}
 
-    return await message_bus.send(
+    result = await message_bus.send(
         sender=sender,
         recipient=recipient,
         payload=parsed,
         correlation_id=correlation_id,
         ttl=ttl,
     )
+
+    # Emit MCP event alongside queue-based delivery for events-capable clients
+    if result.get("ok"):
+        try:
+            await mcp.emit_event(
+                topic=f"spellbook/sessions/{recipient}/messages",
+                payload={
+                    "message_id": result.get("message_id"),
+                    "sender": sender,
+                    "recipient": recipient,
+                    "payload": parsed,
+                    "correlation_id": correlation_id,
+                },
+                source="spellbook/messaging",
+                correlation_id=correlation_id,
+                requested_effects=[
+                    EventEffect(type="inject_context", priority="high"),
+                ],
+            )
+        except Exception:
+            logger.debug("Failed to emit event for message delivery", exc_info=True)
+
+    return result
 
 
 @mcp.tool()
