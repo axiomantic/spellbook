@@ -124,7 +124,7 @@ like a person.
 8. **Second person where it fits.** "If you forget to assert a call, you'll see this error" rather
    than "Unasserted calls produce errors at teardown." Someone is talking to you, not writing a spec.
 
-9. **Casual connectives.** "The other thing worth knowing is" or "This gets interesting when."
+9. **Casual connectives.** "Actually," "By the way," or "This gets interesting when."
    Not every transition needs to be a heading or a bold phrase.
 
 10. **Parenthetical asides.** "(you'll probably want this for CI)" or "(this is the one most people

@@ -109,7 +109,7 @@ These criteria can be evaluated with tools alone, without subagent dispatch.
 
 #### Criterion 1: Banned Phrase Detection
 
-For each banned phrase in `writing-guide.md`:
+For each phrase in the "Banned Phrases" section of `writing-guide.md`:
 1. Use the Grep tool with the phrase as pattern, searching across all files listed in the written manifest.
 2. Record every match: file path, line number, matched phrase.
 3. **Pass condition:** Zero total matches across all files.
