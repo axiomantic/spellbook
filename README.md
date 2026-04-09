@@ -42,7 +42,6 @@
   - [Quality gates](#quality-gates)
   - [Composition](#composition)
   - [Self-improvement](#self-improvement)
-  - [Security tiers](#security-tiers)
 - [The develop Skill](#the-develop-skill)
   - [How it works](#how-it-works)
   - [Parallelization](#parallelization)
@@ -137,10 +136,6 @@ Skills invoke skills. [`develop`][develop] orchestrates [design-exploration], [w
 ### Self-improvement
 
 Some skills exist to improve other skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique, and [prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions against each other so improvements can be measured rather than assumed.
-
-### Security tiers
-
-Every subagent operates within a trust tier with hard-capped tool access. External content is treated as data, not instructions. Raw untrusted content stays in subagent context, and only summaries return to the orchestrator. Five trust tiers provide increasing restriction: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), and quarantine (read-only with audit logging). Tiers cannot be escalated from within a subagent.
 
 ## The develop Skill
 

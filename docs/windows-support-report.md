@@ -159,15 +159,13 @@ def _create_windows_link(source: Path, target: Path) -> str:
 
 Also consider a `bootstrap.bat` one-liner that invokes PowerShell for users who aren't in a PowerShell terminal.
 
-### 4.2 Hook Scripts (5 files in `hooks/`)
+### 4.2 Hook Scripts (3 files in `hooks/`)
 
 | Hook | Purpose | Windows Strategy |
 |------|---------|-----------------|
 | `bash-gate.sh` | PreToolUse: gate bash commands | Python wrapper |
 | `spawn-guard.sh` | PreToolUse: gate spawn operations | Python wrapper |
-| `state-sanitize.sh` | PreToolUse: sanitize state saves | Python wrapper |
-| `audit-log.sh` | PostToolUse: audit logging | Python wrapper |
-| `canary-check.sh` | PostToolUse: canary token checking | Python wrapper |
+| `state-sanitize.sh` | PreToolUse: validate workflow state saves | Python wrapper |
 
 **Recommended approach:** Create Python wrapper scripts (`hooks/*.py`) that work cross-platform. The installer detects the OS and registers the appropriate hook type. Most hook logic is simple string matching and file operations that translate directly to Python.
 
@@ -459,9 +457,7 @@ Windows Defender or other AV may flag the MCP server or hook scripts. May need t
 | `installer/components/service_windows.py` | 3 | Task Scheduler integration |
 | `hooks/bash_gate.py` | 4 | Cross-platform hook: bash gating |
 | `hooks/spawn_guard.py` | 4 | Cross-platform hook: spawn guarding |
-| `hooks/state_sanitize.py` | 4 | Cross-platform hook: state sanitization |
-| `hooks/audit_log.py` | 4 | Cross-platform hook: audit logging |
-| `hooks/canary_check.py` | 4 | Cross-platform hook: canary checking |
+| `hooks/state_sanitize.py` | 4 | Cross-platform hook: workflow state validation |
 | `docs/getting-started/windows.md` | 5 | Windows quick start guide |
 | `tests/unit/test_windows_paths.py` | 1 | Windows path resolution tests |
 | `tests/unit/test_windows_symlinks.py` | 2 | Windows symlink fallback tests |

@@ -68,7 +68,7 @@ Native extension system:
 The `spellbook/` directory contains a FastMCP server providing 100+ tools across these categories:
 
 - **Session management** - initialization, mode switching, context ping, compaction checks
-- **Security** - injection detection, trust levels, canary tokens, output sanitization
+- **Input gates** - injection pattern detection for Bash commands, spawn-session calls, and workflow state saves
 - **Memory** - store, recall, consolidate, forget
 - **Fractal thinking** - graph creation, node management, worker dispatch, synthesis
 - **Forge (autonomous development)** - project initialization, iteration management, roundtable convening
@@ -79,7 +79,6 @@ The `spellbook/` directory contains a FastMCP server providing 100+ tools across
 - **Focus tracking** - stint push, pop, check, replace
 - **Configuration management** - get/set config values, skill instructions
 - **Health checks and analytics** - health check, analytics summary, telemetry controls
-- **Credential management** - credential export
 - **Session spawning** - launch new Claude sessions with custom prompts
 
 ## File Formats
