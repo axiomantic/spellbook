@@ -227,7 +227,7 @@ class TestTtsServiceConfig:
             "--uri", "tcp://127.0.0.1:10200",
             "--device", "cpu",
             "--voice", "af_heart",
-            "--data-dir", "/custom/data",
+            "--data-dir", str(Path("/custom/data")),
         ]
 
     def test_log_paths(self):
