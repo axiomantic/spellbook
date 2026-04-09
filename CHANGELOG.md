@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.47.1] - 2026-04-08
+## [0.48.0] - 2026-04-08
 
 ### Changed
 - Replace `anti-ai-tone.md` with comprehensive `writing-guide.md` covering structural dead tells, human signals, sniff test, and before/after examples

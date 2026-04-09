@@ -7,6 +7,7 @@ from pathlib import Path
 import bigfoot
 import pytest
 
+from spellbook.core.paths import get_data_dir
 from spellbook.tts.venv import (
     TTS_MIN_DISK_SPACE_BYTES,
     _resolve_uv,
@@ -36,8 +37,6 @@ class TestGetTtsPython:
 
 class TestGetTtsVenvDir:
     def test_default_location(self):
-        from spellbook.core.paths import get_data_dir
-
         venv_dir = get_tts_venv_dir()
         assert venv_dir == get_data_dir() / "tts-venv"
 
