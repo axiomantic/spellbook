@@ -1,9 +1,14 @@
-"""Tests for the messaging_check hook function in spellbook_hook.py."""
+"""Tests for the messaging_check hook function in spellbook_hook.py.
+
+These tests mock _http_post to simulate daemon responses rather than
+setting up local inbox files (the daemon now handles file I/O).
+"""
 
 import json
 import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -12,8 +17,8 @@ import pytest
 # Helpers to load _messaging_check from the hook script
 # ---------------------------------------------------------------------------
 
-def _load_messaging_check():
-    """Import _messaging_check from hooks/spellbook_hook.py.
+def _load_hook_module():
+    """Import the hook module.
 
     Uses importlib to load the hook module without requiring it to be
     on sys.path or in a package.
@@ -24,168 +29,173 @@ def _load_messaging_check():
     spec = importlib.util.spec_from_file_location("spellbook_hook", hook_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod._messaging_check
+    return mod
 
 
 @pytest.fixture
-def messaging_check():
+def hook_module():
+    """Provide the loaded hook module."""
+    return _load_hook_module()
+
+
+@pytest.fixture
+def messaging_check(hook_module):
     """Provide the _messaging_check function."""
-    return _load_messaging_check()
-
-
-@pytest.fixture
-def inbox_env(tmp_path, monkeypatch):
-    """Set SPELLBOOK_CONFIG_DIR to a temp directory and return it."""
-    monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path))
-    return tmp_path
+    return hook_module._messaging_check
 
 
 _TEST_SESSION_ID = "test-session-001"
 
 
-def _write_msg(inbox_dir: Path, msg: dict, session_id: str = _TEST_SESSION_ID) -> Path:
-    """Write a message JSON file to the inbox directory.
+def _mock_http_post(responses):
+    """Create a mock _http_post that returns pre-canned responses.
 
-    Also writes a ``.session_id`` marker in the alias directory so the hook
-    recognises this inbox as belonging to the test session.
+    ``responses`` maps path strings to return values. If the path
+    is not in the map, returns None (simulating daemon unreachable).
     """
-    inbox_dir.mkdir(parents=True, exist_ok=True)
-    # Write session marker in the alias directory (parent of inbox)
-    alias_dir = inbox_dir.parent
-    marker = alias_dir / ".session_id"
-    if not marker.exists():
-        marker.write_text(session_id)
-    msg_id = msg.get("id", "msg-unknown")
-    path = inbox_dir / f"{msg_id}.json"
-    path.write_text(json.dumps(msg))
-    return path
+    calls = []
+
+    def _mock(path, payload, timeout=5):
+        calls.append({"path": path, "payload": payload})
+        if callable(responses.get(path)):
+            return responses[path](payload)
+        return responses.get(path)
+
+    _mock.calls = calls
+    return _mock
 
 
 # ---------------------------------------------------------------------------
-# Tests: reading and deleting inbox files
+# Tests: reading and deleting inbox files (now via daemon HTTP)
 # ---------------------------------------------------------------------------
 
 class TestMessagingCheckReadDelete:
-    def test_reads_and_deletes_inbox_files(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "my-session" / "inbox"
-        msg = {
-            "id": "msg-001",
-            "sender": "orchestrator",
-            "recipient": "my-session",
-            "payload": {"task": "run auth tests"},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
-        }
-        msg_path = _write_msg(inbox, msg)
-        assert msg_path.exists()
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[MESSAGE from orchestrator]\n{\n  "task": "run auth tests"\n}'
-        assert result == expected
-        # File should be deleted after processing
-        assert not msg_path.exists()
-
-    def test_reads_multiple_files_in_order(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "worker" / "inbox"
-        for i in range(3):
-            _write_msg(inbox, {
-                "id": f"msg-{i:03d}",
-                "sender": f"sender-{i}",
-                "recipient": "worker",
-                "payload": {"seq": i},
-                "message_type": "direct",
-                "timestamp": "2026-04-03T12:00:00Z",
-            })
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Files are sorted by name (msg-000, msg-001, msg-002), separated by \n\n
-        expected = (
-            '[MESSAGE from sender-0]\n{\n  "seq": 0\n}'
-            '\n\n'
-            '[MESSAGE from sender-1]\n{\n  "seq": 1\n}'
-            '\n\n'
-            '[MESSAGE from sender-2]\n{\n  "seq": 2\n}'
-        )
-        assert result == expected
-        # All files deleted
-        remaining = list(inbox.glob("*.json"))
-        assert len(remaining) == 0
-
-    def test_reads_from_multiple_alias_dirs(self, messaging_check, inbox_env):
-        for alias in ("session-a", "session-b"):
-            inbox = inbox_env / "messaging" / alias / "inbox"
-            _write_msg(inbox, {
-                "id": f"msg-{alias}",
-                "sender": "sender",
-                "recipient": alias,
-                "payload": {"target": alias},
-                "message_type": "direct",
-                "timestamp": "2026-04-03T12:00:00Z",
-            })
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Alias dirs sorted: session-a before session-b
-        expected = (
-            '[MESSAGE from sender]\n{\n  "target": "session-a"\n}'
-            '\n\n'
-            '[MESSAGE from sender]\n{\n  "target": "session-b"\n}'
-        )
-        assert result == expected
-
-    def test_only_drains_own_session_inboxes(self, messaging_check, inbox_env):
-        """Messages for a different session_id are not consumed."""
-        # Write a message for a different session
-        other_alias_dir = inbox_env / "messaging" / "other-session"
-        other_inbox = other_alias_dir / "inbox"
-        other_inbox.mkdir(parents=True)
-        (other_alias_dir / ".session_id").write_text("different-session-999")
-        _write_msg(other_inbox, {
-            "id": "msg-other",
-            "sender": "someone",
-            "recipient": "other-session",
-            "payload": {"secret": "not for us"},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
-        }, session_id="different-session-999")
-
-        # Write a message for our session
-        own_inbox = inbox_env / "messaging" / "my-session" / "inbox"
-        _write_msg(own_inbox, {
-            "id": "msg-mine",
-            "sender": "friend",
-            "recipient": "my-session",
-            "payload": {"greeting": "hello"},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_reads_and_deletes_inbox_files(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "orchestrator",
+                    "payload": {"task": "run auth tests"},
+                    "correlation_id": None,
+                    "filename": "msg-001.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from orchestrator]\n{\n  "task": "run auth tests"\n}'
+            assert result == expected
+            # Verify the correct path and session_id were sent
+            poll_calls = [c for c in mock.calls if c["path"] == "/api/messaging/poll"]
+            assert len(poll_calls) == 1
+            assert poll_calls[0]["payload"]["session_id"] == _TEST_SESSION_ID
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Should only see our message
-        expected = '[MESSAGE from friend]\n{\n  "greeting": "hello"\n}'
-        assert result == expected
-        # Other session's message should still be there
-        assert (other_inbox / "msg-other.json").exists()
-
-    def test_returns_none_without_session_id(self, messaging_check, inbox_env):
-        """Without session_id, no inboxes are drained."""
-        inbox = inbox_env / "messaging" / "my-session" / "inbox"
-        _write_msg(inbox, {
-            "id": "msg-001",
-            "sender": "orchestrator",
-            "recipient": "my-session",
-            "payload": {"task": "run tests"},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_reads_multiple_files_in_order(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [
+                    {
+                        "message_type": "direct",
+                        "sender": f"sender-{i}",
+                        "payload": {"seq": i},
+                        "correlation_id": None,
+                        "filename": f"msg-{i:03d}.json",
+                    }
+                    for i in range(3)
+                ]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = (
+                '[MESSAGE from sender-0]\n{\n  "seq": 0\n}'
+                '\n\n'
+                '[MESSAGE from sender-1]\n{\n  "seq": 1\n}'
+                '\n\n'
+                '[MESSAGE from sender-2]\n{\n  "seq": 2\n}'
+            )
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check()
-        assert result is None
-        # Message should still be in inbox
-        assert (inbox / "msg-001.json").exists()
+    def test_reads_from_multiple_alias_dirs(self, hook_module, messaging_check):
+        """Daemon aggregates messages from multiple alias dirs."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [
+                    {
+                        "message_type": "direct",
+                        "sender": "sender",
+                        "payload": {"target": "session-a"},
+                        "correlation_id": None,
+                        "filename": "msg-session-a.json",
+                    },
+                    {
+                        "message_type": "direct",
+                        "sender": "sender",
+                        "payload": {"target": "session-b"},
+                        "correlation_id": None,
+                        "filename": "msg-session-b.json",
+                    },
+                ]
+            }
+        })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = (
+                '[MESSAGE from sender]\n{\n  "target": "session-a"\n}'
+                '\n\n'
+                '[MESSAGE from sender]\n{\n  "target": "session-b"\n}'
+            )
+            assert result == expected
+        finally:
+            hook_module._http_post = original
+
+    def test_only_drains_own_session_inboxes(self, hook_module, messaging_check):
+        """Session filtering is done by the daemon; hook just sends session_id."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "friend",
+                    "payload": {"greeting": "hello"},
+                    "correlation_id": None,
+                    "filename": "msg-mine.json",
+                }]
+            }
+        })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from friend]\n{\n  "greeting": "hello"\n}'
+            assert result == expected
+            # Confirm session_id was passed to daemon
+            assert mock.calls[0]["payload"]["session_id"] == _TEST_SESSION_ID
+        finally:
+            hook_module._http_post = original
+
+    def test_returns_none_without_session_id(self, hook_module, messaging_check):
+        """Without session_id, no HTTP call is made."""
+        mock = _mock_http_post({})
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check()
+            assert result is None
+            # No HTTP calls should have been made
+            assert len(mock.calls) == 0
+        finally:
+            hook_module._http_post = original
 
 
 # ---------------------------------------------------------------------------
@@ -193,87 +203,110 @@ class TestMessagingCheckReadDelete:
 # ---------------------------------------------------------------------------
 
 class TestMessagingCheckFormatting:
-    def test_direct_message_format(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "target" / "inbox"
-        _write_msg(inbox, {
-            "id": "direct-001",
-            "sender": "alice",
-            "recipient": "target",
-            "payload": {"question": "status?"},
-            "message_type": "direct",
-            "correlation_id": "corr-123",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_direct_message_format(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "alice",
+                    "payload": {"question": "status?"},
+                    "correlation_id": "corr-123",
+                    "filename": "direct-001.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from alice] (correlation_id: corr-123)\n{\n  "question": "status?"\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[MESSAGE from alice] (correlation_id: corr-123)\n{\n  "question": "status?"\n}'
-        assert result == expected
-
-    def test_direct_message_no_correlation(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "target" / "inbox"
-        _write_msg(inbox, {
-            "id": "direct-002",
-            "sender": "bob",
-            "recipient": "target",
-            "payload": {"info": "done"},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_direct_message_no_correlation(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "bob",
+                    "payload": {"info": "done"},
+                    "correlation_id": None,
+                    "filename": "direct-002.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from bob]\n{\n  "info": "done"\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[MESSAGE from bob]\n{\n  "info": "done"\n}'
-        assert result == expected
-
-    def test_broadcast_message_format(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "listener" / "inbox"
-        _write_msg(inbox, {
-            "id": "bc-001",
-            "sender": "announcer",
-            "recipient": "*",
-            "payload": {"info": "deploy starting"},
-            "message_type": "broadcast",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_broadcast_message_format(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "broadcast",
+                    "sender": "announcer",
+                    "payload": {"info": "deploy starting"},
+                    "correlation_id": None,
+                    "filename": "bc-001.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[BROADCAST from announcer]\n{\n  "info": "deploy starting"\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[BROADCAST from announcer]\n{\n  "info": "deploy starting"\n}'
-        assert result == expected
-
-    def test_reply_message_format(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "requester" / "inbox"
-        _write_msg(inbox, {
-            "id": "reply-001",
-            "sender": "responder",
-            "recipient": "requester",
-            "payload": {"answer": "feature/auth"},
-            "message_type": "reply",
-            "correlation_id": "corr-456",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_reply_message_format(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "reply",
+                    "sender": "responder",
+                    "payload": {"answer": "feature/auth"},
+                    "correlation_id": "corr-456",
+                    "filename": "reply-001.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[REPLY from responder] (correlation_id: corr-456)\n{\n  "answer": "feature/auth"\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[REPLY from responder] (correlation_id: corr-456)\n{\n  "answer": "feature/auth"\n}'
-        assert result == expected
-
-    def test_reply_without_correlation(self, messaging_check, inbox_env):
-        inbox = inbox_env / "messaging" / "requester" / "inbox"
-        _write_msg(inbox, {
-            "id": "reply-002",
-            "sender": "responder",
-            "recipient": "requester",
-            "payload": {"answer": "ok"},
-            "message_type": "reply",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_reply_without_correlation(self, hook_module, messaging_check):
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "reply",
+                    "sender": "responder",
+                    "payload": {"answer": "ok"},
+                    "correlation_id": None,
+                    "filename": "reply-002.json",
+                }]
+            }
         })
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        expected = '[REPLY from responder]\n{\n  "answer": "ok"\n}'
-        assert result == expected
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[REPLY from responder]\n{\n  "answer": "ok"\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
 
 # ---------------------------------------------------------------------------
@@ -281,99 +314,89 @@ class TestMessagingCheckFormatting:
 # ---------------------------------------------------------------------------
 
 class TestMessagingCheckNoop:
-    def test_returns_none_when_no_messaging_dir(self, messaging_check, inbox_env):
-        """No messaging directory at all."""
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-        assert result is None
+    def test_returns_none_when_no_messages(self, hook_module, messaging_check):
+        """Daemon returns empty message list."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {"messages": []}
+        })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            assert result is None
+        finally:
+            hook_module._http_post = original
 
-    def test_returns_none_when_messaging_dir_empty(self, messaging_check, inbox_env):
-        """messaging/ exists but has no alias subdirs."""
-        (inbox_env / "messaging").mkdir(parents=True)
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-        assert result is None
+    def test_returns_none_when_daemon_unreachable(self, hook_module, messaging_check):
+        """Daemon unreachable returns None from _http_post."""
+        mock = _mock_http_post({})  # No response for any path
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            assert result is None
+        finally:
+            hook_module._http_post = original
 
-    def test_returns_none_when_inbox_empty(self, messaging_check, inbox_env):
-        """Alias dir exists with empty inbox and valid session marker."""
-        alias_dir = inbox_env / "messaging" / "my-session"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-        assert result is None
-
-    def test_returns_none_when_no_json_files(self, messaging_check, inbox_env):
-        """Inbox has non-JSON files."""
-        alias_dir = inbox_env / "messaging" / "my-session"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
-        (inbox / "readme.txt").write_text("not a message")
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-        assert result is None
+    def test_returns_none_when_daemon_returns_no_messages_key(self, hook_module, messaging_check):
+        """Daemon returns a response without 'messages' key."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {"ok": True}
+        })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            assert result is None
+        finally:
+            hook_module._http_post = original
 
 
 # ---------------------------------------------------------------------------
-# Tests: malformed JSON handling
+# Tests: malformed/missing field handling (daemon still returns entries)
 # ---------------------------------------------------------------------------
 
 class TestMessagingCheckMalformed:
-    def test_handles_invalid_json_gracefully(self, messaging_check, inbox_env):
-        alias_dir = inbox_env / "messaging" / "target"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
-        bad_file = inbox / "bad-msg.json"
-        bad_file.write_text("this is not valid json {{{")
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Should not crash, returns None since no valid messages
-        assert result is None
-        # Malformed file should be deleted to prevent re-processing
-        assert not bad_file.exists()
-
-    def test_handles_partial_json_gracefully(self, messaging_check, inbox_env):
-        alias_dir = inbox_env / "messaging" / "target"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
-        # Valid JSON but missing expected fields
-        partial_file = inbox / "partial-msg.json"
-        partial_file.write_text(json.dumps({"id": "partial-001"}))
-
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Should use defaults for missing fields
-        expected = '[MESSAGE from unknown]\n{}'
-        assert result == expected
-        # File deleted after processing
-        assert not partial_file.exists()
-
-    def test_valid_and_invalid_mixed(self, messaging_check, inbox_env):
-        alias_dir = inbox_env / "messaging" / "target"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text(_TEST_SESSION_ID)
-
-        # One bad file
-        bad_file = inbox / "aaa-bad.json"
-        bad_file.write_text("not json")
-
-        # One good file
-        _write_msg(inbox, {
-            "id": "zzz-good",
-            "sender": "alice",
-            "recipient": "target",
-            "payload": {"ok": True},
-            "message_type": "direct",
-            "timestamp": "2026-04-03T12:00:00Z",
+    def test_handles_missing_fields_gracefully(self, hook_module, messaging_check):
+        """Message with minimal fields uses defaults."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "unknown",
+                    "payload": {},
+                    "correlation_id": None,
+                    "filename": "partial-001.json",
+                }]
+            }
         })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from unknown]\n{}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original
 
-        result = messaging_check(session_id=_TEST_SESSION_ID)
-
-        # Good message should still be processed (bad file skipped)
-        expected = '[MESSAGE from alice]\n{\n  "ok": true\n}'
-        assert result == expected
-        # Both files deleted
-        assert not bad_file.exists()
-        assert not (inbox / "zzz-good.json").exists()
+    def test_valid_and_invalid_mixed(self, hook_module, messaging_check):
+        """Daemon skips invalid JSON files; only valid messages returned."""
+        mock = _mock_http_post({
+            "/api/messaging/poll": {
+                "messages": [{
+                    "message_type": "direct",
+                    "sender": "alice",
+                    "payload": {"ok": True},
+                    "correlation_id": None,
+                    "filename": "zzz-good.json",
+                }]
+            }
+        })
+        original = hook_module._http_post
+        hook_module._http_post = mock
+        try:
+            result = messaging_check(session_id=_TEST_SESSION_ID)
+            expected = '[MESSAGE from alice]\n{\n  "ok": true\n}'
+            assert result == expected
+        finally:
+            hook_module._http_post = original

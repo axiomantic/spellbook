@@ -23,8 +23,6 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from spellbook.core.path_utils import get_spellbook_config_dir
-
 
 # ---------------------------------------------------------------------------
 # MCP Communication
@@ -125,51 +123,20 @@ def _get_config_value(key: str, default=None):
     return default
 
 
-_log_lock = threading.Lock()
-
-
-_LOG_MAX_BYTES = 1_000_000  # 1 MB
-_LOG_BACKUP_COUNT = 3
-
-
-def _rotate_log(log_file: Path) -> None:
-    """Rotate log file if it exceeds _LOG_MAX_BYTES.
-
-    Keeps up to _LOG_BACKUP_COUNT backups: hook-errors.log.1, .2, .3.
-    """
-    try:
-        if not log_file.exists() or log_file.stat().st_size < _LOG_MAX_BYTES:
-            return
-        for i in range(_LOG_BACKUP_COUNT, 0, -1):
-            src = log_file.with_suffix(f".log.{i}") if i > 0 else log_file
-            if i == _LOG_BACKUP_COUNT:
-                src = log_file.with_suffix(f".log.{i}")
-                if src.exists():
-                    src.unlink()
-            else:
-                src = log_file.with_suffix(f".log.{i}")
-                dst = log_file.with_suffix(f".log.{i + 1}")
-                if src.exists():
-                    src.rename(dst)
-        log_file.rename(log_file.with_suffix(".log.1"))
-    except OSError:
-        pass  # Best-effort rotation
-
-
-def _log_hook_error(event: str, tool: str, exc: Exception) -> None:
-    """Log a hook error to the hook-errors log file with rotation."""
+def _log_hook_error(event: str, tool: str, exc: BaseException) -> None:
+    """Log hook error to daemon. Falls back to stderr if daemon unreachable."""
     import traceback as _tb
 
-    log_dir = Path.home() / ".local" / "spellbook" / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / "hook-errors.log"
-    with _log_lock:
-        _rotate_log(log_file)
-        with open(log_file, "a") as f:
-            f.write(f"\n{'=' * 60}\n")
-            f.write(f"{datetime.now(timezone.utc).isoformat()}\n")
-            f.write(f"event={event} tool={tool}\n")
-            _tb.print_exception(type(exc), exc, exc.__traceback__, file=f)
+    tb = "".join(_tb.format_exception(type(exc), exc, exc.__traceback__))
+    payload = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "event": f"{event}:{tool}",
+        "traceback": tb,
+    }
+    result = _http_post("/api/hook-log", payload)
+    if result is None:
+        # Daemon unreachable -- write to stderr so it shows in Claude Code output
+        print(f"[spellbook-hook] Error in {event}:{tool}:\n{tb}", file=sys.stderr)
 
 
 def _fire_and_forget(fn, *args):
@@ -203,8 +170,13 @@ def _fallback_directive() -> dict:
 # Shared helpers
 # ---------------------------------------------------------------------------
 
-def _http_post(url: str, payload: dict, timeout: float = 5) -> dict | None:
-    """Direct HTTP POST (not JSON-RPC). Used by memory, TTS, capture."""
+def _http_post(path: str, payload: dict, timeout: float = 5) -> dict | None:
+    """Direct HTTP POST (not JSON-RPC). Used by memory, TTS, capture.
+
+    ``path`` is an absolute URL path (e.g. ``/api/hook-log``).  The daemon
+    base URL is derived from MCP_HOST and MCP_PORT.
+    """
+    url = f"http://{MCP_HOST}:{MCP_PORT}{path}"
     headers = {"Content-Type": "application/json"}
     if TOKEN_FILE.exists():
         try:
@@ -431,7 +403,7 @@ def _memory_inject(tool_name: str, data: dict) -> str | None:
         "limit": 5,
     }
     response = _http_post(
-        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/recall",
+        "/api/memory/recall",
         payload,
     )
     if not response:
@@ -533,7 +505,7 @@ def _tts_notify(tool_name: str, data: dict) -> None:
     msg_parts.append("finished")
     message = " ".join(msg_parts)
     _http_post(
-        f"http://{MCP_HOST}:{MCP_PORT}/api/speak",
+        "/api/speak",
         {"text": message},
         timeout=10,
     )
@@ -590,7 +562,7 @@ def _memory_capture(tool_name: str, data: dict) -> None:
         "branch": branch,
     }
     _http_post(
-        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/event",
+        "/api/memory/event",
         payload,
         timeout=5,
     )
@@ -646,7 +618,7 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
 
     # 1. Audit trail (existing endpoint, lightweight)
     _http_post(
-        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/event",
+        "/api/memory/event",
         {
             "session_id": session_id,
             "project": namespace,
@@ -662,7 +634,7 @@ def _memory_bridge(tool_name: str, data: dict) -> None:
 
     # 2. Full content capture (new endpoint)
     _http_post(
-        f"http://{MCP_HOST}:{MCP_PORT}/api/memory/bridge-content",
+        "/api/memory/bridge-content",
         {
             "session_id": session_id,
             "project": namespace,
@@ -762,67 +734,39 @@ def _stint_depth_check(data: dict) -> str | None:
 def _messaging_check(session_id: str = "") -> str | None:
     """Check messaging inbox for pending messages and format for injection.
 
-    Only drains inboxes for aliases that belong to this session (matched via
-    a ``.session_id`` marker written by ``messaging_register``).  If no
-    ``session_id`` is provided, no inboxes are drained to prevent one session
-    from consuming another session's messages.
+    Polls the daemon's /api/messaging/poll endpoint which handles file I/O
+    (reading and deleting inbox files) on the daemon side.  The hook only
+    performs presentation formatting.
+
+    If no ``session_id`` is provided, no inboxes are drained to prevent one
+    session from consuming another session's messages.
 
     Returns formatted message text or None if inbox is empty.
     """
     if not session_id:
         return None
 
-    messaging_base = get_spellbook_config_dir() / "messaging"
-    if not messaging_base.exists():
+    resp = _http_post("/api/messaging/poll", {"session_id": session_id})
+    if resp is None or not resp.get("messages"):
         return None
 
     outputs = []
-    # Check only alias directories belonging to this session
-    for alias_dir in sorted(messaging_base.iterdir()):
-        if not alias_dir.is_dir():
-            continue
+    for msg in resp["messages"]:
+        msg_type = msg.get("message_type", "direct")
+        sender = msg.get("sender", "unknown")
+        correlation_id = msg.get("correlation_id")
+        payload = msg.get("payload", {})
+        payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
 
-        # Only drain inboxes with a matching .session_id marker
-        marker = alias_dir / ".session_id"
-        if not marker.exists():
-            continue
-        try:
-            marker_session_id = marker.read_text().strip()
-        except OSError:
-            continue
-        if marker_session_id != session_id:
-            continue
+        corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
+        if msg_type == "broadcast":
+            formatted = f"[BROADCAST from {sender}]\n{payload_str}"
+        elif msg_type == "reply":
+            formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
+        else:
+            formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
 
-        inbox = alias_dir / "inbox"
-        if not inbox.exists():
-            continue
-
-        for msg_file in sorted(inbox.glob("*.json")):
-            try:
-                data = json.loads(msg_file.read_text())
-                msg_type = data.get("message_type", "direct")
-                sender = data.get("sender", "unknown")
-                correlation_id = data.get("correlation_id")
-                payload = data.get("payload", {})
-                payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
-
-                corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
-                if msg_type == "broadcast":
-                    formatted = f"[BROADCAST from {sender}]\n{payload_str}"
-                elif msg_type == "reply":
-                    formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
-                else:
-                    formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
-
-                outputs.append(formatted)
-                # Delete after processing
-                msg_file.unlink()
-            except Exception as e:
-                _log_hook_error("process_inbox_message", str(msg_file), e)
-                try:
-                    msg_file.unlink()
-                except OSError as e:
-                    _log_hook_error("delete_failed_message", str(msg_file), e)
+        outputs.append(formatted)
 
     return "\n\n".join(outputs) if outputs else None
 

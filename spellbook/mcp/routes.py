@@ -4,8 +4,14 @@ Registers REST endpoints via @mcp.custom_route() for use by hook scripts
 and monitoring tools that need HTTP access without full MCP protocol.
 """
 
+import asyncio
+import json
+import logging
 import time
 
+logger = logging.getLogger(__name__)
+
+from pathlib import Path
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -268,3 +274,148 @@ async def api_memory_recall(request: Request) -> JSONResponse:
         repo_path=repo_path,
     )
     return JSONResponse(result)
+
+
+# ---------------------------------------------------------------------------
+# Hook log rotation (moved from hooks/spellbook_hook.py)
+# ---------------------------------------------------------------------------
+
+_HOOK_LOG_MAX_BYTES = 1_000_000  # 1 MB
+_HOOK_LOG_BACKUP_COUNT = 3
+_hook_log_lock = asyncio.Lock()
+
+
+def _rotate_hook_log(log_file: Path) -> None:
+    """Rotate hook log file if it exceeds _HOOK_LOG_MAX_BYTES.
+
+    Keeps up to _HOOK_LOG_BACKUP_COUNT backups: hook-errors.log.1, .2, .3.
+    Must be called while holding _hook_log_lock.
+    """
+    try:
+        if not log_file.exists() or log_file.stat().st_size < _HOOK_LOG_MAX_BYTES:
+            return
+        for i in range(_HOOK_LOG_BACKUP_COUNT, 0, -1):
+            if i == _HOOK_LOG_BACKUP_COUNT:
+                src = log_file.with_suffix(f".log.{i}")
+                if src.exists():
+                    src.unlink()
+            else:
+                src = log_file.with_suffix(f".log.{i}")
+                dst = log_file.with_suffix(f".log.{i + 1}")
+                if src.exists():
+                    src.rename(dst)
+        log_file.rename(log_file.with_suffix(".log.1"))
+    except OSError:
+        pass  # Best-effort rotation
+
+
+@mcp.custom_route("/api/hook-log", methods=["POST"])
+async def api_hook_log(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to log errors via the daemon.
+
+    Accepts JSON body: {"timestamp": "ISO string", "event": "string", "traceback": "string"}
+    Returns JSON: {"ok": true} on success.
+
+    The daemon writes to ~/.local/spellbook/logs/hook-errors.log with
+    rotation, eliminating the need for hook processes to have write access
+    to the config directory.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    timestamp = body.get("timestamp", "")
+    event = body.get("event", "")
+    tb = body.get("traceback", "")
+
+    if not event:
+        return JSONResponse({"error": "missing required field: event"}, status_code=400)
+
+    log_dir = get_spellbook_config_dir() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "hook-errors.log"
+
+    def _write_log(path: Path, text: str) -> None:
+        _rotate_hook_log(path)
+        with open(path, "a") as f:
+            f.write(text)
+
+    entry = f"\n{'=' * 60}\n{timestamp}\n{event}\n{tb}"
+    async with _hook_log_lock:
+        await asyncio.to_thread(_write_log, log_file, entry)
+
+    return JSONResponse({"ok": True})
+
+
+@mcp.custom_route("/api/messaging/poll", methods=["POST"])
+async def api_messaging_poll(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to poll messaging inbox via the daemon.
+
+    Accepts JSON body: {"session_id": "string"}
+    Returns JSON: {"messages": [...]} where each message has fields:
+        message_type, sender, payload, correlation_id, filename
+
+    Iterates all alias directories under ~/.local/spellbook/messaging/,
+    draining only those whose .session_id marker matches the request.
+    This replicates the behavior formerly in hooks/spellbook_hook.py
+    _messaging_check(), eliminating the need for hook processes to have
+    write access to the config directory.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    session_id = body.get("session_id", "")
+    if not session_id:
+        return JSONResponse(
+            {"error": "missing required field: session_id"},
+            status_code=400,
+        )
+
+    messaging_base = get_spellbook_config_dir() / "messaging"
+    if not messaging_base.exists():
+        return JSONResponse({"messages": []})
+
+    messages = []
+    for alias_dir in sorted(messaging_base.iterdir()):
+        if not alias_dir.is_dir():
+            continue
+
+        # Only drain inboxes with a matching .session_id marker
+        marker = alias_dir / ".session_id"
+        if not marker.exists():
+            continue
+        try:
+            marker_session_id = marker.read_text().strip()
+        except OSError:
+            continue
+        if marker_session_id != session_id:
+            continue
+
+        inbox = alias_dir / "inbox"
+        if not inbox.exists():
+            continue
+
+        for msg_file in sorted(inbox.glob("*.json")):
+            try:
+                data = json.loads(msg_file.read_text())
+                messages.append({
+                    "message_type": data.get("message_type", "direct"),
+                    "sender": data.get("sender", "unknown"),
+                    "payload": data.get("payload", {}),
+                    "correlation_id": data.get("correlation_id"),
+                    "filename": msg_file.name,
+                })
+                # Delete after processing
+                msg_file.unlink()
+            except Exception:
+                # Log broken message files before deleting
+                logger.warning("Malformed inbox message %s, deleting", msg_file)
+                try:
+                    msg_file.unlink()
+                except OSError:
+                    pass
+
+    return JSONResponse({"messages": messages})

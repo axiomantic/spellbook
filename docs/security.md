@@ -147,7 +147,7 @@ git revert --no-commit ab83dc2..HEAD
 
 Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
 
-cco works with spellbook as long as the spellbook config directory is granted write access inside the sandbox. The spellbook daemon itself runs as a launchd service outside the sandbox and is unaffected, but Claude Code's PreToolUse/PostToolUse hook subprocesses run inside the sandboxed process tree and write error logs and messaging state to the config directory; without the allowlist entry those writes fail silently.
+cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
 
 Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
 
@@ -175,17 +175,17 @@ alias opencode='/path/to/spellbook/scripts/spellbook-sandbox opencode'
 
 ### What the wrapper does
 
-It resolves `$SPELLBOOK_CONFIG_DIR` (falling back to `~/.local/spellbook` then `~/.config/spellbook`) and execs:
+It resolves `$SPELLBOOK_DIR` (auto-detected from the script's own location, or set via env var) and execs:
 
 ```bash
-cco --add-dir "$SPELLBOOK_CONFIG_DIR":rw "$@"
+cco --add-dir "$SPELLBOOK_DIR":ro "$@"
 ```
 
-`--add-dir ...:rw` is what lets Claude Code's PreToolUse/PostToolUse hook subprocesses write error logs and manage messaging state inside the sandbox, while everything else outside the project stays write-denied. The spellbook daemon runs independently via launchd and is not sandboxed.
+`--add-dir ...:ro` grants read access to spellbook's resource files (skills, commands, hooks) inside the sandbox. All hook writes go through the daemon's HTTP API (`/api/hook-log`, `/api/messaging/poll`), so no write access to any spellbook directory is needed. The daemon runs independently via launchd and is not sandboxed.
 
 ### Stricter mode: `--safe`
 
-By default cco's native mode leaves the entire home directory readable; only writes are denied outside the project, the config dir, and a few auto-allowed paths. That prevents a prompt injection from deleting or corrupting files outside your project, but it does not prevent exfiltration of readable data such as SSH keys or other projects.
+By default cco's native mode leaves the entire home directory readable; only writes are denied outside the project and a few auto-allowed paths. That prevents a prompt injection from deleting or corrupting files outside your project, but it does not prevent exfiltration of readable data such as SSH keys or other projects.
 
 For read isolation, add `--safe`:
 
@@ -194,14 +194,7 @@ scripts/spellbook-sandbox --safe                  # stricter claude
 scripts/spellbook-sandbox --safe opencode         # stricter opencode
 ```
 
-`--safe` hides `$HOME` reads except for the working directory and explicitly allowlisted paths. The wrapper already adds `$SPELLBOOK_CONFIG_DIR:rw`; under `--safe` you also need the spellbook source tree readable so symlinked skills and hook scripts resolve. Add it with a second `--add-dir`:
-
-```bash
-scripts/spellbook-sandbox --safe --add-dir "$SPELLBOOK_DIR":ro
-scripts/spellbook-sandbox --safe --add-dir "$SPELLBOOK_DIR":ro opencode
-```
-
-The wrapper's own `--add-dir "$SPELLBOOK_CONFIG_DIR":rw` is preserved; your additional `--add-dir` stacks on top.
+`--safe` hides `$HOME` reads except for the working directory and explicitly allowlisted paths. The wrapper already adds `$SPELLBOOK_DIR:ro`, so skills and hook scripts resolve without additional flags.
 
 ### Threat model
 
@@ -209,6 +202,7 @@ The wrapper's own `--add-dir "$SPELLBOOK_CONFIG_DIR":rw` is preserved; your addi
 | -------------------------------------------- | -------- | -------- |
 | Trashing files outside project               | Blocked  | Blocked  |
 | Modifying shell rc or SSH config             | Blocked  | Blocked  |
+| Writing to spellbook config dir              | Blocked  | Blocked  |
 | Reading other projects under `$HOME`         | Allowed  | Blocked  |
 | Reading SSH / cloud / browser credentials    | Allowed  | Blocked  |
 | Kernel escape from sandbox-exec              | Out of scope (use a VM) | Out of scope (use a VM) |
