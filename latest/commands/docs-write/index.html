@@ -7770,7 +7770,7 @@
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># MISSION</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply anti-AI-tone rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply writing guide rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Documentation Writer. Your reputation depends on documentation that readers cannot distinguish from the best human-authored OSS docs. Generated docs that &quot;smell like AI&quot; are a career-ending failure. Every banned phrase, every info-dump paragraph, every hedging sentence is a tell that undermines the project&#39;s credibility.
@@ -7790,7 +7790,7 @@
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">1.</span> <span class="gs">**Tone profile adherence**</span>: Each section follows its assigned tone profile from the plan. Drift between profiles within a document is a defect.
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">2.</span> <span class="gs">**Diataxis skeleton compliance**</span>: Each section follows the structural skeleton from <span class="sb">`doc-templates.md`</span> for its declared Diataxis type. Structural deviations cause review failures.
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">3.</span> <span class="gs">**Anti-AI rules applied during generation**</span>: The writing subagent receives the full anti-AI-tone rules as part of its prompt. These rules are generative constraints, not post-hoc filters.
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">3.</span> <span class="gs">**Writing guide rules applied during generation**</span>: The writing subagent receives the full writing guide rules as part of its prompt. These rules are generative constraints, not post-hoc filters.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">4.</span> <span class="gs">**Output to project repository**</span>: Documentation files are project deliverables. Write to the <span class="sb">`output_path`</span> specified in the plan, relative to the project root. Never write docs to spellbook artifact directories.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">5.</span> <span class="gs">**Selective regeneration merges**</span>: When <span class="sb">`sections-filter.json`</span> is present, only regenerate listed sections. Merge new results into the existing <span class="sb">`written-manifest.json`</span> rather than replacing it.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
@@ -7804,7 +7804,7 @@
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| Existing manifest (optional) | <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> | Read |
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Tone profiles | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/tone-profiles.md`</span> | Read |
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Diataxis guide | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/diataxis-guide.md`</span> | Read |
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Anti-AI tone rules | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md`</span> | Read |
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Writing guide rules | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md`</span> | Read |
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| Doc templates | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/doc-templates.md`</span> | Read |
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Load the plan first. If <span class="sb">`plan.json`</span> does not exist, STOP and inform the user that <span class="sb">`/docs-plan`</span> must run first.
@@ -7847,7 +7847,7 @@
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">1.</span> Read all four reference files from <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/`</span>:
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`tone-profiles.md`</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`diataxis-guide.md`</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`anti-ai-tone.md`</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`writing-guide.md`</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`doc-templates.md`</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">2.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/audit-result.json`</span> for source hints and existing docs mode.
@@ -7874,7 +7874,7 @@
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>| Diataxis type rules | Extract the section matching <span class="sb">`diataxis_type`</span> from <span class="sb">`diataxis-guide.md`</span> | Structural constraints |
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>| Tone profile | Extract the section matching <span class="sb">`tone_profile`</span> from <span class="sb">`tone-profiles.md`</span> | Voice and style rules |
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>| Template skeleton | Extract the template matching <span class="sb">`diataxis_type`</span> from <span class="sb">`doc-templates.md`</span> | Document structure |
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>| Anti-AI rules | Full content of <span class="sb">`anti-ai-tone.md`</span> | Banned phrases and voice rules |
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>| Writing guide rules | Full content of <span class="sb">`writing-guide.md`</span> | Banned phrases and voice rules |
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>| Source code | Read files listed in <span class="sb">`source_hints`</span>, chunked per Context Assembly Rules | Technical content |
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>| Existing content | If <span class="sb">`existing_doc_path`</span> is set, read that file | Content to preserve and improve |
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
@@ -7901,9 +7901,9 @@
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">    {extracted template from doc-templates.md}</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">    ## Anti-AI Tone Rules (MANDATORY)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">    ## Writing Guide Rules (MANDATORY)</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">    {full content of anti-ai-tone.md}</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">    {full content of writing-guide.md}</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">    These rules are generative constraints. Apply them AS YOU WRITE,</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">    not as a post-hoc edit pass. If you catch yourself writing a banned</span>
@@ -7929,7 +7929,7 @@
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">    2. Write in the voice defined by the tone profile.</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">    3. Use ONLY information present in the source code context.</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">       Do not fabricate APIs, parameters, or behaviors.</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">    4. Apply every rule from Anti-AI Tone Rules during writing.</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">    4. Apply every rule from Writing Guide Rules during writing.</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">    5. Keep total output under 6K tokens.</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">    6. For tutorials: add &quot;Last verified: {today&#39;s date}&quot; at the end.</span>
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">    7. Write the complete document to: {project_root}/{section.output_path}</span>
@@ -7978,9 +7978,9 @@
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
 <a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">    {extracted README template from doc-templates.md}</span>
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">    ## Anti-AI Tone Rules (MANDATORY)</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">    ## Writing Guide Rules (MANDATORY)</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">    {full content of anti-ai-tone.md}</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">    {full content of writing-guide.md}</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">    ## Project Information</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
@@ -8016,7 +8016,7 @@
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">    3. Installation: single copy-paste command. No multi-step manual configuration.</span>
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">    4. Quick Start: working example in under 10 lines of code.</span>
 <a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">    5. Features: bullet list, not prose paragraphs.</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">    6. Apply every rule from Anti-AI Tone Rules.</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">    6. Apply every rule from Writing Guide Rules.</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">    7. Write the complete README to: {project_root}/{readme_plan.output_path}</span>
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">  result_schema:</span>
@@ -8111,11 +8111,11 @@
 <a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>
 <a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">-</span><span class="w"> </span>Writing documentation files to spellbook artifact directories (output goes to the project repo at output_path)
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the anti-ai-tone.md banned list in generated content
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the writing-guide.md banned list in generated content
 <a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">-</span><span class="w"> </span>Mixing Diataxis types within a single document (tutorial steps in a reference doc, concept explanations in a how-to)
 <a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">-</span><span class="w"> </span>Exceeding 12K token source context per writing subagent dispatch
 <a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">-</span><span class="w"> </span>Exceeding 6K token output per generated section
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Skipping anti-AI-tone rules in writing subagent prompts (rules must be included in full)
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Skipping writing guide rules in writing subagent prompts (rules must be included in full)
 <a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Fabricating API signatures, parameters, return types, or behaviors not present in source code
 <a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">-</span><span class="w"> </span>Silently overwriting an existing written-manifest.json without offering reuse (unless sections_filter is present)
 <a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">-</span><span class="w"> </span>Generating non-MVP sections when running in MVP tier
@@ -8126,7 +8126,7 @@
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>&lt;reflection&gt;
 <a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>After completing generation, verify:
 <a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">-</span><span class="w"> </span>Were all MVP sections from the plan either written or logged as skipped with a reason?
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the full anti-AI-tone rules in its prompt?
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the full writing guide rules in its prompt?
 <a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the correct tone profile for its section?
 <a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="k">-</span><span class="w"> </span>Are all generated files located in the project repository at their planned output_path?
 <a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="k">-</span><span class="w"> </span>If sections_filter was present, were results merged into the existing manifest (not replaced)?

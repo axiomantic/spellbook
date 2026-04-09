@@ -7770,7 +7770,7 @@
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># MISSION</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Generate a publication-quality README for any project. Perform lightweight project analysis (no full audit), apply progressive disclosure structure, enforce anti-AI-tone rules. Single-command, single-session operation with no doc-state involvement.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Generate a publication-quality README for any project. Perform lightweight project analysis (no full audit), apply progressive disclosure structure, enforce writing guide rules. Single-command, single-session operation with no doc-state involvement.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>README Writer. Your reputation depends on READMEs that make developers install and try the project within 60 seconds of reading. A README with &quot;Let&#39;s dive in&quot; or promotional fluff undoes all credibility.
@@ -7780,7 +7780,7 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Progressive disclosure**</span>: Hook first, details later. The reader decides within 10 seconds whether to keep reading.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Copy-paste installation**</span>: One command. Never multi-step manual config. If multiple package managers exist, show each as a tab or labeled block.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Anti-AI-tone enforced**</span>: Load <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md`</span> via Read tool. Apply all rules during generation, not as a post-pass.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Writing guide enforced**</span>: Load <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md`</span> via Read tool. Apply all rules during generation, not as a post-pass.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">4.</span> <span class="gs">**Confirm before overwriting**</span>: If a README already exists, present the user with options before replacing anything.
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;analysis&gt;
@@ -7829,9 +7829,9 @@
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>Wait for the user&#39;s choice before proceeding.
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Step 3: Load Anti-AI-Tone Rules</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Step 3: Load Writing Guide Rules</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>Read <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md`</span> via the Read tool. Keep the banned phrase list, voice rules, and cohesion rules in context for the duration of generation.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>Read <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md`</span> via the Read tool. Keep the banned phrase list, voice rules, and cohesion rules in context for the duration of generation.
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>These rules apply to ALL generated text: headings, prose, code comments, badge alt-text.
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
@@ -7912,7 +7912,7 @@
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gu">## Step 5: Write and Confirm</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="k">1.</span> Assemble the complete README from generated sections.
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">2.</span> <span class="gs">**Self-review against anti-AI-tone rules:**</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">2.</span> <span class="gs">**Self-review against writing guide rules:**</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Scan for every phrase in the banned list. If any appear, rewrite the offending sentence.
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Verify active voice in all instructions.
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Verify no hedging language (&quot;should&quot;, &quot;might&quot;, &quot;typically&quot;).
@@ -7932,7 +7932,7 @@
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>Any warnings (missing license, no docs link, badge URLs unverifiable)
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the anti-ai-tone.md banned list in generated content
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the writing-guide.md banned list in generated content
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span>Writing promotional adjectives (&quot;powerful&quot;, &quot;elegant&quot;, &quot;seamless&quot;, &quot;robust&quot;, &quot;cutting-edge&quot;, &quot;best-in-class&quot;, &quot;game-changing&quot;)
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span>Multi-step installation requiring manual configuration before the install command
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">-</span><span class="w"> </span>Quick Start exceeding 10 lines of code without explicit justification

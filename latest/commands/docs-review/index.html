@@ -7799,7 +7799,7 @@
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>|--------|------|------|
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Written manifest | <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> | Read |
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Documentation plan | <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json`</span> | Read |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| Anti-AI tone rules | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md`</span> | Read |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| Writing guide rules | <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md`</span> | Read |
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Previous review (optional) | <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/review-result.json`</span> | Read |
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>Load the written manifest first. If <span class="sb">`written-manifest.json`</span> does not exist, STOP and inform the user that <span class="sb">`/docs-write`</span> must run first.
@@ -7808,7 +7808,7 @@
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| # | Criterion | Measurement Method | Pass Condition |
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>|---|-----------|-------------------|----------------|
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| 1 | Banned phrase detection | Grep against phrase list from <span class="sb">`anti-ai-tone.md`</span> | Zero matches across all files |
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| 1 | Banned phrase detection | Grep against phrase list from <span class="sb">`writing-guide.md`</span> | Zero matches across all files |
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| 2 | Code block validity | Automated parse of fenced blocks | All 3 MVP checks pass (see below) |
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| 3 | Build config validity | Run build tool (<span class="sb">`mkdocs build --strict`</span>) | Zero errors, all nav links resolve |
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| 4 | Diataxis compliance | Structural checklist (4 sub-checks) | All 4 sub-checks pass per file |
@@ -7863,7 +7863,7 @@
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">2.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json`</span> via Read tool.
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Needed for: Diataxis type and tone profile assignments per section, build tool info, coverage checks.
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">3.</span> Read <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md`</span> via Read tool.
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">3.</span> Read <span class="sb">`$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md`</span> via Read tool.
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Needed for: banned phrase list (criterion 1), voice rule checks (criteria 5, 6).
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">4.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/review-result.json`</span> via Read tool (if it exists).
@@ -7875,7 +7875,7 @@
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gu">#### Criterion 1: Banned Phrase Detection</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>For each banned phrase in <span class="sb">`anti-ai-tone.md`</span>:
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>For each phrase in the &quot;Banned Phrases&quot; section of <span class="sb">`writing-guide.md`</span>:
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">1.</span> Use the Grep tool with the phrase as pattern, searching across all files listed in the written manifest.
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">2.</span> Record every match: file path, line number, matched phrase.
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">3.</span> <span class="gs">**Pass condition:**</span> Zero total matches across all files.

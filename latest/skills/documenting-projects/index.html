@@ -7767,7 +7767,7 @@
 
 
 <h1 id="documenting-projects">documenting-projects<a class="headerlink" href="#documenting-projects" title="Permanent link">&para;</a></h1>
-<p>Multi-phase documentation orchestrator that coordinates project analysis, planning, generation, and quality review through specialized subagents. Produces Diataxis-structured docs with enforced tone profiles and anti-AI tone rules. Invoke with <code>/document-project</code> or describe your documentation needs, and this skill manages the full pipeline from audit through reviewed delivery. For standalone README generation, use <code>/write-readme</code> instead.</p>
+<p>Multi-phase documentation orchestrator that coordinates project analysis, planning, generation, and quality review through specialized subagents. Produces Diataxis-structured docs with enforced tone profiles and writing guide rules. Invoke with <code>/document-project</code> or describe your documentation needs, and this skill manages the full pipeline from audit through reviewed delivery. For standalone README generation, use <code>/write-readme</code> instead.</p>
 <p><strong>Auto-invocation:</strong> Your coding assistant will automatically invoke this skill when it detects a matching trigger.</p>
 <blockquote>
 <p>Use when generating, improving, or auditing project documentation. Triggers: 'document this project', 'write docs', 'generate documentation', 'docs are outdated', 'need a README', 'create tutorials', 'API reference docs', 'doc audit', 'documentation review', '/document-project'. Standalone README: use /write-readme. NOT for: code changes (use develop), code review (use code-review), or research (use deep-research).</p>
@@ -7808,7 +7808,7 @@
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">1.</span> <span class="gs">**Diataxis First**</span>: Every document maps to exactly one Diataxis type. Mode mixing is a defect.
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">2.</span> <span class="gs">**Tone is Non-Negotiable**</span>: Each section follows its assigned tone profile. Deviations trigger re-generation.
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">3.</span> <span class="gs">**Anti-AI-Tone Rules Apply to ALL Content**</span>: No banned phrases, no hedging, no marketing language. Enforced during generation, not as an afterthought.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">3.</span> <span class="gs">**Writing Guide Rules Apply to ALL Content**</span>: No banned phrases, no hedging, no marketing language. Enforced during generation, not as an afterthought.
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">4.</span> <span class="gs">**Quality Gates Must Pass Before Docs Ship**</span>: All 8 review criteria evaluated, all must pass or user explicitly accepts known issues.
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">5.</span> <span class="gs">**Output Goes to Project Repo**</span>: Documentation files are project deliverables, not spellbook artifacts. Write directly to the project&#39;s docs directory.
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
@@ -7948,7 +7948,7 @@
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>| # | Criterion | Pass Condition |
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>|---|-----------|----------------|
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>| 1 | Banned phrase detection | Zero matches against anti-ai-tone.md |
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>| 1 | Banned phrase detection | Zero matches against writing-guide.md |
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| 2 | Code example validity | Language tags, non-empty, language matches project |
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>| 3 | Build config validity | Zero errors from build tool |
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| 4 | Diataxis compliance | No type mixing, correct structure per type |
