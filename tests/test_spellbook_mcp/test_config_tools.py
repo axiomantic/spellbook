@@ -1,6 +1,7 @@
 """Tests for spellbook config management and session initialization tools."""
 
 import json
+import logging
 import pytest
 from pathlib import Path
 
@@ -346,6 +347,122 @@ class TestSessionInit:
         assert result["mode"]["persona"] == ""
         assert result["fun_mode"] == "yes"
         assert result["persona"] == ""
+
+
+class TestSessionInitPlatform:
+    """Tests for session_init platform parameter."""
+
+    def test_platform_included_in_response(self, tmp_path, monkeypatch):
+        """Test that platform value is returned in the response."""
+        from spellbook.core.config import session_init, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        result = session_init(platform="claude_code")
+
+        assert result["platform"] == "claude_code"
+
+        _session_states.clear()
+
+    def test_platform_none_by_default(self, tmp_path, monkeypatch):
+        """Test backward compatibility: platform is None when not provided."""
+        from spellbook.core.config import session_init, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        result = session_init()
+
+        assert result["platform"] is None
+
+        _session_states.clear()
+
+    def test_valid_platform_values(self, tmp_path, monkeypatch):
+        """Test that all valid platform values are accepted."""
+        from spellbook.core.config import session_init, VALID_PLATFORMS, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+
+        for platform in VALID_PLATFORMS:
+            _session_states.clear()
+            result = session_init(platform=platform)
+            assert result["platform"] == platform
+
+        _session_states.clear()
+
+    def test_unknown_platform_accepted_with_warning(self, tmp_path, monkeypatch, caplog):
+        """Test that unknown platform values are accepted (logged as warning)."""
+        from spellbook.core.config import session_init, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        with caplog.at_level(logging.WARNING, logger="spellbook.core.config"):
+            result = session_init(platform="unknown_platform")
+
+        assert result["platform"] == "unknown_platform"
+        assert "Unknown platform" in caplog.text
+
+        _session_states.clear()
+
+    def test_platform_stored_in_session_state(self, tmp_path, monkeypatch):
+        """Test that platform is stored in the session state dict."""
+        from spellbook.core.config import (
+            session_init, _session_states, _get_session_state, DEFAULT_SESSION_ID
+        )
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        session_init(platform="opencode")
+
+        state = _get_session_state(DEFAULT_SESSION_ID)
+        assert state["platform"] == "opencode"
+
+        _session_states.clear()
+
+    def test_platform_with_session_id(self, tmp_path, monkeypatch):
+        """Test that platform is stored per-session."""
+        from spellbook.core.config import (
+            session_init, _session_states, _get_session_state
+        )
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        session_init(session_id="session-a", platform="claude_code")
+        session_init(session_id="session-b", platform="gemini")
+
+        assert _get_session_state("session-a")["platform"] == "claude_code"
+        assert _get_session_state("session-b")["platform"] == "gemini"
+
+        _session_states.clear()
+
+    def test_platform_persists_across_calls_without_argument(self, tmp_path, monkeypatch):
+        """Platform set in one call is returned in response of a later call
+        that omits the argument (e.g. session resume)."""
+        from spellbook.core.config import session_init, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        # First call establishes the platform
+        first = session_init(session_id="sess-resume", platform="opencode")
+        assert first["platform"] == "opencode"
+
+        # Second call without platform arg should still report it
+        second = session_init(session_id="sess-resume")
+        assert second["platform"] == "opencode"
+
+        _session_states.clear()
 
 
 class TestSessionModeSet:

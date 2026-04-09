@@ -36,7 +36,7 @@ class TestSessionInitMemoryRegeneration:
             from spellbook.core.config import session_init
             result = session_init(project_path="/Users/alice/project")
 
-        expected_result = {"mode": {"type": "none"}, "fun_mode": "no", "resume_available": False}
+        expected_result = {"mode": {"type": "none"}, "fun_mode": "no", "resume_available": False, "platform": None}
         mock_session_state.assert_call(args=(None,), kwargs={})
         mock_config_get.assert_call(args=("session_mode",), kwargs={})
         mock_config_get.assert_call(args=("fun_mode",), kwargs={})

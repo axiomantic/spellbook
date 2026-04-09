@@ -3,30 +3,28 @@
 
 Execute these steps IN ORDER before responding to the user:
 
-### Step 0: Platform Detection
+### Step 0: Platform Self-Identification
 
-```bash
-env | grep -iE '(opencode|claude|codex|gemini)' | head -20
-```
+Identify your platform from your own system prompt or runtime context:
 
-| Environment Variable | Platform | Assistant Name |
-|---------------------|----------|----------------|
-| `OPENCODE=1` | OpenCode | OpenCode |
-| `CLAUDE_PROJECT_DIR` or `CLAUDE_ENV_FILE` | Claude Code | Claude |
-| `CODEX_SANDBOX` or `CODEX_SANDBOX_NETWORK_DISABLED` | Codex | Codex |
-| `GEMINI_CLI=1` | Gemini CLI | Gemini |
+| Platform | Self-identification signal | `platform` value | Assistant Name |
+|----------|---------------------------|------------------|----------------|
+| Claude Code | You know you are Claude Code | `claude_code` | Claude |
+| OpenCode | Your system prompt mentions OpenCode or YOLO mode | `opencode` | OpenCode |
+| Codex | Your system prompt mentions Codex sandbox | `codex` | Codex |
+| Gemini CLI | Your system prompt mentions Gemini CLI | `gemini` | Gemini |
 
-No known indicator found: default to "Claude". Use detected name in greetings and self-references.
+If uncertain, omit the `platform` parameter (backward compatible). Use the assistant name in greetings.
 
 ### Step 0.5: OpenCode Agent Inheritance (OpenCode Only)
 
 <CRITICAL>
-If `OPENCODE=1`, track and propagate agent type to all subagents.
+If platform is `opencode`, track and propagate agent type to all subagents.
 
 **Detection:** Check system prompt:
-- "operating in YOLO mode" → `yolo`
-- "YOLO mode with a focus on precision" → `yolo-focused`
-- No YOLO indicators → `general` (default)
+- "operating in YOLO mode" -> `yolo`
+- "YOLO mode with a focus on precision" -> `yolo-focused`
+- No YOLO indicators -> `general` (default)
 
 **Store as `CURRENT_AGENT_TYPE`.** When dispatching via Task tool:
 - `CURRENT_AGENT_TYPE` is `yolo` or `yolo-focused`: pass that same value as `subagent_type`
@@ -37,7 +35,7 @@ If `OPENCODE=1`, track and propagate agent type to all subagents.
 
 ### Step 1: Session Mode and Resume Initialization
 
-1. Call `spellbook_session_init` MCP tool with `continuation_message` = user's first message (if available)
+1. Call `spellbook_session_init` MCP tool with `platform` = your platform value from Step 0, and `continuation_message` = user's first message (if available)
 2. Handle response per Session Mode table below
 3. If `resume_available: true`, follow Session Resume instructions
 4. Greet with "Welcome to spellbook-enhanced [assistant name]." If `admin_url` is present in the session_init response, append: "Admin: [admin_url]"
