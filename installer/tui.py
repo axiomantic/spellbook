@@ -405,6 +405,10 @@ def render_post_install_notes(
             "[cyan]cco[/cyan]: detected on PATH. For sandboxed YOLO mode, launch Claude Code / "
             "OpenCode via the [cyan]spellbook-sandbox[/cyan] launcher. See docs/security.md"
         )
+        lines.append(
+            "[cyan]Aliases[/cyan]: Run the installer interactively to set up "
+            "[cyan]claude[/cyan] and [cyan]opencode[/cyan] shell aliases for sandboxed launch"
+        )
 
     if lines:
         body = "\n".join(lines)

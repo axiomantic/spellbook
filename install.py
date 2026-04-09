@@ -1266,6 +1266,37 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     else:
         show_admin_info(admin_enabled)
 
+    # Offer sandbox aliases if cco is available
+    if not args.dry_run and session.success and shutil.which("cco"):
+        try:
+            from installer.components.aliases import (
+                get_shell_rc_path,
+                install_aliases,
+            )
+
+            rc_path = get_shell_rc_path()
+            if rc_path is not None:
+                offer_aliases = False
+                if getattr(args, "yes", False):
+                    offer_aliases = True
+                elif sys.stdin.isatty():
+                    sys.stdout.write(
+                        "\ncco detected. Install shell aliases so `claude` and "
+                        "`opencode` launch sandboxed? [Y/n] "
+                    )
+                    sys.stdout.flush()
+                    response = input().strip().lower()
+                    offer_aliases = response in ("", "y", "yes")
+
+                if offer_aliases:
+                    alias_result = install_aliases(spellbook_dir, dry_run=args.dry_run)
+                    if alias_result["installed"]:
+                        print(f"  Aliases installed in {alias_result['rc_path']}")
+                        print("  Restart your shell or run: source "
+                              f"{alias_result['rc_path']}")
+        except Exception as e:
+            print(f"\nWarning: Could not install aliases: {e}")
+
     # Show what's new on upgrade
     if not args.dry_run:
         show_whats_new(spellbook_dir, session.previous_version, session.version)

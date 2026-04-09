@@ -202,6 +202,27 @@ The daemon runs independently via launchd and is not sandboxed.
 | Network access (localhost + outbound)        | Allowed |
 | Kernel escape from sandbox-exec              | Out of scope (use a VM) |
 
+### OpenCode desktop and web app
+
+The OpenCode Electron desktop app supports connecting to an externally-launched server. This lets you sandbox the server process (where all agent execution happens) while the desktop UI runs unsandboxed.
+
+Launch the sandboxed server:
+
+```bash
+OPENCODE_SERVER_PASSWORD=mypass spellbook-sandbox opencode serve --port 8080
+```
+
+Then in the Electron desktop app, open the server selection dialog and add:
+- URL: `http://127.0.0.1:8080`
+- Password: `mypass`
+
+The server runs inside cco's sandbox with the same protections as the CLI. The desktop UI connects over HTTP and is unaffected by sandbox restrictions.
+
+Notes:
+- The Tauri desktop app does not support external servers; use the Electron version.
+- `opencode serve` supports `--hostname`, `--cors`, and `--mdns` (Bonjour auto-discovery) flags.
+- Set `OPENCODE_SERVER_PASSWORD` to a strong value in production; without it the server is unauthenticated.
+
 ## Source Citations
 
 The security audit and hardening drew from 45 sources. The top references:
