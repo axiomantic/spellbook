@@ -70,7 +70,7 @@ class TestSessionInitMessaging:
             mock_session_id.assert_call(args=(ctx,))
             mock_init.assert_call(
                 args=("test-session-1",),
-                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
+                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo", "platform": None},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
             mock_derive.assert_call(
@@ -117,7 +117,7 @@ class TestSessionInitMessaging:
             mock_session_id.assert_call(args=(ctx,))
             mock_init.assert_call(
                 args=("test-session-2",),
-                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
+                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo", "platform": None},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
             mock_derive.assert_call(
@@ -167,6 +167,7 @@ class TestSessionInitMessaging:
                 kwargs={
                     "continuation_message": "where were we?",
                     "project_path": "/tmp/myrepo",
+                    "platform": None,
                 },
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
@@ -217,7 +218,7 @@ class TestSessionInitMessaging:
             mock_session_id.assert_call(args=(ctx,))
             mock_init.assert_call(
                 args=("test-session-4",),
-                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
+                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo", "platform": None},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
             mock_derive.assert_call(
@@ -271,7 +272,7 @@ class TestSessionInitMessaging:
             mock_session_id.assert_call(args=(ctx,))
             mock_init.assert_call(
                 args=("test-session-5",),
-                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
+                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo", "platform": None},
             )
             mock_git.assert_call(
                 args=("/tmp/myrepo",),
@@ -321,7 +322,7 @@ class TestSessionInitMessaging:
             mock_session_id.assert_call(args=(ctx,))
             mock_init.assert_call(
                 args=("test-session-6",),
-                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo"},
+                kwargs={"continuation_message": None, "project_path": "/tmp/myrepo", "platform": None},
             )
             mock_git.assert_call(args=("/tmp/myrepo",))
             mock_derive.assert_call(
