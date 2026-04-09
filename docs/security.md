@@ -143,6 +143,77 @@ To revert all security hardening:
 git revert --no-commit ab83dc2..HEAD
 ```
 
+## Sandboxing with cco (macOS)
+
+Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
+
+cco works with spellbook as long as the spellbook config directory is granted write access inside the sandbox. The daemon and hook subprocesses write SQLite state there on every tool call; without the allowlist entry those writes fail silently.
+
+Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
+
+### Quick start
+
+Install cco:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikvdp/cco/master/install.sh | bash
+```
+
+Launch Claude Code (or OpenCode) through the wrapper:
+
+```bash
+scripts/spellbook-sandbox                  # == cco claude
+scripts/spellbook-sandbox opencode         # launch OpenCode sandboxed
+```
+
+Add the script directory to your PATH, or alias for convenience:
+
+```bash
+alias claude='/path/to/spellbook/scripts/spellbook-sandbox'
+alias opencode='/path/to/spellbook/scripts/spellbook-sandbox opencode'
+```
+
+### What the wrapper does
+
+It resolves `$SPELLBOOK_CONFIG_DIR` (falling back to `~/.local/spellbook` then `~/.config/spellbook`) and execs:
+
+```bash
+cco --add-dir "$SPELLBOOK_CONFIG_DIR":rw "$@"
+```
+
+`--add-dir ...:rw` is what lets the spellbook daemon and PreToolUse/PostToolUse hooks write their SQLite databases while everything else outside the project stays write-denied.
+
+### Stricter mode: `--safe`
+
+By default cco's native mode leaves the entire home directory readable; only writes are denied outside the project, the config dir, and a few auto-allowed paths. That prevents a prompt injection from deleting or corrupting files outside your project, but it does not prevent exfiltration of readable data such as SSH keys or other projects.
+
+For read isolation, add `--safe`:
+
+```bash
+scripts/spellbook-sandbox --safe                  # stricter claude
+scripts/spellbook-sandbox --safe opencode         # stricter opencode
+```
+
+`--safe` hides `$HOME` reads except for the working directory and explicitly allowlisted paths. The wrapper already adds `$SPELLBOOK_CONFIG_DIR:rw`; under `--safe` you also need the spellbook source tree readable so symlinked skills and hook scripts resolve. Add it with a second `--add-dir`:
+
+```bash
+scripts/spellbook-sandbox --safe --add-dir "$SPELLBOOK_DIR":ro
+scripts/spellbook-sandbox --safe --add-dir "$SPELLBOOK_DIR":ro opencode
+```
+
+The wrapper's own `--add-dir "$SPELLBOOK_CONFIG_DIR":rw` is preserved; your additional `--add-dir` stacks on top.
+
+### Threat model
+
+| Threat                                       | Non-safe | `--safe` |
+| -------------------------------------------- | -------- | -------- |
+| Trashing files outside project               | Blocked  | Blocked  |
+| Modifying shell rc or SSH config             | Blocked  | Blocked  |
+| Reading other projects under `$HOME`         | Allowed  | Blocked  |
+| Reading SSH / cloud / browser credentials    | Allowed  | Blocked  |
+| Kernel escape from sandbox-exec              | Out of scope (use a VM) | Out of scope (use a VM) |
+
+Start with non-safe if you need package installs and general convenience; graduate to `--safe` once you are comfortable maintaining the read allowlist.
 ## Source Citations
 
 The security audit and hardening drew from 45 sources. The top references:

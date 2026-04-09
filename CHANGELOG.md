@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2026-04-09
+
+### Added
+- **cco sandbox launcher**: `scripts/spellbook-sandbox` wraps [nikvdp/cco](https://github.com/nikvdp/cco) with spellbook's config directory allowlisted for writes, so Claude Code / OpenCode / Codex can run under YOLO mode with automatic sandboxing without breaking the hook subprocesses that write error logs and messaging state to the config directory.
+- **Sandboxing documentation**: New `## Sandboxing with cco (macOS)` section in `docs/security.md` covering quick-start, `--safe` mode, and threat model.
+- **Installer post-install hint**: `render_post_install_notes()` surfaces an optional hint when `cco` is detected on `PATH`, pointing to the launcher and docs.
+
 ## [0.50.0] - 2026-04-08
 
 ### Removed

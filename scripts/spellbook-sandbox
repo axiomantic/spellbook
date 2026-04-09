@@ -1,0 +1,31 @@
+#!/bin/sh
+# spellbook-sandbox: launch Claude Code / OpenCode / Codex under nikvdp/cco
+# with spellbook's config dir allowlisted for writes.
+#
+# Usage:
+#   spellbook-sandbox                          # == cco claude (default)
+#   spellbook-sandbox opencode                 # launch OpenCode sandboxed
+#   spellbook-sandbox --safe                   # stricter: hide $HOME reads
+#   spellbook-sandbox --safe opencode          # combine
+#
+# See docs/security.md for details.
+
+set -eu
+
+if [ -z "${SPELLBOOK_CONFIG_DIR:-}" ]; then
+    if [ -d "$HOME/.local/spellbook" ]; then
+        SPELLBOOK_CONFIG_DIR="$HOME/.local/spellbook"
+    elif [ -d "$HOME/.config/spellbook" ]; then
+        SPELLBOOK_CONFIG_DIR="$HOME/.config/spellbook"
+    else
+        echo "spellbook-sandbox: cannot locate SPELLBOOK_CONFIG_DIR (set it explicitly or install spellbook)" >&2
+        exit 1
+    fi
+fi
+
+if ! command -v cco >/dev/null 2>&1; then
+    echo "spellbook-sandbox: cco not found on PATH. Install from https://github.com/nikvdp/cco" >&2
+    exit 1
+fi
+
+exec cco --add-dir "$SPELLBOOK_CONFIG_DIR":rw "$@"
