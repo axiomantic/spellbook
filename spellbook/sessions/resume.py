@@ -4,7 +4,6 @@ Includes schema validation for workflow state loaded from the database,
 to prevent injection attacks via persisted state.
 """
 
-import hashlib
 import json
 import logging
 import os
@@ -779,9 +778,6 @@ def validate_workflow_state(
 
     is_valid = len(findings) == 0
 
-    if not is_valid and db_path is not None:
-        _mark_hostile_and_log(state, findings, db_path)
-
     if is_valid:
         return {
             "valid": True,
@@ -904,7 +900,7 @@ def _check_state_injection(state: dict) -> list[dict]:
     findings: list[dict] = []
 
     try:
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
     except ImportError:
         logger.warning("Security check module not available, skipping injection check")
         return findings
@@ -926,64 +922,6 @@ def _check_state_injection(state: dict) -> list[dict]:
             })
 
     return findings
-
-
-def _mark_hostile_and_log(
-    state: dict,
-    findings: list[dict],
-    db_path: str,
-) -> None:
-    """Mark rejected state as hostile in trust registry and log security event.
-
-    Args:
-        state: The rejected workflow state dict.
-        findings: List of finding dicts describing the issues.
-        db_path: Path to the database.
-    """
-    try:
-        from spellbook.security.tools import do_log_event, do_set_trust
-    except ImportError:
-        logger.warning("Security tools not available, skipping hostile marking")
-        return
-
-    # Compute a content hash for the state
-    state_json = json.dumps(state, sort_keys=True, default=str)
-    content_hash = hashlib.sha256(state_json.encode("utf-8")).hexdigest()
-
-    # Mark as hostile in trust registry
-    try:
-        do_set_trust(
-            content_hash=content_hash,
-            source="workflow_state_validation",
-            trust_level="hostile",
-            db_path=db_path,
-        )
-    except Exception as e:
-        logger.error(f"Failed to mark state as hostile: {e}")
-
-    # Log security event
-    max_severity = "HIGH"
-    for f in findings:
-        if f.get("severity") == "CRITICAL":
-            max_severity = "CRITICAL"
-            break
-
-    findings_summary = "; ".join(
-        f.get("message", "unknown issue")[:100] for f in findings[:5]
-    )
-
-    try:
-        do_log_event(
-            event_type="workflow_state_rejected",
-            severity=max_severity,
-            source="workflow_state_validation",
-            detail=f"Workflow state rejected: {findings_summary}",
-            tool_name="workflow_state_load",
-            action_taken="state_rejected",
-            db_path=db_path,
-        )
-    except Exception as e:
-        logger.error(f"Failed to log security event: {e}")
 
 
 def load_workflow_state(

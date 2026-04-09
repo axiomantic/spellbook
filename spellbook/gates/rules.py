@@ -12,7 +12,6 @@ Also provides:
 - INVISIBLE_CHARS set for Unicode-based steganography detection
 - shannon_entropy() for entropy-based obfuscation detection
 - check_patterns() for matching text against rule sets
-- TRUST_LEVELS hierarchy for content trust classification
 """
 
 import math
@@ -383,14 +382,6 @@ MCP_RULES: list[tuple[str, Severity, str, str]] = [
 
 
 # =============================================================================
-# Backward-compatible aliases (from task context acceptance criteria)
-# =============================================================================
-
-INJECTION_TRIGGERS = INJECTION_RULES
-EXFILTRATION_PATTERNS = EXFILTRATION_RULES
-
-
-# =============================================================================
 # Invisible Characters
 # =============================================================================
 
@@ -414,19 +405,6 @@ INVISIBLE_CHARS: set[str] = {
     "\ufff9",  # interlinear annotation anchor
     "\ufffa",  # interlinear annotation separator
     "\ufffb",  # interlinear annotation terminator
-}
-
-
-# =============================================================================
-# Trust Levels
-# =============================================================================
-
-TRUST_LEVELS: dict[str, int] = {
-    "system": 5,
-    "verified": 4,
-    "user": 3,
-    "untrusted": 2,
-    "hostile": 1,
 }
 
 

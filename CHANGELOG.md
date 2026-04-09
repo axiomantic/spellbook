@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0] - 2026-04-08
+
+### Removed
+
+**Nuclear security cleanup**: a large pile of markdown-theater "security" features
+that were never invoked, broken, or created false confidence has been deleted.
+Pre-1.0 breaking change. Surviving gates: the Bash `PreToolUse` pattern check, the
+spawn-session pattern check plus rate limit, the `workflow_state_save/load`
+validator, and the pre-commit scanner.
+
+- **PromptSleuth** semantic intent classification (source, tests, MCP tools,
+  config keys, installer entries, DB tables `intent_checks`, `sleuth_budget`,
+  `sleuth_cache`). Never reached production; depended on an uninstalled SDK path.
+- **Ed25519 cryptographic provenance**: signing, verification, key generation,
+  installer bootstrap, `installer/components/keys.py`, and the hook-level
+  crypto gate. The gate silently blocked every call because content was never
+  actually signed end-to-end. `cryptography` dropped from dependencies.
+- **Canary tokens** (MCP tools, hook post-tool scanning, `canary_tokens` table,
+  health check).
+- **Session content accumulator** for "split injection" detection
+  (`session_content_accumulator` table, MCP tools, hook writer).
+- **Trust registry** (MCP tools, `trust_registry` table, hostile-marking path in
+  workflow state validation, skill-level trust tier system).
+- **Security event logging + dashboard + query CLI** (`security_events` table,
+  `security_log_event`/`security_query_events`/`security_dashboard` MCP tools,
+  `spellbook security events` CLI subcommand, admin `/api/security` routes,
+  admin `/api/analytics` routes, admin dashboard security counts).
+- **Spotlighting** (delimiter-based external content wrapping, hook integration,
+  PR fetch wrapper, config keys).
+- **Security modes** (`security_mode` table, `security_set_mode` MCP tool,
+  `get_current_mode`/`should_auto_elevate` helpers, `--mode` CLI flags).
+- **Input/output sanitization MCP surface** (`security_check_output`,
+  `security_sanitize_input`, `do_sanitize_input`, `do_check_output`).
+- **Honeypot MCP decoy tools** (`security_disable_all_checks`,
+  `system_prompt_dump`, `credential_export`) — depended on deleted event logging.
+- **LODO evaluation harness** (`scripts/run_lodo_eval.py`, datasets).
+- **`security-trust-tiers` skill** plus all references in `AGENTS.spellbook.md`,
+  README, docs, and `dispatching-parallel-agents`.
+- **Installer security wizard** / `--security-level` / `--security-wizard` flags /
+  `installer/components/security.py` / feature group UI.
+- **`check_security_domain` health probe** (dropped from `FULL_DOMAINS`).
+- Legacy `TRUST_LEVELS`, `INJECTION_TRIGGERS`, `EXFILTRATION_PATTERNS` exports.
+
+### Changed
+
+- **`spellbook/security/` renamed to `spellbook/gates/`** to reflect its new
+  reality as pattern-based gates, not a security framework. All imports updated.
+  The scanner, rules, check module, and the trimmed `do_detect_injection`
+  helper move with it. `python3 -m spellbook.gates.check` is the CLI entry
+  point used by the OpenCode plugin.
+- **`security_check_tool_input`** is now the only remaining `security_*` MCP
+  tool. It wraps the same `check_tool_input` used by the hooks.
+- **`init_db`** drops the deleted tables if they exist (cleanup path for
+  upgraded installs); no new CREATE TABLE statements for deleted features.
+- **Surviving gates run unconditionally.** No more `security.mode`,
+  `security.enabled`, `security.spotlighting.*`, `security.crypto.*`,
+  `security.sleuth.*`, or `security.lodo.*` config keys.
+
 ## [0.49.0] - 2026-04-08
 
 ### Changed

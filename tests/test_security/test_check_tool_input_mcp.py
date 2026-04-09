@@ -1,7 +1,7 @@
 """Tests for the security_check_tool_input MCP tool.
 
 Validates that the MCP tool wrapper in server.py correctly delegates
-to check_tool_input() from spellbook.security.check, preserving
+to check_tool_input() from spellbook.gates.check, preserving
 the same return contract: {"safe": bool, "findings": [...], "tool_name": str}.
 
 Note: fastmcp 2.x wraps @mcp.tool()-decorated functions in FunctionTool objects,
@@ -79,7 +79,7 @@ class TestSecurityCheckToolInput:
 
     def test_matches_check_tool_input_directly(self):
         """MCP wrapper should produce identical results to calling check_tool_input directly."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
         from spellbook.server import security_check_tool_input
 
         tool_name = "Bash"

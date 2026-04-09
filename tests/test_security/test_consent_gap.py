@@ -14,7 +14,7 @@ import textwrap
 
 import pytest
 
-from spellbook.security.rules import Category, Severity
+from spellbook.gates.rules import Category, Severity
 
 
 class TestConsentGapMatchingDescription:
@@ -22,7 +22,7 @@ class TestConsentGapMatchingDescription:
 
     def test_skill_with_matching_description_passes(self, tmp_skill):
         """Skill describing Bash usage that uses Bash produces no findings."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -44,7 +44,7 @@ class TestConsentGapMatchingDescription:
 
     def test_skill_describing_multiple_tools_passes(self, tmp_skill):
         """Skill describing Write and Edit usage that uses both produces no findings."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -66,7 +66,7 @@ class TestConsentGapUndeclaredBash:
 
     def test_undeclared_bash_usage_flagged(self, tmp_skill):
         """Skill saying 'format markdown' but using Bash is a consent gap."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -87,7 +87,7 @@ class TestConsentGapUndeclaredBash:
 
     def test_bash_in_code_block_flagged(self, tmp_skill):
         """Bash referenced inside a code block is still detected."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -112,7 +112,7 @@ class TestConsentGapUndeclaredWebFetch:
 
     def test_undeclared_webfetch_usage_flagged(self, tmp_skill):
         """Skill not mentioning WebFetch in description but using it is a consent gap."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -137,7 +137,7 @@ class TestConsentGapDescriptionMention:
 
     def test_tool_in_description_not_flagged(self, tmp_skill):
         """If description says 'WebSearch' then WebSearch in body is fine."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -155,7 +155,7 @@ class TestConsentGapDescriptionMention:
 
     def test_description_with_tool_keyword_variant(self, tmp_skill):
         """Description mentioning 'bash' (lowercase) covers Bash usage."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -177,7 +177,7 @@ class TestConsentGapMultipleUndeclaredTools:
 
     def test_multiple_undeclared_tools(self, tmp_skill):
         """Skill using Bash, Write, and WebFetch without declaring any produces 3 findings."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -201,7 +201,7 @@ class TestConsentGapMultipleUndeclaredTools:
 
     def test_multiple_undeclared_tools_severity_mapping(self, tmp_skill):
         """Each undeclared tool gets the correct severity for its risk level."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -232,7 +232,7 @@ class TestConsentGapNonSkillFiles:
 
     def test_no_frontmatter_returns_empty(self, tmp_skill):
         """File without YAML frontmatter produces no findings."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             # Just a Regular File
@@ -246,7 +246,7 @@ class TestConsentGapNonSkillFiles:
 
     def test_frontmatter_without_description_returns_empty(self, tmp_skill):
         """File with frontmatter but no description field is skipped."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -263,7 +263,7 @@ class TestConsentGapNonSkillFiles:
 
     def test_empty_content_returns_empty(self, tmp_skill):
         """Empty content produces no findings."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         findings = analyze_consent_gap(str(tmp_skill), "")
         assert findings == []
@@ -274,7 +274,7 @@ class TestConsentGapSeverityMapping:
 
     def test_spawn_claude_session_is_high(self, tmp_skill):
         """spawn_claude_session is HIGH severity (code execution)."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -293,7 +293,7 @@ class TestConsentGapSeverityMapping:
 
     def test_write_tool_is_high(self, tmp_skill):
         """Write tool is HIGH severity (file modification)."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -312,7 +312,7 @@ class TestConsentGapSeverityMapping:
 
     def test_edit_tool_is_high(self, tmp_skill):
         """Edit tool is HIGH severity (file modification)."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -331,7 +331,7 @@ class TestConsentGapSeverityMapping:
 
     def test_websearch_is_medium(self, tmp_skill):
         """WebSearch is MEDIUM severity (external content)."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -350,7 +350,7 @@ class TestConsentGapSeverityMapping:
 
     def test_notebook_edit_is_low(self, tmp_skill):
         """NotebookEdit is LOW severity (other tools)."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -373,7 +373,7 @@ class TestConsentGapMcpTools:
 
     def test_mcp_tool_reference_flagged(self, tmp_skill):
         """Reference to mcp__spellbook__tool in body without description mention is flagged."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -397,7 +397,7 @@ class TestConsentGapFindingFields:
 
     def test_finding_has_correct_file_path(self, tmp_skill):
         """Finding includes the scanned file path."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -414,7 +414,7 @@ class TestConsentGapFindingFields:
 
     def test_finding_has_consent_gap_rule_id(self, tmp_skill):
         """Finding uses CONSENT-xxx rule ID pattern."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -431,7 +431,7 @@ class TestConsentGapFindingFields:
 
     def test_finding_has_remediation(self, tmp_skill):
         """Finding includes a remediation message."""
-        from spellbook.security.scanner import analyze_consent_gap
+        from spellbook.gates.scanner import analyze_consent_gap
 
         content = textwrap.dedent("""\
             ---
@@ -453,7 +453,7 @@ class TestConsentGapScannerIntegration:
 
     def test_scan_skill_includes_consent_gap_findings(self, tmp_skill):
         """scan_skill in skill mode includes consent gap findings."""
-        from spellbook.security.scanner import scan_skill
+        from spellbook.gates.scanner import scan_skill
 
         content = textwrap.dedent("""\
             ---
@@ -474,7 +474,7 @@ class TestConsentGapScannerIntegration:
 
     def test_scan_directory_skill_mode_includes_consent_gaps(self, tmp_path):
         """scan_directory picks up consent gap findings from skill files."""
-        from spellbook.security.scanner import scan_directory
+        from spellbook.gates.scanner import scan_directory
 
         skill_dir = tmp_path / "skills" / "sneaky"
         skill_dir.mkdir(parents=True)

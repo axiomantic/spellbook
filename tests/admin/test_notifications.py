@@ -15,18 +15,6 @@ class TestClassifyEventScope:
         event = Event(subsystem=Subsystem.CONFIG, event_type="updated", data={})
         assert classify_event_scope(event) == NotificationScope.BROADCAST
 
-    def test_security_mode_changed_is_broadcast(self):
-        event = Event(
-            subsystem=Subsystem.SECURITY, event_type="mode_changed", data={}
-        )
-        assert classify_event_scope(event) == NotificationScope.BROADCAST
-
-    def test_security_other_is_admin_only(self):
-        event = Event(
-            subsystem=Subsystem.SECURITY, event_type="event_logged", data={}
-        )
-        assert classify_event_scope(event) == NotificationScope.ADMIN_ONLY
-
     def test_memory_with_namespace_is_namespace_scoped(self):
         event = Event(
             subsystem=Subsystem.MEMORY,

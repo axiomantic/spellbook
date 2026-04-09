@@ -1058,8 +1058,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
-    from installer.tui import get_feature_groups as _get_fg
-    from installer.wizard import WizardContext, WizardResults, _matches_unset_key
+    from installer.wizard import WizardContext, WizardResults
 
     # Import config module early; may fail in bootstrap scenarios
     try:
@@ -1073,52 +1072,12 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         _cfg_get_early = None  # type: ignore[assignment]
         _cfg_is_set = None  # type: ignore[assignment]
 
-    def _get_all_security_keys() -> list[str]:
-        """Return dotted config keys for all security features."""
-        return [
-            f"security.{f['id']}.enabled"
-            for group in _get_fg()
-            for f in group["features"]
-        ]
-
-    def _get_unset_security_keys(all_keys: list[str]) -> list[str]:
-        """Return security config keys that have not been explicitly set."""
-        if not _config_available:
-            return all_keys
-        return [k for k in all_keys if not _cfg_is_set(k)]
-
-    def _get_default_security_selections(unset_keys: list[str]) -> dict[str, bool]:
-        """Return default security selections for any unset config keys.
-
-        Looks up the recommended default for each feature whose config key
-        appears in *unset_keys* and returns a ``{feature_id: default}`` dict.
-        """
-        selections: dict[str, bool] = {}
-        for group in _get_fg():
-            for feat in group["features"]:
-                if _matches_unset_key(feat["id"], unset_keys):
-                    selections[feat["id"]] = feat["default"]
-        return selections
-
     # ---- Assemble WizardContext and run upfront wizard ----
     if renderer is not None:
-        # Derive unset security config keys using shared helpers
-        all_security_keys = _get_all_security_keys()
-
-        unset_security = _get_unset_security_keys(all_security_keys)
         if _config_available:
-            existing_config = {}
-            for k in all_security_keys:
-                try:
-                    v = _cfg_get_early(k)
-                    if v is not None:
-                        existing_config[k] = v
-                except Exception as e:
-                    print_warning(f"Could not read config key {k}: {e}")
             tts_already_configured = _cfg_get_early("tts_enabled") is not None
             profile_already_configured = _cfg_is_set("profile.default")
         else:
-            existing_config = {}
             tts_already_configured = False
             profile_already_configured = False
 
@@ -1133,10 +1092,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         wizard_ctx = WizardContext(
             available_platforms=installer.detect_platforms(),
             cli_platforms=args.platforms.split(",") if args.platforms else None,
-            unset_security_keys=unset_security,
-            existing_config=existing_config,
-            security_level=getattr(args, "security_level", None),
-            security_wizard=getattr(args, "security_wizard", False),
             tts_disabled=getattr(args, "no_tts", False),
             tts_already_configured=tts_already_configured,
             profile_already_configured=profile_already_configured,
@@ -1164,30 +1119,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 _cfg_set("profile.default", wizard_results.profile_selection)
             except ImportError:
                 print("  Warning: could not save profile selection")
-
-        # Resolve security_selections for Installer.run().
-        # --security-level flag takes priority over wizard selections.
-        # Both renderers now return bare feature IDs (e.g. "crypto"),
-        # but we normalize dotted keys as a safety net.
-        security_selections = None
-        if getattr(args, "security_level", None):
-            try:
-                from installer.components.security import security_level_to_selections
-                security_selections = security_level_to_selections(args.security_level)
-            except (ImportError, ValueError) as e:
-                print_error(f"Invalid security level: {e}")
-                return 1
-        elif wizard_results.security_selections is not None:
-            security_selections = {}
-            for key, value in wizard_results.security_selections.items():
-                # Normalize: "security.crypto.enabled" -> "crypto", "crypto" -> "crypto"
-                parts = key.split(".")
-                bare_id = parts[1] if len(parts) >= 2 else key
-                security_selections[bare_id] = value
-        elif unset_security and (not getattr(args, "security_wizard", False) or getattr(args, "yes", False)):
-            # Security wizard was not requested (or --yes overrides it) and
-            # there are unset keys: silently apply recommended defaults.
-            security_selections = _get_default_security_selections(unset_security)
     else:
         # No renderer: fallback to old platform selection
         if args.platforms:
@@ -1213,25 +1144,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             except (ImportError, Exception) as e:
                 installer_print_warning(f"Interactive mode unavailable ({e}), using auto-detect")
                 platforms = installer.detect_platforms()
-
-        # Convert --security-level to security_selections dict (no-renderer path)
-        security_selections = None
-        if getattr(args, "security_level", None):
-            try:
-                from installer.components.security import security_level_to_selections
-                security_selections = security_level_to_selections(args.security_level)
-            except (ImportError, ValueError) as e:
-                print_error(f"Invalid security level: {e}")
-                return 1
-        elif not getattr(args, "security_wizard", False) or getattr(args, "yes", False) or not is_interactive():
-            # No --security-wizard, or --yes overrides it, or non-interactive:
-            # silently apply recommended defaults for any unset keys.
-            try:
-                _unset_nr = _get_unset_security_keys(_get_all_security_keys())
-                if _unset_nr:
-                    security_selections = _get_default_security_selections(_unset_nr)
-            except Exception as e:
-                print_warning(f"Could not apply security defaults: {e}")
 
         wizard_results = None  # No wizard in no-renderer path
 
@@ -1291,7 +1203,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         dry_run=args.dry_run,
         on_progress=_on_progress,
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
-        security_selections=security_selections,
         renderer=renderer,
     )
 
@@ -1465,18 +1376,6 @@ Examples:
         "--bootstrapped",
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
-    )
-    parser.add_argument(
-        "--security-level",
-        choices=["minimal", "standard", "strict"],
-        default=None,
-        help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
-    )
-    parser.add_argument(
-        "--security-wizard",
-        action="store_true",
-        default=False,
-        help="Run interactive security feature selection wizard",
     )
     parser.add_argument(
         "--no-tts",

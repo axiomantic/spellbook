@@ -2,7 +2,7 @@
 
 The plugin is a TypeScript file (hooks/opencode-plugin.ts) that:
 - Registers tool.execute.before and tool.execute.after hooks
-- Shells out to python3 -m spellbook.security.check for security scanning
+- Shells out to python3 -m spellbook.gates.check for security scanning
 
 The installer (OpenCodeInstaller) should:
 - Copy the plugin to ~/.config/opencode/plugins/spellbook-security.ts
@@ -106,9 +106,9 @@ class TestPluginSourceStructure:
         assert "tool.execute.after" in content
 
     def test_shells_out_to_check_module(self):
-        """Plugin must shell out to python3 -m spellbook.security.check."""
+        """Plugin must shell out to python3 -m spellbook.gates.check."""
         content = _read_plugin_source()
-        assert "spellbook.security.check" in content
+        assert "spellbook.gates.check" in content
         assert "python3" in content
 
     def test_uses_check_output_flag(self):
@@ -119,7 +119,7 @@ class TestPluginSourceStructure:
     def test_uses_python_module_invocation(self):
         """Plugin must invoke check via python3 -m (no SPELLBOOK_DIR needed)."""
         content = _read_plugin_source()
-        assert "python3 -m spellbook.security.check" in content
+        assert "python3 -m spellbook.gates.check" in content
         # Should NOT depend on SPELLBOOK_DIR environment variable
         assert "SPELLBOOK_DIR" not in content
 

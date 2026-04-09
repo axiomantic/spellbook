@@ -114,7 +114,6 @@ async def test_event_preserves_namespace_and_session_id():
 async def test_subsystem_values():
     """Verify all subsystem enum values are strings."""
     assert Subsystem.MEMORY.value == "memory"
-    assert Subsystem.SECURITY.value == "security"
     assert Subsystem.SESSION.value == "session"
     assert Subsystem.CONFIG.value == "config"
     assert Subsystem.FRACTAL.value == "fractal"

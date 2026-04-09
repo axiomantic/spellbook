@@ -205,7 +205,6 @@ class SessionWatcher(threading.Thread):
         from spellbook.db.spellbook_models import (
             Correction,
             Decision,
-            SecurityEvent,
             SkillOutcome as SkillOutcomeModel,
             Soul,
             Subagent,
@@ -220,7 +219,6 @@ class SessionWatcher(threading.Thread):
                 # Each delete is wrapped in try/except to handle missing tables
                 cleanup_ops = [
                     (Soul, Soul.bound_at, cutoff_30d),
-                    (SecurityEvent, SecurityEvent.created_at, cutoff_90d),
                     (SkillOutcomeModel, SkillOutcomeModel.created_at, cutoff_90d),
                     (Subagent, Subagent.spawned_at, cutoff_90d),
                     (Decision, Decision.decided_at, cutoff_90d),

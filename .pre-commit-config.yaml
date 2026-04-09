@@ -45,13 +45,13 @@ repos:
 
       - id: security-scan-changeset
         name: Scan changeset for security issues
-        entry: uv run python -m spellbook.security.scanner --staged
+        entry: uv run python -m spellbook.gates.scanner --staged
         language: system
         types: [markdown]
 
       - id: security-scan-skills
         name: Scan skills for security issues
-        entry: uv run python -m spellbook.security.scanner --skills
+        entry: uv run python -m spellbook.gates.scanner --skills
         language: system
         stages: [manual]
         files: ^skills/.*SKILL\.md$

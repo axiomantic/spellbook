@@ -146,17 +146,26 @@ def _migrate_stint_stack_schema(cursor):
     cursor.execute("DROP TABLE _stint_stack_old")
 
 
-def _migrate_trust_registry_v2(cursor):
-    """Add crypto provenance columns to trust_registry (idempotent)."""
-    existing = {row[1] for row in cursor.execute("PRAGMA table_info(trust_registry)").fetchall()}
-    for col, typedef in [
-        ("signature", "TEXT"),
-        ("signing_key_id", "TEXT"),
-        ("analysis_status", "TEXT"),
-        ("analysis_at", "TEXT"),
-    ]:
-        if col not in existing:
-            cursor.execute(f"ALTER TABLE trust_registry ADD COLUMN {col} {typedef}")
+def _drop_deleted_security_tables(cursor):
+    """Drop security tables removed in the nuclear security cleanup.
+
+    These tables used to back the sleuth/crypto/canary/trust-registry
+    feature set and no longer exist in the ORM. Dropping them is idempotent.
+    """
+    for table_name in (
+        "intent_checks",
+        "sleuth_budget",
+        "sleuth_cache",
+        "canary_tokens",
+        "session_content_accumulator",
+        "trust_registry",
+        "security_events",
+        "security_mode",
+    ):
+        try:
+            cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+        except sqlite3.Error:
+            pass
 
 
 def init_db(db_path: str = None) -> None:
@@ -418,81 +427,8 @@ def init_db(db_path: str = None) -> None:
         ON variant_assignments(session_id)
     """)
 
-    # Security: trust registry for content verification
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS trust_registry (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content_hash TEXT NOT NULL,
-            source TEXT NOT NULL,
-            trust_level TEXT NOT NULL,
-            registered_at TEXT DEFAULT (datetime('now')),
-            expires_at TEXT,
-            registered_by TEXT
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_trust_content_hash
-        ON trust_registry(content_hash)
-    """)
-
-    # Security: event log for audit trail
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS security_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_type TEXT NOT NULL,
-            severity TEXT NOT NULL,
-            source TEXT,
-            detail TEXT,
-            session_id TEXT,
-            tool_name TEXT,
-            action_taken TEXT,
-            created_at TEXT DEFAULT (datetime('now'))
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_security_events_type
-        ON security_events(event_type)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_security_events_severity
-        ON security_events(severity)
-    """)
-
-    # Security: canary tokens for injection detection
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS canary_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token TEXT NOT NULL UNIQUE,
-            token_type TEXT NOT NULL,
-            context TEXT,
-            created_at TEXT DEFAULT (datetime('now')),
-            triggered_at TEXT,
-            triggered_by TEXT
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_canary_token
-        ON canary_tokens(token)
-    """)
-
-    # Security: singleton security mode
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS security_mode (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            mode TEXT NOT NULL DEFAULT 'standard',
-            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_by TEXT,
-            auto_restore_at TEXT
-        )
-    """)
-
-    cursor.execute("""
-        INSERT OR IGNORE INTO security_mode (id, mode) VALUES (1, 'standard')
-    """)
+    # Drop legacy security tables removed in the nuclear security cleanup.
+    _drop_deleted_security_tables(cursor)
 
     # Spawn rate limiting for spawn_claude_session
     cursor.execute("""
@@ -723,73 +659,8 @@ def init_db(db_path: str = None) -> None:
         ON stint_correction_events(correction_type)
     """)
 
-    # --- Injection Defense Tables (v2) ---
-
-    # Intent checks (PromptSleuth results)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS intent_checks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT NOT NULL,
-            content_hash TEXT NOT NULL,
-            source_tool TEXT NOT NULL,
-            classification TEXT NOT NULL,
-            confidence REAL NOT NULL,
-            evidence TEXT,
-            checked_at TEXT DEFAULT (datetime('now')),
-            latency_ms INTEGER,
-            cached INTEGER DEFAULT 0
-        )
-    """)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_intent_session ON intent_checks(session_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_intent_hash ON intent_checks(content_hash)")
-
-    # Session content accumulator (split injection detection)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS session_content_accumulator (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT NOT NULL,
-            content_hash TEXT NOT NULL,
-            source_tool TEXT NOT NULL,
-            content_summary TEXT,
-            content_size INTEGER NOT NULL,
-            received_at TEXT DEFAULT (datetime('now')),
-            expires_at TEXT DEFAULT (datetime('now', '+1 hour'))
-        )
-    """)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_session ON session_content_accumulator(session_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_session_time ON session_content_accumulator(session_id, received_at)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_accum_expires ON session_content_accumulator(expires_at)")
-
-    # PromptSleuth budget tracking
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS sleuth_budget (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT NOT NULL UNIQUE,
-            calls_remaining INTEGER NOT NULL DEFAULT 50,
-            reset_at TEXT NOT NULL
-        )
-    """)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_budget_session ON sleuth_budget(session_id)")
-
-    # PromptSleuth classification cache
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS sleuth_cache (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content_hash TEXT NOT NULL UNIQUE,
-            classification TEXT NOT NULL,
-            confidence REAL NOT NULL,
-            cached_at TEXT DEFAULT (datetime('now')),
-            expires_at TEXT DEFAULT (datetime('now', '+1 hour'))
-        )
-    """)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_hash ON sleuth_cache(content_hash)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sleuth_cache_expires ON sleuth_cache(expires_at)")
-
     # Migrate stint_stack: ensure NOT NULL + UNIQUE constraint on session_id
     _migrate_stint_stack_schema(cursor)
-
-    # Migrate trust_registry: add signature columns if missing
-    _migrate_trust_registry_v2(cursor)
 
     conn.commit()
 

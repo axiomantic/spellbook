@@ -439,58 +439,9 @@ class RichRenderer(InstallerRenderer):
         existing_config: dict[str, Any],
         is_upgrade: bool,
     ) -> dict[str, Any]:
-        if self.auto_yes or not unset_keys:
-            return {}
-
-        from .tui import get_feature_groups, render_feature_table
-        console = self._get_console()
-
-        if is_upgrade and existing_config:
-            from rich.panel import Panel
-            from rich.text import Text
-            lines = [f"  {k}: {v}" for k, v in existing_config.items()]
-            console.print(Panel(
-                "\n".join(lines),
-                title="Existing Configuration",
-                border_style="dim",
-            ))
-
-        groups = get_feature_groups()
-        # Filter groups to only include features that are in unset_keys
-        filtered_groups = []
-        for group in groups:
-            filtered_features = [
-                f for f in group["features"]
-                if f["id"] in unset_keys
-                or any(
-                    f".{f['id']}." in k or k.startswith(f"{f['id']}.")
-                    for k in unset_keys
-                )
-            ]
-            if filtered_features:
-                filtered_groups.append({**group, "features": filtered_features})
-
-        if not filtered_groups:
-            return {}
-
-        render_feature_table(console, filtered_groups)
-
-        from rich.prompt import Confirm
-        selections: dict[str, Any] = {}
-        for group in filtered_groups:
-            for feat in group["features"]:
-                enabled = Confirm.ask(
-                    f"Enable [cyan]{feat['name']}[/cyan]?",
-                    default=feat["default"],
-                    console=console,
-                )
-                selections[feat["id"]] = enabled
-
-        return selections
+        return {}
 
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
-        from installer.wizard import _matches_unset_key
-
         results = WizardResults()
 
         try:
@@ -509,12 +460,6 @@ class RichRenderer(InstallerRenderer):
                 results.platforms = context.available_platforms
             else:
                 results.platforms = self._wizard_platform_select(console, context)
-
-            # --- Section 2: Security Configuration ---
-            if context.security_level is not None:
-                results.security_selections = None
-            elif context.unset_security_keys and context.security_wizard:
-                results.security_selections = self._wizard_security(console, context)
 
             # --- Section 3: TTS Intent ---
             if context.tts_disabled:
@@ -591,33 +536,6 @@ class RichRenderer(InstallerRenderer):
             console=console,
         )
 
-    def _wizard_security(self, console: Any, context: WizardContext) -> dict[str, bool]:
-        """Rich-based security feature configuration."""
-        from rich.panel import Panel
-        from rich.prompt import Confirm
-        from installer.tui import get_feature_groups
-        from installer.wizard import _matches_unset_key
-
-        console.print(Panel(
-            "Configure security features for this installation.",
-            title="Security Configuration",
-            border_style="yellow",
-        ))
-
-        selections: dict[str, bool] = {}
-        for group in get_feature_groups():
-            for feature in group["features"]:
-                if not _matches_unset_key(feature["id"], context.unset_security_keys):
-                    continue
-                enabled = Confirm.ask(
-                    f"Enable {feature['name']}? {feature.get('description', '')}",
-                    default=feature.get("default", False),
-                    console=console,
-                )
-                selections[feature["id"]] = enabled
-
-        return selections
-
     def _wizard_profile(self, console: Any, context: WizardContext) -> str | None:
         """Collect profile selection by delegating to render_profile_wizard().
 
@@ -632,18 +550,7 @@ class RichRenderer(InstallerRenderer):
     def render_config_summary(
         self, config: dict[str, Any], confirmed: bool
     ) -> bool:
-        if not config:
-            return True
-
-        from .tui import render_security_config_panel
-        console = self._get_console()
-        render_security_config_panel(console, config)
-
-        if confirmed or self.auto_yes:
-            return True
-
-        from rich.prompt import Confirm
-        return Confirm.ask("Proceed with this configuration?", default=True, console=console)
+        return True
 
     def render_tts_wizard(self) -> dict[str, Any]:
         if self.auto_yes:
@@ -863,47 +770,9 @@ class PlainTextRenderer(InstallerRenderer):
         existing_config: dict[str, Any],
         is_upgrade: bool,
     ) -> dict[str, Any]:
-        if self.auto_yes or not unset_keys:
-            return {}
-
-        # Feature metadata mirrored from tui.get_feature_groups() to avoid
-        # importing tui (which itself imports Rich at the module level).
-        _feature_meta: dict[str, dict[str, Any]] = {
-            "spotlighting": {"name": "Spotlighting", "default": True},
-            "crypto": {"name": "Cryptographic Provenance", "default": True},
-            "sleuth": {"name": "PromptSleuth Semantic Analysis", "default": False},
-            "lodo": {"name": "LODO Evaluation", "default": True},
-        }
-
-        if is_upgrade and existing_config:
-            print("\nExisting configuration:")
-            for k, v in existing_config.items():
-                print(f"  {k}: {v}")
-
-        print("\nSecurity feature configuration:")
-        selections: dict[str, Any] = {}
-        for key in unset_keys:
-            # Extract bare feature ID from dotted key
-            # e.g. "security.crypto.enabled" -> "crypto"
-            bare_id = key
-            parts = key.split(".")
-            if len(parts) >= 3 and parts[0] == "security":
-                bare_id = parts[1]
-            meta = _feature_meta.get(bare_id, _feature_meta.get(key, {"name": key, "default": True}))
-            default = meta["default"]
-            default_hint = "Y/n" if default else "y/N"
-            answer = input(
-                f"  Enable {meta['name']}? [{default_hint}] "
-            ).strip().lower()
-            if answer == "":
-                selections[bare_id] = default
-            else:
-                selections[bare_id] = answer in ("y", "yes")
-        return selections
+        return {}
 
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
-        from installer.wizard import _matches_unset_key
-
         results = WizardResults()
 
         try:
@@ -920,12 +789,6 @@ class PlainTextRenderer(InstallerRenderer):
                 results.platforms = context.available_platforms
             else:
                 results.platforms = self._wizard_platform_select_plain(context)
-
-            # --- Section 2: Security Configuration ---
-            if context.security_level is not None:
-                results.security_selections = None
-            elif context.unset_security_keys and context.security_wizard:
-                results.security_selections = self._wizard_security_plain(context)
 
             # --- Section 3: TTS Intent ---
             if context.tts_disabled:
@@ -976,29 +839,6 @@ class PlainTextRenderer(InstallerRenderer):
 
         return [o["id"] for o in options if o["selected"]]
 
-    def _wizard_security_plain(self, context: WizardContext) -> dict[str, bool]:
-        """Plain-text security feature configuration."""
-        from installer.tui import get_feature_groups
-        from installer.wizard import _matches_unset_key
-
-        print("\nSecurity Configuration:")
-        selections: dict[str, bool] = {}
-        for group in get_feature_groups():
-            for feature in group["features"]:
-                if not _matches_unset_key(feature["id"], context.unset_security_keys):
-                    continue
-                default = feature.get("default", False)
-                default_hint = "Y/n" if default else "y/N"
-                answer = input(
-                    f"  Enable {feature['name']}? [{default_hint}] "
-                ).strip().lower()
-                if default:
-                    enabled = answer not in ("n", "no")
-                else:
-                    enabled = answer in ("y", "yes")
-                selections[feature["id"]] = enabled
-
-        return selections
 
     def _wizard_profile_plain(self, context: WizardContext) -> str | None:
         """Collect profile selection by delegating to render_profile_wizard().

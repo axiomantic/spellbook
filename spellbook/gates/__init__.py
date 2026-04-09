@@ -1,21 +1,18 @@
-"""Spellbook security module.
+"""Spellbook security gates module.
 
-Provides shared security rules, runtime checks, static scanning,
-and MCP tools for defense-in-depth against prompt injection,
-privilege escalation, and exfiltration attacks.
+Provides the shared pattern rule sets and runtime checks used by
+the surviving security gates (Bash, spawn, workflow state) plus
+the pre-commit scanner.
 """
 
-from spellbook.security.rules import (
+from spellbook.gates.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
-    EXFILTRATION_PATTERNS,
     EXFILTRATION_RULES,
     INJECTION_RULES,
-    INJECTION_TRIGGERS,
     INVISIBLE_CHARS,
     MCP_RULES,
     OBFUSCATION_RULES,
-    TRUST_LEVELS,
     Category,
     Finding,
     ScanResult,
@@ -28,17 +25,14 @@ __all__ = [
     "Category",
     "DANGEROUS_BASH_PATTERNS",
     "ESCALATION_RULES",
-    "EXFILTRATION_PATTERNS",
     "EXFILTRATION_RULES",
     "Finding",
     "INJECTION_RULES",
-    "INJECTION_TRIGGERS",
     "INVISIBLE_CHARS",
     "MCP_RULES",
     "OBFUSCATION_RULES",
     "ScanResult",
     "Severity",
-    "TRUST_LEVELS",
     "check_patterns",
     "shannon_entropy",
 ]

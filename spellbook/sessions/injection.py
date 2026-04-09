@@ -53,7 +53,7 @@ def _sanitize_field(field_name: str, value: str, max_length: int) -> Optional[st
 
     # Check for injection patterns using the security detection
     try:
-        from spellbook.security.tools import do_detect_injection
+        from spellbook.gates.tools import do_detect_injection
 
         result = do_detect_injection(value)
         if result["is_injection"]:

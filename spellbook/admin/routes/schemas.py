@@ -23,7 +23,7 @@ class ListResponse(BaseModel, Generic[T]):
     """Standard list response envelope for all admin list endpoints.
 
     This is the unified response shape that replaces per-endpoint
-    response types (MemoryListResponse, SecurityEventListResponse, etc.)
+    response types (MemoryListResponse, etc.)
     """
 
     items: list[T]
@@ -46,7 +46,6 @@ class HealthStatus(BaseModel):
 class DashboardCounts(BaseModel):
     active_sessions: int
     total_memories: int
-    security_events_24h: int
     open_experiments: int
     fractal_graphs: int
 
@@ -91,31 +90,6 @@ class MemoryUpdateRequest(BaseModel):
 class ConsolidateRequest(BaseModel):
     namespace: str
     max_events: int = Field(default=50, ge=1, le=500)
-
-
-# --- Security ---
-class SecurityEvent(BaseModel):
-    id: int
-    event_type: str
-    severity: str
-    source: Optional[str]
-    detail: Optional[str]
-    session_id: Optional[str]
-    tool_name: Optional[str]
-    action_taken: Optional[str]
-    created_at: str
-
-
-class SecurityEventListResponse(PaginatedResponse):
-    events: list[SecurityEvent]
-
-
-class SecurityDashboardResponse(BaseModel):
-    mode: str
-    events_24h: dict[str, int]
-    top_event_types: list[dict[str, Any]]
-    active_canaries: int
-    trust_registry_size: int
 
 
 # --- Sessions ---

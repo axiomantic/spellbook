@@ -62,22 +62,6 @@ EXPECTED_TABLES = {
         "id", "experiment_id", "session_id", "variant_id",
         "assigned_at",
     ],
-    "trust_registry": [
-        "id", "content_hash", "source", "trust_level",
-        "registered_at", "expires_at", "registered_by",
-        "signature", "signing_key_id", "analysis_status", "analysis_at",
-    ],
-    "security_events": [
-        "id", "event_type", "severity", "source", "detail",
-        "session_id", "tool_name", "action_taken", "created_at",
-    ],
-    "canary_tokens": [
-        "id", "token", "token_type", "context", "created_at",
-        "triggered_at", "triggered_by",
-    ],
-    "security_mode": [
-        "id", "mode", "updated_at", "updated_by", "auto_restore_at",
-    ],
     "spawn_rate_limit": [
         "id", "timestamp", "session_id",
     ],
@@ -115,22 +99,6 @@ EXPECTED_TABLES = {
         "id", "session_id", "tool_ids", "tokens_saved", "strategy",
         "timestamp",
     ],
-    "intent_checks": [
-        "id", "session_id", "content_hash", "source_tool",
-        "classification", "confidence", "evidence",
-        "checked_at", "latency_ms", "cached",
-    ],
-    "session_content_accumulator": [
-        "id", "session_id", "content_hash", "source_tool",
-        "content_summary", "content_size", "received_at", "expires_at",
-    ],
-    "sleuth_budget": [
-        "id", "session_id", "calls_remaining", "reset_at",
-    ],
-    "sleuth_cache": [
-        "id", "content_hash", "classification", "confidence",
-        "cached_at", "expires_at",
-    ],
 }
 
 
@@ -141,11 +109,9 @@ def engine():
         Soul, Subagent, Decision, Correction, Heartbeat,
         SkillOutcome, TelemetryConfig, WorkflowState,
         Experiment, ExperimentVariant, VariantAssignment,
-        TrustRegistry, SecurityEvent, CanaryToken,
-        SecurityMode, SpawnRateLimit, Memory, MemoryCitation,
+        SpawnRateLimit, Memory, MemoryCitation,
         MemoryLink, MemoryBranch, RawEvent, MemoryAuditLog,
         StintStack, StintCorrectionEvent, CuratorEvent,
-        IntentCheck, SessionContentAccumulator, SleuthBudget, SleuthCache,
     )
     engine = create_engine("sqlite:///:memory:")
     SpellbookBase.metadata.create_all(engine)
@@ -529,121 +495,6 @@ class TestVariantAssignmentModel:
             "session_id": "sess-1",
             "variant_id": "var-1",
             "assigned_at": "2026-01-15T10:00:00",
-        }
-
-
-class TestTrustRegistryModel:
-    """Tests for the TrustRegistry ORM model."""
-
-    def test_to_dict_uses_content_hash(self, engine):
-        """TrustRegistry uses content_hash, source, trust_level (NOT entity, reason)."""
-        from spellbook.db.spellbook_models import TrustRegistry
-        t = TrustRegistry(
-            id=1,
-            content_hash="abc123def456",
-            source="manual",
-            trust_level="high",
-            registered_at="2026-01-15T10:00:00",
-            expires_at="2026-06-15T10:00:00",
-            registered_by="user-1",
-        )
-        d = t.to_dict()
-        assert d == {
-            "id": 1,
-            "content_hash": "abc123def456",
-            "source": "manual",
-            "trust_level": "high",
-            "registered_at": "2026-01-15T10:00:00",
-            "expires_at": "2026-06-15T10:00:00",
-            "registered_by": "user-1",
-            "signature": None,
-            "signing_key_id": None,
-            "analysis_status": None,
-            "analysis_at": None,
-        }
-        assert "entity" not in d
-        assert "reason" not in d
-
-
-class TestSecurityEventModel:
-    """Tests for the SecurityEvent ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """SecurityEvent.to_dict() returns all columns."""
-        from spellbook.db.spellbook_models import SecurityEvent
-        se = SecurityEvent(
-            id=1,
-            event_type="injection_attempt",
-            severity="high",
-            source="file_content",
-            detail="Suspicious directive found",
-            session_id="sess-1",
-            tool_name="Read",
-            action_taken="blocked",
-            created_at="2026-01-15T10:00:00",
-        )
-        d = se.to_dict()
-        assert d == {
-            "id": 1,
-            "event_type": "injection_attempt",
-            "severity": "high",
-            "source": "file_content",
-            "detail": "Suspicious directive found",
-            "session_id": "sess-1",
-            "tool_name": "Read",
-            "action_taken": "blocked",
-            "created_at": "2026-01-15T10:00:00",
-        }
-
-
-class TestCanaryTokenModel:
-    """Tests for the CanaryToken ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """CanaryToken has token_type, context, triggered_at, triggered_by."""
-        from spellbook.db.spellbook_models import CanaryToken
-        ct = CanaryToken(
-            id=1,
-            token="CANARY-abc123",
-            token_type="system_prompt",
-            context="Embedded in instructions",
-            created_at="2026-01-15T10:00:00",
-            triggered_at="2026-01-15T11:00:00",
-            triggered_by="external_agent",
-        )
-        d = ct.to_dict()
-        assert d == {
-            "id": 1,
-            "token": "CANARY-abc123",
-            "token_type": "system_prompt",
-            "context": "Embedded in instructions",
-            "created_at": "2026-01-15T10:00:00",
-            "triggered_at": "2026-01-15T11:00:00",
-            "triggered_by": "external_agent",
-        }
-        assert "label" not in d
-
-
-class TestSecurityModeModel:
-    """Tests for the SecurityMode ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """SecurityMode has updated_by and auto_restore_at columns."""
-        from spellbook.db.spellbook_models import SecurityMode
-        sm = SecurityMode(
-            id=1,
-            mode="lockdown",
-            updated_at="2026-01-15T10:00:00",
-            updated_by="admin",
-            auto_restore_at="2026-01-15T12:00:00",
-        )
-        d = sm.to_dict()
-        assert d == {
-            "id": 1,
-            "mode": "lockdown",
-            "updated_at": "2026-01-15T10:00:00",
-            "updated_by": "admin",
-            "auto_restore_at": "2026-01-15T12:00:00",
         }
 
 

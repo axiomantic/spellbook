@@ -29,31 +29,31 @@ class TestMCPRulesExist:
     """MCP_RULES list exists with correct structure."""
 
     def test_mcp_rules_exist(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES is not None
 
     def test_mcp_rules_count(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert len(MCP_RULES) == 9
 
     def test_all_patterns_compile(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         for pattern, severity, rule_id, message in MCP_RULES:
             compiled = re.compile(pattern)
             assert compiled is not None, f"Pattern for {rule_id} failed to compile"
 
     def test_rule_ids_sequential(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         expected_ids = [f"MCP-{i:03d}" for i in range(1, 10)]
         actual_ids = [rule_id for _, _, rule_id, _ in MCP_RULES]
         assert actual_ids == expected_ids
 
     def test_all_severities_are_enum_members(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         for _, severity, rule_id, _ in MCP_RULES:
             assert isinstance(severity, Severity), (
@@ -61,7 +61,7 @@ class TestMCPRulesExist:
             )
 
     def test_no_duplicate_ids_with_other_rules(self):
-        from spellbook.security.rules import (
+        from spellbook.gates.rules import (
             ESCALATION_RULES,
             EXFILTRATION_RULES,
             INJECTION_RULES,
@@ -86,12 +86,12 @@ class TestMCPToolCategory:
     """Category.MCP_TOOL enum exists."""
 
     def test_category_has_mcp_tool(self):
-        from spellbook.security.rules import Category
+        from spellbook.gates.rules import Category
 
         assert Category.MCP_TOOL is not None
 
     def test_mcp_tool_value(self):
-        from spellbook.security.rules import Category
+        from spellbook.gates.rules import Category
 
         assert Category.MCP_TOOL.value == "mcp_tool"
 
@@ -105,30 +105,30 @@ class TestMCPRule001ShellExecution:
     """MCP-001: Shell execution in MCP tool."""
 
     def test_matches_subprocess_run_shell_true(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[0][0]
         assert re.search(pattern, 'subprocess.run(cmd, shell=True)')
 
     def test_matches_subprocess_call_shell_true(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[0][0]
         assert re.search(pattern, 'subprocess.call(cmd, shell=True)')
 
     def test_matches_subprocess_popen_shell_true(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[0][0]
         assert re.search(pattern, 'subprocess.Popen(cmd, shell = True)')
 
     def test_severity_is_critical(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[0][1] == Severity.CRITICAL
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[0][2] == "MCP-001"
 
@@ -137,36 +137,36 @@ class TestMCPRule002DynamicCodeExecution:
     """MCP-002: Dynamic code execution (eval/exec)."""
 
     def test_matches_eval(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[1][0]
         assert re.search(pattern, 'eval(user_input)')
 
     def test_matches_exec(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[1][0]
         assert re.search(pattern, 'exec(code_string)')
 
     def test_no_false_positive_on_evaluate(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[1][0]
         assert not re.search(pattern, 'evaluate(x)')
 
     def test_no_false_positive_on_execute_method(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[1][0]
         assert not re.search(pattern, 'cursor.execute(query)')
 
     def test_severity_is_high(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[1][1] == Severity.HIGH
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[1][2] == "MCP-002"
 
@@ -175,24 +175,24 @@ class TestMCPRule003UnsanitizedPath:
     """MCP-003: Unsanitized path construction."""
 
     def test_matches_os_path_join_with_concatenation(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[2][0]
         assert re.search(pattern, 'os.path.join(base + user_input)')
 
     def test_matches_os_path_join_with_plus(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[2][0]
         assert re.search(pattern, 'os.path.join(dir, prefix + name)')
 
     def test_severity_is_high(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[2][1] == Severity.HIGH
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[2][2] == "MCP-003"
 
@@ -201,30 +201,30 @@ class TestMCPRule004MissingValidation:
     """MCP-004: Missing input validation marker."""
 
     def test_matches_todo_valid(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[3][0]
         assert re.search(pattern, '# TODO validate input')
 
     def test_matches_fixme_check(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[3][0]
         assert re.search(pattern, '# FIXME add check here')
 
     def test_matches_hack(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[3][0]
         assert re.search(pattern, '# HACK workaround')
 
     def test_severity_is_medium(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[3][1] == Severity.MEDIUM
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[3][2] == "MCP-004"
 
@@ -233,24 +233,24 @@ class TestMCPRule005UnboundedRead:
     """MCP-005: Unbounded file read."""
 
     def test_matches_read_no_size(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[4][0]
         assert re.search(pattern, 'f.read()')
 
     def test_matches_file_read_no_size(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[4][0]
         assert re.search(pattern, 'content = file.read()')
 
     def test_severity_is_medium(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[4][1] == Severity.MEDIUM
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[4][2] == "MCP-005"
 
@@ -259,24 +259,24 @@ class TestMCPRule006EnvironmentAccess:
     """MCP-006: Direct environment access."""
 
     def test_matches_os_environ_bracket(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[5][0]
         assert re.search(pattern, 'os.environ["SECRET_KEY"]')
 
     def test_matches_os_getenv(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[5][0]
         assert re.search(pattern, 'os.getenv("API_KEY")')
 
     def test_severity_is_medium(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[5][1] == Severity.MEDIUM
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[5][2] == "MCP-006"
 
@@ -285,24 +285,24 @@ class TestMCPRule007SQLFormatting:
     """MCP-007: SQL string formatting."""
 
     def test_matches_fstring_execute(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[6][0]
         assert re.search(pattern, 'cursor.execute(f"SELECT * FROM {table}")')
 
     def test_matches_fstring_with_execute(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[6][0]
         assert re.search(pattern, 'f"SELECT {col} FROM users" execute')
 
     def test_severity_is_high(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[6][1] == Severity.HIGH
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[6][2] == "MCP-007"
 
@@ -311,24 +311,24 @@ class TestMCPRule008URLConstruction:
     """MCP-008: Unvalidated URL construction."""
 
     def test_matches_fstring_url(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[7][0]
         assert re.search(pattern, 'f"https://api.example.com/{endpoint}"')
 
     def test_matches_http_string_concat(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[7][0]
         assert re.search(pattern, '"http://" + host + "/api"')
 
     def test_severity_is_medium(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[7][1] == Severity.MEDIUM
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[7][2] == "MCP-008"
 
@@ -337,24 +337,24 @@ class TestMCPRule009OSSystem:
     """MCP-009: OS system call."""
 
     def test_matches_os_system(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[8][0]
         assert re.search(pattern, 'os.system("ls -la")')
 
     def test_matches_os_system_variable(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         pattern = MCP_RULES[8][0]
         assert re.search(pattern, 'os.system(cmd)')
 
     def test_severity_is_critical(self):
-        from spellbook.security.rules import MCP_RULES, Severity
+        from spellbook.gates.rules import MCP_RULES, Severity
 
         assert MCP_RULES[8][1] == Severity.CRITICAL
 
     def test_rule_id(self):
-        from spellbook.security.rules import MCP_RULES
+        from spellbook.gates.rules import MCP_RULES
 
         assert MCP_RULES[8][2] == "MCP-009"
 
@@ -368,7 +368,7 @@ class TestScanPythonFileClean:
     """scan_python_file returns PASS for clean Python files."""
 
     def test_clean_python_passes(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "clean.py"
         py_file.write_text(
@@ -393,7 +393,7 @@ class TestScanPythonFileClean:
         assert result.findings == []
 
     def test_empty_python_passes(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "empty.py"
         py_file.write_text("")
@@ -402,7 +402,7 @@ class TestScanPythonFileClean:
         assert result.findings == []
 
     def test_nonexistent_file(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         result = scan_python_file(str(tmp_path / "nonexistent.py"))
         assert result.verdict == "FAIL"
@@ -413,7 +413,7 @@ class TestScanPythonFileDetection:
     """scan_python_file detects MCP rule violations."""
 
     def test_detects_shell_execution(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "shell.py"
         py_file.write_text('import subprocess\nsubprocess.run(cmd, shell=True)\n')
@@ -423,7 +423,7 @@ class TestScanPythonFileDetection:
         assert "MCP-001" in rule_ids
 
     def test_detects_eval(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "evalcode.py"
         py_file.write_text('result = eval(user_input)\n')
@@ -433,7 +433,7 @@ class TestScanPythonFileDetection:
         assert "MCP-002" in rule_ids
 
     def test_detects_os_system(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "ossystem.py"
         py_file.write_text('import os\nos.system("rm -rf /")\n')
@@ -443,7 +443,7 @@ class TestScanPythonFileDetection:
         assert "MCP-009" in rule_ids
 
     def test_detects_sql_injection(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "sql.py"
         py_file.write_text('cursor.execute(f"SELECT * FROM {table}")\n')
@@ -453,7 +453,7 @@ class TestScanPythonFileDetection:
         assert "MCP-007" in rule_ids
 
     def test_detects_environment_access(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "envaccess.py"
         py_file.write_text('secret = os.environ["SECRET_KEY"]\n')
@@ -463,7 +463,7 @@ class TestScanPythonFileDetection:
         assert "MCP-006" in rule_ids
 
     def test_finding_has_correct_line_number(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "lines.py"
         py_file.write_text(
@@ -477,8 +477,8 @@ class TestScanPythonFileDetection:
         assert mcp009_finding.line == 4
 
     def test_finding_has_mcp_tool_category(self, tmp_path):
-        from spellbook.security.rules import Category
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.rules import Category
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "cat.py"
         py_file.write_text('os.system("ls")\n')
@@ -487,7 +487,7 @@ class TestScanPythonFileDetection:
         assert result.findings[0].category == Category.MCP_TOOL
 
     def test_multiple_findings(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "multi.py"
         py_file.write_text(
@@ -505,7 +505,7 @@ class TestScanPythonFileDetection:
         assert "MCP-001" in rule_ids
 
     def test_respects_security_mode_standard(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "medium.py"
         # MCP-006 is MEDIUM severity - should NOT be caught in standard mode
@@ -515,7 +515,7 @@ class TestScanPythonFileDetection:
         assert "MCP-006" not in rule_ids
 
     def test_respects_security_mode_paranoid(self, tmp_path):
-        from spellbook.security.scanner import scan_python_file
+        from spellbook.gates.scanner import scan_python_file
 
         py_file = tmp_path / "medium_paranoid.py"
         # MCP-006 is MEDIUM severity - should be caught in paranoid mode
@@ -534,7 +534,7 @@ class TestScanMCPDirectory:
     """scan_mcp_directory recursively scans Python files."""
 
     def test_scans_python_files(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         py_file = tmp_path / "tool.py"
         py_file.write_text('print("clean")\n')
@@ -543,7 +543,7 @@ class TestScanMCPDirectory:
         assert results[0].verdict == "PASS"
 
     def test_scans_nested_python_files(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         sub = tmp_path / "sub" / "deep"
         sub.mkdir(parents=True)
@@ -553,7 +553,7 @@ class TestScanMCPDirectory:
         assert len(results) == 2
 
     def test_detects_issues_in_nested_files(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         sub = tmp_path / "tools"
         sub.mkdir()
@@ -565,7 +565,7 @@ class TestScanMCPDirectory:
         assert "MCP-009" in rule_ids
 
     def test_ignores_non_python_files(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         (tmp_path / "readme.md").write_text("# Readme")
         (tmp_path / "config.json").write_text("{}")
@@ -576,19 +576,19 @@ class TestScanMCPDirectory:
         assert str(tmp_path / "tool.py") in files
 
     def test_nonexistent_directory(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         results = scan_mcp_directory(str(tmp_path / "nonexistent"))
         assert results == []
 
     def test_empty_directory(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         results = scan_mcp_directory(str(tmp_path))
         assert results == []
 
     def test_passes_security_mode(self, tmp_path):
-        from spellbook.security.scanner import scan_mcp_directory
+        from spellbook.gates.scanner import scan_mcp_directory
 
         py_file = tmp_path / "env.py"
         # MCP-006 is MEDIUM severity
@@ -620,7 +620,7 @@ class TestCLIModeMCP:
             [
                 sys.executable,
                 "-m",
-                "spellbook.security.scanner",
+                "spellbook.gates.scanner",
                 "--mode",
                 "mcp",
                 str(tmp_path),
@@ -639,7 +639,7 @@ class TestCLIModeMCP:
             [
                 sys.executable,
                 "-m",
-                "spellbook.security.scanner",
+                "spellbook.gates.scanner",
                 "--mode",
                 "mcp",
                 str(tmp_path),
@@ -656,7 +656,7 @@ class TestCLIModeMCP:
             [
                 sys.executable,
                 "-m",
-                "spellbook.security.scanner",
+                "spellbook.gates.scanner",
                 "--mode",
                 "mcp",
                 str(tmp_path),
@@ -678,7 +678,7 @@ class TestCLIModeMCP:
             [
                 sys.executable,
                 "-m",
-                "spellbook.security.scanner",
+                "spellbook.gates.scanner",
                 "--mode",
                 "mcp",
                 str(tmp_path),
@@ -693,7 +693,7 @@ class TestCLIModeMCP:
     def test_cli_usage_updated(self):
         """Usage message mentions --mode with mcp option."""
         result = subprocess.run(
-            [sys.executable, "-m", "spellbook.security.scanner"],
+            [sys.executable, "-m", "spellbook.gates.scanner"],
             capture_output=True,
             text=True,
             timeout=30,

@@ -34,7 +34,7 @@ import sys
 from fnmatch import fnmatch
 from pathlib import Path
 
-from spellbook.security.rules import (
+from spellbook.gates.rules import (
     ESCALATION_RULES,
     EXFILTRATION_RULES,
     INJECTION_RULES,
@@ -791,7 +791,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --base requires a BRANCH argument.\n"
-                "Usage: python -m spellbook.security.scanner --base BRANCH",
+                "Usage: python -m spellbook.gates.scanner --base BRANCH",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -806,7 +806,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --commit requires a RANGE argument.\n"
-                "Usage: python -m spellbook.security.scanner --commit RANGE",
+                "Usage: python -m spellbook.gates.scanner --commit RANGE",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -826,7 +826,7 @@ def main(argv: list[str] | None = None) -> None:
         if idx + 1 >= len(args):
             print(
                 "Error: --mode requires a MODE argument.\n"
-                "Usage: python -m spellbook.security.scanner --mode mcp DIR",
+                "Usage: python -m spellbook.gates.scanner --mode mcp DIR",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -852,7 +852,7 @@ def main(argv: list[str] | None = None) -> None:
 
     else:
         print(
-            "Usage: python -m spellbook.security.scanner "
+            "Usage: python -m spellbook.gates.scanner "
             "[--changeset | --staged | --base BRANCH | --commit RANGE "
             "| --skills | --mode (mcp|skill) DIR]",
             file=sys.stderr,

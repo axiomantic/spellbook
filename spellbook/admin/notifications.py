@@ -27,10 +27,8 @@ class NotificationScope:
 
 def classify_event_scope(event: Event) -> str:
     """Determine notification routing scope for an event."""
-    # Config and security mode changes broadcast to all
+    # Config changes broadcast to all
     if event.subsystem == Subsystem.CONFIG:
-        return NotificationScope.BROADCAST
-    if event.subsystem == Subsystem.SECURITY and event.event_type == "mode_changed":
         return NotificationScope.BROADCAST
 
     # Memory mutations scope to namespace
