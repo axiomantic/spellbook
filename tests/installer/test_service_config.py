@@ -14,6 +14,7 @@ from installer.compat import (
     mcp_service_config,
     tts_service_config,
 )
+from spellbook.core.paths import get_data_dir, get_log_dir
 
 
 class TestServiceConfig:
@@ -106,6 +107,7 @@ class TestMcpServiceConfig:
                 host="127.0.0.1",
             )
 
+        spellbook_dir = Path("/opt/spellbook")
         assert config == ServiceConfig(
             launchd_label="com.spellbook.mcp",
             service_name="spellbook-mcp",
@@ -113,16 +115,16 @@ class TestMcpServiceConfig:
             description="Spellbook MCP Server",
             executable=fake_python,
             args=["-m", "spellbook.mcp"],
-            working_directory=Path("/opt/spellbook"),
+            working_directory=spellbook_dir,
             environment={
                 "PATH": "/usr/local/bin:/usr/bin",
                 "SPELLBOOK_MCP_TRANSPORT": "streamable-http",
                 "SPELLBOOK_MCP_HOST": "127.0.0.1",
                 "SPELLBOOK_MCP_PORT": "8765",
-                "SPELLBOOK_DIR": "/opt/spellbook",
+                "SPELLBOOK_DIR": str(spellbook_dir),
             },
-            log_stdout=Path.home() / ".local" / "spellbook" / "logs" / "mcp.log",
-            log_stderr=Path.home() / ".local" / "spellbook" / "logs" / "mcp.err.log",
+            log_stdout=get_log_dir() / "mcp.log",
+            log_stderr=get_log_dir() / "mcp.err.log",
             pid_file=tmp_path / "config" / "spellbook-mcp.pid",
             keep_alive=True,
             health_check_port=8765,
@@ -176,7 +178,7 @@ class TestTtsServiceConfig:
             assert config.executable == tts_venv / "Scripts" / "python.exe"
         else:
             assert config.executable == tts_venv / "bin" / "python"
-        assert config.working_directory == Path.home() / ".local" / "spellbook"
+        assert config.working_directory == get_data_dir()
         assert config.environment == {}
         assert config.pid_file is None
         assert config.keep_alive is True
@@ -192,7 +194,7 @@ class TestTtsServiceConfig:
             "--uri", "tcp://127.0.0.1:10200",
             "--device", "cpu",
             "--voice", "af_heart",
-            "--data-dir", str(Path.home() / ".local" / "spellbook" / "tts-data"),
+            "--data-dir", str(get_data_dir() / "tts-data"),
         ]
 
     def test_custom_port_device_voice(self):
@@ -209,7 +211,7 @@ class TestTtsServiceConfig:
             "--uri", "tcp://127.0.0.1:10300",
             "--device", "cuda",
             "--voice", "af_bella",
-            "--data-dir", str(Path.home() / ".local" / "spellbook" / "tts-data"),
+            "--data-dir", str(get_data_dir() / "tts-data"),
         ]
         assert config.health_check_port == 10300
 
@@ -232,9 +234,8 @@ class TestTtsServiceConfig:
         tts_venv = Path("/home/user/.local/spellbook/tts-venv")
         config = tts_service_config(tts_venv_dir=tts_venv)
 
-        log_dir = Path.home() / ".local" / "spellbook" / "logs"
-        assert config.log_stdout == log_dir / "tts.log"
-        assert config.log_stderr == log_dir / "tts.err.log"
+        assert config.log_stdout == get_log_dir() / "tts.log"
+        assert config.log_stderr == get_log_dir() / "tts.err.log"
 
 
 # ---------------------------------------------------------------------------
@@ -382,10 +383,12 @@ class TestServiceManagerGenerateTaskXml:
     """_generate_task_xml() uses config fields."""
 
     def test_xml_contains_config_executable_and_args(self):
+        executable = Path("/usr/bin/python3")
+        working_dir = Path("/opt/myapp")
         config = _make_config(
-            executable=Path("/usr/bin/python3"),
+            executable=executable,
             args=["-m", "myservice", "--port", "8080"],
-            working_directory=Path("/opt/myapp"),
+            working_directory=working_dir,
         )
         manager = ServiceManager(config)
         xml = manager._generate_task_xml()
@@ -401,14 +404,14 @@ class TestServiceManagerGenerateTaskXml:
         # Arguments contain the original command with log redirection
         arguments = root.find(".//t:Exec/t:Arguments", ns)
         assert arguments is not None
-        assert "/usr/bin/python3" in arguments.text
+        assert str(executable) in arguments.text
         assert "-m myservice --port 8080" in arguments.text
         assert str(config.log_stdout) in arguments.text
         assert str(config.log_stderr) in arguments.text
 
         workdir = root.find(".//t:Exec/t:WorkingDirectory", ns)
         assert workdir is not None
-        assert workdir.text == "/opt/myapp"
+        assert workdir.text == str(working_dir)
 
 
 class TestServiceManagerStop:
