@@ -9,6 +9,13 @@ Note: These tests intentionally access private attributes (e.g., _event_topics,
 _active_sessions, _subscription_registry, _retained_store, _fastmcp_event_session_id,
 _session_state) to verify subscription and session state. No public API exposes this
 information yet.
+
+Why no bigfoot mocks: These are integration tests that exercise real FastMCP server
+and MessageBus objects end-to-end. The test doubles used here (capturing_send closures,
+tracking_emit functions) replace attributes on live objects to observe real event
+flow -- they are not mocks of dependencies but probes on real instances. Pytest's
+monkeypatch is used for the two places a module-level attribute needs to be swapped
+(per AGENTS.md, monkeypatch is the approved tool for environment/attribute patching).
 """
 
 from typing import Any
@@ -52,16 +59,16 @@ def _make_server() -> FastMCP:
 class TestEventTopicDeclaration:
     """Verify event topics are declared correctly."""
 
-    def test_message_topic_declared(self):
+    def test_message_topic_declared(self) -> None:
         server = _make_server()
         assert "spellbook/sessions/{session_id}/messages" in server._event_topics
 
-    def test_build_status_topic_declared(self):
+    def test_build_status_topic_declared(self) -> None:
         server = _make_server()
         desc = server._event_topics["spellbook/sessions/{session_id}/build/status"]
         assert desc.retained is True
 
-    async def test_events_capability_advertised(self):
+    async def test_events_capability_advertised(self) -> None:
         """When event topics are declared, the events capability is visible."""
         server = _make_server()
         async with Client(server) as client:
@@ -95,7 +102,7 @@ class TestEventTopicDeclaration:
 class TestEventEmissionOnSend:
     """Verify that messaging_send emits events to subscribed sessions."""
 
-    async def test_recipient_receives_event_on_send(self):
+    async def test_recipient_receives_event_on_send(self) -> None:
         """Session B subscribes to its messages topic. Session A sends a
         message via emit_event. Session B's subscription receives the event."""
         server = _make_server()
@@ -121,7 +128,7 @@ class TestEventEmissionOnSend:
                 # Capture notifications sent to session B
                 original_send = session_b.send_notification
 
-                async def capturing_send(notification, related_request_id=None):
+                async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                     received_notifications.append(notification)
 
                 session_b.send_notification = capturing_send
@@ -152,7 +159,7 @@ class TestEventEmissionOnSend:
                 assert notif.params.payload["payload"] == {"greeting": "hello from A"}
                 assert notif.params.source == "spellbook/messaging"
 
-    async def test_sender_does_not_receive_event(self):
+    async def test_sender_does_not_receive_event(self) -> None:
         """Session A sends a message to B. A should NOT receive the event
         because A is not subscribed to B's topic."""
         server = _make_server()
@@ -171,7 +178,7 @@ class TestEventEmissionOnSend:
             # Capture notifications sent to session A
             original_send = session_a.send_notification
 
-            async def capturing_send(notification, related_request_id=None):
+            async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                 sender_notifications.append(notification)
 
             session_a.send_notification = capturing_send
@@ -197,7 +204,7 @@ class TestEventEmissionOnSend:
                 # Session A should NOT have received this event
                 assert len(sender_notifications) == 0
 
-    async def test_wildcard_subscription_receives_all_sessions(self):
+    async def test_wildcard_subscription_receives_all_sessions(self) -> None:
         """A session subscribed with a wildcard pattern receives events for
         any session_id."""
         server = _make_server()
@@ -215,7 +222,7 @@ class TestEventEmissionOnSend:
 
             original_send = session.send_notification
 
-            async def capturing_send(notification, related_request_id=None):
+            async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                 received.append(notification)
 
             session.send_notification = capturing_send
@@ -241,7 +248,7 @@ class TestEventEmissionOnSend:
 class TestRetainedEvents:
     """Verify retained event behavior for build/status topic."""
 
-    async def test_retained_event_stored(self):
+    async def test_retained_event_stored(self) -> None:
         """Emitting to a retained topic stores the value.
 
         Note: parameterized topic patterns (with {session_id}) require
@@ -265,7 +272,7 @@ class TestRetainedEvents:
         assert stored.topic == "spellbook/sessions/worker-1/build/status"
         assert stored.event_id is not None and len(stored.event_id) > 0
 
-    async def test_retained_event_overwritten(self):
+    async def test_retained_event_overwritten(self) -> None:
         """New retained events replace previous ones for the same topic."""
         server = _make_server()
 
@@ -300,7 +307,7 @@ class TestRetainedEvents:
         assert stored.topic == "spellbook/sessions/worker-1/build/status"
 
 
-    async def test_retained_event_delivered_on_subscribe(self):
+    async def test_retained_event_delivered_on_subscribe(self) -> None:
         """When a client subscribes to a topic with a retained event,
         the retained value is included in the subscribe result via get_matching."""
         server = _make_server()
@@ -340,7 +347,7 @@ class TestRetainedEvents:
 class TestMessagingSendEventIntegration:
     """End-to-end test: messaging_send tool emits events alongside queue delivery."""
 
-    async def test_messaging_send_emits_event(self, monkeypatch):
+    async def test_messaging_send_emits_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Use a patched messaging bus with the real mcp event infrastructure.
         Verify that calling messaging_send produces both queue delivery AND
         event emission."""
@@ -358,10 +365,10 @@ class TestMessagingSendEventIntegration:
         # Track emit_event calls on the mcp instance
         from spellbook.mcp.server import mcp
 
-        emitted_events: list[dict] = []
+        emitted_events: list[dict[str, Any]] = []
         original_emit = mcp.emit_event
 
-        async def tracking_emit(topic, payload, **kwargs):
+        async def tracking_emit(topic: str, payload: Any, **kwargs: Any) -> None:
             emitted_events.append({"topic": topic, "payload": payload, **kwargs})
             # Don't call original since no sessions are actually connected
             # to the spellbook global mcp singleton in this test context
@@ -400,7 +407,9 @@ class TestMessagingSendEventIntegration:
         effect_types = [e.type for e in effects]
         assert "inject_context" in effect_types
 
-    async def test_messaging_send_event_not_emitted_on_failure(self, monkeypatch):
+    async def test_messaging_send_event_not_emitted_on_failure(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """If the bus send fails, no event should be emitted."""
         from spellbook.messaging.bus import MessageBus
         import spellbook.mcp.tools.messaging as tools_mod
@@ -413,10 +422,10 @@ class TestMessagingSendEventIntegration:
 
         from spellbook.mcp.server import mcp
 
-        emitted_events: list[dict] = []
+        emitted_events: list[dict[str, Any]] = []
         original_emit = mcp.emit_event
 
-        async def tracking_emit(topic, payload, **kwargs):
+        async def tracking_emit(topic: str, payload: Any, **kwargs: Any) -> None:
             emitted_events.append({"topic": topic, "payload": payload})
 
         monkeypatch.setattr(mcp, "emit_event", tracking_emit)
