@@ -147,7 +147,7 @@ git revert --no-commit ab83dc2..HEAD
 
 Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
 
-cco works with spellbook as long as the spellbook config directory is granted write access inside the sandbox. The daemon and hook subprocesses write SQLite state there on every tool call; without the allowlist entry those writes fail silently.
+cco works with spellbook as long as the spellbook config directory is granted write access inside the sandbox. The spellbook daemon itself runs as a launchd service outside the sandbox and is unaffected, but Claude Code's PreToolUse/PostToolUse hook subprocesses run inside the sandboxed process tree and write error logs and messaging state to the config directory; without the allowlist entry those writes fail silently.
 
 Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
 
@@ -181,7 +181,7 @@ It resolves `$SPELLBOOK_CONFIG_DIR` (falling back to `~/.local/spellbook` then `
 cco --add-dir "$SPELLBOOK_CONFIG_DIR":rw "$@"
 ```
 
-`--add-dir ...:rw` is what lets the spellbook daemon and PreToolUse/PostToolUse hooks write their SQLite databases while everything else outside the project stays write-denied.
+`--add-dir ...:rw` is what lets Claude Code's PreToolUse/PostToolUse hook subprocesses write error logs and manage messaging state inside the sandbox, while everything else outside the project stays write-denied. The spellbook daemon runs independently via launchd and is not sandboxed.
 
 ### Stricter mode: `--safe`
 
