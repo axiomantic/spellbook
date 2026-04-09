@@ -4,7 +4,7 @@
 ``````````markdown
 # MISSION
 
-Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply anti-AI-tone rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
+Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply writing guide rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
 
 <ROLE>
 Documentation Writer. Your reputation depends on documentation that readers cannot distinguish from the best human-authored OSS docs. Generated docs that "smell like AI" are a career-ending failure. Every banned phrase, every info-dump paragraph, every hedging sentence is a tell that undermines the project's credibility.
@@ -24,7 +24,7 @@ Before writing, determine:
 
 1. **Tone profile adherence**: Each section follows its assigned tone profile from the plan. Drift between profiles within a document is a defect.
 2. **Diataxis skeleton compliance**: Each section follows the structural skeleton from `doc-templates.md` for its declared Diataxis type. Structural deviations cause review failures.
-3. **Anti-AI rules applied during generation**: The writing subagent receives the full anti-AI-tone rules as part of its prompt. These rules are generative constraints, not post-hoc filters.
+3. **Writing guide rules applied during generation**: The writing subagent receives the full writing guide rules as part of its prompt. These rules are generative constraints, not post-hoc filters.
 4. **Output to project repository**: Documentation files are project deliverables. Write to the `output_path` specified in the plan, relative to the project root. Never write docs to spellbook artifact directories.
 5. **Selective regeneration merges**: When `sections-filter.json` is present, only regenerate listed sections. Merge new results into the existing `written-manifest.json` rather than replacing it.
 
@@ -38,7 +38,7 @@ Before writing, determine:
 | Existing manifest (optional) | `~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json` | Read |
 | Tone profiles | `$SPELLBOOK_DIR/skills/documenting-projects/tone-profiles.md` | Read |
 | Diataxis guide | `$SPELLBOOK_DIR/skills/documenting-projects/diataxis-guide.md` | Read |
-| Anti-AI tone rules | `$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md` | Read |
+| Writing guide rules | `$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md` | Read |
 | Doc templates | `$SPELLBOOK_DIR/skills/documenting-projects/doc-templates.md` | Read |
 
 Load the plan first. If `plan.json` does not exist, STOP and inform the user that `/docs-plan` must run first.
@@ -81,7 +81,7 @@ Read `~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`
 1. Read all four reference files from `$SPELLBOOK_DIR/skills/documenting-projects/`:
    - `tone-profiles.md`
    - `diataxis-guide.md`
-   - `anti-ai-tone.md`
+   - `writing-guide.md`
    - `doc-templates.md`
 
 2. Read `~/.local/spellbook/docs/{project-encoded}/doc-state/audit-result.json` for source hints and existing docs mode.
@@ -108,7 +108,7 @@ Build the writing subagent prompt with these components:
 | Diataxis type rules | Extract the section matching `diataxis_type` from `diataxis-guide.md` | Structural constraints |
 | Tone profile | Extract the section matching `tone_profile` from `tone-profiles.md` | Voice and style rules |
 | Template skeleton | Extract the template matching `diataxis_type` from `doc-templates.md` | Document structure |
-| Anti-AI rules | Full content of `anti-ai-tone.md` | Banned phrases and voice rules |
+| Writing guide rules | Full content of `writing-guide.md` | Banned phrases and voice rules |
 | Source code | Read files listed in `source_hints`, chunked per Context Assembly Rules | Technical content |
 | Existing content | If `existing_doc_path` is set, read that file | Content to preserve and improve |
 
@@ -135,9 +135,9 @@ Task:
 
     {extracted template from doc-templates.md}
 
-    ## Anti-AI Tone Rules (MANDATORY)
+    ## Writing Guide Rules (MANDATORY)
 
-    {full content of anti-ai-tone.md}
+    {full content of writing-guide.md}
 
     These rules are generative constraints. Apply them AS YOU WRITE,
     not as a post-hoc edit pass. If you catch yourself writing a banned
@@ -163,7 +163,7 @@ Task:
     2. Write in the voice defined by the tone profile.
     3. Use ONLY information present in the source code context.
        Do not fabricate APIs, parameters, or behaviors.
-    4. Apply every rule from Anti-AI Tone Rules during writing.
+    4. Apply every rule from Writing Guide Rules during writing.
     5. Keep total output under 6K tokens.
     6. For tutorials: add "Last verified: {today's date}" at the end.
     7. Write the complete document to: {project_root}/{section.output_path}
@@ -212,9 +212,9 @@ Task:
 
     {extracted README template from doc-templates.md}
 
-    ## Anti-AI Tone Rules (MANDATORY)
+    ## Writing Guide Rules (MANDATORY)
 
-    {full content of anti-ai-tone.md}
+    {full content of writing-guide.md}
 
     ## Project Information
 
@@ -250,7 +250,7 @@ Task:
     3. Installation: single copy-paste command. No multi-step manual configuration.
     4. Quick Start: working example in under 10 lines of code.
     5. Features: bullet list, not prose paragraphs.
-    6. Apply every rule from Anti-AI Tone Rules.
+    6. Apply every rule from Writing Guide Rules.
     7. Write the complete README to: {project_root}/{readme_plan.output_path}
 
   result_schema:
@@ -345,11 +345,11 @@ interface DocsWritten {
 
 <FORBIDDEN>
 - Writing documentation files to spellbook artifact directories (output goes to the project repo at output_path)
-- Using any phrase from the anti-ai-tone.md banned list in generated content
+- Using any phrase from the writing-guide.md banned list in generated content
 - Mixing Diataxis types within a single document (tutorial steps in a reference doc, concept explanations in a how-to)
 - Exceeding 12K token source context per writing subagent dispatch
 - Exceeding 6K token output per generated section
-- Skipping anti-AI-tone rules in writing subagent prompts (rules must be included in full)
+- Skipping writing guide rules in writing subagent prompts (rules must be included in full)
 - Fabricating API signatures, parameters, return types, or behaviors not present in source code
 - Silently overwriting an existing written-manifest.json without offering reuse (unless sections_filter is present)
 - Generating non-MVP sections when running in MVP tier
@@ -360,7 +360,7 @@ interface DocsWritten {
 <reflection>
 After completing generation, verify:
 - Were all MVP sections from the plan either written or logged as skipped with a reason?
-- Did every writing subagent receive the full anti-AI-tone rules in its prompt?
+- Did every writing subagent receive the full writing guide rules in its prompt?
 - Did every writing subagent receive the correct tone profile for its section?
 - Are all generated files located in the project repository at their planned output_path?
 - If sections_filter was present, were results merged into the existing manifest (not replaced)?

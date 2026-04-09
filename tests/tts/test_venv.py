@@ -7,6 +7,7 @@ from pathlib import Path
 import bigfoot
 import pytest
 
+from spellbook.core.paths import get_data_dir
 from spellbook.tts.venv import (
     TTS_MIN_DISK_SPACE_BYTES,
     _resolve_uv,
@@ -16,6 +17,8 @@ from spellbook.tts.venv import (
 )
 
 DiskUsage = collections.namedtuple("usage", ["total", "used", "free"])
+
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 class TestGetTtsPython:
@@ -35,7 +38,8 @@ class TestGetTtsPython:
 class TestGetTtsVenvDir:
     def test_default_location(self):
         venv_dir = get_tts_venv_dir()
-        assert venv_dir == Path.home() / ".local" / "spellbook" / "tts-venv"
+        assert venv_dir.name == "tts-venv"
+        assert venv_dir.parent == get_data_dir()
 
 
 class TestConstants:
@@ -91,7 +95,7 @@ class TestCreateTtsVenv:
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
         mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
-            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
+            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", PYTHON_VERSION, "--seed"],
             stdin=None,
         )
         bigfoot.async_subprocess_mock.assert_communicate(input=None)
@@ -128,7 +132,7 @@ class TestCreateTtsVenv:
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
         mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
-            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
+            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", PYTHON_VERSION, "--seed"],
             stdin=None,
         )
         bigfoot.async_subprocess_mock.assert_communicate(input=None)
@@ -165,7 +169,7 @@ class TestCreateTtsVenv:
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
         mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
-            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
+            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", PYTHON_VERSION, "--seed"],
             stdin=None,
         )
         bigfoot.async_subprocess_mock.assert_communicate(input=None)
@@ -217,7 +221,7 @@ class TestCreateTtsVenv:
         mock_du.assert_call(args=(str(tmp_path),), kwargs={})
         mock_uv.assert_call(args=(), kwargs={})
         bigfoot.async_subprocess_mock.assert_spawn(
-            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", "3.12", "--seed"],
+            command=["uv", "venv", str(tmp_path / "tts-venv"), "--python", PYTHON_VERSION, "--seed"],
             stdin=None,
         )
         bigfoot.async_subprocess_mock.assert_communicate(input=None)

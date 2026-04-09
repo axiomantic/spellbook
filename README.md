@@ -118,7 +118,7 @@ The main agent dispatches subagents rather than doing implementation work direct
 
 The system is designed to distrust its own outputs. [Fact-checking][fact-checking] treats every claim as a hypothesis to verify. [Green mirage auditing][auditing-green-mirage] asks whether a test would actually fail if the code were broken, which is a different question from whether the test passes. [Hunch verification][verifying-hunches] intercepts moments of claimed discovery and requires reframing them as testable hypotheses. [Dehallucination][dehallucination] names the specific ways LLMs confabulate and provides recovery protocols.
 
-Test-driven development is treated as an epistemic practice: tests written before implementation answer "what should this do?" while tests written after answer "what does this do?" That distinction matters at every level.
+Test-driven development is treated as an epistemic practice: tests written before implementation answer "what should this do?" while tests written after answer "what does this do?" -- and the system's quality gates are designed around that difference.
 
 Hallucination prevention draws on peer-reviewed research. [Chain-of-Verification][cove-protocol] self-interrogation (Dhuliawala et al., 2023) requires verification skills to generate and answer questions about their own claims before finalizing verdicts. [Atomic claim decomposition][decompose-claims] (Min et al., FActScore, EMNLP 2023) breaks compound statements into independently verifiable units. API hallucination detection checklists in [code review][code-review] and [quality enforcement][enforcing-code-quality] catch the specific pattern where LLMs generate syntactically valid but non-existent API calls.
 
@@ -128,7 +128,7 @@ LLMs fail in predictable ways, and Spellbook names those patterns so it can buil
 
 ### Quality gates
 
-Every substantial skill runs as a sequence of phases with mandatory gates between them. Tests must pass, code review must clear, claims must verify against source, and tests must actually catch regressions. These gates cannot be bypassed by YOLO mode or autonomy settings. YOLO mode grants permission to act without asking, but it does not grant permission to skip verification steps.
+Every substantial skill runs as a sequence of phases with mandatory gates between them. Tests must pass, code review must clear, claims must verify against source, and tests must actually catch regressions. These gates cannot be bypassed by YOLO mode or autonomy settings -- YOLO grants permission to act without asking, but not to skip verification.
 
 ### Composition
 
@@ -136,7 +136,7 @@ Skills invoke skills. [`develop`][develop] orchestrates [design-exploration], [w
 
 ### Self-improvement
 
-Some skills exist to improve other skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions. The feedback loop is: measure, identify weakness, apply improvement skills, measure again.
+Some skills exist to improve other skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique, and [prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions against each other so improvements can be measured rather than assumed.
 
 ### Security tiers
 
@@ -146,11 +146,11 @@ Every subagent operates within a trust tier with hard-capped tool access. Extern
 
 You say "add dark mode" or "migrate the auth system to OAuth2" or "build a webhook delivery pipeline with retry logic." The [`develop`][develop] skill orchestrates the full feature lifecycle through 20+ specialized skills and commands. The first question it asks is how involved you want to be:
 
-**Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its claims, audits its tests for false confidence, and opens a PR. Every step runs in a fresh subagent with a quality gate that cannot be bypassed.
+**Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its claims, audits its tests for false confidence, and opens a PR. Each step runs in a fresh subagent with its own quality gate.
 
-**Highly interactive.** Same pipeline, same rigor, but you are in the conversation. Ambiguities become specific questions grounded in what it found in your code. Architectural tradeoffs come with evidence. Checkpoints pause for your input.
+**Highly interactive.** The same pipeline with the same rigor, but you stay in the conversation. Ambiguities become specific questions grounded in what it found in your code, and architectural tradeoffs come with evidence. Checkpoints pause for your input.
 
-**Or anywhere between.** Mostly autonomous with pauses only for critical decisions. Set once at the start.
+**Or anywhere between.** You can run mostly autonomous with pauses only for critical decisions, and set the level once at the start.
 
 ### How it works
 
@@ -365,7 +365,7 @@ Reusable workflows for structured development:
 | [/ie-tool-docs] | Guidance for writing tool/function documentation |
 | [/sharpen-audit] | Audit prompts for ambiguity with executor predictions |
 | [/sharpen-improve] | Rewrite prompts to eliminate ambiguity |
-| [/write-readme] | Standalone README generation with anti-AI-tone enforcement |
+| [/write-readme] | Standalone README generation with writing guide enforcement |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -496,7 +496,7 @@ Research suggests that personas and structured randomness can improve LLM creati
 - **Fun mode**: The assistant adopts a random persona each session -- a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Personas apply only to dialogue; code, commits, and documentation stay professional.
 - **Tarot mode**: Ten archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable dialogue, with specialized agents for implementation, integration, and conflict resolution.
 
-If you say no, it never asks again.
+If you decline, it won't ask again for the rest of the session.
 
 <details>
 <summary><strong>Research references</strong></summary>

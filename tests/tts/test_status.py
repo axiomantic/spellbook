@@ -5,6 +5,7 @@ from pathlib import Path
 import bigfoot
 import pytest
 
+from spellbook.core.paths import get_data_dir, get_log_dir
 from spellbook.notifications.tts import get_status
 
 
@@ -61,9 +62,9 @@ class TestGetStatusServiceFields:
                 "service_installed": True,
                 "device": "mps",
                 "provisioning": False,
-                "data_dir": str(Path.home() / ".local" / "spellbook" / "tts-data"),
-                "venv_dir": str(Path.home() / ".local" / "spellbook" / "tts-venv"),
-                "log_file": str(Path.home() / ".local" / "spellbook" / "logs" / "tts.log"),
+                "data_dir": str(get_data_dir() / "tts-data"),
+                "venv_dir": str(get_data_dir() / "tts-venv"),
+                "log_file": str(get_log_dir() / "tts.log"),
             },
         }
 
@@ -103,9 +104,9 @@ class TestGetStatusServiceFields:
             "service_installed": False,
             "device": "unknown",
             "provisioning": False,
-            "data_dir": str(Path.home() / ".local" / "spellbook" / "tts-data"),
-            "venv_dir": str(Path.home() / ".local" / "spellbook" / "tts-venv"),
-            "log_file": str(Path.home() / ".local" / "spellbook" / "logs" / "tts.log"),
+            "data_dir": str(get_data_dir() / "tts-data"),
+            "venv_dir": str(get_data_dir() / "tts-venv"),
+            "log_file": str(get_log_dir() / "tts.log"),
         }
 
     def test_no_service_dict_when_not_installed(self):

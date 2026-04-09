@@ -33,7 +33,7 @@ Before reviewing, determine:
 |--------|------|------|
 | Written manifest | `~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json` | Read |
 | Documentation plan | `~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json` | Read |
-| Anti-AI tone rules | `$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md` | Read |
+| Writing guide rules | `$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md` | Read |
 | Previous review (optional) | `~/.local/spellbook/docs/{project-encoded}/doc-state/review-result.json` | Read |
 
 Load the written manifest first. If `written-manifest.json` does not exist, STOP and inform the user that `/docs-write` must run first.
@@ -42,7 +42,7 @@ Load the written manifest first. If `written-manifest.json` does not exist, STOP
 
 | # | Criterion | Measurement Method | Pass Condition |
 |---|-----------|-------------------|----------------|
-| 1 | Banned phrase detection | Grep against phrase list from `anti-ai-tone.md` | Zero matches across all files |
+| 1 | Banned phrase detection | Grep against phrase list from `writing-guide.md` | Zero matches across all files |
 | 2 | Code block validity | Automated parse of fenced blocks | All 3 MVP checks pass (see below) |
 | 3 | Build config validity | Run build tool (`mkdocs build --strict`) | Zero errors, all nav links resolve |
 | 4 | Diataxis compliance | Structural checklist (4 sub-checks) | All 4 sub-checks pass per file |
@@ -97,7 +97,7 @@ A file passes if ALL of the following hold:
 2. Read `~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json` via Read tool.
    - Needed for: Diataxis type and tone profile assignments per section, build tool info, coverage checks.
 
-3. Read `$SPELLBOOK_DIR/skills/documenting-projects/anti-ai-tone.md` via Read tool.
+3. Read `$SPELLBOOK_DIR/skills/documenting-projects/writing-guide.md` via Read tool.
    - Needed for: banned phrase list (criterion 1), voice rule checks (criteria 5, 6).
 
 4. Read `~/.local/spellbook/docs/{project-encoded}/doc-state/review-result.json` via Read tool (if it exists).
@@ -109,7 +109,7 @@ These criteria can be evaluated with tools alone, without subagent dispatch.
 
 #### Criterion 1: Banned Phrase Detection
 
-For each banned phrase in `anti-ai-tone.md`:
+For each phrase in the "Banned Phrases" section of `writing-guide.md`:
 1. Use the Grep tool with the phrase as pattern, searching across all files listed in the written manifest.
 2. Record every match: file path, line number, matched phrase.
 3. **Pass condition:** Zero total matches across all files.
