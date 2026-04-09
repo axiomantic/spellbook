@@ -30,7 +30,8 @@ class TestProvisioningLock:
             assert lock_file.exists()
 
     def test_default_lock_file_path(self):
-        assert DEFAULT_LOCK_FILE == get_data_dir() / "tts-provision.lock"
+        assert DEFAULT_LOCK_FILE.name == "tts-provision.lock"
+        assert DEFAULT_LOCK_FILE.parent == get_data_dir()
 
     def test_lock_released_after_exit(self, tmp_path):
         lock_file = tmp_path / "test.lock"

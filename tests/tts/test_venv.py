@@ -38,7 +38,8 @@ class TestGetTtsPython:
 class TestGetTtsVenvDir:
     def test_default_location(self):
         venv_dir = get_tts_venv_dir()
-        assert venv_dir == get_data_dir() / "tts-venv"
+        assert venv_dir.name == "tts-venv"
+        assert venv_dir.parent == get_data_dir()
 
 
 class TestConstants:
