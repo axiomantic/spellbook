@@ -942,8 +942,10 @@ def session_init(
                 "undertow": undertow,
             }
 
-    # Include platform in response
-    result["platform"] = platform
+    # Include platform in response (read from session_state to reflect
+    # previously stored value when the caller omits the argument, e.g.
+    # during a session resume)
+    result["platform"] = session_state.get("platform")
 
     # Add update notification (if any)
     _add_update_notification(result)

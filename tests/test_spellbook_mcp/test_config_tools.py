@@ -445,6 +445,25 @@ class TestSessionInitPlatform:
 
         _session_states.clear()
 
+    def test_platform_persists_across_calls_without_argument(self, tmp_path, monkeypatch):
+        """Platform set in one call is returned in response of a later call
+        that omits the argument (e.g. session resume)."""
+        from spellbook.core.config import session_init, _session_states
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook.core.config.get_config_path", lambda: config_path)
+        _session_states.clear()
+
+        # First call establishes the platform
+        first = session_init(session_id="sess-resume", platform="opencode")
+        assert first["platform"] == "opencode"
+
+        # Second call without platform arg should still report it
+        second = session_init(session_id="sess-resume")
+        assert second["platform"] == "opencode"
+
+        _session_states.clear()
+
 
 class TestSessionModeSet:
     """Tests for session_mode_set function."""
