@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.49.0] - 2026-04-08
+
+### Changed
+- **Platform self-identification**: `spellbook_session_init` now accepts a `platform` parameter so LLMs can self-identify their platform (`claude_code`, `opencode`, `codex`, `gemini`) from their own system prompt instead of relying on environment variable detection. `AGENTS.spellbook.md` Step 0 no longer runs `env | grep` at session start.
+
 ## [0.48.0] - 2026-04-08
 
 ### Changed

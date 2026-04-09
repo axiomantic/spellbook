@@ -822,10 +822,14 @@ def _regenerate_memory_md(project_path: Optional[str]) -> None:
         pass  # Fail-open: never block session init
 
 
+VALID_PLATFORMS = ("claude_code", "opencode", "codex", "gemini")
+
+
 def session_init(
     session_id: Optional[str] = None,
     continuation_message: Optional[str] = None,
-    project_path: Optional[str] = None
+    project_path: Optional[str] = None,
+    platform: Optional[str] = None,
 ) -> dict:
     """Initialize a spellbook session with optional continuation detection.
 
@@ -847,16 +851,25 @@ def session_init(
         continuation_message: User's first message for resume detection (optional).
                             Pass the raw first message to enable continuation detection.
         project_path: Project path for resume detection. If None, falls back to os.getcwd().
+        platform: LLM platform self-identification. Valid values: "claude_code",
+                  "opencode", "codex", "gemini". If None, platform is unknown.
 
     Returns:
         Dict with:
         - mode: {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data}
         - fun_mode: "yes"|"no"|"unset" (legacy key for backward compatibility)
+        - platform: The platform value (or None if not provided)
         - resume_available: bool
         - resume_* fields if resume is available
     """
-    # Check session state first (in-memory override)
+    # Validate and store platform
+    if platform is not None and platform not in VALID_PLATFORMS:
+        logger.warning("Unknown platform '%s', accepting as-is", platform)
     session_state = _get_session_state(session_id)
+    if platform is not None:
+        session_state["platform"] = platform
+
+    # Check session state first (in-memory override)
     session_override = session_state.get("mode")
 
     # Then check config
@@ -928,6 +941,9 @@ def session_init(
                 "context": context,
                 "undertow": undertow,
             }
+
+    # Include platform in response
+    result["platform"] = platform
 
     # Add update notification (if any)
     _add_update_notification(result)

@@ -164,6 +164,7 @@ async def spellbook_session_init(
     ctx: Context,
     session_name: Optional[str] = None,
     continuation_message: Optional[str] = None,
+    platform: Optional[str] = None,
 ) -> dict:
     """
     Initialize a spellbook session.
@@ -176,11 +177,15 @@ async def spellbook_session_init(
         session_name: Optional explicit alias for this session. If provided,
             used as-is (after slugify) instead of git-derived alias.
         continuation_message: User's first message for resume detection.
+        platform: LLM platform self-identification. The calling LLM should
+            identify itself from its own system prompt. Valid values:
+            "claude_code", "opencode", "codex", "gemini".
 
     Returns:
         {
             "mode": {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data},
             "fun_mode": "yes"|"no"|"unset",  // legacy key
+            "platform": str|null,
             "messaging": {"registered": bool, "alias": str|None, ...}
         }
     """
@@ -192,6 +197,7 @@ async def spellbook_session_init(
         session_id or None,
         continuation_message=continuation_message,
         project_path=project_path,
+        platform=platform,
     )
 
     # 2. Auto-register for messaging (async, best-effort)
