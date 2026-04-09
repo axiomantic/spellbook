@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 class Subsystem(str, Enum):
     MEMORY = "memory"
-    SECURITY = "security"
     SESSION = "session"
     CONFIG = "config"
     FRACTAL = "fractal"

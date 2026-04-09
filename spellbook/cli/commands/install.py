@@ -42,12 +42,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         help="Show what would be done without making changes",
     )
     parser.add_argument(
-        "--security-level",
-        choices=["minimal", "standard", "strict"],
-        default=None,
-        help="Pre-set security level, skipping the security wizard (minimal|standard|strict)",
-    )
-    parser.add_argument(
         "--no-tts",
         action="store_true",
         default=False,
@@ -148,21 +142,10 @@ def run(args: argparse.Namespace) -> None:
         if getattr(args, "dry_run", False):
             renderer.render_warning("DRY RUN - no changes will be made")
 
-    # Convert --security-level to security_selections dict if provided
-    security_selections = None
-    if getattr(args, "security_level", None):
-        try:
-            from installer.components.security import security_level_to_selections
-            security_selections = security_level_to_selections(args.security_level)
-        except (ImportError, ValueError) as e:
-            print(f"Error: Invalid security level: {e}", file=sys.stderr)
-            sys.exit(1)
-
     session = installer.run(
         platforms=getattr(args, "platforms", None),
         force=getattr(args, "force", False),
         dry_run=getattr(args, "dry_run", False),
-        security_selections=security_selections,
         renderer=renderer,
     )
 

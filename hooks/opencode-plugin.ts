@@ -9,7 +9,7 @@
 import { execSync } from 'child_process';
 
 function getCheckCommand(): string {
-  return 'python3 -m spellbook.security.check';
+  return 'python3 -m spellbook.gates.check';
 }
 
 function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: boolean; error?: string } {

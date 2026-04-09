@@ -36,11 +36,6 @@ class TestHealthCheckerImports:
 
         assert HealthCheckResult is not None
 
-    def test_import_check_security_domain(self):
-        from spellbook.health.checker import check_security_domain
-
-        assert callable(check_security_domain)
-
     def test_all_public_exports_match(self):
         """Every public callable/class in spellbook.health.checker must exist in spellbook.health.checker."""
         import spellbook.health.checker as old_mod

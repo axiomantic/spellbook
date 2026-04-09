@@ -226,14 +226,14 @@ class TestCheckModuleBehavior:
 
     def test_safe_bash_command_is_allowed(self):
         """A normal bash command should pass check_tool_input."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "ls -la"})
         assert result == {"safe": True, "findings": [], "tool_name": "Bash"}
 
     def test_dangerous_bash_command_is_blocked(self):
         """rm -rf / should be flagged by check_tool_input."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "rm -rf /"})
         assert result == {
@@ -251,7 +251,7 @@ class TestCheckModuleBehavior:
 
     def test_sudo_is_blocked(self):
         """sudo commands should be flagged."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "sudo rm -rf /tmp"})
         assert result == {
@@ -275,7 +275,7 @@ class TestCheckModuleBehavior:
 
     def test_curl_exfiltration_is_blocked(self):
         """curl with suspicious payload should be flagged."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "Bash",
@@ -296,7 +296,7 @@ class TestCheckModuleBehavior:
 
     def test_safe_spawn_prompt_is_allowed(self):
         """A normal spawn prompt should pass."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "spawn_claude_session",
@@ -306,7 +306,7 @@ class TestCheckModuleBehavior:
 
     def test_injection_prompt_is_blocked(self):
         """An injection attempt in spawn prompt should be blocked."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "spawn_claude_session",
@@ -327,7 +327,7 @@ class TestCheckModuleBehavior:
 
     def test_safe_workflow_state_is_allowed(self):
         """Clean workflow state should pass."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "workflow_state_save",
@@ -341,7 +341,7 @@ class TestCheckModuleBehavior:
 
     def test_injected_workflow_state_is_blocked(self):
         """Injection in workflow state should be blocked."""
-        from spellbook.security.check import check_tool_input
+        from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "workflow_state_save",
@@ -379,8 +379,8 @@ class TestCheckModuleCLI:
         *,
         extra_args: list[str] | None = None,
     ) -> subprocess.CompletedProcess:
-        """Run spellbook.security.check as subprocess."""
-        cmd = [sys.executable, "-m", "spellbook.security.check"]
+        """Run spellbook.gates.check as subprocess."""
+        cmd = [sys.executable, "-m", "spellbook.gates.check"]
         if extra_args:
             cmd.extend(extra_args)
 
@@ -441,7 +441,7 @@ class TestCheckModuleCLI:
         env = os.environ.copy()
         env["PYTHONPATH"] = PROJECT_ROOT
         proc = subprocess.run(
-            [sys.executable, "-m", "spellbook.security.check"],
+            [sys.executable, "-m", "spellbook.gates.check"],
             input="not json at all",
             capture_output=True,
             text=True,
@@ -450,29 +450,6 @@ class TestCheckModuleCLI:
             cwd=PROJECT_ROOT,
         )
         assert proc.returncode == 1
-
-    def test_audit_mode_always_exits_zero(self):
-        """--mode audit always exits 0, even for dangerous commands."""
-        proc = self._run_check(
-            {
-                "tool_name": "Bash",
-                "tool_input": {"command": "rm -rf /"},
-            },
-            extra_args=["--mode", "audit"],
-        )
-        assert proc.returncode == 0
-
-    def test_canary_mode_always_exits_zero(self):
-        """--mode canary always exits 0."""
-        proc = self._run_check(
-            {
-                "tool_name": "Bash",
-                "tool_input": {},
-                "tool_output": "normal output with no canaries",
-            },
-            extra_args=["--mode", "canary"],
-        )
-        assert proc.returncode == 0
 
     def test_spawn_guard_safe_prompt(self):
         """Safe spawn prompt -> exit 0."""

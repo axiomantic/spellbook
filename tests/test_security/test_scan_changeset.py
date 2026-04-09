@@ -22,7 +22,7 @@ from dirty_equals import IsInstance
 
 pytestmark = pytest.mark.integration
 
-from spellbook.security.scanner import main as scanner_main
+from spellbook.gates.scanner import main as scanner_main
 
 
 # ---------------------------------------------------------------------------
@@ -88,8 +88,8 @@ class TestGetGitDiff:
     """_get_git_diff runs git commands and returns diff text."""
 
     def test_staged_runs_git_diff_cached(self):
-        import spellbook.security.scanner as scanner_mod
-        from spellbook.security.scanner import _get_git_diff
+        import spellbook.gates.scanner as scanner_mod
+        from spellbook.gates.scanner import _get_git_diff
 
         captured_cmds = []
 
@@ -109,8 +109,8 @@ class TestGetGitDiff:
         assert result == CLEAN_DIFF
 
     def test_base_runs_git_diff_triple_dot(self):
-        import spellbook.security.scanner as scanner_mod
-        from spellbook.security.scanner import _get_git_diff
+        import spellbook.gates.scanner as scanner_mod
+        from spellbook.gates.scanner import _get_git_diff
 
         captured_cmds = []
 
@@ -130,8 +130,8 @@ class TestGetGitDiff:
         assert result == CLEAN_DIFF
 
     def test_commit_runs_git_diff_range(self):
-        import spellbook.security.scanner as scanner_mod
-        from spellbook.security.scanner import _get_git_diff
+        import spellbook.gates.scanner as scanner_mod
+        from spellbook.gates.scanner import _get_git_diff
 
         captured_cmds = []
 
@@ -151,8 +151,8 @@ class TestGetGitDiff:
         assert result == CLEAN_DIFF
 
     def test_git_failure_raises_system_exit(self):
-        import spellbook.security.scanner as scanner_mod
-        from spellbook.security.scanner import _get_git_diff
+        import spellbook.gates.scanner as scanner_mod
+        from spellbook.gates.scanner import _get_git_diff
 
         mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
         mock_run.returns(
@@ -169,13 +169,13 @@ class TestGetGitDiff:
         assert exc_info.value.code != 0
 
     def test_no_args_raises_value_error(self):
-        from spellbook.security.scanner import _get_git_diff
+        from spellbook.gates.scanner import _get_git_diff
 
         with pytest.raises(ValueError, match="Exactly one"):
             _get_git_diff()
 
     def test_multiple_args_raises_value_error(self):
-        from spellbook.security.scanner import _get_git_diff
+        from spellbook.gates.scanner import _get_git_diff
 
         with pytest.raises(ValueError, match="Exactly one"):
             _get_git_diff(staged=True, base="main")
@@ -190,7 +190,7 @@ class TestCLIStaged:
     """CLI --staged flag runs git diff --cached and scans the result."""
 
     def test_staged_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
         with bigfoot:
@@ -201,7 +201,7 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
         with bigfoot:
@@ -212,7 +212,7 @@ class TestCLIStaged:
         assert exc_info.value.code == 1
 
     def test_staged_removal_only_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(REMOVAL_ONLY_DIFF)
 
         with bigfoot:
@@ -223,7 +223,7 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_empty_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
         with bigfoot:
@@ -234,7 +234,7 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_passes_staged_flag_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
         with bigfoot:
@@ -253,7 +253,7 @@ class TestCLIBase:
     """CLI --base BRANCH flag runs git diff BRANCH...HEAD and scans the result."""
 
     def test_base_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
         with bigfoot:
@@ -264,7 +264,7 @@ class TestCLIBase:
         assert exc_info.value.code == 0
 
     def test_base_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
         with bigfoot:
@@ -275,7 +275,7 @@ class TestCLIBase:
         assert exc_info.value.code == 1
 
     def test_base_passes_branch_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
         with bigfoot:
@@ -300,7 +300,7 @@ class TestCLICommit:
     """CLI --commit RANGE flag runs git diff RANGE and scans the result."""
 
     def test_commit_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
         with bigfoot:
@@ -311,7 +311,7 @@ class TestCLICommit:
         assert exc_info.value.code == 0
 
     def test_commit_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
         with bigfoot:
@@ -322,7 +322,7 @@ class TestCLICommit:
         assert exc_info.value.code == 1
 
     def test_commit_passes_range_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
         with bigfoot:
@@ -347,7 +347,7 @@ class TestMultiFileChangeset:
     """Multiple files in a changeset are all scanned."""
 
     def test_staged_multi_file_detects_both(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MULTI_FILE_DIFF)
 
         with bigfoot:
@@ -358,7 +358,7 @@ class TestMultiFileChangeset:
         assert exc_info.value.code == 1
 
     def test_base_multi_file_detects_both(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MULTI_FILE_DIFF)
 
         with bigfoot:
@@ -378,7 +378,7 @@ class TestGitErrorHandling:
     """Proper error handling when git commands fail."""
 
     def test_staged_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
         with bigfoot:
@@ -389,7 +389,7 @@ class TestGitErrorHandling:
         assert exc_info.value.code != 0
 
     def test_base_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
         with bigfoot:
@@ -400,7 +400,7 @@ class TestGitErrorHandling:
         assert exc_info.value.code != 0
 
     def test_commit_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.security.scanner:_get_git_diff")
+        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
         with bigfoot:
@@ -451,7 +451,7 @@ class TestBackwardCompatibility:
 
     def test_changeset_flag_still_reads_stdin(self):
         result = subprocess.run(
-            [sys.executable, "-m", "spellbook.security.scanner", "--changeset"],
+            [sys.executable, "-m", "spellbook.gates.scanner", "--changeset"],
             input=CLEAN_DIFF,
             capture_output=True,
             text=True,
@@ -461,7 +461,7 @@ class TestBackwardCompatibility:
 
     def test_changeset_flag_with_malicious_stdin_exits_one(self):
         result = subprocess.run(
-            [sys.executable, "-m", "spellbook.security.scanner", "--changeset"],
+            [sys.executable, "-m", "spellbook.gates.scanner", "--changeset"],
             input=MALICIOUS_DIFF,
             capture_output=True,
             text=True,

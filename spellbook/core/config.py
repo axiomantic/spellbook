@@ -21,17 +21,12 @@ logger = logging.getLogger(__name__)
 # Built-in defaults for config keys. config_get returns these when a key is
 # absent from the user's spellbook.json config file. Adding an entry here
 # means the key has a well-known default that callers can rely on.
-CONFIG_DEFAULTS: dict[str, Any] = {
-    "security.spotlighting.enabled": True,
-    "security.spotlighting.tier": "standard",
-}
+CONFIG_DEFAULTS: dict[str, Any] = {}
 
 
 # Wizard-relevant config keys. Used by get_unset_config_keys() to determine
 # which keys to prompt for during installation.
 WIZARD_CONFIG_KEYS: list[str] = [
-    "security.spotlighting.enabled",
-    "security.spotlighting.tier",
     "tts.enabled",
     "tts.voice",
 ]

@@ -30,25 +30,15 @@ def _get_tool_names(mcp_instance):
 class TestToolRegistrationCount:
     """Verify all MCP tools are registered after decomposition."""
 
-    def test_tool_count_at_least_100(self):
-        """After register_all_tools(), at least 100 tools should be registered."""
+    def test_tool_count_at_least_90(self):
+        """After register_all_tools(), at least 90 tools should be registered."""
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) >= 100, (
-            f"Expected >= 100 tools, got {len(tool_names)}. "
+        assert len(tool_names) >= 90, (
+            f"Expected >= 90 tools, got {len(tool_names)}. "
             f"Missing tools need to be added to the appropriate tool module."
-        )
-
-    def test_tool_count_exact_111(self):
-        """111 tools: 103 post-swarm-removal + 8 messaging."""
-        from spellbook.mcp.server import mcp, register_all_tools
-
-        register_all_tools()
-        tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 111, (
-            f"Expected exactly 111 tools, got {len(tool_names)}."
         )
 
     def test_key_tools_present(self):
@@ -64,7 +54,7 @@ class TestToolRegistrationCount:
             "spellbook_config_get",  # config
             "spellbook_health_check",  # health
             "memory_recall",         # memory
-            "security_log_event",    # security
+            "security_check_tool_input",  # security
             "pr_fetch",              # pr
             "forge_iteration_start", # forged
             "fractal_create_graph",  # fractal

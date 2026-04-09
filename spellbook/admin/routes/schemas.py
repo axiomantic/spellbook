@@ -46,7 +46,6 @@ class HealthStatus(BaseModel):
 class DashboardCounts(BaseModel):
     active_sessions: int
     total_memories: int
-    security_events_24h: int
     open_experiments: int
     fractal_graphs: int
 

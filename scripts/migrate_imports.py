@@ -50,7 +50,7 @@ MODULE_MAP: dict[str, str] = {
     # MCP server
     "spellbook.mcp.server": "spellbook.mcp.server",
     # Subpackages: prefix swap (order matters, longer first in sorted keys)
-    "spellbook.security": "spellbook.security",
+    "spellbook.security": "spellbook.gates",
     "spellbook.forged": "spellbook.forged",
     "spellbook.fractal": "spellbook.fractal",
     "spellbook.code_review": "spellbook.code_review",
@@ -91,8 +91,12 @@ def rewrite_line(line: str) -> str:
         pattern = re.compile(re.escape(old_path) + r"(?=\b|\.)")
         result = pattern.sub(new_path, result)
 
-    # Fallback: catch any remaining spellbook references
+    # Fallback: catch any remaining spellbook_mcp references
     result = _FALLBACK_RE.sub("spellbook", result)
+
+    # Post-fallback security -> gates rename (handles inputs like
+    # spellbook_mcp.security.check which normalize to spellbook.security.*).
+    result = re.sub(r"\bspellbook\.security(?=\b|\.)", "spellbook.gates", result)
     return result
 
 

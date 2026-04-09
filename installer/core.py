@@ -25,7 +25,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
     """Validate a skill file for security issues before installation.
 
     Runs the skill content through injection, exfiltration, escalation, and
-    obfuscation rule sets from spellbook.security.rules. Uses the
+    obfuscation rule sets from spellbook.gates.rules. Uses the
     "standard" security mode, which flags CRITICAL and HIGH severity findings.
 
     Args:
@@ -36,7 +36,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
         - is_safe is True if no CRITICAL or HIGH findings were detected
         - issues is a list of human-readable strings describing each finding
     """
-    from spellbook.security.rules import (
+    from spellbook.gates.rules import (
         ESCALATION_RULES,
         EXFILTRATION_RULES,
         INJECTION_RULES,
@@ -69,7 +69,7 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
 
     # Only block on HIGH and CRITICAL findings (standard mode threshold).
     # LOW/MEDIUM findings (like entropy signals) are informational only.
-    from spellbook.security.rules import Severity
+    from spellbook.gates.rules import Severity
 
     blocking_findings = [
         f for f in all_findings
@@ -108,7 +108,6 @@ class InstallSession:
     results: List[InstallResult] = field(default_factory=list)
     start_time: datetime = field(default_factory=datetime.now)
     dry_run: bool = False
-    security_config: Optional[Dict[str, Any]] = None
 
     @property
     def success(self) -> bool:
@@ -211,7 +210,6 @@ class Installer:
         dry_run: bool = False,
         on_progress=None,
         config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
-        security_selections: Optional[Dict[str, bool]] = None,
         renderer=None,
     ) -> InstallSession:
         """
@@ -263,31 +261,6 @@ class Installer:
             previous_version=previous_version,
             dry_run=dry_run,
         )
-
-        # Apply security feature configuration if selections provided
-        if security_selections is not None:
-            from .components.security import apply_security_config, get_default_security_config
-
-            written_keys = apply_security_config(security_selections, dry_run=dry_run)
-            # Store the resolved config on the session for downstream use
-            defaults = get_default_security_config()
-            resolved = dict(defaults)
-            for feat_id, enabled in security_selections.items():
-                enabled_key = f"security.{feat_id}.enabled"
-                if enabled_key in resolved:
-                    resolved[enabled_key] = enabled
-            session.security_config = resolved
-
-            security_result = InstallResult(
-                component="security_config",
-                platform="system",
-                success=True,
-                action="installed" if not dry_run else "skipped",
-                message=f"Security config: {len(written_keys)} keys {'written' if not dry_run else 'would be written'}",
-            )
-            session.results.append(security_result)
-            if on_progress:
-                on_progress("result", {"result": security_result})
 
         # Check if upgrade is needed
         needs_upgrade, upgrade_reason = check_upgrade_needed(

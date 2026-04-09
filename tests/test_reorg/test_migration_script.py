@@ -85,7 +85,7 @@ class TestPythonImportRewriting:
         mod = _load_migrate_module()
         mod.migrate_file(str(test_file), dry_run=False)
 
-        assert test_file.read_text() == "from spellbook.security.check import scan\n"
+        assert test_file.read_text() == "from spellbook.gates.check import scan\n"
 
     def test_multiple_imports(self, tmp_path):
         """Rewrite multiple imports in a single file."""
@@ -227,7 +227,7 @@ class TestRewriteLine:
         # spellbook_mcp.security.check should match security subpackage
         line = "from spellbook_mcp.security.check import scan"
         result = mod.rewrite_line(line)
-        assert result == "from spellbook.security.check import scan"
+        assert result == "from spellbook.gates.check import scan"
 
     def test_no_change_returns_original(self):
         """Lines without spellbook_mcp should be returned unchanged."""

@@ -5,7 +5,7 @@ import importlib
 import pytest
 
 SUBPACKAGES = [
-    "spellbook.security",
+    "spellbook.gates",
     "spellbook.forged",
     "spellbook.fractal",
     "spellbook.coordination",
@@ -25,7 +25,7 @@ def test_subpackage_importable(package: str) -> None:
 @pytest.mark.parametrize(
     "package,submodules",
     [
-        ("spellbook.security", ["check", "rules", "scanner", "tools"]),
+        ("spellbook.gates", ["check", "rules", "scanner", "tools"]),
         (
             "spellbook.forged",
             [

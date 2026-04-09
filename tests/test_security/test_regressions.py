@@ -8,7 +8,7 @@ the corresponding test will fail.
 
 import pytest
 
-from spellbook.security.rules import (
+from spellbook.gates.rules import (
     EXFILTRATION_RULES,
     INJECTION_RULES,
     check_patterns,

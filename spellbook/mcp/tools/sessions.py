@@ -196,8 +196,7 @@ async def spawn_session(
     # --- MCP-level security guard ---
     import sqlite3 as _sqlite3
 
-    from spellbook.security.check import check_tool_input as _check_tool_input
-    from spellbook.security.tools import do_log_event as _do_log_event
+    from spellbook.gates.check import check_tool_input as _check_tool_input
     from spellbook.core.db import get_db_path
 
     _db_path = str(get_db_path())
@@ -211,15 +210,6 @@ async def spawn_session(
 
     if not _check_result["safe"]:
         _first = _check_result["findings"][0]
-        _do_log_event(
-            event_type="spawn_blocked",
-            severity="HIGH",
-            source="spawn_guard",
-            detail=f"Injection pattern detected in spawn prompt: {_first['message']}",
-            tool_name="spawn_session",
-            action_taken=f"blocked:{_first['rule_id']}",
-            db_path=_db_path,
-        )
         return {
             "blocked": True,
             "reason": _first["message"],
@@ -238,15 +228,6 @@ async def spawn_session(
             ).fetchone()
 
             if _row[0] > 0:
-                _do_log_event(
-                    event_type="spawn_rate_limited",
-                    severity="MEDIUM",
-                    source="spawn_guard",
-                    detail="Rate limit exceeded: max 1 spawn per 5 minutes",
-                    tool_name="spawn_session",
-                    action_taken="blocked:rate_limit",
-                    db_path=_db_path,
-                )
                 return {
                     "blocked": True,
                     "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
@@ -268,16 +249,6 @@ async def spawn_session(
     except _sqlite3.Error as e:
         return {"status": "error", "error": f"Rate limit check failed: {e}. Blocking spawn for safety."}
 
-    # Log allowed invocation
-    _do_log_event(
-        event_type="spawn_allowed",
-        severity="INFO",
-        source="spawn_guard",
-        detail=f"Spawn allowed for session {_session_id}",
-        tool_name="spawn_session",
-        action_taken="allowed",
-        db_path=_db_path,
-    )
     # --- End security guard ---
 
     # Also scan working_directory through security check if provided
@@ -288,15 +259,6 @@ async def spawn_session(
         )
         if not _wd_check["safe"]:
             _wd_first = _wd_check["findings"][0]
-            _do_log_event(
-                event_type="spawn_blocked",
-                severity="HIGH",
-                source="spawn_guard",
-                detail=f"Injection pattern in working_directory: {_wd_first['message']}",
-                tool_name="spawn_session",
-                action_taken=f"blocked:{_wd_first['rule_id']}",
-                db_path=_db_path,
-            )
             return {
                 "blocked": True,
                 "reason": _wd_first["message"],

@@ -19,7 +19,6 @@ _COMMAND_MODULES = (
     "config",
     "memory",
     "session",
-    "security",
     "events",
 )
 

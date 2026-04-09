@@ -2,7 +2,6 @@
 
 import asyncio
 import time
-from datetime import datetime, timedelta, timezone
 from importlib.metadata import version as pkg_version
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from spellbook.db import (
     get_spellbook_session,
 )
 from spellbook.db.fractal_models import FractalGraph
-from spellbook.db.spellbook_models import Experiment, Memory, SecurityEvent
+from spellbook.db.spellbook_models import Experiment, Memory
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -55,11 +54,10 @@ def _count_session_files() -> int:
     return count
 
 
-async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
+async def _query_spellbook_counts() -> tuple[int, int, list]:
     """Query spellbook.db for dashboard counts and recent activity.
 
-    Returns (memories_count, security_count, experiments_count,
-             recent_security_events, recent_memories).
+    Returns (memories_count, experiments_count, recent_memories).
     """
     async with get_spellbook_session() as session:
         # Count active memories
@@ -70,16 +68,6 @@ async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
         )
         memories_count = result.scalar_one()
 
-        # Count security events in last 24 hours
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-        cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
-        result = await session.execute(
-            select(func.count()).select_from(SecurityEvent).where(
-                SecurityEvent.created_at > cutoff_str
-            )
-        )
-        security_count = result.scalar_one()
-
         # Count running/paused experiments
         result = await session.execute(
             select(func.count()).select_from(Experiment).where(
@@ -87,14 +75,6 @@ async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
             )
         )
         experiments_count = result.scalar_one()
-
-        # Recent security events
-        result = await session.execute(
-            select(SecurityEvent)
-            .order_by(SecurityEvent.created_at.desc())
-            .limit(20)
-        )
-        recent_security = list(result.scalars().all())
 
         # Recent memories
         result = await session.execute(
@@ -106,9 +86,7 @@ async def _query_spellbook_counts() -> tuple[int, int, int, list, list]:
 
     return (
         memories_count,
-        security_count,
         experiments_count,
-        recent_security,
         recent_memories,
     )
 
@@ -142,40 +120,25 @@ async def get_dashboard_data() -> dict:
     # Unpack spellbook results (or defaults on error)
     if isinstance(spellbook_result, Exception):
         memories_count = 0
-        security_count = 0
         experiments_count = 0
-        recent_security_events: list = []
         recent_memories: list = []
     else:
         (
             memories_count,
-            security_count,
             experiments_count,
-            recent_security_events,
             recent_memories,
         ) = spellbook_result
 
     # Transform ORM objects to activity dicts
-    security_activity = [
-        {
-            "type": ev.event_type,
-            "timestamp": ev.created_at,
-            "summary": ev.detail if ev.detail else ev.event_type,
-        }
-        for ev in recent_security_events
-    ]
-    memory_activity = [
-        {
-            "type": "memory_created",
-            "timestamp": mem.created_at,
-            "summary": mem.content[:80],
-        }
-        for mem in recent_memories
-    ]
-
-    # Merge and sort recent activity by timestamp descending
     activity = sorted(
-        security_activity + memory_activity,
+        [
+            {
+                "type": "memory_created",
+                "timestamp": mem.created_at,
+                "summary": mem.content[:80],
+            }
+            for mem in recent_memories
+        ],
         key=lambda x: x.get("timestamp", ""),
         reverse=True,
     )[:20]
@@ -200,7 +163,6 @@ async def get_dashboard_data() -> dict:
         "counts": {
             "active_sessions": safe_int(session_count),
             "total_memories": memories_count,
-            "security_events_24h": security_count,
             "open_experiments": experiments_count,
             "fractal_graphs": safe_int(graphs_result),
         },
