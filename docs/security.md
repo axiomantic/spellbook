@@ -147,7 +147,7 @@ git revert --no-commit ab83dc2..HEAD
 
 Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
 
-cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
+cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`) and the config directory (`$SPELLBOOK_CONFIG_DIR`, for the `.mcp-token` auth file). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
 
 Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
 
@@ -162,8 +162,9 @@ curl -fsSL https://raw.githubusercontent.com/nikvdp/cco/master/install.sh | bash
 Launch Claude Code (or OpenCode) through the wrapper:
 
 ```bash
-scripts/spellbook-sandbox                  # == cco claude
-scripts/spellbook-sandbox opencode         # launch OpenCode sandboxed
+scripts/spellbook-sandbox                  # sandboxed Claude Code
+scripts/spellbook-sandbox opencode         # sandboxed OpenCode
+scripts/spellbook-sandbox codex            # sandboxed Codex
 ```
 
 Add the script directory to your PATH, or alias for convenience:
@@ -175,39 +176,32 @@ alias opencode='/path/to/spellbook/scripts/spellbook-sandbox opencode'
 
 ### What the wrapper does
 
-It resolves `$SPELLBOOK_DIR` (auto-detected from the script's own location, or set via env var) and execs:
+The wrapper uses cco's `--safe` mode by default, which hides `$HOME` reads so only the current project directory and explicitly allowlisted paths are visible inside the sandbox. It resolves `$SPELLBOOK_DIR` (auto-detected from the script's location, or set via env var) and `$SPELLBOOK_CONFIG_DIR` (env, `~/.local/spellbook`, or `~/.config/spellbook`), then execs:
 
 ```bash
-cco --add-dir "$SPELLBOOK_DIR":ro "$@"
+cco --safe --add-dir "$SPELLBOOK_DIR":ro --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
 ```
 
-`--add-dir ...:ro` grants read access to spellbook's resource files (skills, commands, hooks) inside the sandbox. All hook writes go through the daemon's HTTP API (`/api/hook-log`, `/api/messaging/poll`), so no write access to any spellbook directory is needed. The daemon runs independently via launchd and is not sandboxed.
+- `--safe` hides `$HOME` reads except for the working directory and explicitly allowed paths
+- `--add-dir $SPELLBOOK_DIR:ro` grants read access to spellbook's resource files (skills, commands, hooks)
+- `--add-dir $SPELLBOOK_CONFIG_DIR:ro` grants read access to the config directory (needed for `.mcp-token` which hooks use for daemon HTTP auth)
+- All hook writes go through the daemon's HTTP API (`/api/hook-log`, `/api/messaging/poll`), so no write access to any spellbook directory is granted
 
-### Stricter mode: `--safe`
-
-By default cco's native mode leaves the entire home directory readable; only writes are denied outside the project and a few auto-allowed paths. That prevents a prompt injection from deleting or corrupting files outside your project, but it does not prevent exfiltration of readable data such as SSH keys or other projects.
-
-For read isolation, add `--safe`:
-
-```bash
-scripts/spellbook-sandbox --safe                  # stricter claude
-scripts/spellbook-sandbox --safe opencode         # stricter opencode
-```
-
-`--safe` hides `$HOME` reads except for the working directory and explicitly allowlisted paths. The wrapper already adds `$SPELLBOOK_DIR:ro`, so skills and hook scripts resolve without additional flags.
+The daemon runs independently via launchd and is not sandboxed.
 
 ### Threat model
 
-| Threat                                       | Non-safe | `--safe` |
-| -------------------------------------------- | -------- | -------- |
-| Trashing files outside project               | Blocked  | Blocked  |
-| Modifying shell rc or SSH config             | Blocked  | Blocked  |
-| Writing to spellbook config dir              | Blocked  | Blocked  |
-| Reading other projects under `$HOME`         | Allowed  | Blocked  |
-| Reading SSH / cloud / browser credentials    | Allowed  | Blocked  |
-| Kernel escape from sandbox-exec              | Out of scope (use a VM) | Out of scope (use a VM) |
+| Threat                                       | Default |
+| -------------------------------------------- | ------- |
+| Trashing files outside project               | Blocked |
+| Modifying shell rc or SSH config             | Blocked |
+| Writing to spellbook config dir              | Blocked |
+| Reading other projects under `$HOME`         | Blocked |
+| Reading SSH / cloud / browser credentials    | Blocked |
+| Reading spellbook source and config          | Allowed (read-only) |
+| Network access (localhost + outbound)        | Allowed |
+| Kernel escape from sandbox-exec              | Out of scope (use a VM) |
 
-Start with non-safe if you need package installs and general convenience; graduate to `--safe` once you are comfortable maintaining the read allowlist.
 ## Source Citations
 
 The security audit and hardening drew from 45 sources. The top references:
