@@ -63,7 +63,9 @@ class TestMessagingRegister:
         )
         # Pop the dynamic timestamp and verify it independently
         registered_at = result.pop("registered_at")
-        assert result == {"ok": True, "alias": "tool-test"}
+        # fastmcp_session_id is None when the tool is called outside an MCP
+        # request context (as here via __wrapped__ direct invocation).
+        assert result == {"ok": True, "alias": "tool-test", "fastmcp_session_id": None}
         # Verify registered_at parses as ISO 8601
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
@@ -126,7 +128,7 @@ class TestMessagingRegister:
             alias="replaceable", enable_sse=False, force=True,
         )
         registered_at = result.pop("registered_at")
-        assert result == {"ok": True, "alias": "replaceable"}
+        assert result == {"ok": True, "alias": "replaceable", "fastmcp_session_id": None}
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
 

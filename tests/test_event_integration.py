@@ -18,9 +18,11 @@ monkeypatch is used for the two places a module-level attribute needs to be swap
 (per AGENTS.md, monkeypatch is the approved tool for environment/attribute patching).
 """
 
+import json
 from typing import Any
 
 import pytest
+from mcp.types import EventParams, TextContent
 
 from fastmcp import Client, FastMCP
 from fastmcp.server.events import EventEffect, EventEmitNotification
@@ -344,101 +346,417 @@ class TestRetainedEvents:
         assert match.event_id is not None
 
 
-class TestMessagingSendEventIntegration:
-    """End-to-end test: messaging_send tool emits events alongside queue delivery."""
+def _make_messaging_server() -> tuple[FastMCP, Any]:
+    """Create a FastMCP server with real messaging tools wired to a local bus.
 
-    async def test_messaging_send_emits_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Use a patched messaging bus with the real mcp event infrastructure.
-        Verify that calling messaging_send produces both queue delivery AND
-        event emission."""
-        from spellbook.messaging.bus import MessageBus
-        import spellbook.mcp.tools.messaging as tools_mod
+    Returns (server, bus) so tests can inspect bus state. The tools registered
+    here mirror spellbook.mcp.tools.messaging but avoid importing the global
+    mcp singleton (which drags in DB init, watchers, etc).
+    """
+    from spellbook.messaging.bus import MessageBus
 
-        # Create a fresh bus and patch it into the tools module
-        bus = MessageBus(queue_size=64)
-        monkeypatch.setattr(tools_mod, "message_bus", bus)
+    server = FastMCP("spellbook-messaging-test")
+    bus = MessageBus(queue_size=64)
 
-        # Register sender and recipient on the bus (no SSE)
-        await bus.register("session-a", enable_sse=False)
-        await bus.register("session-b", enable_sse=False)
+    # Declare the same event topics the real server does
+    server.declare_event(
+        "spellbook/sessions/{session_id}/messages",
+        description="Cross-session messages",
+    )
+    server.declare_event(
+        "spellbook/sessions/{session_id}/build/status",
+        description="Build status for this session's work",
+        retained=True,
+    )
 
-        # Track emit_event calls on the mcp instance
-        from spellbook.mcp.server import mcp
+    # A non-scoped public topic for authorization tests
+    server.declare_event(
+        "spellbook/server/status",
+        description="Server-wide status (public, no session scoping)",
+    )
 
-        emitted_events: list[dict[str, Any]] = []
-        original_emit = mcp.emit_event
+    # A public broadcast topic for targeted-emit tests
+    server.declare_event(
+        "spellbook/broadcasts/announcements",
+        description="Public announcements channel",
+    )
 
-        async def tracking_emit(topic: str, payload: Any, **kwargs: Any) -> None:
-            emitted_events.append({"topic": topic, "payload": payload, **kwargs})
-            # Don't call original since no sessions are actually connected
-            # to the spellbook global mcp singleton in this test context
+    from fastmcp import Context
+    from mcp.types import EventEffect
 
-        monkeypatch.setattr(mcp, "emit_event", tracking_emit)
+    def _extract_session_id(ctx: Context | None) -> str | None:
+        """Extract the fastmcp event session UUID from a tool Context."""
+        if ctx is None:
+            return None
+        try:
+            request_context = ctx.request_context
+        except (RuntimeError, AttributeError):
+            return None
+        if request_context is None:
+            return None
+        session = getattr(request_context, "session", None)
+        if session is None:
+            return None
+        sid = getattr(session, "_fastmcp_event_session_id", None)
+        return sid if isinstance(sid, str) and sid else None
 
-        # Call the tool function (bypass the decorator)
-        result = await tools_mod.messaging_send.__wrapped__(
-            sender="session-a",
-            recipient="session-b",
-            payload='{"task": "run tests"}',
-        )
+    @server.tool()
+    async def messaging_register(
+        alias: str,
+        ctx: Context | None = None,
+    ) -> dict:
+        """Register for messaging with alias. Captures fastmcp session UUID."""
+        fastmcp_sid = _extract_session_id(ctx)
+        try:
+            reg = await bus.register(
+                alias, enable_sse=False, fastmcp_session_id=fastmcp_sid,
+            )
+            return {
+                "ok": True,
+                "alias": reg.alias,
+                "registered_at": reg.registered_at,
+                "fastmcp_session_id": reg.fastmcp_session_id,
+            }
+        except ValueError as e:
+            return {"ok": False, "error": "alias_already_registered", "detail": str(e)}
 
-        assert result["ok"] is True
+    @server.tool()
+    async def messaging_send(
+        sender: str,
+        recipient: str,
+        payload: str,
+    ) -> dict:
+        """Send a message. Emits MCP event to recipient's session topic."""
+        import json as _json
 
-        # Verify queue delivery happened
-        messages, _ = await bus.poll("session-b", max_messages=10)
-        assert len(messages) == 1
-        assert messages[0]["sender"] == "session-a"
-        assert messages[0]["payload"] == {"task": "run tests"}
+        try:
+            parsed = _json.loads(payload)
+        except (ValueError, _json.JSONDecodeError) as e:
+            return {"ok": False, "error": "invalid_payload_json", "detail": str(e)}
 
-        # Verify event was emitted
-        assert len(emitted_events) == 1
-        evt = emitted_events[0]
-        assert evt["topic"] == "spellbook/sessions/session-b/messages"
-        assert evt["payload"]["sender"] == "session-a"
-        assert evt["payload"]["recipient"] == "session-b"
-        assert evt["payload"]["payload"] == {"task": "run tests"}
-        assert evt["source"] == "spellbook/messaging"
-        # Verify the message_id is present in the payload
-        assert "message_id" in evt["payload"]
-        # Verify requested_effects include inject_context for cross-session messages
-        assert "requested_effects" in evt
-        effects = evt["requested_effects"]
-        assert len(effects) >= 1
-        effect_types = [e.type for e in effects]
-        assert "inject_context" in effect_types
+        result = await bus.send(sender=sender, recipient=recipient, payload=parsed)
 
-    async def test_messaging_send_event_not_emitted_on_failure(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """If the bus send fails, no event should be emitted."""
-        from spellbook.messaging.bus import MessageBus
-        import spellbook.mcp.tools.messaging as tools_mod
+        if result.get("ok"):
+            recipient_uuid = bus.resolve_alias_to_session_id(recipient)
+            if recipient_uuid:
+                await server.emit_event(
+                    topic=f"spellbook/sessions/{recipient_uuid}/messages",
+                    payload={
+                        "message_id": result.get("message_id"),
+                        "sender": sender,
+                        "recipient": recipient,
+                        "payload": parsed,
+                    },
+                    source="spellbook/messaging",
+                    requested_effects=[
+                        EventEffect(type="inject_context", priority="high"),
+                    ],
+                    target_session_ids=[recipient_uuid],
+                )
+        return result
 
-        bus = MessageBus(queue_size=64)
-        monkeypatch.setattr(tools_mod, "message_bus", bus)
+    return server, bus
 
-        # Register only the sender
-        await bus.register("sender-only", enable_sse=False)
 
-        from spellbook.mcp.server import mcp
+@pytest.mark.allow("mcp")
+class TestCrossSessionMessaging:
+    """Real MCP client round-trip tests for cross-session messaging events.
 
-        emitted_events: list[dict[str, Any]] = []
-        original_emit = mcp.emit_event
+    Each test spins up two (or three) in-process Client sessions connected
+    to a fresh FastMCP server with messaging tools. Events are captured
+    via set_event_handler on the client's low-level session.
+    """
 
-        async def tracking_emit(topic: str, payload: Any, **kwargs: Any) -> None:
-            emitted_events.append({"topic": topic, "payload": payload})
+    async def test_bob_receives_message_from_alice(self) -> None:
+        """Alice sends a message to Bob. Bob receives the EventEmitNotification
+        reactively via his event handler. Alice does NOT receive it."""
+        import asyncio as _asyncio
 
-        monkeypatch.setattr(mcp, "emit_event", tracking_emit)
+        server, bus = _make_messaging_server()
 
-        # Send to nonexistent recipient
-        result = await tools_mod.messaging_send.__wrapped__(
-            sender="sender-only",
-            recipient="nonexistent",
-            payload='{"hello": "world"}',
-        )
+        alice_events: list[Any] = []
+        bob_events: list[Any] = []
 
-        assert result["ok"] is False
-        assert result["error"] == "recipient_not_found"
+        async with Client(server) as alice_client:
+            alice_session = alice_client.session
+            alice_sid = alice_session.session_id
+            assert alice_sid is not None, "Server must assign session_id"
 
-        # No event should have been emitted
-        assert len(emitted_events) == 0
+            async with Client(server) as bob_client:
+                bob_session = bob_client.session
+                bob_sid = bob_session.session_id
+                assert bob_sid is not None
+
+                # Register both on the bus via MCP tool calls
+                await alice_client.call_tool(
+                    "messaging_register", {"alias": "alice"}
+                )
+                await bob_client.call_tool(
+                    "messaging_register", {"alias": "bob"}
+                )
+
+                # Subscribe each to their own session topic
+                alice_sub = await alice_session.subscribe_events(
+                    [f"spellbook/sessions/{alice_sid}/messages"]
+                )
+                assert len(alice_sub.rejected) == 0
+
+                bob_sub = await bob_session.subscribe_events(
+                    [f"spellbook/sessions/{bob_sid}/messages"]
+                )
+                assert len(bob_sub.rejected) == 0
+
+                # Set up event handlers (must be async for type safety)
+                async def _alice_handler(params: EventParams) -> None:
+                    alice_events.append(params)
+
+                async def _bob_handler(params: EventParams) -> None:
+                    bob_events.append(params)
+
+                alice_session.set_event_handler(_alice_handler)
+                bob_session.set_event_handler(_bob_handler)
+
+                # Alice sends a message to Bob
+                send_result = await alice_client.call_tool(
+                    "messaging_send",
+                    {
+                        "sender": "alice",
+                        "recipient": "bob",
+                        "payload": '{"text": "hello"}',
+                    },
+                )
+                # Verify tool returned success
+                first_content = send_result.content[0]
+                assert isinstance(first_content, TextContent)
+                result_data = json.loads(first_content.text)
+                assert result_data["ok"] is True
+
+                # Let event propagate
+                await _asyncio.sleep(0.2)
+
+                # Bob SHOULD have received the event
+                assert len(bob_events) == 1, (
+                    f"Bob should receive exactly 1 event, got {len(bob_events)}"
+                )
+                bob_event = bob_events[0]
+                assert bob_event.topic == f"spellbook/sessions/{bob_sid}/messages"
+                assert bob_event.payload["sender"] == "alice"
+                assert bob_event.payload["payload"] == {"text": "hello"}
+                assert bob_event.source == "spellbook/messaging"
+
+                # Alice should NOT have received it
+                assert len(alice_events) == 0, (
+                    f"Alice should receive 0 events, got {len(alice_events)}"
+                )
+
+    async def test_alice_does_not_receive_bobs_message(self) -> None:
+        """Bob sends to Alice. Alice receives the event. Bob does NOT."""
+        import asyncio as _asyncio
+
+        server, bus = _make_messaging_server()
+
+        alice_events: list[Any] = []
+        bob_events: list[Any] = []
+
+        async with Client(server) as alice_client:
+            alice_session = alice_client.session
+            alice_sid = alice_session.session_id
+            assert alice_sid is not None
+
+            async with Client(server) as bob_client:
+                bob_session = bob_client.session
+                bob_sid = bob_session.session_id
+                assert bob_sid is not None
+
+                # Register both
+                await alice_client.call_tool(
+                    "messaging_register", {"alias": "alice"}
+                )
+                await bob_client.call_tool(
+                    "messaging_register", {"alias": "bob"}
+                )
+
+                # Subscribe each to their OWN topic
+                await alice_session.subscribe_events(
+                    [f"spellbook/sessions/{alice_sid}/messages"]
+                )
+                await bob_session.subscribe_events(
+                    [f"spellbook/sessions/{bob_sid}/messages"]
+                )
+
+                # Set up handlers (must be async for type safety)
+                async def _alice_handler(params: EventParams) -> None:
+                    alice_events.append(params)
+
+                async def _bob_handler(params: EventParams) -> None:
+                    bob_events.append(params)
+
+                alice_session.set_event_handler(_alice_handler)
+                bob_session.set_event_handler(_bob_handler)
+
+                # Bob sends to Alice
+                send_result = await bob_client.call_tool(
+                    "messaging_send",
+                    {
+                        "sender": "bob",
+                        "recipient": "alice",
+                        "payload": '{"text": "reply"}',
+                    },
+                )
+                first_content = send_result.content[0]
+                assert isinstance(first_content, TextContent)
+                result_data = json.loads(first_content.text)
+                assert result_data["ok"] is True
+
+                await _asyncio.sleep(0.2)
+
+                # Alice SHOULD receive
+                assert len(alice_events) == 1
+                assert alice_events[0].payload["sender"] == "bob"
+
+                # Bob should NOT
+                assert len(bob_events) == 0
+
+
+@pytest.mark.allow("mcp")
+class TestSessionScopedAuthorization:
+    """Verify {session_id} enforcement prevents cross-session snooping."""
+
+    async def test_cannot_subscribe_to_other_session_topic(self) -> None:
+        """Alice tries to subscribe to Bob's session topic. Must be rejected."""
+        server = _make_server()
+
+        async with Client(server) as alice_client:
+            alice_session = alice_client.session
+            alice_sid = alice_session.session_id
+            assert alice_sid is not None
+
+            async with Client(server) as bob_client:
+                bob_session = bob_client.session
+                bob_sid = bob_session.session_id
+                assert bob_sid is not None
+                assert alice_sid != bob_sid
+
+                # Alice tries to subscribe to Bob's topic
+                result = await alice_session.subscribe_events(
+                    [f"spellbook/sessions/{bob_sid}/messages"]
+                )
+                assert len(result.rejected) == 1
+                assert result.rejected[0].reason == "permission_denied"
+                assert len(result.subscribed) == 0
+
+    async def test_cannot_use_wildcard_in_session_slot(self) -> None:
+        """Subscribing with + in the {session_id} slot must be rejected."""
+        server = _make_server()
+
+        async with Client(server) as client:
+            session = client.session
+            sid = session.session_id
+            assert sid is not None
+
+            result = await session.subscribe_events(
+                ["spellbook/sessions/+/messages"]
+            )
+            assert len(result.rejected) == 1
+            assert result.rejected[0].reason == "permission_denied"
+            assert len(result.subscribed) == 0
+
+    async def test_can_subscribe_to_own_session_topic(self) -> None:
+        """A client can subscribe to its own session topic."""
+        server = _make_server()
+
+        async with Client(server) as client:
+            session = client.session
+            sid = session.session_id
+            assert sid is not None
+
+            result = await session.subscribe_events(
+                [f"spellbook/sessions/{sid}/messages"]
+            )
+            assert len(result.rejected) == 0
+            assert len(result.subscribed) == 1
+            assert result.subscribed[0].pattern == f"spellbook/sessions/{sid}/messages"
+
+    async def test_public_topic_allows_any_subscriber(self) -> None:
+        """A non-scoped topic (no {session_id}) allows any subscriber."""
+        server, _bus = _make_messaging_server()
+
+        async with Client(server) as client:
+            session = client.session
+
+            result = await session.subscribe_events(
+                ["spellbook/server/status"]
+            )
+            assert len(result.rejected) == 0
+            assert len(result.subscribed) == 1
+
+
+@pytest.mark.allow("mcp")
+class TestTargetedEmission:
+    """Verify target_session_ids restricts delivery to specified sessions."""
+
+    async def test_targeted_emit_only_reaches_specified_sessions(self) -> None:
+        """Three clients subscribe to a public topic. Emit with
+        target_session_ids=[A, B] -- only A and B receive; C does not."""
+        import asyncio as _asyncio
+
+        server, _bus = _make_messaging_server()
+
+        a_events: list[Any] = []
+        b_events: list[Any] = []
+        c_events: list[Any] = []
+
+        async with Client(server) as client_a:
+            session_a = client_a.session
+            sid_a = session_a.session_id
+            assert sid_a is not None
+
+            async with Client(server) as client_b:
+                session_b = client_b.session
+                sid_b = session_b.session_id
+                assert sid_b is not None
+
+                async with Client(server) as client_c:
+                    session_c = client_c.session
+                    sid_c = session_c.session_id
+                    assert sid_c is not None
+
+                    # All three subscribe to the public topic
+                    for s in (session_a, session_b, session_c):
+                        result = await s.subscribe_events(
+                            ["spellbook/broadcasts/announcements"]
+                        )
+                        assert len(result.rejected) == 0
+
+                    # Set up handlers (must be async for type safety)
+                    async def _a_handler(params: EventParams) -> None:
+                        a_events.append(params)
+
+                    async def _b_handler(params: EventParams) -> None:
+                        b_events.append(params)
+
+                    async def _c_handler(params: EventParams) -> None:
+                        c_events.append(params)
+
+                    session_a.set_event_handler(_a_handler)
+                    session_b.set_event_handler(_b_handler)
+                    session_c.set_event_handler(_c_handler)
+
+                    # Emit with target_session_ids restricting to A and B
+                    await server.emit_event(
+                        topic="spellbook/broadcasts/announcements",
+                        payload={"msg": "targeted broadcast"},
+                        source="test",
+                        target_session_ids=[sid_a, sid_b],
+                    )
+
+                    await _asyncio.sleep(0.2)
+
+                    # A and B received
+                    assert len(a_events) == 1
+                    assert a_events[0].payload["msg"] == "targeted broadcast"
+                    assert len(b_events) == 1
+                    assert b_events[0].payload["msg"] == "targeted broadcast"
+
+                    # C did NOT receive
+                    assert len(c_events) == 0

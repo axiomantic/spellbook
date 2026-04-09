@@ -59,6 +59,11 @@ class SessionRegistration:
     queue: asyncio.Queue
     registered_at: str
     session_id: str = ""
+    # fastmcp event session UUID (from ServerSession._fastmcp_event_session_id).
+    # Used to emit MCP events to the correct {session_id} topic. Distinct from
+    # `session_id` above, which is the Claude Code session marker used by the
+    # hook-based inbox drainer.
+    fastmcp_session_id: Optional[str] = None
 
 
 @dataclass
@@ -87,6 +92,11 @@ class MessageBus:
         self._sessions: dict[str, SessionRegistration] = {}
         self._pending_correlations: dict[str, PendingCorrelation] = {}
         self._bridges: dict[str, MessageBridge] = {}
+        # alias -> fastmcp event session UUID. Populated when register() is
+        # called with fastmcp_session_id. Used to resolve event topic
+        # substitution for cross-session event delivery.
+        self._alias_to_fastmcp_session: dict[str, str] = {}
+        self._fastmcp_session_to_alias: dict[str, str] = {}
         # Lock is created eagerly. This is safe because all async methods run
         # in the same event loop. The shutdown path bypasses the lock directly
         # (see server.py shutdown()) since atexit runs in a new event loop.
@@ -105,6 +115,7 @@ class MessageBus:
         enable_sse: bool = True,
         force: bool = False,
         session_id: str = "",
+        fastmcp_session_id: Optional[str] = None,
     ) -> SessionRegistration:
         """Register a session with the given alias.
 
@@ -116,11 +127,21 @@ class MessageBus:
                 registration, and logs a warning.
             session_id: Caller's session identifier. Written to a marker file
                 so the hook only drains inboxes belonging to its own session.
+            fastmcp_session_id: fastmcp event session UUID
+                (ServerSession._fastmcp_event_session_id). When provided,
+                stored in an alias<->UUID map so cross-session event topics
+                like spellbook/sessions/{session_id}/messages can be resolved.
 
         Raises ValueError if alias is already taken and force=False.
         """
         async with self._lock:
-            return self._register_locked(alias, enable_sse, session_id, force=force)
+            return self._register_locked(
+                alias,
+                enable_sse,
+                session_id,
+                force=force,
+                fastmcp_session_id=fastmcp_session_id,
+            )
 
     def _register_locked(
         self,
@@ -128,6 +149,7 @@ class MessageBus:
         enable_sse: bool,
         session_id: str,
         force: bool = False,
+        fastmcp_session_id: Optional[str] = None,
     ) -> SessionRegistration:
         """Register while caller holds self._lock. Not async-safe on its own.
 
@@ -157,14 +179,26 @@ class MessageBus:
             old_bridge = self._bridges.pop(alias, None)
             if old_bridge is not None:
                 old_bridge.stop()
+            # Clear any stale alias<->fastmcp_session_id mapping. We rebuild
+            # below if the new registration supplies one.
+            old_fastmcp_sid = self._alias_to_fastmcp_session.pop(alias, None)
+            if old_fastmcp_sid is not None:
+                self._fastmcp_session_to_alias.pop(old_fastmcp_sid, None)
 
         reg = SessionRegistration(
             alias=alias,
             queue=asyncio.Queue(maxsize=self._queue_size),
             registered_at=datetime.now(timezone.utc).isoformat(),
             session_id=session_id,
+            fastmcp_session_id=fastmcp_session_id,
         )
         self._sessions[alias] = reg
+
+        # Record alias<->uuid mapping so messaging_send can resolve event
+        # topic substitution.
+        if fastmcp_session_id:
+            self._alias_to_fastmcp_session[alias] = fastmcp_session_id
+            self._fastmcp_session_to_alias[fastmcp_session_id] = alias
 
         # Spawn bridge inside the lock to prevent race conditions
         if enable_sse:
@@ -300,6 +334,10 @@ class MessageBus:
                 bridge.stop()
             # Remove session marker
             self._remove_session_marker(alias)
+            # Clear alias<->fastmcp_session_id mapping
+            old_fastmcp_sid = self._alias_to_fastmcp_session.pop(alias, None)
+            if old_fastmcp_sid is not None:
+                self._fastmcp_session_to_alias.pop(old_fastmcp_sid, None)
             # Clean up any pending correlations from this session
             expired = [
                 cid
@@ -311,12 +349,30 @@ class MessageBus:
             return removed is not None
 
     async def list_sessions(self) -> list[dict]:
-        """Return list of registered sessions (alias + registered_at)."""
+        """Return list of registered sessions (alias + registered_at + fastmcp_session_id)."""
         async with self._lock:
             return [
-                {"alias": reg.alias, "registered_at": reg.registered_at}
+                {
+                    "alias": reg.alias,
+                    "registered_at": reg.registered_at,
+                    "fastmcp_session_id": reg.fastmcp_session_id,
+                }
                 for reg in self._sessions.values()
             ]
+
+    def resolve_alias_to_session_id(self, alias: str) -> Optional[str]:
+        """Return the fastmcp event session UUID for an alias, or None.
+
+        Thread-safe snapshot read against the dict. No lock required: the
+        only writers are register/unregister, and a stale read is acceptable
+        for event emission (fastmcp's own target_session_ids filter provides
+        defense in depth).
+        """
+        return self._alias_to_fastmcp_session.get(alias)
+
+    def resolve_session_id_to_alias(self, session_id: str) -> Optional[str]:
+        """Return the alias that claimed this fastmcp event session UUID, or None."""
+        return self._fastmcp_session_to_alias.get(session_id)
 
     # --- Sending ---
 
