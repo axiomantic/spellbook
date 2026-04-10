@@ -1,13 +1,12 @@
 """Tests for hook-related REST API routes in spellbook/mcp/routes.py.
 
 Tests /api/hook-log and /api/messaging/poll endpoints by calling the
-route handler functions directly with mock Starlette Request objects.
+route handler functions directly with stub Starlette Request objects.
 """
 
 import asyncio
 import json
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,26 +15,27 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_request(body: dict) -> MagicMock:
-    """Create a mock Starlette Request with a JSON body."""
-    request = MagicMock()
+class _StubRequest:
+    """Minimal Starlette Request stub with a JSON body."""
 
-    async def _json():
-        return body
+    def __init__(self, body: dict | None = None, *, raise_on_json: bool = False):
+        self._body = body
+        self._raise_on_json = raise_on_json
 
-    request.json = _json
-    return request
+    async def json(self):
+        if self._raise_on_json:
+            raise ValueError("invalid JSON")
+        return self._body
 
 
-def _make_bad_request() -> MagicMock:
-    """Create a mock Starlette Request that raises on .json()."""
-    request = MagicMock()
+def _make_request(body: dict) -> _StubRequest:
+    """Create a stub Starlette Request with a JSON body."""
+    return _StubRequest(body)
 
-    async def _json():
-        raise ValueError("invalid JSON")
 
-    request.json = _json
-    return request
+def _make_bad_request() -> _StubRequest:
+    """Create a stub Starlette Request that raises on .json()."""
+    return _StubRequest(raise_on_json=True)
 
 
 # ---------------------------------------------------------------------------
