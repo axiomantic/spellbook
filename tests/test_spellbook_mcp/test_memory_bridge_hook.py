@@ -130,7 +130,7 @@ class TestMemoryBridge:
         # First call: audit trail to /api/memory/event
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/event",
+                "/api/memory/event",
                 {
                     "session_id": "sess-123",
                     "project": "Users-alice-project",
@@ -148,7 +148,7 @@ class TestMemoryBridge:
         # Second call: content to /api/memory/bridge-content
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/bridge-content",
+                "/api/memory/bridge-content",
                 {
                     "session_id": "sess-123",
                     "project": "Users-alice-project",
@@ -181,7 +181,7 @@ class TestMemoryBridge:
         # Audit call should say "topic"
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/event",
+                "/api/memory/event",
                 {
                     "session_id": "sess-123",
                     "project": "Users-alice-project",
@@ -199,7 +199,7 @@ class TestMemoryBridge:
         # Content call should have is_primary=False
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/bridge-content",
+                "/api/memory/bridge-content",
                 {
                     "session_id": "sess-123",
                     "project": "Users-alice-project",
@@ -239,7 +239,7 @@ class TestMemoryBridge:
         with bigfoot.in_any_order():
             mock_post.assert_call(
                 args=(
-                    "http://127.0.0.1:8765/api/memory/event",
+                    "/api/memory/event",
                     {
                         "session_id": "sess-123",
                         "project": "Users-alice-project",
@@ -255,7 +255,7 @@ class TestMemoryBridge:
             )
             mock_post.assert_call(
                 args=(
-                    "http://127.0.0.1:8765/api/memory/bridge-content",
+                    "/api/memory/bridge-content",
                     {
                         "session_id": "sess-123",
                         "project": "Users-alice-project",
@@ -315,7 +315,7 @@ class TestMemoryBridge:
         # Audit call
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/event",
+                "/api/memory/event",
                 {
                     "session_id": "sess-wt",
                     "project": "Users-alice-project",
@@ -333,7 +333,7 @@ class TestMemoryBridge:
         # Content call: namespace should be based on main repo, not worktree path
         mock_post.assert_call(
             args=(
-                "http://127.0.0.1:8765/api/memory/bridge-content",
+                "/api/memory/bridge-content",
                 {
                     "session_id": "sess-wt",
                     "project": "Users-alice-project",
