@@ -549,6 +549,11 @@ class Uninstaller:
                     )
                     session.results.append(fail_result)
 
+        # Remove shell aliases if installed
+        alias_result = self._uninstall_aliases(dry_run)
+        if alias_result:
+            session.results.append(alias_result)
+
         # Uninstall MCP server system service if installed
         mcp_result = self._uninstall_mcp_service(dry_run)
         if mcp_result:
@@ -560,6 +565,40 @@ class Uninstaller:
             session.results.append(tts_result)
 
         return session
+
+    def _uninstall_aliases(self, dry_run: bool = False) -> Optional[InstallResult]:
+        """Remove spellbook shell aliases from the user's rc file."""
+        try:
+            from installer.components.aliases import get_shell_rc_path, uninstall_aliases
+        except ImportError:
+            return None
+
+        rc_path = get_shell_rc_path()
+        if rc_path is None or not rc_path.exists():
+            return None
+
+        # Check if our demarcated block exists
+        content = rc_path.read_text(encoding="utf-8")
+        if "# SPELLBOOK_ALIASES:START" not in content:
+            return None
+
+        if dry_run:
+            return InstallResult(
+                component="aliases",
+                platform="system",
+                success=True,
+                action="removed",
+                message=f"Shell aliases: would remove from {rc_path}",
+            )
+
+        result = uninstall_aliases()
+        return InstallResult(
+            component="aliases",
+            platform="system",
+            success=result["removed"],
+            action="removed" if result["removed"] else "failed",
+            message=f"Shell aliases: {'removed from' if result['removed'] else 'failed to remove from'} {result.get('rc_path', rc_path)}",
+        )
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the MCP server system service if installed."""

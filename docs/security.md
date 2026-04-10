@@ -143,6 +143,86 @@ To revert all security hardening:
 git revert --no-commit ab83dc2..HEAD
 ```
 
+## Sandboxing with cco (macOS)
+
+Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
+
+cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`) and the config directory (`$SPELLBOOK_CONFIG_DIR`, for the `.mcp-token` auth file). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
+
+Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
+
+### Quick start
+
+Install cco:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikvdp/cco/master/install.sh | bash
+```
+
+Launch Claude Code (or OpenCode) through the wrapper:
+
+```bash
+scripts/spellbook-sandbox                  # sandboxed Claude Code
+scripts/spellbook-sandbox opencode         # sandboxed OpenCode
+scripts/spellbook-sandbox codex            # sandboxed Codex
+```
+
+Add the script directory to your PATH, or alias for convenience:
+
+```bash
+alias claude='/path/to/spellbook/scripts/spellbook-sandbox'
+alias opencode='/path/to/spellbook/scripts/spellbook-sandbox opencode'
+```
+
+### What the wrapper does
+
+The wrapper uses cco's `--safe` mode by default, which hides `$HOME` reads so only the current project directory and explicitly allowlisted paths are visible inside the sandbox. It resolves `$SPELLBOOK_DIR` (auto-detected from the script's location, or set via env var) and `$SPELLBOOK_CONFIG_DIR` (env, `~/.local/spellbook`, or `~/.config/spellbook`), then execs:
+
+```bash
+cco --safe --add-dir "$SPELLBOOK_DIR":ro --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
+```
+
+- `--safe` hides `$HOME` reads except for the working directory and explicitly allowed paths
+- `--add-dir $SPELLBOOK_DIR:ro` grants read access to spellbook's resource files (skills, commands, hooks)
+- `--add-dir $SPELLBOOK_CONFIG_DIR:ro` grants read access to the config directory (needed for `.mcp-token` which hooks use for daemon HTTP auth)
+- All hook writes go through the daemon's HTTP API (`/api/hook-log`, `/api/messaging/poll`), so no write access to any spellbook directory is granted
+
+The daemon runs independently via launchd and is not sandboxed.
+
+### Threat model
+
+| Threat                                       | Default |
+| -------------------------------------------- | ------- |
+| Trashing files outside project               | Blocked |
+| Modifying shell rc or SSH config             | Blocked |
+| Writing to spellbook config dir              | Blocked |
+| Reading other projects under `$HOME`         | Blocked |
+| Reading SSH / cloud / browser credentials    | Blocked |
+| Reading spellbook source and config          | Allowed (read-only) |
+| Network access (localhost + outbound)        | Allowed |
+| Kernel escape from sandbox-exec              | Out of scope (use a VM) |
+
+### OpenCode desktop and web app
+
+The OpenCode Electron desktop app supports connecting to an externally-launched server. This lets you sandbox the server process (where all agent execution happens) while the desktop UI runs unsandboxed.
+
+Launch the sandboxed server:
+
+```bash
+OPENCODE_SERVER_PASSWORD=mypass spellbook-sandbox opencode serve --port 8080
+```
+
+Then in the Electron desktop app, open the server selection dialog and add:
+- URL: `http://127.0.0.1:8080`
+- Password: `mypass`
+
+The server runs inside cco's sandbox with the same protections as the CLI. The desktop UI connects over HTTP and is unaffected by sandbox restrictions.
+
+Notes:
+- The Tauri desktop app does not support external servers; use the Electron version.
+- `opencode serve` supports `--hostname`, `--cors`, and `--mdns` (Bonjour auto-discovery) flags.
+- Set `OPENCODE_SERVER_PASSWORD` to a strong value in production; without it the server is unauthenticated.
+
 ## Source Citations
 
 The security audit and hardening drew from 45 sources. The top references:

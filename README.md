@@ -35,6 +35,7 @@
 
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
+- [Sandboxed Usage](#sandboxed-usage)
 - [What Spellbook Does](#what-spellbook-does)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
@@ -104,6 +105,22 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 - Symlinks require **Developer Mode** enabled in Windows Settings (falls back to junctions or copies otherwise)
 - Service management uses **Windows Task Scheduler**
 - Install location: `%LOCALAPPDATA%\spellbook`
+
+## Sandboxed Usage
+
+Spellbook recommends running AI coding assistants inside [nikvdp/cco](https://github.com/nikvdp/cco)'s sandbox. The `spellbook-sandbox` launcher wraps `cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden.
+
+```bash
+# Install cco first: https://github.com/nikvdp/cco#quick-start
+
+# Launch sandboxed
+spellbook-sandbox                    # Claude Code (default)
+spellbook-sandbox opencode           # OpenCode CLI
+spellbook-sandbox opencode serve     # OpenCode server (for desktop/web app)
+spellbook-sandbox codex              # Codex
+```
+
+The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-cco-macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
 
 ## What Spellbook Does
 
