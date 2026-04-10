@@ -4,8 +4,7 @@
 #
 # Hook filesystem writes (error logs, messaging) are routed through the
 # spellbook daemon HTTP API, so the sandbox only needs read access to
-# $SPELLBOOK_DIR (resource files) and $SPELLBOOK_CONFIG_DIR (.mcp-token).
-# No write access to any spellbook directory is granted.
+# $SPELLBOOK_DIR and the config directories. No write access is granted.
 #
 # Usage:
 #   spellbook-sandbox                          # == cco claude (default)
@@ -15,8 +14,9 @@
 # Environment:
 #   SPELLBOOK_DIR        Path to spellbook repo checkout. Auto-detected
 #                        from this script's location if unset.
-#   SPELLBOOK_CONFIG_DIR Path to spellbook config/state directory.
-#                        Falls back to ~/.local/spellbook or ~/.config/spellbook.
+#   SPELLBOOK_CONFIG_DIR Additional config directory to mount (optional).
+#                        ~/.local/spellbook and ~/.config/spellbook are
+#                        always mounted if they exist.
 #
 # See docs/security.md for details.
 
@@ -35,15 +35,6 @@ if [ -z "${SPELLBOOK_DIR:-}" ]; then
     fi
 fi
 
-# --- Resolve SPELLBOOK_CONFIG_DIR (needed for .mcp-token read access) ---
-if [ -z "${SPELLBOOK_CONFIG_DIR:-}" ]; then
-    if [ -d "$HOME/.local/spellbook" ]; then
-        SPELLBOOK_CONFIG_DIR="$HOME/.local/spellbook"
-    elif [ -d "$HOME/.config/spellbook" ]; then
-        SPELLBOOK_CONFIG_DIR="$HOME/.config/spellbook"
-    fi
-fi
-
 if ! command -v cco >/dev/null 2>&1; then
     echo "spellbook-sandbox: cco not found on PATH. Install from https://github.com/nikvdp/cco" >&2
     exit 1
@@ -51,15 +42,21 @@ fi
 
 # --safe: hide $HOME reads (only $PWD + allowlisted paths visible)
 # --add-dir SPELLBOOK_DIR:ro: skills, commands, hook scripts
-# --add-dir SPELLBOOK_CONFIG_DIR:ro: .mcp-token for daemon auth
 set -- --safe --add-dir "$SPELLBOOK_DIR":ro "$@"
-if [ -n "${SPELLBOOK_CONFIG_DIR:-}" ]; then
-    set -- --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
-fi
-# The auth token is at a fixed path (~/.local/spellbook/.mcp-token).
-# Ensure its parent dir is mounted even if SPELLBOOK_CONFIG_DIR differs.
-# cco handles duplicate mounts gracefully.
+
+# The hook may need access to multiple config locations:
+# - ~/.local/spellbook (.mcp-token, messaging state)
+# - ~/.config/spellbook (spellbook.json config)
+# Mount all that exist. cco handles duplicate mounts gracefully.
 if [ -d "$HOME/.local/spellbook" ]; then
     set -- --add-dir "$HOME/.local/spellbook":ro "$@"
 fi
+if [ -d "$HOME/.config/spellbook" ]; then
+    set -- --add-dir "$HOME/.config/spellbook":ro "$@"
+fi
+# Also mount a custom config dir if specified via the environment.
+if [ -n "${SPELLBOOK_CONFIG_DIR:-}" ] && [ -d "$SPELLBOOK_CONFIG_DIR" ]; then
+    set -- --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
+fi
+
 exec cco "$@"
