@@ -7,20 +7,12 @@ idempotent install/uninstall.
 """
 
 import os
-import re
-import shutil
 from pathlib import Path
-from typing import Optional
 
 # Demarcation markers for shell rc files (# comment style, matching
 # the pattern used by installer/platforms/codex.py for TOML files).
 _START_MARKER = "# SPELLBOOK_ALIASES:START"
 _END_MARKER = "# SPELLBOOK_ALIASES:END"
-
-# Regex to find existing alias targets
-_ALIAS_RE = re.compile(
-    r"""alias\s+(claude|opencode)\s*=?\s*['"]([^'"]+)['"]""",
-)
 
 
 def get_shell_rc_path() -> Path | None:
@@ -45,27 +37,6 @@ def get_shell_rc_path() -> Path | None:
 def _is_fish(rc_path: Path) -> bool:
     """Return True if *rc_path* belongs to fish shell."""
     return rc_path.name == "config.fish"
-
-
-def detect_existing_aliases(rc_path: Path) -> dict[str, str | None]:
-    """Check if claude/opencode aliases already exist in rc file.
-
-    Returns dict like ``{"claude": "/path/to/spellbook-sandbox", "opencode": None}``
-    where value is the target if alias exists and points to spellbook-sandbox,
-    None if not found.
-    """
-    result: dict[str, str | None] = {"claude": None, "opencode": None}
-
-    if not rc_path.exists():
-        return result
-
-    content = rc_path.read_text(encoding="utf-8")
-    for match in _ALIAS_RE.finditer(content):
-        name, target = match.group(1), match.group(2)
-        if name in result and "spellbook-sandbox" in target:
-            result[name] = target
-
-    return result
 
 
 def generate_alias_block(spellbook_dir: Path, fish: bool = False) -> str:

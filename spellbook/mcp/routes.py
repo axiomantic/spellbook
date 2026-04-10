@@ -348,37 +348,9 @@ async def api_hook_log(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True})
 
 
-@mcp.custom_route("/api/messaging/poll", methods=["POST"])
-async def api_messaging_poll(request: Request) -> JSONResponse:
-    """REST endpoint for hook scripts to poll messaging inbox via the daemon.
-
-    Accepts JSON body: {"session_id": "string"}
-    Returns JSON: {"messages": [...]} where each message has fields:
-        message_type, sender, payload, correlation_id, filename
-
-    Iterates all alias directories under ~/.local/spellbook/messaging/,
-    draining only those whose .session_id marker matches the request.
-    This replicates the behavior formerly in hooks/spellbook_hook.py
-    _messaging_check(), eliminating the need for hook processes to have
-    write access to the config directory.
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "invalid JSON"}, status_code=400)
-
-    session_id = body.get("session_id", "")
-    if not session_id:
-        return JSONResponse(
-            {"error": "missing required field: session_id"},
-            status_code=400,
-        )
-
-    messaging_base = get_spellbook_config_dir() / "messaging"
-    if not messaging_base.exists():
-        return JSONResponse({"messages": []})
-
-    messages = []
+def _poll_inbox_sync(messaging_base: Path, session_id: str) -> list[dict]:
+    """Synchronous inbox polling -- runs in thread pool via asyncio.to_thread()."""
+    messages: list[dict] = []
     for alias_dir in sorted(messaging_base.iterdir()):
         if not alias_dir.is_dir():
             continue
@@ -417,5 +389,40 @@ async def api_messaging_poll(request: Request) -> JSONResponse:
                     msg_file.unlink()
                 except OSError:
                     pass
+    return messages
 
+
+@mcp.custom_route("/api/messaging/poll", methods=["POST"])
+async def api_messaging_poll(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to poll messaging inbox via the daemon.
+
+    Accepts JSON body: {"session_id": "string"}
+    Returns JSON: {"messages": [...]} where each message has fields:
+        message_type, sender, payload, correlation_id, filename
+
+    Iterates all alias directories under ~/.local/spellbook/messaging/,
+    draining only those whose .session_id marker matches the request.
+    This replicates the behavior formerly in hooks/spellbook_hook.py
+    _messaging_check(), eliminating the need for hook processes to have
+    write access to the config directory.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    session_id = body.get("session_id", "")
+    if not session_id:
+        return JSONResponse(
+            {"error": "missing required field: session_id"},
+            status_code=400,
+        )
+
+    messaging_base = get_spellbook_config_dir() / "messaging"
+    if not messaging_base.exists():
+        return JSONResponse({"messages": []})
+
+    messages = await asyncio.to_thread(
+        _poll_inbox_sync, messaging_base, session_id
+    )
     return JSONResponse({"messages": messages})

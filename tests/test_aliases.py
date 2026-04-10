@@ -5,10 +5,8 @@ from pathlib import Path
 import pytest
 
 from installer.components.aliases import (
-    _ALIAS_RE,
     _END_MARKER,
     _START_MARKER,
-    detect_existing_aliases,
     generate_alias_block,
     get_shell_rc_path,
     install_aliases,
@@ -245,62 +243,3 @@ class TestUninstallAliases:
         )
         result = uninstall_aliases()
         assert result["removed"] is False
-
-
-# ---------------------------------------------------------------------------
-# detect_existing_aliases
-# ---------------------------------------------------------------------------
-
-
-class TestDetectExistingAliases:
-    def test_finds_aliases_in_block(self, tmp_path):
-        rc = tmp_path / ".zshrc"
-        content = (
-            f"{_START_MARKER}\n"
-            "alias claude='/foo/scripts/spellbook-sandbox'\n"
-            "alias opencode='/foo/scripts/spellbook-sandbox opencode'\n"
-            f"{_END_MARKER}\n"
-        )
-        rc.write_text(content, encoding="utf-8")
-        result = detect_existing_aliases(rc)
-        assert result["claude"] is not None
-        assert result["opencode"] is not None
-
-    def test_ignores_non_spellbook_aliases(self, tmp_path):
-        rc = tmp_path / ".zshrc"
-        rc.write_text("alias claude='/usr/bin/something-else'\n", encoding="utf-8")
-        result = detect_existing_aliases(rc)
-        assert result["claude"] is None
-
-    def test_missing_file(self, tmp_path):
-        rc = tmp_path / ".zshrc"
-        result = detect_existing_aliases(rc)
-        assert result == {"claude": None, "opencode": None}
-
-    def test_fish_syntax(self, tmp_path):
-        rc = tmp_path / "config.fish"
-        content = "alias claude '/foo/scripts/spellbook-sandbox'\n"
-        rc.write_text(content, encoding="utf-8")
-        result = detect_existing_aliases(rc)
-        assert result["claude"] is not None
-
-
-# ---------------------------------------------------------------------------
-# Regex pattern
-# ---------------------------------------------------------------------------
-
-
-class TestAliasRegex:
-    def test_matches_bash_alias(self):
-        m = _ALIAS_RE.search("alias claude='/path/to/spellbook-sandbox'")
-        assert m is not None
-        assert m.group(1) == "claude"
-
-    def test_matches_fish_alias(self):
-        m = _ALIAS_RE.search("alias claude '/path/to/spellbook-sandbox'")
-        assert m is not None
-        assert m.group(1) == "claude"
-
-    def test_no_match_for_other_aliases(self):
-        m = _ALIAS_RE.search("alias vim='nvim'")
-        assert m is None
