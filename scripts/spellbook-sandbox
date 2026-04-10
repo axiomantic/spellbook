@@ -56,4 +56,10 @@ set -- --safe --add-dir "$SPELLBOOK_DIR":ro "$@"
 if [ -n "${SPELLBOOK_CONFIG_DIR:-}" ]; then
     set -- --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
 fi
+# The auth token is at a fixed path (~/.local/spellbook/.mcp-token).
+# Ensure its parent dir is mounted even if SPELLBOOK_CONFIG_DIR differs.
+# cco handles duplicate mounts gracefully.
+if [ -d "$HOME/.local/spellbook" ]; then
+    set -- --add-dir "$HOME/.local/spellbook":ro "$@"
+fi
 exec cco "$@"
