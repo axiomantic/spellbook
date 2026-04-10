@@ -6,25 +6,10 @@ route handler functions directly with mock Starlette Request objects.
 
 import asyncio
 import json
-import sys
 from pathlib import Path
-from types import ModuleType
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-
-
-# Mock the entire TTS module tree before importing routes.
-# The tts module depends on numpy/sounddevice/wyoming which may not
-# be installed in the test environment.
-_tts_mock = ModuleType("spellbook.notifications.tts")
-for _mod_name in (
-    "numpy", "sounddevice", "wyoming", "wyoming.audio",
-    "wyoming.tts", "wyoming.event", "wyoming.info",
-    "spellbook.notifications.tts",
-):
-    if _mod_name not in sys.modules:
-        sys.modules[_mod_name] = ModuleType(_mod_name) if _mod_name != "spellbook.notifications.tts" else _tts_mock
 
 
 # ---------------------------------------------------------------------------
