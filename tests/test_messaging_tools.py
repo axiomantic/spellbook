@@ -648,6 +648,7 @@ class TestBroadcastEventEmission:
             assert e["payload"]["recipient"] == "*"
             assert e["payload"]["broadcast"] is True
             assert e["source"] == "spellbook/messaging"
+            assert e["payload"]["payload"] == {"msg": "hi all"}
 
     @pytest.mark.asyncio
     async def test_broadcast_skips_sessions_without_uuid(self, _patch_bus):
@@ -719,7 +720,7 @@ class TestBroadcastEventEmission:
         assert result["ok"] is True
         # The non-failing recipient still got its event
         assert len(successful_emits) == 1
-        assert "uuid-ok" in successful_emits[0]["topic"]
+        assert successful_emits[0]["topic"] == "spellbook/sessions/uuid-ok/messages"
 
 
 class TestReplyEventEmission:
@@ -779,6 +780,7 @@ class TestReplyEventEmission:
         assert c["payload"]["correlation_id"] == "corr-1"
         assert c["payload"]["sender"] == "rq-replier"
         assert c["correlation_id"] == "corr-1"
+        assert c["source"] == "spellbook/messaging"
 
     @pytest.mark.asyncio
     async def test_reply_no_uuid_skips_event(self, _patch_bus):
