@@ -52,13 +52,8 @@ fi
 # --safe: hide $HOME reads (only $PWD + allowlisted paths visible)
 # --add-dir SPELLBOOK_DIR:ro: skills, commands, hook scripts
 # --add-dir SPELLBOOK_CONFIG_DIR:ro: .mcp-token for daemon auth
+set -- --safe --add-dir "$SPELLBOOK_DIR":ro "$@"
 if [ -n "${SPELLBOOK_CONFIG_DIR:-}" ]; then
-    exec cco --safe \
-        --add-dir "$SPELLBOOK_DIR":ro \
-        --add-dir "$SPELLBOOK_CONFIG_DIR":ro \
-        "$@"
-else
-    exec cco --safe \
-        --add-dir "$SPELLBOOK_DIR":ro \
-        "$@"
+    set -- --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
 fi
+exec cco "$@"
