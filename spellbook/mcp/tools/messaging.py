@@ -300,16 +300,50 @@ async def messaging_broadcast(
         include_self: Whether to include sender in broadcast (default false)
 
     Returns:
-        {"ok": true, "delivered_count": int, "failed_count": int, "errors": list|null}
+        {"ok": true, "delivered_count": int, "failed_count": int,
+         "delivered_aliases": list[str], "errors": list|null}
     """
     parsed, err = _parse_payload(payload)
     if err:
         return err
-    return await message_bus.broadcast(
+    result = await message_bus.broadcast(
         sender=sender,
         payload=parsed,
         exclude_sender=not include_self,
     )
+
+    # Emit events for each recipient with a known session UUID.
+    # Use delivered_aliases from broadcast() result (NOT a separate
+    # list_sessions() call) to avoid TOCTOU race conditions.
+    # Fire-and-forget: one failure must not block other recipients.
+    if result.get("ok"):
+        for alias in result.get("delivered_aliases", []):
+            uuid = message_bus.resolve_alias_to_session_id(alias)
+            if not uuid:
+                continue
+            try:
+                await mcp.emit_event(
+                    topic=f"spellbook/sessions/{uuid}/messages",
+                    payload={
+                        "sender": sender,
+                        "recipient": "*",
+                        "payload": parsed,
+                        "broadcast": True,
+                    },
+                    source="spellbook/messaging",
+                    requested_effects=[
+                        EventEffect(type="inject_context", priority="normal"),
+                    ],
+                    target_session_ids=[uuid],
+                )
+            except Exception:
+                logger.warning(
+                    "Failed to emit broadcast event for recipient %s",
+                    alias,
+                    exc_info=True,
+                )
+
+    return result
 
 
 @mcp.tool()
@@ -330,17 +364,50 @@ async def messaging_reply(
         payload: JSON string with reply content
 
     Returns:
-        {"ok": true, "message_id": str} on success
+        {"ok": true, "message_id": str, "recipient": str} on success
         {"ok": false, "error": str} if expired or sender gone
     """
     parsed, err = _parse_payload(payload)
     if err:
         return err
-    return await message_bus.reply(
+    result = await message_bus.reply(
         sender=sender,
         correlation_id=correlation_id,
         payload=parsed,
     )
+
+    # Emit event to the reply recipient (the original sender of the
+    # correlated message). Guard on result having recipient field.
+    if result.get("ok"):
+        recipient_alias = result.get("recipient")
+        if recipient_alias:
+            recipient_uuid = message_bus.resolve_alias_to_session_id(recipient_alias)
+            if recipient_uuid:
+                try:
+                    await mcp.emit_event(
+                        topic=f"spellbook/sessions/{recipient_uuid}/messages",
+                        payload={
+                            "message_id": result.get("message_id"),
+                            "sender": sender,
+                            "recipient": recipient_alias,
+                            "payload": parsed,
+                            "correlation_id": correlation_id,
+                            "is_reply": True,
+                        },
+                        source="spellbook/messaging",
+                        correlation_id=correlation_id,
+                        requested_effects=[
+                            EventEffect(type="inject_context", priority="high"),
+                        ],
+                        target_session_ids=[recipient_uuid],
+                    )
+                except Exception:
+                    logger.warning(
+                        "Failed to emit event for reply delivery",
+                        exc_info=True,
+                    )
+
+    return result
 
 
 @mcp.tool()

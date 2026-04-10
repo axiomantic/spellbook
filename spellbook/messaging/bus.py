@@ -446,6 +446,7 @@ class MessageBus:
             delivered = 0
             failed = 0
             errors = []
+            delivered_aliases: list[str] = []
 
             envelope = self._make_envelope(
                 sender=sender,
@@ -461,6 +462,7 @@ class MessageBus:
                 try:
                     reg.queue.put_nowait(envelope)
                     delivered += 1
+                    delivered_aliases.append(alias)
                 except asyncio.QueueFull:
                     failed += 1
                     errors.append({"alias": alias, "error": "queue_full"})
@@ -473,6 +475,7 @@ class MessageBus:
                 "ok": True,
                 "delivered_count": delivered,
                 "failed_count": failed,
+                "delivered_aliases": delivered_aliases,
                 "errors": errors if errors else None,
             }
 
@@ -516,7 +519,7 @@ class MessageBus:
                 target.queue.put_nowait(envelope)
                 self._total_sent += 1
                 self._total_delivered += 1
-                return {"ok": True, "message_id": envelope.id}
+                return {"ok": True, "message_id": envelope.id, "recipient": original_sender}
             except asyncio.QueueFull:
                 self._total_errors += 1
                 return {
