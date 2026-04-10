@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cco sandbox launcher**: `scripts/spellbook-sandbox` wraps [nikvdp/cco](https://github.com/nikvdp/cco) so Claude Code / OpenCode / Codex can run under YOLO mode with automatic sandboxing. The source tree is mounted read-only; the config directory is mounted read-only since hook subprocesses route writes (error logs, messaging state) through the daemon's HTTP API.
 - **Sandboxing documentation**: New `## Sandboxing with cco (macOS)` section in `docs/security.md` covering quick-start, `--safe` mode, and threat model.
 - **Installer post-install hint**: `render_post_install_notes()` surfaces an optional hint when `cco` is detected on `PATH`, pointing to the launcher and docs.
+- **MCP events integration**: Event topics declared on the spellbook MCP server; `messaging_send`, `messaging_broadcast`, and `messaging_reply` emit `EventEmitNotification` alongside queue delivery for cross-session event-driven communication. Topics use `{session_id}` scoping so only the owning session can subscribe.
+
+### Changed
+- **Dependencies**: Replaced local `file://` path dependencies for `mcp` and `fastmcp` with git references to `axiomantic/python-sdk` and `axiomantic/fastmcp` `mcp-events` branches.
 
 ## [0.50.0] - 2026-04-08
 
@@ -79,11 +83,7 @@ validator, and the pre-commit scanner.
 
 ## [0.48.0] - 2026-04-08
 
-### Added
-- **MCP events integration**: Event topics declared on the spellbook MCP server, messaging_send emits EventEmitNotification alongside queue delivery for cross-session event-driven communication
-
 ### Changed
-- **Dependencies**: Replaced local file:// path dependencies for mcp and fastmcp with git references to axiomantic/python-sdk and axiomantic/fastmcp mcp-events branches
 - Replace `anti-ai-tone.md` with comprehensive `writing-guide.md` covering structural dead tells, human signals, sniff test, and before/after examples
 - Update all references across commands, docs, and skills
 

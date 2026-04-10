@@ -11,6 +11,7 @@ __all__ = [
     "messaging_stats",
 ]
 
+import asyncio
 import json
 import logging
 import re
@@ -315,12 +316,14 @@ async def messaging_broadcast(
     # Emit events for each recipient with a known session UUID.
     # Use delivered_aliases from broadcast() result (NOT a separate
     # list_sessions() call) to avoid TOCTOU race conditions.
-    # Fire-and-forget: one failure must not block other recipients.
+    # Gather all coroutines in parallel so N recipients cost one round-trip,
+    # not N serial awaits. return_exceptions=True prevents one failure from
+    # cancelling delivery to other recipients.
     if result.get("ok"):
-        for alias in result.get("delivered_aliases", []):
+        async def _emit_one(alias: str) -> None:
             uuid = message_bus.resolve_alias_to_session_id(alias)
             if not uuid:
-                continue
+                return
             try:
                 await mcp.emit_event(
                     topic=f"spellbook/sessions/{uuid}/messages",
@@ -342,6 +345,10 @@ async def messaging_broadcast(
                     alias,
                     exc_info=True,
                 )
+
+        coros = [_emit_one(alias) for alias in result.get("delivered_aliases", [])]
+        if coros:
+            await asyncio.gather(*coros, return_exceptions=True)
 
     return result
 

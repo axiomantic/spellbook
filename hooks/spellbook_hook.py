@@ -11,6 +11,7 @@ pre-compact-save.sh, post-compact-recover.sh).
 """
 
 import json
+import logging
 import os
 import shlex
 import subprocess
@@ -22,6 +23,23 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+_LOG_LEVEL = os.environ.get("SPELLBOOK_LOG_LEVEL", "DEBUG").upper()
+_LOG_DIR = Path.home() / ".local" / "spellbook" / "logs"
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+logger = logging.getLogger("spellbook_hook")
+logger.setLevel(getattr(logging, _LOG_LEVEL, logging.DEBUG))
+
+_file_handler = logging.FileHandler(_LOG_DIR / "hook.log")
+_file_handler.setFormatter(
+    logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+)
+logger.addHandler(_file_handler)
 
 
 # ---------------------------------------------------------------------------
@@ -282,18 +300,21 @@ def _gate_bash(data: dict) -> None:
     try:
         from spellbook.gates.check import check_tool_input
     except ImportError as e:
+        logger.error("Failed to import security module: %s", e)
         _log_hook_error("gate_bash", "Bash", e)
         print(json.dumps({"error": "Security check failed: security module not available"}))
         sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
+        logger.warning("gate_bash: no tool_input provided")
         print(json.dumps({"error": "Security check failed: no tool input provided"}))
         sys.exit(2)
 
     result = check_tool_input("Bash", tool_input)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
+        logger.info("gate_bash blocked: %s", reasons)
         print(json.dumps({"error": f"Security check failed: {reasons}"}))
         sys.exit(2)
 
@@ -989,11 +1010,13 @@ def main():
     """Parse stdin and dispatch to handlers."""
     raw = sys.stdin.read().strip()
     if not raw:
+        logger.debug("Empty stdin, exiting")
         sys.exit(0)
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        logger.warning("Invalid JSON on stdin: %s", raw[:200])
         sys.exit(0)
 
     event_name = data.get("hook_event_name", "")
@@ -1003,15 +1026,19 @@ def main():
         elif "tool_name" in data:
             event_name = "PreToolUse"
         else:
+            logger.debug("No event name and no tool_result/tool_name, exiting")
             sys.exit(0)
 
     tool_name = data.get("tool_name", "")
+    logger.debug("Dispatching %s:%s", event_name, tool_name)
 
     try:
         output = dispatch(event_name, tool_name, data)
         if output:
             print(output)
+        logger.debug("Completed %s:%s", event_name, tool_name)
     except Exception as e:
+        logger.exception("Unhandled exception in %s:%s", event_name, tool_name)
         _log_hook_error(event_name, tool_name, e)
 
 
