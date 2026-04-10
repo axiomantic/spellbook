@@ -29,7 +29,8 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 MCP_HOST = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
 MCP_PORT = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
-MCP_URL = f"http://{MCP_HOST}:{MCP_PORT}/mcp"
+_host_part = f"[{MCP_HOST}]" if ":" in MCP_HOST else MCP_HOST  # IPv6 bracket
+MCP_URL = f"http://{_host_part}:{MCP_PORT}/mcp"
 TOKEN_FILE = Path.home() / ".local" / "spellbook" / ".mcp-token"
 CONFIG_PATH = Path(os.environ.get(
     "SPELLBOOK_CONFIG_PATH",
@@ -176,7 +177,7 @@ def _http_post(path: str, payload: dict, timeout: float = 5) -> dict | None:
     ``path`` is an absolute URL path (e.g. ``/api/hook-log``).  The daemon
     base URL is derived from MCP_HOST and MCP_PORT.
     """
-    url = f"http://{MCP_HOST}:{MCP_PORT}{path}"
+    url = f"http://{_host_part}:{MCP_PORT}{path}"
     headers = {"Content-Type": "application/json"}
     if TOKEN_FILE.exists():
         try:

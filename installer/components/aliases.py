@@ -128,9 +128,12 @@ def install_aliases(
         new_content = content[: span[0]] + new_block + content[span[1] :]
     else:
         # Append
-        if content and not content.endswith("\n"):
-            content += "\n"
-        new_content = content + "\n" + new_block + "\n"
+        if content:
+            if not content.endswith("\n"):
+                content += "\n"
+            new_content = content + "\n" + new_block + "\n"
+        else:
+            new_content = new_block + "\n"
 
     if not dry_run:
         rc_path.parent.mkdir(parents=True, exist_ok=True)

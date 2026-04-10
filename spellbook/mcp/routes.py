@@ -303,8 +303,8 @@ def _rotate_hook_log(log_file: Path) -> None:
                 src = log_file.with_suffix(f".log.{i}")
                 dst = log_file.with_suffix(f".log.{i + 1}")
                 if src.exists():
-                    src.rename(dst)
-        log_file.rename(log_file.with_suffix(".log.1"))
+                    src.replace(dst)
+        log_file.replace(log_file.with_suffix(".log.1"))
     except OSError:
         pass  # Best-effort rotation
 
