@@ -640,13 +640,6 @@ class TestCrossSessionMessaging:
 class TestSessionScopedAuthorization:
     """Verify {session_id} enforcement prevents cross-session snooping."""
 
-    @pytest.mark.skip(
-        reason=(
-            "Cross-session subscription rejection ({session_id} enforcement) is not yet "
-            "implemented in the installed fastmcp version. Re-enable once "
-            "axiomantic/fastmcp mcp-events branch adds authorization to subscribe_events."
-        )
-    )
     async def test_cannot_subscribe_to_other_session_topic(self) -> None:
         """Alice tries to subscribe to Bob's session topic. Must be rejected."""
         server = _make_server()
@@ -673,13 +666,6 @@ class TestSessionScopedAuthorization:
                 assert result.rejected[0].reason == "permission_denied"
                 assert len(result.subscribed) == 0
 
-    @pytest.mark.skip(
-        reason=(
-            "Wildcard rejection in {session_id} slot is not yet implemented in the "
-            "installed fastmcp version. Re-enable once axiomantic/fastmcp mcp-events "
-            "branch adds authorization to subscribe_events."
-        )
-    )
     async def test_cannot_use_wildcard_in_session_slot(self) -> None:
         """Subscribing with + in the {session_id} slot must be rejected."""
         server = _make_server()
@@ -728,12 +714,6 @@ class TestSessionScopedAuthorization:
             assert len(result.subscribed) == 1
 
 
-@pytest.mark.skip(
-    reason=(
-        "target_session_ids is not yet implemented in the installed fastmcp version. "
-        "Re-enable once axiomantic/fastmcp mcp-events branch adds the parameter to emit_event."
-    )
-)
 @pytest.mark.allow("mcp")
 class TestTargetedEmission:
     """Verify target_session_ids restricts delivery to specified sessions."""
