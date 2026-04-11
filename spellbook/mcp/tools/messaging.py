@@ -16,7 +16,9 @@ import inspect
 import json
 import logging
 import re
-from typing import Any, Optional
+from typing import Any, Literal, Optional
+
+MessagePriority = Literal["urgent", "high", "normal", "low"]
 
 from fastmcp import Context
 
@@ -58,7 +60,7 @@ _EMIT_SUPPORTS_PRIORITY = "priority" in _EMIT_PARAMS
 _EMIT_SUPPORTS_REQUESTED_EFFECTS = "requested_effects" in _EMIT_PARAMS
 _EMIT_SUPPORTS_CORRELATION_ID = "correlation_id" in _EMIT_PARAMS
 _DECLARE_SUPPORTS_KIND = "kind" in _DECLARE_PARAMS
-_DECLARE_SUPPORTS_SUGGESTED_HANDLE = "suggestedHandle" in _DECLARE_PARAMS
+_DECLARE_SUPPORTS_SUGGESTED_HANDLE = "suggested_handle" in _DECLARE_PARAMS
 
 # Message payload schema (per MCP Events Spec v2 example). Declared once and
 # reused across messages/replies since they share the same shape.
@@ -104,7 +106,7 @@ def _declare_event_v2(
     if _DECLARE_SUPPORTS_KIND:
         kwargs["kind"] = kind
     if suggested_handle is not None and _DECLARE_SUPPORTS_SUGGESTED_HANDLE:
-        kwargs["suggestedHandle"] = suggested_handle
+        kwargs["suggested_handle"] = suggested_handle
     mcp.declare_event(pattern, **kwargs)
 
 
@@ -338,22 +340,30 @@ async def messaging_send(
     sender: str,
     recipient: str,
     payload: str,
-    correlation_id: Optional[str] = None,
     ttl: int = 60,
+    priority: MessagePriority = "high",
 ) -> dict:
     """Send a direct message to another session.
 
     Delivers immediately to the recipient's queue. Fails if recipient is
     not registered or their queue is full.
 
+    Under MCP Events Spec v2, correlation identifiers are NOT a wire-level
+    field: callers that want request/reply correlation put a
+    ``correlation_id`` key directly in the ``payload`` dict. The tool
+    extracts it from the payload and registers a pending correlation so
+    ``messaging_reply`` can route the response back.
+
     Args:
         sender: Your registered alias
         recipient: Target session alias
-        payload: JSON string with message content (will be parsed)
-        correlation_id: Optional ID to track request/reply pairs. Recipient
-                       can use messaging_reply with this ID. Embedded in
-                       the event payload; NOT a wire-level field.
+        payload: JSON string with message content (will be parsed). If it
+                contains a top-level ``correlation_id`` string, that value
+                is used to track request/reply pairs. Max 128 chars.
         ttl: Seconds before correlation expires (default 60, max 300)
+        priority: Delivery priority hint for v2 events. One of
+                 ``urgent``/``high``/``normal``/``low``. Defaults to
+                 ``high`` for direct messages.
 
     Returns:
         {"ok": true, "message_id": str} on success
@@ -366,9 +376,18 @@ async def messaging_send(
     # Clamp TTL
     ttl = max(_TTL_MIN, min(ttl, _TTL_MAX))
 
-    # Validate correlation_id length
-    if correlation_id and len(correlation_id) > 128:
-        return {"ok": False, "error": "correlation_id_too_long", "detail": "Max 128 chars."}
+    # Extract correlation_id from the payload dict (v2: caller-owned, not a
+    # wire field). Must be a string to be usable as a routing key.
+    correlation_id: Optional[str] = None
+    raw_corr = parsed.get("correlation_id")
+    if isinstance(raw_corr, str) and raw_corr:
+        if len(raw_corr) > 128:
+            return {
+                "ok": False,
+                "error": "correlation_id_too_long",
+                "detail": "Max 128 chars.",
+            }
+        correlation_id = raw_corr
 
     result = await message_bus.send(
         sender=sender,
@@ -396,12 +415,12 @@ async def messaging_send(
                         "message_id": result.get("message_id"),
                         "sender": sender,
                         "recipient": recipient,
+                        # v2: correlation_id (if any) lives inside ``parsed``;
+                        # nothing extra at the event-payload level.
                         "payload": parsed,
-                        # correlation_id lives in the payload, not the wire
-                        "correlation_id": correlation_id,
                     },
                     source="spellbook/messaging",
-                    priority="high",
+                    priority=priority,
                     target_session_ids=(
                         [recipient_transport_sid] if recipient_transport_sid else None
                     ),
@@ -423,6 +442,7 @@ async def messaging_broadcast(
     sender: str,
     payload: str,
     include_self: bool = False,
+    priority: MessagePriority = "normal",
 ) -> dict:
     """Broadcast a message to all registered sessions.
 
@@ -432,6 +452,9 @@ async def messaging_broadcast(
         sender: Your registered alias
         payload: JSON string with message content
         include_self: Whether to include sender in broadcast (default false)
+        priority: Delivery priority hint for v2 events. One of
+                 ``urgent``/``high``/``normal``/``low``. Defaults to
+                 ``normal`` for broadcasts.
 
     Returns:
         {"ok": true, "delivered_count": int, "failed_count": int,
@@ -468,7 +491,7 @@ async def messaging_broadcast(
                         "broadcast": True,
                     },
                     source="spellbook/messaging",
-                    priority="normal",
+                    priority=priority,
                     target_session_ids=[transport_sid] if transport_sid else None,
                 )
             except Exception:
@@ -489,26 +512,51 @@ async def messaging_broadcast(
 @inject_recovery_context
 async def messaging_reply(
     sender: str,
-    correlation_id: str,
     payload: str,
+    priority: MessagePriority = "high",
 ) -> dict:
     """Reply to a message using its correlation ID.
 
     Routes the reply back to the original sender. Fails if the correlation
     has expired (default 60s TTL) or the original sender disconnected.
 
+    Under MCP Events Spec v2, ``correlation_id`` is NOT a wire-level field.
+    The replier places the ``correlation_id`` from the received message as
+    a top-level key inside the reply ``payload`` dict; this tool extracts
+    it and uses it to route the reply back to the original sender.
+
     Args:
         sender: Your registered alias (the replier)
-        correlation_id: The correlation_id from the received message
-        payload: JSON string with reply content
+        payload: JSON string with reply content. MUST include a top-level
+                ``correlation_id`` string matching the received message.
+        priority: Delivery priority hint for v2 events. One of
+                 ``urgent``/``high``/``normal``/``low``. Defaults to
+                 ``high`` for replies.
 
     Returns:
         {"ok": true, "message_id": str, "recipient": str} on success
-        {"ok": false, "error": str} if expired or sender gone
+        {"ok": false, "error": str} if expired, sender gone, or
+        correlation_id missing/invalid in the payload
     """
     parsed, err = _parse_payload(payload)
     if err:
         return err
+
+    raw_corr = parsed.get("correlation_id")
+    if not isinstance(raw_corr, str) or not raw_corr:
+        return {
+            "ok": False,
+            "error": "missing_correlation_id",
+            "detail": "Reply payload must include a top-level 'correlation_id' string.",
+        }
+    if len(raw_corr) > 128:
+        return {
+            "ok": False,
+            "error": "correlation_id_too_long",
+            "detail": "Max 128 chars.",
+        }
+    correlation_id = raw_corr
+
     result = await message_bus.reply(
         sender=sender,
         correlation_id=correlation_id,
@@ -532,13 +580,14 @@ async def messaging_reply(
                             "message_id": result.get("message_id"),
                             "sender": sender,
                             "recipient": recipient_alias,
+                            # v2: correlation_id is inside ``parsed``
+                            # (placed there by the replier); no separate
+                            # wire-level field.
                             "payload": parsed,
-                            # correlation_id lives in the payload under v2
-                            "correlation_id": correlation_id,
                             "is_reply": True,
                         },
                         source="spellbook/messaging",
-                        priority="high",
+                        priority=priority,
                         target_session_ids=(
                             [recipient_transport_sid]
                             if recipient_transport_sid

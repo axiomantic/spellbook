@@ -89,10 +89,7 @@ def _make_server() -> FastMCP:
 
     The literal placeholder name ``{agent_id}`` is magic in fastmcp: it
     enforces that the subscriber's transport session UUID matches the
-    value substituted into that slot. A secondary
-    ``spellbook/sessions/{agent_id}/messages`` topic is declared so the
-    authorization tests can exercise magic enforcement on a
-    non-``agents/`` pattern too.
+    value substituted into that slot.
     """
     server = FastMCP("spellbook-test")
     server.declare_event(
@@ -105,14 +102,6 @@ def _make_server() -> FastMCP:
         kind="content",
         description="Build status for this agent's work",
         retained=True,
-    )
-    # Parallel declaration used by TestSessionScopedAuthorization to
-    # exercise the ``{agent_id}`` magic-placeholder convention on a
-    # non-``agents/`` pattern.
-    server.declare_event(
-        "spellbook/sessions/{agent_id}/messages",
-        kind="content",
-        description="Per-agent messages (magic-auth slot)",
     )
     return server
 
@@ -454,15 +443,6 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
         description="Public announcements channel",
     )
 
-    # Parallel declaration used by TestSessionScopedAuthorization to
-    # exercise the ``{agent_id}`` magic-placeholder convention on a
-    # non-``agents/`` pattern.
-    server.declare_event(
-        "spellbook/sessions/{agent_id}/messages",
-        kind="content",
-        description="Per-agent messages (magic-auth slot)",
-    )
-
     from fastmcp import Context
 
     def _extract_session_id(ctx: Context | None) -> str | None:
@@ -738,7 +718,7 @@ class TestSessionScopedAuthorization:
     """Verify {agent_id} enforcement prevents cross-session snooping."""
 
     async def test_cannot_subscribe_to_other_session_topic(self) -> None:
-        """Alice tries to subscribe to Bob's session topic. Must be rejected."""
+        """Alice tries to subscribe to Bob's agent topic. Must be rejected."""
         server = _make_server()
 
         async with Client(server) as alice_client:
@@ -755,16 +735,16 @@ class TestSessionScopedAuthorization:
                 assert bob_sid is not None
                 assert alice_sid != bob_sid
 
-                # Alice tries to subscribe to Bob's topic
+                # Alice tries to subscribe to Bob's agent topic
                 result = await alice_session.subscribe_events(
-                    [f"spellbook/sessions/{bob_sid}/messages"]
+                    [f"agents/{bob_sid}/messages"]
                 )
                 assert len(result.rejected) == 1
                 assert result.rejected[0].reason == "permission_denied"
                 assert len(result.subscribed) == 0
 
     async def test_cannot_use_wildcard_in_session_slot(self) -> None:
-        """Subscribing with + in the {session_id} slot must be rejected."""
+        """Subscribing with + in the {agent_id} slot must be rejected."""
         server = _make_server()
 
         async with Client(server) as client:
@@ -774,14 +754,14 @@ class TestSessionScopedAuthorization:
             assert len(server._active_sessions) == 1
 
             result = await session.subscribe_events(
-                ["spellbook/sessions/+/messages"]
+                ["agents/+/messages"]
             )
             assert len(result.rejected) == 1
             assert result.rejected[0].reason == "permission_denied"
             assert len(result.subscribed) == 0
 
     async def test_can_subscribe_to_own_session_topic(self) -> None:
-        """A client can subscribe to its own session topic."""
+        """A client can subscribe to its own agent topic."""
         server = _make_server()
 
         async with Client(server) as client:
@@ -791,11 +771,11 @@ class TestSessionScopedAuthorization:
             assert sid is not None
 
             result = await session.subscribe_events(
-                [f"spellbook/sessions/{sid}/messages"]
+                [f"agents/{sid}/messages"]
             )
             assert len(result.rejected) == 0
             assert len(result.subscribed) == 1
-            assert result.subscribed[0].pattern == f"spellbook/sessions/{sid}/messages"
+            assert result.subscribed[0].pattern == f"agents/{sid}/messages"
 
     async def test_public_topic_allows_any_subscriber(self) -> None:
         """A non-scoped topic (no {session_id}) allows any subscriber."""
