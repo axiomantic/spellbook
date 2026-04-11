@@ -78,6 +78,23 @@ async def _emit_v2(
 # ---------------------------------------------------------------------------
 
 
+def _require_agent_id_matches_session(
+    session_id: str, topic_params: dict[str, str]
+) -> bool:
+    """Authorize callback enforcing ``topic_params['agent_id'] == session_id``.
+
+    Under fastmcp's v2 authorization model the default is permissive: the
+    ``{agent_id}`` placeholder has no special meaning to fastmcp itself.
+    These integration tests use the MCP transport session UUID as the
+    application-level ``agent_id``, so this callback recreates the legacy
+    "subscribe only to your own agent topic" policy by requiring the
+    subscriber's transport session id to match the literal substituted
+    into the ``{agent_id}`` slot. A literal equality check also correctly
+    rejects wildcards (``+`` or ``#``) in that slot.
+    """
+    return topic_params.get("agent_id") == session_id
+
+
 def _make_server() -> FastMCP:
     """Create a fresh FastMCP instance with messaging event topics declared.
 
@@ -87,21 +104,27 @@ def _make_server() -> FastMCP:
     other tool registrations and startup dependencies (DB init, watchers,
     etc).
 
-    The literal placeholder name ``{agent_id}`` is magic in fastmcp: it
-    enforces that the subscriber's transport session UUID matches the
-    value substituted into that slot.
+    An explicit ``authorize`` callback is registered to enforce
+    ``topic_params['agent_id'] == session_id``. Under fastmcp v2 the
+    default subscription policy is permissive and ``{agent_id}`` has no
+    built-in meaning; per-agent isolation is opt-in. These tests use the
+    transport UUID as the agent_id (see module docstring), so this
+    callback reinstates the legacy "only your own agent topic" behavior
+    that the ``TestSessionScopedAuthorization`` class exercises.
     """
     server = FastMCP("spellbook-test")
     server.declare_event(
         "agents/{agent_id}/messages",
         kind="content",
         description="Cross-agent messages",
+        authorize=_require_agent_id_matches_session,
     )
     server.declare_event(
         "agents/{agent_id}/build/status",
         kind="content",
         description="Build status for this agent's work",
         retained=True,
+        authorize=_require_agent_id_matches_session,
     )
     return server
 
@@ -417,16 +440,22 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
     bus = MessageBus(queue_size=64)
 
     # Declare the same event topics the real server does (v2 style).
+    # The test fixture wires agent_id = transport UUID (see the
+    # ``messaging_register`` tool below), so the authorize callback can
+    # enforce "subscribe only to your own agent topic" by comparing
+    # topic_params['agent_id'] to the subscriber's transport session id.
     server.declare_event(
         "agents/{agent_id}/messages",
         kind="content",
         description="Cross-agent messages",
+        authorize=_require_agent_id_matches_session,
     )
     server.declare_event(
         "agents/{agent_id}/build/status",
         kind="content",
         description="Build status for this agent's work",
         retained=True,
+        authorize=_require_agent_id_matches_session,
     )
 
     # A non-scoped public topic for authorization tests
@@ -715,7 +744,15 @@ class TestCrossSessionMessaging:
 
 @pytest.mark.allow("mcp")
 class TestSessionScopedAuthorization:
-    """Verify {agent_id} enforcement prevents cross-session snooping."""
+    """Verify an explicit ``authorize`` callback prevents cross-session snooping.
+
+    Under fastmcp v2 there is no built-in ``{agent_id}`` magic: per-agent
+    isolation is opt-in via ``declare_event(authorize=...)``. ``_make_server``
+    registers a callback that rejects any subscription whose ``agent_id``
+    slot value does not equal the subscriber's transport session id. These
+    tests exercise that policy against cross-session, wildcard, and
+    same-session subscribe attempts.
+    """
 
     async def test_cannot_subscribe_to_other_session_topic(self) -> None:
         """Alice tries to subscribe to Bob's agent topic. Must be rejected."""
