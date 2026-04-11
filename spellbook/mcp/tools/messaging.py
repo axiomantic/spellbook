@@ -12,13 +12,13 @@ __all__ = [
 ]
 
 import asyncio
+import inspect
 import json
 import logging
 import re
-from typing import Optional
+from typing import Any, Optional
 
 from fastmcp import Context
-from fastmcp.server.events import EventEffect
 
 from spellbook.mcp.server import mcp
 from spellbook.messaging.bus import MAX_ALIAS_LENGTH, message_bus
@@ -27,36 +27,154 @@ from spellbook.sessions.injection import inject_recovery_context
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Event topic declarations (MCP events integration)
+# Event topic declarations (MCP Events Spec v2)
 # ---------------------------------------------------------------------------
 #
-# The ``{session_id}`` segment in these topic patterns is magic: fastmcp
-# enforces that only the session whose ``_fastmcp_event_session_id`` matches
-# the substituted UUID may subscribe. Subscribers must pass their own
-# ``client.session_id`` (exposed on the client after initialize) in the topic
-# pattern they subscribe to. Human-readable aliases such as
-# ``"orchestrator-main"`` will never authorize because they cannot match a
-# UUID. Callers route from alias to UUID via the MessageBus resolver
-# (see ``messaging_send`` below).
+# Under MCP Events Spec v2, topics use ``{agent_id}`` as the application-level
+# identity placeholder. ``{agent_id}`` is a CLIENT-SIDE concept: the client
+# substitutes its own agent id (e.g. the opencode session id) when subscribing.
+# Servers receive fully-resolved topic strings. Spellbook maintains an
+# ``alias <-> agent_id`` mapping populated by ``messaging_register`` and uses
+# it to resolve the correct concrete topic for a given recipient alias before
+# emitting an event.
+#
+# Topic declarations include ``kind`` and, where meaningful, ``schema`` and a
+# ``suggestedHandle`` hint.
 
-mcp.declare_event(
-    "spellbook/sessions/{session_id}/messages",
+# ---------------------------------------------------------------------------
+# FastMCP API compatibility shim
+# ---------------------------------------------------------------------------
+#
+# MCP Events Spec v2 replaced the fastmcp ``requested_effects`` + embedded
+# priority design with a top-level ``priority`` field, and added ``kind`` /
+# ``suggestedHandle`` to topic declarations. The installed fastmcp version may
+# pre-date these kwargs, so we feature-detect and only forward the new kwargs
+# when supported. Once fastmcp is fully aligned with v2, the legacy branches
+# become dead code and can be removed.
+
+_EMIT_PARAMS = set(inspect.signature(mcp.emit_event).parameters.keys())
+_DECLARE_PARAMS = set(inspect.signature(mcp.declare_event).parameters.keys())
+_EMIT_SUPPORTS_PRIORITY = "priority" in _EMIT_PARAMS
+_EMIT_SUPPORTS_REQUESTED_EFFECTS = "requested_effects" in _EMIT_PARAMS
+_EMIT_SUPPORTS_CORRELATION_ID = "correlation_id" in _EMIT_PARAMS
+_DECLARE_SUPPORTS_KIND = "kind" in _DECLARE_PARAMS
+_DECLARE_SUPPORTS_SUGGESTED_HANDLE = "suggestedHandle" in _DECLARE_PARAMS
+
+# Message payload schema (per MCP Events Spec v2 example). Declared once and
+# reused across messages/replies since they share the same shape.
+_MESSAGE_PAYLOAD_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "sender": {
+            "type": "string",
+            "description": "Alias of the sending agent.",
+        },
+        "recipient": {
+            "type": "string",
+            "description": "Alias of the target agent.",
+        },
+        "message_id": {"type": "string", "description": "Unique message ID."},
+        "payload": {
+            "type": "object",
+            "description": "Application-defined message content.",
+        },
+    },
+    "required": ["sender", "recipient", "message_id", "payload"],
+}
+
+
+def _declare_event_v2(
+    pattern: str,
+    *,
+    description: str,
+    kind: str,
+    retained: bool = False,
+    schema: Optional[dict[str, Any]] = None,
+    suggested_handle: Optional[str] = None,
+) -> None:
+    """Declare an event topic using MCP Events Spec v2 fields.
+
+    Forwards ``kind``, ``schema``, and ``suggestedHandle`` when the installed
+    fastmcp supports them. Older fastmcp versions transparently skip the new
+    fields so spellbook can land ahead of a fastmcp release.
+    """
+    kwargs: dict[str, Any] = {"description": description, "retained": retained}
+    if schema is not None:
+        kwargs["schema"] = schema
+    if _DECLARE_SUPPORTS_KIND:
+        kwargs["kind"] = kind
+    if suggested_handle is not None and _DECLARE_SUPPORTS_SUGGESTED_HANDLE:
+        kwargs["suggestedHandle"] = suggested_handle
+    mcp.declare_event(pattern, **kwargs)
+
+
+_declare_event_v2(
+    "agents/{agent_id}/messages",
     description=(
-        "Cross-session direct messages. The {session_id} segment is magic: "
-        "only the fastmcp session whose UUID matches may subscribe, so a "
-        "client must substitute its own client.session_id when subscribing."
+        "Cross-agent direct messages and replies. The {agent_id} segment "
+        "is the application-level identity (e.g. the opencode session id) "
+        "that the client substitutes when subscribing. Content-kind, high "
+        "priority by default."
     ),
+    kind="content",
+    schema=_MESSAGE_PAYLOAD_SCHEMA,
+    suggested_handle="inject",
 )
-mcp.declare_event(
-    "spellbook/sessions/{session_id}/build/status",
+
+_declare_event_v2(
+    "agents/{agent_id}/build/status",
     description=(
-        "Build status for this session's work. The {session_id} segment is "
-        "magic: only the fastmcp session whose UUID matches may subscribe, "
-        "so a client must substitute its own client.session_id when "
-        "subscribing."
+        "Build status for work owned by this agent. Retained so new "
+        "subscribers receive the last known value on subscribe."
     ),
+    kind="content",
     retained=True,
+    suggested_handle="inject",
 )
+
+
+async def _emit_event_v2(
+    *,
+    topic: str,
+    payload: Any,
+    source: str,
+    priority: str,
+    target_session_ids: Optional[list[str]] = None,
+) -> None:
+    """Emit an event using MCP Events Spec v2 wire fields.
+
+    - ``priority`` is forwarded as a top-level kwarg when supported.
+    - Legacy fastmcp versions that still require ``requested_effects`` get
+      a best-effort translation so spellbook can land ahead of a fastmcp
+      release without breaking event delivery.
+    - ``correlation_id`` is NOT a wire field under v2; applications that
+      need correlation embed it in the payload.
+    """
+    kwargs: dict[str, Any] = {
+        "topic": topic,
+        "payload": payload,
+        "source": source,
+    }
+    if target_session_ids is not None:
+        kwargs["target_session_ids"] = target_session_ids
+
+    if _EMIT_SUPPORTS_PRIORITY:
+        kwargs["priority"] = priority
+    elif _EMIT_SUPPORTS_REQUESTED_EFFECTS:
+        # Transitional compatibility with pre-v2 fastmcp: synthesize a
+        # requested_effects entry so events continue to flow with the
+        # correct priority until fastmcp exposes a top-level field.
+        try:
+            from fastmcp.server.events import EventEffect  # type: ignore
+
+            kwargs["requested_effects"] = [
+                EventEffect(type="inject_context", priority=priority),
+            ]
+        except ImportError:
+            logger.debug("fastmcp missing both priority and EventEffect; emitting without priority")
+
+    await mcp.emit_event(**kwargs)
+
 
 _ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 _PAYLOAD_MAX_BYTES = 65536  # 64KB
@@ -102,11 +220,12 @@ def _parse_payload(payload_str: str) -> tuple[Optional[dict], Optional[dict]]:
 
 
 def _extract_fastmcp_session_id(ctx: Optional[Context]) -> Optional[str]:
-    """Return the caller's fastmcp event session UUID, or None.
+    """Return the caller's MCP transport session UUID, or None.
 
-    The event session id lives on the low-level ServerSession as
+    The transport session id lives on the low-level ServerSession as
     ``_fastmcp_event_session_id``. This is distinct from ``ctx.session_id``
-    (the StreamableHTTP state prefix used for Redis-style state).
+    (the StreamableHTTP state prefix) and from ``agent_id`` (the
+    application-level identity supplied by the client).
     """
     if ctx is None:
         return None
@@ -129,6 +248,7 @@ def _extract_fastmcp_session_id(ctx: Optional[Context]) -> Optional[str]:
 @inject_recovery_context
 async def messaging_register(
     alias: str,
+    agent_id: str = "",
     enable_sse: bool = True,
     force: bool = False,
     session_id: str = "",
@@ -142,25 +262,35 @@ async def messaging_register(
     Args:
         alias: Unique name for this session (e.g., "orchestrator-main", "worker-auth").
               Letters, numbers, hyphens, underscores only. Max 64 chars.
+        agent_id: Application-level agent identifier (MCP Events Spec v2).
+                 Typically the opencode session ID. Passed explicitly by the
+                 client; used to parameterize event topics like
+                 ``agents/{agent_id}/messages``. If omitted, the session
+                 registers without an agent_id and will not receive events
+                 over the topic-routed path (messaging still works via the
+                 hook-based inbox).
         enable_sse: If True (default), spawn a MessageBridge that consumes the
                    SSE stream and writes to the session's inbox directory for
                    hook-based delivery.
         force: If True, replace existing registration for this alias. Old
               queue is discarded (disconnect sentinel sent first for SSE
               cleanup) and a warning is logged.
-        session_id: Caller's session identifier. Used to write a marker file
-                   so the hook only drains inboxes belonging to this session.
+        session_id: Caller's local session marker (Claude Code session id).
+                   Used to write a marker file so the hook only drains
+                   inboxes belonging to this session. Distinct from
+                   ``agent_id`` and from the MCP transport UUID.
 
     Returns:
-        {"ok": true, "alias": str, "registered_at": str} on success
+        {"ok": true, "alias": str, "registered_at": str,
+         "agent_id": str|None, "fastmcp_session_id": str|None} on success
         {"ok": false, "error": str} if alias taken (and force=False) or invalid
     """
     err = _validate_alias(alias)
     if err:
         return err
-    # Capture the caller's fastmcp event session UUID so cross-session event
-    # topic substitution (spellbook/sessions/{session_id}/messages) can route
-    # by alias. See the topic docstring at the top of this module.
+    # Capture the caller's MCP transport session UUID so emit_event's
+    # target_session_ids filter can restrict delivery to the right
+    # connection. This is distinct from the application-level agent_id.
     fastmcp_session_id = _extract_fastmcp_session_id(ctx)
     try:
         reg = await message_bus.register(
@@ -168,12 +298,14 @@ async def messaging_register(
             enable_sse=enable_sse,
             force=force,
             session_id=session_id,
+            agent_id=agent_id or None,
             fastmcp_session_id=fastmcp_session_id,
         )
         return {
             "ok": True,
             "alias": reg.alias,
             "registered_at": reg.registered_at,
+            "agent_id": reg.agent_id,
             "fastmcp_session_id": reg.fastmcp_session_id,
         }
     except ValueError as e:
@@ -219,7 +351,8 @@ async def messaging_send(
         recipient: Target session alias
         payload: JSON string with message content (will be parsed)
         correlation_id: Optional ID to track request/reply pairs. Recipient
-                       can use messaging_reply with this ID.
+                       can use messaging_reply with this ID. Embedded in
+                       the event payload; NOT a wire-level field.
         ttl: Seconds before correlation expires (default 60, max 300)
 
     Returns:
@@ -246,38 +379,38 @@ async def messaging_send(
     )
 
     # Emit MCP event alongside queue-based delivery for events-capable clients.
-    # The {session_id} segment is magic: fastmcp authorizes subscriptions by
-    # matching the caller's _fastmcp_event_session_id against the substituted
-    # UUID. The recipient alias is a human-readable name that cannot match
-    # that authorization check, so we resolve it to the recipient's UUID
-    # first. If the recipient never registered via MCP (e.g., legacy direct
-    # bus caller), the UUID mapping is absent and we skip event emission;
-    # queue-based delivery above still happened.
+    # Under MCP Events Spec v2, topics are parameterized by the recipient's
+    # application-level ``agent_id``. If the recipient registered without an
+    # agent_id, skip event emission; queue-based delivery above still
+    # happened. We also pass the recipient's MCP transport UUID as the
+    # ``target_session_ids`` defense-in-depth filter to avoid cross-session
+    # leakage inside clients that multiplex several agents per transport.
     if result.get("ok"):
-        recipient_uuid = message_bus.resolve_alias_to_session_id(recipient)
-        if recipient_uuid:
+        recipient_agent_id = message_bus.resolve_alias_to_agent_id(recipient)
+        if recipient_agent_id:
+            recipient_transport_sid = message_bus.resolve_alias_to_session_id(recipient)
             try:
-                await mcp.emit_event(
-                    topic=f"spellbook/sessions/{recipient_uuid}/messages",
+                await _emit_event_v2(
+                    topic=f"agents/{recipient_agent_id}/messages",
                     payload={
                         "message_id": result.get("message_id"),
                         "sender": sender,
                         "recipient": recipient,
                         "payload": parsed,
+                        # correlation_id lives in the payload, not the wire
                         "correlation_id": correlation_id,
                     },
                     source="spellbook/messaging",
-                    correlation_id=correlation_id,
-                    requested_effects=[
-                        EventEffect(type="inject_context", priority="high"),
-                    ],
-                    target_session_ids=[recipient_uuid],
+                    priority="high",
+                    target_session_ids=(
+                        [recipient_transport_sid] if recipient_transport_sid else None
+                    ),
                 )
             except Exception:
                 logger.warning("Failed to emit event for message delivery", exc_info=True)
         else:
             logger.debug(
-                "recipient %s has no session_id; skipping event emission (queue-only)",
+                "recipient %s has no agent_id; skipping event emission (queue-only)",
                 recipient,
             )
 
@@ -313,7 +446,7 @@ async def messaging_broadcast(
         exclude_sender=not include_self,
     )
 
-    # Emit events for each recipient with a known session UUID.
+    # Emit events for each recipient with a known agent_id.
     # Use delivered_aliases from broadcast() result (NOT a separate
     # list_sessions() call) to avoid TOCTOU race conditions.
     # Gather all coroutines in parallel so N recipients cost one round-trip,
@@ -321,12 +454,13 @@ async def messaging_broadcast(
     # cancelling delivery to other recipients.
     if result.get("ok"):
         async def _emit_one(alias: str) -> None:
-            uuid = message_bus.resolve_alias_to_session_id(alias)
-            if not uuid:
+            agent_id = message_bus.resolve_alias_to_agent_id(alias)
+            if not agent_id:
                 return
+            transport_sid = message_bus.resolve_alias_to_session_id(alias)
             try:
-                await mcp.emit_event(
-                    topic=f"spellbook/sessions/{uuid}/messages",
+                await _emit_event_v2(
+                    topic=f"agents/{agent_id}/messages",
                     payload={
                         "sender": sender,
                         "recipient": "*",
@@ -334,10 +468,8 @@ async def messaging_broadcast(
                         "broadcast": True,
                     },
                     source="spellbook/messaging",
-                    requested_effects=[
-                        EventEffect(type="inject_context", priority="normal"),
-                    ],
-                    target_session_ids=[uuid],
+                    priority="normal",
+                    target_session_ids=[transport_sid] if transport_sid else None,
                 )
             except Exception:
                 logger.warning(
@@ -384,29 +516,34 @@ async def messaging_reply(
     )
 
     # Emit event to the reply recipient (the original sender of the
-    # correlated message). Guard on result having recipient field.
+    # correlated message).
     if result.get("ok"):
         recipient_alias = result.get("recipient")
         if recipient_alias:
-            recipient_uuid = message_bus.resolve_alias_to_session_id(recipient_alias)
-            if recipient_uuid:
+            recipient_agent_id = message_bus.resolve_alias_to_agent_id(recipient_alias)
+            if recipient_agent_id:
+                recipient_transport_sid = message_bus.resolve_alias_to_session_id(
+                    recipient_alias
+                )
                 try:
-                    await mcp.emit_event(
-                        topic=f"spellbook/sessions/{recipient_uuid}/messages",
+                    await _emit_event_v2(
+                        topic=f"agents/{recipient_agent_id}/messages",
                         payload={
                             "message_id": result.get("message_id"),
                             "sender": sender,
                             "recipient": recipient_alias,
                             "payload": parsed,
+                            # correlation_id lives in the payload under v2
                             "correlation_id": correlation_id,
                             "is_reply": True,
                         },
                         source="spellbook/messaging",
-                        correlation_id=correlation_id,
-                        requested_effects=[
-                            EventEffect(type="inject_context", priority="high"),
-                        ],
-                        target_session_ids=[recipient_uuid],
+                        priority="high",
+                        target_session_ids=(
+                            [recipient_transport_sid]
+                            if recipient_transport_sid
+                            else None
+                        ),
                     )
                 except Exception:
                     logger.warning(
@@ -446,7 +583,8 @@ async def messaging_list_sessions() -> dict:
     """List all registered messaging sessions.
 
     Returns:
-        {"ok": true, "sessions": [{"alias": str, "registered_at": str}, ...]}
+        {"ok": true, "sessions": [{"alias": str, "registered_at": str,
+         "agent_id": str|None, "fastmcp_session_id": str|None}, ...]}
     """
     sessions = await message_bus.list_sessions()
     return {"ok": True, "sessions": sessions}

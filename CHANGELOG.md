@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **MCP Events Spec v2 alignment**: Event topics and wire fields updated to match the v2 spec.
+  - Topics now use the `agents/{agent_id}/` prefix (e.g. `agents/{agent_id}/messages`, `agents/{agent_id}/build/status`). `{agent_id}` is the application-level identity the client supplies at registration time (typically the opencode session id), not the MCP transport UUID.
+  - `messaging_register` accepts an explicit `agent_id` parameter. The response includes both `agent_id` (v2 routing identity) and `fastmcp_session_id` (MCP transport UUID retained for `target_session_ids` defense-in-depth filtering).
+  - Topic declarations carry `kind` (`content`), a JSON Schema for the message payload, and a `suggestedHandle` hint (`inject`) where the installed fastmcp supports them.
+  - Event emission uses the top-level `priority` field (`high` for direct messages and replies, `normal` for broadcasts) instead of the legacy `requested_effects`/`EventEffect` shape. `correlation_id` is no longer a wire field; it travels in the event payload.
+  - Transitional compatibility: the messaging tool module feature-detects the installed fastmcp's `emit_event`/`declare_event` signatures and falls back to the legacy `requested_effects` shape when needed so spellbook can land ahead of a fastmcp release.
+- **Stateful HTTP test assertions**: Tests updated to expect `stateless_http=False` now that the MCP daemon runs stateful HTTP for event delivery (see commit 685c66d8).
+- **Opencode security plugin tests**: `test_shells_out_to_check_module` and `test_uses_python_module_invocation` updated to match the daemon-venv Python invocation introduced in commit c44777f7.
+
 ## [0.51.0] - 2026-04-09
 
 ### Added

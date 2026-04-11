@@ -59,10 +59,18 @@ class SessionRegistration:
     queue: asyncio.Queue
     registered_at: str
     session_id: str = ""
-    # fastmcp event session UUID (from ServerSession._fastmcp_event_session_id).
-    # Used to emit MCP events to the correct {session_id} topic. Distinct from
-    # `session_id` above, which is the Claude Code session marker used by the
-    # hook-based inbox drainer.
+    # Application-level agent identifier (MCP Events Spec v2). Typically
+    # the opencode session ID supplied explicitly by the client at
+    # registration time. This is the stable identity used to parameterize
+    # topics like ``agents/{agent_id}/messages``. Distinct from the MCP
+    # transport UUID (``fastmcp_session_id``) below, which is ephemeral
+    # and connection-scoped.
+    agent_id: Optional[str] = None
+    # MCP transport session UUID (ServerSession._fastmcp_event_session_id).
+    # Used for defense-in-depth routing via ``target_session_ids`` on
+    # ``emit_event`` calls. Distinct from ``session_id`` (the Claude Code
+    # marker used by the hook-based inbox drainer) and from ``agent_id``
+    # (the application-level identity).
     fastmcp_session_id: Optional[str] = None
 
 
@@ -92,9 +100,15 @@ class MessageBus:
         self._sessions: dict[str, SessionRegistration] = {}
         self._pending_correlations: dict[str, PendingCorrelation] = {}
         self._bridges: dict[str, MessageBridge] = {}
-        # alias -> fastmcp event session UUID. Populated when register() is
-        # called with fastmcp_session_id. Used to resolve event topic
-        # substitution for cross-session event delivery.
+        # alias <-> application-level agent_id (MCP Events Spec v2). The
+        # agent_id parameterizes event topics like
+        # ``agents/{agent_id}/messages``. Populated when register() is
+        # called with an explicit ``agent_id``.
+        self._alias_to_agent_id: dict[str, str] = {}
+        self._agent_id_to_alias: dict[str, str] = {}
+        # alias <-> MCP transport session UUID. Used by emit_event's
+        # ``target_session_ids`` defense-in-depth filter. Populated
+        # automatically from the tool Context when available.
         self._alias_to_fastmcp_session: dict[str, str] = {}
         self._fastmcp_session_to_alias: dict[str, str] = {}
         # Lock is created eagerly. This is safe because all async methods run
@@ -115,6 +129,7 @@ class MessageBus:
         enable_sse: bool = True,
         force: bool = False,
         session_id: str = "",
+        agent_id: Optional[str] = None,
         fastmcp_session_id: Optional[str] = None,
     ) -> SessionRegistration:
         """Register a session with the given alias.
@@ -127,10 +142,14 @@ class MessageBus:
                 registration, and logs a warning.
             session_id: Caller's session identifier. Written to a marker file
                 so the hook only drains inboxes belonging to its own session.
-            fastmcp_session_id: fastmcp event session UUID
-                (ServerSession._fastmcp_event_session_id). When provided,
-                stored in an alias<->UUID map so cross-session event topics
-                like spellbook/sessions/{session_id}/messages can be resolved.
+            agent_id: Application-level agent identifier (MCP Events Spec v2).
+                Typically the opencode session ID. When provided, stored in
+                an alias<->agent_id map so event topics like
+                ``agents/{agent_id}/messages`` can be resolved.
+            fastmcp_session_id: MCP transport session UUID
+                (ServerSession._fastmcp_event_session_id) captured from the
+                tool Context. Used by emit_event's ``target_session_ids``
+                defense-in-depth filter.
 
         Raises ValueError if alias is already taken and force=False.
         """
@@ -140,6 +159,7 @@ class MessageBus:
                 enable_sse,
                 session_id,
                 force=force,
+                agent_id=agent_id,
                 fastmcp_session_id=fastmcp_session_id,
             )
 
@@ -149,6 +169,7 @@ class MessageBus:
         enable_sse: bool,
         session_id: str,
         force: bool = False,
+        agent_id: Optional[str] = None,
         fastmcp_session_id: Optional[str] = None,
     ) -> SessionRegistration:
         """Register while caller holds self._lock. Not async-safe on its own.
@@ -158,6 +179,8 @@ class MessageBus:
             enable_sse: If True, spawn a MessageBridge for real-time delivery.
             session_id: Caller's session identifier.
             force: If True, replace existing registration.
+            agent_id: Application-level agent identifier.
+            fastmcp_session_id: MCP transport session UUID.
 
         Returns:
             SessionRegistration for the newly registered session.
@@ -179,8 +202,12 @@ class MessageBus:
             old_bridge = self._bridges.pop(alias, None)
             if old_bridge is not None:
                 old_bridge.stop()
-            # Clear any stale alias<->fastmcp_session_id mapping. We rebuild
-            # below if the new registration supplies one.
+            # Clear stale alias<->agent_id and alias<->fastmcp_session_id
+            # mappings. We rebuild below if the new registration supplies
+            # them.
+            old_agent_id = self._alias_to_agent_id.pop(alias, None)
+            if old_agent_id is not None:
+                self._agent_id_to_alias.pop(old_agent_id, None)
             old_fastmcp_sid = self._alias_to_fastmcp_session.pop(alias, None)
             if old_fastmcp_sid is not None:
                 self._fastmcp_session_to_alias.pop(old_fastmcp_sid, None)
@@ -190,12 +217,20 @@ class MessageBus:
             queue=asyncio.Queue(maxsize=self._queue_size),
             registered_at=datetime.now(timezone.utc).isoformat(),
             session_id=session_id,
+            agent_id=agent_id,
             fastmcp_session_id=fastmcp_session_id,
         )
         self._sessions[alias] = reg
 
-        # Record alias<->uuid mapping so messaging_send can resolve event
-        # topic substitution.
+        # Record alias<->agent_id mapping so messaging_send can resolve
+        # the recipient's topic. agent_id is the primary routing identity
+        # under MCP Events Spec v2.
+        if agent_id:
+            self._alias_to_agent_id[alias] = agent_id
+            self._agent_id_to_alias[agent_id] = alias
+
+        # Record alias<->MCP transport UUID for defense-in-depth
+        # target_session_ids filtering on emit_event calls.
         if fastmcp_session_id:
             self._alias_to_fastmcp_session[alias] = fastmcp_session_id
             self._fastmcp_session_to_alias[fastmcp_session_id] = alias
@@ -334,6 +369,10 @@ class MessageBus:
                 bridge.stop()
             # Remove session marker
             self._remove_session_marker(alias)
+            # Clear alias<->agent_id mapping
+            old_agent_id = self._alias_to_agent_id.pop(alias, None)
+            if old_agent_id is not None:
+                self._agent_id_to_alias.pop(old_agent_id, None)
             # Clear alias<->fastmcp_session_id mapping
             old_fastmcp_sid = self._alias_to_fastmcp_session.pop(alias, None)
             if old_fastmcp_sid is not None:
@@ -349,29 +388,52 @@ class MessageBus:
             return removed is not None
 
     async def list_sessions(self) -> list[dict]:
-        """Return list of registered sessions (alias + registered_at + fastmcp_session_id)."""
+        """Return list of registered sessions.
+
+        Each entry includes ``alias``, ``registered_at``, ``agent_id``
+        (MCP Events Spec v2 application-level identity), and
+        ``fastmcp_session_id`` (MCP transport UUID, used for
+        defense-in-depth routing).
+        """
         async with self._lock:
             return [
                 {
                     "alias": reg.alias,
                     "registered_at": reg.registered_at,
+                    "agent_id": reg.agent_id,
                     "fastmcp_session_id": reg.fastmcp_session_id,
                 }
                 for reg in self._sessions.values()
             ]
 
-    def resolve_alias_to_session_id(self, alias: str) -> Optional[str]:
-        """Return the fastmcp event session UUID for an alias, or None.
+    def resolve_alias_to_agent_id(self, alias: str) -> Optional[str]:
+        """Return the application-level agent_id for an alias, or None.
 
-        Thread-safe snapshot read against the dict. No lock required: the
-        only writers are register/unregister, and a stale read is acceptable
-        for event emission (fastmcp's own target_session_ids filter provides
-        defense in depth).
+        Under MCP Events Spec v2, ``agent_id`` is the routing identity
+        used to parameterize event topics such as
+        ``agents/{agent_id}/messages``.
+
+        Thread-safe snapshot read: the only writers are register/unregister
+        and a stale read is acceptable because the emit_event
+        ``target_session_ids`` filter provides defense in depth.
+        """
+        return self._alias_to_agent_id.get(alias)
+
+    def resolve_agent_id_to_alias(self, agent_id: str) -> Optional[str]:
+        """Return the alias that claimed this agent_id, or None."""
+        return self._agent_id_to_alias.get(agent_id)
+
+    def resolve_alias_to_session_id(self, alias: str) -> Optional[str]:
+        """Return the MCP transport session UUID for an alias, or None.
+
+        Used by emit_event's ``target_session_ids`` defense-in-depth
+        filter. Distinct from ``resolve_alias_to_agent_id`` which returns
+        the application-level routing identity.
         """
         return self._alias_to_fastmcp_session.get(alias)
 
     def resolve_session_id_to_alias(self, session_id: str) -> Optional[str]:
-        """Return the alias that claimed this fastmcp event session UUID, or None."""
+        """Return the alias that claimed this MCP transport UUID, or None."""
         return self._fastmcp_session_to_alias.get(session_id)
 
     # --- Sending ---

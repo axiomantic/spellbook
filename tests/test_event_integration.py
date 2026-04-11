@@ -3,7 +3,13 @@
 Verifies that:
 - Event topics are declared on the spellbook MCP server
 - messaging_send emits an EventEmitNotification alongside queue delivery
-- The event is delivered only to the subscribed recipient session, not the sender
+- The event is delivered only to the subscribed recipient agent, not the sender
+
+Under MCP Events Spec v2, topics are parameterized by the application-level
+``agent_id`` (e.g. the opencode session id) rather than the MCP transport UUID.
+These tests use the transport UUID as the agent_id value for simplicity so that
+the same identifier feeds both the topic slot and the ``target_session_ids``
+defense-in-depth filter.
 
 Note: These tests intentionally access private attributes (e.g., _event_topics,
 _active_sessions, _subscription_registry, _retained_store, _fastmcp_event_session_id,
@@ -18,6 +24,7 @@ monkeypatch is used for the two places a module-level attribute needs to be swap
 (per AGENTS.md, monkeypatch is the approved tool for environment/attribute patching).
 """
 
+import inspect
 import json
 from typing import Any
 
@@ -25,7 +32,45 @@ import pytest
 from mcp.types import EventParams, TextContent
 
 from fastmcp import Client, FastMCP
-from fastmcp.server.events import EventEffect, EventEmitNotification
+from fastmcp.server.events import EventEmitNotification
+
+
+# ---------------------------------------------------------------------------
+# FastMCP API compatibility shim (mirrors the one in spellbook.mcp.tools.messaging)
+# ---------------------------------------------------------------------------
+
+_EMIT_PARAMS = set(inspect.signature(FastMCP.emit_event).parameters.keys())
+_EMIT_SUPPORTS_PRIORITY = "priority" in _EMIT_PARAMS
+_EMIT_SUPPORTS_REQUESTED_EFFECTS = "requested_effects" in _EMIT_PARAMS
+
+
+async def _emit_v2(
+    server: FastMCP,
+    *,
+    topic: str,
+    payload: Any,
+    source: str | None = None,
+    priority: str = "high",
+    target_session_ids: list[str] | None = None,
+    retained: bool | None = None,
+) -> None:
+    """Emit an event using v2 wire fields with transitional fastmcp compat."""
+    kwargs: dict[str, Any] = {"topic": topic, "payload": payload}
+    if source is not None:
+        kwargs["source"] = source
+    if target_session_ids is not None:
+        kwargs["target_session_ids"] = target_session_ids
+    if retained is not None:
+        kwargs["retained"] = retained
+    if _EMIT_SUPPORTS_PRIORITY:
+        kwargs["priority"] = priority
+    elif _EMIT_SUPPORTS_REQUESTED_EFFECTS:
+        from fastmcp.server.events import EventEffect  # type: ignore
+
+        kwargs["requested_effects"] = [
+            EventEffect(type="inject_context", priority=priority),
+        ]
+    await server.emit_event(**kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -36,19 +81,35 @@ from fastmcp.server.events import EventEffect, EventEmitNotification
 def _make_server() -> FastMCP:
     """Create a fresh FastMCP instance with messaging event topics declared.
 
-    We create a standalone server rather than importing the spellbook global
-    singleton to avoid side effects from other tool registrations and startup
-    dependencies (DB init, watchers, etc).
+    Topic declarations use the MCP Events Spec v2 pattern
+    ``agents/{agent_id}/...``. We create a standalone server rather than
+    importing the spellbook global singleton to avoid side effects from
+    other tool registrations and startup dependencies (DB init, watchers,
+    etc).
+
+    NOTE: the literal placeholder name ``{session_id}`` is still magic in
+    the currently-installed fastmcp (it enforces subscriber identity match
+    against the MCP transport UUID). Until fastmcp renames this to
+    ``{agent_id}``, this helper also declares a legacy parallel topic
+    under the old pattern so the authorization tests can exercise the
+    magic. Spellbook itself now uses ``agents/{agent_id}/...`` everywhere.
     """
     server = FastMCP("spellbook-test")
     server.declare_event(
-        "spellbook/sessions/{session_id}/messages",
-        description="Cross-session messages",
+        "agents/{agent_id}/messages",
+        description="Cross-agent messages",
     )
     server.declare_event(
-        "spellbook/sessions/{session_id}/build/status",
-        description="Build status for this session's work",
+        "agents/{agent_id}/build/status",
+        description="Build status for this agent's work",
         retained=True,
+    )
+    # Legacy parallel declaration for the fastmcp {session_id} magic-auth
+    # tests. Remove once fastmcp renames the magic placeholder to
+    # {agent_id}.
+    server.declare_event(
+        "spellbook/sessions/{session_id}/messages",
+        description="Cross-session messages (legacy magic-auth slot)",
     )
     return server
 
@@ -63,11 +124,11 @@ class TestEventTopicDeclaration:
 
     def test_message_topic_declared(self) -> None:
         server = _make_server()
-        assert "spellbook/sessions/{session_id}/messages" in server._event_topics
+        assert "agents/{agent_id}/messages" in server._event_topics
 
     def test_build_status_topic_declared(self) -> None:
         server = _make_server()
-        desc = server._event_topics["spellbook/sessions/{session_id}/build/status"]
+        desc = server._event_topics["agents/{agent_id}/build/status"]
         assert desc.retained is True
 
     async def test_events_capability_advertised(self) -> None:
@@ -93,8 +154,8 @@ class TestEventTopicDeclaration:
                 t.get("pattern") if isinstance(t, dict) else getattr(t, "pattern", None)
                 for t in topics
             ]
-            assert "spellbook/sessions/{session_id}/messages" in patterns
-            assert "spellbook/sessions/{session_id}/build/status" in patterns
+            assert "agents/{agent_id}/messages" in patterns
+            assert "agents/{agent_id}/build/status" in patterns
             # Verify descriptions are present
             for t in topics:
                 desc = t.get("description") if isinstance(t, dict) else getattr(t, "description", None)
@@ -105,15 +166,14 @@ class TestEventEmissionOnSend:
     """Verify that messaging_send emits events to subscribed sessions."""
 
     async def test_recipient_receives_event_on_send(self) -> None:
-        """Session B subscribes to its messages topic. Session A sends a
-        message via emit_event. Session B's subscription receives the event."""
+        """Agent B subscribes to its messages topic. Agent A sends a
+        message via emit_event. Agent B's subscription receives the event."""
         server = _make_server()
 
         received_notifications: list[Any] = []
 
         async with Client(server) as client_a:
             session_a = list(server._active_sessions.values())[0]
-            session_a_id = getattr(session_a, "_fastmcp_event_session_id")
 
             async with Client(server) as client_b:
                 # Find session B (the one that is not session A)
@@ -122,47 +182,45 @@ class TestEventEmissionOnSend:
                 ][0]
                 session_b_id = getattr(session_b, "_fastmcp_event_session_id")
 
-                # Subscribe session B to its messages topic
+                # Subscribe session B to agent B's messages topic. For this
+                # test the agent_id value is chosen arbitrarily ("agent-b");
+                # in production it would be the opencode session id.
                 await server._subscription_registry.add(
-                    session_b_id, "spellbook/sessions/session-b/messages"
+                    session_b_id, "agents/agent-b/messages"
                 )
 
                 # Capture notifications sent to session B
-                original_send = session_b.send_notification
-
                 async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                     received_notifications.append(notification)
 
                 session_b.send_notification = capturing_send
 
-                # Emit an event targeting session B (simulating what
+                # Emit an event targeting agent B (simulating what
                 # messaging_send does after a successful queue delivery)
-                await server.emit_event(
-                    topic="spellbook/sessions/session-b/messages",
+                await _emit_v2(
+                    server,
+                    topic="agents/agent-b/messages",
                     payload={
                         "message_id": "test-msg-001",
-                        "sender": "session-a",
-                        "recipient": "session-b",
+                        "sender": "agent-a",
+                        "recipient": "agent-b",
                         "payload": {"greeting": "hello from A"},
-                        "correlation_id": None,
                     },
                     source="spellbook/messaging",
-                    requested_effects=[
-                        EventEffect(type="inject_context", priority="high"),
-                    ],
+                    priority="high",
                 )
 
                 # Verify session B received the event
                 assert len(received_notifications) == 1
                 notif = received_notifications[0]
                 assert isinstance(notif, EventEmitNotification)
-                assert notif.params.topic == "spellbook/sessions/session-b/messages"
-                assert notif.params.payload["sender"] == "session-a"
+                assert notif.params.topic == "agents/agent-b/messages"
+                assert notif.params.payload["sender"] == "agent-a"
                 assert notif.params.payload["payload"] == {"greeting": "hello from A"}
                 assert notif.params.source == "spellbook/messaging"
 
     async def test_sender_does_not_receive_event(self) -> None:
-        """Session A sends a message to B. A should NOT receive the event
+        """Agent A sends a message to B. A should NOT receive the event
         because A is not subscribed to B's topic."""
         server = _make_server()
 
@@ -172,14 +230,12 @@ class TestEventEmissionOnSend:
             session_a = list(server._active_sessions.values())[0]
             session_a_id = getattr(session_a, "_fastmcp_event_session_id")
 
-            # Subscribe session A to its OWN messages topic (not B's)
+            # Subscribe session A to agent A's messages topic (not B's)
             await server._subscription_registry.add(
-                session_a_id, "spellbook/sessions/session-a/messages"
+                session_a_id, "agents/agent-a/messages"
             )
 
             # Capture notifications sent to session A
-            original_send = session_a.send_notification
-
             async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                 sender_notifications.append(notification)
 
@@ -191,15 +247,16 @@ class TestEventEmissionOnSend:
                 ][0]
                 session_b_id = getattr(session_b, "_fastmcp_event_session_id")
 
-                # Subscribe session B to its own messages topic
+                # Subscribe session B to agent B's messages topic
                 await server._subscription_registry.add(
-                    session_b_id, "spellbook/sessions/session-b/messages"
+                    session_b_id, "agents/agent-b/messages"
                 )
 
-                # Emit event targeting session B
-                await server.emit_event(
-                    topic="spellbook/sessions/session-b/messages",
-                    payload={"sender": "session-a", "payload": {"hello": "B"}},
+                # Emit event targeting agent B
+                await _emit_v2(
+                    server,
+                    topic="agents/agent-b/messages",
+                    payload={"sender": "agent-a", "payload": {"hello": "B"}},
                     source="spellbook/messaging",
                 )
 
@@ -208,7 +265,7 @@ class TestEventEmissionOnSend:
 
     async def test_wildcard_subscription_receives_all_sessions(self) -> None:
         """A session subscribed with a wildcard pattern receives events for
-        any session_id."""
+        any agent_id."""
         server = _make_server()
 
         received: list[Any] = []
@@ -217,33 +274,33 @@ class TestEventEmissionOnSend:
             session = list(server._active_sessions.values())[0]
             session_id = getattr(session, "_fastmcp_event_session_id")
 
-            # Subscribe with wildcard: all sessions' messages
+            # Subscribe with wildcard: all agents' messages
             await server._subscription_registry.add(
-                session_id, "spellbook/sessions/+/messages"
+                session_id, "agents/+/messages"
             )
-
-            original_send = session.send_notification
 
             async def capturing_send(notification: Any, related_request_id: Any = None) -> None:
                 received.append(notification)
 
             session.send_notification = capturing_send
 
-            # Emit to two different session topics
-            await server.emit_event(
-                "spellbook/sessions/alpha/messages",
+            # Emit to two different agent topics
+            await _emit_v2(
+                server,
+                topic="agents/alpha/messages",
                 payload={"from": "alpha"},
             )
-            await server.emit_event(
-                "spellbook/sessions/beta/messages",
+            await _emit_v2(
+                server,
+                topic="agents/beta/messages",
                 payload={"from": "beta"},
             )
 
             assert len(received) == 2
             topics = {n.params.topic for n in received}
             assert topics == {
-                "spellbook/sessions/alpha/messages",
-                "spellbook/sessions/beta/messages",
+                "agents/alpha/messages",
+                "agents/beta/messages",
             }
 
 
@@ -253,51 +310,54 @@ class TestRetainedEvents:
     async def test_retained_event_stored(self) -> None:
         """Emitting to a retained topic stores the value.
 
-        Note: parameterized topic patterns (with {session_id}) require
+        Note: parameterized topic patterns (with {agent_id}) require
         explicit retained=True on emit since the exact lookup for the
         descriptor won't match the concrete topic string.
         """
         server = _make_server()
 
-        await server.emit_event(
-            "spellbook/sessions/worker-1/build/status",
+        await _emit_v2(
+            server,
+            topic="agents/worker-1/build/status",
             payload={"status": "building", "progress": 42},
             retained=True,
         )
 
         stored = await server._retained_store.get(
-            "spellbook/sessions/worker-1/build/status"
+            "agents/worker-1/build/status"
         )
         assert stored is not None
         assert stored.payload["status"] == "building"
         assert stored.payload["progress"] == 42
-        assert stored.topic == "spellbook/sessions/worker-1/build/status"
+        assert stored.topic == "agents/worker-1/build/status"
         assert stored.event_id is not None and len(stored.event_id) > 0
 
     async def test_retained_event_overwritten(self) -> None:
         """New retained events replace previous ones for the same topic."""
         server = _make_server()
 
-        await server.emit_event(
-            "spellbook/sessions/worker-1/build/status",
+        await _emit_v2(
+            server,
+            topic="agents/worker-1/build/status",
             payload={"status": "building"},
             retained=True,
         )
 
         first_stored = await server._retained_store.get(
-            "spellbook/sessions/worker-1/build/status"
+            "agents/worker-1/build/status"
         )
         assert first_stored is not None
         first_event_id = first_stored.event_id
 
-        await server.emit_event(
-            "spellbook/sessions/worker-1/build/status",
+        await _emit_v2(
+            server,
+            topic="agents/worker-1/build/status",
             payload={"status": "complete"},
             retained=True,
         )
 
         stored = await server._retained_store.get(
-            "spellbook/sessions/worker-1/build/status"
+            "agents/worker-1/build/status"
         )
         assert stored is not None
         assert stored.payload["status"] == "complete"
@@ -306,7 +366,7 @@ class TestRetainedEvents:
         # Verify event_id was updated (new event replaces old)
         assert stored.event_id is not None
         assert stored.event_id != first_event_id
-        assert stored.topic == "spellbook/sessions/worker-1/build/status"
+        assert stored.topic == "agents/worker-1/build/status"
 
 
     async def test_retained_event_delivered_on_subscribe(self) -> None:
@@ -315,31 +375,32 @@ class TestRetainedEvents:
         server = _make_server()
 
         # Emit a retained event before any subscriptions exist
-        await server.emit_event(
-            "spellbook/sessions/worker-1/build/status",
+        await _emit_v2(
+            server,
+            topic="agents/worker-1/build/status",
             payload={"status": "passing", "commit": "abc123"},
             retained=True,
         )
 
         # Verify retained store has the event
         stored = await server._retained_store.get(
-            "spellbook/sessions/worker-1/build/status"
+            "agents/worker-1/build/status"
         )
         assert stored is not None
 
         # Simulate what subscribe does: get_matching returns retained events
         # for patterns matching the topic
         matching = await server._retained_store.get_matching(
-            "spellbook/sessions/+/build/status"
+            "agents/+/build/status"
         )
         assert len(matching) >= 1
         matched_topics = [m.topic for m in matching]
-        assert "spellbook/sessions/worker-1/build/status" in matched_topics
+        assert "agents/worker-1/build/status" in matched_topics
 
         # Verify the retained event payload is complete
         match = next(
             m for m in matching
-            if m.topic == "spellbook/sessions/worker-1/build/status"
+            if m.topic == "agents/worker-1/build/status"
         )
         assert match.payload["status"] == "passing"
         assert match.payload["commit"] == "abc123"
@@ -352,27 +413,32 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
     Returns (server, bus) so tests can inspect bus state. The tools registered
     here mirror spellbook.mcp.tools.messaging but avoid importing the global
     mcp singleton (which drags in DB init, watchers, etc).
+
+    Topic declarations use MCP Events Spec v2 (``agents/{agent_id}/...``).
+    The test ``messaging_register`` tool auto-derives an ``agent_id`` from
+    the MCP transport UUID so the same identifier is usable for topic
+    substitution and for ``target_session_ids`` defense-in-depth filtering.
     """
     from spellbook.messaging.bus import MessageBus
 
     server = FastMCP("spellbook-messaging-test")
     bus = MessageBus(queue_size=64)
 
-    # Declare the same event topics the real server does
+    # Declare the same event topics the real server does (v2 style).
     server.declare_event(
-        "spellbook/sessions/{session_id}/messages",
-        description="Cross-session messages",
+        "agents/{agent_id}/messages",
+        description="Cross-agent messages",
     )
     server.declare_event(
-        "spellbook/sessions/{session_id}/build/status",
-        description="Build status for this session's work",
+        "agents/{agent_id}/build/status",
+        description="Build status for this agent's work",
         retained=True,
     )
 
     # A non-scoped public topic for authorization tests
     server.declare_event(
         "spellbook/server/status",
-        description="Server-wide status (public, no session scoping)",
+        description="Server-wide status (public, no scoping)",
     )
 
     # A public broadcast topic for targeted-emit tests
@@ -381,11 +447,18 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
         description="Public announcements channel",
     )
 
+    # Legacy parallel declaration for the fastmcp {session_id} magic-auth
+    # tests. Remove once fastmcp renames the magic placeholder to
+    # {agent_id}.
+    server.declare_event(
+        "spellbook/sessions/{session_id}/messages",
+        description="Cross-session messages (legacy magic-auth slot)",
+    )
+
     from fastmcp import Context
-    from mcp.types import EventEffect
 
     def _extract_session_id(ctx: Context | None) -> str | None:
-        """Extract the fastmcp event session UUID from a tool Context."""
+        """Extract the MCP transport session UUID from a tool Context."""
         if ctx is None:
             return None
         try:
@@ -405,16 +478,28 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
         alias: str,
         ctx: Context | None = None,
     ) -> dict:
-        """Register for messaging with alias. Captures fastmcp session UUID."""
-        fastmcp_sid = _extract_session_id(ctx)
+        """Register for messaging.
+
+        Captures the MCP transport UUID from the Context and reuses it as
+        the application-level ``agent_id``. Real clients pass their own
+        ``agent_id`` (e.g. opencode session id) explicitly; this test
+        helper uses the transport UUID as a convenient stand-in so topic
+        routing and ``target_session_ids`` filtering both work with a
+        single identifier.
+        """
+        transport_sid = _extract_session_id(ctx)
         try:
             reg = await bus.register(
-                alias, enable_sse=False, fastmcp_session_id=fastmcp_sid,
+                alias,
+                enable_sse=False,
+                agent_id=transport_sid,
+                fastmcp_session_id=transport_sid,
             )
             return {
                 "ok": True,
                 "alias": reg.alias,
                 "registered_at": reg.registered_at,
+                "agent_id": reg.agent_id,
                 "fastmcp_session_id": reg.fastmcp_session_id,
             }
         except ValueError as e:
@@ -426,7 +511,7 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
         recipient: str,
         payload: str,
     ) -> dict:
-        """Send a message. Emits MCP event to recipient's session topic."""
+        """Send a message. Emits a v2 MCP event to the recipient's agent topic."""
         import json as _json
 
         try:
@@ -437,10 +522,12 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
         result = await bus.send(sender=sender, recipient=recipient, payload=parsed)
 
         if result.get("ok"):
-            recipient_uuid = bus.resolve_alias_to_session_id(recipient)
-            if recipient_uuid:
-                await server.emit_event(
-                    topic=f"spellbook/sessions/{recipient_uuid}/messages",
+            recipient_agent_id = bus.resolve_alias_to_agent_id(recipient)
+            recipient_transport_sid = bus.resolve_alias_to_session_id(recipient)
+            if recipient_agent_id:
+                await _emit_v2(
+                    server,
+                    topic=f"agents/{recipient_agent_id}/messages",
                     payload={
                         "message_id": result.get("message_id"),
                         "sender": sender,
@@ -448,9 +535,10 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
                         "payload": parsed,
                     },
                     source="spellbook/messaging",
-                    requested_effects=[
-                        EventEffect(type="inject_context", priority="high"),
-                    ],
+                    priority="high",
+                    target_session_ids=(
+                        [recipient_transport_sid] if recipient_transport_sid else None
+                    ),
                 )
         return result
 
@@ -483,32 +571,33 @@ class TestCrossSessionMessaging:
                 bob_session = bob_client.session
 
                 # Register both on the bus via MCP tool calls.
-                # The register response includes the fastmcp_session_id (UUID)
-                # assigned by the server, which is needed for topic subscription.
+                # The test helper sets agent_id = MCP transport UUID so the
+                # response's ``agent_id`` can be reused as both the topic
+                # slot value and the target_session_ids filter input.
                 alice_reg_result = await alice_client.call_tool(
                     "messaging_register", {"alias": "alice"}
                 )
                 alice_reg_data = json.loads(alice_reg_result.content[0].text)
                 assert alice_reg_data["ok"] is True, f"Alice register failed: {alice_reg_data}"
-                alice_sid = alice_reg_data.get("fastmcp_session_id")
-                assert alice_sid is not None, "Server must assign fastmcp_session_id"
+                alice_agent_id = alice_reg_data.get("agent_id")
+                assert alice_agent_id is not None, "Server must populate agent_id"
 
                 bob_reg_result = await bob_client.call_tool(
                     "messaging_register", {"alias": "bob"}
                 )
                 bob_reg_data = json.loads(bob_reg_result.content[0].text)
                 assert bob_reg_data["ok"] is True, f"Bob register failed: {bob_reg_data}"
-                bob_sid = bob_reg_data.get("fastmcp_session_id")
-                assert bob_sid is not None
+                bob_agent_id = bob_reg_data.get("agent_id")
+                assert bob_agent_id is not None
 
-                # Subscribe each to their own session topic
+                # Subscribe each to their own agent topic (v2)
                 alice_sub = await alice_session.subscribe_events(
-                    [f"spellbook/sessions/{alice_sid}/messages"]
+                    [f"agents/{alice_agent_id}/messages"]
                 )
                 assert len(alice_sub.rejected) == 0
 
                 bob_sub = await bob_session.subscribe_events(
-                    [f"spellbook/sessions/{bob_sid}/messages"]
+                    [f"agents/{bob_agent_id}/messages"]
                 )
                 assert len(bob_sub.rejected) == 0
 
@@ -548,7 +637,7 @@ class TestCrossSessionMessaging:
                     f"Bob should receive exactly 1 event, got {len(bob_events)}"
                 )
                 bob_event = bob_events[0]
-                assert bob_event.topic == f"spellbook/sessions/{bob_sid}/messages"
+                assert bob_event.topic == f"agents/{bob_agent_id}/messages"
                 assert bob_event.payload["sender"] == "alice"
                 assert bob_event.payload["payload"] == {"text": "hello"}
                 assert bob_event.source == "spellbook/messaging"
@@ -573,29 +662,29 @@ class TestCrossSessionMessaging:
             async with Client(server) as bob_client:
                 bob_session = bob_client.session
 
-                # Register both; use fastmcp_session_id from response for topic subscription.
+                # Register both; use agent_id from response for topic subscription.
                 alice_reg_result = await alice_client.call_tool(
                     "messaging_register", {"alias": "alice"}
                 )
                 alice_reg_data = json.loads(alice_reg_result.content[0].text)
                 assert alice_reg_data["ok"] is True
-                alice_sid = alice_reg_data.get("fastmcp_session_id")
-                assert alice_sid is not None
+                alice_agent_id = alice_reg_data.get("agent_id")
+                assert alice_agent_id is not None
 
                 bob_reg_result = await bob_client.call_tool(
                     "messaging_register", {"alias": "bob"}
                 )
                 bob_reg_data = json.loads(bob_reg_result.content[0].text)
                 assert bob_reg_data["ok"] is True
-                bob_sid = bob_reg_data.get("fastmcp_session_id")
-                assert bob_sid is not None
+                bob_agent_id = bob_reg_data.get("agent_id")
+                assert bob_agent_id is not None
 
-                # Subscribe each to their OWN topic
+                # Subscribe each to their OWN topic (v2)
                 await alice_session.subscribe_events(
-                    [f"spellbook/sessions/{alice_sid}/messages"]
+                    [f"agents/{alice_agent_id}/messages"]
                 )
                 await bob_session.subscribe_events(
-                    [f"spellbook/sessions/{bob_sid}/messages"]
+                    [f"agents/{bob_agent_id}/messages"]
                 )
 
                 # Set up handlers (must be async for type safety)
@@ -783,7 +872,8 @@ class TestTargetedEmission:
                     session_c.set_event_handler(_c_handler)
 
                     # Emit with target_session_ids restricting to A and B
-                    await server.emit_event(
+                    await _emit_v2(
+                        server,
                         topic="spellbook/broadcasts/announcements",
                         payload={"msg": "targeted broadcast"},
                         source="test",

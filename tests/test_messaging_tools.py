@@ -63,9 +63,16 @@ class TestMessagingRegister:
         )
         # Pop the dynamic timestamp and verify it independently
         registered_at = result.pop("registered_at")
-        # fastmcp_session_id is None when the tool is called outside an MCP
-        # request context (as here via __wrapped__ direct invocation).
-        assert result == {"ok": True, "alias": "tool-test", "fastmcp_session_id": None}
+        # agent_id and fastmcp_session_id are both None when the tool is
+        # called outside an MCP request context (as here via __wrapped__
+        # direct invocation) and the caller did not pass an explicit
+        # agent_id.
+        assert result == {
+            "ok": True,
+            "alias": "tool-test",
+            "agent_id": None,
+            "fastmcp_session_id": None,
+        }
         # Verify registered_at parses as ISO 8601
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
@@ -128,7 +135,12 @@ class TestMessagingRegister:
             alias="replaceable", enable_sse=False, force=True,
         )
         registered_at = result.pop("registered_at")
-        assert result == {"ok": True, "alias": "replaceable", "fastmcp_session_id": None}
+        assert result == {
+            "ok": True,
+            "alias": "replaceable",
+            "agent_id": None,
+            "fastmcp_session_id": None,
+        }
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
 
@@ -604,7 +616,7 @@ class TestMessagingStats:
 class TestBroadcastEventEmission:
     @pytest.mark.asyncio
     async def test_broadcast_emits_events_to_recipients(self, _patch_bus):
-        """Broadcast emits events to recipients with fastmcp session UUIDs."""
+        """Broadcast emits v2 events keyed by recipient agent_id."""
         import spellbook.mcp.tools.messaging as tools_mod
         from spellbook.mcp.tools.messaging import messaging_broadcast, messaging_register
 
@@ -614,7 +626,10 @@ class TestBroadcastEventEmission:
         await messaging_register.__wrapped__(alias="b-recv1", enable_sse=False)
         await messaging_register.__wrapped__(alias="b-recv2", enable_sse=False)
 
-        # Manually map aliases to UUIDs
+        # Manually map aliases to agent_ids (primary v2 routing key) and
+        # to transport UUIDs (for the target_session_ids filter).
+        bus._alias_to_agent_id["b-recv1"] = "agent-r1"
+        bus._alias_to_agent_id["b-recv2"] = "agent-r2"
         bus._alias_to_fastmcp_session["b-recv1"] = "uuid-r1"
         bus._alias_to_fastmcp_session["b-recv2"] = "uuid-r2"
 
@@ -636,11 +651,11 @@ class TestBroadcastEventEmission:
         assert result["ok"] is True
         assert result["delivered_count"] == 2
 
-        # Verify events emitted for both recipients
+        # Verify events emitted for both recipients using v2 topics
         assert len(emitted) == 2
         topics = {e["topic"] for e in emitted}
-        assert "spellbook/sessions/uuid-r1/messages" in topics
-        assert "spellbook/sessions/uuid-r2/messages" in topics
+        assert "agents/agent-r1/messages" in topics
+        assert "agents/agent-r2/messages" in topics
 
         # Check payload shape
         for e in emitted:
@@ -649,21 +664,26 @@ class TestBroadcastEventEmission:
             assert e["payload"]["broadcast"] is True
             assert e["source"] == "spellbook/messaging"
             assert e["payload"]["payload"] == {"msg": "hi all"}
+            # target_session_ids filter is set to the recipient's
+            # transport UUID for defense in depth.
+            assert "target_session_ids" in e
+            assert len(e["target_session_ids"]) == 1
 
     @pytest.mark.asyncio
-    async def test_broadcast_skips_sessions_without_uuid(self, _patch_bus):
-        """Broadcast skips event emission for sessions without fastmcp UUID."""
+    async def test_broadcast_skips_sessions_without_agent_id(self, _patch_bus):
+        """Broadcast skips event emission for sessions without an agent_id."""
         import spellbook.mcp.tools.messaging as tools_mod
         from spellbook.mcp.tools.messaging import messaging_broadcast, messaging_register
 
         bus = tools_mod.message_bus
 
         await messaging_register.__wrapped__(alias="b-sender2", enable_sse=False)
-        await messaging_register.__wrapped__(alias="b-recv-uuid", enable_sse=False)
-        await messaging_register.__wrapped__(alias="b-recv-no-uuid", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv-aid", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv-no-aid", enable_sse=False)
 
-        # Only one recipient has a UUID
-        bus._alias_to_fastmcp_session["b-recv-uuid"] = "uuid-yes"
+        # Only one recipient has an agent_id
+        bus._alias_to_agent_id["b-recv-aid"] = "agent-yes"
+        bus._alias_to_fastmcp_session["b-recv-aid"] = "uuid-yes"
 
         emitted: list[dict] = []
         original_emit = tools_mod.mcp.emit_event
@@ -683,7 +703,7 @@ class TestBroadcastEventEmission:
         assert result["ok"] is True
         assert result["delivered_count"] == 2  # Both get queue delivery
         assert len(emitted) == 1  # Only one gets event
-        assert emitted[0]["topic"] == "spellbook/sessions/uuid-yes/messages"
+        assert emitted[0]["topic"] == "agents/agent-yes/messages"
 
     @pytest.mark.asyncio
     async def test_broadcast_event_failure_does_not_block_others(self, _patch_bus):
@@ -697,6 +717,8 @@ class TestBroadcastEventEmission:
         await messaging_register.__wrapped__(alias="b-fail", enable_sse=False)
         await messaging_register.__wrapped__(alias="b-ok", enable_sse=False)
 
+        bus._alias_to_agent_id["b-fail"] = "agent-fail"
+        bus._alias_to_agent_id["b-ok"] = "agent-ok"
         bus._alias_to_fastmcp_session["b-fail"] = "uuid-fail"
         bus._alias_to_fastmcp_session["b-ok"] = "uuid-ok"
 
@@ -704,7 +726,7 @@ class TestBroadcastEventEmission:
         original_emit = tools_mod.mcp.emit_event
 
         async def flaky_emit(**kwargs):
-            if "uuid-fail" in kwargs.get("topic", ""):
+            if "agent-fail" in kwargs.get("topic", ""):
                 raise RuntimeError("emit failed")
             successful_emits.append(kwargs)
 
@@ -720,13 +742,13 @@ class TestBroadcastEventEmission:
         assert result["ok"] is True
         # The non-failing recipient still got its event
         assert len(successful_emits) == 1
-        assert successful_emits[0]["topic"] == "spellbook/sessions/uuid-ok/messages"
+        assert successful_emits[0]["topic"] == "agents/agent-ok/messages"
 
 
 class TestReplyEventEmission:
     @pytest.mark.asyncio
     async def test_reply_emits_event_to_original_sender(self, _patch_bus):
-        """Reply emits event to the original sender."""
+        """Reply emits a v2 event to the original sender's agent topic."""
         import spellbook.mcp.tools.messaging as tools_mod
         from spellbook.mcp.tools.messaging import (
             messaging_register,
@@ -739,6 +761,7 @@ class TestReplyEventEmission:
         await messaging_register.__wrapped__(alias="rq-sender", enable_sse=False)
         await messaging_register.__wrapped__(alias="rq-replier", enable_sse=False)
 
+        bus._alias_to_agent_id["rq-sender"] = "agent-sender"
         bus._alias_to_fastmcp_session["rq-sender"] = "uuid-sender"
 
         emitted: list[dict] = []
@@ -776,15 +799,16 @@ class TestReplyEventEmission:
         ]
         assert len(reply_calls) == 1
         c = reply_calls[0]
-        assert c["topic"] == "spellbook/sessions/uuid-sender/messages"
+        assert c["topic"] == "agents/agent-sender/messages"
+        # correlation_id lives in the payload under v2, not on the wire
         assert c["payload"]["correlation_id"] == "corr-1"
         assert c["payload"]["sender"] == "rq-replier"
-        assert c["correlation_id"] == "corr-1"
+        assert "correlation_id" not in c
         assert c["source"] == "spellbook/messaging"
 
     @pytest.mark.asyncio
-    async def test_reply_no_uuid_skips_event(self, _patch_bus):
-        """Reply skips event emission when original sender has no UUID."""
+    async def test_reply_no_agent_id_skips_event(self, _patch_bus):
+        """Reply skips event emission when the original sender has no agent_id."""
         import spellbook.mcp.tools.messaging as tools_mod
         from spellbook.mcp.tools.messaging import (
             messaging_register,
@@ -794,7 +818,7 @@ class TestReplyEventEmission:
 
         await messaging_register.__wrapped__(alias="rq-noid", enable_sse=False)
         await messaging_register.__wrapped__(alias="rq-rep2", enable_sse=False)
-        # No UUID mapping for rq-noid
+        # No agent_id mapping for rq-noid
 
         emitted: list[dict] = []
         original_emit = tools_mod.mcp.emit_event
@@ -820,7 +844,7 @@ class TestReplyEventEmission:
             tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
 
         assert result["ok"] is True
-        # No event emitted for reply because original sender has no UUID
+        # No event emitted for reply because original sender has no agent_id
         reply_calls = [
             e for e in emitted
             if e.get("payload", {}).get("is_reply")
