@@ -354,12 +354,11 @@ class TestFullMCPToolRoundtrip:
         aliases = {s["alias"] for s in sessions["sessions"]}
         assert aliases == {"tool-orch", "tool-worker"}
 
-        # Step 3: Send a message with correlation_id
+        # Step 3: Send a message with correlation_id (v2: in payload dict)
         send_result = await messaging_send.__wrapped__(
             sender="tool-orch",
             recipient="tool-worker",
-            payload='{"task": "deploy", "env": "staging"}',
-            correlation_id="tool-corr-1",
+            payload='{"task": "deploy", "env": "staging", "correlation_id": "tool-corr-1"}',
         )
         assert send_result["ok"] is True
         assert "message_id" in send_result
@@ -372,14 +371,19 @@ class TestFullMCPToolRoundtrip:
         assert len(poll_result["messages"]) == 1
         msg = poll_result["messages"][0]
         assert msg["sender"] == "tool-orch"
-        assert msg["payload"] == {"task": "deploy", "env": "staging"}
+        assert msg["payload"] == {
+            "task": "deploy",
+            "env": "staging",
+            "correlation_id": "tool-corr-1",
+        }
+        # Envelope correlation_id is still a top-level field populated by
+        # the tool from the payload dict (for hook/bridge compatibility).
         assert msg["correlation_id"] == "tool-corr-1"
 
-        # Step 5: Reply using the correlation_id
+        # Step 5: Reply (v2: correlation_id in payload dict)
         reply_result = await messaging_reply.__wrapped__(
             sender="tool-worker",
-            correlation_id="tool-corr-1",
-            payload='{"status": "deployed", "version": "1.2.3"}',
+            payload='{"status": "deployed", "version": "1.2.3", "correlation_id": "tool-corr-1"}',
         )
         assert reply_result["ok"] is True
 
@@ -392,7 +396,11 @@ class TestFullMCPToolRoundtrip:
         reply_msg = orch_poll["messages"][0]
         assert reply_msg["message_type"] == "reply"
         assert reply_msg["correlation_id"] == "tool-corr-1"
-        assert reply_msg["payload"] == {"status": "deployed", "version": "1.2.3"}
+        assert reply_msg["payload"] == {
+            "status": "deployed",
+            "version": "1.2.3",
+            "correlation_id": "tool-corr-1",
+        }
 
         # Step 7: Broadcast a message
         bc_result = await messaging_broadcast.__wrapped__(

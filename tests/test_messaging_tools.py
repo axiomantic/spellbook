@@ -63,7 +63,16 @@ class TestMessagingRegister:
         )
         # Pop the dynamic timestamp and verify it independently
         registered_at = result.pop("registered_at")
-        assert result == {"ok": True, "alias": "tool-test"}
+        # agent_id and fastmcp_session_id are both None when the tool is
+        # called outside an MCP request context (as here via __wrapped__
+        # direct invocation) and the caller did not pass an explicit
+        # agent_id.
+        assert result == {
+            "ok": True,
+            "alias": "tool-test",
+            "agent_id": None,
+            "fastmcp_session_id": None,
+        }
         # Verify registered_at parses as ISO 8601
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
@@ -126,7 +135,12 @@ class TestMessagingRegister:
             alias="replaceable", enable_sse=False, force=True,
         )
         registered_at = result.pop("registered_at")
-        assert result == {"ok": True, "alias": "replaceable"}
+        assert result == {
+            "ok": True,
+            "alias": "replaceable",
+            "agent_id": None,
+            "fastmcp_session_id": None,
+        }
         parsed_dt = datetime.fromisoformat(registered_at)
         assert parsed_dt is not None
 
@@ -205,6 +219,7 @@ class TestMessagingSend:
 
     @pytest.mark.asyncio
     async def test_send_with_correlation(self, _patch_bus):
+        """Under v2, correlation_id lives inside the payload dict."""
         from spellbook.mcp.tools.messaging import messaging_register, messaging_send
 
         await messaging_register.__wrapped__(alias="corr-sender", enable_sse=False)
@@ -212,8 +227,7 @@ class TestMessagingSend:
         result = await messaging_send.__wrapped__(
             sender="corr-sender",
             recipient="corr-receiver",
-            payload='{"q": "status?"}',
-            correlation_id="test-corr-1",
+            payload='{"q": "status?", "correlation_id": "test-corr-1"}',
         )
         assert result["ok"] is True
         assert isinstance(result["message_id"], str)
@@ -228,8 +242,7 @@ class TestMessagingSend:
         result = await messaging_send.__wrapped__(
             sender="ttl-sender",
             recipient="ttl-receiver",
-            payload='{"test": 1}',
-            correlation_id="ttl-corr",
+            payload='{"test": 1, "correlation_id": "ttl-corr"}',
             ttl=999,
         )
         assert result["ok"] is True
@@ -248,8 +261,7 @@ class TestMessagingSend:
         result = await messaging_send.__wrapped__(
             sender="ttl-lo-sender",
             recipient="ttl-lo-receiver",
-            payload='{"test": 1}',
-            correlation_id="ttl-lo-corr",
+            payload='{"test": 1, "correlation_id": "ttl-lo-corr"}',
             ttl=-5,
         )
         assert result["ok"] is True
@@ -259,15 +271,16 @@ class TestMessagingSend:
 
     @pytest.mark.asyncio
     async def test_send_correlation_id_too_long(self, _patch_bus):
+        """correlation_id in payload > 128 chars should be rejected."""
         from spellbook.mcp.tools.messaging import messaging_register, messaging_send
 
         await messaging_register.__wrapped__(alias="long-corr-s", enable_sse=False)
         await messaging_register.__wrapped__(alias="long-corr-r", enable_sse=False)
+        long_corr = "c" * 129
         result = await messaging_send.__wrapped__(
             sender="long-corr-s",
             recipient="long-corr-r",
-            payload='{"x": 1}',
-            correlation_id="c" * 129,
+            payload=json.dumps({"x": 1, "correlation_id": long_corr}),
         )
         assert result == {
             "ok": False,
@@ -338,12 +351,11 @@ class TestMessagingBroadcast:
             sender="bc-sender",
             payload='{"info": "all"}',
         )
-        assert result == {
-            "ok": True,
-            "delivered_count": 1,
-            "failed_count": 0,
-            "errors": None,
-        }
+        assert result["ok"] is True
+        assert result["delivered_count"] == 1
+        assert result["failed_count"] == 0
+        assert result["errors"] is None
+        assert result["delivered_aliases"] == ["bc-listener"]
 
     @pytest.mark.asyncio
     async def test_broadcast_include_self(self, _patch_bus):
@@ -355,12 +367,11 @@ class TestMessagingBroadcast:
             payload='{"echo": true}',
             include_self=True,
         )
-        assert result == {
-            "ok": True,
-            "delivered_count": 1,
-            "failed_count": 0,
-            "errors": None,
-        }
+        assert result["ok"] is True
+        assert result["delivered_count"] == 1
+        assert result["failed_count"] == 0
+        assert result["errors"] is None
+        assert result["delivered_aliases"] == ["bc-self"]
 
     @pytest.mark.asyncio
     async def test_broadcast_invalid_json(self, _patch_bus):
@@ -394,6 +405,7 @@ class TestMessagingBroadcast:
 class TestMessagingReply:
     @pytest.mark.asyncio
     async def test_reply_success(self, _patch_bus):
+        """Reply routes via correlation_id placed in the reply payload dict."""
         from spellbook.mcp.tools.messaging import (
             messaging_register, messaging_send, messaging_reply, messaging_poll,
         )
@@ -403,24 +415,43 @@ class TestMessagingReply:
         await messaging_send.__wrapped__(
             sender="req-tool",
             recipient="resp-tool",
-            payload='{"q": "status?"}',
-            correlation_id="tool-corr-1",
+            payload='{"q": "status?", "correlation_id": "tool-corr-1"}',
         )
         result = await messaging_reply.__wrapped__(
             sender="resp-tool",
-            correlation_id="tool-corr-1",
-            payload='{"a": "ok"}',
+            payload='{"a": "ok", "correlation_id": "tool-corr-1"}',
         )
         assert result["ok"] is True
         assert isinstance(result["message_id"], str)
+        assert result["recipient"] == "req-tool"
 
-        # Verify reply arrives at the requester
+        # Verify reply arrives at the requester. Bus envelopes still track
+        # correlation_id as a top-level envelope field (populated by the
+        # tool from the payload dict) for hook/bridge delivery.
         poll_result = await messaging_poll.__wrapped__(alias="req-tool")
         assert poll_result["ok"] is True
         assert len(poll_result["messages"]) == 1
         assert poll_result["messages"][0]["correlation_id"] == "tool-corr-1"
-        assert poll_result["messages"][0]["payload"] == {"a": "ok"}
+        assert poll_result["messages"][0]["payload"] == {
+            "a": "ok",
+            "correlation_id": "tool-corr-1",
+        }
         assert poll_result["messages"][0]["message_type"] == "reply"
+
+    @pytest.mark.asyncio
+    async def test_reply_missing_correlation_id(self, _patch_bus):
+        """Reply payload without a correlation_id must fail fast."""
+        from spellbook.mcp.tools.messaging import messaging_reply
+
+        result = await messaging_reply.__wrapped__(
+            sender="resp",
+            payload='{"a": "ok"}',
+        )
+        assert result == {
+            "ok": False,
+            "error": "missing_correlation_id",
+            "detail": "Reply payload must include a top-level 'correlation_id' string.",
+        }
 
     @pytest.mark.asyncio
     async def test_reply_invalid_json(self, _patch_bus):
@@ -428,7 +459,6 @@ class TestMessagingReply:
 
         result = await messaging_reply.__wrapped__(
             sender="resp",
-            correlation_id="some-corr",
             payload="bad json!!!",
         )
         assert result["ok"] is False
@@ -593,3 +623,248 @@ class TestMessagingStats:
             "total_delivered": 1,
             "total_errors": 0,
         }
+
+
+# ---------------------------------------------------------------------------
+# Event emission from broadcast/reply
+# ---------------------------------------------------------------------------
+
+
+class TestBroadcastEventEmission:
+    @pytest.mark.asyncio
+    async def test_broadcast_emits_events_to_recipients(self, _patch_bus):
+        """Broadcast emits v2 events keyed by recipient agent_id."""
+        import spellbook.mcp.tools.messaging as tools_mod
+        from spellbook.mcp.tools.messaging import messaging_broadcast, messaging_register
+
+        bus = tools_mod.message_bus
+
+        await messaging_register.__wrapped__(alias="b-sender", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv1", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv2", enable_sse=False)
+
+        # Manually map aliases to agent_ids (primary v2 routing key) and
+        # to transport UUIDs (for the target_session_ids filter).
+        bus._alias_to_agent_id["b-recv1"] = "agent-r1"
+        bus._alias_to_agent_id["b-recv2"] = "agent-r2"
+        bus._alias_to_fastmcp_session["b-recv1"] = "uuid-r1"
+        bus._alias_to_fastmcp_session["b-recv2"] = "uuid-r2"
+
+        emitted: list[dict] = []
+        original_emit = tools_mod.mcp.emit_event
+
+        async def tracking_emit(**kwargs):
+            emitted.append(kwargs)
+
+        tools_mod.mcp.emit_event = tracking_emit  # type: ignore[assignment]
+        try:
+            result = await messaging_broadcast.__wrapped__(
+                sender="b-sender",
+                payload='{"msg": "hi all"}',
+            )
+        finally:
+            tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
+
+        assert result["ok"] is True
+        assert result["delivered_count"] == 2
+
+        # Verify events emitted for both recipients using v2 topics
+        assert len(emitted) == 2
+        topics = {e["topic"] for e in emitted}
+        assert "agents/agent-r1/messages" in topics
+        assert "agents/agent-r2/messages" in topics
+
+        # Check payload shape
+        for e in emitted:
+            assert e["payload"]["sender"] == "b-sender"
+            assert e["payload"]["recipient"] == "*"
+            assert e["payload"]["broadcast"] is True
+            assert e["source"] == "spellbook/messaging"
+            assert e["payload"]["payload"] == {"msg": "hi all"}
+            # target_session_ids filter is set to the recipient's
+            # transport UUID for defense in depth.
+            assert "target_session_ids" in e
+            assert len(e["target_session_ids"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_broadcast_skips_sessions_without_agent_id(self, _patch_bus):
+        """Broadcast skips event emission for sessions without an agent_id."""
+        import spellbook.mcp.tools.messaging as tools_mod
+        from spellbook.mcp.tools.messaging import messaging_broadcast, messaging_register
+
+        bus = tools_mod.message_bus
+
+        await messaging_register.__wrapped__(alias="b-sender2", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv-aid", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-recv-no-aid", enable_sse=False)
+
+        # Only one recipient has an agent_id
+        bus._alias_to_agent_id["b-recv-aid"] = "agent-yes"
+        bus._alias_to_fastmcp_session["b-recv-aid"] = "uuid-yes"
+
+        emitted: list[dict] = []
+        original_emit = tools_mod.mcp.emit_event
+
+        async def tracking_emit(**kwargs):
+            emitted.append(kwargs)
+
+        tools_mod.mcp.emit_event = tracking_emit  # type: ignore[assignment]
+        try:
+            result = await messaging_broadcast.__wrapped__(
+                sender="b-sender2",
+                payload='{"msg": "hi"}',
+            )
+        finally:
+            tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
+
+        assert result["ok"] is True
+        assert result["delivered_count"] == 2  # Both get queue delivery
+        assert len(emitted) == 1  # Only one gets event
+        assert emitted[0]["topic"] == "agents/agent-yes/messages"
+
+    @pytest.mark.asyncio
+    async def test_broadcast_event_failure_does_not_block_others(self, _patch_bus):
+        """One recipient's event failure doesn't block others."""
+        import spellbook.mcp.tools.messaging as tools_mod
+        from spellbook.mcp.tools.messaging import messaging_broadcast, messaging_register
+
+        bus = tools_mod.message_bus
+
+        await messaging_register.__wrapped__(alias="b-sender3", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-fail", enable_sse=False)
+        await messaging_register.__wrapped__(alias="b-ok", enable_sse=False)
+
+        bus._alias_to_agent_id["b-fail"] = "agent-fail"
+        bus._alias_to_agent_id["b-ok"] = "agent-ok"
+        bus._alias_to_fastmcp_session["b-fail"] = "uuid-fail"
+        bus._alias_to_fastmcp_session["b-ok"] = "uuid-ok"
+
+        successful_emits: list[dict] = []
+        original_emit = tools_mod.mcp.emit_event
+
+        async def flaky_emit(**kwargs):
+            if "agent-fail" in kwargs.get("topic", ""):
+                raise RuntimeError("emit failed")
+            successful_emits.append(kwargs)
+
+        tools_mod.mcp.emit_event = flaky_emit  # type: ignore[assignment]
+        try:
+            result = await messaging_broadcast.__wrapped__(
+                sender="b-sender3",
+                payload='{"msg": "test"}',
+            )
+        finally:
+            tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
+
+        assert result["ok"] is True
+        # The non-failing recipient still got its event
+        assert len(successful_emits) == 1
+        assert successful_emits[0]["topic"] == "agents/agent-ok/messages"
+
+
+class TestReplyEventEmission:
+    @pytest.mark.asyncio
+    async def test_reply_emits_event_to_original_sender(self, _patch_bus):
+        """Reply emits a v2 event to the original sender's agent topic."""
+        import spellbook.mcp.tools.messaging as tools_mod
+        from spellbook.mcp.tools.messaging import (
+            messaging_register,
+            messaging_reply,
+            messaging_send,
+        )
+
+        bus = tools_mod.message_bus
+
+        await messaging_register.__wrapped__(alias="rq-sender", enable_sse=False)
+        await messaging_register.__wrapped__(alias="rq-replier", enable_sse=False)
+
+        bus._alias_to_agent_id["rq-sender"] = "agent-sender"
+        bus._alias_to_fastmcp_session["rq-sender"] = "uuid-sender"
+
+        emitted: list[dict] = []
+        original_emit = tools_mod.mcp.emit_event
+
+        async def tracking_emit(**kwargs):
+            emitted.append(kwargs)
+
+        tools_mod.mcp.emit_event = tracking_emit  # type: ignore[assignment]
+        try:
+            # Send initial message with correlation (v2: in payload dict)
+            await messaging_send.__wrapped__(
+                sender="rq-sender",
+                recipient="rq-replier",
+                payload='{"q": "status?", "correlation_id": "corr-1"}',
+            )
+
+            # Reply (v2: correlation_id in payload dict)
+            result = await messaging_reply.__wrapped__(
+                sender="rq-replier",
+                payload='{"a": "ok", "correlation_id": "corr-1"}',
+            )
+        finally:
+            tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
+
+        assert result["ok"] is True
+        assert result["recipient"] == "rq-sender"
+
+        # Verify event emitted to original sender (filter to reply event only)
+        reply_calls = [
+            e for e in emitted
+            if e.get("payload", {}).get("is_reply")
+        ]
+        assert len(reply_calls) == 1
+        c = reply_calls[0]
+        assert c["topic"] == "agents/agent-sender/messages"
+        # correlation_id lives inside the nested application payload under
+        # v2, not as a sibling of sender/recipient/is_reply and not on the
+        # wire at the top level.
+        assert c["payload"]["payload"]["correlation_id"] == "corr-1"
+        assert c["payload"]["sender"] == "rq-replier"
+        assert "correlation_id" not in c
+        assert "correlation_id" not in c["payload"]
+        assert c["source"] == "spellbook/messaging"
+        # v2 priority: replies default to "high"
+        assert c["priority"] == "high"
+
+    @pytest.mark.asyncio
+    async def test_reply_no_agent_id_skips_event(self, _patch_bus):
+        """Reply skips event emission when the original sender has no agent_id."""
+        import spellbook.mcp.tools.messaging as tools_mod
+        from spellbook.mcp.tools.messaging import (
+            messaging_register,
+            messaging_reply,
+            messaging_send,
+        )
+
+        await messaging_register.__wrapped__(alias="rq-noid", enable_sse=False)
+        await messaging_register.__wrapped__(alias="rq-rep2", enable_sse=False)
+        # No agent_id mapping for rq-noid
+
+        emitted: list[dict] = []
+        original_emit = tools_mod.mcp.emit_event
+
+        async def tracking_emit(**kwargs):
+            emitted.append(kwargs)
+
+        tools_mod.mcp.emit_event = tracking_emit  # type: ignore[assignment]
+        try:
+            await messaging_send.__wrapped__(
+                sender="rq-noid",
+                recipient="rq-rep2",
+                payload='{"q": "hi", "correlation_id": "corr-2"}',
+            )
+
+            result = await messaging_reply.__wrapped__(
+                sender="rq-rep2",
+                payload='{"a": "yo", "correlation_id": "corr-2"}',
+            )
+        finally:
+            tools_mod.mcp.emit_event = original_emit  # type: ignore[assignment]
+
+        assert result["ok"] is True
+        # No event emitted for reply because original sender has no agent_id
+        reply_calls = [
+            e for e in emitted
+            if e.get("payload", {}).get("is_reply")
+        ]
+        assert len(reply_calls) == 0

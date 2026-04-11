@@ -285,6 +285,6 @@ def build_http_run_kwargs() -> Dict[str, Any]:
         "transport": "streamable-http",
         "host": host,
         "port": port,
-        "stateless_http": True,
+        "stateless_http": False,
         "middleware": auth_middleware,
     }

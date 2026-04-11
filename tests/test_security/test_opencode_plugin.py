@@ -106,10 +106,16 @@ class TestPluginSourceStructure:
         assert "tool.execute.after" in content
 
     def test_shells_out_to_check_module(self):
-        """Plugin must shell out to python3 -m spellbook.gates.check."""
+        """Plugin must shell out to ``python -m spellbook.gates.check``.
+
+        Since commit c44777f7 the plugin uses the spellbook daemon venv's
+        Python rather than the system ``python3`` so the security check
+        runs with spellbook installed regardless of ambient PATH.
+        """
         content = _read_plugin_source()
         assert "spellbook.gates.check" in content
-        assert "python3" in content
+        # The plugin resolves the daemon venv path and invokes its python.
+        assert "daemon-venv/bin/python" in content
 
     def test_uses_check_output_flag(self):
         """Plugin's after hook must use --check-output flag."""
@@ -117,9 +123,14 @@ class TestPluginSourceStructure:
         assert "--check-output" in content
 
     def test_uses_python_module_invocation(self):
-        """Plugin must invoke check via python3 -m (no SPELLBOOK_DIR needed)."""
+        """Plugin must invoke check via ``-m spellbook.gates.check``.
+
+        After commit c44777f7 the plugin reads SPELLBOOK_CONFIG_DIR to
+        locate the daemon venv Python, so the legacy SPELLBOOK_DIR variable
+        must not appear.
+        """
         content = _read_plugin_source()
-        assert "python3 -m spellbook.gates.check" in content
+        assert "-m spellbook.gates.check" in content
         # Should NOT depend on SPELLBOOK_DIR environment variable
         assert "SPELLBOOK_DIR" not in content
 

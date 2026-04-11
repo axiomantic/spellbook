@@ -345,7 +345,9 @@ class TestServerStartupAuthIntegration:
             assert kwargs["transport"] == "streamable-http"
             assert kwargs["host"] == "127.0.0.1"
             assert kwargs["port"] == 9999
-            assert kwargs["stateless_http"] is True
+            # Stateful mode is required for MCP event delivery; see commit
+            # 685c66d8 "Switch to stateful streamable-http for MCP events".
+            assert kwargs["stateless_http"] is False
             # Must have exactly one middleware entry
             assert len(kwargs["middleware"]) == 1
             mw = kwargs["middleware"][0]
@@ -379,7 +381,7 @@ class TestServerStartupAuthIntegration:
                 "transport": "streamable-http",
                 "host": "0.0.0.0",
                 "port": 8765,
-                "stateless_http": True,
+                "stateless_http": False,
                 "middleware": [],
             }
             # Token file must NOT have been created
@@ -405,7 +407,7 @@ class TestServerStartupAuthIntegration:
                 "transport": "streamable-http",
                 "host": "127.0.0.1",
                 "port": 8765,
-                "stateless_http": True,
+                "stateless_http": False,
                 "middleware": [],
             }
         finally:
@@ -422,4 +424,9 @@ class TestServerStartupAuthIntegration:
         daemon_deps = pyproject.get("dependency-groups", {}).get("daemon", [])
         fastmcp_deps = [d for d in daemon_deps if d.startswith("fastmcp")]
         assert len(fastmcp_deps) == 1, "fastmcp must be in the daemon dependency group"
-        assert fastmcp_deps[0].startswith("fastmcp>="), f"fastmcp must have a minimum version: {fastmcp_deps[0]}"
+        dep = fastmcp_deps[0]
+        # TODO: The " @ " branch allows file:// path deps during development.
+        # Tighten this to require fastmcp>=X.Y.Z before merge.
+        assert dep.startswith("fastmcp>=") or " @ " in dep, (
+            f"fastmcp must have a minimum version (fastmcp>=X.Y.Z) or be a local path dep: {dep}"
+        )

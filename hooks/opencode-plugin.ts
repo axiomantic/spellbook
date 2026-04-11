@@ -9,7 +9,10 @@
 import { execSync } from 'child_process';
 
 function getCheckCommand(): string {
-  return 'python3 -m spellbook.gates.check';
+  const configDir = process.env.SPELLBOOK_CONFIG_DIR
+    || `${process.env.HOME}/.local/spellbook`;
+  const venvPython = `${configDir}/daemon-venv/bin/python`;
+  return `${venvPython} -m spellbook.gates.check`;
 }
 
 function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: boolean; error?: string } {

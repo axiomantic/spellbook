@@ -312,6 +312,7 @@ nav:
         - agents/queen-affective.md
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
+    - MCP Events: reference/mcp-events.md
     - Citations: reference/citations.md
   - Contributing:
     - Contributing: reference/contributing.md

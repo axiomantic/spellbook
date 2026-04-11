@@ -208,7 +208,14 @@ def list_sessions_with_samples(project_dir: str, limit: int = 5) -> List[Dict[st
                         content = json.dumps(content)
                     recent_messages.append(str(content)[:500])
 
+            # session_id is the UUID embedded in the .jsonl filename. Each
+            # Claude Code session writes to a file named <sessionId>.jsonl,
+            # and message lines carry "sessionId" too. Surface it so callers
+            # can correlate file-based sessions with live MCP sessions.
+            session_id = os.path.splitext(os.path.basename(jsonl_file))[0]
+
             sessions.append({
+                'session_id': session_id,
                 'slug': slug,
                 'custom_title': custom_title,
                 'path': jsonl_file,
