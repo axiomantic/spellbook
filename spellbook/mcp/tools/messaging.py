@@ -259,33 +259,55 @@ async def messaging_register(
     """Register this session for cross-session messaging.
 
     Claim an alias for this session. Aliases are first-come-first-served.
-    Must register before sending or receiving messages.
+    You MUST register before sending or receiving messages.
+
+    Typical LLM usage is a single argument::
+
+        messaging_register(alias="session-b")
+
+    or, if re-registering after a previous session left a stale entry::
+
+        messaging_register(alias="session-b", force=True)
+
+    You do NOT need to pass ``agent_id`` or ``session_id`` manually. The
+    MCP client (for example the opencode harness) auto-injects those so
+    the server can resolve your application-level identity and route
+    topic-based events (``agents/{agent_id}/messages``) to your transport.
+    Passing them explicitly is only useful if you are writing a custom
+    client that does not auto-inject.
 
     Args:
-        alias: Unique name for this session (e.g., "orchestrator-main", "worker-auth").
-              Letters, numbers, hyphens, underscores only. Max 64 chars.
+        alias: Unique name for this session (e.g. ``"orchestrator-main"``,
+              ``"worker-auth"``). Letters, numbers, hyphens, underscores
+              only. Max 64 chars.
         agent_id: Application-level agent identifier (MCP Events Spec v2).
-                 Typically the opencode session ID. Passed explicitly by the
-                 client; used to parameterize event topics like
-                 ``agents/{agent_id}/messages``. If omitted, the session
-                 registers without an agent_id and will not receive events
-                 over the topic-routed path (messaging still works via the
+                 Normally auto-injected by the client; leave unset unless
+                 your client does not inject. Used to parameterize event
+                 topics like ``agents/{agent_id}/messages``. If omitted
+                 and no client injection occurs, the session registers
+                 without an agent_id and will not receive events over the
+                 topic-routed path (messaging still works via the
                  hook-based inbox).
-        enable_sse: If True (default), spawn a MessageBridge that consumes the
-                   SSE stream and writes to the session's inbox directory for
-                   hook-based delivery.
-        force: If True, replace existing registration for this alias. Old
-              queue is discarded (disconnect sentinel sent first for SSE
-              cleanup) and a warning is logged.
-        session_id: Caller's local session marker (Claude Code session id).
+        enable_sse: If True (default), spawn a MessageBridge that consumes
+                   the SSE stream and writes to the session's inbox
+                   directory for hook-based delivery.
+        force: If True, replace an existing registration for this alias.
+              The old queue is discarded (a disconnect sentinel is sent
+              first for SSE cleanup) and a warning is logged. Use this
+              when recovering an alias claimed by a dead prior session.
+        session_id: Caller's local session marker (e.g. Claude Code
+                   session id). Normally auto-injected by the client.
                    Used to write a marker file so the hook only drains
                    inboxes belonging to this session. Distinct from
                    ``agent_id`` and from the MCP transport UUID.
 
     Returns:
-        {"ok": true, "alias": str, "registered_at": str,
-         "agent_id": str|None, "fastmcp_session_id": str|None} on success
-        {"ok": false, "error": str} if alias taken (and force=False) or invalid
+        ``{"ok": true, "alias": str, "registered_at": str,
+        "agent_id": str|None, "fastmcp_session_id": str|None}`` on success.
+        ``{"ok": false, "error": "alias_already_registered", ...}`` if
+        the alias is taken and ``force`` is False.
+        ``{"ok": false, "error": "invalid_alias", ...}`` if ``alias``
+        fails validation.
     """
     err = _validate_alias(alias)
     if err:
@@ -319,14 +341,18 @@ async def messaging_register(
 async def messaging_unregister(alias: str) -> dict:
     """Unregister this session from messaging.
 
-    Removes the session from the registry and discards any queued messages.
+    Removes the alias from the registry and discards any queued messages
+    and pending correlations. Call this on clean session shutdown so
+    other agents don't try to deliver to a dead queue.
 
     Args:
-        alias: The alias to unregister
+        alias: The alias to unregister (must be one previously claimed
+              via ``messaging_register``).
 
     Returns:
-        {"ok": true} if removed
-        {"ok": false, "error": "not_found"} if alias not registered
+        ``{"ok": true}`` if removed.
+        ``{"ok": false, "error": "not_found"}`` if the alias was not
+        registered.
     """
     removed = await message_bus.unregister(alias)
     if removed:
@@ -343,31 +369,58 @@ async def messaging_send(
     ttl: int = 60,
     priority: MessagePriority = "high",
 ) -> dict:
-    """Send a direct message to another session.
+    """Send a direct message to another registered session.
 
-    Delivers immediately to the recipient's queue. Fails if recipient is
-    not registered or their queue is full.
+    Delivers immediately to the recipient's queue and, when the recipient
+    has an ``agent_id``, also emits an MCP Events Spec v2 event on the
+    topic ``agents/{recipient_agent_id}/messages``. Events-capable
+    clients receive the message as a context injection; legacy clients
+    receive it by polling or via the SSE hook bridge.
 
-    Under MCP Events Spec v2, correlation identifiers are NOT a wire-level
-    field: callers that want request/reply correlation put a
-    ``correlation_id`` key directly in the ``payload`` dict. The tool
-    extracts it from the payload and registers a pending correlation so
-    ``messaging_reply`` can route the response back.
+    Fails if ``recipient`` is not registered or their queue is full.
+
+    Correlation IDs (v2):
+        Under MCP Events Spec v2, correlation identifiers are NOT a
+        wire-level field. To track a request/reply pair, put a
+        ``"correlation_id"`` key directly in the ``payload`` dict. The
+        tool extracts it and registers a pending correlation so
+        ``messaging_reply`` can route the reply back. Example::
+
+            messaging_send(
+                sender="alice",
+                recipient="bob",
+                payload='{"question": "status?", "correlation_id": "req-42"}',
+            )
 
     Args:
-        sender: Your registered alias
-        recipient: Target session alias
-        payload: JSON string with message content (will be parsed). If it
-                contains a top-level ``correlation_id`` string, that value
-                is used to track request/reply pairs. Max 128 chars.
-        ttl: Seconds before correlation expires (default 60, max 300)
-        priority: Delivery priority hint for v2 events. One of
-                 ``urgent``/``high``/``normal``/``low``. Defaults to
-                 ``high`` for direct messages.
+        sender: Your registered alias.
+        recipient: Target session's registered alias.
+        payload: JSON string with message content. Must parse to a JSON
+                object (dict). Max 64 KB. If it contains a top-level
+                ``"correlation_id"`` string (max 128 chars), that value
+                is used to track a request/reply pair.
+        ttl: Seconds before a pending correlation expires. Clamped to
+            ``[1, 300]``. Default 60. Only meaningful when the payload
+            carries a ``correlation_id``.
+        priority: Delivery priority hint for the v2 event. Controls how
+                 aggressively the receiving client injects the message.
+                 One of:
+                   - ``"urgent"`` - interrupt the agent immediately
+                     (reserved for actionable blockers)
+                   - ``"high"`` - inject at the next safe point
+                     (direct messages default; human-routed replies)
+                   - ``"normal"`` - inject on the next turn
+                     (informational updates)
+                   - ``"low"`` - deliver opportunistically
+                     (background chatter, metrics)
+                 Defaults to ``"high"`` for direct messages.
 
     Returns:
-        {"ok": true, "message_id": str} on success
-        {"ok": false, "error": str} on failure
+        ``{"ok": true, "message_id": str}`` on success.
+        ``{"ok": false, "error": str, "detail": str}`` on failure
+        (e.g. ``recipient_not_found``, ``queue_full``,
+        ``invalid_payload_json``, ``payload_too_large``,
+        ``correlation_id_too_long``).
     """
     parsed, err = _parse_payload(payload)
     if err:
@@ -446,19 +499,33 @@ async def messaging_broadcast(
 ) -> dict:
     """Broadcast a message to all registered sessions.
 
-    Useful for discovery ("who is working on X?") and announcements.
+    Delivers the message to every registered alias (optionally
+    including the sender) via the queue, and also emits an MCP Events
+    Spec v2 event on ``agents/{recipient_agent_id}/messages`` for each
+    recipient that has an ``agent_id``. Useful for discovery ("who is
+    working on X?") and project-wide announcements.
+
+    Correlation IDs have no meaning for broadcasts; do not set one in
+    the payload.
 
     Args:
-        sender: Your registered alias
-        payload: JSON string with message content
-        include_self: Whether to include sender in broadcast (default false)
-        priority: Delivery priority hint for v2 events. One of
-                 ``urgent``/``high``/``normal``/``low``. Defaults to
-                 ``normal`` for broadcasts.
+        sender: Your registered alias.
+        payload: JSON string with message content. Must parse to a JSON
+                object (dict). Max 64 KB.
+        include_self: If True, also deliver to ``sender``. Default False.
+        priority: Delivery priority hint for the v2 events. One of
+                 ``"urgent"`` / ``"high"`` / ``"normal"`` / ``"low"``.
+                 Defaults to ``"normal"`` because broadcasts are usually
+                 informational. Use ``"high"`` only for project-wide
+                 alerts that warrant interrupting every agent. See
+                 ``messaging_send`` for priority semantics.
 
     Returns:
-        {"ok": true, "delivered_count": int, "failed_count": int,
-         "delivered_aliases": list[str], "errors": list|null}
+        ``{"ok": true, "delivered_count": int, "failed_count": int,
+        "delivered_aliases": list[str], "errors": list|null}``. The
+        ``delivered_aliases`` list is authoritative and is what the
+        server uses when emitting per-recipient v2 events (no TOCTOU
+        races against ``messaging_list_sessions``).
     """
     parsed, err = _parse_payload(payload)
     if err:
@@ -517,26 +584,47 @@ async def messaging_reply(
 ) -> dict:
     """Reply to a message using its correlation ID.
 
-    Routes the reply back to the original sender. Fails if the correlation
-    has expired (default 60s TTL) or the original sender disconnected.
+    Routes the reply back to the original sender and emits an MCP
+    Events Spec v2 event to the original sender's
+    ``agents/{agent_id}/messages`` topic (when they have an
+    ``agent_id``). Fails if the correlation has expired (the pending
+    correlation lives for at most ``ttl`` seconds, default 60) or the
+    original sender has unregistered.
 
-    Under MCP Events Spec v2, ``correlation_id`` is NOT a wire-level field.
-    The replier places the ``correlation_id`` from the received message as
-    a top-level key inside the reply ``payload`` dict; this tool extracts
-    it and uses it to route the reply back to the original sender.
+    Correlation IDs (v2):
+        Under MCP Events Spec v2, ``correlation_id`` is NOT a wire-level
+        field. The replier copies the ``correlation_id`` from the
+        received message into a top-level key inside the reply
+        ``payload`` dict; this tool extracts it and uses it to route
+        the reply. Example (responding to the send example above)::
+
+            messaging_reply(
+                sender="bob",
+                payload='{"answer": "all green", "correlation_id": "req-42"}',
+            )
+
+        You do NOT need to specify the original ``recipient`` — it is
+        resolved from the pending correlation table.
 
     Args:
-        sender: Your registered alias (the replier)
-        payload: JSON string with reply content. MUST include a top-level
-                ``correlation_id`` string matching the received message.
-        priority: Delivery priority hint for v2 events. One of
-                 ``urgent``/``high``/``normal``/``low``. Defaults to
-                 ``high`` for replies.
+        sender: Your registered alias (the replier).
+        payload: JSON string with reply content. Must parse to a JSON
+                object (dict). MUST include a top-level
+                ``"correlation_id"`` string matching the received
+                message. Max 64 KB. Correlation id max 128 chars.
+        priority: Delivery priority hint for the v2 event. One of
+                 ``"urgent"`` / ``"high"`` / ``"normal"`` / ``"low"``.
+                 Defaults to ``"high"`` because a reply is usually what
+                 the requester is blocked waiting for. See
+                 ``messaging_send`` for the full priority semantics.
 
     Returns:
-        {"ok": true, "message_id": str, "recipient": str} on success
-        {"ok": false, "error": str} if expired, sender gone, or
-        correlation_id missing/invalid in the payload
+        ``{"ok": true, "message_id": str, "recipient": str}`` on
+        success, where ``recipient`` is the alias of the original
+        sender the reply was routed to.
+        ``{"ok": false, "error": str, "detail": str}`` if the
+        correlation expired, the original sender is gone, or
+        ``correlation_id`` is missing/invalid in the payload.
     """
     parsed, err = _parse_payload(payload)
     if err:
@@ -609,17 +697,24 @@ async def messaging_poll(
     alias: str,
     max_messages: int = 10,
 ) -> dict:
-    """Poll for pending messages (fallback when SSE unavailable).
+    """Poll for pending messages (fallback when SSE / v2 events unavailable).
 
-    Drains up to max_messages from your queue. Messages are removed
-    once polled (at-most-once delivery).
+    Drains up to ``max_messages`` from your queue. Messages are removed
+    once polled (at-most-once delivery). Use this path when your client
+    does not subscribe to MCP v2 event topics
+    (``agents/{agent_id}/messages``) or when you want to reconcile the
+    queue after a reconnect.
 
     Args:
-        alias: Your registered alias
-        max_messages: Maximum messages to retrieve (1-50, default 10)
+        alias: Your registered alias.
+        max_messages: Maximum messages to retrieve. Clamped to
+                     ``[1, 50]``. Default 10.
 
     Returns:
-        {"ok": true, "messages": list[MessageEnvelope], "remaining": int}
+        ``{"ok": true, "messages": list[MessageEnvelope],
+        "remaining": int}``. Each ``MessageEnvelope`` carries the
+        sender, payload, and any correlation metadata recorded at send
+        time.
     """
     max_messages = max(1, min(max_messages, _POLL_MAX))
     messages, remaining = await message_bus.poll(alias, max_messages=max_messages)
