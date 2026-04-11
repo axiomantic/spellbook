@@ -87,29 +87,32 @@ def _make_server() -> FastMCP:
     other tool registrations and startup dependencies (DB init, watchers,
     etc).
 
-    NOTE: the literal placeholder name ``{session_id}`` is still magic in
-    the currently-installed fastmcp (it enforces subscriber identity match
-    against the MCP transport UUID). Until fastmcp renames this to
-    ``{agent_id}``, this helper also declares a legacy parallel topic
-    under the old pattern so the authorization tests can exercise the
-    magic. Spellbook itself now uses ``agents/{agent_id}/...`` everywhere.
+    The literal placeholder name ``{agent_id}`` is magic in fastmcp: it
+    enforces that the subscriber's transport session UUID matches the
+    value substituted into that slot. A secondary
+    ``spellbook/sessions/{agent_id}/messages`` topic is declared so the
+    authorization tests can exercise magic enforcement on a
+    non-``agents/`` pattern too.
     """
     server = FastMCP("spellbook-test")
     server.declare_event(
         "agents/{agent_id}/messages",
+        kind="content",
         description="Cross-agent messages",
     )
     server.declare_event(
         "agents/{agent_id}/build/status",
+        kind="content",
         description="Build status for this agent's work",
         retained=True,
     )
-    # Legacy parallel declaration for the fastmcp {session_id} magic-auth
-    # tests. Remove once fastmcp renames the magic placeholder to
-    # {agent_id}.
+    # Parallel declaration used by TestSessionScopedAuthorization to
+    # exercise the ``{agent_id}`` magic-placeholder convention on a
+    # non-``agents/`` pattern.
     server.declare_event(
-        "spellbook/sessions/{session_id}/messages",
-        description="Cross-session messages (legacy magic-auth slot)",
+        "spellbook/sessions/{agent_id}/messages",
+        kind="content",
+        description="Per-agent messages (magic-auth slot)",
     )
     return server
 
@@ -427,10 +430,12 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
     # Declare the same event topics the real server does (v2 style).
     server.declare_event(
         "agents/{agent_id}/messages",
+        kind="content",
         description="Cross-agent messages",
     )
     server.declare_event(
         "agents/{agent_id}/build/status",
+        kind="content",
         description="Build status for this agent's work",
         retained=True,
     )
@@ -438,21 +443,24 @@ def _make_messaging_server() -> tuple[FastMCP, Any]:
     # A non-scoped public topic for authorization tests
     server.declare_event(
         "spellbook/server/status",
+        kind="content",
         description="Server-wide status (public, no scoping)",
     )
 
     # A public broadcast topic for targeted-emit tests
     server.declare_event(
         "spellbook/broadcasts/announcements",
+        kind="content",
         description="Public announcements channel",
     )
 
-    # Legacy parallel declaration for the fastmcp {session_id} magic-auth
-    # tests. Remove once fastmcp renames the magic placeholder to
-    # {agent_id}.
+    # Parallel declaration used by TestSessionScopedAuthorization to
+    # exercise the ``{agent_id}`` magic-placeholder convention on a
+    # non-``agents/`` pattern.
     server.declare_event(
-        "spellbook/sessions/{session_id}/messages",
-        description="Cross-session messages (legacy magic-auth slot)",
+        "spellbook/sessions/{agent_id}/messages",
+        kind="content",
+        description="Per-agent messages (magic-auth slot)",
     )
 
     from fastmcp import Context
@@ -727,7 +735,7 @@ class TestCrossSessionMessaging:
 
 @pytest.mark.allow("mcp")
 class TestSessionScopedAuthorization:
-    """Verify {session_id} enforcement prevents cross-session snooping."""
+    """Verify {agent_id} enforcement prevents cross-session snooping."""
 
     async def test_cannot_subscribe_to_other_session_topic(self) -> None:
         """Alice tries to subscribe to Bob's session topic. Must be rejected."""
