@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 import os
+from pathlib import Path
 import threading
 import time
 
@@ -670,7 +671,7 @@ class TestFilestore:
         assert result.frontmatter.content_hash is not None
         assert result.content == "We use retry backoff for API calls."
         # File should be in type subdirectory
-        assert "/project/" in result.path
+        assert Path(result.path).parent.name == "project"
 
     def test_store_creates_subdirectory(self, tmp_path):
         from spellbook.memory.filestore import store_memory
@@ -685,7 +686,7 @@ class TestFilestore:
             branch=None,
             memory_dir=str(tmp_path),
         )
-        assert "/feedback/" in result.path
+        assert Path(result.path).parent.name == "feedback"
         assert (tmp_path / "feedback").is_dir()
 
     def test_store_dedup_by_content_hash(self, tmp_path):
@@ -1143,7 +1144,7 @@ class TestPathTraversalPrevention:
                 memory_dir=str(tmp_path),
             )
             assert os.path.exists(result.path)
-            assert f"/{valid_type}/" in result.path
+            assert Path(result.path).parent.name == valid_type
 
     def test_forget_memory_rejects_path_outside_memories_root(self, tmp_path):
         from spellbook.memory.filestore import forget_memory

@@ -633,7 +633,7 @@ def apply_sync_results(
                     rel_path = os.path.relpath(mem_path, memory_dir)
                     archive_path = os.path.join(memory_dir, ".archive", rel_path)
                     os.makedirs(os.path.dirname(archive_path), exist_ok=True)
-                    os.rename(mem_path, archive_path)
+                    os.replace(mem_path, archive_path)
                     report.memories_archived += 1
                 else:
                     report.errors.append(f"NOW_FALSE but path missing: {mem_path}")

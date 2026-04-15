@@ -83,7 +83,7 @@ def write_memory_file(
                 f.write(content)
                 f.flush()
                 os.fsync(f.fileno())
-            os.rename(tmp_path, path)
+            os.replace(tmp_path, path)
         except BaseException:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
