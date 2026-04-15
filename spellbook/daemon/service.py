@@ -7,6 +7,7 @@ Windows (Task Scheduler).
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -14,6 +15,8 @@ import sys
 import textwrap
 import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from spellbook.daemon._paths import (
     DEFAULT_HOST,
@@ -189,9 +192,31 @@ def get_launchd_plist_path() -> Path:
     return Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
 
 
+def _get_service_source_dir() -> Path:
+    """Return the path that launchd/systemd service definitions should bake in.
+
+    Prefers the stable source symlink (``$SPELLBOOK_CONFIG_DIR/source``) so
+    the service file survives worktree switches. Falls back to the
+    resolved source directory if the symlink is not yet present (e.g.
+    very first install before the symlink is created).
+    """
+    try:
+        from installer.components.source_link import get_source_link_path
+        link = get_source_link_path()
+        if link.exists() or link.is_symlink():
+            return link
+    except Exception as exc:
+        logger.debug(
+            "source symlink lookup failed; falling back to resolved spellbook dir: %s",
+            exc,
+            exc_info=True,
+        )
+    return get_spellbook_dir()
+
+
 def _generate_launchd_plist() -> str:
     """Generate launchd plist content."""
-    spellbook_dir = get_spellbook_dir()
+    spellbook_dir = _get_service_source_dir()
     log_file = get_log_file()
     err_log_file = get_err_log_file()
     port = get_port()
@@ -317,7 +342,7 @@ def get_systemd_service_path() -> Path:
 
 def _generate_systemd_service() -> str:
     """Generate systemd user service content."""
-    spellbook_dir = get_spellbook_dir()
+    spellbook_dir = _get_service_source_dir()
     port = get_port()
     host = get_host()
     daemon_path = _get_linux_daemon_path()

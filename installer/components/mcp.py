@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from installer.compat import Platform, get_platform, get_python_executable
+from installer.components.source_link import get_source_link_path
 from installer.config import get_spellbook_config_dir
 
 # Daemon configuration
@@ -330,6 +331,90 @@ def _hash_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def _editable_install_spellbook(daemon_python: Path) -> Tuple[bool, str]:
+    """Install spellbook in editable mode pointing at the stable source symlink.
+
+    The symlink (``$SPELLBOOK_CONFIG_DIR/source``) is the indirection point;
+    using it here means the editable install survives worktree switches
+    without being touched again.
+    """
+    symlink_path = get_source_link_path()
+    try:
+        result = subprocess.run(
+            [
+                "uv", "pip", "install",
+                "--python", str(daemon_python),
+                "-e", str(symlink_path),
+                "--no-deps",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if result.returncode != 0:
+            error = result.stderr.strip() or result.stdout.strip()
+            return (False, f"Failed editable install of spellbook: {error}")
+    except FileNotFoundError:
+        return (False, "uv not found; cannot install spellbook into daemon venv")
+    except subprocess.TimeoutExpired:
+        return (False, "Spellbook editable install timed out")
+    except OSError as e:
+        return (False, f"Spellbook editable install failed: {e}")
+    return (True, "")
+
+
+def _refresh_editable_install(daemon_python: Path) -> Tuple[bool, str]:
+    """Force-refresh the editable spellbook install.
+
+    Runs two ``uv pip uninstall`` calls defensively (the second is a
+    no-op) to clear any stale ``.dist-info`` left behind by an aborted
+    prior install, then re-runs the editable install against the stable
+    source symlink.
+    """
+    for attempt in range(2):
+        try:
+            result = subprocess.run(
+                [
+                    "uv", "pip", "uninstall",
+                    "--python", str(daemon_python),
+                    "spellbook",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+        except FileNotFoundError:
+            return (False, "uv not found; cannot refresh daemon venv editable install")
+        except subprocess.TimeoutExpired:
+            return (False, "Spellbook uninstall timed out")
+        except OSError as e:
+            return (False, f"Spellbook uninstall failed: {e}")
+
+        if result.returncode == 0:
+            continue
+        # Treat "package not installed" as success: that is the expected
+        # state for the second pass, and for first-time installs where
+        # the venv has never had spellbook installed. Fail loudly on any
+        # other non-zero exit so permission / environment errors are not
+        # silently masked.
+        stderr_lower = (result.stderr or "").lower()
+        not_installed_markers = (
+            "is not installed",
+            "not installed in environment",
+            "no matching distribution",
+            "cannot uninstall",
+        )
+        if any(marker in stderr_lower for marker in not_installed_markers):
+            continue
+        return (
+            False,
+            f"Spellbook uninstall failed (pass {attempt + 1}, exit "
+            f"{result.returncode}): {result.stderr.strip() or result.stdout.strip()}",
+        )
+
+    return _editable_install_spellbook(daemon_python)
+
+
 def ensure_daemon_venv(
     spellbook_dir: Path,
     force: bool = False,
@@ -355,8 +440,10 @@ def ensure_daemon_venv(
     venv_dir = get_daemon_venv_dir()
     daemon_python = get_daemon_python()
     hash_file = venv_dir / ".pyproject-hash"
+    source_path_file = venv_dir / ".source-path"
 
     current_hash = _hash_file(pyproject)
+    current_source = str(spellbook_dir.resolve())
     needs_rebuild = force or not daemon_python.exists()
 
     if not needs_rebuild and hash_file.exists():
@@ -367,11 +454,23 @@ def ensure_daemon_venv(
     if not needs_rebuild and not hash_file.exists():
         needs_rebuild = True
 
+    # Independent of pyproject hash: if the editable install's source path
+    # is unknown or differs from the current source tree, refresh the
+    # editable install only (no full venv teardown).
+    source_path_changed = False
+    if not needs_rebuild:
+        if not source_path_file.exists():
+            source_path_changed = True
+        else:
+            stored_source = source_path_file.read_text().strip()
+            if stored_source != current_source:
+                source_path_changed = True
+
     # Check if TTS was requested but not installed previously
     tts_installed_marker = venv_dir / ".tts-installed"
     tts_needs_install = include_tts and not tts_installed_marker.exists()
 
-    if not needs_rebuild and not tts_needs_install:
+    if not needs_rebuild and not tts_needs_install and not source_path_changed:
         return (True, "Daemon venv is up to date")
 
     # Stop any running daemon before rebuilding
@@ -437,32 +536,24 @@ def ensure_daemon_venv(
         except OSError as e:
             return (False, f"Dependency installation failed: {e}")
 
-        # Editable install of spellbook itself (no deps)
-        try:
-            result = subprocess.run(
-                [
-                    "uv", "pip", "install",
-                    "--python", str(daemon_python),
-                    "-e", str(spellbook_dir),
-                    "--no-deps",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            if result.returncode != 0:
-                error = result.stderr.strip() or result.stdout.strip()
-                return (False, f"Failed editable install of spellbook: {error}")
-        except FileNotFoundError:
-            return (False, "uv not found; cannot install spellbook into daemon venv")
-        except subprocess.TimeoutExpired:
-            return (False, "Spellbook editable install timed out")
-        except OSError as e:
-            return (False, f"Spellbook editable install failed: {e}")
+        # Editable install of spellbook (via the stable source symlink).
+        ok, err = _editable_install_spellbook(daemon_python)
+        if not ok:
+            return (False, err)
 
-        # Store pyproject hash
+        # Store pyproject hash and source-path marker
         hash_file.write_text(current_hash)
+        source_path_file.write_text(current_source)
         tts_needs_install = include_tts
+
+    # Source-path refresh path: venv is otherwise fine but editable install
+    # points at a stale worktree (or marker is missing). Force-reinstall
+    # the editable install only.
+    if not needs_rebuild and source_path_changed:
+        ok, err = _refresh_editable_install(daemon_python)
+        if not ok:
+            return (False, err)
+        source_path_file.write_text(current_source)
 
     # Install TTS deps if requested
     if tts_needs_install:

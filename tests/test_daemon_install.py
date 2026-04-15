@@ -725,6 +725,11 @@ class TestEnsureDaemonVenvHashDetection:
         hash_file = venv_dir / ".pyproject-hash"
         hash_file.write_text(h)
 
+        # Write the source-path marker so the new refresh-detection path
+        # treats this venv as up-to-date for the current source tree.
+        source_path_marker = venv_dir / ".source-path"
+        source_path_marker.write_text(str(sb_dir.resolve()))
+
         monkeypatch.setattr(
             "installer.components.mcp.get_daemon_venv_dir",
             lambda: venv_dir,
