@@ -218,11 +218,17 @@ def recall_memories(
     Returns:
         List of MemoryResult sorted by score descending, limited to `limit`.
     """
-    # When a scope filter is active, over-fetch from QMD so the
-    # post-filter can still return up to `limit` matches. Without this
-    # the caller gets fewer results than requested whenever some of the
-    # top-ranked matches have the wrong scope.
-    qmd_limit = limit * 3 if scope is not None else limit
+    # When any post-filter is active (scope here, or tags/file_path applied
+    # inside search_qmd.search_memories), over-fetch from QMD so the
+    # combined filtering can still return up to `limit` matches. Without
+    # this the caller gets fewer results than requested whenever some of
+    # the top-ranked matches fail a filter.
+    post_filter_active = (
+        scope is not None
+        or (tags is not None and len(tags) > 0)
+        or (file_path is not None and file_path != "")
+    )
+    qmd_limit = limit * 3 if post_filter_active else limit
     results = _qmd_search_memories(
         query=query,
         memory_dirs=[memory_dir],

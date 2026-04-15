@@ -1351,6 +1351,56 @@ class TestRecallOverfetchWithScope:
         assert captured_limits == [5]
         assert len(results) == 5
 
+    def test_recall_overfetches_when_tags_filter_active(self, tmp_path, monkeypatch):
+        """`search_qmd.search_memories` post-filters on tags, so
+        recall_memories must over-fetch when a caller passes tags too."""
+        import datetime as _dt
+        import spellbook.memory.filestore as _fs
+        from spellbook.memory.models import (
+            MemoryFile,
+            MemoryFrontmatter,
+            MemoryResult,
+        )
+
+        captured_limits: list[int] = []
+
+        def fake_qmd_search(*, query, memory_dirs, tags, file_path, limit, branch):
+            captured_limits.append(limit)
+            return []
+
+        monkeypatch.setattr(_fs, "_qmd_search_memories", fake_qmd_search)
+
+        _fs.recall_memories(
+            query="ignored",
+            memory_dir=str(tmp_path),
+            scope=None,
+            tags=["alpha", "beta"],
+            limit=10,
+        )
+        assert captured_limits == [30]
+
+    def test_recall_overfetches_when_file_path_filter_active(self, tmp_path, monkeypatch):
+        """`search_qmd.search_memories` post-filters on file_path, so
+        recall_memories must over-fetch when a caller passes file_path."""
+        import spellbook.memory.filestore as _fs
+
+        captured_limits: list[int] = []
+
+        def fake_qmd_search(*, query, memory_dirs, tags, file_path, limit, branch):
+            captured_limits.append(limit)
+            return []
+
+        monkeypatch.setattr(_fs, "_qmd_search_memories", fake_qmd_search)
+
+        _fs.recall_memories(
+            query="ignored",
+            memory_dir=str(tmp_path),
+            scope=None,
+            file_path="spellbook/memory/filestore.py",
+            limit=7,
+        )
+        assert captured_limits == [21]
+
 
 # ---------------------------------------------------------------------------
 # F1: recall_memories must update the access log in a single batched write
