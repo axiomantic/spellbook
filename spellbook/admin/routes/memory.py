@@ -149,7 +149,8 @@ async def search_memories_endpoint(
 ):
     """Search memories via QMD and return ranked results."""
     root = _resolve_memory_root()
-    results = search_memories(
+    results = await asyncio.to_thread(
+        search_memories,
         query=q,
         memory_dirs=[root],
         limit=limit,
@@ -209,7 +210,7 @@ async def get_memory(
             "MEMORY_NOT_FOUND", f"Memory '{path}' not found", 404
         )
     try:
-        mf = read_memory(abs_path)
+        mf = await asyncio.to_thread(read_memory, abs_path)
     except (ValueError, OSError) as e:
         logger.warning("Failed to parse memory %s: %s", abs_path, e)
         return _error_response(

@@ -41,7 +41,7 @@ class SymbolChange:
 # ---------------------------------------------------------------------------
 
 # Python patterns
-_PY_DEF_RE = re.compile(r"^\s*def\s+(\w+)\s*\(")
+_PY_DEF_RE = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)\s*\(")
 _PY_CLASS_RE = re.compile(r"^\s*class\s+(\w+)\s*[:(]")
 
 # JS/TS patterns

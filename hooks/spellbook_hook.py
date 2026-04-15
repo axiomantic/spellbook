@@ -10,6 +10,7 @@ memory-inject.sh, notify-on-complete.sh, tts-notify.sh, memory-capture.sh,
 pre-compact-save.sh, post-compact-recover.sh).
 """
 
+import hashlib
 import json
 import os
 import re
@@ -1469,8 +1470,7 @@ def _handle_stop(data: dict) -> None:
     if not text_body:
         return
 
-    import hashlib as _hashlib
-    text_sha = _hashlib.sha256(text_body.encode("utf-8")).hexdigest()
+    text_sha = hashlib.sha256(text_body.encode("utf-8")).hexdigest()
     cache = _load_stop_harvest_cache()
     if cache.get(transcript_path) == text_sha:
         return  # Already processed this exact transcript + final message.

@@ -112,17 +112,7 @@ def _atomic_update_access_log(log_path: str, memory_path: str) -> None:
         data[memory_path]["last_accessed"] = datetime.now(timezone.utc).isoformat()
 
         # Write atomically via temp file, then rename (still under lock)
-        fd_tmp, tmp_path = tempfile.mkstemp(dir=dir_path, prefix=".tmp_access_")
-        try:
-            with os.fdopen(fd_tmp, "w") as f:
-                json.dump(data, f, separators=(",", ":"))
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp_path, log_path)
-        except BaseException:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-            raise
+        _write_access_log(log_path, data)
 
 
 def _read_access_log(log_path: str) -> dict:

@@ -457,6 +457,29 @@ class TestExtractSymbolsFromHunkPython:
         # At minimum, we should see both the old and new names
         assert len(symbols) >= 1
 
+    def test_extract_async_def_function(self):
+        """`async def` should be recognized as a function symbol."""
+        from spellbook.memory.diff_symbols import (
+            DiffHunk,
+            extract_symbols_from_hunk,
+        )
+
+        hunk = DiffHunk(
+            file_path="src/async_mod.py",
+            old_start=0,
+            old_count=0,
+            new_start=1,
+            new_count=2,
+            content="",
+            added_lines=[
+                "async def foo(x):",
+                "    return x",
+            ],
+            removed_lines=[],
+        )
+        symbols = extract_symbols_from_hunk(hunk, ".py")
+        assert {s.symbol_name for s in symbols} == {"foo"}
+
     def test_extract_method_with_class_context(self):
         """Methods inside a class context should be identified as methods."""
         from spellbook.memory.diff_symbols import (

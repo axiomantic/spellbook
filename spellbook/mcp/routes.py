@@ -390,7 +390,8 @@ async def api_memory_recall(request: Request) -> JSONResponse:
 
     memory_dir = _get_memory_dir(namespace, "project")
     try:
-        results = _filestore_recall(
+        results = await asyncio.to_thread(
+            _filestore_recall,
             query=query,
             memory_dir=memory_dir,
             scope=None,
