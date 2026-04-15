@@ -209,3 +209,75 @@ def test_uninstall_runs_twice(fake_venv, source_dir, config_dir, monkeypatch):
     assert len(install_idxs) == 1
     # Both uninstalls happen before the install.
     assert uninstall_idxs[0] < uninstall_idxs[1] < install_idxs[0]
+
+
+def test_uninstall_not_installed_stderr_is_tolerated(
+    fake_venv, source_dir, config_dir, monkeypatch
+):
+    """A non-zero uninstall exit with the 'not installed' marker is
+    treated as success (the package was already absent). The second
+    uninstall and the editable install still run.
+    """
+    from installer.components.mcp import ensure_daemon_venv, _hash_file
+    pyproject = source_dir / "pyproject.toml"
+    (fake_venv / ".pyproject-hash").write_text(_hash_file(pyproject))
+    (fake_venv / ".source-path").write_text("/stale/worktree")
+
+    calls: List[List[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        if isinstance(cmd, list):
+            calls.append(list(cmd))
+        if "uninstall" in (cmd if isinstance(cmd, list) else []):
+            return _FakeCompleted(
+                returncode=1,
+                stdout="",
+                stderr="error: package 'spellbook' is not installed",
+            )
+        return _FakeCompleted(returncode=0, stdout="", stderr="")
+
+    import installer.components.mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod.subprocess, "run", fake_run)
+
+    ok, msg = ensure_daemon_venv(source_dir)
+    assert ok, msg
+    uninstalls = [c for c in calls if "uninstall" in c]
+    installs = [c for c in calls if "install" in c and "-e" in c]
+    assert len(uninstalls) == 2
+    assert len(installs) == 1
+
+
+def test_uninstall_permission_error_fails_loudly(
+    fake_venv, source_dir, config_dir, monkeypatch
+):
+    """A non-zero uninstall exit that does NOT match the 'not installed'
+    markers is surfaced as a failure instead of being silently ignored.
+    """
+    from installer.components.mcp import ensure_daemon_venv, _hash_file
+    pyproject = source_dir / "pyproject.toml"
+    (fake_venv / ".pyproject-hash").write_text(_hash_file(pyproject))
+    (fake_venv / ".source-path").write_text("/stale/worktree")
+
+    calls: List[List[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        if isinstance(cmd, list):
+            calls.append(list(cmd))
+        if "uninstall" in (cmd if isinstance(cmd, list) else []):
+            return _FakeCompleted(
+                returncode=13,
+                stdout="",
+                stderr="error: permission denied writing to site-packages",
+            )
+        return _FakeCompleted(returncode=0, stdout="", stderr="")
+
+    import installer.components.mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod.subprocess, "run", fake_run)
+
+    ok, msg = ensure_daemon_venv(source_dir)
+    assert ok is False
+    assert "permission denied" in msg
+    assert "exit 13" in msg
+    # The editable install must NOT have been attempted when uninstall failed.
+    installs = [c for c in calls if "install" in c and "-e" in c]
+    assert installs == []

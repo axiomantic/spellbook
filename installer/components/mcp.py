@@ -372,9 +372,9 @@ def _refresh_editable_install(daemon_python: Path) -> Tuple[bool, str]:
     prior install, then re-runs the editable install against the stable
     source symlink.
     """
-    for _ in range(2):
+    for attempt in range(2):
         try:
-            subprocess.run(
+            result = subprocess.run(
                 [
                     "uv", "pip", "uninstall",
                     "--python", str(daemon_python),
@@ -390,6 +390,28 @@ def _refresh_editable_install(daemon_python: Path) -> Tuple[bool, str]:
             return (False, "Spellbook uninstall timed out")
         except OSError as e:
             return (False, f"Spellbook uninstall failed: {e}")
+
+        if result.returncode == 0:
+            continue
+        # Treat "package not installed" as success: that is the expected
+        # state for the second pass, and for first-time installs where
+        # the venv has never had spellbook installed. Fail loudly on any
+        # other non-zero exit so permission / environment errors are not
+        # silently masked.
+        stderr_lower = (result.stderr or "").lower()
+        not_installed_markers = (
+            "is not installed",
+            "not installed in environment",
+            "no matching distribution",
+            "cannot uninstall",
+        )
+        if any(marker in stderr_lower for marker in not_installed_markers):
+            continue
+        return (
+            False,
+            f"Spellbook uninstall failed (pass {attempt + 1}, exit "
+            f"{result.returncode}): {result.stderr.strip() or result.stdout.strip()}",
+        )
 
     return _editable_install_spellbook(daemon_python)
 
