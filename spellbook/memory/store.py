@@ -338,8 +338,7 @@ def get_recently_consolidated_events(
 ) -> List[Dict[str, Any]]:
     """Get events consolidated within the last 24 hours.
 
-    Used by memory_get_unconsolidated with include_consolidated=True
-    to allow client re-synthesis of recently consolidated events.
+    Allows re-synthesis of recently consolidated events.
     """
     with get_sync_session(db_path) as session:
         # Use text() for SQLite datetime function

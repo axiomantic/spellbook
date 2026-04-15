@@ -26,19 +26,27 @@ Use these MCP tools to access project memories:
 - `memory_recall(query="topic")` - search for specific knowledge
 - `memory_recall(query="", limit=20)` - recent important memories
 - `memory_recall(file_path="/path/to/file.py")` - memories about a specific file
+- `memory_recall(tags="api,auth")` - filter by tags
 
 ## Storing Knowledge
 
-- `memory_store_memories(memories='{"memories": [{"content": "...", "memory_type": "fact", "tags": ["tag1"]}]}')`
+- `memory_store(content="...", type="project", kind="fact", tags="tag1,tag2")`
 
-Memory types: `fact`, `rule`, `antipattern`, `preference`, `decision`
+Types: `project`, `user`, `feedback`, `reference`
+Kinds: `fact`, `rule`, `convention`, `preference`, `decision`, `antipattern`
+
+## Syncing and Verification
+
+- `memory_sync(changed_files="src/main.py,src/config.py")` - find memories affected by code changes
+- `memory_verify(memory_path="/path/to/memory.md")` - fact-check a single memory
+- `memory_review_events()` - review pending raw events for synthesis
 
 ## How It Works
 
 - MEMORY.md is refreshed at the start of each session
-- Any content you write here is automatically captured by the bridge hook and stored in spellbook's structured memory (SQLite with FTS5 search, branch scoring, importance ranking)
+- Any content you write here is automatically captured by the bridge hook and stored in spellbook's structured memory (file-based markdown with grep/QMD search, branch scoring, importance ranking)
 - Use `memory_recall` instead of re-reading this file for past context
-- Use `memory_store_memories` for important knowledge you want to persist across sessions
+- Use `memory_store` for important knowledge you want to persist across sessions
 """
 
 

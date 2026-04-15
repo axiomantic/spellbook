@@ -87,18 +87,17 @@ class TestApiMemoryEventBranch:
 
 class TestApiMemoryRecallBranch:
     @pytest.mark.asyncio
-    async def test_passes_branch_to_do_memory_recall(self, db_path, monkeypatch):
-        """REST /api/memory/recall should extract branch from body and pass to do_memory_recall."""
+    async def test_passes_branch_to_filestore_recall(self, db_path, monkeypatch):
+        """REST /api/memory/recall should extract branch from body and pass to filestore recall."""
         from spellbook.mcp import routes
 
         captured = {}
 
-        def mock_do_memory_recall(**kwargs):
+        def mock_recall(**kwargs):
             captured.update(kwargs)
-            return {"memories": [], "count": 0}
+            return []
 
-        monkeypatch.setattr("spellbook.mcp.routes.do_memory_recall", mock_do_memory_recall)
-        monkeypatch.setattr("spellbook.mcp.routes.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.mcp.routes._filestore_recall", mock_recall)
 
         request = _make_request(
             {
@@ -113,46 +112,44 @@ class TestApiMemoryRecallBranch:
         assert captured["branch"] == "feature-x"
 
     @pytest.mark.asyncio
-    async def test_passes_repo_path_to_do_memory_recall(self, db_path, monkeypatch):
-        """REST /api/memory/recall should extract repo_path from body and pass to do_memory_recall."""
+    async def test_passes_file_path_to_filestore_recall(self, db_path, monkeypatch):
+        """REST /api/memory/recall should forward file_path to filestore recall."""
         from spellbook.mcp import routes
 
         captured = {}
 
-        def mock_do_memory_recall(**kwargs):
+        def mock_recall(**kwargs):
             captured.update(kwargs)
-            return {"memories": [], "count": 0}
+            return []
 
-        monkeypatch.setattr("spellbook.mcp.routes.do_memory_recall", mock_do_memory_recall)
-        monkeypatch.setattr("spellbook.mcp.routes.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.mcp.routes._filestore_recall", mock_recall)
 
         request = _make_request(
             {
                 "namespace": "test-project",
                 "query": "test",
                 "branch": "main",
-                "repo_path": "/Users/test/repo",
+                "file_path": "/src/module.py",
             }
         )
 
         await routes.api_memory_recall(request)
 
         assert captured["branch"] == "main"
-        assert captured["repo_path"] == "/Users/test/repo"
+        assert captured["file_path"] == "/src/module.py"
 
     @pytest.mark.asyncio
-    async def test_branch_defaults_to_empty_when_absent(self, db_path, monkeypatch):
-        """REST /api/memory/recall should default branch to empty when not in body."""
+    async def test_branch_defaults_to_none_when_absent(self, db_path, monkeypatch):
+        """REST /api/memory/recall should default branch to None when not in body."""
         from spellbook.mcp import routes
 
         captured = {}
 
-        def mock_do_memory_recall(**kwargs):
+        def mock_recall(**kwargs):
             captured.update(kwargs)
-            return {"memories": [], "count": 0}
+            return []
 
-        monkeypatch.setattr("spellbook.mcp.routes.do_memory_recall", mock_do_memory_recall)
-        monkeypatch.setattr("spellbook.mcp.routes.get_db_path", lambda: db_path)
+        monkeypatch.setattr("spellbook.mcp.routes._filestore_recall", mock_recall)
 
         request = _make_request(
             {
@@ -163,8 +160,7 @@ class TestApiMemoryRecallBranch:
 
         await routes.api_memory_recall(request)
 
-        assert captured["branch"] == ""
-        assert captured["repo_path"] == ""
+        assert captured["branch"] is None
 
 
 class TestMcpMemoryRecallBranch:
@@ -211,52 +207,5 @@ class TestMcpMemoryRecallBranch:
         )
 
         assert captured["branch"] == "feature-branch"
-        assert captured["repo_path"] == "/Users/test/myproject"
         assert captured["namespace"] == expected_namespace
 
-
-class TestMcpMemoryStoreMemoriesBranch:
-    @pytest.mark.asyncio
-    async def test_detects_branch_from_context(self, db_path, monkeypatch):
-        """MCP memory_store_memories should detect branch from context and pass to do_store_memories."""
-        from spellbook import server
-
-        captured = {}
-
-        def mock_do_store_memories(**kwargs):
-            captured.update(kwargs)
-            return {
-                "status": "success",
-                "memories_created": 0,
-                "events_consolidated": 0,
-                "memory_ids": [],
-            }
-
-        fake_project_path = "/Users/test/myproject"
-        expected_namespace = encode_cwd(fake_project_path)
-        mock_ctx = SimpleNamespace()
-
-        monkeypatch.setattr("spellbook.mcp.tools.memory.get_db_path", lambda: db_path)
-
-        async def _return_project_path(*args, **kwargs):
-            return fake_project_path
-
-        monkeypatch.setattr(
-            "spellbook.mcp.tools.memory.get_project_path_from_context",
-            _return_project_path,
-        )
-        monkeypatch.setattr("spellbook.mcp.tools.memory.do_store_memories", mock_do_store_memories)
-        monkeypatch.setattr(
-            "spellbook.mcp.tools.memory.get_current_branch",
-            lambda p: "dev-branch",
-        )
-
-        await server.memory_store_memories.fn(
-            ctx=mock_ctx,
-            memories='{"memories": []}',
-            event_ids="",
-            namespace="",
-        )
-
-        assert captured["branch"] == "dev-branch"
-        assert captured["namespace"] == expected_namespace

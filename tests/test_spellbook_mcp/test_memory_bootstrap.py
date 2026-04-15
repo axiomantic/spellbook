@@ -51,7 +51,7 @@ class TestGenerateMemoryMd:
         assert "## Storing Knowledge" in result
         assert "## How It Works" in result
         assert "memory_recall" in result
-        assert "memory_store_memories" in result
+        assert "memory_store" in result
 
     def test_accepts_kwargs_for_backward_compat(self):
         """Accepts arbitrary kwargs without error (backward compatibility)."""
@@ -180,7 +180,7 @@ class TestRegenerateMemoryMdForProject:
         content = memory_md.read_text(encoding="utf-8")
         assert content.startswith("# Spellbook Memory System")
         assert "memory_recall" in content
-        assert "memory_store_memories" in content
+        assert "memory_store" in content
 
     def test_returns_silently_when_no_memory_dir(self):
         """No auto-memory directory means nothing to do."""

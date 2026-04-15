@@ -56,7 +56,40 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     )
     export_parser.set_defaults(func=_run_export)
 
+    # memory install
+    install_parser = memory_sub.add_parser(
+        "install",
+        help="Install memory system dependencies (QMD, Serena)",
+    )
+    install_parser.set_defaults(func=_run_install_memory)
+
     memory_parser.set_defaults(func=_run_memory_help(memory_parser))
+
+
+def _run_install_memory(args: argparse.Namespace) -> None:
+    """Execute ``spellbook memory install``."""
+    from installer.components.memory import setup_memory_system
+
+    print("Installing memory system dependencies (QMD + Serena)...")
+    result = setup_memory_system(True)
+
+    json_mode = getattr(args, "json", False)
+    if json_mode:
+        output(result, json_mode=True)
+        return
+
+    if result["qmd"]:
+        print("  QMD: installed")
+    else:
+        print("  QMD: FAILED (npm install -g @tobilu/qmd)")
+    if result["serena"]:
+        print("  Serena: installed")
+    else:
+        print("  Serena: FAILED (uv tool install -p 3.13 serena-agent@latest --prerelease=allow)")
+
+    if not (result["qmd"] and result["serena"]):
+        import sys
+        sys.exit(1)
 
 
 def _run_memory_help(parser: argparse.ArgumentParser):
@@ -84,6 +117,15 @@ def _run_search(args: argparse.Namespace) -> None:
         )
     except (sqlite3.OperationalError, SAOperationalError, FileNotFoundError, OSError):
         result = {"memories": [], "count": 0, "query": args.query}
+
+    # If memory system unavailable, coerce to empty-result shape for stable CLI output
+    if "memories" not in result:
+        result = {
+            "memories": [],
+            "count": 0,
+            "query": args.query,
+            "error": result.get("error", "memory system unavailable"),
+        }
 
     if json_mode:
         output(result, json_mode=True)

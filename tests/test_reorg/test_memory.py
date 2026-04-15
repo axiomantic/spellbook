@@ -111,20 +111,10 @@ class TestMemoryToolsImports:
 
         assert callable(do_memory_recall)
 
-    def test_import_do_store_memories(self):
-        from spellbook.memory.tools import do_store_memories
-
-        assert callable(do_store_memories)
-
     def test_import_do_memory_forget(self):
         from spellbook.memory.tools import do_memory_forget
 
         assert callable(do_memory_forget)
-
-    def test_import_do_get_unconsolidated(self):
-        from spellbook.memory.tools import do_get_unconsolidated
-
-        assert callable(do_get_unconsolidated)
 
     def test_all_public_exports_match(self):
         """Every public callable in spellbook.memory.tools must exist."""

@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 # Built-in defaults for config keys. config_get returns these when a key is
 # absent from the user's spellbook.json config file. Adding an entry here
 # means the key has a well-known default that callers can rely on.
-CONFIG_DEFAULTS: dict[str, Any] = {}
+CONFIG_DEFAULTS: dict[str, Any] = {
+    "memory.auto_recall": True,
+    "memory.auto_store": True,
+}
 
 
 # Wizard-relevant config keys. Used by get_unset_config_keys() to determine

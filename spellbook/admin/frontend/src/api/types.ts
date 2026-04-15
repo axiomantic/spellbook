@@ -38,25 +38,40 @@ export interface DashboardResponse {
 }
 
 // Memory
-export interface MemoryItem {
-  id: string
-  content: string
-  memory_type: string | null
-  namespace: string
-  branch: string
-  importance: number
-  created_at: string
-  accessed_at: string | null
-  status: string
-  meta: Record<string, unknown>
-  citation_count: number
+export interface Citation {
+  file: string
+  symbol: string | null
+  symbol_type: string | null
 }
 
+export interface MemoryItem {
+  id: string
+  type: string
+  kind: string | null
+  tags: string[]
+  citations: Citation[]
+  confidence: 'high' | 'medium' | 'low' | null
+  created: string
+  last_verified: string | null
+  body: string
+}
 
-export interface MemoryUpdateRequest {
-  content?: string
-  importance?: number
-  meta?: Record<string, unknown>
+export interface MemorySearchResult extends MemoryItem {
+  score: number
+  match_context: string | null
+}
+
+export interface MemoryListResponse {
+  items: MemoryItem[]
+  total: number
+  offset: number
+  limit: number
+}
+
+export interface MemorySearchResponse {
+  query: string
+  total: number
+  items: MemorySearchResult[]
 }
 
 // Security

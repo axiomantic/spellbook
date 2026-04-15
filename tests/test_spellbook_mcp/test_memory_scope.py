@@ -4,6 +4,7 @@ import pytest
 
 from spellbook.core.db import close_all_connections, get_connection, init_db
 from spellbook.memory.store import insert_memory
+from tests._memory_marker import requires_memory_tools
 
 
 @pytest.fixture
@@ -388,89 +389,108 @@ class TestRecallByFilePathScope:
         }
 
 
+@requires_memory_tools
 class TestDoMemoryRecallScope:
-    def test_do_recall_passes_scope(self, db_path):
-        """do_memory_recall passes scope to recall_by_query."""
-        from spellbook.memory.tools import do_memory_recall
+    def test_do_recall_passes_scope(self, tmp_path, monkeypatch):
+        """do_memory_recall passes scope to filestore recall."""
+        from spellbook.memory.tools import do_memory_recall, do_memory_store
 
-        insert_memory(
-            db_path=db_path,
-            content="Global fact about testing",
-            memory_type="fact",
-            namespace="proj-a",
+        global_dir = str(tmp_path / "global_memories")
+        project_dir = str(tmp_path / "project_memories")
+
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            return project_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        do_memory_store(
+            content="Global fact about testing that spans multiple words for slug generation",
+            type="project",
+            kind="fact",
             tags=["testing"],
-            citations=[],
             scope="global",
+            namespace="proj-a",
         )
         result = do_memory_recall(
-            db_path=db_path,
             query="",
             namespace="proj-a",
             scope="global",
         )
         assert result["count"] == 1
-        assert result["memories"][0]["scope"] == "global"
 
-    def test_do_recall_default_scope_is_project(self, db_path):
+    def test_do_recall_default_scope_is_project(self, tmp_path, monkeypatch):
         """do_memory_recall defaults to scope='project'."""
-        from spellbook.memory.tools import do_memory_recall
+        from spellbook.memory.tools import do_memory_recall, do_memory_store
 
-        insert_memory(
-            db_path=db_path,
-            content="Project fact",
-            memory_type="fact",
-            namespace="proj-a",
+        global_dir = str(tmp_path / "global_memories")
+        project_dir = str(tmp_path / "project_memories")
+
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            return project_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        do_memory_store(
+            content="Project fact about architecture with enough words for a proper slug",
+            type="project",
+            kind="fact",
             tags=["test"],
-            citations=[],
             scope="project",
-        )
-        insert_memory(
-            db_path=db_path,
-            content="Global fact",
-            memory_type="fact",
             namespace="proj-a",
+        )
+        do_memory_store(
+            content="Global fact about cross project conventions with enough words for slug",
+            type="project",
+            kind="fact",
             tags=["test"],
-            citations=[],
             scope="global",
+            namespace="proj-a",
         )
         result = do_memory_recall(
-            db_path=db_path,
             query="",
             namespace="proj-a",
         )
         # Default scope=project should exclude global
         assert result["count"] == 1
-        assert result["memories"][0]["content"] == "Project fact"
+        assert "architecture" in result["memories"][0]["content"]
 
 
-class TestDoStoreMemoriesScope:
-    def test_store_with_global_scope(self, db_path):
-        """do_store_memories passes scope through to insert_memory."""
-        import json
+@requires_memory_tools
+class TestDoMemoryStoreScope:
+    def test_store_with_global_scope(self, tmp_path, monkeypatch):
+        """do_memory_store passes scope through to filestore."""
+        from spellbook.memory.tools import do_memory_recall, do_memory_store
 
-        from spellbook.memory.tools import do_memory_recall, do_store_memories
+        global_dir = str(tmp_path / "global_memories")
+        project_dir = str(tmp_path / "project_memories")
 
-        memories = json.dumps({
-            "memories": [{"content": "Global convention", "memory_type": "rule"}]
-        })
-        result = do_store_memories(
-            db_path=db_path,
-            memories_json=memories,
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            return project_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        result = do_memory_store(
+            content="Global convention about testing standards with enough words for slug",
+            type="project",
+            kind="rule",
             namespace="proj-a",
             scope="global",
         )
-        assert result["status"] == "success"
-        assert result["memories_created"] == 1
+        assert result["status"] == "stored"
 
-        # Verify it was stored with global scope
+        # Verify it was stored in the global directory
         recall = do_memory_recall(
-            db_path=db_path,
             query="",
             namespace="proj-a",
             scope="global",
         )
         assert recall["count"] == 1
-        assert recall["memories"][0]["scope"] == "global"
 
 
 class TestMCPToolScopeValidation:
@@ -576,53 +596,70 @@ class TestCLIScopeFlag:
         )
 
 
+@requires_memory_tools
 class TestGlobalMemoryCrossProject:
     """Integration: store global in project A, recall from project B."""
 
-    def test_global_memory_cross_project(self, db_path):
+    def test_global_memory_cross_project(self, tmp_path, monkeypatch):
         """memory_store(scope='global') in project A, recall(scope='all') in project B."""
-        import json
+        from spellbook.memory.tools import do_memory_recall, do_memory_store
 
-        from spellbook.memory.tools import do_memory_recall, do_store_memories
+        # Global dir is shared across projects; project dirs are per-project
+        global_dir = str(tmp_path / "global")
+        proj_a_dir = str(tmp_path / "proj-a")
+        proj_b_dir = str(tmp_path / "proj-b")
 
-        memories = json.dumps({
-            "memories": [{"content": "SQLite WAL is single-writer", "memory_type": "fact"}]
-        })
-        store_result = do_store_memories(
-            db_path=db_path,
-            memories_json=memories,
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            if "proj-a" in ns:
+                return proj_a_dir
+            return proj_b_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        store_result = do_memory_store(
+            content="SQLite WAL is single-writer but allows concurrent readers",
+            type="project",
+            kind="fact",
             namespace="proj-a",
             scope="global",
         )
-        assert store_result["status"] == "success"
+        assert store_result["status"] == "stored"
 
         recall_result = do_memory_recall(
-            db_path=db_path,
             query="SQLite WAL",
             namespace="proj-b",
             scope="all",
         )
         assert recall_result["count"] == 1
-        assert recall_result["memories"][0]["content"] == "SQLite WAL is single-writer"
-        assert recall_result["memories"][0]["scope"] == "global"
+        assert "SQLite WAL is single-writer" in recall_result["memories"][0]["content"]
 
-    def test_global_memory_invisible_with_project_scope(self, db_path):
+    def test_global_memory_invisible_with_project_scope(self, tmp_path, monkeypatch):
         """Global memory from proj-a is NOT visible with scope='project' in proj-b."""
-        import json
+        from spellbook.memory.tools import do_memory_recall, do_memory_store
 
-        from spellbook.memory.tools import do_memory_recall, do_store_memories
+        global_dir = str(tmp_path / "global")
+        proj_a_dir = str(tmp_path / "proj-a")
+        proj_b_dir = str(tmp_path / "proj-b")
 
-        memories = json.dumps({
-            "memories": [{"content": "Cross project invisible test", "memory_type": "fact"}]
-        })
-        do_store_memories(
-            db_path=db_path,
-            memories_json=memories,
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            if "proj-a" in ns:
+                return proj_a_dir
+            return proj_b_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        do_memory_store(
+            content="Cross project invisible test content with enough words for slug",
+            type="project",
+            kind="fact",
             namespace="proj-a",
             scope="global",
         )
         recall_result = do_memory_recall(
-            db_path=db_path,
             query="invisible test",
             namespace="proj-b",
             scope="project",
@@ -630,26 +667,37 @@ class TestGlobalMemoryCrossProject:
         assert recall_result["count"] == 0
 
 
+@requires_memory_tools
 class TestForgetGlobalMemory:
-    def test_forget_global_memory(self, db_path):
-        """Soft-delete a global memory by ID."""
-        from spellbook.memory.tools import do_memory_forget, do_memory_recall
+    def test_forget_global_memory(self, tmp_path, monkeypatch):
+        """Archive a global memory via file path."""
+        from spellbook.memory.tools import do_memory_forget, do_memory_recall, do_memory_store
 
-        mem_id = insert_memory(
-            db_path=db_path,
-            content="Global to forget",
-            memory_type="fact",
-            namespace="proj-a",
+        global_dir = str(tmp_path / "global")
+        project_dir = str(tmp_path / "project")
+
+        def _mock_memory_dir(ns, scope="project"):
+            if scope == "global":
+                return global_dir
+            return project_dir
+
+        monkeypatch.setattr("spellbook.memory.tools._get_memory_dir", _mock_memory_dir)
+
+        store_result = do_memory_store(
+            content="Global to forget stored as a file with enough words for slug generation",
+            type="project",
+            kind="fact",
             tags=["forget"],
-            citations=[],
             scope="global",
+            namespace="proj-a",
         )
-        result = do_memory_forget(db_path=db_path, memory_id=mem_id)
-        assert result["status"] == "deleted"
+        mem_path = store_result["path"]
+
+        result = do_memory_forget(memory_id_or_query=mem_path, namespace="proj-a")
+        assert result["status"] == "archived"
 
         # Verify it's gone from recall
         recall = do_memory_recall(
-            db_path=db_path,
             query="",
             namespace="proj-a",
             scope="global",
