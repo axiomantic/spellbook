@@ -9,7 +9,7 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.30,<2.1",
     "aiosqlite>=0.20.0,<0.23",
     "alembic>=1.13.0,<1.19",
-    "rich>=13.0",
+    "rich>=15.0.0",
     "claude-agent-sdk",
 ]
 
