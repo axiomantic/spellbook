@@ -80,11 +80,18 @@ def test_existing_spellbook_managed_entries_are_removed_before_merge(
     assert hook["type"] == "command"
     assert hook["timeout"] == 15
     # The new command references the stable symlink path, not the worktree.
+    import sys as _sys
     from installer.components.source_link import get_source_link_path
-    expected_cmd = (
-        f"{config_dir}/daemon-venv/bin/python "
-        f"{get_source_link_path()}/hooks/spellbook_hook.py"
-    )
+    if _sys.platform == "win32":
+        expected_cmd = (
+            f"powershell -ExecutionPolicy Bypass -File "
+            f"{get_source_link_path()}/hooks/spellbook_hook.ps1"
+        )
+    else:
+        expected_cmd = (
+            f"{config_dir}/daemon-venv/bin/python "
+            f"{get_source_link_path()}/hooks/spellbook_hook.py"
+        )
     assert hook["command"] == expected_cmd
 
 
