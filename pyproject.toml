@@ -20,7 +20,7 @@ gemini = []
 [dependency-groups]
 daemon = [
     "fastmcp>=0.4.1",
-    "fastapi>=0.115.0",
+    "fastapi>=0.135.3",
     "uvicorn>=0.30.0",
     "httpx>=0.25.0",
 ]
@@ -39,7 +39,7 @@ dev = [
     "bigfoot>=0.19.1",
     "dirty-equals>=0.8.0",
     "fastmcp>=0.4.1",
-    "fastapi>=0.115.0",
+    "fastapi>=0.135.3",
     "pyyaml>=6.0",
 ]
 docs = [
