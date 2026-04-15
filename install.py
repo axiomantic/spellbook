@@ -1015,6 +1015,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Stable-source symlink must be in place before anything else, so all
     # downstream artifacts (hook commands, plist entries, editable install)
     # reference the symlink path rather than this specific worktree path.
+    # Function-level import is intentional: install.py is self-bootstrapping
+    # and may run before the `installer` package is importable (curl-pipe
+    # install path). Every other installer import in this file follows the
+    # same convention; do not hoist to module top.
     try:
         from installer.components.source_link import (
             InstallError as SourceLinkError,

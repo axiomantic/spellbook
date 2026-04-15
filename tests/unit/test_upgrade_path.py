@@ -213,10 +213,6 @@ class TestUpgradeFromShellHooks:
 
         config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: config_dir)
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: config_dir,
-        )
 
         old_settings = {
             "hooks": {

@@ -1053,10 +1053,6 @@ class TestInstallHooksWithSpellbookDir:
         monkeypatch.setattr(
             "installer.config.get_spellbook_config_dir", lambda: fake_config_dir
         )
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: fake_config_dir,
-        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1074,10 +1070,6 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: fake_config_dir,
-        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1100,10 +1092,6 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: fake_config_dir,
-        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1149,10 +1137,6 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: fake_config_dir,
-        )
 
         # Simulate old installation with literal paths
         _make_settings_file(settings_path, {
@@ -1188,10 +1172,6 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
-        monkeypatch.setattr(
-            "installer.config.get_spellbook_config_dir",
-            lambda: fake_config_dir,
-        )
 
         _make_settings_file(settings_path, {
             "hooks": {
