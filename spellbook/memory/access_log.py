@@ -42,12 +42,61 @@ def get_importance(memory_path: str, memory_dir: str) -> float:
     """
     log_path = os.path.join(memory_dir, ".access-log.json")
     data = _read_access_log(log_path)
+    return importance_from_log(data, memory_path)
 
+
+def importance_from_log(data: dict, memory_path: str) -> float:
+    """Compute importance score from a pre-loaded access-log dict.
+
+    Use this when iterating many paths against the same log to avoid
+    re-reading the file on every call.
+    """
     if memory_path not in data:
         return 1.0
-
     count = data[memory_path]["count"]
     return min(1.0 + 0.1 * count, 10.0)
+
+
+def load_access_log(memory_dir: str) -> dict:
+    """Read the access-log dict for a memory directory (empty if missing)."""
+    log_path = os.path.join(memory_dir, ".access-log.json")
+    return _read_access_log(log_path)
+
+
+def batch_record_access(memory_paths: list[str], memory_dir: str) -> None:
+    """Record accesses for multiple memories in a single read-modify-write cycle.
+
+    Equivalent to calling :func:`record_access` for each path but performs
+    exactly one ``_write_access_log`` invocation regardless of how many
+    paths are supplied. Skips the write entirely when the input list is empty.
+    """
+    if not memory_paths:
+        return
+
+    log_path = os.path.join(memory_dir, ".access-log.json")
+    dir_path = os.path.dirname(log_path) or "."
+    os.makedirs(dir_path, exist_ok=True)
+
+    lock_path = Path(log_path + ".lock")
+    with CrossPlatformLock(lock_path, shared=False, blocking=True):
+        if os.path.exists(log_path):
+            with open(log_path, "rb") as f:
+                content = f.read()
+        else:
+            content = b""
+
+        data = json.loads(content.decode("utf-8")) if content else {}
+
+        now = datetime.now(timezone.utc).isoformat()
+        for memory_path in memory_paths:
+            entry = data.get(memory_path)
+            if entry is None:
+                entry = {"count": 0, "last_accessed": ""}
+                data[memory_path] = entry
+            entry["count"] += 1
+            entry["last_accessed"] = now
+
+        _write_access_log(log_path, data)
 
 
 def record_audit(

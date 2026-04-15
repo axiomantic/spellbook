@@ -16,6 +16,12 @@ class Citation:
     file: str
     symbol: Optional[str] = None
     symbol_type: Optional[str] = None  # function, method, class, module, variable, type
+    # Optional source line anchor. ``line_start`` is 1-indexed; ``line_end``
+    # is inclusive. When only ``line_start`` is set, callers should treat it
+    # as a single-line citation. Used by the sync pipeline to window the
+    # source-code snippet handed to fact-checking LLMs.
+    line_start: Optional[int] = None
+    line_end: Optional[int] = None
 
 
 @dataclass

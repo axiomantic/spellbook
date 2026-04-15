@@ -181,6 +181,16 @@ async def list_memories(
 ):
     """List memories sorted by ``created`` descending, offset-paginated."""
     root = _resolve_memory_root()
+    # TODO(perf): this endpoint is O(N) in total memory count -- every request
+    # walks the entire memory tree, parses each file's frontmatter, sorts the
+    # full set, and then returns one page. Pagination is done in-memory after
+    # the full load, so cost does not shrink with smaller ``limit`` values.
+    # Proposed fix is a sidecar SQLite index (path, type, scope, created,
+    # last_verified, ...) updated on store/forget/sync; this endpoint then
+    # becomes a single indexed ``ORDER BY created DESC LIMIT ? OFFSET ?``
+    # query. Acceptable for now; becomes a perceptible UI lag once the
+    # memory tree holds roughly 1000+ files. Until then, the asyncio.to_thread
+    # offload below at least keeps the event loop responsive.
     # Walking the memory directory and parsing every file is synchronous and
     # can be slow; offload to a worker thread so we do not block the event loop.
     all_mems = await asyncio.to_thread(

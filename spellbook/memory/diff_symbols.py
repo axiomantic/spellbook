@@ -57,8 +57,48 @@ _HUNK_HEADER_RE = re.compile(
     r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)"
 )
 
-# File path from diff header
-_DIFF_FILE_RE = re.compile(r"^diff --git a/(.*?) b/(.*?)$")
+# File path from diff header. Git wraps filenames containing spaces, tabs,
+# control characters, or non-ASCII bytes in double quotes (controlled by
+# ``core.quotepath``). Both forms must parse: bare ``a/path b/path`` and
+# quoted ``"a/path with space" "b/path with space"``. Mixed forms (one
+# quoted, one bare) do not occur in practice but are tolerated by the
+# alternation. Inside quoted names, git uses C-style escapes for special
+# bytes; :func:`_unquote_diff_path` handles the common ones.
+_DIFF_FILE_RE = re.compile(
+    r'^diff --git (?:"a/(.*?)"|a/(.*?)) (?:"b/(.*?)"|b/(.*?))$'
+)
+
+# C-style escapes that git emits inside quoted diff filenames. Higher-order
+# octal byte escapes (e.g. ``\303\251`` for UTF-8 ``é``) are NOT decoded
+# here -- those paths arrive intact as the literal escape sequence. If that
+# matters in practice, switch to ``codecs.escape_decode`` and handle the
+# bytes->str conversion explicitly.
+_DIFF_QUOTE_ESCAPES = {
+    "\\\\": "\\",
+    '\\"': '"',
+    "\\t": "\t",
+    "\\n": "\n",
+    "\\r": "\r",
+}
+
+
+def _unquote_diff_path(path: str) -> str:
+    """Decode the limited C-style escapes git uses in quoted diff paths."""
+    if "\\" not in path:
+        return path
+    out: list[str] = []
+    i = 0
+    while i < len(path):
+        if path[i] == "\\" and i + 1 < len(path):
+            two = path[i : i + 2]
+            replacement = _DIFF_QUOTE_ESCAPES.get(two)
+            if replacement is not None:
+                out.append(replacement)
+                i += 2
+                continue
+        out.append(path[i])
+        i += 1
+    return "".join(out)
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +158,9 @@ def parse_diff_hunks(diff_text: str) -> list[DiffHunk]:
         file_match = _DIFF_FILE_RE.match(line)
         if file_match:
             _flush_hunk()
-            current_file = file_match.group(2)
+            # Pick whichever side-b alternation matched (quoted vs bare).
+            b_path = file_match.group(3) or file_match.group(4) or ""
+            current_file = _unquote_diff_path(b_path)
             continue
 
         hunk_match = _HUNK_HEADER_RE.match(line)

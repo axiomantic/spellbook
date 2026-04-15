@@ -1074,3 +1074,131 @@ class TestApplySyncResults:
         assert report.memories_created == 1
         assert report.memories_rejected == 0
         assert report.errors == []
+
+
+# ---------------------------------------------------------------------------
+# F3: _read_code_snippet must window large source files
+# ---------------------------------------------------------------------------
+
+
+class TestReadCodeSnippetWindow:
+    """_read_code_snippet must not return entire large source files.
+
+    Previously the helper read every byte of every cited file and handed
+    the result to the fact-check prompt, which can blow LLM context for
+    large sources. The fix windows around the citation's line range when
+    one is set, around a best-effort symbol match otherwise, and falls
+    back to a hard ceiling on the first N lines as a last resort. The
+    snippet is always prefixed with a `# path:start-end (windowed)`
+    header so prompts can tell they are seeing a window, not the file.
+    """
+
+    def test_read_code_snippet_with_line_range_windows_around(self, tmp_path):
+        from spellbook.memory.sync_pipeline import (
+            _SNIPPET_CONTEXT_LINES,
+            _read_code_snippet,
+        )
+
+        # Build a 300-line source file, each line uniquely identifiable
+        # so we can verify the exact slice that came back.
+        rel = "src/big_module.py"
+        full = os.path.join(str(tmp_path), rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w") as f:
+            f.write("\n".join(f"line_{i}" for i in range(1, 301)))
+
+        cite = Citation(file=rel, line_start=150)
+        snippet = _read_code_snippet(str(tmp_path), cite)
+
+        # 25 lines before + the line itself + 25 lines after = 51 lines of
+        # body, plus one header line.
+        body_lines = snippet.splitlines()
+        assert body_lines[0] == f"# {rel}:125-175 (windowed)"
+        body = body_lines[1:]
+        assert len(body) == 51, (
+            f"expected 25+1+25 = 51 windowed lines, got {len(body)}"
+        )
+        assert body[0] == "line_125"
+        assert body[25] == "line_150"
+        assert body[-1] == "line_175"
+        # Sanity: confirms we're using the configured context width.
+        assert _SNIPPET_CONTEXT_LINES == 25
+
+    def test_read_code_snippet_windows_for_symbol_when_no_line_range(
+        self, tmp_path
+    ):
+        from spellbook.memory.sync_pipeline import _read_code_snippet
+
+        rel = "src/findme.py"
+        full = os.path.join(str(tmp_path), rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        # 500 lines: padding, then `def my_target():` at line 10, then
+        # more padding. Symbol search should anchor on line 10.
+        lines = [f"# pad {i}" for i in range(1, 10)]
+        lines.append("def my_target():")
+        lines += [f"# pad {i}" for i in range(11, 501)]
+        with open(full, "w") as f:
+            f.write("\n".join(lines))
+
+        cite = Citation(file=rel, symbol="my_target")
+        snippet = _read_code_snippet(str(tmp_path), cite)
+
+        body_lines = snippet.splitlines()
+        # Symbol matched on line 10. Window is max(1, 10-25)=1 to
+        # min(500, 10+25)=35; that's 35 lines. Either way, must be <= 51.
+        assert body_lines[0].startswith(f"# {rel}:")
+        body = body_lines[1:]
+        assert len(body) <= 51, (
+            f"symbol-anchored window should be <= 51 lines, got {len(body)}"
+        )
+        assert "def my_target():" in body
+
+    def test_read_code_snippet_ceiling_when_symbol_not_found(self, tmp_path):
+        from spellbook.memory.sync_pipeline import (
+            _SNIPPET_HARD_CEILING,
+            _read_code_snippet,
+        )
+
+        rel = "src/no_match.py"
+        full = os.path.join(str(tmp_path), rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        # 600 lines, none of which contain the cited symbol.
+        with open(full, "w") as f:
+            f.write("\n".join(f"# unrelated_{i}" for i in range(1, 601)))
+
+        cite = Citation(file=rel, symbol="nowhere_to_be_found")
+        snippet = _read_code_snippet(str(tmp_path), cite)
+
+        body_lines = snippet.splitlines()
+        assert body_lines[0] == f"# {rel}:1-{_SNIPPET_HARD_CEILING} (windowed)"
+        body = body_lines[1:]
+        assert len(body) == _SNIPPET_HARD_CEILING == 200
+        # First and last lines of the windowed slice line up with the cap.
+        assert body[0] == "# unrelated_1"
+        assert body[-1] == f"# unrelated_{_SNIPPET_HARD_CEILING}"
+
+    def test_read_code_snippet_missing_file_returns_empty(self, tmp_path):
+        from spellbook.memory.sync_pipeline import _read_code_snippet
+
+        cite = Citation(file="src/does_not_exist.py", line_start=1)
+        assert _read_code_snippet(str(tmp_path), cite) == ""
+
+    def test_read_code_snippet_legacy_string_signature_still_works(
+        self, tmp_path
+    ):
+        """Backwards-compat: passing a bare path (no Citation) hits the ceiling path."""
+        from spellbook.memory.sync_pipeline import (
+            _SNIPPET_HARD_CEILING,
+            _read_code_snippet,
+        )
+
+        rel = "src/legacy.py"
+        full = os.path.join(str(tmp_path), rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w") as f:
+            f.write("\n".join(f"row_{i}" for i in range(1, 301)))
+
+        snippet = _read_code_snippet(str(tmp_path), rel)
+        body_lines = snippet.splitlines()
+        assert body_lines[0].endswith("(windowed)")
+        assert len(body_lines) - 1 <= _SNIPPET_HARD_CEILING

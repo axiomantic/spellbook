@@ -171,6 +171,10 @@ def _citation_to_dict(c: Citation) -> dict:
         d["symbol"] = c.symbol
     if c.symbol_type is not None:
         d["symbol_type"] = c.symbol_type
+    if c.line_start is not None:
+        d["line_start"] = c.line_start
+    if c.line_end is not None:
+        d["line_end"] = c.line_end
     return d
 
 
@@ -207,6 +211,8 @@ def _dict_to_frontmatter(data: dict) -> MemoryFrontmatter:
                 file=c["file"],
                 symbol=c.get("symbol"),
                 symbol_type=c.get("symbol_type"),
+                line_start=c.get("line_start"),
+                line_end=c.get("line_end"),
             ))
 
     # Parse last_verified

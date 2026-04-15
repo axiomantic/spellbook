@@ -1350,3 +1350,81 @@ class TestRecallOverfetchWithScope:
 
         assert captured_limits == [5]
         assert len(results) == 5
+
+
+# ---------------------------------------------------------------------------
+# F1: recall_memories must update the access log in a single batched write
+# ---------------------------------------------------------------------------
+
+
+class TestRecallAccessLogBatchedWrite:
+    """recall_memories should write the access log exactly once per call.
+
+    Previously, the function called record_access in a per-result loop,
+    which performed one read-modify-write cycle per returned memory. That
+    is O(N) writes for an N-result call; gemini flagged this as redundant
+    I/O. The fix loads the access log once at the top of the function and
+    flushes a single batched update at the end.
+    """
+
+    @requires_memory_tools
+    def test_writes_access_log_exactly_once_for_n_results(
+        self, tmp_path, monkeypatch
+    ):
+        from spellbook.memory import access_log as _alog
+        from spellbook.memory import filestore as _fs
+
+        # Seed several real memories so QMD has something to score against.
+        for i in range(5):
+            _fs.store_memory(
+                content=f"Batched access log probe {i}: tracking redundant I/O.",
+                type="project",
+                kind="fact",
+                citations=[],
+                tags=["batch-probe"],
+                scope="project",
+                branch=None,
+                memory_dir=str(tmp_path),
+            )
+
+        # Count writes to the access log atomic-write helper. We patch on
+        # the access_log module so any call site (including recall_memories
+        # via the batched helper) is observed.
+        write_calls: list[tuple] = []
+        original_write = _alog._write_access_log
+
+        def counting_write(log_path, data):
+            write_calls.append((log_path, dict(data)))
+            return original_write(log_path, data)
+
+        monkeypatch.setattr(_alog, "_write_access_log", counting_write)
+
+        results = _fs.recall_memories(
+            query="batched access log probe tracking",
+            memory_dir=str(tmp_path),
+            limit=5,
+        )
+
+        # Sanity: we got multiple results back so we are exercising the
+        # batched-write code path, not the trivial single-result case.
+        assert len(results) >= 2, (
+            "Test setup failure: needed multiple results to detect "
+            f"redundant per-result writes, got {len(results)}"
+        )
+
+        # The fix: exactly one write call, regardless of result count.
+        assert len(write_calls) == 1, (
+            f"recall_memories wrote the access log {len(write_calls)} times "
+            f"for {len(results)} results; expected exactly 1 batched write"
+        )
+
+        # And that single write must contain an entry for every returned
+        # memory, proving the batch covered all of them rather than the
+        # last one only.
+        _log_path, written = write_calls[0]
+        for r in results:
+            rel = os.path.relpath(r.memory.path, str(tmp_path))
+            assert rel in written, (
+                f"batched access-log write missing entry for {rel}"
+            )
+            assert written[rel]["count"] >= 1

@@ -10,7 +10,12 @@ import os
 import shutil
 from datetime import date
 
-from spellbook.memory.access_log import get_importance, record_access, record_audit
+from spellbook.memory.access_log import (
+    batch_record_access,
+    importance_from_log,
+    load_access_log,
+    record_audit,
+)
 from spellbook.memory.frontmatter import (
     generate_slug,
     parse_frontmatter,
@@ -39,8 +44,15 @@ def _find_existing_by_hash(
 ) -> str | None:
     """Scan existing memory files in a type directory for a matching content_hash.
 
-    TODO(perf): replace with hash-prefixed directory index when memory count
-    exceeds ~500. Current linear scan is O(N) per store.
+    TODO(perf): this is O(N) in the number of memories of the given type --
+    every store_memory call walks the entire type directory and parses each
+    file's frontmatter just to check for a hash collision. Proposed fix is a
+    hash-prefixed directory index (e.g. ``.index/by-hash/<sha-prefix>/<full-hash>``
+    -> filename) maintained alongside writes; lookup then becomes O(1).
+    Current scan is fine for small projects but starts to become a noticeable
+    fixed cost on every store once a single type directory holds roughly
+    500+ memories. Defer until that threshold is hit; the index needs its
+    own integrity story (rebuild-on-corruption, archival handling).
     """
     target_dir = os.path.join(memory_dir, type_dir)
     if not os.path.isdir(target_dir):
@@ -224,11 +236,16 @@ def recall_memories(
     if scope is not None:
         results = [r for r in results if r.memory.frontmatter.scope == scope]
 
-    # Apply access importance boost and update access log
+    # Apply access importance boost and update access log.
+    # Read the access log ONCE up front so that scoring all candidates is
+    # an in-memory dict lookup. We also batch the access-count update at
+    # the end into a single write, regardless of how many results we return.
+    access_data = load_access_log(memory_dir)
+
     boosted: list[MemoryResult] = []
     for r in results:
         rel_path = os.path.relpath(r.memory.path, memory_dir)
-        importance = get_importance(rel_path, memory_dir)
+        importance = importance_from_log(access_data, rel_path)
         boosted.append(MemoryResult(
             memory=r.memory,
             score=r.score * importance,
@@ -236,12 +253,14 @@ def recall_memories(
         ))
 
     boosted.sort(key=lambda r: r.score, reverse=True)
+    final = boosted[:limit]
 
-    for result in boosted[:limit]:
-        rel_path = os.path.relpath(result.memory.path, memory_dir)
-        record_access(rel_path, memory_dir)
+    rel_paths = [
+        os.path.relpath(result.memory.path, memory_dir) for result in final
+    ]
+    batch_record_access(rel_paths, memory_dir)
 
-    return boosted[:limit]
+    return final
 
 
 def forget_memory(

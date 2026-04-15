@@ -307,6 +307,48 @@ class TestParseDiffHunks:
         assert hunks[0].removed_lines == ["  port: 8080"]
         assert hunks[0].added_lines == ["  port: 9090"]
 
+    def test_parses_quoted_filename_with_space(self):
+        """git diff quotes filenames with spaces; the regex must match both forms.
+
+        Without this, hunks belonging to "my file.py" are silently dropped
+        and any symbols changed inside that file are invisible to the
+        sync pipeline. The fix is to extend _DIFF_FILE_RE to handle the
+        quoted form and unquote the captured path.
+        """
+        from spellbook.memory.diff_symbols import parse_diff_hunks
+
+        diff = (
+            'diff --git "a/my file.py" "b/my file.py"\n'
+            '--- "a/my file.py"\n'
+            '+++ "b/my file.py"\n'
+            "@@ -1,3 +1,4 @@\n"
+            " def existing():\n"
+            "     pass\n"
+            "+def added():\n"
+            "+    return 1\n"
+        )
+
+        hunks = parse_diff_hunks(diff)
+        assert len(hunks) == 1
+        # The path must arrive UNQUOTED -- callers (Citation.file,
+        # symbol mapping, etc.) work with bare paths.
+        assert hunks[0].file_path == "my file.py"
+
+    def test_parses_quoted_filename_with_escapes(self):
+        """C-style escapes (\\\", \\\\, \\t) inside quoted paths must decode."""
+        from spellbook.memory.diff_symbols import parse_diff_hunks
+
+        # Path contains an embedded backslash; git emits it as \\
+        diff = (
+            'diff --git "a/weird\\\\name.py" "b/weird\\\\name.py"\n'
+            "@@ -1,1 +1,1 @@\n"
+            "-old\n"
+            "+new\n"
+        )
+        hunks = parse_diff_hunks(diff)
+        assert len(hunks) == 1
+        assert hunks[0].file_path == "weird\\name.py"
+
 
 # ---------------------------------------------------------------------------
 # extract_symbols_from_hunk - Python

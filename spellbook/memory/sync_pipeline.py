@@ -12,6 +12,7 @@ Phases:
 
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -107,13 +108,84 @@ class SyncReport:
 # ---------------------------------------------------------------------------
 
 
-def _read_code_snippet(project_root: str, file_path: str) -> str:
-    """Read source file content, returning empty string if missing."""
+# Snippet windowing configuration. Tuned to keep individual snippets small
+# enough that a fact-check prompt can carry many of them without blowing
+# the context budget, while still giving the LLM enough surrounding code
+# to judge correctness.
+_SNIPPET_CONTEXT_LINES = 25  # before and after the anchor line
+_SNIPPET_HARD_CEILING = 200  # last-resort cap when no anchor is available
+
+
+def _read_code_snippet(
+    project_root: str,
+    file_path_or_citation,
+    citation: "Citation | None" = None,
+) -> str:
+    """Read a windowed source-code snippet for a citation.
+
+    Returns at most a small window around the citation's line range, or
+    around the first definition matching its symbol, or the first
+    ``_SNIPPET_HARD_CEILING`` lines as a last-resort ceiling. Always
+    prefixes the snippet with a header line of the form
+    ``# <path>:<start>-<end> (windowed)`` so downstream prompts make
+    clear that what they are seeing is a window, not the whole file.
+
+    Backwards-compatible signature: ``_read_code_snippet(root, "path")`` and
+    ``_read_code_snippet(root, citation)`` both work; the citation form
+    activates line-range windowing.
+    """
+    if isinstance(file_path_or_citation, Citation):
+        citation = file_path_or_citation
+        file_path = citation.file
+    else:
+        file_path = file_path_or_citation
+
     full_path = os.path.join(project_root, file_path)
     if not os.path.exists(full_path):
         return ""
+
     with open(full_path, "r") as f:
-        return f.read()
+        lines = f.read().splitlines()
+
+    if not lines:
+        return ""
+
+    total = len(lines)
+    anchor: int | None = None  # 1-indexed line number to center on
+    explicit_range: tuple[int, int] | None = None
+
+    if citation is not None and citation.line_start is not None:
+        start = max(1, int(citation.line_start))
+        end = int(citation.line_end) if citation.line_end is not None else start
+        if end < start:
+            end = start
+        explicit_range = (start, end)
+
+    if explicit_range is None and citation is not None and citation.symbol:
+        # Best-effort symbol search. Only the first match counts; this is
+        # advisory windowing, not a code-intelligence query.
+        sym = re.escape(citation.symbol)
+        pattern = re.compile(rf"^\s*(?:async\s+)?(?:def|class)\s+{sym}\b")
+        for idx, line in enumerate(lines, start=1):
+            if pattern.search(line):
+                anchor = idx
+                break
+
+    if explicit_range is not None:
+        win_start = max(1, explicit_range[0] - _SNIPPET_CONTEXT_LINES)
+        win_end = min(total, explicit_range[1] + _SNIPPET_CONTEXT_LINES)
+    elif anchor is not None:
+        win_start = max(1, anchor - _SNIPPET_CONTEXT_LINES)
+        win_end = min(total, anchor + _SNIPPET_CONTEXT_LINES)
+    else:
+        # No usable anchor: hand back at most the first _SNIPPET_HARD_CEILING
+        # lines so a giant source file does not dominate the prompt.
+        win_start = 1
+        win_end = min(total, _SNIPPET_HARD_CEILING)
+
+    body = "\n".join(lines[win_start - 1 : win_end])
+    header = f"# {file_path}:{win_start}-{win_end} (windowed)"
+    return f"{header}\n{body}"
 
 
 def _scan_existing_hashes(memory_dir: str) -> set[str]:
@@ -312,7 +384,7 @@ def phase2_prepare_factcheck(
         # Read current code for each cited file
         snippets: list[str] = []
         for citation in arm.at_risk_citations:
-            snippet = _read_code_snippet(project_root, citation.file)
+            snippet = _read_code_snippet(project_root, citation)
             if snippet:
                 snippets.append(snippet)
 
@@ -675,6 +747,8 @@ def apply_sync_results(
                         file=c.get("file", ""),
                         symbol=c.get("symbol"),
                         symbol_type=c.get("symbol_type"),
+                        line_start=c.get("line_start"),
+                        line_end=c.get("line_end"),
                     )
                     for c in mem.get("citations", [])
                 ]
