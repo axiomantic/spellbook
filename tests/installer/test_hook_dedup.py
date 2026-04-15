@@ -184,3 +184,62 @@ def test_user_hooks_preserved_when_spellbook_entries_replaced(tmp_path, config_d
     assert hooks[0] == user_hook
     assert hooks[1]["spellbook_managed"] is True
     assert hooks[1]["spellbook_hook_id"] == "PreToolUse"
+
+
+def test_strip_preserves_entry_level_fields(tmp_path, config_dir):
+    """An entry with mixed spellbook+user hooks and entry-level fields
+    (timeout, async) must retain those fields when stripping the
+    spellbook hooks.
+    """
+    from installer.components.hooks import _strip_managed_from_all_phases
+
+    user_hook = {"type": "command", "command": "/user/script.sh"}
+    spellbook_hook = {
+        "type": "command",
+        "command": "/old/path/spellbook_hook.py",
+        "spellbook_managed": True,
+        "spellbook_hook_id": "PreToolUse",
+    }
+    phase_entries = [
+        {
+            "timeout": 30,
+            "hooks": [spellbook_hook, user_hook],
+        }
+    ]
+
+    _strip_managed_from_all_phases(phase_entries)
+
+    assert len(phase_entries) == 1
+    assert phase_entries[0] == {"timeout": 30, "hooks": [user_hook]}
+
+
+def test_legacy_path_hooks_removed_when_spellbook_dir_passed(
+    tmp_path, config_dir
+):
+    """A legacy hook entry (no spellbook_managed field, command matches
+    the CURRENT worktree path) must be removed when spellbook_dir is
+    passed to _strip_managed_from_all_phases.
+    """
+    from installer.components.hooks import _strip_managed_from_all_phases
+
+    spellbook_dir = tmp_path / "worktree-current"
+    spellbook_dir.mkdir()
+
+    legacy_cmd = (
+        f"{spellbook_dir}/.venv/bin/python "
+        f"{spellbook_dir}/hooks/spellbook_hook.py"
+    )
+    # No spellbook_managed marker — identification is path-based only.
+    legacy_hook = {"type": "command", "command": legacy_cmd, "timeout": 15}
+    phase_entries = [{"hooks": [legacy_hook]}]
+
+    # Without spellbook_dir, this legacy entry is not recognized (path doesn't
+    # contain $SPELLBOOK_DIR literal or the stable symlink prefix).
+    unchanged = [{"hooks": [dict(legacy_hook)]}]
+    _strip_managed_from_all_phases(unchanged)
+    assert len(unchanged) == 1
+    assert unchanged[0]["hooks"] == [legacy_hook]
+
+    # With spellbook_dir, it matches and gets removed.
+    _strip_managed_from_all_phases(phase_entries, spellbook_dir)
+    assert phase_entries == []

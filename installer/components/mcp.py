@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from installer.compat import Platform, get_platform, get_python_executable
+from installer.components.source_link import get_source_link_path
 from installer.config import get_spellbook_config_dir
 
 # Daemon configuration
@@ -337,8 +338,6 @@ def _editable_install_spellbook(daemon_python: Path) -> Tuple[bool, str]:
     using it here means the editable install survives worktree switches
     without being touched again.
     """
-    from installer.components.source_link import get_source_link_path
-
     symlink_path = get_source_link_path()
     try:
         result = subprocess.run(

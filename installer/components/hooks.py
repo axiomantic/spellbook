@@ -202,23 +202,23 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
     # Check both starts-with (legacy bare path) and contains (venv python prefix)
     if _SPELLBOOK_HOOK_PREFIX in normalized_path:
         return True
+    # Recognize the stable symlink prefix so re-install from any worktree
+    # cleans up prior entries. This check does not depend on spellbook_dir.
+    try:
+        symlink_prefix = str(_source_link.get_source_link_path()).replace("\\", "/") + "/hooks/"
+        if symlink_prefix in normalized_path:
+            return True
+    except Exception as exc:
+        logger.debug(
+            "source symlink prefix lookup failed during hook detection: %s",
+            exc,
+            exc_info=True,
+        )
     if spellbook_dir is not None:
         # Normalize spellbook_dir to forward slashes as well
         expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
         if expanded_prefix in normalized_path:
             return True
-        # Also recognize the stable symlink prefix so re-install from any
-        # worktree cleans up prior entries.
-        try:
-            symlink_prefix = str(_source_link.get_source_link_path()).replace("\\", "/") + "/hooks/"
-            if symlink_prefix in normalized_path:
-                return True
-        except Exception as exc:
-            logger.debug(
-                "source symlink prefix lookup failed during hook detection: %s",
-                exc,
-                exc_info=True,
-            )
     return False
 
 
@@ -372,21 +372,28 @@ def _tag_as_managed(
 
 def _strip_managed_from_all_phases(
     phase_entries: List[Dict],
+    spellbook_dir: Optional[Path] = None,
 ) -> None:
     """Remove every spellbook-managed hook from ``phase_entries`` in-place.
 
     Entries whose hooks list becomes empty are dropped. User-authored
     hooks (no ``spellbook_managed`` marker and no spellbook path prefix)
-    are preserved.
+    are preserved. Entry-level fields (``timeout``, ``async``, etc.) on
+    mixed entries (some spellbook, some user hooks) are retained.
+
+    If ``spellbook_dir`` is provided, legacy path-based hook entries
+    whose command contains the current worktree path are also removed.
     """
     cleaned_entries: List[Dict] = []
     for entry in phase_entries:
-        remaining = [h for h in entry.get("hooks", []) if not _is_spellbook_hook(h)]
-        if remaining:
-            new_entry: Dict[str, Any] = {"hooks": remaining}
-            if "matcher" in entry:
-                new_entry["matcher"] = entry["matcher"]
-            cleaned_entries.append(new_entry)
+        filtered = [
+            h for h in entry.get("hooks", [])
+            if not _is_spellbook_hook(h, spellbook_dir)
+        ]
+        if filtered:
+            cleaned = dict(entry)
+            cleaned["hooks"] = filtered
+            cleaned_entries.append(cleaned)
     phase_entries.clear()
     phase_entries.extend(cleaned_entries)
 
@@ -423,7 +430,7 @@ def _merge_hooks_for_phase(
     # merging in fresh ones. This is the critical dedup: stale entries
     # baked with a prior worktree's absolute path are identified via the
     # ``spellbook_managed`` marker and removed regardless of path.
-    _strip_managed_from_all_phases(phase_entries)
+    _strip_managed_from_all_phases(phase_entries, spellbook_dir)
 
     phase_id = _phase_for_hook_defs(hook_defs)
 
