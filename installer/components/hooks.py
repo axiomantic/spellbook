@@ -21,9 +21,17 @@ practice, omitting the field is the most reliable approach.
 """
 
 import json
+import logging
+import platform as _platform
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+
+from .. import config as _config
+from . import source_link as _source_link
+
+logger = logging.getLogger(__name__)
 
 # Hook definitions grouped by phase. Each phase maps to a list of matcher entries.
 # All hooks MUST use the object format {type, command, ...}. Plain string hooks
@@ -107,8 +115,6 @@ def _get_hook_path_for_platform(hook_path: str) -> str:
       just the .ps1 wrapper, since the PS1 wrapper handles Python discovery itself.
     On Unix, returns the original path unchanged.
     """
-    import sys
-
     if sys.platform == "win32":
         # Handle venv-prefixed commands: extract the .py path and convert to .ps1
         # The PS1 wrapper handles Python invocation itself, so the venv prefix is dropped.
@@ -204,12 +210,15 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
         # Also recognize the stable symlink prefix so re-install from any
         # worktree cleans up prior entries.
         try:
-            from .source_link import get_source_link_path
-            symlink_prefix = str(get_source_link_path()).replace("\\", "/") + "/hooks/"
+            symlink_prefix = str(_source_link.get_source_link_path()).replace("\\", "/") + "/hooks/"
             if symlink_prefix in normalized_path:
                 return True
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug(
+                "source symlink prefix lookup failed during hook detection: %s",
+                exc,
+                exc_info=True,
+            )
     return False
 
 
@@ -290,13 +299,8 @@ def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path)
     On Windows, also replaces ``daemon-venv/bin/python`` with
     ``daemon-venv/Scripts/python.exe`` so the venv Python resolves correctly.
     """
-    import platform as _platform
-
-    from ..config import get_spellbook_config_dir
-    from .source_link import get_source_link_path
-
-    spellbook_str = str(get_source_link_path())
-    config_str = str(get_spellbook_config_dir())
+    spellbook_str = str(_source_link.get_source_link_path())
+    config_str = str(_config.get_spellbook_config_dir())
     # spellbook_dir is intentionally not used for substitution anymore; keep
     # the reference to satisfy static analysis.
     _ = spellbook_dir
@@ -530,7 +534,6 @@ def install_hooks(
 
     # On Windows, verify PowerShell is available before registering hooks.
     # Without PowerShell, .ps1 hooks cannot execute.
-    import sys
     if sys.platform == "win32":
         import shutil
         if not shutil.which("powershell"):

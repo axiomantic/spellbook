@@ -7,6 +7,7 @@ Windows (Task Scheduler).
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -14,6 +15,8 @@ import sys
 import textwrap
 import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from spellbook.daemon._paths import (
     DEFAULT_HOST,
@@ -202,8 +205,12 @@ def _get_service_source_dir() -> Path:
         link = get_source_link_path()
         if link.exists() or link.is_symlink():
             return link
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug(
+            "source symlink lookup failed; falling back to resolved spellbook dir: %s",
+            exc,
+            exc_info=True,
+        )
     return get_spellbook_dir()
 
 

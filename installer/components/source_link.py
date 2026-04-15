@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -53,7 +53,7 @@ def get_source_link_path() -> Path:
 
 def _backup_timestamp() -> str:
     """Return the current UTC timestamp formatted for backup directory names."""
-    return datetime.now().strftime("%Y%m%d-%H%M%S")
+    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
 def ensure_source_link(
