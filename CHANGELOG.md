@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-04-14
+
+### Added
+
+- **File-based memory system** (replaces the SQLAlchemy-backed memory):
+  frontmatter + body storage, QMD + Serena search backends, confidence and
+  `last_verified` fields, access log, citation tracking, sync pipeline,
+  secret scanner, migration tooling.
+- **Confidence decay** applied lazily in scoring: `high → medium → low`
+  multiplier (1.0 / 0.7 / 0.4) based on `last_verified` (or `created`
+  fallback). `store_memory()` defaults `confidence="high"`. Sync pipeline
+  `STILL_TRUE` verdict refreshes `last_verified`.
+- **Automatic memory recall on hooks**: `UserPromptSubmit` and `PreToolUse`
+  handlers extract keywords / paths, call `/api/memory/recall`, inject
+  `<spellbook-memory-context>` into prompts. Budget 500 tokens / 5 memories.
+  Atomic dedup log with 15-minute TTL. Config toggle `memory.auto_recall`
+  (default true).
+- **Automatic memory storage on hooks**: `UserPromptSubmit` pattern detection
+  for corrections / confirmations / explicit remember; `Stop` hook harvests
+  `<memory-candidate>` self-nominations from the assistant transcript.
+  Rule-dictation exception. Partial-failure retry semantics. Config toggle
+  `memory.auto_store` (default true). `AGENTS.spellbook.md` documents the
+  self-nomination schema.
+- **Admin API**: three filestore-backed endpoints — `GET /api/memories`,
+  `/search`, `/{path:path}`. Path-traversal guard.
+
+### Changed
+
+- `/api/memory/recall` rewired to `filestore.recall_memories` with
+  `cwd`-derived namespace.
+- Admin frontend (`types.ts`, `useMemories.ts`, `MemoryBrowser.tsx`) updated
+  to new schema (path-as-id, new Citation shape, `confidence`, `last_verified`).
+
+### Removed
+
+- ORM-backed memory endpoints: `/stats`, `/consolidate`, `/namespaces`,
+  memory update/delete. No backwards compatibility (pre-1.0).
+
 ## [0.51.0] - 2026-04-09
 
 ### Added
