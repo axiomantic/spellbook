@@ -474,6 +474,12 @@ class TestDedupLogLocking:
         thread to overwrite the other's new entry (last-writer-wins), losing
         entries with identical timestamps.
         """
+        import sys as _sys
+        if _sys.platform == "win32":
+            pytest.skip(
+                "fcntl-based serialization is POSIX-only; on Windows the "
+                "dedup log falls back to last-writer-wins (documented)."
+            )
         import threading
 
         barrier = threading.Barrier(2)
@@ -498,6 +504,9 @@ class TestDedupLogLocking:
         self, mock_http, dedup_log_path, monkeypatch,
     ):
         """When fcntl.flock is permanently contended, the write degrades safely."""
+        import sys as _sys
+        if _sys.platform == "win32":
+            pytest.skip("fcntl is POSIX-only; lock fallback path is a no-op on Windows")
         import fcntl
 
         def always_block(fd, op):
