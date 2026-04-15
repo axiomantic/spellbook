@@ -24,6 +24,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from spellbook.admin.auth import require_admin_auth
+from spellbook.memory import memory_index
 from spellbook.memory.filestore import read_memory
 from spellbook.memory.models import Citation, MemoryFile, MemoryFrontmatter
 from spellbook.memory.search_qmd import search_memories
@@ -179,26 +180,37 @@ async def list_memories(
     limit: int = Query(50, ge=1, le=500),
     _session: str = Depends(require_admin_auth),
 ):
-    """List memories sorted by ``created`` descending, offset-paginated."""
+    """List memories sorted by ``created`` descending, offset-paginated.
+
+    Backed by the :mod:`spellbook.memory.memory_index` sidecar. Only fields
+    stored in the index are surfaced: ``id`` (rel path), ``type``, ``kind``,
+    ``created``, ``content_hash``. Hit the detail endpoint for full
+    frontmatter and body.
+    """
     root = _resolve_memory_root()
-    # TODO(perf): this endpoint is O(N) in total memory count -- every request
-    # walks the entire memory tree, parses each file's frontmatter, sorts the
-    # full set, and then returns one page. Pagination is done in-memory after
-    # the full load, so cost does not shrink with smaller ``limit`` values.
-    # Proposed fix is a sidecar SQLite index (path, type, scope, created,
-    # last_verified, ...) updated on store/forget/sync; this endpoint then
-    # becomes a single indexed ``ORDER BY created DESC LIMIT ? OFFSET ?``
-    # query. Acceptable for now; becomes a perceptible UI lag once the
-    # memory tree holds roughly 1000+ files. Until then, the asyncio.to_thread
-    # offload below at least keeps the event loop responsive.
-    # Walking the memory directory and parsing every file is synchronous and
-    # can be slow; offload to a worker thread so we do not block the event loop.
-    all_mems = await asyncio.to_thread(
-        lambda: _sort_by_created_desc(_load_all_memories(root))
-    )
-    total = len(all_mems)
-    window = all_mems[offset : offset + limit]
-    items = [_serialize_memory(lm.rel_id, lm.mf) for lm in window]
+
+    def _collect() -> tuple[list[dict[str, Any]], int]:
+        # Self-heal after external modification (throttled internally).
+        try:
+            memory_index.rebuild_if_stale(root)
+        except OSError as e:
+            logger.warning("memory-index rebuild_if_stale failed: %s", e)
+        entries = memory_index.list_entries(root)
+        total = len(entries)
+        window = entries[offset : offset + limit]
+        items = [
+            {
+                "id": e["rel_path"],
+                "type": e.get("type"),
+                "kind": e.get("kind"),
+                "created": e.get("created"),
+                "content_hash": e.get("content_hash"),
+            }
+            for e in window
+        ]
+        return items, total
+
+    items, total = await asyncio.to_thread(_collect)
     return {
         "items": items,
         "total": total,

@@ -324,9 +324,11 @@ class TestResponseShape:
 
         list_resp = auth_client.get("/api/memories").json()
         item = list_resp["items"][0]
+        # List endpoint is backed by the sidecar index and surfaces only
+        # the minimal set of indexed fields. Full detail requires the
+        # /api/memories/{path} endpoint.
         assert set(item.keys()) == {
-            "id", "type", "kind", "tags", "citations",
-            "confidence", "created", "last_verified", "body",
+            "id", "type", "kind", "created", "content_hash",
         }
 
         detail = auth_client.get(
@@ -341,7 +343,7 @@ class TestResponseShape:
         forbidden = {
             "memory_type", "status", "importance", "namespace",
             "memory_id", "meta", "accessed_at", "deleted_at",
-            "content_hash", "content", "citation_count",
+            "content", "citation_count",
         }
         assert forbidden.isdisjoint(item.keys())
         assert forbidden.isdisjoint(detail.keys())

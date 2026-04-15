@@ -342,7 +342,6 @@ def phase1_find_at_risk(
     at_risk = find_at_risk_memories(
         symbol_changes=combined_changes,
         memory_dir=memory_dir,
-        project_root=project_root,
     )
 
     return SyncPhase1Result(

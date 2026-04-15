@@ -457,3 +457,67 @@ class TestLoadDedupLogLogging:
             c for c in mock_http.calls if c["url"].endswith("/api/hook-log")
         ]
         assert hook_log_calls == []
+
+
+# ---------------------------------------------------------------------------
+# Dedup log: exclusive-lock serialization
+# ---------------------------------------------------------------------------
+
+
+class TestDedupLogLocking:
+    def test_dedup_log_lock_serializes_concurrent_writes(
+        self, dedup_log_path, monkeypatch,
+    ):
+        """Two threads touching disjoint paths must both land entries in the log.
+
+        Before the lock was added, the read-modify-write race allowed one
+        thread to overwrite the other's new entry (last-writer-wins), losing
+        entries with identical timestamps.
+        """
+        import threading
+
+        barrier = threading.Barrier(2)
+
+        def writer(paths):
+            barrier.wait()
+            # Force a handful of interleavings.
+            for _ in range(25):
+                spellbook_hook._touch_dedup_log(paths)
+
+        t1 = threading.Thread(target=writer, args=(["project/alpha.md"],))
+        t2 = threading.Thread(target=writer, args=(["project/beta.md"],))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        written = json.loads(dedup_log_path.read_text())
+        assert set(written.keys()) == {"project/alpha.md", "project/beta.md"}
+
+    def test_dedup_log_lock_timeout_falls_back_gracefully(
+        self, mock_http, dedup_log_path, monkeypatch,
+    ):
+        """When fcntl.flock is permanently contended, the write degrades safely."""
+        import fcntl
+
+        def always_block(fd, op):
+            raise BlockingIOError("locked")
+
+        monkeypatch.setattr(fcntl, "flock", always_block)
+
+        # Must not raise; must not block indefinitely.
+        spellbook_hook._touch_dedup_log(["project/alpha.md"])
+
+        # Because flock was monkeypatched to always fail, we fell back to
+        # the unlocked last-writer-wins path. The entry should still land.
+        written = json.loads(dedup_log_path.read_text())
+        assert list(written.keys()) == ["project/alpha.md"]
+
+        # And the diagnostic must have been logged via _log_hook_error so
+        # operators can spot contention in the daemon's hook-log stream.
+        hook_log_calls = [
+            c for c in mock_http.calls if c["url"].endswith("/api/hook-log")
+        ]
+        assert len(hook_log_calls) == 1
+        payload = hook_log_calls[0]["payload"]
+        assert payload["event"] == f"memory_dedup_lock_timeout:{dedup_log_path}"

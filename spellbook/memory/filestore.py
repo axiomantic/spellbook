@@ -10,6 +10,7 @@ import os
 import shutil
 from datetime import date
 
+from spellbook.memory import memory_index
 from spellbook.memory.access_log import (
     batch_record_access,
     importance_from_log,
@@ -42,18 +43,33 @@ VALID_MEMORY_TYPES = {"project", "user", "feedback", "reference"}
 def _find_existing_by_hash(
     memory_dir: str, content_hash: str, type_dir: str
 ) -> str | None:
-    """Scan existing memory files in a type directory for a matching content_hash.
+    """Return an existing memory file path with this content_hash, if any.
 
-    TODO(perf): this is O(N) in the number of memories of the given type --
-    every store_memory call walks the entire type directory and parses each
-    file's frontmatter just to check for a hash collision. Proposed fix is a
-    hash-prefixed directory index (e.g. ``.index/by-hash/<sha-prefix>/<full-hash>``
-    -> filename) maintained alongside writes; lookup then becomes O(1).
-    Current scan is fine for small projects but starts to become a noticeable
-    fixed cost on every store once a single type directory holds roughly
-    500+ memories. Defer until that threshold is hit; the index needs its
-    own integrity story (rebuild-on-corruption, archival handling).
+    Uses the sidecar :mod:`memory_index` for O(1) lookup and falls back to
+    a directory scan if the index call raises unexpectedly.
     """
+    try:
+        matches = memory_index.find_by_hash(memory_dir, content_hash)
+    except (OSError, ValueError) as e:
+        logger.warning(
+            "memory-index find_by_hash failed for %s: %s; falling back to scan",
+            memory_dir,
+            e,
+        )
+        matches = []
+    else:
+        for rel in matches:
+            # The index may contain entries from any type dir; we only care
+            # about ones in the target type_dir to preserve existing
+            # per-type dedup semantics.
+            if rel.split("/", 1)[0] != type_dir:
+                continue
+            candidate = os.path.join(memory_dir, rel.replace("/", os.sep))
+            if os.path.isfile(candidate):
+                return candidate
+        # Index may be out of date (e.g. external file drop). Fall through.
+
+    # Fallback: walk the type subdirectory.
     target_dir = os.path.join(memory_dir, type_dir)
     if not os.path.isdir(target_dir):
         return None
@@ -188,6 +204,19 @@ def store_memory(
     rel_path = os.path.relpath(file_path, memory_dir)
     record_audit("create", rel_path, {"type": type, "kind": kind}, memory_dir)
 
+    # Sidecar index (best-effort; failures must not block the store).
+    try:
+        mtime_ns = os.stat(file_path).st_mtime_ns
+        memory_index.record_store(
+            memory_dir,
+            rel_path.replace(os.sep, "/"),
+            fm,
+            c_hash,
+            mtime_ns,
+        )
+    except OSError as e:
+        logger.warning("memory-index record_store failed: %s", e)
+
     return MemoryFile(path=file_path, frontmatter=fm, content=content)
 
 
@@ -308,6 +337,11 @@ def forget_memory(
     else:
         os.unlink(memory_path_or_query)
         record_audit("delete", rel_path, {}, memory_dir)
+
+    try:
+        memory_index.record_delete(memory_dir, rel_path.replace(os.sep, "/"))
+    except OSError as e:
+        logger.warning("memory-index record_delete failed: %s", e)
 
     return True
 

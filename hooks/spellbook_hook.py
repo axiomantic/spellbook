@@ -1010,27 +1010,93 @@ def _atomic_write_json(path: Path, data: dict) -> None:
     )
 
 
-def _touch_dedup_log(paths: list[str], now: datetime | None = None) -> None:
-    """Stamp paths with `now` and write back the dedup log.
+def _dedup_lock_path() -> Path:
+    return DEDUP_LOG_PATH.with_suffix(DEDUP_LOG_PATH.suffix + ".lock")
 
-    Merges with existing (fresh) entries from the log. The write step is
-    atomic (tempfile + os.replace) so a partial write cannot be observed.
-    Best-effort dedup; last writer wins on concurrent invocations (the
-    load-modify-write race between parallel hooks is tolerated — we do
-    not take a file lock because hooks must be fast and fcntl can deadlock
-    on NFS).
+
+def _acquire_dedup_lock(lock_fd: int, timeout_sec: float = 0.1) -> bool:
+    """Try to take an exclusive advisory lock on ``lock_fd``.
+
+    Non-blocking first, then a short spinning retry up to ``timeout_sec``.
+    Returns True on success, False on timeout. Windows (no ``fcntl``)
+    short-circuits to True (no lock taken; caller retains best-effort
+    semantics).
+    """
+    try:
+        import fcntl  # POSIX only
+    except ImportError:
+        return True
+
+    deadline = time.monotonic() + timeout_sec
+    while True:
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.005)
+        except OSError:
+            # Lock call failed unexpectedly — give up cleanly.
+            return False
+
+
+def _release_dedup_lock(lock_fd: int) -> None:
+    try:
+        import fcntl  # POSIX only
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    except (ImportError, OSError):
+        pass
+
+
+def _touch_dedup_log(paths: list[str], now: datetime | None = None) -> None:
+    """Stamp paths with ``now`` and write back the dedup log.
+
+    Exclusive-lock best effort with a 100ms timeout; on timeout we fall back
+    to the prior last-writer-wins semantics and log a diagnostic via
+    ``_log_hook_error`` so operators can diagnose contention. The write
+    itself is atomic (tempfile + os.replace) so partial writes are never
+    observable.
     """
     if now is None:
         now = _utcnow()
-    log = _load_dedup_log(now=now)
     ts = now.isoformat()
-    for p in paths:
-        if p:
-            log[p] = ts
+
+    DEDUP_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = _dedup_lock_path()
+    lock_fd: int | None = None
+    locked = False
     try:
-        _atomic_write_json(DEDUP_LOG_PATH, log)
-    except OSError:
-        pass
+        try:
+            lock_fd = os.open(lock_path, os.O_WRONLY | os.O_CREAT, 0o600)
+        except OSError:
+            lock_fd = None
+
+        if lock_fd is not None:
+            locked = _acquire_dedup_lock(lock_fd)
+            if not locked:
+                _log_hook_error(
+                    "memory_dedup_lock_timeout",
+                    str(DEDUP_LOG_PATH),
+                    TimeoutError("dedup log lock contended beyond 100ms"),
+                )
+
+        log = _load_dedup_log(now=now)
+        for p in paths:
+            if p:
+                log[p] = ts
+        try:
+            _atomic_write_json(DEDUP_LOG_PATH, log)
+        except OSError:
+            pass
+    finally:
+        if lock_fd is not None:
+            if locked:
+                _release_dedup_lock(lock_fd)
+            try:
+                os.close(lock_fd)
+            except OSError:
+                pass
 
 
 def _format_memory_xml(memories: list[dict]) -> str | None:

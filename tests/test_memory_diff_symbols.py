@@ -906,12 +906,6 @@ class TestExtractChangedSymbols:
 class TestSerenaModels:
     """Test search_serena data models."""
 
-    def test_symbol_reference_construction(self):
-        from spellbook.memory.search_serena import SymbolReference
-
-        ref = SymbolReference(file="src/main.py", symbol="main", line=10)
-        assert ref == SymbolReference(file="src/main.py", symbol="main", line=10)
-
     def test_at_risk_memory_construction(self):
         from spellbook.memory.models import Citation, MemoryFile, MemoryFrontmatter
         from spellbook.memory.search_serena import AtRiskMemory
@@ -1009,9 +1003,7 @@ class TestFindAtRiskMemories:
         )
 
         changes = _symbol_changes_for_files(["src/api/client.py"])
-        at_risk = find_at_risk_memories(
-            changes, str(tmp_path), "/fake/project/root"
-        )
+        at_risk = find_at_risk_memories(changes, str(tmp_path))
 
         assert len(at_risk) == 1
         assert "client-retry" in at_risk[0].memory.path
@@ -1038,9 +1030,7 @@ class TestFindAtRiskMemories:
         )
 
         changes = _symbol_changes_for_files(["src/api/client.py"])
-        at_risk = find_at_risk_memories(
-            changes, str(tmp_path), "/fake/project/root"
-        )
+        at_risk = find_at_risk_memories(changes, str(tmp_path))
         assert at_risk == []
 
     def test_memory_with_no_citations_not_at_risk(self, tmp_path):
@@ -1059,9 +1049,7 @@ class TestFindAtRiskMemories:
         )
 
         changes = _symbol_changes_for_files(["src/api/client.py"])
-        at_risk = find_at_risk_memories(
-            changes, str(tmp_path), "/fake/project/root"
-        )
+        at_risk = find_at_risk_memories(changes, str(tmp_path))
         assert at_risk == []
 
     def test_multiple_changed_files_match_one_memory(self, tmp_path):
@@ -1084,9 +1072,7 @@ class TestFindAtRiskMemories:
         )
 
         changes = _symbol_changes_for_files(["src/api/client.py", "src/utils.py"])
-        at_risk = find_at_risk_memories(
-            changes, str(tmp_path), "/fake/project/root"
-        )
+        at_risk = find_at_risk_memories(changes, str(tmp_path))
         assert len(at_risk) == 1
         at_risk_files = {c.file for c in at_risk[0].at_risk_citations}
         assert at_risk_files == {"src/api/client.py", "src/utils.py"}
@@ -1110,7 +1096,5 @@ class TestFindAtRiskMemories:
         )
 
         changes = _symbol_changes_for_files(["src/api/client.py"])
-        at_risk = find_at_risk_memories(
-            changes, str(tmp_path), "/fake/project/root"
-        )
+        at_risk = find_at_risk_memories(changes, str(tmp_path))
         assert at_risk == []
