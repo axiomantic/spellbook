@@ -245,5 +245,6 @@ class TestUpgradeFromShellHooks:
         pre_tool_use = updated["hooks"]["PreToolUse"]
         assert len(pre_tool_use) == 1
         assert "matcher" not in pre_tool_use[0]
-        expected = _expected_unified_command(str(spellbook_dir), str(config_dir))
+        expected_symlink = config_dir / "source"
+        expected = _expected_unified_command(str(expected_symlink), str(config_dir))
         assert pre_tool_use[0]["hooks"][0]["command"] == expected
