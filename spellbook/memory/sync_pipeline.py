@@ -641,10 +641,14 @@ def apply_sync_results(
             elif verdict == "STILL_TRUE":
                 # Refresh last_verified to today so confidence decay resets.
                 # created is left untouched; content is not rewritten.
+                # Skip the rewrite entirely when last_verified is already today
+                # to avoid an unnecessary disk write on repeated syncs.
                 if os.path.exists(mem_path):
                     mf = read_memory(mem_path)
-                    mf.frontmatter.last_verified = date.today()
-                    write_memory_file(mem_path, mf.frontmatter, mf.content)
+                    today = date.today()
+                    if mf.frontmatter.last_verified != today:
+                        mf.frontmatter.last_verified = today
+                        write_memory_file(mem_path, mf.frontmatter, mf.content)
                 report.memories_unchanged += 1
 
             elif verdict == "UNCERTAIN":

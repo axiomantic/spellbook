@@ -373,7 +373,12 @@ async def api_memory_recall(request: Request) -> JSONResponse:
 
     namespace = body.get("namespace") or ""
     if not namespace:
-        namespace = _derive_namespace_from_cwd(body.get("cwd", "") or body.get("repo_path", ""))
+        # _derive_namespace_from_cwd shells out to `git rev-parse`; offload the
+        # subprocess call so we do not block the event loop.
+        namespace = await asyncio.to_thread(
+            _derive_namespace_from_cwd,
+            body.get("cwd", "") or body.get("repo_path", ""),
+        )
     if not namespace:
         return JSONResponse({"memories": [], "count": 0})
 

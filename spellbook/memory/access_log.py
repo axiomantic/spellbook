@@ -116,6 +116,8 @@ def _atomic_update_access_log(log_path: str, memory_path: str) -> None:
         try:
             with os.fdopen(fd_tmp, "w") as f:
                 json.dump(data, f, separators=(",", ":"))
+                f.flush()
+                os.fsync(f.fileno())
             os.replace(tmp_path, log_path)
         except BaseException:
             if os.path.exists(tmp_path):
@@ -140,6 +142,8 @@ def _write_access_log(log_path: str, data: dict) -> None:
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(data, f, separators=(",", ":"))
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp_path, log_path)
     except BaseException:
         if os.path.exists(tmp_path):

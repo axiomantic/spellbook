@@ -37,7 +37,11 @@ VALID_MEMORY_TYPES = {"project", "user", "feedback", "reference"}
 def _find_existing_by_hash(
     memory_dir: str, content_hash: str, type_dir: str
 ) -> str | None:
-    """Scan existing memory files in a type directory for a matching content_hash."""
+    """Scan existing memory files in a type directory for a matching content_hash.
+
+    TODO(perf): replace with hash-prefixed directory index when memory count
+    exceeds ~500. Current linear scan is O(N) per store.
+    """
     target_dir = os.path.join(memory_dir, type_dir)
     if not os.path.isdir(target_dir):
         return None

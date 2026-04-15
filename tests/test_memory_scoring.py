@@ -249,3 +249,64 @@ def test_still_true_updates_last_verified(tmp_path):
     assert after.frontmatter.created == datetime.date(2026, 1, 1)
     # Content must NOT be touched.
     assert after.content.strip() == content
+
+
+def test_still_true_no_op_when_already_verified_today(tmp_path):
+    """STILL_TRUE skips the rewrite when last_verified is already today."""
+    memory_dir = str(tmp_path / "memories")
+    project_root = str(tmp_path / "project")
+    os.makedirs(project_root)
+
+    content = "The database connection pool uses a maximum of 10 connections."
+    today = datetime.date.today()
+
+    # Seed a memory whose last_verified is already today.
+    fm = MemoryFrontmatter(
+        type="project",
+        created=datetime.date(2026, 1, 1),
+        kind="fact",
+        citations=[Citation(file="src/db.py")],
+        tags=["db"],
+        scope="project",
+        branch=None,
+        last_verified=today,
+        confidence="high",
+        content_hash=_content_hash(content),
+    )
+    mem_path = os.path.join(memory_dir, "project", "db-pool.md")
+    write_memory_file(mem_path, fm, content)
+
+    # Capture mtime and bytes before the sync.
+    mtime_before = os.stat(mem_path).st_mtime_ns
+    with open(mem_path, "rb") as f:
+        bytes_before = f.read()
+
+    results = {
+        "verdicts": [
+            {
+                "memory_path": mem_path,
+                "verdict": "STILL_TRUE",
+                "reason": "Pool config unchanged.",
+            }
+        ],
+        "new_memories": [],
+    }
+
+    report = apply_sync_results(
+        results=results,
+        memory_dir=memory_dir,
+        project_root=project_root,
+    )
+
+    # Counted as unchanged, not updated.
+    assert report.memories_unchanged == 1
+    assert report.memories_updated == 0
+    assert report.memories_archived == 0
+    assert report.errors == []
+
+    # File must not have been rewritten: mtime and content identical.
+    mtime_after = os.stat(mem_path).st_mtime_ns
+    with open(mem_path, "rb") as f:
+        bytes_after = f.read()
+    assert mtime_after == mtime_before
+    assert bytes_after == bytes_before

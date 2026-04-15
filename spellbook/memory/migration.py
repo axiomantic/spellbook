@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sqlite3
+import tempfile
 from dataclasses import dataclass
 from datetime import date
 
@@ -236,12 +237,22 @@ def migrate_memories(
 
     conn.close()
 
-    # Write access log if any entries
+    # Write access log if any entries. Use tempfile + fsync + os.replace so a
+    # crash mid-write cannot leave a partially-written access log behind.
     if access_log:
         os.makedirs(output_dir, exist_ok=True)
         access_log_path = os.path.join(output_dir, ".access-log.json")
-        with open(access_log_path, "w") as f:
-            json.dump(access_log, f, separators=(",", ":"))
+        fd, tmp_path = tempfile.mkstemp(dir=output_dir, prefix=".tmp_access_")
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(access_log, f, separators=(",", ":"))
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, access_log_path)
+        except BaseException:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
 
     return MigrationReport(
         total_memories=total,

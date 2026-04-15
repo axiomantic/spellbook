@@ -13,6 +13,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from dataclasses import dataclass
@@ -179,7 +180,11 @@ async def list_memories(
 ):
     """List memories sorted by ``created`` descending, offset-paginated."""
     root = _resolve_memory_root()
-    all_mems = _sort_by_created_desc(_load_all_memories(root))
+    # Walking the memory directory and parsing every file is synchronous and
+    # can be slow; offload to a worker thread so we do not block the event loop.
+    all_mems = await asyncio.to_thread(
+        lambda: _sort_by_created_desc(_load_all_memories(root))
+    )
     total = len(all_mems)
     window = all_mems[offset : offset + limit]
     items = [_serialize_memory(lm.rel_id, lm.mf) for lm in window]
