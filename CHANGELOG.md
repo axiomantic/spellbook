@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-04-14
+
+### Added
+
+- **Stable source symlink** (`~/.local/spellbook/source`) is now the canonical
+  `$SPELLBOOK_DIR` for all installed artifacts. `install.py` creates or
+  repoints this symlink on every run; hook commands, launchd plists,
+  systemd units, and CLAUDE.md variable blocks reference the symlink
+  rather than the resolved checkout path. Switching worktrees is now a
+  one-command operation: re-run `install.py` from the new worktree and
+  every artifact follows the symlink automatically.
+- **Backup-then-symlink** when the target path exists as a real directory.
+  With `--yes`, the existing directory is renamed to
+  `source.backup-YYYYMMDD-HHMMSS` and replaced with the symlink. Without
+  `--yes`, the installer aborts with an actionable error.
+- **`spellbook_managed: true` + `spellbook_hook_id`** fields on every
+  installer-written hook entry in `~/.claude/settings.json`. Re-installs
+  dedup by these fields instead of matching paths, so re-installing from
+  a different worktree replaces the old entries cleanly instead of
+  appending duplicates.
+
+### Changed
+
+- **Daemon-venv editable install** is now refreshed when the source path
+  changes (new `.source-path` marker), not just when `pyproject.toml`
+  changes. Refresh runs `pip uninstall spellbook -y` twice (defensive,
+  handles stale non-editable installs) before `pip install --no-deps -e`
+  against the symlink path.
+
+### Fixed
+
+- Re-running `install.py` from a different worktree no longer leaves the
+  `~/.claude/settings.json` hook array with duplicate
+  `spellbook_hook.py` entries (one per worktree).
+- Launchd plist `WorkingDirectory` and `SPELLBOOK_DIR` env now reference
+  the stable symlink, so the daemon survives worktree moves without
+  breaking.
+
 ## [0.51.0] - 2026-04-09
 
 ### Added

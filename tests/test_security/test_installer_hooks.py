@@ -256,6 +256,8 @@ class TestInstallHooks:
             "type": "command",
             "command": _expected_unified_command("$SPELLBOOK_DIR"),
             "timeout": 15,
+            "spellbook_managed": True,
+            "spellbook_hook_id": "PreToolUse",
         }
 
     def test_unified_hook_entry_correct_in_post_tool_use(self, tmp_path):
@@ -277,6 +279,8 @@ class TestInstallHooks:
             "type": "command",
             "command": _expected_unified_command("$SPELLBOOK_DIR"),
             "timeout": 15,
+            "spellbook_managed": True,
+            "spellbook_hook_id": "PostToolUse",
         }
 
     def test_preserves_existing_settings(self, tmp_path):
@@ -941,14 +945,19 @@ class TestClaudeCodeInstallerHookIntegration:
 
 
 class TestExpandSpellbookDir:
-    """_expand_spellbook_dir() should replace $SPELLBOOK_DIR with actual path."""
+    """_expand_spellbook_dir() should replace $SPELLBOOK_DIR with the stable
+    source-symlink path (not ``spellbook_dir``). The symlink is the
+    indirection point that lets artifacts survive worktree switches.
+    """
 
     def test_expands_string_hook(self, tmp_path):
+        from installer.components.source_link import get_source_link_path
         spellbook_dir = tmp_path / "spellbook"
         result = _expand_spellbook_dir("$SPELLBOOK_DIR/hooks/bash-gate.sh", spellbook_dir)
-        assert result == f"{spellbook_dir}/hooks/bash-gate.sh"
+        assert result == f"{get_source_link_path()}/hooks/bash-gate.sh"
 
     def test_expands_dict_hook_command(self, tmp_path):
+        from installer.components.source_link import get_source_link_path
         spellbook_dir = tmp_path / "spellbook"
         hook = {
             "type": "command",
@@ -957,7 +966,7 @@ class TestExpandSpellbookDir:
             "timeout": 10,
         }
         result = _expand_spellbook_dir(hook, spellbook_dir)
-        assert result["command"] == f"{spellbook_dir}/hooks/audit-log.sh"
+        assert result["command"] == f"{get_source_link_path()}/hooks/audit-log.sh"
         assert result["async"] is True
         assert result["timeout"] == 10
 
@@ -1023,19 +1032,30 @@ class TestIsSpellbookHookWithSpellbookDir:
 class TestInstallHooksWithSpellbookDir:
     """install_hooks() with spellbook_dir should write expanded paths."""
 
-    def test_writes_expanded_paths(self, tmp_path):
-        """Hook paths should use absolute paths, not $SPELLBOOK_DIR."""
+    def test_writes_expanded_paths(self, tmp_path, monkeypatch):
+        """Hook paths should use the stable source-symlink path, not
+        ``$SPELLBOOK_DIR`` and not the raw worktree path."""
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
+        fake_config_dir = tmp_path / ".local" / "spellbook"
+        monkeypatch.setattr(
+            "installer.config.get_spellbook_config_dir", lambda: fake_config_dir
+        )
+        monkeypatch.setattr(
+            "installer.components.source_link.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
         content = settings_path.read_text(encoding="utf-8")
         assert "$SPELLBOOK_DIR" not in content
-        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
-        assert json.dumps(str(spellbook_dir))[1:-1] in content
+        expected_symlink = fake_config_dir / "source"
+        assert json.dumps(str(expected_symlink))[1:-1] in content
+        # Raw worktree path must NOT appear (that's the whole point).
+        assert json.dumps(str(spellbook_dir))[1:-1] not in content
 
     def test_expanded_unified_hook_correct(self, tmp_path, monkeypatch):
         spellbook_dir = _make_spellbook_dir(tmp_path)
@@ -1044,6 +1064,10 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
+        monkeypatch.setattr(
+            "installer.components.source_link.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1054,7 +1078,10 @@ class TestInstallHooksWithSpellbookDir:
         assert "matcher" not in catchall_entry
         assert len(catchall_entry["hooks"]) == 1
         assert catchall_entry["hooks"][0]["type"] == "command"
-        assert catchall_entry["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
+        expected_symlink = fake_config_dir / "source"
+        assert catchall_entry["hooks"][0]["command"] == _expected_unified_command(
+            str(expected_symlink), config_prefix=str(fake_config_dir)
+        )
 
     def test_expanded_post_tool_use_hook_correct(self, tmp_path, monkeypatch):
         spellbook_dir = _make_spellbook_dir(tmp_path)
@@ -1063,6 +1090,10 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
+        monkeypatch.setattr(
+            "installer.components.source_link.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
 
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
@@ -1073,7 +1104,10 @@ class TestInstallHooksWithSpellbookDir:
         assert "matcher" not in post_entry
         assert len(post_entry["hooks"]) == 1
         hook = post_entry["hooks"][0]
-        assert hook["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
+        expected_symlink = fake_config_dir / "source"
+        assert hook["command"] == _expected_unified_command(
+            str(expected_symlink), config_prefix=str(fake_config_dir)
+        )
         assert hook["timeout"] == 15
 
     def test_idempotent_with_expanded_paths(self, tmp_path, monkeypatch):
@@ -1105,6 +1139,10 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
+        monkeypatch.setattr(
+            "installer.components.source_link.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
 
         # Simulate old installation with literal paths
         _make_settings_file(settings_path, {
@@ -1127,7 +1165,10 @@ class TestInstallHooksWithSpellbookDir:
         assert len(pre_tool_use) == 1
         assert "matcher" not in pre_tool_use[0]
         assert len(pre_tool_use[0]["hooks"]) == 1
-        assert pre_tool_use[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
+        expected_symlink = fake_config_dir / "source"
+        assert pre_tool_use[0]["hooks"][0]["command"] == _expected_unified_command(
+            str(expected_symlink), config_prefix=str(fake_config_dir)
+        )
 
     def test_preserves_user_hooks_with_expanded_paths(self, tmp_path, monkeypatch):
         """User hooks should be preserved when installing with expanded paths."""
@@ -1137,6 +1178,10 @@ class TestInstallHooksWithSpellbookDir:
         settings_path = config_dir / "settings.local.json"
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
+        monkeypatch.setattr(
+            "installer.components.source_link.get_spellbook_config_dir",
+            lambda: fake_config_dir,
+        )
 
         _make_settings_file(settings_path, {
             "hooks": {
@@ -1157,7 +1202,10 @@ class TestInstallHooksWithSpellbookDir:
         # Unified hook added as catch-all entry
         catchall = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall) == 1
-        assert catchall[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir), config_prefix=str(fake_config_dir))
+        expected_symlink = fake_config_dir / "source"
+        assert catchall[0]["hooks"][0]["command"] == _expected_unified_command(
+            str(expected_symlink), config_prefix=str(fake_config_dir)
+        )
 
 
 # --- uninstall_hooks() with spellbook_dir tests ---

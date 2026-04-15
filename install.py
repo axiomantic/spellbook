@@ -1012,6 +1012,25 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         print_info("Make sure you're running from a valid spellbook repository.")
         return 1
 
+    # Stable-source symlink must be in place before anything else, so all
+    # downstream artifacts (hook commands, plist entries, editable install)
+    # reference the symlink path rather than this specific worktree path.
+    try:
+        from installer.components.source_link import (
+            InstallError as SourceLinkError,
+            ensure_source_link,
+        )
+        link_result = ensure_source_link(
+            source_dir=spellbook_dir,
+            yes=args.yes,
+            dry_run=args.dry_run,
+        )
+        if link_result.action != "unchanged":
+            print_info(link_result.message)
+    except SourceLinkError as exc:
+        print_error(str(exc))
+        return 1
+
     installer = Installer(spellbook_dir)
 
     # Create renderer (Rich for TTY, plain text otherwise)

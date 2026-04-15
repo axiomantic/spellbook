@@ -172,14 +172,24 @@ def _get_hook_path(hook: Union[str, Dict[str, Any]]) -> str:
 def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional[Path] = None) -> bool:
     """Check if a hook is managed by spellbook.
 
-    Works with both string hooks ("$SPELLBOOK_DIR/hooks/foo.sh") and
-    object hooks ({"type": "command", "command": "$SPELLBOOK_DIR/hooks/foo.sh"}).
-    Also detects .py wrapper hooks on Windows and Nim binary paths.
+    Detection order:
+      1. Object hooks carrying the ``spellbook_managed: True`` marker are
+         always recognized, regardless of the baked-in command path. This
+         is the authoritative mechanism for current-generation entries.
+      2. Legacy fallback: string hooks or object hooks whose command path
+         contains ``$SPELLBOOK_DIR/hooks/`` (literal) or the expanded
+         absolute ``<spellbook_dir>/hooks/`` prefix. On Windows, path
+         separators are normalized before comparison so both forward and
+         back slashes match.
 
-    Recognizes both legacy literal $SPELLBOOK_DIR paths and expanded absolute
-    paths when spellbook_dir is provided. On Windows, path separators are
-    normalized before comparison so both forward and back slashes match.
+    The managed-marker check is critical: when the installer runs from a
+    different worktree, the baked-in path will differ from every known
+    prefix. Without the marker, stale entries accumulate.
     """
+    # Primary: explicit managed marker on object hooks.
+    if isinstance(hook, dict) and hook.get("spellbook_managed") is True:
+        return True
+
     path = _get_hook_path(hook)
     # Normalize to forward slashes for consistent comparison across platforms
     normalized_path = path.replace("\\", "/")
@@ -191,6 +201,15 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
         expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
         if expanded_prefix in normalized_path:
             return True
+        # Also recognize the stable symlink prefix so re-install from any
+        # worktree cleans up prior entries.
+        try:
+            from .source_link import get_source_link_path
+            symlink_prefix = str(get_source_link_path()).replace("\\", "/") + "/hooks/"
+            if symlink_prefix in normalized_path:
+                return True
+        except Exception:
+            pass
     return False
 
 
@@ -260,15 +279,27 @@ def _cleanup_legacy_hooks(settings: Dict, spellbook_dir: Optional[Path] = None) 
 def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path) -> Union[str, Dict[str, Any]]:
     """Replace $SPELLBOOK_DIR and $SPELLBOOK_CONFIG_DIR with actual paths.
 
+    $SPELLBOOK_DIR expands to the STABLE SOURCE SYMLINK path
+    (``$SPELLBOOK_CONFIG_DIR/source``), not ``spellbook_dir`` itself. The
+    symlink is the indirection point: artifacts reference it, and
+    re-installing from a different worktree just re-points the symlink
+    instead of rewriting every artifact. ``spellbook_dir`` is retained in
+    the signature for backward compatibility and for callers that need to
+    detect legacy path-based entries during cleanup.
+
     On Windows, also replaces ``daemon-venv/bin/python`` with
     ``daemon-venv/Scripts/python.exe`` so the venv Python resolves correctly.
     """
     import platform as _platform
 
     from ..config import get_spellbook_config_dir
+    from .source_link import get_source_link_path
 
-    spellbook_str = str(spellbook_dir)
+    spellbook_str = str(get_source_link_path())
     config_str = str(get_spellbook_config_dir())
+    # spellbook_dir is intentionally not used for substitution anymore; keep
+    # the reference to satisfy static analysis.
+    _ = spellbook_dir
 
     def _expand(s: str) -> str:
         result = s.replace("$SPELLBOOK_DIR", spellbook_str).replace(
@@ -315,6 +346,55 @@ def _matcher_key(entry: Dict) -> Optional[str]:
 _LEGACY_CATCHALL_MATCHERS = {".*", "*", ""}
 
 
+def _tag_as_managed(
+    hook: Union[str, Dict[str, Any]], phase: Optional[str]
+) -> Dict[str, Any]:
+    """Return a new hook dict tagged with the spellbook-managed markers.
+
+    String hooks are promoted to object form. The tags let future installs
+    identify and replace existing spellbook-written entries even when the
+    baked-in command path no longer matches any known prefix (e.g. because
+    the user ran the installer from a different worktree).
+    """
+    if isinstance(hook, str):
+        obj: Dict[str, Any] = {"type": "command", "command": hook}
+    else:
+        obj = dict(hook)
+    obj["spellbook_managed"] = True
+    if phase is not None:
+        obj["spellbook_hook_id"] = phase
+    return obj
+
+
+def _strip_managed_from_all_phases(
+    phase_entries: List[Dict],
+) -> None:
+    """Remove every spellbook-managed hook from ``phase_entries`` in-place.
+
+    Entries whose hooks list becomes empty are dropped. User-authored
+    hooks (no ``spellbook_managed`` marker and no spellbook path prefix)
+    are preserved.
+    """
+    cleaned_entries: List[Dict] = []
+    for entry in phase_entries:
+        remaining = [h for h in entry.get("hooks", []) if not _is_spellbook_hook(h)]
+        if remaining:
+            new_entry: Dict[str, Any] = {"hooks": remaining}
+            if "matcher" in entry:
+                new_entry["matcher"] = entry["matcher"]
+            cleaned_entries.append(new_entry)
+    phase_entries.clear()
+    phase_entries.extend(cleaned_entries)
+
+
+def _phase_for_hook_defs(hook_defs: List[Dict]) -> Optional[str]:
+    """Recover the phase id (PreToolUse, PostToolUse, ...) for a hook_defs list."""
+    for phase, defs in HOOK_DEFINITIONS.items():
+        if defs is hook_defs:
+            return phase
+    return None
+
+
 def _merge_hooks_for_phase(
     phase_entries: List[Dict],
     hook_defs: List[Dict],
@@ -335,6 +415,14 @@ def _merge_hooks_for_phase(
     to the actual absolute path, and both literal and expanded paths are
     recognized for cleanup of old hooks.
     """
+    # Strip every existing spellbook-managed hook from this phase before
+    # merging in fresh ones. This is the critical dedup: stale entries
+    # baked with a prior worktree's absolute path are identified via the
+    # ``spellbook_managed`` marker and removed regardless of path.
+    _strip_managed_from_all_phases(phase_entries)
+
+    phase_id = _phase_for_hook_defs(hook_defs)
+
     for hook_def in hook_defs:
         matcher = _matcher_key(hook_def)
         is_catchall = matcher is None
@@ -346,6 +434,9 @@ def _merge_hooks_for_phase(
         # Expand $SPELLBOOK_DIR to actual path if provided
         if spellbook_dir is not None:
             spellbook_hooks = [_expand_spellbook_dir(h, spellbook_dir) for h in spellbook_hooks]
+
+        # Tag every outgoing spellbook hook with the managed markers.
+        spellbook_hooks = [_tag_as_managed(h, phase_id) for h in spellbook_hooks]
 
         # Find existing entry with this matcher
         existing_entry = None
