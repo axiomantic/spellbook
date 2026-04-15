@@ -253,6 +253,17 @@ After substantive work, consider the `opportunity-awareness` skill for artifact 
 
 When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.
 
+### Worktree Location
+
+Default: `~/Development/worktrees/{workspace-name}/{project}/`
+
+Where `workspace-name` is a branch slug or feature name. When multiple repos share
+a branch name, they nest under the same workspace directory. This groups all repos
+for a single effort together rather than scattering worktrees across projects.
+
+Project CLAUDE.md or AGENTS.md may override the naming convention (e.g., ticket-grouped
+workspace tools use `{TICKET-ID-desc}` as the workspace name).
+
 ### Worktree Command Discipline
 
 <CRITICAL>
@@ -272,16 +283,112 @@ This applies to the orchestrator AND to subagents. When dispatching a subagent t
 
 ## Memory System
 
-Prefer spellbook MCP memory tools over direct MEMORY.md edits:
-- `memory_recall`: Search existing memories by keyword or file path before re-discovering
-- `memory_store_memories`: Store structured facts, rules, conventions, decisions
-- `memory_get_unconsolidated`: Review pending raw events for synthesis
+Memories are markdown files with YAML frontmatter stored at
+`~/.local/spellbook/memories/{project-encoded}/` (per-project) and
+`~/.local/spellbook/memories/_global/` (cross-project).
 
-Direct writes to MEMORY.md are captured by spellbook's bridge hook and
-fed into the consolidation pipeline, but MCP tools provide better
-structure, deduplication, and cross-session retrieval. Use `memory_recall`
-with specific queries rather than re-reading MEMORY.md when looking for
-past context.
+**Types:** project, user, feedback, reference
+**Kinds:** fact, rule, convention, preference, decision, antipattern
+
+### Tools
+
+- `memory_store(content, type, kind?, citations?, tags?, scope?)`: Store a memory as a markdown file. Citations use `[{"file": "path", "symbol": "name"}]` JSON.
+- `memory_recall(query, scope?, tags?, file_path?, limit?)`: Search memories. Uses QMD when available, grep fallback. Supports branch-weighted scoring and temporal decay.
+- `memory_forget(memory_id)`: Archive a memory (recoverable from `.archive/`).
+- `memory_sync(changed_files?, base_ref?)`: Run sync pipeline. Returns a plan for the calling LLM to fact-check at-risk memories and discover new ones.
+- `memory_verify(memory_path)`: Fact-check a single memory against current code state.
+- `memory_review_events(namespace?, limit?)`: Get pending raw events for synthesis into memory files.
+
+### Usage
+
+Use `memory_recall` with specific queries before re-reading MEMORY.md or
+re-discovering facts. Store memories via `memory_store` (one fact per file).
+Run `/memory-sync` after significant code changes to keep memories current.
+
+### Self-Nominating Memories
+
+Emit `<memory-candidate>` blocks at the end of your response when you notice something
+worth remembering that the user did not explicitly ask you to save. The Stop hook
+harvests these automatically.
+
+**When to nominate:**
+
+- **feedback**: User corrected you or confirmed a non-obvious judgment call. Save BOTH
+  failures ("don't mock the DB") AND validated successes ("yes the bundled PR was right").
+- **project**: A fact, deadline, motivation, or ownership detail that future sessions
+  will lose without a record. Include a **Why:** and **How to apply:** line.
+- **user**: Role, preferences, expertise, workflow that shapes how you collaborate.
+- **reference**: Pointer to an external system (Linear project, Grafana board, Slack
+  channel) with its purpose.
+
+**When NOT to nominate:**
+
+- Code patterns, file paths, architecture — derivable from reading the code.
+- Git history or who-changed-what — `git log` / `git blame` are authoritative.
+- Debugging solutions or fix recipes — the fix is in the commit.
+- Anything already in AGENTS.md or AGENTS.spellbook.md.
+- Ephemeral task state — belongs in TodoWrite, not memory.
+- **Rule dictation**: when the user says "give yourself the rule…", "the rule is…",
+  "add a rule that says…", they are telling you to emit or record rule text, not
+  reporting feedback. Echo the rule in your response (or add to AGENTS.spellbook.md
+  if requested), but do NOT self-nominate it.
+
+**Schema:**
+
+    <memory-candidate>
+      <type>feedback|project|user|reference</type>
+      <content>1-3 sentence summary. For feedback/project include Why: and How to apply: lines.</content>
+      <tags>comma,separated,optional</tags>
+      <citations>path:line,path:line (optional)</citations>
+    </memory-candidate>
+
+**Examples:**
+
+- [Instrument before guessing](feedback_instrument_before_guessing.md) — When a UI/runtime symptom contradicts your mental model, add a diagnostic dump BEFORE making code changes
+- [Rule text vs storage](feedback_rule_text_vs_storage.md) — When user asks what rule to give you, output the text only; don't auto-save to memory
+
+Emit a block per nomination. Multiple blocks per turn is fine. The consolidation
+pipeline dedups and synthesizes downstream — nominate liberally for real signals,
+not at all for derivable facts.
+
+### Test dependency exceptions
+
+The hybrid-search memory tests call out to two external CLI tools: **QMD**
+(`@tobilu/qmd`, a ~200MB npm global install) and **Serena** (language-server
+based symbol search). These are intentionally NOT listed in the `dev` or `test`
+dependency groups in `pyproject.toml` because:
+
+- They are large (QMD alone is 200MB+) and would bloat every contributor's env.
+- They are not present in our CI images.
+- Only a small subset of tests actually exercises the real QMD/Serena path;
+  the rest of the memory stack is covered by pure-Python unit tests.
+
+Tests that require these tools are tagged with the `requires_memory_tools`
+pytest marker. `tests/conftest.py` detects the binaries at collection time
+and skips those tests when they are missing, emitting a loud yellow warning
+above the test summary so the skip cannot be confused with a pass.
+
+To run these tests locally:
+
+```
+npm i -g @tobilu/qmd
+# install Serena per its upstream instructions (language-server binary)
+```
+
+Then re-run `uv run pytest tests/` and the `requires_memory_tools` tests will
+be collected and executed.
+
+## Pull Request Conventions
+
+<CRITICAL>
+Before running `gh pr create`, ALWAYS invoke the `creating-issues-and-pull-requests` skill. That skill's job is to discover and apply the repo's PR template. Going straight to `gh pr create` causes the Claude Code harness's hardcoded `## Summary` + `## Test plan` template to win, which is almost never what the repo actually wants.
+</CRITICAL>
+
+<RULE>NEVER include a "Test plan" section (or any test-plan-shaped checklist) in PR bodies. Not as `## Test plan`, not as `### Testing`, not as a trailing checklist. The user has explicitly rejected this pattern.</RULE>
+
+<RULE>ALWAYS use the repository's PR template when one exists. Fetch it via `creating-issues-and-pull-requests` skill, which checks `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/pull_request_template.md`, and `PULL_REQUEST_TEMPLATE/*.md`. If no template exists, a plain description is fine — do NOT invent `## Summary` / `## Test plan` sections to fill the void.</RULE>
+
+**Background — why the disconnect happens:** The Claude Code harness system prompt (above all user instructions) contains a literal `gh pr create` heredoc template with `## Summary` and `## Test plan` sections. When `gh pr create` is invoked directly without going through the skill, that template biases the output. These rules override the harness default.
 
 ## Key Skill References
 

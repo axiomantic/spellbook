@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
@@ -6,109 +6,103 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import { MemoryBrowser } from './MemoryBrowser'
 
-// Mock useListPage - the migrated component should use this
-vi.mock('../hooks/useListPage', () => ({
-  useListPage: vi.fn(),
-}))
-
-// Mock useMemories for non-list hooks only
+// Mock the three hooks the page consumes. The page is pure UI over these hooks.
 vi.mock('../hooks/useMemories', () => ({
+  useMemoryList: vi.fn(),
   useMemory: vi.fn(),
-  useUpdateMemory: vi.fn(),
-  useDeleteMemory: vi.fn(),
-  useConsolidate: vi.fn(),
-  useMemoryNamespaces: vi.fn(),
+  useMemorySearch: vi.fn(),
 }))
 
-import { useListPage } from '../hooks/useListPage'
 import {
+  useMemoryList,
   useMemory,
-  useUpdateMemory,
-  useDeleteMemory,
-  useConsolidate,
-  useMemoryNamespaces,
+  useMemorySearch,
 } from '../hooks/useMemories'
 
-const mockUseListPage = useListPage as Mock
+const mockUseMemoryList = useMemoryList as Mock
 const mockUseMemory = useMemory as Mock
-const mockUseUpdateMemory = useUpdateMemory as Mock
-const mockUseDeleteMemory = useDeleteMemory as Mock
-const mockUseConsolidate = useConsolidate as Mock
-const mockUseMemoryNamespaces = useMemoryNamespaces as Mock
+const mockUseMemorySearch = useMemorySearch as Mock
 
-const mockMemory1 = {
-  id: 'mem-aaa-111',
-  content: 'Remember to always check edge cases in production code',
-  memory_type: 'insight',
-  namespace: 'project-alpha',
-  branch: 'main',
-  importance: 3.5,
-  created_at: '2026-03-18T10:00:00Z',
-  accessed_at: '2026-03-19T14:00:00Z',
-  status: 'active',
-  meta: {},
-  citation_count: 2,
+const PAGE_SIZE = 50
+
+const memoryA = {
+  id: 'project/foo.md',
+  type: 'convention',
+  kind: 'rule',
+  tags: ['python', 'testing'],
+  citations: [
+    { file: 'spellbook/memory/store.py', symbol: 'MemoryStore', symbol_type: 'class' },
+  ],
+  confidence: 'high' as const,
+  created: '2026-03-01T10:00:00Z',
+  last_verified: '2026-03-05T10:00:00Z',
+  body: 'Prefer top-level imports. Only use function-level imports for known circular imports.',
 }
 
-const mockMemory2 = {
-  id: 'mem-bbb-222',
-  content: 'The database schema changed in v2 migration',
-  memory_type: 'fact',
-  namespace: 'project-beta',
-  branch: 'develop',
-  importance: 7.0,
-  created_at: '2026-03-19T08:00:00Z',
-  accessed_at: null,
-  status: 'active',
-  meta: { source: 'consolidation' },
-  citation_count: 0,
+const memoryB = {
+  id: 'project/bar.md',
+  type: 'decision',
+  kind: null,
+  tags: [],
+  citations: [],
+  confidence: null,
+  created: '2026-03-02T11:00:00Z',
+  last_verified: null,
+  body: 'Short body for memory B.',
 }
 
-const mockSetSearch = vi.fn()
-const mockSetFilters = vi.fn()
-const mockClearFilters = vi.fn()
+const memoryC = {
+  id: 'project/baz.md',
+  type: 'fact',
+  kind: 'observation',
+  tags: ['perf'],
+  citations: [],
+  confidence: 'medium' as const,
+  created: '2026-03-03T12:00:00Z',
+  last_verified: null,
+  body: 'Body text for memory C that has enough characters to exercise preview behavior cleanly.',
+}
 
-function makeListPageReturn(overrides: Record<string, unknown> = {}) {
+function listResponse(items: typeof memoryA[], total?: number, offset = 0) {
   return {
-    data: [mockMemory1, mockMemory2],
-    total: 2,
+    items,
+    total: total ?? items.length,
+    offset,
+    limit: PAGE_SIZE,
+  }
+}
+
+function listHookReturn(overrides: Record<string, unknown> = {}) {
+  return {
+    data: listResponse([memoryA, memoryB, memoryC]),
     isLoading: false,
     isError: false,
     error: null,
-    page: 1,
-    pages: 1,
-    perPage: 50,
-    setPage: vi.fn(),
-    setPerPage: vi.fn(),
-    sorting: { column: 'created_at', order: 'desc' as const },
-    setSorting: vi.fn(),
-    search: '',
-    setSearch: mockSetSearch,
-    filters: {},
-    setFilters: mockSetFilters,
-    clearFilters: mockClearFilters,
-    tableProps: {
-      data: [mockMemory1, mockMemory2],
-      loading: false,
-      pagination: {
-        page: 1,
-        pages: 1,
-        total: 2,
-        perPage: 50,
-        onPageChange: vi.fn(),
-        onPerPageChange: vi.fn(),
-      },
-      sorting: {
-        sortColumn: 'created_at',
-        sortOrder: 'desc' as const,
-        onSortChange: vi.fn(),
-      },
-    },
     ...overrides,
   }
 }
 
-function renderMemoryBrowser() {
+function searchHookReturn(overrides: Record<string, unknown> = {}) {
+  return {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    ...overrides,
+  }
+}
+
+function memoryHookReturn(overrides: Record<string, unknown> = {}) {
+  return {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    ...overrides,
+  }
+}
+
+function renderBrowser() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
@@ -120,412 +114,215 @@ function renderMemoryBrowser() {
       createElement(
         MemoryRouter,
         { initialEntries: ['/memory'] },
-        createElement(MemoryBrowser)
-      )
-    )
+        createElement(MemoryBrowser),
+      ),
+    ),
   )
 }
 
 describe('MemoryBrowser', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseListPage.mockReturnValue(makeListPageReturn())
-    mockUseMemoryNamespaces.mockReturnValue({
-      data: { namespaces: ['project-alpha', 'project-beta', 'global'] },
-    })
-    mockUseMemory.mockReturnValue({
-      data: null,
-      isLoading: false,
-      error: null,
-    })
-    mockUseUpdateMemory.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    })
-    mockUseDeleteMemory.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    })
-    mockUseConsolidate.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      isSuccess: false,
-      isError: false,
-      data: null,
-      error: null,
-    })
+    mockUseMemoryList.mockReturnValue(listHookReturn())
+    mockUseMemorySearch.mockReturnValue(searchHookReturn())
+    mockUseMemory.mockReturnValue(memoryHookReturn())
   })
 
-  describe('uses useListPage hook', () => {
-    it('calls useListPage with memories query key and endpoint', () => {
-      renderMemoryBrowser()
+  it('renders memory list from useMemoryList', () => {
+    renderBrowser()
 
-      expect(mockUseListPage).toHaveBeenCalledTimes(1)
-      const callArgs = mockUseListPage.mock.calls[0][0]
-      expect(callArgs.queryKey).toEqual(['memories'])
-      expect(callArgs.endpoint).toBe('/api/memories')
-    })
+    // type badges
+    expect(screen.getByText('convention')).toBeInTheDocument()
+    expect(screen.getByText('decision')).toBeInTheDocument()
+    expect(screen.getByText('fact')).toBeInTheDocument()
 
-    /*
-    ESCAPE: calls useListPage with memories query key and endpoint
-      CLAIM: MemoryBrowser invokes useListPage with correct config
-      PATH: MemoryBrowser renders -> calls useListPage({queryKey, endpoint, ...})
-      CHECK: queryKey === ['memories'], endpoint === '/api/memories'
-      MUTATION: Wrong queryKey would fail array equality; wrong endpoint would fail string equality
-      ESCAPE: Nothing reasonable -- both fields checked with exact equality
-      IMPACT: Wrong query key would break cache invalidation; wrong endpoint would fetch wrong data
-    */
+    // created timestamps
+    expect(screen.getByText('2026-03-01T10:00:00Z')).toBeInTheDocument()
+    expect(screen.getByText('2026-03-02T11:00:00Z')).toBeInTheDocument()
+    expect(screen.getByText('2026-03-03T12:00:00Z')).toBeInTheDocument()
 
-    it('configures useListPage with default sort by created_at desc', () => {
-      renderMemoryBrowser()
-
-      const callArgs = mockUseListPage.mock.calls[0][0]
-      expect(callArgs.defaultSort).toEqual({ column: 'created_at', order: 'desc' })
-    })
-
-    /*
-    ESCAPE: configures useListPage with default sort
-      CLAIM: Default sort is created_at descending
-      PATH: useListPage options.defaultSort
-      CHECK: defaultSort equals { column: 'created_at', order: 'desc' }
-      MUTATION: Different column or order would fail equality
-      ESCAPE: Nothing reasonable -- exact object equality
-      IMPACT: Memories would appear in wrong default order
-    */
+    // body previews (first ~50 chars). Bodies here are <120 chars so shown in full.
+    expect(
+      screen.getByText(
+        'Prefer top-level imports. Only use function-level imports for known circular imports.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Short body for memory B.')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Body text for memory C that has enough characters to exercise preview behavior cleanly.',
+      ),
+    ).toBeInTheDocument()
   })
 
-  describe('DataTable columns', () => {
-    it('renders table headers for content, type, namespace, importance, created, and citations', () => {
-      renderMemoryBrowser()
+  it('loading state renders the LoadingSpinner', () => {
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({ data: undefined, isLoading: true }),
+    )
+    const { container } = renderBrowser()
 
-      const table = screen.getByRole('table')
-      const headers = within(table).getAllByRole('columnheader')
-      const headerTexts = headers.map((h) => h.textContent?.trim().toLowerCase() ?? '')
-
-      // Sort indicators may append ' v' or ' ^', so use startsWith
-      expect(headerTexts.some((t) => t.startsWith('content'))).toBe(true)
-      expect(headerTexts.some((t) => t.startsWith('type'))).toBe(true)
-      expect(headerTexts.some((t) => t.startsWith('namespace'))).toBe(true)
-      expect(headerTexts.some((t) => t.startsWith('importance'))).toBe(true)
-      expect(headerTexts.some((t) => t.startsWith('created'))).toBe(true)
-      expect(headerTexts.some((t) => t.startsWith('citations'))).toBe(true)
-    })
-
-    /*
-    ESCAPE: renders table headers
-      CLAIM: DataTable renders all expected column headers
-      PATH: MemoryBrowser defines columns -> DataTable renders headers
-      CHECK: Each expected header text is present
-      MUTATION: Missing a column definition would omit its header
-      ESCAPE: Extra unexpected columns wouldn't be caught, but that's benign
-      IMPACT: Missing columns would hide important data from users
-    */
-
-    it('renders memory data in table rows', () => {
-      renderMemoryBrowser()
-
-      const table = screen.getByRole('table')
-
-      // First memory -- content truncated at 80 chars (this one is under 80)
-      expect(within(table).getByText('Remember to always check edge cases in production code')).toBeInTheDocument()
-      expect(within(table).getByText('project-alpha')).toBeInTheDocument()
-
-      // Second memory
-      expect(within(table).getByText('The database schema changed in v2 migration')).toBeInTheDocument()
-      expect(within(table).getByText('project-beta')).toBeInTheDocument()
-    })
-
-    /*
-    ESCAPE: renders memory data in table rows
-      CLAIM: Memory content and namespace appear in table cells
-      PATH: DataTable receives data -> renders cell content via column definitions
-      CHECK: Specific text from mock data found in table
-      MUTATION: Wrong column accessor would render wrong field; missing column wouldn't render it
-      ESCAPE: We don't check every field in every row -- but we check enough distinct fields to confirm column mapping
-      IMPACT: Columns would display wrong data or nothing
-    */
-
-    it('renders memory_type as Badge component', () => {
-      renderMemoryBrowser()
-
-      const table = screen.getByRole('table')
-      expect(within(table).getByText('insight')).toBeInTheDocument()
-      expect(within(table).getByText('fact')).toBeInTheDocument()
-    })
-
-    /*
-    ESCAPE: renders memory_type as Badge
-      CLAIM: memory_type values are displayed (as Badges)
-      PATH: Column definition for type renders Badge -> Badge shows label text
-      CHECK: Both memory_type values present in table
-      MUTATION: Not rendering memory_type would cause both getByText to fail
-      ESCAPE: We don't verify Badge component specifically (just text presence), but this is sufficient for behavior
-      IMPACT: Memory type would be invisible to users
-    */
+    // LoadingSpinner has a uniquely identifying animate-spin element.
+    const spinner = container.querySelector('.animate-spin')
+    expect(spinner).not.toBeNull()
   })
 
-  describe('search', () => {
-    it('renders a search input for FTS search', () => {
-      renderMemoryBrowser()
+  it('empty list shows empty-state copy', () => {
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({ data: listResponse([], 0) }),
+    )
+    renderBrowser()
 
-      const searchInput = screen.getByPlaceholderText(/search/i)
-      expect(searchInput).toBeInTheDocument()
-    })
-
-    /*
-    ESCAPE: renders search input
-      CLAIM: A search input with placeholder containing "search" exists
-      PATH: MemoryBrowser renders SearchBar component
-      CHECK: Input with search-related placeholder exists
-      MUTATION: Not rendering SearchBar would cause getByPlaceholderText to fail
-      ESCAPE: Nothing reasonable -- presence of search input verified
-      IMPACT: Users couldn't search memories
-    */
+    expect(screen.getByText('No memories found.')).toBeInTheDocument()
   })
 
-  describe('namespace filter', () => {
-    it('renders namespace filter options from useMemoryNamespaces', () => {
-      renderMemoryBrowser()
+  it('error state surfaces the error message', () => {
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({
+        data: undefined,
+        isError: true,
+        error: new Error('boom'),
+      }),
+    )
+    renderBrowser()
 
-      // The namespace filter select should have "All namespaces" default option
-      const namespaceSelect = screen.getByDisplayValue('All namespaces')
-      expect(namespaceSelect).toBeInTheDocument()
-
-      // Verify all namespace options exist within the filter select
-      const options = within(namespaceSelect).getAllByRole('option')
-      const optionTexts = options.map((o) => o.textContent)
-      expect(optionTexts).toEqual([
-        'All namespaces',
-        'project-alpha',
-        'project-beta',
-        'global',
-      ])
-    })
-
-    /*
-    ESCAPE: renders namespace filter options
-      CLAIM: Namespace values from useMemoryNamespaces appear as filter options
-      PATH: useMemoryNamespaces returns namespaces -> FilterBar renders options
-      CHECK: All three namespace texts present in document
-      MUTATION: Not using namespace data would omit these texts
-      ESCAPE: These texts also appear in table data for project-alpha and project-beta, but 'global' only comes from namespaces, confirming filter rendering
-      IMPACT: Users couldn't filter by namespace
-    */
-
-    it('calls setFilters when a namespace is selected', async () => {
-      renderMemoryBrowser()
-
-      const user = userEvent.setup()
-
-      // Find and interact with the namespace select
-      const namespaceSelect = screen.getByDisplayValue('All namespaces')
-      await user.selectOptions(namespaceSelect, 'project-alpha')
-
-      expect(mockSetFilters).toHaveBeenCalledWith(
-        expect.objectContaining({ namespace: 'project-alpha' })
-      )
-    })
-
-    /*
-    ESCAPE: calls setFilters on namespace selection
-      CLAIM: Selecting a namespace calls setFilters with the namespace value
-      PATH: User selects namespace -> onChange -> setFilters({namespace: value})
-      CHECK: setFilters called with object containing namespace key
-      MUTATION: Not wiring onChange to setFilters would leave mockSetFilters uncalled
-      ESCAPE: We use objectContaining rather than exact match because other filter keys may be present -- but the namespace key is verified
-      IMPACT: Namespace filter selections would have no effect
-    */
+    expect(screen.getByText('boom')).toBeInTheDocument()
   })
 
-  describe('detail panel', () => {
-    it('shows detail panel when a table row is clicked', async () => {
-      // Set up useMemory to return detail when selected
-      mockUseMemory.mockReturnValue({
+  it('search input switches to useMemorySearch and renders its results', async () => {
+    const searchResult = {
+      ...memoryA,
+      id: 'search/hit.md',
+      type: 'searchtype',
+      body: 'Search result body',
+      score: 0.87,
+      match_context: null,
+    }
+    mockUseMemorySearch.mockReturnValue(
+      searchHookReturn({
         data: {
-          ...mockMemory1,
-          citations: [
-            {
-              id: 1,
-              memory_id: 'mem-aaa-111',
-              file_path: '/src/utils.ts',
-              line_range: '10-20',
-              content_snippet: 'function helper() {',
-            },
-          ],
+          query: 'foo',
+          total: 1,
+          items: [searchResult],
         },
-        isLoading: false,
-        error: null,
-      })
+      }),
+    )
 
-      renderMemoryBrowser()
+    renderBrowser()
 
-      const user = userEvent.setup()
-      const table = screen.getByRole('table')
-      const rows = within(table).getAllByRole('row')
-      // Row 0 is header, row 1 is first data row
-      const firstDataRow = rows[1]
+    const input = screen.getByPlaceholderText('Search memories...') as HTMLInputElement
+    // fireEvent writes synchronously; SearchBar's debounce (300ms) will then fire
+    // onChange once via a real setTimeout.
+    fireEvent.change(input, { target: { value: 'foo' } })
 
-      await user.click(firstDataRow)
-
-      // Detail panel should show the memory ID
-      expect(screen.getByText('mem-aaa-111')).toBeInTheDocument()
+    // Wait for the debounced setSearch to propagate and useMemorySearch to be
+    // called with the trimmed query.
+    await waitFor(() => {
+      const queries = mockUseMemorySearch.mock.calls.map((c) => c[0])
+      expect(queries).toContain('foo')
     })
 
-    /*
-    ESCAPE: shows detail panel on row click
-      CLAIM: Clicking a table row opens the detail panel showing memory details
-      PATH: onRowClick -> setSelectedId -> MemoryDetailPanel renders
-      CHECK: Memory ID text appears after click
-      MUTATION: Not passing onRowClick to DataTable would prevent selection; not rendering detail panel would omit ID
-      ESCAPE: Nothing reasonable -- the ID text only appears in the detail panel, not in table cells
-      IMPACT: Users couldn't view memory details
-    */
+    // The rendered row comes from search results, not the list data
+    expect(screen.getByText('searchtype')).toBeInTheDocument()
+    expect(screen.getByText('Search result body')).toBeInTheDocument()
+    // Score is rendered for search results
+    expect(screen.getByText('0.87')).toBeInTheDocument()
 
-    it('closes detail panel when close button is clicked', async () => {
-      mockUseMemory.mockReturnValue({
-        data: {
-          ...mockMemory1,
-          citations: [],
-        },
-        isLoading: false,
-        error: null,
-      })
-
-      renderMemoryBrowser()
-
-      const user = userEvent.setup()
-
-      // Open detail panel
-      const table = screen.getByRole('table')
-      const rows = within(table).getAllByRole('row')
-      await user.click(rows[1])
-
-      // Verify panel is open
-      expect(screen.getByText('mem-aaa-111')).toBeInTheDocument()
-
-      // Close panel
-      const closeButton = screen.getByRole('button', { name: /close/i })
-      await user.click(closeButton)
-
-      // Memory ID should no longer be visible (it's only in the detail panel)
-      expect(screen.queryByText('mem-aaa-111')).not.toBeInTheDocument()
-    })
-
-    /*
-    ESCAPE: closes detail panel on close click
-      CLAIM: Clicking close button hides the detail panel
-      PATH: close button onClick -> setSelectedId(null) -> detail panel unmounts
-      CHECK: Memory ID disappears after close click
-      MUTATION: Not wiring close handler would leave panel open
-      ESCAPE: Nothing reasonable -- presence then absence of unique text verified
-      IMPACT: Users couldn't dismiss the detail panel
-    */
+    // List-only items should not be visible once search is active
+    expect(screen.queryByText('Short body for memory B.')).not.toBeInTheDocument()
   })
 
-  describe('consolidation panel', () => {
-    it('renders consolidation section with namespace selector', () => {
-      renderMemoryBrowser()
+  it('pagination Next advances offset; Prev is disabled at offset 0', async () => {
+    // 120 total => 3 pages at PAGE_SIZE=50
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({ data: listResponse([memoryA, memoryB, memoryC], 120, 0) }),
+    )
+    const user = userEvent.setup()
+    renderBrowser()
 
-      expect(screen.getByText('Consolidation')).toBeInTheDocument()
-    })
+    const prevButton = screen.getByRole('button', { name: 'Prev' })
+    const nextButton = screen.getByRole('button', { name: 'Next' })
 
-    /*
-    ESCAPE: renders consolidation panel
-      CLAIM: Consolidation panel is rendered
-      PATH: MemoryBrowser renders ConsolidatePanel component
-      CHECK: "Consolidation" heading text present
-      MUTATION: Not rendering ConsolidatePanel would omit this heading
-      ESCAPE: Nothing reasonable -- text presence verified
-      IMPACT: Users couldn't trigger memory consolidation
-    */
+    // At offset 0, Prev is disabled; Next is enabled.
+    expect(prevButton).toBeDisabled()
+    expect(nextButton).not.toBeDisabled()
+
+    // First call on mount was with offset=0.
+    const offsetsBefore = mockUseMemoryList.mock.calls.map((c) => c[0])
+    expect(offsetsBefore).toContain(0)
+
+    await user.click(nextButton)
+
+    // After clicking Next, the hook should be re-invoked with offset=PAGE_SIZE (50).
+    const offsetsAfterNext = mockUseMemoryList.mock.calls.map((c) => c[0])
+    expect(offsetsAfterNext).toContain(PAGE_SIZE)
   })
 
-  describe('loading state', () => {
-    it('passes loading=true to DataTable via tableProps when data is loading', () => {
-      mockUseListPage.mockReturnValue(
-        makeListPageReturn({
-          isLoading: true,
-          data: [],
-          tableProps: {
-            data: [],
-            loading: true,
-            pagination: {
-              page: 1,
-              pages: 0,
-              total: 0,
-              perPage: 50,
-              onPageChange: vi.fn(),
-              onPerPageChange: vi.fn(),
-            },
-            sorting: {
-              sortColumn: 'created_at',
-              sortOrder: 'desc',
-              onSortChange: vi.fn(),
-            },
-          },
-        })
-      )
-      renderMemoryBrowser()
+  it('pagination Prev decreases offset from a non-zero offset', async () => {
+    // Start rendering with a list whose offset is 50 (middle page). Total=120.
+    // Component state starts at offset=0, so we need to click Next first to move it.
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({ data: listResponse([memoryA, memoryB, memoryC], 120, 0) }),
+    )
+    const user = userEvent.setup()
+    renderBrowser()
 
-      // DataTable renders a loading overlay with animate-spin when loading=true
-      // The table should still render (DataTable shows overlay on top)
-      expect(screen.getByRole('table')).toBeInTheDocument()
-      // The loading overlay div has bg-bg-base/50 class
-      const container = screen.getByRole('table').closest('.relative')
-      expect(container).not.toBeNull()
-      // The loading overlay is the first child with z-10 class
-      const overlay = container!.querySelector('.z-10')
-      expect(overlay).not.toBeNull()
-    })
+    const nextButton = screen.getByRole('button', { name: 'Next' })
+    await user.click(nextButton) // offset -> 50
+    await user.click(nextButton) // offset -> 100
 
-    /*
-    ESCAPE: loading state
-      CLAIM: Loading overlay appears when data is being fetched
-      PATH: useListPage returns isLoading=true -> tableProps.loading=true -> DataTable shows overlay
-      CHECK: Table exists, container with .relative class exists, overlay with .z-10 class exists
-      MUTATION: Not passing loading=true would hide the overlay (no .z-10 child)
-      ESCAPE: If DataTable changed its loading class names, test would break -- but that's a DataTable API change
-      IMPACT: Users would see empty page during data load with no feedback
-    */
+    mockUseMemoryList.mockClear()
+    // Re-return same data for subsequent renders
+    mockUseMemoryList.mockReturnValue(
+      listHookReturn({ data: listResponse([memoryA, memoryB, memoryC], 120, 100) }),
+    )
+
+    const prevButton = screen.getByRole('button', { name: 'Prev' })
+    await user.click(prevButton)
+
+    const offsetsAfterPrev = mockUseMemoryList.mock.calls.map((c) => c[0])
+    // Prev from 100 should request offset=50
+    expect(offsetsAfterPrev).toContain(50)
   })
 
-  describe('empty state', () => {
-    it('shows empty state when no memories match', () => {
-      mockUseListPage.mockReturnValue(
-        makeListPageReturn({
-          data: [],
-          tableProps: {
-            data: [],
-            loading: false,
-            pagination: {
-              page: 1,
-              pages: 0,
-              total: 0,
-              perPage: 50,
-              onPageChange: vi.fn(),
-              onPerPageChange: vi.fn(),
-            },
-            sorting: {
-              sortColumn: 'created_at',
-              sortOrder: 'desc',
-              onSortChange: vi.fn(),
-            },
-          },
-        })
-      )
-      renderMemoryBrowser()
+  it('selecting a memory invokes useMemory with its id and renders detail fields', async () => {
+    mockUseMemory.mockReturnValue(memoryHookReturn({ data: memoryA }))
 
-      expect(screen.getByText('No memories found')).toBeInTheDocument()
-    })
+    const user = userEvent.setup()
+    renderBrowser()
 
-    /*
-    ESCAPE: empty state
-      CLAIM: Empty state message appears when no memories match
-      PATH: useListPage returns empty data -> DataTable renders EmptyState
-      CHECK: "No memories found" text present
-      MUTATION: Not passing emptyTitle to DataTable would show default "No Data"
-      ESCAPE: Nothing reasonable -- exact text verified
-      IMPACT: Users would see blank area instead of helpful message
-    */
+    // Find the row button for memoryA by its id text (shown in row footer)
+    const idCell = screen.getByText('project/foo.md')
+    const rowButton = idCell.closest('button')!
+    await user.click(rowButton)
+
+    // useMemory should have been invoked with the selected memory's id at some point.
+    const memoryCalls = mockUseMemory.mock.calls.map((c) => c[0])
+    expect(memoryCalls).toContain('project/foo.md')
+
+    // Detail panel fields from memoryA
+    // Body renders in a dedicated panel; it appears once in the row preview and once in detail.
+    const bodyMatches = screen.getAllByText(
+      'Prefer top-level imports. Only use function-level imports for known circular imports.',
+    )
+    expect(bodyMatches.length).toBeGreaterThanOrEqual(2)
+
+    // Tags
+    expect(screen.getByText('python')).toBeInTheDocument()
+    expect(screen.getByText('testing')).toBeInTheDocument()
+
+    // Confidence badge
+    expect(screen.getByText('conf:high')).toBeInTheDocument()
+
+    // last_verified timestamp (unique: not shown in the row)
+    expect(screen.getByText('2026-03-05T10:00:00Z')).toBeInTheDocument()
+
+    // Citations heading ("Citations (1)") and citation file
+    expect(screen.getByText('Citations (1)')).toBeInTheDocument()
+    const citation = screen.getByText('spellbook/memory/store.py')
+    expect(citation).toBeInTheDocument()
+    // Symbol rendered alongside citation
+    expect(
+      within(citation.parentElement as HTMLElement).getByText(/class: MemoryStore/),
+    ).toBeInTheDocument()
   })
 })

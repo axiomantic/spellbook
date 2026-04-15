@@ -1,33 +1,37 @@
 """Memory MCP tool implementations.
 
-Separated from server.py for testability. server.py thin wrappers call these.
+File-based memory system wrappers. The do_memory_* functions delegate to
+spellbook.memory.filestore. SQLite event logging (do_log_event) is preserved
+for hooks and REST endpoints.
 """
 
 import json
 import logging
-import uuid
+import os
 from typing import Any, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
-
+from spellbook.core.db import get_db_path as _get_db_path
+from spellbook.memory.consolidation import build_consolidation_prompt
+from spellbook.memory.filestore import (
+    forget_memory,
+    recall_memories,
+    store_memory,
+    verify_memory,
+)
+from spellbook.memory.models import Citation
+from spellbook.memory.requirements import (
+    MemorySystemNotAvailable,
+    ensure_memory_system_available,
+)
 from spellbook.memory.store import (
-    recall_by_query,
-    recall_by_file_path,
-    soft_delete_memory,
     get_memory,
-    update_access,
-    log_raw_event,
     get_unconsolidated_events,
-    get_recently_consolidated_events,
-    insert_memory,
-    insert_link,
-    mark_events_consolidated,
+    log_raw_event,
+    soft_delete_memory,
 )
-from spellbook.memory.consolidation import (
-    build_consolidation_prompt,
-    parse_llm_response,
-    compute_bibliographic_coupling,
-)
+from spellbook.memory.sync_pipeline import memory_sync as _run_sync_pipeline
+
+logger = logging.getLogger(__name__)
 
 
 MEMORY_STORE_SCHEMA = {
@@ -76,77 +80,354 @@ MEMORY_STORE_SCHEMA = {
 }
 
 
-def do_memory_recall(
-    db_path: str,
-    query: str,
-    namespace: str,
-    limit: int = 10,
-    file_path: Optional[str] = None,
-    branch: str = "",
-    repo_path: str = "",
-    scope: str = "project",
-) -> Dict[str, Any]:
-    """Recall memories by query or file path.
+# ---------------------------------------------------------------------------
+# Memory directory resolution
+# ---------------------------------------------------------------------------
+
+
+def _get_memory_dir(namespace: str, scope: str = "project") -> str:
+    """Resolve the root memory directory for a namespace and scope.
 
     Args:
-        db_path: Database path.
-        query: FTS5 search query. Empty string returns recent+important.
-        namespace: Project namespace for scoping.
-        limit: Max results.
-        file_path: If provided, search by cited file path instead of FTS5.
-        branch: Current git branch for branch-weighted scoring.
-        repo_path: Git repo root path for ancestry checks.
+        namespace: Project path or namespace identifier.
+        scope: "project" or "global".
 
     Returns:
-        Dict with 'memories' list and metadata.
+        Absolute path to the memory directory.
     """
-    if file_path:
-        results = recall_by_file_path(
-            db_path, file_path, namespace, limit,
-            branch=branch, repo_path=repo_path, scope=scope,
-        )
-    else:
-        results = recall_by_query(
-            db_path, query, namespace, limit,
-            branch=branch, repo_path=repo_path, scope=scope,
-        )
+    if scope == "global":
+        return os.path.expanduser("~/.local/spellbook/memories/_global")
+    # project-encoded path: strip leading /, replace / with -
+    project_encoded = namespace.replace("/", "-").lstrip("-")
+    return os.path.expanduser(f"~/.local/spellbook/memories/{project_encoded}")
 
-    # Update access for returned memories
-    for mem in results:
-        update_access(db_path, mem["id"])
+
+# ---------------------------------------------------------------------------
+# New file-based tool functions
+# ---------------------------------------------------------------------------
+
+
+def do_memory_store(
+    content: str,
+    type: str = "project",
+    kind: Optional[str] = None,
+    citations: Optional[List[Dict[str, str]]] = None,
+    tags: Optional[List[str]] = None,
+    scope: str = "project",
+    branch: Optional[str] = None,
+    namespace: str = "",
+) -> Dict[str, Any]:
+    """Store a single memory as a markdown file.
+
+    Args:
+        content: Memory body text.
+        type: Memory category (project, user, feedback, reference).
+        kind: Knowledge classification (fact, rule, convention, etc.).
+        citations: List of citation dicts with 'file' and optional 'symbol'.
+        tags: Freeform tags.
+        scope: "project" or "global".
+        branch: Git branch where memory was created.
+        namespace: Project namespace for directory resolution.
+
+    Returns:
+        Dict with status, path, and content_hash.
+    """
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
+
+    memory_dir = _get_memory_dir(namespace, scope)
+
+    # Parse citations from dicts to Citation objects
+    citation_objects: List[Citation] = []
+    if citations:
+        for c in citations:
+            citation_objects.append(Citation(
+                file=c.get("file", ""),
+                symbol=c.get("symbol"),
+                symbol_type=c.get("symbol_type"),
+            ))
+
+    mf = store_memory(
+        content=content,
+        type=type,
+        kind=kind,
+        citations=citation_objects,
+        tags=tags or [],
+        scope=scope,
+        branch=branch,
+        memory_dir=memory_dir,
+    )
 
     return {
-        "memories": results,
-        "count": len(results),
+        "status": "stored",
+        "path": mf.path,
+        "content_hash": mf.frontmatter.content_hash,
+    }
+
+
+def do_memory_recall(
+    query: str = "",
+    namespace: str = "",
+    limit: int = 10,
+    file_path: Optional[str] = None,
+    scope: str = "project",
+    tags: Optional[List[str]] = None,
+    branch: str = "",
+    # Legacy params kept for backward compat with MCP tool registration
+    db_path: str = "",
+    repo_path: str = "",
+) -> Dict[str, Any]:
+    """Search memories using the new filestore.
+
+    Falls back through QMD -> grep search.
+
+    Args:
+        query: Search query text. Empty returns recent/all.
+        namespace: Project namespace.
+        limit: Maximum results.
+        file_path: Filter by citation file path.
+        scope: "project", "global", or "all".
+        tags: Filter by tags.
+        branch: Current git branch for scoring.
+        db_path: Ignored (legacy). Kept for backward compat.
+        repo_path: Ignored (legacy). Kept for backward compat.
+
+    Returns:
+        Dict with memories list, count, query, and namespace.
+    """
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
+
+    memory_dirs: List[str] = []
+
+    if scope in ("project", "all"):
+        memory_dirs.append(_get_memory_dir(namespace, "project"))
+    if scope in ("global", "all"):
+        memory_dirs.append(_get_memory_dir(namespace, "global"))
+
+    # Use the first directory as the primary for recall_memories
+    # (recall_memories expects a single dir)
+    results = []
+    for mdir in memory_dirs:
+        if os.path.isdir(mdir):
+            results.extend(
+                recall_memories(
+                    query=query,
+                    memory_dir=mdir,
+                    scope=None,  # Already filtered by directory
+                    tags=tags,
+                    file_path=file_path,
+                    limit=limit,
+                    branch=branch or None,
+                )
+            )
+
+    # Sort by score descending and limit
+    results.sort(key=lambda r: r.score, reverse=True)
+    results = results[:limit]
+
+    memories = []
+    for r in results:
+        memories.append({
+            "content": r.memory.content.strip(),
+            "score": r.score,
+            "path": r.memory.path,
+            "type": r.memory.frontmatter.type,
+            "kind": r.memory.frontmatter.kind,
+            "tags": r.memory.frontmatter.tags,
+            "scope": r.memory.frontmatter.scope,
+            "match_context": r.match_context,
+        })
+
+    return {
+        "memories": memories,
+        "count": len(memories),
         "query": query,
         "namespace": namespace,
     }
 
 
 def do_memory_forget(
-    db_path: str,
-    memory_id: str,
+    memory_id_or_query: str = "",
+    namespace: str = "",
+    archive: bool = True,
+    # Legacy params
+    db_path: str = "",
+    memory_id: str = "",
 ) -> Dict[str, Any]:
-    """Soft-delete a memory by ID.
+    """Archive or delete a memory file.
 
     Args:
-        db_path: Database path.
-        memory_id: The memory ID to forget.
+        memory_id_or_query: Absolute path to the memory file.
+        namespace: Project namespace.
+        archive: If True, move to .archive/. If False, permanently delete.
+        db_path: Ignored (legacy).
+        memory_id: Legacy param. If provided and memory_id_or_query is empty,
+                   falls back to old SQLite deletion.
 
     Returns:
-        Dict with status ('deleted' or 'not_found') and memory_id.
+        Dict with status.
     """
-    mem = get_memory(db_path, memory_id)
-    if mem is None:
-        return {"status": "not_found", "memory_id": memory_id}
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
 
-    soft_delete_memory(db_path, memory_id)
+    # Legacy fallback: if called with old memory_id param (UUID)
+    if not memory_id_or_query and memory_id:
+        db = str(_get_db_path()) if not db_path else db_path
+        mem = get_memory(db, memory_id)
+        if mem is None:
+            return {"status": "not_found", "memory_id": memory_id}
+        soft_delete_memory(db, memory_id)
+        return {
+            "status": "deleted",
+            "memory_id": memory_id,
+            "message": f"Memory soft-deleted. Will be purged after 30 days. "
+                       f"Content preview: {mem['content'][:80]}...",
+        }
+
+    memory_dir = _get_memory_dir(namespace, "project")
+    found = forget_memory(memory_id_or_query, memory_dir, archive=archive)
+
+    if not found:
+        return {"status": "not_found", "path": memory_id_or_query}
+
+    status = "archived" if archive else "deleted"
+    return {"status": status, "path": memory_id_or_query}
+
+
+def do_memory_sync(
+    namespace: str = "",
+    project_root: str = "",
+    changed_files: Optional[List[str]] = None,
+    base_ref: str = "main",
+) -> Dict[str, Any]:
+    """Run sync pipeline phases 1-3, return plan for calling LLM.
+
+    Args:
+        namespace: Project namespace.
+        project_root: Root of the git repository.
+        changed_files: List of changed file paths.
+        base_ref: Base git ref for diff (default: main).
+
+    Returns:
+        Dict with status, factcheck_items, prompt_template, and stats.
+    """
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
+
+    memory_dir = _get_memory_dir(namespace, "project")
+    if changed_files is None:
+        changed_files = []
+
+    plan = _run_sync_pipeline(
+        project_root=project_root,
+        memory_dir=memory_dir,
+        changed_files=changed_files,
+        diff_text="",
+    )
+
+    # Serialize factcheck items
+    factcheck_items = []
+    for item in plan.factcheck_items:
+        factcheck_items.append({
+            "memory_path": item.memory_path,
+            "memory_content": item.memory_content,
+            "prompt": item.prompt,
+        })
+
     return {
-        "status": "deleted",
-        "memory_id": memory_id,
-        "message": f"Memory soft-deleted. Will be purged after 30 days. "
-                   f"Content preview: {mem['content'][:80]}...",
+        "status": "plan_ready",
+        "factcheck_items": factcheck_items,
+        "prompt_template": plan.prompt_template,
+        "phase4_instructions": plan.phase4_instructions,
+        "stats": {**plan.stats, "base_ref": base_ref},
     }
+
+
+def do_memory_verify(
+    memory_path: str,
+    namespace: str = "",
+    project_root: str = "",
+) -> Dict[str, Any]:
+    """Fact-check a single memory, return context for calling LLM.
+
+    Args:
+        memory_path: Absolute path to the memory file.
+        namespace: Project namespace.
+        project_root: Root of the project for citation checks.
+
+    Returns:
+        Dict with status, cited_files_exist, cited_symbols_exist, and memory_content.
+    """
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
+
+    ctx = verify_memory(memory_path, project_root)
+
+    return {
+        "status": "context_ready",
+        "memory_content": ctx.memory.content,
+        "memory_path": memory_path,
+        "cited_files_exist": ctx.cited_files_exist,
+        "cited_symbols_exist": ctx.cited_symbols_exist,
+    }
+
+
+def do_memory_review_events(
+    namespace: Optional[str] = None,
+    limit: int = 50,
+    db_path: str = "",
+) -> Dict[str, Any]:
+    """Return pending raw events for LLM synthesis.
+
+    Args:
+        namespace: Project namespace for scoping.
+        limit: Max events to return.
+        db_path: Explicit database path. If empty, uses _get_db_path().
+
+    Returns:
+        Dict with events, count, consolidation_prompt, and response_schema.
+    """
+    try:
+        ensure_memory_system_available()
+    except MemorySystemNotAvailable as e:
+        return {"error": str(e), "status": "unavailable"}
+
+    if not db_path:
+        db_path = str(_get_db_path())
+    events = get_unconsolidated_events(db_path, limit=limit, namespace=namespace)
+
+    if not events:
+        return {
+            "events": [],
+            "count": 0,
+            "consolidation_prompt": "",
+            "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+        }
+
+    prompt = build_consolidation_prompt(events)
+
+    return {
+        "events": events,
+        "count": len(events),
+        "consolidation_prompt": prompt,
+        "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+    }
+
+
+# ---------------------------------------------------------------------------
+# SQLite event logging (preserved for hooks/REST)
+# ---------------------------------------------------------------------------
 
 
 def do_log_event(
@@ -188,155 +469,3 @@ def do_log_event(
         branch=branch,
     )
     return {"status": "logged", "event_id": event_id}
-
-
-def do_get_unconsolidated(
-    db_path: str,
-    namespace: str = "",
-    limit: int = 50,
-    include_consolidated: bool = False,
-) -> Dict[str, Any]:
-    """Get unconsolidated events for client-side synthesis.
-
-    Args:
-        db_path: Database path.
-        namespace: Project namespace for scoping. Empty string means all.
-        limit: Max events to return.
-        include_consolidated: If true, also return recently consolidated events.
-
-    Returns:
-        Dict with events, count, consolidation_prompt, and response_schema.
-    """
-    ns = namespace if namespace else None
-    events = get_unconsolidated_events(db_path, limit=limit, namespace=ns)
-
-    if include_consolidated:
-        consolidated = get_recently_consolidated_events(
-            db_path, limit=limit, namespace=ns,
-        )
-        # Merge, dedup by event ID, respect total limit
-        seen_ids = {e["id"] for e in events}
-        for e in consolidated:
-            if e["id"] not in seen_ids and len(events) < limit:
-                events.append(e)
-                seen_ids.add(e["id"])
-
-    if not events:
-        return {
-            "events": [],
-            "count": 0,
-            "consolidation_prompt": "",
-            "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
-        }
-
-    prompt = build_consolidation_prompt(events)
-
-    return {
-        "events": events,
-        "count": len(events),
-        "consolidation_prompt": prompt,
-        "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
-    }
-
-
-def do_store_memories(
-    db_path: str,
-    memories_json: str,
-    event_ids_str: str = "",
-    namespace: str = "",
-    branch: str = "",
-    scope: str = "project",
-) -> Dict[str, Any]:
-    """Store client-synthesized memories and mark source events consolidated.
-
-    Args:
-        db_path: Database path.
-        memories_json: JSON string of memory objects matching MEMORY_STORE_SCHEMA.
-        event_ids_str: Comma-separated event IDs to mark consolidated.
-        namespace: Project namespace.
-        branch: Git branch name to associate with stored memories.
-
-    Returns:
-        Dict with status, memories_created, events_consolidated, memory_ids.
-    """
-    # Parse memories JSON
-    try:
-        data = json.loads(memories_json)
-    except (json.JSONDecodeError, TypeError) as e:
-        return {"status": "error", "error": f"Invalid JSON: {e}"}
-
-    # Accept both {"memories": [...]} and bare list [...]
-    if not isinstance(data, (list, dict)):
-        return {"status": "error", "error": "Expected JSON object or array"}
-
-    # Validate and parse using parse_llm_response for consistency
-    if isinstance(data, list):
-        validated = parse_llm_response(json.dumps({"memories": data}))
-    else:
-        validated = parse_llm_response(memories_json)
-
-    if not validated:
-        return {
-            "status": "error",
-            "error": "No valid memories found. Each memory must have non-empty 'content'.",
-        }
-
-    # Validate memory_type values
-    valid_types = {"fact", "rule", "antipattern", "preference", "decision"}
-    for mem in validated:
-        if mem["memory_type"] not in valid_types:
-            mem["memory_type"] = "fact"
-        # Cap tags at 20
-        if len(mem.get("tags", [])) > 20:
-            mem["tags"] = mem["tags"][:20]
-
-    # Parse event IDs
-    event_ids: List[int] = []
-    if event_ids_str:
-        for eid_str in event_ids_str.split(","):
-            eid_str = eid_str.strip()
-            if eid_str:
-                try:
-                    event_ids.append(int(eid_str))
-                except ValueError:
-                    logger.warning("Ignoring unparseable event ID: %r", eid_str)
-
-    # Insert memories
-    created_ids: List[str] = []
-    for mem in validated:
-        mem_id = insert_memory(
-            db_path=db_path,
-            content=mem["content"],
-            memory_type=mem["memory_type"],
-            namespace=namespace,
-            tags=mem["tags"],
-            citations=mem["citations"],
-            extra_meta={"source": "client_llm"},
-            branch=branch,
-            scope=scope,
-        )
-        created_ids.append(mem_id)
-
-    # Compute bibliographic coupling for new memories
-    for mem_id in created_ids:
-        links = compute_bibliographic_coupling(db_path, mem_id)
-        for link in links:
-            insert_link(
-                db_path, mem_id, link["other_id"],
-                "bibliographic", link["weight"],
-            )
-
-    # Mark events consolidated (scoped to namespace to prevent cross-project marking)
-    events_consolidated = 0
-    if event_ids:
-        batch_id = str(uuid.uuid4())
-        events_consolidated = mark_events_consolidated(
-            db_path, event_ids, batch_id, namespace=namespace or None,
-        )
-
-    return {
-        "status": "success",
-        "memories_created": len(created_ids),
-        "events_consolidated": events_consolidated,
-        "memory_ids": created_ids,
-    }

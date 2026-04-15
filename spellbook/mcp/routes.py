@@ -21,8 +21,9 @@ from spellbook.notifications import tts as tts_module
 from spellbook.core.db import get_db_path
 from spellbook.memory.tools import (
     do_log_event,
-    do_memory_recall,
+    _get_memory_dir,
 )
+from spellbook.memory.filestore import recall_memories as _filestore_recall
 from spellbook.memory.store import log_raw_event, mark_events_consolidated
 from spellbook.memory.consolidation import should_consolidate, consolidate_batch
 from spellbook.core.path_utils import get_spellbook_config_dir
@@ -142,6 +143,65 @@ async def api_memory_event(request: Request) -> JSONResponse:
     return JSONResponse(result)
 
 
+@mcp.custom_route("/api/memory/unconsolidated", methods=["POST"])
+async def api_memory_unconsolidated(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to enqueue a self-nominated memory
+    candidate as a raw unconsolidated event.
+
+    Accepts JSON body: {
+        "project": "...",         (required, project-encoded namespace)
+        "type": "feedback|project|user|reference",  (required)
+        "content": "...",         (required, 1-3 sentence summary)
+        "tags": "...",            (optional, comma-separated)
+        "citations": "...",       (optional, path:line comma-separated)
+        "branch": "...",          (optional)
+        "source": "...",          (optional, e.g. "stop_hook", "user_prompt_submit")
+        "session_id": "..."       (optional)
+    }
+
+    Returns JSON: {"status": "logged", "event_id": N}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    required = ["project", "type", "content"]
+    missing = [f for f in required if not body.get(f)]
+    if missing:
+        return JSONResponse(
+            {"error": f"missing required fields: {missing}"}, status_code=400
+        )
+
+    project = str(body["project"])[:500]
+    mtype = str(body["type"])[:50]
+    content = str(body["content"])[:5000]
+    tags = str(body.get("tags", ""))[:500]
+    citations = str(body.get("citations", ""))[:1000]
+    branch = str(body.get("branch", ""))[:200]
+    source = str(body.get("source", "auto_store"))[:100]
+    session_id = str(body.get("session_id", ""))[:200]
+
+    # Combine tags with self-nomination marker and type for downstream filters
+    combined_tags = ",".join(
+        t for t in ["self-nominated", f"type:{mtype}", tags] if t
+    )[:500]
+
+    db_path = str(get_db_path())
+    event_id = log_raw_event(
+        db_path=db_path,
+        session_id=session_id,
+        project=project,
+        event_type="memory_candidate",
+        tool_name=source,
+        subject=citations,
+        summary=content,
+        tags=combined_tags,
+        branch=branch,
+    )
+    return JSONResponse({"status": "logged", "event_id": event_id})
+
+
 @mcp.custom_route("/api/memory/bridge-content", methods=["POST"])
 async def api_memory_bridge_content(request: Request) -> JSONResponse:
     """REST endpoint for bridge hook to submit auto-memory content.
@@ -243,37 +303,108 @@ async def api_memory_bridge_content(request: Request) -> JSONResponse:
     })
 
 
+def _derive_namespace_from_cwd(cwd: str) -> str:
+    """Project-encode a cwd path into a memory namespace.
+
+    Thin wrapper over the canonical implementation in
+    ``spellbook.memory.utils.derive_namespace_from_cwd`` — kept for the
+    existing import path used by callers.
+    """
+    from spellbook.memory.utils import derive_namespace_from_cwd
+
+    return derive_namespace_from_cwd(cwd)
+
+
+def _memory_result_to_dict(result, memory_dir: str) -> dict:
+    """Serialize a filestore MemoryResult into the REST response shape.
+
+    Shape:
+        {
+          "path": str,           # absolute memory file path
+          "score": float,
+          "match_context": str | None,
+          "frontmatter": {
+              "type": str,
+              "confidence": str | None,
+              "created": str (ISO date),
+              "last_verified": str | None (ISO date),
+          },
+          "body": str,
+        }
+    """
+    mem = result.memory
+    fm = mem.frontmatter
+    return {
+        "path": mem.path,
+        "score": result.score,
+        "match_context": result.match_context,
+        "frontmatter": {
+            "type": fm.type,
+            "confidence": fm.confidence,
+            "created": fm.created.isoformat() if fm.created else None,
+            "last_verified": fm.last_verified.isoformat() if fm.last_verified else None,
+        },
+        "body": mem.content,
+    }
+
+
 @mcp.custom_route("/api/memory/recall", methods=["POST"])
 async def api_memory_recall(request: Request) -> JSONResponse:
-    """REST endpoint for hook scripts to query memories by file path.
+    """REST endpoint for hook scripts to query memories.
 
-    Accepts JSON body: {"file_path": "...", "namespace": "...", "branch": "...", "limit": 5}
-    or {"query": "...", "namespace": "...", "branch": "...", "limit": 10}
-    Returns JSON: {"memories": [...], "count": N}
+    Accepts JSON body:
+        {
+          "query": str,        # optional when file_path is provided
+          "file_path": str,    # optional, filter by citation file
+          "namespace": str,    # optional; derived from cwd when absent
+          "cwd": str,          # optional; used to derive namespace
+          "branch": str,       # optional; passed to scoring
+          "limit": int,        # default 5
+          "tags": list[str],   # optional
+        }
+
+    Returns:
+        {"memories": [MemoryResult-shape dicts], "count": N}
     """
     try:
         body = await request.json()
     except Exception:
         return JSONResponse({"error": "invalid JSON"}, status_code=400)
 
-    namespace = body.get("namespace", "")
+    namespace = body.get("namespace") or ""
+    if not namespace:
+        # _derive_namespace_from_cwd shells out to `git rev-parse`; offload the
+        # subprocess call so we do not block the event loop.
+        namespace = await asyncio.to_thread(
+            _derive_namespace_from_cwd,
+            body.get("cwd", "") or body.get("repo_path", ""),
+        )
     if not namespace:
         return JSONResponse({"memories": [], "count": 0})
 
-    branch = body.get("branch", "")
-    repo_path = body.get("repo_path", "")
+    branch = body.get("branch") or None
+    query = body.get("query", "") or ""
+    file_path = body.get("file_path") or None
+    limit = int(body.get("limit", 5) or 5)
+    tags = body.get("tags") or None
 
-    db_path = str(get_db_path())
-    result = do_memory_recall(
-        db_path=db_path,
-        query=body.get("query", ""),
-        namespace=namespace,
-        limit=body.get("limit", 5),
-        file_path=body.get("file_path"),
-        branch=branch,
-        repo_path=repo_path,
-    )
-    return JSONResponse(result)
+    memory_dir = _get_memory_dir(namespace, "project")
+    try:
+        results = await asyncio.to_thread(
+            _filestore_recall,
+            query=query,
+            memory_dir=memory_dir,
+            scope=None,
+            tags=tags,
+            file_path=file_path,
+            limit=limit,
+            branch=branch,
+        )
+    except Exception:
+        return JSONResponse({"memories": [], "count": 0})
+
+    memories = [_memory_result_to_dict(r, memory_dir) for r in results]
+    return JSONResponse({"memories": memories, "count": len(memories)})
 
 
 # ---------------------------------------------------------------------------

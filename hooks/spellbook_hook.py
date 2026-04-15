@@ -10,8 +10,11 @@ memory-inject.sh, notify-on-complete.sh, tts-notify.sh, memory-capture.sh,
 pre-compact-save.sh, post-compact-recover.sh).
 """
 
+import hashlib
 import json
 import os
+import re
+import secrets
 import shlex
 import subprocess
 import sys
@@ -20,7 +23,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -36,6 +39,31 @@ CONFIG_PATH = Path(os.environ.get(
     "SPELLBOOK_CONFIG_PATH",
     str(Path.home() / ".config" / "spellbook" / "spellbook.json"),
 ))
+
+# ---------------------------------------------------------------------------
+# Auto memory recall: budget, dedup, keyword extraction
+# ---------------------------------------------------------------------------
+DEDUP_LOG_PATH = Path.home() / ".local" / "spellbook" / "cache" / "recent-memory-injections.json"
+DEDUP_TTL = timedelta(minutes=15)
+MEMORY_BUDGET_MAX_COUNT = 5
+MEMORY_BUDGET_MAX_TOKENS = 500
+MEMORY_PROMPT_MIN_LENGTH = 10
+
+_STOPWORDS = frozenset({
+    "the", "a", "an", "and", "or", "but", "for", "with",
+    "this", "that", "these", "those", "is", "was", "are",
+    "were", "to", "of", "in", "on", "at",
+})
+
+# Identifiers: CamelCase, camelCase, snake_case (require an internal boundary).
+_IDENT_RE = re.compile(r"\b(?:[A-Z][a-z0-9]+[A-Z][A-Za-z0-9]*|[a-z]+[A-Z][A-Za-z0-9]*|[A-Za-z]+_[A-Za-z0-9_]+)\b")
+# File paths: contain a '/' and non-space characters (allow extensions).
+_PATH_RE = re.compile(r"\b[\w.\-/]*/[\w.\-/]+")
+
+
+def _utcnow() -> datetime:
+    """Return current UTC time. Indirection lets tests freeze time."""
+    return datetime.now(timezone.utc)
 
 
 def _detect_platform() -> str:
@@ -374,8 +402,11 @@ def _memory_inject(tool_name: str, data: dict) -> str | None:
 
     For file-related tools (Read, Edit, Grep, Glob), extracts file_path
     from tool_input and recalls associated memories from the MCP server.
-    Returns formatted XML or None.
+    Applies dedup + budget and returns formatted XML or None.
     """
+    if not _auto_recall_enabled():
+        return None
+
     tool_input = data.get("tool_input") or {}
     cwd = data.get("cwd", "")
 
@@ -389,47 +420,30 @@ def _memory_inject(tool_name: str, data: dict) -> str | None:
     if not file_path:
         return None
 
-    # Resolve worktree and branch (best-effort)
-    resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-") if resolved_cwd else ""
+    namespace, resolved_cwd, branch = _derive_namespace(cwd)
     if not namespace:
         return None
 
-    # Call recall API
-    payload = {
-        "file_path": file_path,
-        "namespace": namespace,
-        "branch": branch,
-        "repo_path": resolved_cwd,
-        "limit": 5,
-    }
-    response = _http_post(
-        "/api/memory/recall",
-        payload,
+    memories = _recall(
+        namespace=namespace,
+        branch=branch,
+        resolved_cwd=resolved_cwd,
+        file_path=file_path,
+        limit=MEMORY_BUDGET_MAX_COUNT,
     )
-    if not response:
-        return None
-
-    memories = response.get("memories", [])
     if not memories:
         return None
 
-    # Format as XML
-    lines = ["<spellbook-memory>"]
-    for mem in memories[:5]:
-        content = mem.get("content", "")
-        mtype = mem.get("memory_type", "fact")
-        importance = mem.get("importance", 1.0)
-        status = mem.get("status", "active")
-        confidence = "verified" if status == "active" else "unverified"
-        lines.append(
-            f'  <memory type="{mtype}" confidence="{confidence}" '
-            f'importance="{importance:.1f}">'
-        )
-        lines.append(f"    {content}")
-        lines.append("  </memory>")
-    lines.append("</spellbook-memory>")
-    return "\n".join(lines)
+    log = _load_dedup_log()
+    memories = _filter_memories_by_dedup(memories, log)
+    memories = _apply_memory_budget(memories)
+    if not memories:
+        return None
+
+    xml = _format_memory_xml(memories)
+    if xml:
+        _touch_dedup_log([m.get("path", "") for m in memories])
+    return xml
 
 
 def _notify_on_complete(tool_name: str, data: dict) -> None:
@@ -542,6 +556,9 @@ def _memory_capture(tool_name: str, data: dict) -> None:
     if desc:
         summary += f" ({desc[:80]})"
 
+    # Canonical namespace encoding lives in
+    # spellbook.memory.utils.derive_namespace_from_cwd; kept inline here
+    # because the hook must avoid importing the spellbook package.
     resolved_cwd, branch = _resolve_git_context(cwd)
     namespace = resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-") if resolved_cwd else "unknown"
 
@@ -827,6 +844,791 @@ def _build_recovery_directive(state: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Memory auto-recall helpers
+# ---------------------------------------------------------------------------
+
+
+def _extract_keywords(prompt: str) -> list[str]:
+    """Extract significant keywords from a user prompt.
+
+    Combines three sources in order, preserving order of first appearance:
+    1. Path-like tokens (containing '/')
+    2. Code identifiers (CamelCase, camelCase, snake_case)
+    3. Plain words (len >= 4, not in stopword list)
+
+    Duplicates are removed.
+    """
+    seen: set[str] = set()
+    out: list[str] = []
+
+    def _push(tok: str) -> None:
+        if tok and tok not in seen:
+            seen.add(tok)
+            out.append(tok)
+
+    # Pass 1: tokenize preserving order across identifiers, paths, words.
+    # We walk the string, at each non-whitespace token classify it.
+    for raw in prompt.split():
+        # Strip common trailing punctuation but preserve '/' and '_' and '.'.
+        tok = raw.strip(",;:!?()[]{}\"'`")
+        if not tok:
+            continue
+        if "/" in tok:
+            _push(tok)
+            continue
+        if _IDENT_RE.fullmatch(tok):
+            _push(tok)
+            continue
+        # Plain word filter: accept alphanumerics with at least one letter
+        # (so tokens like ``gap3``, ``py314``, ``ody0042`` survive).
+        lower = tok.lower()
+        if (
+            len(tok) >= 4
+            and lower not in _STOPWORDS
+            and tok.isalnum()
+            and any(c.isalpha() for c in tok)
+        ):
+            _push(tok)
+    return out
+
+
+def _extract_tool_paths(tool_name: str, tool_input: dict) -> list[str]:
+    """Extract file paths from a tool invocation's input.
+
+    For Bash: split command and keep tokens containing '/'.
+    For Write/Edit: the 'file_path' field.
+    """
+    if tool_name == "Bash":
+        cmd = tool_input.get("command", "") or ""
+        try:
+            parts = shlex.split(cmd)
+        except ValueError:
+            parts = cmd.split()
+        return [p for p in parts if "/" in p]
+    if tool_name in ("Write", "Edit"):
+        fp = tool_input.get("file_path", "") or ""
+        return [fp] if fp else []
+    return []
+
+
+def _apply_memory_budget(
+    memories: list[dict],
+    max_count: int = MEMORY_BUDGET_MAX_COUNT,
+    max_tokens: int = MEMORY_BUDGET_MAX_TOKENS,
+) -> list[dict]:
+    """Cap a memory list by count and cumulative token estimate.
+
+    Token estimate: len(body) // 4 per memory. Stops before adding a memory
+    that would push cumulative tokens above max_tokens.
+    """
+    out: list[dict] = []
+    total = 0
+    for m in memories:
+        if len(out) >= max_count:
+            break
+        body = m.get("body", "") or ""
+        cost = len(body) // 4
+        if total + cost > max_tokens:
+            break
+        out.append(m)
+        total += cost
+    return out
+
+
+def _load_dedup_log(now: datetime | None = None) -> dict[str, str]:
+    """Load dedup log, dropping entries older than DEDUP_TTL.
+
+    Returns the remaining (fresh) entries as a path->ISO8601 dict.
+    """
+    if now is None:
+        now = _utcnow()
+    if not DEDUP_LOG_PATH.exists():
+        return {}
+    try:
+        raw = json.loads(DEDUP_LOG_PATH.read_text())
+    except FileNotFoundError:
+        # Raced with a delete between .exists() and .read_text() -> silent.
+        return {}
+    except (OSError, json.JSONDecodeError) as e:
+        # Unexpected: permission denied, disk error, corrupt JSON, etc.
+        # Route through the daemon's /api/hook-log endpoint so operators
+        # can diagnose; fall back to stderr if daemon unreachable. Dedup
+        # fails open regardless.
+        _log_hook_error("memory_dedup_load", str(DEDUP_LOG_PATH), e)
+        return {}
+    fresh: dict[str, str] = {}
+    cutoff = now - DEDUP_TTL
+    for path, ts in raw.items():
+        try:
+            t = datetime.fromisoformat(ts)
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+        if t >= cutoff:
+            fresh[path] = ts
+    return fresh
+
+
+def _filter_memories_by_dedup(memories: list[dict], log: dict[str, str]) -> list[dict]:
+    """Drop memories whose path appears in the dedup log."""
+    return [m for m in memories if m.get("path") not in log]
+
+
+def _atomic_write_json(path: Path, data: dict) -> None:
+    """Atomically write `data` as JSON to `path` via tempfile + os.replace.
+
+    The tempfile is created with O_EXCL and a random suffix; on collision we
+    retry with a fresh suffix. Once written, ``os.replace`` swaps it into
+    place so readers never observe a partially-written file.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(data).encode("utf-8")
+    for _ in range(5):
+        tmp = path.with_suffix(
+            f".tmp.{os.getpid()}.{secrets.token_hex(4)}"
+        )
+        try:
+            fd = os.open(
+                tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644,
+            )
+        except FileExistsError:
+            continue
+        try:
+            with os.fdopen(fd, "wb") as fh:
+                fh.write(payload)
+            os.replace(tmp, path)
+            return
+        except Exception:
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+            raise
+    raise OSError(
+        f"unable to allocate unique tempfile for {path} after 5 retries"
+    )
+
+
+def _dedup_lock_path() -> Path:
+    return DEDUP_LOG_PATH.with_suffix(DEDUP_LOG_PATH.suffix + ".lock")
+
+
+def _acquire_dedup_lock(lock_fd: int, timeout_sec: float = 0.1) -> bool:
+    """Try to take an exclusive advisory lock on ``lock_fd``.
+
+    Non-blocking first, then a short spinning retry up to ``timeout_sec``.
+    Returns True on success, False on timeout. Windows (no ``fcntl``)
+    short-circuits to True (no lock taken; caller retains best-effort
+    semantics).
+    """
+    try:
+        import fcntl  # POSIX only
+    except ImportError:
+        return True
+
+    deadline = time.monotonic() + timeout_sec
+    while True:
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.005)
+        except OSError:
+            # Lock call failed unexpectedly — give up cleanly.
+            return False
+
+
+def _release_dedup_lock(lock_fd: int) -> None:
+    try:
+        import fcntl  # POSIX only
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    except (ImportError, OSError):
+        pass
+
+
+def _touch_dedup_log(paths: list[str], now: datetime | None = None) -> None:
+    """Stamp paths with ``now`` and write back the dedup log.
+
+    Exclusive-lock best effort with a 100ms timeout; on timeout we fall back
+    to the prior last-writer-wins semantics and log a diagnostic via
+    ``_log_hook_error`` so operators can diagnose contention. The write
+    itself is atomic (tempfile + os.replace) so partial writes are never
+    observable.
+    """
+    if now is None:
+        now = _utcnow()
+    ts = now.isoformat()
+
+    DEDUP_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = _dedup_lock_path()
+    lock_fd: int | None = None
+    locked = False
+    try:
+        try:
+            lock_fd = os.open(lock_path, os.O_WRONLY | os.O_CREAT, 0o600)
+        except OSError:
+            lock_fd = None
+
+        if lock_fd is not None:
+            locked = _acquire_dedup_lock(lock_fd)
+            if not locked:
+                _log_hook_error(
+                    "memory_dedup_lock_timeout",
+                    str(DEDUP_LOG_PATH),
+                    TimeoutError("dedup log lock contended beyond 100ms"),
+                )
+
+        log = _load_dedup_log(now=now)
+        for p in paths:
+            if p:
+                log[p] = ts
+        try:
+            _atomic_write_json(DEDUP_LOG_PATH, log)
+        except OSError:
+            pass
+    finally:
+        if lock_fd is not None:
+            if locked:
+                _release_dedup_lock(lock_fd)
+            try:
+                os.close(lock_fd)
+            except OSError:
+                pass
+
+
+def _format_memory_xml(memories: list[dict]) -> str | None:
+    """Format memories (filestore MemoryResult shape) as injected XML.
+
+    Shape expected per memory:
+      {path, score, match_context, frontmatter: {type, confidence, created,
+       last_verified}, body}
+
+    Returns None when the list is empty.
+    """
+    if not memories:
+        return None
+    lines = ["<spellbook-memory-context>"]
+    for m in memories:
+        fm = m.get("frontmatter") or {}
+        path = m.get("path", "")
+        mtype = fm.get("type", "") or ""
+        confidence = fm.get("confidence", "") or ""
+        created = fm.get("created", "") or ""
+        last_verified = fm.get("last_verified") or ""
+        score = m.get("score", 0.0) or 0.0
+        body = m.get("body", "") or ""
+        lines.append(
+            f'  <memory path="{path}" type="{mtype}" confidence="{confidence}"'
+            f' created="{created}" last_verified="{last_verified}"'
+            f' score="{float(score):.2f}">'
+        )
+        lines.append(f"    {body}")
+        lines.append("  </memory>")
+    lines.append("</spellbook-memory-context>")
+    return "\n".join(lines)
+
+
+def _auto_recall_enabled() -> bool:
+    """Return True when memory.auto_recall config is truthy (default True)."""
+    val = _get_config_value("memory.auto_recall", default=True)
+    return bool(val)
+
+
+def _derive_namespace(cwd: str) -> tuple[str, str, str]:
+    """Return (namespace, resolved_cwd, branch) for a given cwd.
+
+    Falls back to an empty namespace when cwd is missing.
+
+    Note: the namespace-encoding logic is canonicalized in
+    ``spellbook.memory.utils.derive_namespace_from_cwd``. This hook keeps
+    an inline copy to avoid importing the spellbook package at hook
+    startup (cold-start cost). Keep the encoding in sync with the
+    canonical implementation.
+    """
+    if not cwd:
+        return "", "", ""
+    resolved_cwd, branch = _resolve_git_context(cwd)
+    namespace = (
+        resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-")
+        if resolved_cwd else ""
+    )
+    return namespace, resolved_cwd, branch
+
+
+def _recall(namespace: str, branch: str, resolved_cwd: str,
+            query: str = "", file_path: str | None = None,
+            limit: int = MEMORY_BUDGET_MAX_COUNT) -> list[dict]:
+    """POST to /api/memory/recall and return the memories list."""
+    payload: dict = {
+        "namespace": namespace,
+        "branch": branch,
+        "repo_path": resolved_cwd,
+        "limit": limit,
+    }
+    if query:
+        payload["query"] = query
+    if file_path:
+        payload["file_path"] = file_path
+    resp = _http_post("/api/memory/recall", payload)
+    if not resp:
+        return []
+    return resp.get("memories", []) or []
+
+
+def _memory_recall_for_prompt(prompt: str, cwd: str) -> str | None:
+    """UserPromptSubmit handler: recall memories for a user prompt.
+
+    Skips trivial prompts (< 10 chars) and slash commands. Extracts keywords,
+    queries /api/memory/recall, applies dedup + budget, injects XML, and
+    records injected paths in the dedup log.
+    """
+    if not _auto_recall_enabled():
+        return None
+    if not prompt or len(prompt) < MEMORY_PROMPT_MIN_LENGTH:
+        return None
+    if prompt.startswith("/"):
+        return None
+
+    namespace, resolved_cwd, branch = _derive_namespace(cwd)
+    if not namespace:
+        return None
+
+    keywords = _extract_keywords(prompt)
+    if not keywords:
+        return None
+
+    query = " ".join(keywords)
+    memories = _recall(
+        namespace=namespace,
+        branch=branch,
+        resolved_cwd=resolved_cwd,
+        query=query,
+        limit=MEMORY_BUDGET_MAX_COUNT * 4,
+    )
+    if not memories:
+        return None
+
+    log = _load_dedup_log()
+    memories = _filter_memories_by_dedup(memories, log)
+    memories = _apply_memory_budget(memories)
+    if not memories:
+        return None
+
+    xml = _format_memory_xml(memories)
+    if xml:
+        _touch_dedup_log([m.get("path", "") for m in memories])
+    return xml
+
+
+# ---------------------------------------------------------------------------
+# Memory auto-store (Gap 4)
+# ---------------------------------------------------------------------------
+
+# Rule-dictation patterns take priority — match these FIRST and skip capture.
+_RULE_DICTATION_PATTERNS = [
+    re.compile(r"\bgive yourself the rule\b", re.IGNORECASE),
+    re.compile(r"\bthe rule is:", re.IGNORECASE),
+    re.compile(r"\bwrite this down as\b", re.IGNORECASE),
+    re.compile(r"\boutput the text only\b", re.IGNORECASE),
+    re.compile(r"\bwhat rule to give you\b", re.IGNORECASE),
+    re.compile(r"\bhere'?s a rule\b", re.IGNORECASE),
+]
+
+# Correction / feedback patterns.
+_CORRECTION_PREFIX_RE = re.compile(
+    r"^(no|don'?t|stop|actually)\b",
+    re.IGNORECASE,
+)
+_CORRECTION_BODY_PATTERNS = [
+    re.compile(r"\buse\s+\S+\s+instead\b", re.IGNORECASE),
+    re.compile(r"\balways\s+\S+", re.IGNORECASE),
+    re.compile(r"\bnever\s+\S+", re.IGNORECASE),
+]
+
+# Confirmation patterns.
+_CONFIRMATION_PATTERNS = [
+    re.compile(r"\byes exactly\b", re.IGNORECASE),
+    re.compile(r"\bperfect keep doing that\b", re.IGNORECASE),
+    re.compile(r"\bthat was right\b", re.IGNORECASE),
+    re.compile(r"\bnice that worked\b", re.IGNORECASE),
+]
+
+# Explicit remember / save patterns.
+_REMEMBER_PATTERNS = [
+    re.compile(r"\bremember that\b", re.IGNORECASE),
+    re.compile(r"\bremember this\b", re.IGNORECASE),
+    re.compile(r"\bsave this\b", re.IGNORECASE),
+    re.compile(r"\bnote for next time\b", re.IGNORECASE),
+    re.compile(r"\bfor future reference\b", re.IGNORECASE),
+]
+
+# XML parser for <memory-candidate> blocks. Non-greedy, multiline-aware.
+_CANDIDATE_BLOCK_RE = re.compile(
+    r"<memory-candidate>(.*?)</memory-candidate>",
+    re.DOTALL | re.IGNORECASE,
+)
+_FIELD_RE_CACHE: dict[str, re.Pattern[str]] = {}
+
+# Max content size for client-side auto-store. Single-fact feedback should
+# never exceed this; oversized content is almost always a mis-classified
+# pasted blob and must be skipped with a diagnostic log entry.
+_AUTO_STORE_MAX_CONTENT_BYTES = 2000
+
+
+def _log_autostore_oversized(content: str) -> None:
+    """Record an auto_store_skipped_oversized_prompt entry via the daemon.
+
+    Does NOT raise. Synthesizes a RuntimeError describing the skipped content
+    (first 200 chars preview + total length) and routes it through
+    ``_log_hook_error`` so the daemon's rotation-aware sink captures it.
+    """
+    preview = content[:200].replace("\n", " ")
+    detail = f"total_length={len(content)} preview={preview!r}"
+    _log_hook_error(
+        "auto_store_skipped_oversized_prompt",
+        "UserPromptSubmit",
+        RuntimeError(detail),
+    )
+
+
+def _auto_store_enabled() -> bool:
+    """Return True when memory.auto_store config is truthy (default True)."""
+    val = _get_config_value("memory.auto_store", default=True)
+    return bool(val)
+
+
+def _classify_prompt_for_autostore(prompt: str) -> tuple[str, str, str] | None:
+    """Classify a user prompt for auto-store.
+
+    Returns (type, tag_suffix, content_override) or None when the prompt
+    should not be auto-captured. ``content_override`` is an empty string
+    when the raw prompt should be stored verbatim; otherwise it is the
+    transformed content (e.g. for confirmations we prefix ``CONFIRMATION:``).
+
+    Rule-dictation patterns are checked FIRST. If any match, return None
+    so the dictation is echoed/stored by the user's own intent, not
+    auto-captured by this hook.
+    """
+    for pat in _RULE_DICTATION_PATTERNS:
+        if pat.search(prompt):
+            return None
+
+    if _CORRECTION_PREFIX_RE.match(prompt.lstrip()):
+        return ("feedback", "correction", "")
+    for pat in _CORRECTION_BODY_PATTERNS:
+        if pat.search(prompt):
+            return ("feedback", "correction", "")
+
+    for pat in _CONFIRMATION_PATTERNS:
+        if pat.search(prompt):
+            return ("feedback", "confirmation", f"CONFIRMATION: {prompt}")
+
+    for pat in _REMEMBER_PATTERNS:
+        if pat.search(prompt):
+            return ("user", "remember", "")
+
+    return None
+
+
+def _post_unconsolidated(
+    *,
+    project: str,
+    branch: str,
+    mtype: str,
+    content: str,
+    tags: str,
+    citations: str,
+    source: str,
+) -> bool:
+    """POST a self-nominated memory candidate to the unconsolidated endpoint.
+
+    Returns True when ``_http_post`` returned a non-None response body
+    (success), False on transport failure. Relies on ``_http_post`` being
+    fail-open — do not add a try/except wrapper here. That would mask real
+    bugs in payload construction and was a green-mirage double-catch.
+
+    Callers that need retry semantics (e.g. the Stop hook's per-transcript
+    idempotency record) MUST inspect the return value. Fire-and-forget
+    callers (e.g. UserPromptSubmit) can safely discard it.
+    """
+    resp = _http_post(
+        "/api/memory/unconsolidated",
+        {
+            "project": project,
+            "branch": branch,
+            "type": mtype,
+            "content": content,
+            "tags": tags,
+            "citations": citations,
+            "source": source,
+        },
+        timeout=5,
+    )
+    return resp is not None
+
+
+def _memory_autostore_for_prompt(prompt: str, cwd: str) -> None:
+    """UserPromptSubmit auto-store. FAIL-OPEN.
+
+    Detects correction/confirmation/remember patterns and POSTs a raw
+    unconsolidated event. Rule-dictation prompts are skipped entirely.
+    """
+    if not _auto_store_enabled():
+        return
+    if not prompt or len(prompt) < MEMORY_PROMPT_MIN_LENGTH:
+        return
+    if prompt.startswith("/"):
+        return
+
+    classification = _classify_prompt_for_autostore(prompt)
+    if classification is None:
+        return
+    mtype, tag_suffix, content_override = classification
+    content = content_override if content_override else prompt
+
+    # Single-fact feedback should be short. If the prompt produces an
+    # oversized content payload, skip the auto-store and log a diagnostic
+    # rather than POSTing a giant prompt as a "memory".
+    if len(content) > _AUTO_STORE_MAX_CONTENT_BYTES:
+        _log_autostore_oversized(content)
+        return
+
+    namespace, _resolved_cwd, branch = _derive_namespace(cwd)
+    if not namespace:
+        return
+
+    _post_unconsolidated(
+        project=namespace,
+        branch=branch,
+        mtype=mtype,
+        content=content,
+        tags=f"auto-store,user-prompt,{tag_suffix}",
+        citations="",
+        source="user_prompt_submit",
+    )
+
+
+def _extract_last_assistant_text(transcript_path: str) -> str:
+    """Return concatenated text of the final assistant message in a JSONL transcript.
+
+    Returns empty string when the file is missing, unreadable, or has no
+    assistant messages. Fail-open for the Stop hook.
+    """
+    p = Path(transcript_path)
+    if not p.exists():
+        return ""
+    try:
+        raw_lines = p.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    last_text = ""
+    for line in raw_lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            msg = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        # Transcript entries wrap an inner message dict.
+        inner = msg.get("message", msg)
+        role = inner.get("role") or msg.get("type")
+        if role != "assistant":
+            continue
+        content = inner.get("content", "")
+        if isinstance(content, str):
+            last_text = content
+            continue
+        if isinstance(content, list):
+            parts: list[str] = []
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "text":
+                    parts.append(item.get("text", ""))
+            last_text = "\n".join(parts)
+    return last_text
+
+
+def _extract_candidate_field(block: str, field: str) -> str:
+    """Extract a named field from a <memory-candidate> block body.
+
+    Returns empty string when the field is absent. Case-insensitive tag match.
+    """
+    pat = _FIELD_RE_CACHE.get(field)
+    if pat is None:
+        pat = re.compile(
+            rf"<{field}>\s*(.*?)\s*</{field}>",
+            re.DOTALL | re.IGNORECASE,
+        )
+        _FIELD_RE_CACHE[field] = pat
+    m = pat.search(block)
+    if not m:
+        return ""
+    return m.group(1).strip()
+
+
+def _parse_memory_candidates(text_body: str) -> list[dict]:
+    """Parse all well-formed <memory-candidate> blocks from assistant text.
+
+    A candidate is well-formed when it has a non-empty ``<type>`` AND
+    ``<content>``. Malformed blocks are silently dropped.
+    """
+    out: list[dict] = []
+    for m in _CANDIDATE_BLOCK_RE.finditer(text_body):
+        block = m.group(1)
+        mtype = _extract_candidate_field(block, "type")
+        content = _extract_candidate_field(block, "content")
+        if not mtype or not content:
+            continue
+        out.append({
+            "type": mtype,
+            "content": content,
+            "tags": _extract_candidate_field(block, "tags"),
+            "citations": _extract_candidate_field(block, "citations"),
+        })
+    return out
+
+
+STOP_HARVEST_CACHE_PATH = (
+    Path.home() / ".local" / "spellbook" / "cache" / "last-stop-harvest.json"
+)
+
+
+def _load_stop_harvest_cache() -> dict[str, str]:
+    """Return the {transcript_path: last_text_sha256} map, or {} on failure."""
+    if not STOP_HARVEST_CACHE_PATH.exists():
+        return {}
+    try:
+        raw = json.loads(STOP_HARVEST_CACHE_PATH.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
+    """Persist the last-seen sha256 for a transcript. Best-effort."""
+    cache = _load_stop_harvest_cache()
+    cache[transcript_path] = text_sha
+    try:
+        _atomic_write_json(STOP_HARVEST_CACHE_PATH, cache)
+    except OSError:
+        pass
+
+
+def _handle_stop(data: dict) -> None:
+    """Stop hook: harvest <memory-candidate> blocks and POST each. FAIL-OPEN.
+
+    Idempotent: we hash the extracted final-assistant text per transcript
+    and skip harvest when the hash matches the most-recent processed value.
+    """
+    if not _auto_store_enabled():
+        return
+    transcript_path = data.get("transcript_path", "") or ""
+    if not transcript_path:
+        return
+    try:
+        text_body = _extract_last_assistant_text(transcript_path)
+    except Exception as e:
+        _log_hook_error("stop_extract_transcript", "Stop", e)
+        return
+    if not text_body:
+        return
+
+    text_sha = hashlib.sha256(text_body.encode("utf-8")).hexdigest()
+    cache = _load_stop_harvest_cache()
+    if cache.get(transcript_path) == text_sha:
+        return  # Already processed this exact transcript + final message.
+
+    candidates = _parse_memory_candidates(text_body)
+    if not candidates:
+        _record_stop_harvest(transcript_path, text_sha)
+        return
+
+    namespace, _resolved_cwd, branch = _derive_namespace(data.get("cwd", ""))
+    if not namespace:
+        _record_stop_harvest(transcript_path, text_sha)
+        return
+
+    failed = 0
+    for cand in candidates:
+        ok = _post_unconsolidated(
+            project=namespace,
+            branch=branch,
+            mtype=cand["type"],
+            content=cand["content"],
+            tags=cand["tags"],
+            citations=cand["citations"],
+            source="stop_hook",
+        )
+        if not ok:
+            failed += 1
+
+    if failed == 0:
+        _record_stop_harvest(transcript_path, text_sha)
+    else:
+        # Do NOT record the sha: the next Stop invocation must retry the
+        # whole harvest. Server-side consolidation dedups on content, so
+        # double-posting on retry is acceptable. Log the partial failure
+        # so operators can correlate with daemon outages.
+        _log_hook_error(
+            "stop_harvest_partial_failure",
+            "Stop",
+            RuntimeError(
+                f"stop_harvest_partial_failure failed={failed} "
+                f"total={len(candidates)}"
+            ),
+        )
+
+
+def _memory_recall_for_tool(tool_name: str, tool_input: dict, cwd: str) -> str | None:
+    """PreToolUse handler: recall memories for Bash/Write/Edit file targets."""
+    if not _auto_recall_enabled():
+        return None
+    if tool_name not in ("Bash", "Write", "Edit"):
+        return None
+
+    paths = _extract_tool_paths(tool_name, tool_input or {})
+    if not paths:
+        return None
+
+    namespace, resolved_cwd, branch = _derive_namespace(cwd)
+    if not namespace:
+        return None
+
+    collected: list[dict] = []
+    seen_paths: set[str] = set()
+    for fp in paths:
+        mems = _recall(
+            namespace=namespace,
+            branch=branch,
+            resolved_cwd=resolved_cwd,
+            file_path=fp,
+            limit=MEMORY_BUDGET_MAX_COUNT,
+        )
+        for m in mems:
+            p = m.get("path", "")
+            if p and p not in seen_paths:
+                seen_paths.add(p)
+                collected.append(m)
+
+    if not collected:
+        return None
+
+    log = _load_dedup_log()
+    collected = _filter_memories_by_dedup(collected, log)
+    collected = _apply_memory_budget(collected)
+    if not collected:
+        return None
+
+    xml = _format_memory_xml(collected)
+    if xml:
+        _touch_dedup_log([m.get("path", "") for m in collected])
+    return xml
+
+
+# ---------------------------------------------------------------------------
 # Event Handlers
 # ---------------------------------------------------------------------------
 
@@ -845,6 +1647,36 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
 
+    # Memory auto-recall for file-modifying tools (non-blocking)
+    if tool_name in ("Bash", "Write", "Edit"):
+        try:
+            out = _memory_recall_for_tool(
+                tool_name, data.get("tool_input") or {}, data.get("cwd", ""),
+            )
+            if out:
+                outputs.append(out)
+        except Exception as e:
+            _log_hook_error("memory_recall_for_tool", tool_name, e)
+
+    return outputs
+
+
+def _handle_user_prompt_submit(data: dict) -> list[str]:
+    """UserPromptSubmit handler: auto-inject memory context for prompts."""
+    outputs: list[str] = []
+    prompt = data.get("prompt", "") or data.get("user_prompt", "") or ""
+    try:
+        out = _memory_recall_for_prompt(prompt, data.get("cwd", ""))
+        if out:
+            outputs.append(out)
+    except Exception as e:
+        _log_hook_error("memory_recall_for_prompt", "UserPromptSubmit", e)
+
+    # Pattern-based self-capture (Gap 4). Non-blocking, fail-open.
+    try:
+        _memory_autostore_for_prompt(prompt, data.get("cwd", ""))
+    except Exception as e:
+        _log_hook_error("memory_autostore_for_prompt", "UserPromptSubmit", e)
     return outputs
 
 
@@ -974,6 +1806,13 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
         outputs.extend(_handle_pre_tool_use(tool_name, data))
     elif event_name == "PostToolUse":
         outputs.extend(_handle_post_tool_use(tool_name, data))
+    elif event_name == "UserPromptSubmit":
+        outputs.extend(_handle_user_prompt_submit(data))
+    elif event_name == "Stop":
+        try:
+            _handle_stop(data)
+        except Exception as e:
+            _log_hook_error("stop", "Stop", e)
     elif event_name == "PreCompact":
         _handle_pre_compact(data)
     elif event_name == "SessionStart":

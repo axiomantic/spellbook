@@ -153,7 +153,7 @@ class TestMemoryBridgeIntegration:
         assert memory_md.exists()
         content = memory_md.read_text(encoding="utf-8")
         assert "# Spellbook Memory System" in content
-        assert "memory_store_memories" in content
+        assert "memory_store" in content
         assert "memory_recall" in content
 
     def test_regenerated_md_is_static_template(self, db):
@@ -230,7 +230,7 @@ class TestMemoryBridgeIntegration:
 
         # Step 5: Verify template content (not DB content)
         assert "# Spellbook Memory System" in result
-        assert "memory_store_memories" in result
+        assert "memory_store" in result
         assert "memory_recall" in result
         # DB content is accessed via MCP tools, not rendered in the file
         assert "RabbitMQ" not in result

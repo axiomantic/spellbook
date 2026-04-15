@@ -1,101 +1,39 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { fetchApi } from '../api/client'
-import type { MemoryItem, MemoryUpdateRequest } from '../api/types'
+import type {
+  MemoryItem,
+  MemoryListResponse,
+  MemorySearchResponse,
+} from '../api/types'
 
-export interface MemoryDetail extends MemoryItem {
-  citations: Citation[]
-}
-
-export interface Citation {
-  id: number
-  memory_id: string
-  file_path: string
-  line_range: string | null
-  content_snippet: string | null
-}
-
-export interface ConsolidateRequest {
-  namespace: string
-  max_events?: number
-}
-
-export interface ConsolidateResponse {
-  memories_created: number
-  events_consolidated: number
-}
-
-export interface MemoryStatsResponse {
-  total: number
-  by_type: Record<string, number>
-  by_status: Record<string, number>
-  by_namespace: Record<string, number>
-}
-
-export interface NamespaceListResponse {
-  namespaces: string[]
+export function useMemoryList(offset = 0, limit = 50) {
+  return useQuery({
+    queryKey: ['memories', offset, limit],
+    queryFn: () =>
+      fetchApi<MemoryListResponse>(
+        `/api/memories?offset=${offset}&limit=${limit}`,
+      ),
+  })
 }
 
 export function useMemory(id: string | null) {
   return useQuery({
     queryKey: ['memory', id],
-    queryFn: () => fetchApi<MemoryDetail>(`/api/memories/${id}`),
+    queryFn: () =>
+      fetchApi<MemoryItem>(
+        `/api/memories/${id!.split('/').map(encodeURIComponent).join('/')}`,
+      ),
     enabled: !!id,
   })
 }
 
-export function useUpdateMemory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: MemoryUpdateRequest }) =>
-      fetchApi<{ status: string; memory_id: string }>(`/api/memories/${id}`, {
-        method: 'PUT',
-        body: data,
-      }),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] })
-      queryClient.invalidateQueries({ queryKey: ['memory', variables.id] })
-    },
-  })
-}
-
-export function useDeleteMemory() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) =>
-      fetchApi<{ status: string; memory_id: string }>(`/api/memories/${id}`, {
-        method: 'DELETE',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] })
-    },
-  })
-}
-
-export function useConsolidate() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (data: ConsolidateRequest) =>
-      fetchApi<ConsolidateResponse>('/api/memories/consolidate', {
-        method: 'POST',
-        body: data,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] })
-      queryClient.invalidateQueries({ queryKey: ['memory-stats'] })
-    },
-  })
-}
-
-export function useMemoryNamespaces() {
+export function useMemorySearch(query: string, limit = 10) {
   return useQuery({
-    queryKey: ['memory-namespaces'],
-    queryFn: () => fetchApi<NamespaceListResponse>('/api/memories/namespaces'),
-  })
-}
-
-export function useMemoryStats() {
-  return useQuery({
-    queryKey: ['memory-stats'],
-    queryFn: () => fetchApi<MemoryStatsResponse>('/api/memories/stats'),
+    queryKey: ['memory-search', query, limit],
+    queryFn: () =>
+      fetchApi<MemorySearchResponse>(
+        `/api/memories/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+      ),
+    enabled: query.trim().length > 0,
   })
 }

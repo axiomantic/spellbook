@@ -1,37 +1,39 @@
-import { useState, useCallback } from 'react'
-import { type ColumnDef } from '@tanstack/react-table'
-import { useListPage } from '../hooks/useListPage'
+import { useCallback, useMemo, useState } from 'react'
 import {
   useMemory,
-  useUpdateMemory,
-  useDeleteMemory,
-  useConsolidate,
-  useMemoryNamespaces,
-  type MemoryDetail,
+  useMemoryList,
+  useMemorySearch,
 } from '../hooks/useMemories'
-import { DataTable } from '../components/shared/DataTable'
-import { SearchBar } from '../components/shared/SearchBar'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { Badge } from '../components/shared/Badge'
 import { PageLayout } from '../components/layout/PageLayout'
-import type { MemoryItem } from '../api/types'
+import { SearchBar } from '../components/shared/SearchBar'
+import type {
+  Citation,
+  MemoryItem,
+  MemorySearchResult,
+} from '../api/types'
 
-// -- Citation list in detail panel --
+// ---------------------------------------------------------------------------
+// Citations list
+// ---------------------------------------------------------------------------
 
-function CitationList({ citations }: { citations: MemoryDetail['citations'] }) {
+function CitationList({ citations }: { citations: Citation[] }) {
   if (!citations || citations.length === 0) {
     return <p className="text-text-dim text-xs">No citations.</p>
   }
   return (
     <div className="space-y-1">
-      {citations.map((c) => (
-        <div key={c.id} className="text-xs font-mono text-text-secondary border border-bg-border px-2 py-1">
-          <span className="text-accent-cyan">{c.file_path}</span>
-          {c.line_range && (
-            <span className="text-text-dim ml-2">L{c.line_range}</span>
-          )}
-          {c.content_snippet && (
-            <div className="text-text-dim mt-0.5 truncate">{c.content_snippet}</div>
+      {citations.map((c, i) => (
+        <div
+          key={`${c.file}-${c.symbol ?? ''}-${i}`}
+          className="text-xs font-mono text-text-secondary border border-bg-border px-2 py-1"
+        >
+          <span className="text-accent-cyan">{c.file}</span>
+          {c.symbol && (
+            <span className="text-text-dim ml-2">
+              {c.symbol_type ?? 'symbol'}: {c.symbol}
+            </span>
           )}
         </div>
       ))}
@@ -39,56 +41,18 @@ function CitationList({ citations }: { citations: MemoryDetail['citations'] }) {
   )
 }
 
-// -- Detail / edit panel --
+// ---------------------------------------------------------------------------
+// Detail panel
+// ---------------------------------------------------------------------------
 
 function MemoryDetailPanel({
   memoryId,
   onClose,
-  onDeleted,
 }: {
   memoryId: string
   onClose: () => void
-  onDeleted: () => void
 }) {
   const { data: memory, isLoading, error } = useMemory(memoryId)
-  const updateMutation = useUpdateMemory()
-  const deleteMutation = useDeleteMemory()
-
-  const [editing, setEditing] = useState(false)
-  const [editContent, setEditContent] = useState('')
-  const [editImportance, setEditImportance] = useState(1.0)
-
-  const startEditing = useCallback(() => {
-    if (memory) {
-      setEditContent(memory.content)
-      setEditImportance(memory.importance)
-    }
-    setEditing(true)
-  }, [memory])
-
-  const handleSave = useCallback(() => {
-    if (!memory) return
-    const data: Record<string, unknown> = {}
-    if (editContent !== memory.content) data.content = editContent
-    if (editImportance !== memory.importance) data.importance = editImportance
-    if (Object.keys(data).length === 0) {
-      setEditing(false)
-      return
-    }
-    updateMutation.mutate(
-      { id: memoryId, data },
-      {
-        onSuccess: () => setEditing(false),
-      },
-    )
-  }, [memory, editContent, editImportance, memoryId, updateMutation])
-
-  const handleDelete = useCallback(() => {
-    if (!window.confirm('Delete this memory? This is a soft delete.')) return
-    deleteMutation.mutate(memoryId, {
-      onSuccess: () => onDeleted(),
-    })
-  }, [memoryId, deleteMutation, onDeleted])
 
   if (isLoading) {
     return (
@@ -118,372 +82,233 @@ function MemoryDetailPanel({
         <div className="font-mono text-xs text-text-dim truncate mr-2">
           {memory.id}
         </div>
-        <div className="flex gap-2 shrink-0">
-          {!editing && (
-            <button onClick={startEditing} className="btn text-xs">
-              Edit
-            </button>
-          )}
-          <button onClick={onClose} className="btn text-xs">
-            Close
-          </button>
-        </div>
+        <button onClick={onClose} className="btn text-xs shrink-0">
+          Close
+        </button>
       </div>
 
       {/* Body */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {/* Metadata badges */}
         <div className="flex flex-wrap gap-2">
-          <Badge label={memory.status} />
-          {memory.memory_type && <Badge label={memory.memory_type} variant="info" />}
-          <Badge label={memory.namespace} variant="info" />
+          <Badge label={memory.type} variant="info" />
+          {memory.kind && <Badge label={memory.kind} />}
+          {memory.confidence && (
+            <Badge label={`conf:${memory.confidence}`} />
+          )}
         </div>
 
-        {/* Content */}
-        <div>
-          <h3 className="section-header mb-1">Content</h3>
-          {editing ? (
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-bg-elevated border border-bg-border p-2 text-sm text-text-primary font-mono focus:outline-none focus:border-accent-green min-h-[120px] resize-y"
-            />
-          ) : (
-            <div className="text-sm text-text-primary whitespace-pre-wrap bg-bg-elevated border border-bg-border p-2">
-              {memory.content}
+        {/* Tags */}
+        {memory.tags.length > 0 && (
+          <div>
+            <h3 className="section-header mb-1">Tags</h3>
+            <div className="flex flex-wrap gap-1">
+              {memory.tags.map((t) => (
+                <Badge key={t} label={t} />
+              ))}
             </div>
-          )}
-        </div>
-
-        {/* Importance */}
-        <div>
-          <h3 className="section-header mb-1">Importance</h3>
-          {editing ? (
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="10"
-              value={editImportance}
-              onChange={(e) => setEditImportance(parseFloat(e.target.value))}
-              className="bg-bg-elevated border border-bg-border px-2 py-1 text-sm text-text-primary font-mono w-24 focus:outline-none focus:border-accent-green"
-            />
-          ) : (
-            <span className="text-sm text-text-primary font-mono">{memory.importance}</span>
-          )}
-        </div>
-
-        {/* Edit actions */}
-        {editing && (
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={updateMutation.isPending}
-              className="btn-primary text-xs"
-            >
-              {updateMutation.isPending ? 'Saving...' : 'Save'}
-            </button>
-            <button
-              onClick={() => {
-                setEditing(false)
-                setEditContent(memory.content)
-                setEditImportance(memory.importance)
-              }}
-              className="btn text-xs"
-            >
-              Cancel
-            </button>
           </div>
         )}
+
+        {/* Body text */}
+        <div>
+          <h3 className="section-header mb-1">Body</h3>
+          <div className="text-sm text-text-primary whitespace-pre-wrap bg-bg-elevated border border-bg-border p-2 font-mono">
+            {memory.body}
+          </div>
+        </div>
 
         {/* Dates */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <span className="text-text-dim">Created: </span>
             <span className="text-text-secondary font-mono">
-              {new Date(memory.created_at).toLocaleString()}
+              {memory.created}
             </span>
           </div>
-          {memory.accessed_at && (
+          {memory.last_verified && (
             <div>
-              <span className="text-text-dim">Accessed: </span>
+              <span className="text-text-dim">Verified: </span>
               <span className="text-text-secondary font-mono">
-                {new Date(memory.accessed_at).toLocaleString()}
+                {memory.last_verified}
               </span>
             </div>
           )}
         </div>
 
-        {/* Meta */}
-        {memory.meta && Object.keys(memory.meta).length > 0 && (
-          <div>
-            <h3 className="section-header mb-1">Metadata</h3>
-            <pre className="text-xs text-text-secondary bg-bg-elevated border border-bg-border p-2 overflow-auto">
-              {JSON.stringify(memory.meta, null, 2)}
-            </pre>
-          </div>
-        )}
-
         {/* Citations */}
         <div>
           <h3 className="section-header mb-1">
-            Citations ({memory.citation_count})
+            Citations ({memory.citations.length})
           </h3>
           <CitationList citations={memory.citations} />
         </div>
-
-        {/* Delete */}
-        <div className="pt-4 border-t border-bg-border">
-          <button
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="btn text-accent-red border-accent-red hover:border-accent-red text-xs"
-          >
-            {deleteMutation.isPending ? 'Deleting...' : 'Delete Memory'}
-          </button>
-        </div>
       </div>
     </div>
   )
 }
 
-// -- Consolidation panel --
+// ---------------------------------------------------------------------------
+// Row (used by both list and search panels)
+// ---------------------------------------------------------------------------
 
-function ConsolidatePanel() {
-  const { data: nsData } = useMemoryNamespaces()
-  const consolidate = useConsolidate()
-  const [namespace, setNamespace] = useState('')
-  const [maxEvents, setMaxEvents] = useState(50)
-
-  const handleTrigger = useCallback(() => {
-    if (!namespace) return
-    consolidate.mutate({ namespace, max_events: maxEvents })
-  }, [namespace, maxEvents, consolidate])
-
-  const isConflict = consolidate.error && (consolidate.error as Error & { code?: string }).code === 'CONSOLIDATION_IN_PROGRESS'
-
+function MemoryRow({
+  memory,
+  selected,
+  onClick,
+  score,
+}: {
+  memory: MemoryItem
+  selected: boolean
+  onClick: () => void
+  score?: number
+}) {
+  const preview =
+    memory.body.length > 120 ? memory.body.slice(0, 120) + '...' : memory.body
   return (
-    <div className="card">
-      <h3 className="section-header mb-3">Consolidation</h3>
-      <div className="flex gap-2 items-end flex-wrap">
-        <div>
-          <label className="text-xs text-text-dim block mb-1">Namespace</label>
-          <select
-            value={namespace}
-            onChange={(e) => setNamespace(e.target.value)}
-            className="bg-bg-elevated border border-bg-border px-2 py-1 text-sm text-text-primary font-mono focus:outline-none focus:border-accent-green"
-          >
-            <option value="">Select namespace...</option>
-            {(nsData?.namespaces ?? []).map((ns) => (
-              <option key={ns} value={ns}>
-                {ns}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-text-dim block mb-1">
-            Max events: {maxEvents}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="500"
-            value={maxEvents}
-            onChange={(e) => setMaxEvents(parseInt(e.target.value))}
-            className="w-32"
-          />
-        </div>
-        <button
-          onClick={handleTrigger}
-          disabled={!namespace || consolidate.isPending}
-          className="btn-primary text-xs"
-        >
-          {consolidate.isPending ? 'Running...' : 'Consolidate'}
-        </button>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full text-left border-b border-bg-border px-3 py-2 hover:bg-bg-elevated ${
+        selected ? 'bg-bg-elevated' : ''
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <Badge label={memory.type} variant="info" />
+        {memory.kind && <Badge label={memory.kind} />}
+        <span className="text-text-dim font-mono text-xs">{memory.created}</span>
+        {score !== undefined && (
+          <span className="text-accent-green font-mono text-xs ml-auto">
+            {score.toFixed(2)}
+          </span>
+        )}
       </div>
-      {consolidate.isSuccess && consolidate.data && (
-        <div className="text-xs text-accent-green mt-2 font-mono">
-          Created {consolidate.data.memories_created} memories from{' '}
-          {consolidate.data.events_consolidated} events.
-        </div>
-      )}
-      {consolidate.isError && (
-        <div className="text-xs text-accent-red mt-2 font-mono">
-          {isConflict
-            ? 'Consolidation already in progress.'
-            : (consolidate.error as Error).message}
-        </div>
-      )}
-    </div>
+      <div className="text-sm text-text-primary whitespace-pre-wrap font-mono">
+        {preview}
+      </div>
+      <div className="font-mono text-xs text-text-dim mt-1 truncate">
+        {memory.id}
+      </div>
+    </button>
   )
 }
 
-// -- Column definitions --
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const columns: ColumnDef<MemoryItem, any>[] = [
-  {
-    id: 'content',
-    header: 'Content',
-    accessorKey: 'content',
-    enableSorting: true,
-    cell: ({ getValue }) => {
-      const content = getValue() as string
-      return (
-        <span className="max-w-xs truncate block text-text-primary">
-          {content.length > 80 ? content.slice(0, 80) + '...' : content}
-        </span>
-      )
-    },
-  },
-  {
-    id: 'memory_type',
-    header: 'Type',
-    accessorKey: 'memory_type',
-    enableSorting: false,
-    cell: ({ getValue }) => {
-      const memType = getValue() as string | null
-      return memType ? <Badge label={memType} variant="info" /> : null
-    },
-  },
-  {
-    id: 'namespace',
-    header: 'Namespace',
-    accessorKey: 'namespace',
-    enableSorting: true,
-    cell: ({ getValue }) => (
-      <span className="text-text-secondary">{getValue() as string}</span>
-    ),
-  },
-  {
-    id: 'importance',
-    header: 'Importance',
-    accessorKey: 'importance',
-    enableSorting: true,
-    cell: ({ getValue }) => (
-      <span className="text-text-secondary">{getValue() as number}</span>
-    ),
-  },
-  {
-    id: 'created_at',
-    header: 'Created',
-    accessorKey: 'created_at',
-    enableSorting: true,
-    cell: ({ getValue }) => (
-      <span className="text-text-secondary">
-        {new Date(getValue() as string).toLocaleDateString()}
-      </span>
-    ),
-  },
-  {
-    id: 'citation_count',
-    header: 'Citations',
-    accessorKey: 'citation_count',
-    enableSorting: false,
-    cell: ({ getValue }) => (
-      <span className="text-text-secondary text-center block">{getValue() as number}</span>
-    ),
-  },
-]
-
-// -- Main page --
+const PAGE_SIZE = 50
 
 export function MemoryBrowser() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [offset, setOffset] = useState(0)
+  const [search, setSearch] = useState('')
 
-  const listPage = useListPage<MemoryItem>({
-    queryKey: ['memories'],
-    endpoint: '/api/memories',
-    defaultPerPage: 50,
-    defaultSort: { column: 'created_at', order: 'desc' },
-  })
+  const trimmedSearch = search.trim()
+  const isSearching = trimmedSearch.length > 0
 
-  const { data: nsData } = useMemoryNamespaces()
-  const namespaces = nsData?.namespaces ?? []
+  const listQuery = useMemoryList(offset, PAGE_SIZE)
+  const searchQuery = useMemorySearch(trimmedSearch, 25)
 
-  const handleRowClick = useCallback((row: MemoryItem) => {
-    setSelectedId(row.id)
+  const activeQuery = isSearching ? searchQuery : listQuery
+  const items: (MemoryItem | MemorySearchResult)[] = useMemo(() => {
+    if (isSearching) {
+      return searchQuery.data?.items ?? []
+    }
+    return listQuery.data?.items ?? []
+  }, [isSearching, listQuery.data, searchQuery.data])
+
+  const total = isSearching
+    ? searchQuery.data?.total ?? 0
+    : listQuery.data?.total ?? 0
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value)
+    setOffset(0)
+    setSelectedId(null)
   }, [])
 
-  const handleNamespaceChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const ns = e.target.value
-      if (ns) {
-        listPage.setFilters({ ...listPage.filters, namespace: ns })
-      } else {
-        // Remove namespace from filters
-        const { namespace: _, ...rest } = listPage.filters
-        listPage.setFilters(rest)
-      }
-    },
-    [listPage],
-  )
+  const handleNext = useCallback(() => {
+    setOffset((o) => o + PAGE_SIZE)
+  }, [])
+  const handlePrev = useCallback(() => {
+    setOffset((o) => Math.max(0, o - PAGE_SIZE))
+  }, [])
 
   return (
     <PageLayout segments={[{ label: 'MEMORY' }]} fullHeight>
-      {/* Subheader */}
       <div className="p-6 pb-0">
         <p className="text-sm text-text-secondary mb-4">
-          Browse, search, and manage memories across namespaces.
+          Browse and search markdown memory files.
         </p>
-
-        {/* Consolidation panel */}
-        <ConsolidatePanel />
+        <SearchBar
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search memories..."
+        />
       </div>
 
-      {/* Content area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Table section */}
+        {/* List / results */}
         <div className="flex-1 flex flex-col overflow-hidden p-6 pt-4">
-          {/* Search and filters */}
-          <div className="flex gap-2 mb-4">
-            <div className="flex-1">
-              <SearchBar
-                value={listPage.search}
-                onChange={listPage.setSearch}
-                placeholder="Search memories (FTS)..."
-              />
-            </div>
-            <select
-              value={listPage.filters.namespace ?? ''}
-              onChange={handleNamespaceChange}
-              className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary focus:border-accent-green outline-none"
-            >
-              <option value="">All namespaces</option>
-              {namespaces.map((ns) => (
-                <option key={ns} value={ns}>
-                  {ns}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Error state */}
-          {listPage.isError && (
+          {activeQuery.isError && (
             <div className="text-accent-red text-sm font-mono mb-4">
-              {(listPage.error as Error).message}
+              {(activeQuery.error as Error).message}
             </div>
           )}
 
-          {/* DataTable */}
-          <div className="flex-1 overflow-auto">
-            <DataTable
-              columns={columns}
-              {...listPage.tableProps}
-              emptyTitle="No memories found"
-              emptyMessage={listPage.search ? 'Try adjusting your search query.' : undefined}
-              onRowClick={handleRowClick}
-            />
-          </div>
+          {activeQuery.isLoading ? (
+            <LoadingSpinner className="py-16" />
+          ) : items.length === 0 ? (
+            <div className="text-text-dim text-sm font-mono py-16 text-center">
+              {isSearching ? 'No results.' : 'No memories found.'}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto border border-bg-border">
+              {items.map((mem) => (
+                <MemoryRow
+                  key={mem.id}
+                  memory={mem}
+                  selected={mem.id === selectedId}
+                  onClick={() => setSelectedId(mem.id)}
+                  score={
+                    'score' in mem ? (mem as MemorySearchResult).score : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pagination footer (list mode only) */}
+          {!isSearching && total > 0 && (
+            <div className="flex items-center justify-between mt-3 text-xs font-mono text-text-dim">
+              <span>
+                {offset + 1}-{Math.min(offset + PAGE_SIZE, total)} of {total}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={offset === 0}
+                  className="btn text-xs"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={offset + PAGE_SIZE >= total}
+                  className="btn text-xs"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Detail panel */}
         {selectedId && (
           <MemoryDetailPanel
             memoryId={selectedId}
             onClose={() => setSelectedId(null)}
-            onDeleted={() => setSelectedId(null)}
           />
         )}
       </div>

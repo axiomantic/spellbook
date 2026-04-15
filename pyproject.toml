@@ -72,6 +72,15 @@ markers = [
     "docker: marks tests that require Docker or heavy platform fixtures (CI only)",
     "slow: marks tests with deliberate sleeps > 0.5s (skipped locally, runs in CI)",
     "external: marks tests requiring external tools like Claude CLI (skipped locally)",
+    # QMD and Serena are external CLI tools (200MB+ npm global install) that
+    # we intentionally do NOT add to the dev/test extras — they are too heavy
+    # to require on every contributor machine and are not available in CI
+    # images. Tests touching the file-based memory hybrid search path mark
+    # themselves with `requires_memory_tools`, and conftest emits a session
+    # warning when they get skipped. See AGENTS.spellbook.md ("Test dependency
+    # exceptions") for install instructions and the rationale for the
+    # exception.
+    "requires_memory_tools: test requires QMD and Serena to be installed",
 ]
 
 [tool.bigfoot]

@@ -2,7 +2,7 @@
 
 Batch-extracts structured memories from raw events via heuristic strategies.
 Handles dedup, bibliographic coupling, FTS5 sync, and error recovery.
-Client-side LLM synthesis available via memory_get_unconsolidated/memory_store_memories tools.
+Client-side LLM synthesis available via memory_review_events/memory_store tools.
 """
 
 import json
@@ -471,7 +471,7 @@ def build_consolidation_prompt(events: List[Dict[str, Any]]) -> str:
 def parse_llm_response(response: str) -> List[Dict[str, Any]]:
     """Parse and validate a JSON response into memory dicts. Returns empty list on failure.
 
-    Used by memory_store_memories to validate client input.
+    Used to validate client input for memory storage.
     """
     try:
         data = json.loads(response)
@@ -646,8 +646,6 @@ def consolidate_batch(
             "events_count": len(event_ids),
         })
         # Mark events consolidated even on failure to prevent infinite retry.
-        # These events can be re-processed via memory_get_unconsolidated with
-        # include_consolidated=True if needed.
         mark_events_consolidated(db_path, event_ids, batch_id, namespace=namespace)
         return {
             "status": "error",
