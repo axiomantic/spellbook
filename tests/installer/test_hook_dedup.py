@@ -22,8 +22,8 @@ def config_dir(tmp_path, monkeypatch):
     import installer.components.hooks as hooks_mod
     import installer.components.source_link as source_link_mod
     monkeypatch.setattr(config_mod, "get_spellbook_config_dir", lambda: cfg)
-    monkeypatch.setattr(hooks_mod, "get_spellbook_config_dir", lambda: cfg, raising=False)
-    monkeypatch.setattr(source_link_mod, "get_spellbook_config_dir", lambda: cfg)
+    # hooks now resolve via installer.config at call time, patched above
+    # source_link now resolves via installer.config at call time, patched above
     return cfg
 
 

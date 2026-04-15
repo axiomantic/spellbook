@@ -924,9 +924,13 @@ class TestClaudeCodeInstallerHookIntegration:
         # Literal $SPELLBOOK_DIR and $SPELLBOOK_CONFIG_DIR should NOT appear in the written file
         assert "$SPELLBOOK_DIR" not in content
         assert "$SPELLBOOK_CONFIG_DIR" not in content
-        # The expanded spellbook_dir path should appear instead
-        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
-        assert json.dumps(str(spellbook_dir))[1:-1] in content
+        # $SPELLBOOK_DIR now expands to the stable source symlink path
+        # (<fake_config_dir>/source), not the underlying worktree path.
+        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes).
+        expected_source_link = str(fake_config_dir / "source")
+        assert json.dumps(expected_source_link)[1:-1] in content
+        # And the underlying spellbook_dir must NOT appear in hook commands.
+        assert json.dumps(str(spellbook_dir) + "/hooks")[1:-1] not in content
 
         settings = _read_settings(settings_path)
         # Verify the unified hook path is expanded
@@ -937,7 +941,13 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(catchall_entry["hooks"]) == 1
         hook = catchall_entry["hooks"][0]
         assert hook["type"] == "command"
-        expected_path = _expected_unified_command(str(spellbook_dir), config_prefix=str(tmp_path / ".local" / "spellbook"))
+        # Under the stable-source-symlink design, the hook command references
+        # the symlink path (<fake_config_dir>/source), not the underlying
+        # spellbook_dir.
+        expected_path = _expected_unified_command(
+            str(fake_config_dir / "source"),
+            config_prefix=str(fake_config_dir),
+        )
         assert hook["command"] == expected_path
 
 
@@ -1044,7 +1054,7 @@ class TestInstallHooksWithSpellbookDir:
             "installer.config.get_spellbook_config_dir", lambda: fake_config_dir
         )
         monkeypatch.setattr(
-            "installer.components.source_link.get_spellbook_config_dir",
+            "installer.config.get_spellbook_config_dir",
             lambda: fake_config_dir,
         )
 
@@ -1065,7 +1075,7 @@ class TestInstallHooksWithSpellbookDir:
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
         monkeypatch.setattr(
-            "installer.components.source_link.get_spellbook_config_dir",
+            "installer.config.get_spellbook_config_dir",
             lambda: fake_config_dir,
         )
 
@@ -1091,7 +1101,7 @@ class TestInstallHooksWithSpellbookDir:
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
         monkeypatch.setattr(
-            "installer.components.source_link.get_spellbook_config_dir",
+            "installer.config.get_spellbook_config_dir",
             lambda: fake_config_dir,
         )
 
@@ -1140,7 +1150,7 @@ class TestInstallHooksWithSpellbookDir:
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
         monkeypatch.setattr(
-            "installer.components.source_link.get_spellbook_config_dir",
+            "installer.config.get_spellbook_config_dir",
             lambda: fake_config_dir,
         )
 
@@ -1179,7 +1189,7 @@ class TestInstallHooksWithSpellbookDir:
         fake_config_dir = tmp_path / ".local" / "spellbook"
         monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: fake_config_dir)
         monkeypatch.setattr(
-            "installer.components.source_link.get_spellbook_config_dir",
+            "installer.config.get_spellbook_config_dir",
             lambda: fake_config_dir,
         )
 

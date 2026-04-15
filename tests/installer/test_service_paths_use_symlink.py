@@ -28,7 +28,7 @@ def fake_paths(tmp_path, monkeypatch):
     import installer.config as config_mod
     import installer.components.source_link as source_link_mod
     monkeypatch.setattr(config_mod, "get_spellbook_config_dir", lambda: cfg)
-    monkeypatch.setattr(source_link_mod, "get_spellbook_config_dir", lambda: cfg)
+    # source_link now resolves via installer.config at call time, patched above
 
     # Point spellbook.core.config.get_spellbook_dir at the raw worktree.
     import spellbook.core.config as core_cfg

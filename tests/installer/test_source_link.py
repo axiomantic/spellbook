@@ -23,9 +23,6 @@ def config_dir(tmp_path, monkeypatch):
         "installer.config.get_spellbook_config_dir",
         lambda: cfg,
     )
-    # The source_link module imports the helper directly; re-patch there too.
-    import installer.components.source_link as source_link
-    monkeypatch.setattr(source_link, "get_spellbook_config_dir", lambda: cfg)
     return cfg
 
 

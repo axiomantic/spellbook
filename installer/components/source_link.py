@@ -18,8 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal, Optional
 
+from installer import config as _config
 from installer.compat import create_link
-from installer.config import get_spellbook_config_dir
 
 
 SourceLinkAction = Literal[
@@ -48,7 +48,7 @@ class SourceLinkResult:
 
 def get_source_link_path() -> Path:
     """Return the absolute path of the stable source symlink."""
-    return get_spellbook_config_dir() / "source"
+    return _config.get_spellbook_config_dir() / "source"
 
 
 def _backup_timestamp() -> str:
