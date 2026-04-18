@@ -17,7 +17,6 @@ from starlette.responses import JSONResponse
 
 from spellbook.mcp import state as _state
 from spellbook.mcp.server import mcp
-from spellbook.notifications import tts as tts_module
 from spellbook.core.db import get_db_path
 from spellbook.memory.tools import (
     do_log_event,
@@ -88,6 +87,7 @@ async def api_speak(request: Request) -> JSONResponse:
     volume = body.get("volume")
     session_id = body.get("session_id")
 
+    from spellbook.notifications import tts as tts_module
     result = await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
     status_code = 200 if result.get("ok") else 500
     return JSONResponse(result, status_code=status_code)

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.1] - 2026-04-18
+
+### Fixed
+
+- **Installer dependency resolution**: `uv run install.py` ran the script
+  under an isolated PEP 723 env with `dependencies = []`, so `rich`,
+  `sqlalchemy`, and other project deps declared in `pyproject.toml` were
+  never available at install time. Re-exec commands now use
+  `uv run --project <repo> python <script>` to pick up the full project
+  environment. Also added a final re-exec step for the curl-pipe path with
+  an existing local repo, which previously fell through to `run_installation`
+  under plain `python3` and crashed importing `rich`.
+- **Daemon `/health` route silently missing**: `spellbook/mcp/routes.py`
+  imported `spellbook.notifications.tts` at module scope, which pulled in
+  `numpy` (part of the optional `tts` dep group). When TTS wasn't installed,
+  the import failed and `register_all_tools()` swallowed the error, so
+  `@mcp.custom_route("/health")` was never registered. The installer's
+  health check then 404'd and reported daemon startup failure. Moved the
+  `tts` import into the `/api/speak` handler so it's only loaded when that
+  endpoint is actually called.
+
 ## [0.53.0] - 2026-04-15
 
 ### Added

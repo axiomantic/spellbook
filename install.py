@@ -568,12 +568,29 @@ def clone_repository(install_dir: Path, auto_yes: bool = False) -> bool:
 # Self-Bootstrap Logic
 # =============================================================================
 
+def _uv_run_cmd(script_path: Path, extra_args: list[str]) -> list[str]:
+    """Build a `uv run` command that uses the project's pyproject.toml deps.
+
+    install.py declares ``dependencies = []`` in its PEP 723 header so that
+    the initial `python3 install.py` invocation stays free of external deps.
+    That header, however, causes `uv run install.py` to create an isolated
+    script environment with no deps — which breaks later imports of rich,
+    sqlalchemy, etc. from `run_installation()`. Invoking via
+    ``uv run --project <repo> python <script>`` bypasses PEP 723 and uses the
+    project env with full dependencies.
+    """
+    project_dir = script_path.parent
+    if (project_dir / "pyproject.toml").is_file():
+        return ["uv", "run", "--project", str(project_dir), "python", str(script_path)] + extra_args
+    return ["uv", "run", str(script_path)] + extra_args
+
+
 def reexec_under_uv(script_path: Path | None, args: list[str]) -> NoReturn:
     """Re-execute this script under uv."""
     print_step("Re-executing under uv for dependency management...")
 
     if script_path and script_path.exists():
-        cmd = ["uv", "run", str(script_path)] + args + ["--bootstrapped"]
+        cmd = _uv_run_cmd(script_path, args + ["--bootstrapped"])
     else:
         # Running from pipe - need to clone first, then run from repo
         # For now, just continue with bootstrapped flag since uv will handle Python
@@ -675,7 +692,7 @@ def bootstrap(args: argparse.Namespace) -> Path:
                         ):
                             print_step("Running updated installer...")
                             filtered_args = [a for a in sys.argv[1:] if a != "--bootstrapped"]
-                            cmd = ["uv", "run", str(new_script)] + filtered_args + ["--bootstrapped"]
+                            cmd = _uv_run_cmd(new_script, filtered_args + ["--bootstrapped"])
                             if sys.platform == "win32":
                                 sys.exit(subprocess.call(cmd))
                             else:
@@ -723,7 +740,22 @@ def bootstrap(args: argparse.Namespace) -> Path:
                     continue
                 filtered_args.append(arg)
 
-            cmd = ["uv", "run", str(new_script)] + filtered_args
+            cmd = _uv_run_cmd(new_script, filtered_args)
+            if sys.platform == "win32":
+                sys.exit(subprocess.call(cmd))
+            else:
+                os.execvp("uv", cmd)
+
+    # Curl-pipe path with an existing repo: get_script_path() returned None
+    # so the earlier reexec_under_uv() was skipped. Re-exec now from the
+    # on-disk install.py so uv resolves dependencies (rich, etc.) from the
+    # repo's pyproject.toml before run_installation() imports them.
+    if not args.bootstrapped and not running_under_uv() and get_script_path() is None:
+        new_script = spellbook_dir / "install.py"
+        if new_script.exists():
+            print_step("Re-executing under uv for dependency management...")
+            filtered_args = [a for a in sys.argv[1:] if a != "--bootstrapped"]
+            cmd = _uv_run_cmd(new_script, filtered_args + ["--bootstrapped"])
             if sys.platform == "win32":
                 sys.exit(subprocess.call(cmd))
             else:
