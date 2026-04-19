@@ -24,6 +24,22 @@ logger = logging.getLogger(__name__)
 CONFIG_DEFAULTS: dict[str, Any] = {
     "memory.auto_recall": True,
     "memory.auto_store": True,
+    # worker_llm: 14 flat keys. All feature flags default False (opt-in).
+    # Matches CONFIG_SCHEMA in spellbook/admin/routes/config.py.
+    "worker_llm_base_url": "",
+    "worker_llm_model": "",
+    "worker_llm_api_key": "",
+    "worker_llm_timeout_s": 10.0,
+    "worker_llm_max_tokens": 1024,
+    "worker_llm_tool_safety_timeout_s": 1.5,
+    "worker_llm_transcript_harvest_mode": "replace",
+    "worker_llm_allow_prompt_overrides": True,
+    "worker_llm_read_claude_memory": False,
+    "worker_llm_feature_transcript_harvest": False,
+    "worker_llm_feature_roundtable": False,
+    "worker_llm_feature_memory_rerank": False,
+    "worker_llm_feature_tool_safety": False,
+    "worker_llm_safety_cache_ttl_s": 300,
 }
 
 

@@ -82,6 +82,94 @@ CONFIG_SCHEMA = [
         "description": "Whether the admin web interface is mounted on server startup",
         "default": True,
     },
+    {
+        "key": "worker_llm_base_url",
+        "type": "string",
+        "description": "OpenAI-compatible base URL, e.g., http://localhost:11434/v1",
+        "default": "",
+    },
+    {
+        "key": "worker_llm_model",
+        "type": "string",
+        "description": "Model id to send in worker LLM requests (e.g., qwen2.5-coder:7b)",
+        "default": "",
+    },
+    {
+        "key": "worker_llm_api_key",
+        "type": "string",
+        "description": "Bearer token for the worker LLM endpoint (plaintext; often empty for local servers)",
+        "default": "",
+    },
+    {
+        "key": "worker_llm_timeout_s",
+        "type": "number",
+        "description": "Per-call timeout in seconds for worker LLM requests",
+        "default": 10.0,
+    },
+    {
+        "key": "worker_llm_max_tokens",
+        "type": "number",
+        "description": "Max completion tokens per worker LLM request",
+        "default": 1024,
+    },
+    {
+        "key": "worker_llm_tool_safety_timeout_s",
+        "type": "number",
+        "description": "Short separate timeout (seconds) for PreToolUse tool-safety sniff",
+        "default": 1.5,
+    },
+    {
+        "key": "worker_llm_transcript_harvest_mode",
+        "type": "string",
+        "description": "Stop-hook harvest mode: 'replace' (worker supersedes regex) or 'merge'",
+        "default": "replace",
+    },
+    {
+        "key": "worker_llm_allow_prompt_overrides",
+        "type": "boolean",
+        "description": "Allow override prompts in ~/.local/spellbook/worker_prompts/*.md",
+        "default": True,
+    },
+    {
+        "key": "worker_llm_read_claude_memory",
+        "type": "boolean",
+        "description": (
+            "Include Claude Code's ~/.claude/projects/<proj>/memory/ when recalling "
+            "memories. Opt-in toggle; independent of worker LLM endpoint. Default "
+            "False to preserve zero-change behavior for unconfigured users."
+        ),
+        "default": False,
+    },
+    {
+        "key": "worker_llm_feature_transcript_harvest",
+        "type": "boolean",
+        "description": "Enable worker-LLM semantic Stop-hook memory harvest",
+        "default": False,
+    },
+    {
+        "key": "worker_llm_feature_roundtable",
+        "type": "boolean",
+        "description": "Enable local MCP roundtable execution via forge_roundtable_convene_local",
+        "default": False,
+    },
+    {
+        "key": "worker_llm_feature_memory_rerank",
+        "type": "boolean",
+        "description": "Enable worker-LLM reranking of memory_recall candidates",
+        "default": False,
+    },
+    {
+        "key": "worker_llm_feature_tool_safety",
+        "type": "boolean",
+        "description": "Enable worker-LLM PreToolUse tool-safety sniff (OK/WARN/BLOCK)",
+        "default": False,
+    },
+    {
+        "key": "worker_llm_safety_cache_ttl_s",
+        "type": "number",
+        "description": "Tool-safety verdict cache TTL (seconds)",
+        "default": 300,
+    },
 ]
 
 CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}

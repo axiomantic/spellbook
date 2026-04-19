@@ -1,14 +1,32 @@
 """FastAPI sub-application factory for Spellbook Admin."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 import logging
 
+from spellbook.admin.events import event_bus
+
 logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """Mark the event bus as in-daemon while this app is running.
+
+    ``spellbook.worker_llm.events._in_daemon_process`` consults this flag to
+    choose between direct ``publish_sync`` and the HTTP fallback. The bus is
+    module-global, so nothing needs to be torn down on shutdown.
+    """
+    event_bus._in_daemon = True
+    try:
+        yield
+    finally:
+        event_bus._in_daemon = False
 
 
 def create_admin_app() -> FastAPI:
@@ -18,6 +36,7 @@ def create_admin_app() -> FastAPI:
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
+        lifespan=_lifespan,
     )
 
     # Global exception handler for fault isolation
