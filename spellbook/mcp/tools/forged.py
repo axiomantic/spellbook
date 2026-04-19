@@ -9,6 +9,7 @@ __all__ = [
     "forge_feature_update",
     "forge_select_skill",
     "forge_roundtable_convene",
+    "forge_roundtable_convene_local",
     "forge_roundtable_debate",
     "forge_process_roundtable_response",
     "forge_record_gate_completion",
@@ -362,6 +363,103 @@ def forge_roundtable_convene(
         gate=gate,
         archetypes=archetypes,
     )
+
+
+@mcp.tool()
+@inject_recovery_context
+async def forge_roundtable_convene_local(
+    feature_name: str,
+    stage: str,
+    artifact_path: str,
+    gate: str,
+    archetypes: list = None,
+) -> dict:
+    """
+    Convene roundtable and EXECUTE the dialogue locally via the worker LLM.
+
+    Mirrors ``forge_roundtable_convene`` but performs the voice-generation
+    step against the user-configured worker LLM endpoint instead of
+    returning the dialogue string for orchestrator execution. The parsed
+    response is returned to the caller with ``verdicts`` / ``feedback`` /
+    ``dialogue`` / ``worker_llm_raw_response`` keys.
+
+    **Loud-fail contract.** Worker errors (unreachable, timeout, malformed
+    response) do NOT raise; instead the returned dict carries a
+    ``worker_llm_error`` key containing a ``<worker-llm-error>`` XML block.
+    The orchestrator can inspect that field and fall back to the non-local
+    ``forge_roundtable_convene`` + local execution if desired.
+
+    Requires:
+        ``worker_llm_base_url``, ``worker_llm_model``,
+        ``worker_llm_feature_roundtable=true``.
+
+    Recommended model: ``qwen2.5:14b-instruct`` or larger; 7B models tend
+    to ABSTAIN too frequently on multi-archetype dialogues (design §6.3).
+
+    Args:
+        feature_name: Name of the feature being developed.
+        stage: Current workflow stage.
+        artifact_path: Path to the artifact file to validate.
+        gate: Quality gate being validated.
+        archetypes: List of archetype names (uses stage defaults if omitted).
+
+    Returns:
+        Dict mirroring ``forge_process_roundtable_response`` output plus:
+        - ``worker_llm_raw_response``: raw string the worker produced.
+        - ``worker_llm_error``: ``<worker-llm-error>`` block when the worker
+          call failed or the feature is not configured (key absent on
+          happy path).
+    """
+    from spellbook.worker_llm import errors as _wl_errors
+    from spellbook.worker_llm.config import feature_enabled
+    from spellbook.worker_llm.tasks.roundtable import roundtable_voice
+
+    convene_result = do_roundtable_convene(
+        feature_name=feature_name,
+        stage=stage,
+        artifact_path=artifact_path,
+        gate=gate,
+        archetypes=archetypes,
+    )
+    if convene_result.get("error") or not convene_result.get("dialogue"):
+        # Artifact missing, etc. Do not consume a worker call.
+        return convene_result
+
+    if not feature_enabled("roundtable"):
+        convene_result["worker_llm_error"] = (
+            "<worker-llm-error>"
+            "<task>roundtable</task>"
+            "<type>WorkerLLMNotConfigured</type>"
+            "<message>worker_llm_feature_roundtable is false or endpoint "
+            "not configured</message>"
+            "</worker-llm-error>"
+        )
+        return convene_result
+
+    try:
+        raw_response = await roundtable_voice(convene_result["dialogue"])
+    except _wl_errors.WorkerLLMError as e:
+        convene_result["worker_llm_error"] = (
+            "<worker-llm-error>"
+            "<task>roundtable</task>"
+            f"<type>{type(e).__name__}</type>"
+            f"<message>{str(e)[:500]}</message>"
+            "</worker-llm-error>"
+        )
+        return convene_result
+
+    parsed = await do_process_roundtable_response(
+        response=raw_response,
+        stage=stage,
+        gate=gate,
+        feature_name=feature_name,
+        iteration=1,
+    )
+    parsed["dialogue"] = convene_result["dialogue"]
+    parsed["archetypes"] = convene_result.get("archetypes", archetypes)
+    parsed["gate"] = gate
+    parsed["worker_llm_raw_response"] = raw_response
+    return parsed
 
 
 @mcp.tool()
