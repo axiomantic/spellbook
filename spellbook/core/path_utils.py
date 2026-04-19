@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 MAX_ALIAS_BASE = 50  # Leave room for "-NNN" suffix (up to 4 chars)
 HASH_LEN = 4
 
-# Must match _ALIAS_PATTERN in spellbook/mcp/tools/messaging.py
+# Alias pattern used by messaging bus registration
 _ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 

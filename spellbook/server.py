@@ -25,7 +25,6 @@ from spellbook.mcp.tools.updates import *  # noqa: F401,F403
 from spellbook.mcp.tools.health import *  # noqa: F401,F403
 from spellbook.mcp.tools.config import *  # noqa: F401,F403
 from spellbook.mcp.tools.coordination import *  # noqa: F401,F403
-from spellbook.mcp.tools.experiments import *  # noqa: F401,F403
 from spellbook.mcp.tools.fractal import *  # noqa: F401,F403
 from spellbook.mcp.tools.memory import *  # noqa: F401,F403
 from spellbook.mcp.tools.notifications import *  # noqa: F401,F403
