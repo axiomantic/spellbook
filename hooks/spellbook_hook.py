@@ -1517,11 +1517,59 @@ def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
         pass
 
 
+def _merge_candidates(
+    regex_cands: list[dict], worker_cands: list[dict]
+) -> list[dict]:
+    """Content-hash dedup for merge-mode transcript harvest.
+
+    Worker wins on collision: the worker response carries strongly-typed
+    tags/citations (lists converted to comma strings), while the regex
+    path produces whatever the assistant wrote verbatim.
+    """
+    seen: dict[str, dict] = {}
+    for c in worker_cands:
+        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
+        seen[key] = c
+    for c in regex_cands:
+        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
+        seen.setdefault(key, c)
+    return list(seen.values())
+
+
+def _worker_error_block(task: str, err: BaseException) -> str:
+    """Render a ``<worker-llm-error>`` block for injection into the orchestrator.
+
+    Consumed by Claude Code / OpenCode / Codex / Gemini CLI as a structured
+    signal that a worker-LLM step failed. The <hint> points operators at
+    the doctor CLI and admin event monitor.
+    """
+    return (
+        "<worker-llm-error>\n"
+        f"  <task>{task}</task>\n"
+        f"  <type>{type(err).__name__}</type>\n"
+        f"  <message>{str(err)[:500]}</message>\n"
+        "  <hint>Check `spellbook worker-llm doctor` and the admin EventMonitorPage.</hint>\n"
+        "</worker-llm-error>"
+    )
+
+
 def _handle_stop(data: dict) -> None:
     """Stop hook: harvest <memory-candidate> blocks and POST each. FAIL-OPEN.
 
     Idempotent: we hash the extracted final-assistant text per transcript
     and skip harvest when the hash matches the most-recent processed value.
+
+    Three modes driven by ``worker_llm_feature_transcript_harvest`` +
+    ``worker_llm_transcript_harvest_mode``:
+
+    - Feature off (default): regex path unchanged. Byte-identical to the
+      pre-worker-LLM baseline.
+    - ``replace``: worker supersedes regex. Loud-fail on worker error —
+      inject ``<worker-llm-error>``, POST nothing, DO NOT record sha so the
+      next Stop retries.
+    - ``merge``: run both, content-hash dedup. Soft-fail on worker error
+      so existing regex behavior never regresses; record sha when regex
+      posts succeeded (the error block carries the loss-of-fidelity signal).
     """
     if not _auto_store_enabled():
         return
@@ -1541,7 +1589,79 @@ def _handle_stop(data: dict) -> None:
     if cache.get(transcript_path) == text_sha:
         return  # Already processed this exact transcript + final message.
 
-    candidates = _parse_memory_candidates(text_body)
+    # ---------- Worker-LLM gate ----------
+    # Imports are deferred to function scope so the hook module remains
+    # importable by the installer / standalone checks that do not carry
+    # the ``spellbook`` package on ``sys.path``.
+    try:
+        from spellbook.worker_llm import errors as _wl_errors
+        from spellbook.worker_llm import events as _wl_events
+        from spellbook.worker_llm.config import feature_enabled, get_worker_config
+        from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
+        _wl_import_ok = True
+    except Exception:
+        _wl_import_ok = False
+        _wl_events = None  # type: ignore[assignment]
+
+    _wl_start = time.monotonic()
+
+    use_worker = _wl_import_ok and feature_enabled("transcript_harvest")
+    mode = (
+        get_worker_config().transcript_harvest_mode.lower()
+        if use_worker
+        else "skip"
+    )
+    worker_cands: list[dict] = []
+    worker_error: BaseException | None = None
+
+    if use_worker:
+        try:
+            result = _wl_harvest.transcript_harvest(text_body)
+            worker_cands = [
+                {
+                    "type": c.type,
+                    "content": c.content,
+                    "tags": ",".join(c.tags),
+                    "citations": ",".join(c.citations),
+                }
+                for c in result
+            ]
+        except _wl_errors.WorkerLLMError as e:
+            worker_error = e
+            print(f"[worker-llm] transcript_harvest: {e}", file=sys.stderr)
+
+    if use_worker and mode == "replace":
+        if worker_error is not None:
+            # Loud: do not fall back, do not record sha.
+            print(
+                _worker_error_block("transcript_harvest", worker_error),
+                file=sys.stdout,
+            )
+            if _wl_events is not None:
+                _wl_events.publish_hook_integration(
+                    task="transcript_harvest",
+                    mode=mode,
+                    candidate_count=0,
+                    duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                    status="worker_error",
+                    error=type(worker_error).__name__,
+                )
+            return
+        candidates = worker_cands
+    elif use_worker and mode == "merge":
+        regex_cands = _parse_memory_candidates(text_body)
+        if worker_error is not None:
+            candidates = regex_cands
+            print(
+                _worker_error_block("transcript_harvest", worker_error),
+                file=sys.stdout,
+            )
+        else:
+            candidates = _merge_candidates(regex_cands, worker_cands)
+    else:
+        # Feature off (or mode == "skip"): existing regex path unchanged.
+        candidates = _parse_memory_candidates(text_body)
+
     if not candidates:
         _record_stop_harvest(transcript_path, text_sha)
         return
@@ -1558,27 +1678,55 @@ def _handle_stop(data: dict) -> None:
             branch=branch,
             mtype=cand["type"],
             content=cand["content"],
-            tags=cand["tags"],
-            citations=cand["citations"],
+            tags=cand.get("tags", ""),
+            citations=cand.get("citations", ""),
             source="stop_hook",
         )
         if not ok:
             failed += 1
 
-    if failed == 0:
+    # Sha recording policy:
+    #   REPLACE mode: recorded only when the worker succeeded (early return
+    #     above covers worker_error) AND every POST succeeded.
+    #   MERGE mode: record sha even when worker_error is set, because the
+    #     regex candidates were already POSTed successfully; NOT recording
+    #     would cause the same transcript to be re-harvested on every Stop
+    #     (duplicate regex posts) even though the only thing that failed is
+    #     the optional worker augmentation. The <worker-llm-error> block has
+    #     already been injected into the orchestrator, so the loss-of-fidelity
+    #     signal is preserved.
+    merge_mode_with_worker_only_error = (
+        use_worker
+        and mode == "merge"
+        and worker_error is not None
+        and failed == 0
+    )
+    if failed == 0 and (worker_error is None or merge_mode_with_worker_only_error):
         _record_stop_harvest(transcript_path, text_sha)
+        _status = "ok" if worker_error is None else "worker_error"
     else:
         # Do NOT record the sha: the next Stop invocation must retry the
         # whole harvest. Server-side consolidation dedups on content, so
-        # double-posting on retry is acceptable. Log the partial failure
-        # so operators can correlate with daemon outages.
+        # double-posting on retry is acceptable.
         _log_hook_error(
             "stop_harvest_partial_failure",
             "Stop",
             RuntimeError(
                 f"stop_harvest_partial_failure failed={failed} "
-                f"total={len(candidates)}"
+                f"total={len(candidates)} "
+                f"worker_error={type(worker_error).__name__ if worker_error else 'none'}"
             ),
+        )
+        _status = "partial"
+
+    if use_worker and _wl_events is not None:
+        _wl_events.publish_hook_integration(
+            task="transcript_harvest",
+            mode=mode,
+            candidate_count=len(candidates),
+            duration_ms=int((time.monotonic() - _wl_start) * 1000),
+            status=_status,
+            error=(type(worker_error).__name__ if worker_error else None),
         )
 
 

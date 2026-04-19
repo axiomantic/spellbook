@@ -183,6 +183,47 @@ def publish_override_loaded(task: str, path: str) -> None:
     )
 
 
+def publish_hook_integration(
+    task: str,
+    mode: str,
+    candidate_count: int,
+    duration_ms: int,
+    status: str,
+    error: str | None = None,
+) -> None:
+    """Emit a ``hook_integration`` event summarizing a hook-side worker run.
+
+    Unlike ``publish_call`` (one event per HTTP call), this event summarizes
+    the hook's overall outcome — including mode (``replace``/``merge``/``skip``),
+    the number of candidates produced (post-dedup), and the total duration
+    including merge / cache / POST work. Emitting ONE summary event per hook
+    invocation keeps the admin EventMonitorPage free of per-call noise while
+    preserving the coarse-grained "did the feature fire and with what result"
+    signal operators actually want.
+
+    Args:
+        task: ``"transcript_harvest"`` | ``"tool_safety"`` | ...
+        mode: Mode string for transcript_harvest; ``""`` for flag-toggle tasks.
+        candidate_count: Number of artifacts produced (candidates posted /
+            verdict count / rerank items). ``-1`` when not applicable.
+        duration_ms: Wall-clock duration of the full hook integration step.
+        status: ``"ok"`` | ``"worker_error"`` | ``"partial"`` | ``"bypass"``.
+        error: Exception type name if ``status != "ok"``; else None.
+    """
+    _publish(
+        Subsystem.WORKER_LLM,
+        "hook_integration",
+        {
+            "task": task,
+            "mode": mode,
+            "candidate_count": candidate_count,
+            "duration_ms": duration_ms,
+            "status": status,
+            "error": error,
+        },
+    )
+
+
 def publish_fail_open(task: str, reason: str, error: str) -> None:
     """Emit a ``fail_open`` event when a task bails before calling the worker.
 
