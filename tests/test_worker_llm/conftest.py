@@ -107,6 +107,12 @@ def worker_llm_config(monkeypatch):
         "worker_llm_safety_cache_ttl_s": 300,
     }
     from spellbook.core import config as _cfg
+    from spellbook.worker_llm import config as _wl_cfg
 
-    monkeypatch.setattr(_cfg, "config_get", lambda k: overrides.get(k))
+    fake = lambda k: overrides.get(k)  # noqa: E731
+    monkeypatch.setattr(_cfg, "config_get", fake)
+    # ``spellbook.worker_llm.config`` did ``from spellbook.core.config import
+    # config_get``, so the name ``config_get`` in that module is a local
+    # reference that must be patched separately.
+    monkeypatch.setattr(_wl_cfg, "config_get", fake)
     return overrides

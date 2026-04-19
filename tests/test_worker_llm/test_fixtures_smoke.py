@@ -25,10 +25,14 @@ def test_worker_llm_config_returns_deterministic_snapshot(worker_llm_config):
 
 def test_worker_llm_config_patches_config_get(worker_llm_config):
     from spellbook.core import config as _cfg
+    from spellbook.worker_llm import config as _wl_cfg
 
     assert _cfg.config_get("worker_llm_model") == "test-model"
     assert _cfg.config_get("worker_llm_base_url") == "http://test.local/v1"
     assert _cfg.config_get("not_a_worker_key") is None
+    # worker_llm.config imports ``config_get`` by name; the fixture patches
+    # both references so get_worker_config() sees the fake values.
+    assert _wl_cfg.config_get("worker_llm_model") == "test-model"
 
 
 def test_transport_empty_script_returns_empty_request_list(worker_llm_transport):
