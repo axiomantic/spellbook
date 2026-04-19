@@ -181,3 +181,24 @@ def publish_override_loaded(task: str, path: str) -> None:
         "override_loaded",
         {"task": task, "path": path},
     )
+
+
+def publish_fail_open(task: str, reason: str, error: str) -> None:
+    """Emit a ``fail_open`` event when a task bails before calling the worker.
+
+    The in-client fail-open paths (timeout, connect error, bad response) all
+    get their ``call_failed`` event via ``client.call``'s ``finally`` block.
+    But fail-open branches that short-circuit BEFORE reaching the client —
+    notably ``tool_safety``'s prompt-loader catch — never hit that finally.
+    Without this helper those fail-opens are invisible to the admin UI.
+
+    Args:
+        task: Observability tag (e.g. ``"tool_safety"``).
+        reason: Short machine-readable reason (e.g. ``"prompt_load_error"``).
+        error: Human-readable error string (``str(exc)``).
+    """
+    _publish(
+        Subsystem.WORKER_LLM,
+        "fail_open",
+        {"task": task, "reason": reason, "error": error},
+    )

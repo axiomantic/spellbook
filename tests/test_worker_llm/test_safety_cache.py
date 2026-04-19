@@ -326,3 +326,64 @@ def test_cache_path_parent_created_on_write(tmp_path, monkeypatch):
     k = safety_cache.make_key("Bash", {})
     safety_cache.cache_verdict(k, SafetyVerdict(verdict="OK", reasoning=""))
     assert nested.exists()
+
+
+def test_persist_osError_warns_exactly_once_across_failures(
+    tmp_path, monkeypatch, caplog
+):
+    """First persist OSError -> WARNING (names path and exception type);
+    subsequent failures -> DEBUG. Keeps fire-and-forget semantics but makes
+    unwritable-cache-dir bugs loud instead of silently swallowed.
+
+    Pattern mirrors ``events.py::_publish_failures`` (see review finding I3
+    on the events module).
+    """
+    import logging
+
+    # Redirect CACHE_PATH to a tmp location (value doesn't matter; the real
+    # failure trigger is forcing _atomic_write_json to raise).
+    monkeypatch.setattr(safety_cache, "CACHE_PATH", tmp_path / "safety.json")
+    monkeypatch.setattr(
+        "spellbook.core.config.config_get",
+        lambda k: 300.0 if k == "worker_llm_safety_cache_ttl_s" else None,
+    )
+    # Reset the module-level counter so the test is order-independent.
+    monkeypatch.setattr(safety_cache, "_persist_failures", 0)
+
+    def raising_write(path, data):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(safety_cache, "_atomic_write_json", raising_write)
+
+    k = safety_cache.make_key("Bash", {"command": "ls"})
+    v = SafetyVerdict(verdict="OK", reasoning="")
+
+    with caplog.at_level(logging.DEBUG, logger="spellbook.worker_llm.safety_cache"):
+        # Call persist-triggering APIs multiple times.
+        for _ in range(5):
+            safety_cache.cache_verdict(k, v)
+
+    warning_records = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING
+        and r.name == "spellbook.worker_llm.safety_cache"
+    ]
+    debug_records = [
+        r for r in caplog.records
+        if r.levelno == logging.DEBUG
+        and r.name == "spellbook.worker_llm.safety_cache"
+    ]
+
+    assert len(warning_records) == 1, (
+        f"expected exactly one WARNING across 5 failures, got "
+        f"{len(warning_records)}: {[r.message for r in warning_records]}"
+    )
+    msg = warning_records[0].getMessage()
+    # Warning must name exception type and path so operators can act on it.
+    assert "OSError" in msg
+    assert str(tmp_path / "safety.json") in msg
+
+    # The other 4 failures fell back to DEBUG.
+    assert len(debug_records) == 4, (
+        f"expected 4 DEBUG records (failures 2..5), got {len(debug_records)}"
+    )

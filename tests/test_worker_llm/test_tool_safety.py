@@ -22,11 +22,17 @@ def _ok(content: str) -> dict:
 
 
 @pytest.fixture(autouse=True)
-def _reset_safety_cache():
+def _reset_safety_cache(tmp_path, monkeypatch):
     """Every tool_safety call reads/writes the module-global verdict and
-    block caches; reset them between tests so each case is isolated."""
+    block caches, and cache_verdict/record_block persist those caches to
+    ``safety_cache.CACHE_PATH``. Without monkeypatching ``CACHE_PATH`` to
+    a tmp path, these tests would write to the user's real
+    ``~/.local/spellbook/cache/worker_llm_block.json`` and pollute user
+    state. Pattern mirrors ``test_safety_cache.py::_isolate_cache``.
+    """
     from spellbook.worker_llm import safety_cache
 
+    monkeypatch.setattr(safety_cache, "CACHE_PATH", tmp_path / "safety.json")
     safety_cache._VERDICT_CACHE.clear()
     safety_cache._BLOCK_CACHE.clear()
     yield
@@ -320,3 +326,44 @@ def test_fail_open_result_is_not_cached(
     v = tool_safety("Bash", {"command": "ls"}, "")
     assert v == SafetyVerdict(verdict="OK", reasoning="error; fail-open")
     assert writes == []  # nothing cached — transient error
+
+
+# ---------------------------------------------------------------------------
+# Observability: prompt-load failure emits a fail_open event
+# ---------------------------------------------------------------------------
+
+
+def test_prompt_load_error_emits_fail_open_event(
+    worker_llm_transport, worker_llm_config, monkeypatch
+):
+    """A prompt-loader failure short-circuits BEFORE ``client.call`` runs, so
+    the ``call_failed`` event from ``client.call``'s finally-block never
+    fires. The branch must emit its own ``fail_open`` event so this failure
+    mode is visible to the admin UI."""
+    worker_llm_transport([])  # any HTTP call would raise — should not be reached
+
+    from spellbook.worker_llm import prompts
+    from spellbook.worker_llm.tasks import tool_safety as tool_safety_mod
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    def boom(_task):
+        raise FileNotFoundError("packaging bug: tool_safety.md missing")
+
+    monkeypatch.setattr(prompts, "load", boom)
+
+    captured: list = []
+
+    def fake_publish(task, reason, error):
+        captured.append({"task": task, "reason": reason, "error": error})
+
+    monkeypatch.setattr(tool_safety_mod, "publish_fail_open", fake_publish)
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    # Still fails open — user action is not blocked.
+    assert v == SafetyVerdict(verdict="OK", reasoning="error; fail-open")
+    # But the fail-open is observable.
+    assert len(captured) == 1
+    evt = captured[0]
+    assert evt["task"] == "tool_safety"
+    assert evt["reason"] == "prompt_load_error"
+    assert "packaging bug" in evt["error"]

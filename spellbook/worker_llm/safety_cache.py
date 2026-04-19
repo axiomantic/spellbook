@@ -59,6 +59,14 @@ class _Entry:
 _VERDICT_CACHE: dict[str, _Entry] = {}
 _BLOCK_CACHE: dict[str, float] = {}
 
+# Module-level counter so we can emit a single loud warning on the first
+# persist failure per process, then fall back to DEBUG for the rest.
+# Rationale: cache persistence is best-effort (fire-and-forget) and runs in
+# the hot hook subprocess path, so we do not want to spam logs — but silent
+# swallow hid unwritable-cache-dir bugs. One WARN makes misconfigurations
+# loud without flooding. Pattern mirrors ``events.py::_publish_failures``.
+_persist_failures: int = 0
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -219,10 +227,24 @@ def _persist_to_disk() -> None:
         },
         "blocks": dict(_BLOCK_CACHE),
     }
+    global _persist_failures
     try:
         _atomic_write_json(CACHE_PATH, payload)
     except OSError as e:
-        logger.debug("safety_cache write failed: %s", e)
+        # FIRST failure per process -> WARNING (actionable, names the path
+        # and exception type). Subsequent failures drop to DEBUG to avoid
+        # flooding logs from the hot hook subprocess path.
+        if _persist_failures == 0:
+            logger.warning(
+                "worker_llm safety_cache persist failed (%s writing to %s): "
+                "%s. Further failures will be logged at DEBUG.",
+                type(e).__name__,
+                CACHE_PATH,
+                e,
+            )
+        else:
+            logger.debug("safety_cache write failed: %s", e)
+        _persist_failures += 1
 
 
 def _atomic_write_json(path: Path, data: dict) -> None:
