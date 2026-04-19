@@ -1080,17 +1080,24 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         # Fallback: renderer module not available (should not happen normally)
         renderer = None
 
-    # Handle --reconfigure: run config wizard for unset keys only
+    # Handle --reconfigure: run the shared installer wizards for every
+    # prompt-registered config key. Each wizard honors
+    # ``config_is_explicitly_set`` by default but skips that gate when
+    # ``args.reconfigure`` is truthy, so users can revisit previously-
+    # answered prompts without wiping their spellbook.json.
     if args.reconfigure:
-        from spellbook.core.config import config_set, get_unset_config_keys
-        unset_keys = get_unset_config_keys()
-        if unset_keys and renderer is not None:
-            selections = renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
-            if selections:
-                for key, value in selections.items():
-                    config_set(key, value)
-        elif not unset_keys:
-            print_success("All config keys are already set.")
+        from spellbook.core.config import config_set
+
+        try:
+            from installer.wizards import (
+                run_defaults_wizard,
+                run_worker_llm_wizard,
+            )
+        except ImportError as _exc:
+            print(f"\nWarning: Could not load installer wizards: {_exc}")
+        else:
+            run_defaults_wizard(args)
+            run_worker_llm_wizard(args)
 
         # Offer profile selection during reconfigure
         if renderer is not None:
@@ -1283,6 +1290,23 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     auto_yes=getattr(args, "yes", False),
                     spellbook_dir=spellbook_dir,
                 )
+
+    # Shared installer wizards. Must run on BOTH install entry paths per
+    # the "Adding Config Options" contract in AGENTS.md. Placed after the
+    # TTS wizard so run_defaults_wizard can gate its tts_voice prompt on
+    # the just-configured tts_enabled value. Each wizard is itself
+    # idempotent, gated on stdin.isatty(), and respects --reconfigure.
+    if not args.dry_run:
+        try:
+            from installer.wizards import (
+                run_defaults_wizard,
+                run_worker_llm_wizard,
+            )
+        except ImportError as _exc:
+            print(f"\nWarning: Could not load installer wizards: {_exc}")
+        else:
+            run_defaults_wizard(args)
+            run_worker_llm_wizard(args)
 
     # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()
