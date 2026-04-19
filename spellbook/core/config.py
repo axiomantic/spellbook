@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 CONFIG_DEFAULTS: dict[str, Any] = {
     "memory.auto_recall": True,
     "memory.auto_store": True,
+    # Default session profile slug (empty string = no profile). Kept in
+    # CONFIG_DEFAULTS so session_init's ``config_get("profile.default")``
+    # never raises KeyError on fresh installs.
+    "profile.default": "",
     # worker_llm: 14 flat keys. All feature flags default False (opt-in).
     # Matches CONFIG_SCHEMA in spellbook/admin/routes/config.py.
     "worker_llm_base_url": "",
@@ -41,14 +45,6 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_feature_tool_safety": False,
     "worker_llm_safety_cache_ttl_s": 300,
 }
-
-
-# Wizard-relevant config keys. Used by get_unset_config_keys() to determine
-# which keys to prompt for during installation.
-WIZARD_CONFIG_KEYS: list[str] = [
-    "tts.enabled",
-    "tts.voice",
-]
 
 
 def config_is_explicitly_set(key: str) -> bool:
@@ -73,14 +69,17 @@ def config_is_explicitly_set(key: str) -> bool:
         return False
 
 
-def get_unset_config_keys(keys: list[str] = WIZARD_CONFIG_KEYS) -> list[str]:
+def get_unset_config_keys(keys: list[str]) -> list[str]:
     """Return the subset of keys not yet explicitly set in spellbook.json.
 
-    Preserves input order.
+    Preserves input order. This is a generic helper consumed by callers
+    that know which keys they care about; it does not carry an opinion
+    about the "install wizard key set" (that lived in the previous
+    ``WIZARD_CONFIG_KEYS`` constant, which was removed in favor of
+    per-wizard opinions in ``installer/wizards/*``).
 
     Args:
-        keys: List of dotted config key strings to check. Defaults to
-              WIZARD_CONFIG_KEYS.
+        keys: List of config key strings to check.
 
     Returns:
         Keys from the input list for which config_is_explicitly_set() is False.

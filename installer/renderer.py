@@ -13,10 +13,12 @@ SD-1: ``render_admin_info`` accepts ``admin_url: str`` and ``show_token: bool``
     raw token is never passed to the renderer; the caller controls whether
     token visibility is requested.
 
-SD-2: ``render_tts_wizard()`` is a separate top-level method rather than a
-    step inside ``render_config_wizard()``. TTS configuration is a post-install
-    step because it requires confirming that TTS dependencies are installed,
-    which only makes sense after the install loop completes.
+SD-2: ``render_tts_wizard()`` is a separate top-level method. TTS
+    configuration is a post-install step because it requires confirming
+    that TTS dependencies are installed, which only makes sense after
+    the install loop completes. (Previous drafts placed TTS inside a
+    ``render_config_wizard()`` method that was later removed entirely;
+    its prompts now live in ``installer/wizards/*`` shared modules.)
 """
 
 from __future__ import annotations
@@ -57,43 +59,6 @@ class InstallerRenderer(ABC):
         Args:
             version: Spellbook version string (e.g. ``"1.2.3"``).
             is_upgrade: ``True`` when a previous installation was detected.
-        """
-        ...
-
-    @abstractmethod
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        """Run the interactive configuration wizard and return collected config.
-
-        Only prompts for keys listed in ``unset_keys``. When ``unset_keys``
-        is empty, must return ``{}`` immediately without prompting.
-
-        When ``is_upgrade`` is ``True`` and ``existing_config`` is non-empty,
-        the renderer should display existing configuration before prompting for
-        new keys.
-
-        When ``self.auto_yes`` is ``True``, must return ``{}`` without
-        prompting for any input.
-
-        The returned dict must be compatible with the ``security_selections``
-        parameter expected by ``Installer.run()``. Keys are feature IDs
-        (e.g. ``"spotlighting"``, ``"crypto"``) with ``bool`` values.
-
-        Args:
-            unset_keys: Config keys not yet explicitly set in ``spellbook.json``.
-                From ``get_unset_config_keys()`` or ``WIZARD_CONFIG_KEYS``
-                when ``--reconfigure`` is active.
-            existing_config: Current resolved config dict for display during
-                upgrades. May be empty on a fresh install.
-            is_upgrade: ``True`` when a previous installation was detected.
-
-        Returns:
-            Dict of security feature selections, or ``{}`` to skip security
-            configuration entirely.
         """
         ...
 
@@ -433,14 +398,6 @@ class RichRenderer(InstallerRenderer):
         else:
             render_welcome_panel(console, version=version, auto_yes=self.auto_yes)
 
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        return {}
-
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
         results = WizardResults()
 
@@ -763,14 +720,6 @@ class PlainTextRenderer(InstallerRenderer):
     def render_welcome(self, version: str, is_upgrade: bool) -> None:
         label = "Upgrading" if is_upgrade else "Installing"
         print(f"=== Spellbook Installer - {label} {version} ===")
-
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        return {}
 
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
         results = WizardResults()

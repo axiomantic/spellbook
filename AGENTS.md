@@ -201,6 +201,28 @@ commands/
 | OpenCode | `installer/platforms/opencode.py` | AGENTS.md + MCP |
 | Codex | `installer/platforms/codex.py` | AGENTS.md + MCP |
 
+## Adding Config Options
+
+<CRITICAL>
+Every user-facing configuration option MUST follow the three-point rule:
+
+1. **Prompted on fresh install.** If the user has never answered, offer a prompt. Either add the prompt to an existing wizard in `installer/wizards/` (`worker_llm.py`, `defaults.py`) or create a new shared wizard module there.
+2. **Prompted on re-install IF the key is still unset.** The idempotency gate uses `spellbook.core.config.config_is_explicitly_set(key)`. If it returns False, ask again. If it returns True, skip.
+3. **NOT re-prompted once the user has answered.** Any explicit value counts, including empty strings and False. Declining at the opener still writes a sentinel so the next run does not re-ask.
+
+Wire every wizard into BOTH install entry paths:
+- Root `install.py` (the curl-pipe entry point used by new users).
+- `spellbook/cli/commands/install.py` (the `spellbook install` CLI command, including the `--reconfigure` branch).
+
+A wizard that lives in only one entry path is a bug. `--reconfigure` must bypass the idempotency gate so users can revisit earlier answers.
+
+Register every new key in:
+- `spellbook/core/config.py::CONFIG_DEFAULTS` (runtime default).
+- `spellbook/admin/routes/config.py::CONFIG_SCHEMA` (admin UI visibility, validator dispatch).
+
+Tests live in `tests/test_cli/test_install_wizard_coverage.py` and must cover each new key: fresh-install prompt fires, re-install skip, `--reconfigure` bypass, non-tty noop, and presence in both install entry paths.
+</CRITICAL>
+
 ## Testing
 
 Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.

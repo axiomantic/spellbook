@@ -83,6 +83,16 @@ CONFIG_SCHEMA = [
         "default": True,
     },
     {
+        "key": "profile.default",
+        "type": "string",
+        "description": (
+            "Default session profile slug loaded at session_init "
+            "(empty = no profile). Profiles live under "
+            "skills/profiles/*/PROFILE.md."
+        ),
+        "default": "",
+    },
+    {
         "key": "worker_llm_base_url",
         "type": "string",
         "description": "OpenAI-compatible base URL, e.g., http://localhost:11434/v1",
