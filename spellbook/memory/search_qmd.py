@@ -265,12 +265,71 @@ def search_memories(
     # Gated on `worker_llm_feature_memory_rerank` AND endpoint configured
     # (feature_enabled() enforces both). Worker failures set the shared
     # ``_MEMORY_RECALL_ERROR`` ContextVar and otherwise fall through to the
-    # baseline scoring — never raised.
+    # baseline scoring — never raised. Rerank sees ONLY spellbook-native
+    # hits; the claude_memory merge below happens afterwards so the LLM
+    # budget is not spent reranking claude-sourced content.
     _apply_worker_rerank(query, query_terms, pre_scored)
 
     scored: list[MemoryResult] = [mr for (mr, _) in pre_scored]
+
+    # D5: feature-flagged merge of Claude Code's per-project memory files.
+    # Gated on ``worker_llm_read_claude_memory`` (default False). Content-
+    # hash dedup keeps spellbook-native hits when both sources carry the
+    # same body text.
+    _merge_claude_memory(scored, query_terms, branch)
+
     scored.sort(key=lambda r: r.score, reverse=True)
     return scored[:limit]
+
+
+def _content_hash(body: str) -> str:
+    """Stable sha256 over whitespace-stripped body. Matches the dedup key."""
+    return hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
+
+
+def _merge_claude_memory(
+    scored: list[MemoryResult],
+    query_terms: list[str],
+    branch: str | None,
+) -> None:
+    """Append Claude-memory hits to ``scored`` when the feature flag is on.
+
+    Deduped by content hash so a body that already appeared via a
+    spellbook-native hit is not duplicated from the claude side. On any
+    unexpected failure inside the claude scanner, a warning is logged and
+    the function returns silently — Claude-memory is a best-effort
+    sidecar, never load-bearing.
+    """
+    # Deferred imports: keep the worker-LLM package optional at module load.
+    from spellbook.worker_llm.config import get_worker_config as _wl_get_cfg
+
+    if not _wl_get_cfg().read_claude_memory:
+        return
+
+    from spellbook.memory import claude_memory as _claude_mem
+
+    try:
+        claude_hits = _claude_mem.scan(
+            project_root=os.getcwd(),
+            query_terms=query_terms,
+            branch=branch,
+        )
+    except Exception as e:
+        logger.warning("claude_memory scan failed: %s", e)
+        return
+
+    if not claude_hits:
+        return
+
+    seen_hashes = {_content_hash(mr.memory.content) for mr in scored}
+    for mr in claude_hits:
+        h = _content_hash(mr.memory.content)
+        if h in seen_hashes:
+            # Spellbook-native already carries this content; do not
+            # double-count the claude copy.
+            continue
+        seen_hashes.add(h)
+        scored.append(mr)
 
 
 def _apply_worker_rerank(
