@@ -1780,8 +1780,58 @@ def _memory_recall_for_tool(tool_name: str, tool_input: dict, cwd: str) -> str |
 # Event Handlers
 # ---------------------------------------------------------------------------
 
+_SAFETY_APPLICABLE_TOOLS = frozenset({"Bash", "Write", "Edit"})
+
+
+def _safety_warn_block(reasoning: str) -> str:
+    """Render the <worker-llm-tool-safety verdict="WARN"> output block."""
+    return (
+        '<worker-llm-tool-safety verdict="WARN">\n'
+        f"  {reasoning}\n"
+        "</worker-llm-tool-safety>"
+    )
+
+
+def _emit_block_and_exit(reasoning: str) -> None:
+    """Signal BLOCK to the platform via stderr + ``sys.exit(2)``.
+
+    Claude Code convention: exit 2 with the message on stderr; the platform
+    presents the reasoning to the user and vetoes the tool call. The 30-second
+    bypass note lets a user retry the exact same invocation to override.
+    """
+    print(
+        '<worker-llm-tool-safety verdict="BLOCK">\n'
+        f"  {reasoning}\n"
+        "  Retry the same tool call within 30 seconds to bypass this check.\n"
+        "</worker-llm-tool-safety>",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
+def _recent_context_snippet(data: dict) -> str:
+    """Best-effort grab of the last few transcript turns (<= 4KB)."""
+    transcript_path = data.get("transcript_path", "") or ""
+    if not transcript_path:
+        return ""
+    try:
+        lines = Path(transcript_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    return "\n".join(lines[-6:])[-4000:]
+
+
 def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
-    """PreToolUse handlers. Return list of output strings."""
+    """PreToolUse handlers. Return list of output strings.
+
+    Order of operations:
+      1. Existing security gates (can exit non-zero) — untouched.
+      2. Temporal tracking — untouched.
+      3. Existing memory recall — untouched.
+      4. NEW: worker-LLM tool-safety sniff. Fails OPEN on any error, and is
+         cache-first (consults safety_cache before calling the worker). A
+         fresh BLOCK triggers a 30-second bypass window so the user can retry.
+    """
     outputs = []
 
     # Security gates (blocking - can exit non-zero)
@@ -1806,7 +1856,117 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
         except Exception as e:
             _log_hook_error("memory_recall_for_tool", tool_name, e)
 
+    # Worker-LLM tool-safety sniff (fails OPEN)
+    if tool_name in _SAFETY_APPLICABLE_TOOLS:
+        _wl_tool_safety_sniff(tool_name, data, outputs)
+
     return outputs
+
+
+def _wl_tool_safety_sniff(
+    tool_name: str, data: dict, outputs: list[str]
+) -> None:
+    """Inline gate that consults the worker LLM for an OK/WARN/BLOCK verdict.
+
+    Separated from the handler body to keep the handler's existing flow
+    readable and so the paranoid outer try/except only wraps the new code.
+    A ``sys.exit(2)`` raised here propagates through the handler as expected
+    (``SystemExit`` is re-raised from the catch-all below).
+    """
+    _wl_start = time.monotonic()
+    try:
+        from spellbook.worker_llm import errors as _wl_errors
+        from spellbook.worker_llm import events as _wl_events
+        from spellbook.worker_llm import safety_cache as _wl_cache
+        from spellbook.worker_llm.config import feature_enabled
+        from spellbook.worker_llm.tasks import tool_safety as _wl_safety
+    except Exception:
+        # Import failure should never block a tool call.
+        return
+
+    try:
+        if not feature_enabled("tool_safety"):
+            return
+    except Exception:
+        return
+
+    params = data.get("tool_input") or {}
+    cache_hit = False
+    try:
+        key = _wl_cache.make_key(tool_name, params)
+
+        # 30-second bypass: a fresh BLOCK lets the user retry once without
+        # re-consulting the worker. ``should_bypass`` consumes the bypass.
+        if _wl_cache.should_bypass(key):
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=-1,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="bypass",
+                error=None,
+            )
+            return
+
+        cached = _wl_cache.get_cached_verdict(key)
+        if cached is not None:
+            cache_hit = True
+            verdict = cached
+        else:
+            verdict = _wl_safety.tool_safety(
+                tool_name, params, _recent_context_snippet(data)
+            )
+            # tool_safety has fail-open semantics; it returns an OK "error;
+            # fail-open" verdict on failure and does NOT cache those. Real
+            # OK/WARN/BLOCK verdicts are already cached inside the task.
+
+        if verdict.verdict == "WARN":
+            outputs.append(_safety_warn_block(verdict.reasoning))
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="warn",
+                error=None,
+            )
+        elif verdict.verdict == "BLOCK":
+            _wl_cache.record_block(key)
+            # Emit the event BEFORE exiting so it still lands.
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="block",
+                error=None,
+            )
+            _emit_block_and_exit(verdict.reasoning)
+        else:
+            # OK verdict (including fail-open OK).
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="ok",
+                error=None,
+            )
+
+    except SystemExit:
+        # BLOCK exits with code 2 -- let it through.
+        raise
+    except (_wl_errors.WorkerLLMTimeout,
+            _wl_errors.WorkerLLMUnreachable,
+            _wl_errors.WorkerLLMBadResponse) as e:
+        # Known transient failures: FAIL OPEN. Stderr notice only.
+        print(
+            f"[worker-llm] tool_safety: {e} (failing open)",
+            file=sys.stderr,
+        )
+    except Exception as e:
+        # Paranoid catch: any unexpected exception must not block the user.
+        _log_hook_error("worker_llm_tool_safety", tool_name, e)
 
 
 def _handle_user_prompt_submit(data: dict) -> list[str]:
