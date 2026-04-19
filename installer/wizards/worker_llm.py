@@ -7,12 +7,106 @@ key per call so a partial failure never leaves the config half-written.
 
 The wizard is a noop when stdin is not a tty (CI / piped installs) and
 when ``args.dry_run`` is truthy.
+
+Idempotency contract (matches ``AGENTS.md`` "Adding Config Options" rule):
+- Fresh install (no ``worker_llm_base_url`` set): wizard prompts as before.
+- Re-install (``worker_llm_base_url`` already has a value): wizard skips
+  unless ``args.reconfigure`` is set.
+- Re-install with ``--reconfigure``: wizard prompts again.
+- Declined opener with no prior value: writes an empty sentinel
+  ``worker_llm_base_url=""`` so the next install does not re-ask.
+
+Advanced settings tier: after the base endpoint is configured, the wizard
+offers an optional "Advanced settings?" prompt. Declining keeps all
+existing defaults; accepting walks through seven additional keys one at a
+time with enter-to-keep-default behavior.
 """
 
 from __future__ import annotations
 
 import sys as _sys
 from typing import Any, Optional
+
+
+# Advanced settings prompted only when the user opts in to the second tier.
+# (key, prompt_prefix, type) where type is "number", "bool", or "harvest_mode".
+_ADVANCED_KEYS: list[tuple[str, str, str]] = [
+    ("worker_llm_timeout_s", "Per-call timeout (seconds)", "number"),
+    ("worker_llm_max_tokens", "Max completion tokens per request", "number"),
+    (
+        "worker_llm_tool_safety_timeout_s",
+        "PreToolUse safety-sniff timeout (seconds)",
+        "number",
+    ),
+    (
+        "worker_llm_transcript_harvest_mode",
+        "Stop-hook harvest mode (replace/merge/skip)",
+        "harvest_mode",
+    ),
+    (
+        "worker_llm_allow_prompt_overrides",
+        "Allow prompt overrides in ~/.local/spellbook/worker_prompts/",
+        "bool",
+    ),
+    (
+        "worker_llm_feature_roundtable",
+        "Enable local MCP roundtable (forge_roundtable_convene_local)",
+        "bool",
+    ),
+    (
+        "worker_llm_safety_cache_ttl_s",
+        "Tool-safety verdict cache TTL (seconds)",
+        "number",
+    ),
+]
+
+
+def _is_explicit(key: str) -> bool:
+    """Return True if ``key`` has been explicitly written to spellbook.json.
+
+    Uses ``config_is_explicitly_set`` rather than ``config_get`` because
+    ``config_get`` masks "never written" behind ``CONFIG_DEFAULTS``. We need
+    to distinguish "user has answered" from "default is ''".
+    """
+    try:
+        from spellbook.core.config import config_is_explicitly_set
+    except ImportError:
+        return False
+    return config_is_explicitly_set(key)
+
+
+def _prompt_number(prompt: str, current: Any) -> Any:
+    """Prompt for a number with enter-to-keep-default behavior."""
+    while True:
+        raw = input(f"{prompt} [{current}]: ").strip()
+        if not raw:
+            return current
+        try:
+            if isinstance(current, int) and "." not in raw:
+                return int(raw)
+            return float(raw)
+        except ValueError:
+            print("  Please enter a number.")
+
+
+def _prompt_bool(prompt: str, current: bool) -> bool:
+    """Prompt yes/no with default reflected in [Y/n] or [y/N]."""
+    suffix = "[Y/n]" if current else "[y/N]"
+    raw = input(f"{prompt} {suffix}: ").strip().lower()
+    if not raw:
+        return current
+    return raw in ("y", "yes")
+
+
+def _prompt_harvest_mode(prompt: str, current: str) -> str:
+    """Prompt for a transcript_harvest_mode enum value."""
+    while True:
+        raw = input(f"{prompt} [{current}]: ").strip().lower()
+        if not raw:
+            return current
+        if raw in ("replace", "merge", "skip"):
+            return raw
+        print("  Must be one of: replace, merge, skip.")
 
 
 def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
@@ -30,12 +124,29 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
     if getattr(args, "dry_run", False):
         return
 
+    reconfigure = bool(getattr(args, "reconfigure", False))
+
+    # Idempotency gate: skip the wizard if the user has already answered
+    # (explicit value in spellbook.json), unless --reconfigure is active.
+    if not reconfigure and _is_explicit("worker_llm_base_url"):
+        return
+
     print()
     resp = input(
         "Do you have a local or remote OpenAI-compatible LLM endpoint you'd "
         "like spellbook to use for background tasks? [y/N]: "
     ).strip().lower()
     if resp not in ("y", "yes"):
+        # Declined. Persist an empty sentinel so the next install does not
+        # re-ask. (Idempotency requires SOMETHING be written once the user
+        # has answered; an empty string is the documented "no endpoint"
+        # value per CONFIG_DEFAULTS.)
+        if not _is_explicit("worker_llm_base_url"):
+            try:
+                from spellbook.core.config import config_set
+                config_set("worker_llm_base_url", "")
+            except Exception:  # noqa: BLE001
+                pass
         return
 
     # 1) Probe for running local endpoints.
@@ -192,6 +303,14 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
         "Run `spellbook worker-llm doctor` to verify."
     )
 
+    # 6.25) Advanced-settings tier. Opt-in per the "Adding Config Options"
+    # rule: keys already explicitly set are skipped unless --reconfigure is
+    # active. Values the user accepts with bare Enter are still written so
+    # the next install does not re-ask the same question.
+    adv_resp = input("Advanced settings? [y/N]: ").strip().lower()
+    if adv_resp in ("y", "yes"):
+        _run_advanced_prompts(reconfigure=reconfigure)
+
     # 6.5) Drop a breadcrumb README in the override directory so users who
     # want to customize a task prompt can discover the convention without
     # reading source. Gated on ``worker_llm_allow_prompt_overrides`` so it
@@ -215,6 +334,49 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
                 pass
         except Exception as e:  # noqa: BLE001
             print(f"  (doctor failed to run: {type(e).__name__}: {e})")
+
+
+def _run_advanced_prompts(reconfigure: bool) -> None:
+    """Walk through the 7 advanced worker-LLM keys.
+
+    Each key is skipped when it already has an explicit value unless
+    ``reconfigure`` is True. The current default (or explicit value) is
+    shown; bare Enter accepts it. Accepted values are always written so
+    the idempotency gate trips on the next install.
+    """
+    try:
+        from spellbook.core.config import (
+            CONFIG_DEFAULTS,
+            config_get,
+            config_set,
+        )
+    except ImportError:
+        print("  (advanced settings skipped: config module not available)")
+        return
+
+    for key, prompt_label, kind in _ADVANCED_KEYS:
+        if not reconfigure and _is_explicit(key):
+            continue
+        current = config_get(key)
+        if current is None:
+            current = CONFIG_DEFAULTS.get(key)
+        try:
+            if kind == "number":
+                value: Any = _prompt_number(prompt_label, current)
+            elif kind == "bool":
+                value = _prompt_bool(prompt_label, bool(current))
+            elif kind == "harvest_mode":
+                value = _prompt_harvest_mode(prompt_label, str(current))
+            else:
+                continue
+        except (EOFError, KeyboardInterrupt):
+            print()
+            print("  (advanced settings cancelled)")
+            return
+        try:
+            config_set(key, value)
+        except Exception as e:  # noqa: BLE001
+            print(f"  Error writing {key}: {type(e).__name__}: {e}")
 
 
 # ---------------------------------------------------------------------------

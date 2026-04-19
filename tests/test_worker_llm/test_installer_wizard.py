@@ -83,6 +83,11 @@ def stub_probe(monkeypatch):
 def captured_config(monkeypatch):
     """Intercept ``config_set`` calls so tests can assert what was written.
 
+    Also pins ``config_is_explicitly_set`` to ``False`` for every key so
+    the wizard's idempotency gate behaves as if this were a fresh install,
+    regardless of the developer's real spellbook.json. Tests that want to
+    exercise the idempotency path can override the gate themselves.
+
     Returns the list of (key, value) tuples in call order.
     """
     calls: list[tuple[str, object]] = []
@@ -94,6 +99,11 @@ def captured_config(monkeypatch):
     from spellbook.core import config as _core_cfg
 
     monkeypatch.setattr(_core_cfg, "config_set", _fake_config_set)
+    # Default: all keys are unset (fresh install). Individual tests may
+    # override this after requesting the fixture.
+    monkeypatch.setattr(
+        _core_cfg, "config_is_explicitly_set", lambda _k: False
+    )
     return calls
 
 
@@ -129,9 +139,14 @@ def scripted_input(monkeypatch):
 
 
 class TestWizardDeclined:
-    """User says no at the first prompt -> nothing written."""
+    """User says no at the first prompt -> only an empty-sentinel write.
 
-    def test_no_config_written_when_declined(
+    Idempotency requires SOMETHING be persisted the first time the user
+    answers (so the wizard does not re-prompt forever). Per the design,
+    declining writes an empty ``worker_llm_base_url`` and nothing else.
+    """
+
+    def test_sentinel_written_when_declined_fresh(
         self, stub_probe, captured_config, scripted_input, monkeypatch
     ):
         from spellbook.worker_llm.probe import DetectedEndpoint
@@ -146,6 +161,8 @@ class TestWizardDeclined:
                 )
             ]
         )
+        # Fresh install: captured_config fixture pins
+        # config_is_explicitly_set -> False for every key.
         scripted_input(["n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
@@ -153,7 +170,31 @@ class TestWizardDeclined:
 
         _run_worker_llm_wizard()
 
-        # Absolutely no config_set calls when the user declines.
+        # Only the sentinel is written; no model / api_key / feature flags.
+        assert captured_config == [("worker_llm_base_url", "")]
+
+    def test_declined_is_skipped_when_already_set(
+        self, stub_probe, captured_config, scripted_input, monkeypatch
+    ):
+        """Re-install with an existing value: wizard never prompts."""
+        from spellbook.core import config as _core_cfg
+
+        # Simulate: the user answered last time (sentinel or a real URL).
+        monkeypatch.setattr(
+            _core_cfg, "config_is_explicitly_set", lambda _k: True
+        )
+
+        def _explode(*_a, **_kw):
+            raise AssertionError(
+                "wizard must skip when worker_llm_base_url is already set"
+            )
+
+        monkeypatch.setattr("builtins.input", _explode)
+        monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+        from spellbook.cli.commands.install import _run_worker_llm_wizard
+
+        _run_worker_llm_wizard()
         assert captured_config == []
 
 
@@ -194,8 +235,9 @@ class TestWizardWithProbeHits:
         # 6. Enable tool_safety? -> n
         # 7. Enable memory_rerank? -> n
         # 8. Enable read_claude_memory? -> n
-        # 9. Run doctor now? -> n
-        scripted_input(["y", "1", "1", "", "y", "n", "n", "n", "n"])
+        # 9. Advanced settings? -> n
+        # 10. Run doctor now? -> n
+        scripted_input(["y", "1", "1", "", "y", "n", "n", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
@@ -274,13 +316,15 @@ class TestWizardNoProbeHits:
         # 3. Model prompt -> mistral:latest
         # 4. API key -> secret-key
         # 5..8. All features -> n
-        # 9. Run doctor now? -> n
+        # 9. Advanced settings? -> n
+        # 10. Run doctor now? -> n
         scripted_input(
             [
                 "y",
                 "http://remote.host:9999/v1",
                 "mistral:latest",
                 "secret-key",
+                "n",
                 "n",
                 "n",
                 "n",
@@ -406,8 +450,8 @@ class TestPromptOverrideBreadcrumb:
         )
         allow_overrides(True)
         # 1. Enable? y   2. Pick endpoint 1   3. Pick model 1   4. key blank
-        # 5-8. Features all n   9. Doctor n
-        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n"])
+        # 5-8. Features all n   9. Advanced n   10. Doctor n
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
@@ -459,7 +503,7 @@ class TestPromptOverrideBreadcrumb:
         sentinel = "# my custom README - do not touch\n"
         readme.write_text(sentinel, encoding="utf-8")
 
-        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n"])
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
