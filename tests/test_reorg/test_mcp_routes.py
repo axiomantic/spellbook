@@ -18,11 +18,6 @@ class TestMcpRoutesImportable:
 
         assert callable(api_health)
 
-    def test_api_speak_exists(self):
-        from spellbook.mcp.routes import api_speak
-
-        assert callable(api_speak)
-
     def test_api_memory_event_exists(self):
         from spellbook.mcp.routes import api_memory_event
 

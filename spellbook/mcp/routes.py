@@ -62,37 +62,6 @@ async def api_health(request: Request) -> JSONResponse:
     })
 
 
-@mcp.custom_route("/api/speak", methods=["POST"])
-async def api_speak(request: Request) -> JSONResponse:
-    """REST endpoint for hook scripts to trigger TTS.
-
-    Accepts JSON body: {"text": "...", "voice": "...", "volume": 0.3}
-    Returns JSON: {"ok": true, "elapsed": 1.23, "wav_path": "..."} on success,
-    optionally with "warning" if volume was clamped or playback failed.
-    Returns {"error": "..."} on failure.
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "invalid JSON"}, status_code=400)
-
-    text = body.get("text", "")
-    if not text:
-        return JSONResponse({"error": "no text provided"}, status_code=400)
-
-    if len(text) > 5000:
-        return JSONResponse({"error": "text exceeds 5000 character limit"}, status_code=400)
-
-    voice = body.get("voice")
-    volume = body.get("volume")
-    session_id = body.get("session_id")
-
-    from spellbook.notifications import tts as tts_module
-    result = await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
-    status_code = 200 if result.get("ok") else 500
-    return JSONResponse(result, status_code=status_code)
-
-
 @mcp.custom_route("/api/memory/event", methods=["POST"])
 async def api_memory_event(request: Request) -> JSONResponse:
     """REST endpoint for hook scripts to log raw observation events.

@@ -48,7 +48,7 @@ class TestToolRegistrationCount:
         register_all_tools()
         tool_names = set(_get_tool_names(mcp))
 
-        # One tool from each of the 15 modules
+        # One tool from each module
         expected_tools = [
             "find_session",          # sessions
             "spellbook_config_get",  # config
@@ -60,7 +60,6 @@ class TestToolRegistrationCount:
             "fractal_create_graph",  # fractal
             "stint_push",            # coordination
             "experiment_create",     # experiments
-            "tts_speak",             # notifications
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
             "tooling_discover",      # tooling

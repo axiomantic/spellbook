@@ -9,7 +9,6 @@ import atexit
 import functools
 import logging
 import os
-import threading
 import time
 from typing import Any, Dict
 
@@ -157,15 +156,6 @@ def startup() -> None:
         )
         _timed("update_watcher_start", update_watcher.start)
         state.update_watcher = update_watcher
-
-    # Preload TTS model in background (non-blocking)
-    try:
-        from spellbook.notifications import tts as tts_module
-
-        tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
-        tts_preload.start()
-    except Exception:
-        pass
 
     # Mount admin web interface
     _timed("mount_admin", _mount_admin_app)

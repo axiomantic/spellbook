@@ -1,55 +1,10 @@
 """Tests for the spellbook.notifications domain module.
 
-Verifies that key exports from spellbook.notifications.tts and spellbook.notifications.notify
-exist in spellbook.notifications.tts and spellbook.notifications.notify.
+Verifies that key exports from spellbook.notifications.notify
+exist in spellbook.notifications.notify.
 """
 
 import pytest
-
-
-class TestNotificationsTTS:
-    """Verify spellbook.notifications.tts has key exports from spellbook.notifications.tts."""
-
-    def test_tts_module_importable(self):
-        import spellbook.notifications.tts
-
-        assert hasattr(spellbook.notifications.tts, "__file__")
-
-    @pytest.mark.parametrize(
-        "name",
-        [
-            "get_status",
-            "preload",
-            "ensure_connected",
-            "speak",
-            "_wyoming_synthesize",
-            "_cleanup_stale_wav_files",
-            "_check_server",
-            "_resolve_setting",
-        ],
-    )
-    def test_tts_has_export(self, name):
-        import spellbook.notifications.tts as tts
-
-        assert hasattr(tts, name), f"spellbook.notifications.tts missing {name}"
-
-    def test_tts_imports_from_core_config(self):
-        """Verify tts.py imports config from spellbook.core, not spellbook."""
-        import ast
-        import inspect
-
-        import spellbook.notifications.tts as tts
-
-        source = inspect.getsource(tts)
-        tree = ast.parse(source)
-
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
-                if isinstance(node, ast.ImportFrom) and node.module:
-                    assert not node.module.startswith("spellbook_mcp"), (
-                        f"spellbook.notifications.tts still imports from "
-                        f"spellbook_mcp: {node.module}"
-                    )
 
 
 class TestNotificationsNotify:

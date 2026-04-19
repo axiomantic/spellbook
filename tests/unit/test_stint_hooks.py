@@ -55,7 +55,7 @@ class TestEventDetection:
     """Test that the hook correctly identifies event types."""
 
     def test_pre_tool_use_detected(self):
-        """PreToolUse: has tool_name but no tool_result. Verify timer files created."""
+        """PreToolUse: has tool_name but no tool_result. Verify timer file created."""
         tool_use_id = "detect-pre-tool-use-test"
         proc = _run_hook({
             "tool_name": "Read",
@@ -64,21 +64,16 @@ class TestEventDetection:
         })
         assert proc.returncode == 0
         # Timer file creation proves PreToolUse handler was dispatched
-        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
-        assert tts_file.exists(), "PreToolUse handler not dispatched: TTS timer file missing"
         assert notify_file.exists(), "PreToolUse handler not dispatched: notify timer file missing"
-        tts_file.unlink(missing_ok=True)
         notify_file.unlink(missing_ok=True)
 
     def test_post_tool_use_detected(self):
         """PostToolUse: has tool_result. Timer files should NOT be created (PostToolUse
         does not call _record_tool_start, only PreToolUse does)."""
         tool_use_id = "detect-post-tool-use-test"
-        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         # Clean up any leftover files
-        tts_file.unlink(missing_ok=True)
         notify_file.unlink(missing_ok=True)
         proc = _run_hook({
             "tool_name": "Read",
@@ -88,9 +83,6 @@ class TestEventDetection:
         })
         assert proc.returncode == 0
         # PostToolUse should NOT create timer files (only PreToolUse does)
-        assert not tts_file.exists(), (
-            "PostToolUse incorrectly dispatched to PreToolUse: timer file created"
-        )
         assert not notify_file.exists(), (
             "PostToolUse incorrectly dispatched to PreToolUse: notify file created"
         )
@@ -253,10 +245,10 @@ class TestPreToolUseStateSanitize:
 
 
 class TestRecordToolStart:
-    """Test timer file creation for TTS/notification thresholds."""
+    """Test timer file creation for notification thresholds."""
 
     def test_creates_timer_files_for_valid_tool_use_id(self, tmp_path, monkeypatch):
-        """Both timer files should be created with current timestamp."""
+        """The notify timer file should be created with current timestamp."""
         tool_use_id = "test-abc-123"
         # Use monkeypatch to redirect /tmp writes
         proc = _run_hook({
@@ -265,19 +257,13 @@ class TestRecordToolStart:
             "tool_use_id": tool_use_id,
         })
         assert proc.returncode == 0
-        # Check that timer files were created in /tmp
-        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
+        # Check that timer file was created in /tmp
         notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
-        assert tts_file.exists(), "TTS timer file not created"
         assert notify_file.exists(), "Notify timer file not created"
         # Verify contents are timestamps (integers)
-        tts_ts = int(tts_file.read_text().strip())
         notify_ts = int(notify_file.read_text().strip())
-        assert tts_ts > 0
         assert notify_ts > 0
-        assert tts_ts == notify_ts
         # Cleanup
-        tts_file.unlink(missing_ok=True)
         notify_file.unlink(missing_ok=True)
 
     def test_no_timer_files_for_empty_tool_use_id(self):
@@ -431,46 +417,6 @@ class TestNotifyOnComplete:
                 os.environ.pop("SPELLBOOK_NOTIFY_ENABLED", None)
             else:
                 os.environ["SPELLBOOK_NOTIFY_ENABLED"] = original_env
-
-
-class TestTtsNotify:
-    """Test TTS notification handler (fail-open).
-
-    Tests mock _http_post to verify the handler attempts to POST
-    to the /api/speak endpoint when threshold is exceeded.
-    """
-
-    def test_tts_attempts_speak_when_threshold_exceeded(self):
-        """TTS handler should attempt POST to /api/speak for long-running tools."""
-        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
-        import spellbook_hook
-
-        calls = []
-        original_http = spellbook_hook._http_post
-        spellbook_hook._http_post = lambda url, payload, timeout=5: (
-            calls.append(("http_post", url, payload)) or None
-        )
-
-        tool_use_id = "tts-test-threshold"
-        # Create timer file with timestamp 0 (ancient) to exceed threshold
-        Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}")).write_text("0")
-
-        try:
-            spellbook_hook._tts_notify("Bash", {
-                "tool_input": {"command": "make build"},
-                "tool_result": "build complete",
-                "tool_use_id": tool_use_id,
-                "cwd": "/tmp/test-project",
-            })
-            speak_calls = [c for c in calls if "/api/speak" in c[1]]
-            assert len(speak_calls) == 1, (
-                f"Expected 1 speak call, got {len(speak_calls)}. All calls: {calls}"
-            )
-            assert "text" in speak_calls[0][2]
-            assert "make" in speak_calls[0][2]["text"]
-        finally:
-            spellbook_hook._http_post = original_http
-            Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}")).unlink(missing_ok=True)
 
 
 class TestMemoryCapture:

@@ -5,8 +5,8 @@ Single Python script handling all hook events. Dispatches to handler
 functions based on hook_event_name and tool_name from stdin JSON.
 
 Replaces all individual shell hooks (bash-gate.sh, spawn-guard.sh,
-state-sanitize.sh, tts-timer-start.sh, audit-log.sh, canary-check.sh,
-memory-inject.sh, notify-on-complete.sh, tts-notify.sh, memory-capture.sh,
+state-sanitize.sh, notify-timer-start.sh, audit-log.sh, canary-check.sh,
+memory-inject.sh, notify-on-complete.sh, memory-capture.sh,
 pre-compact-save.sh, post-compact-recover.sh).
 """
 
@@ -269,7 +269,7 @@ def _send_os_notification(title: str, body: str) -> None:
         pass
 
 
-# Excluded tools for notifications and TTS (high-frequency, fast tools)
+# Excluded tools for notifications (high-frequency, fast tools)
 _EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
@@ -380,10 +380,9 @@ def _gate_state_sanitize(data: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def _record_tool_start(tool_name: str, data: dict) -> None:
-    """Record tool start time for TTS/notification thresholds.
+    """Record tool start time for notification thresholds.
 
-    Writes current Unix timestamp to two files:
-    - {tempdir}/claude-tool-start-{tool_use_id} (for TTS)
+    Writes current Unix timestamp to:
     - {tempdir}/claude-notify-start-{tool_use_id} (for OS notifications)
     """
     tool_use_id = data.get("tool_use_id", "")
@@ -391,11 +390,10 @@ def _record_tool_start(tool_name: str, data: dict) -> None:
         return
     now = str(int(time.time()))
     tmpdir = tempfile.gettempdir()
-    for prefix in ("claude-tool-start-", "claude-notify-start-"):
-        try:
-            Path(os.path.join(tmpdir, f"{prefix}{tool_use_id}")).write_text(now)
-        except OSError:
-            pass
+    try:
+        Path(os.path.join(tmpdir, f"claude-notify-start-{tool_use_id}")).write_text(now)
+    except OSError:
+        pass
 
 
 def _memory_inject(tool_name: str, data: dict) -> str | None:
@@ -475,56 +473,6 @@ def _notify_on_complete(tool_name: str, data: dict) -> None:
     title = os.environ.get("SPELLBOOK_NOTIFY_TITLE", "Spellbook")
     body = f"{tool_name} finished ({elapsed}s)"
     _send_os_notification(title, body)
-
-
-def _tts_notify(tool_name: str, data: dict) -> None:
-    """TTS announcement for long-running tools. FAIL-OPEN.
-
-    Reads timer file created by _record_tool_start, checks elapsed time
-    against threshold, and POSTs to MCP server /api/speak endpoint.
-    """
-    if tool_name in _EXCLUDED_TOOLS:
-        return
-    tool_use_id = data.get("tool_use_id", "")
-    if not _validate_tool_use_id(tool_use_id):
-        return
-    start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
-    if not start_file.exists():
-        return
-    try:
-        start_ts = int(start_file.read_text().strip())
-        start_file.unlink(missing_ok=True)
-    except (ValueError, OSError):
-        return
-    elapsed = int(time.time()) - start_ts
-    threshold = int(os.environ.get("SPELLBOOK_TTS_THRESHOLD", "30"))
-    if elapsed < threshold:
-        return
-    # Build message
-    cwd = data.get("cwd", "")
-    project = os.path.basename(cwd) if cwd else "unknown"
-    inp = data.get("tool_input") or {}
-    detail = ""
-    if tool_name == "Bash":
-        cmd = inp.get("command", "")
-        if cmd:
-            try:
-                parts = shlex.split(cmd)
-            except ValueError:
-                parts = cmd.split()
-            detail = parts[0].split("/")[-1] if parts else ""
-    elif tool_name == "Task":
-        detail = inp.get("description", "")[:40]
-    msg_parts = [project, tool_name]
-    if detail:
-        msg_parts.append(detail)
-    msg_parts.append("finished")
-    message = " ".join(msg_parts)
-    _http_post(
-        "/api/speak",
-        {"text": message},
-        timeout=10,
-    )
 
 
 def _memory_capture(tool_name: str, data: dict) -> None:
@@ -2019,9 +1967,8 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     if out:
         outputs.append(out)
 
-    # Notifications and TTS (catch-all, non-blocking)
+    # Notifications (catch-all, non-blocking)
     _fire_and_forget(_notify_on_complete, tool_name, data)
-    _fire_and_forget(_tts_notify, tool_name, data)
 
     # Memory capture (catch-all, non-blocking)
     _fire_and_forget(_memory_capture, tool_name, data)
