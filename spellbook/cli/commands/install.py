@@ -169,6 +169,12 @@ def run(args: argparse.Namespace) -> None:
                 except (ImportError, Exception):
                     pass
 
+    # Worker LLM endpoint wizard (optional; default OFF so existing users
+    # see zero behavior change). Skipped under --dry-run and on non-tty stdin
+    # (CI, piped installs) so the installer never blocks.
+    if not getattr(args, "dry_run", False):
+        _run_worker_llm_wizard()
+
     # Memory system setup (QMD + Serena)
     if not getattr(args, "dry_run", False):
         try:
@@ -253,3 +259,211 @@ def run(args: argparse.Namespace) -> None:
         else:
             print("Installation completed with errors.", file=sys.stderr)
             sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# Worker LLM wizard
+# ---------------------------------------------------------------------------
+
+
+def _run_worker_llm_wizard() -> None:
+    """Prompt the user to configure an OpenAI-compatible worker LLM endpoint.
+
+    Design decision: this wizard uses plain ``input()`` rather than a renderer
+    method (unlike the TTS wizard) to keep the surface area small. The
+    precedent is the memory-system block at :func:`run`: both the memory-
+    system and worker-LLM wizards are opt-in, default-off, low-traffic
+    setup flows that do not justify dual RichRenderer/PlainTextRenderer
+    implementations.
+
+    The function is a noop when stdin is not a tty so CI / piped installers
+    do not block. Writes config via :func:`spellbook.core.config.config_set`;
+    one key per ``config_set`` call so a partial failure does not leave the
+    config in a half-written state.
+
+    See design doc §9.
+    """
+    import sys as _sys
+
+    if not _sys.stdin.isatty():
+        return
+
+    print()
+    resp = input(
+        "Do you have a local or remote OpenAI-compatible LLM endpoint you'd "
+        "like spellbook to use for background tasks? [y/N]: "
+    ).strip().lower()
+    if resp not in ("y", "yes"):
+        return
+
+    # 1) Probe for running local endpoints.
+    try:
+        import asyncio
+
+        from spellbook.worker_llm.probe import probe_all
+
+        detected = asyncio.run(probe_all(timeout_total_s=2.0))
+    except Exception as e:  # noqa: BLE001
+        print(f"  (probe failed: {type(e).__name__}: {e}; continuing)")
+        detected = []
+
+    # 2) Pick or manually enter the endpoint.
+    chosen_url: str = ""
+    chosen_models: list[str] = []
+    if detected:
+        print()
+        print("Detected local endpoints:")
+        for i, ep in enumerate(detected, start=1):
+            models_count = len(ep.models)
+            print(
+                f"  {i}. {ep.base_url} ({ep.label}, {models_count} model(s))"
+            )
+        print(f"  {len(detected) + 1}. Enter URL manually")
+        while True:
+            raw = input(
+                f"Select endpoint [1-{len(detected) + 1}]: "
+            ).strip()
+            try:
+                idx = int(raw)
+            except ValueError:
+                print("  Please enter a number.")
+                continue
+            if 1 <= idx <= len(detected):
+                chosen_url = detected[idx - 1].base_url
+                chosen_models = list(detected[idx - 1].models)
+                break
+            if idx == len(detected) + 1:
+                chosen_url = input("Base URL: ").strip()
+                break
+            print("  Out of range.")
+    else:
+        chosen_url = input(
+            "Base URL (e.g. http://localhost:11434/v1): "
+        ).strip()
+
+    if not chosen_url:
+        print("  No URL provided; wizard aborted.")
+        return
+
+    # 3) Pick or enter a model. Default to qwen2.5-coder:7b per design §9.
+    default_model = (
+        chosen_models[0] if chosen_models else "qwen2.5-coder:7b"
+    )
+    if chosen_models:
+        print()
+        print("Available models:")
+        for i, m in enumerate(chosen_models, start=1):
+            print(f"  {i}. {m}")
+        print(f"  {len(chosen_models) + 1}. Enter manually")
+        while True:
+            raw = input(
+                f"Select model [1-{len(chosen_models) + 1}, default 1]: "
+            ).strip()
+            if not raw:
+                chosen_model = chosen_models[0]
+                break
+            try:
+                idx = int(raw)
+            except ValueError:
+                print("  Please enter a number.")
+                continue
+            if 1 <= idx <= len(chosen_models):
+                chosen_model = chosen_models[idx - 1]
+                break
+            if idx == len(chosen_models) + 1:
+                chosen_model = input("Model id: ").strip() or default_model
+                break
+            print("  Out of range.")
+    else:
+        chosen_model = (
+            input(f"Model id [{default_model}]: ").strip() or default_model
+        )
+
+    # 4) Optional API key (blank allowed for local endpoints).
+    chosen_key = input("API key (blank for local endpoints): ").strip()
+
+    # 5) Four feature flags — always ask for all four; write the explicit
+    # value (including False) so the keys are persisted and there is no
+    # ambiguity between "user said no" and "key absent".
+    features: dict[str, bool] = {}
+    feature_prompts = [
+        (
+            "transcript_harvest",
+            "Enable worker-LLM semantic Stop-hook memory harvest? "
+            "(REPLACE mode by default; worker supersedes regex harvester) [y/N]: ",
+        ),
+        (
+            "tool_safety",
+            "Enable worker-LLM PreToolUse safety sniff (OK/WARN/BLOCK)? "
+            "(Fails OPEN on 1.5s timeout; BLOCK verdicts bypassable within 30s) [y/N]: ",
+        ),
+        (
+            "memory_rerank",
+            "Enable worker-LLM reranking of memory_recall candidates? "
+            "(Adds one worker call per memory_recall invocation) [y/N]: ",
+        ),
+        (
+            "read_claude_memory",
+            "Also include Claude Code's MEMORY.md files in memory_recall? "
+            "(Independent of worker LLM; safe to enable without an endpoint) [y/N]: ",
+        ),
+    ]
+    for name, prompt in feature_prompts:
+        ans = input(prompt).strip().lower()
+        features[name] = ans in ("y", "yes")
+
+    # 6) Write config. One key per config_set call so a partial failure
+    # does not leave the config in a half-written state.
+    try:
+        from spellbook.core.config import config_set
+    except ImportError:
+        print("  Error: could not import config_set; aborted.")
+        return
+
+    try:
+        config_set("worker_llm_base_url", chosen_url)
+        config_set("worker_llm_model", chosen_model)
+        if chosen_key:
+            config_set("worker_llm_api_key", chosen_key)
+        config_set(
+            "worker_llm_feature_transcript_harvest",
+            bool(features["transcript_harvest"]),
+        )
+        config_set(
+            "worker_llm_feature_tool_safety", bool(features["tool_safety"])
+        )
+        config_set(
+            "worker_llm_feature_memory_rerank",
+            bool(features["memory_rerank"]),
+        )
+        config_set(
+            "worker_llm_read_claude_memory",
+            bool(features["read_claude_memory"]),
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"  Error writing config: {type(e).__name__}: {e}")
+        return
+
+    print()
+    print(
+        f"  Worker LLM configured: {chosen_url} ({chosen_model}). "
+        "Run `spellbook worker-llm doctor` to verify."
+    )
+
+    # 7) Offer to run doctor inline.
+    run_doctor = input("Run doctor now? [y/N]: ").strip().lower()
+    if run_doctor in ("y", "yes"):
+        try:
+            import argparse as _ap
+
+            from spellbook.cli.commands.worker_llm import _run_doctor
+
+            doctor_args = _ap.Namespace(
+                json=False, bench=None, runs=10, roundtable_sample=None
+            )
+            try:
+                _run_doctor(doctor_args)
+            except SystemExit:
+                pass
+        except Exception as e:  # noqa: BLE001
+            print(f"  (doctor failed to run: {type(e).__name__}: {e})")
