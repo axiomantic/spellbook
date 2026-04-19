@@ -30,14 +30,24 @@ def _get_tool_names(mcp_instance):
 class TestToolRegistrationCount:
     """Verify all MCP tools are registered after decomposition."""
 
-    def test_tool_count_at_least_90(self):
-        """After register_all_tools(), at least 90 tools should be registered."""
+    def test_tool_count_at_least_65(self):
+        """After register_all_tools(), at least 65 tools should be registered.
+
+        Target lowered from 90 after two rounds of MCP tool pruning:
+          - 15 tools removed with the ``messaging`` and ``experiments`` module
+            deletions (both had zero external callers).
+          - 10 further dead tools removed (health/misc debug tools, telemetry
+            triad, forge_roundtable_debate, forge_select_skill).
+
+        67 tools remain. This floor guards against accidental further
+        regression.
+        """
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) >= 90, (
-            f"Expected >= 90 tools, got {len(tool_names)}. "
+        assert len(tool_names) >= 65, (
+            f"Expected >= 65 tools, got {len(tool_names)}. "
             f"Missing tools need to be added to the appropriate tool module."
         )
 
@@ -59,11 +69,9 @@ class TestToolRegistrationCount:
             "forge_iteration_start", # forged
             "fractal_create_graph",  # fractal
             "stint_push",            # coordination
-            "experiment_create",     # experiments
             "spellbook_check_for_updates",  # updates
             "workflow_state_save",   # misc
             "tooling_discover",      # tooling
-            "messaging_register",    # messaging
         ]
 
         for tool_name in expected_tools:
