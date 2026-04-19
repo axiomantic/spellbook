@@ -190,3 +190,117 @@ def test_fallback_http_post_swallows_all_exceptions(monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", raising_urlopen)
     # Must not raise.
     wl_events._fallback_http_post("/p", {"x": 1}, timeout=1.0)
+
+
+def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, caplog):
+    """First failure -> WARNING; subsequent failures -> DEBUG.
+
+    Review finding I3: silent swallow of subprocess publish failures hid a
+    route-mismatch bug for a long time. We keep fire-and-forget semantics
+    (never raise, never spam) but make the FIRST failure loud so the next
+    such misconfiguration gets caught in operator logs.
+    """
+    import logging
+
+    monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
+    monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
+    # Reset the module-level counter so this test is order-independent.
+    monkeypatch.setattr(wl_events, "_publish_failures", 0)
+
+    def raising_urlopen(*a, **kw):
+        raise ConnectionRefusedError("no daemon")
+
+    monkeypatch.setattr("urllib.request.urlopen", raising_urlopen)
+
+    with caplog.at_level(logging.DEBUG, logger="spellbook.worker_llm.events"):
+        for _ in range(5):
+            wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
+
+    warning_records = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING
+        and r.name == "spellbook.worker_llm.events"
+    ]
+    debug_records = [
+        r for r in caplog.records
+        if r.levelno == logging.DEBUG
+        and r.name == "spellbook.worker_llm.events"
+    ]
+
+    assert len(warning_records) == 1, (
+        f"expected exactly one WARNING across 5 failures, got "
+        f"{len(warning_records)}: {[r.message for r in warning_records]}"
+    )
+    # The one warning must name the exception type and URL so the failure is
+    # actionable from logs alone.
+    msg = warning_records[0].getMessage()
+    assert "ConnectionRefusedError" in msg
+    assert "/api/events/publish" in msg
+
+    # The other 4 failures fell back to DEBUG so we do not spam the logs.
+    assert len(debug_records) == 4, (
+        f"expected 4 DEBUG records (failures 2..5), got {len(debug_records)}"
+    )
+
+
+def test_fallback_http_post_attaches_bearer_token_when_present(
+    monkeypatch, tmp_path
+):
+    """The MCP-root ``/api/events/publish`` route is behind
+    ``BearerAuthMiddleware``. Subprocess callers must attach the bearer
+    token from ``~/.local/spellbook/.mcp-token`` or every publish will 401.
+    """
+    token_file = tmp_path / ".mcp-token"
+    token_file.write_text("secret-token-abc")
+    monkeypatch.setattr(wl_events, "_TOKEN_PATH", token_file)
+    monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
+    monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
+
+    captured: list = []
+
+    class _FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=1.0):
+        captured.append(dict(req.headers))
+        return _FakeResponse()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
+    assert len(captured) == 1
+    # urllib normalizes header names to Title-Case.
+    auth_header = captured[0].get("Authorization") or captured[0].get("authorization")
+    assert auth_header == "Bearer secret-token-abc"
+
+
+def test_fallback_http_post_no_auth_header_when_token_missing(
+    monkeypatch, tmp_path
+):
+    """Token file absent: no Authorization header (request will 401; that's
+    a deployment misconfiguration, not something we can fake)."""
+    monkeypatch.setattr(wl_events, "_TOKEN_PATH", tmp_path / "does-not-exist")
+    monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
+    monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
+
+    captured: list = []
+
+    class _FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=1.0):
+        captured.append(dict(req.headers))
+        return _FakeResponse()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
+    assert len(captured) == 1
+    assert "Authorization" not in captured[0]
+    assert "authorization" not in captured[0]

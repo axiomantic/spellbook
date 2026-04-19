@@ -557,3 +557,66 @@ async def api_messaging_poll(request: Request) -> JSONResponse:
         _poll_inbox_sync, messaging_base, session_id
     )
     return JSONResponse({"messages": messages})
+
+
+# ---------------------------------------------------------------------------
+# Worker-LLM event publish (subprocess fallback for spellbook.worker_llm.events)
+# ---------------------------------------------------------------------------
+
+
+@mcp.custom_route("/api/events/publish", methods=["POST"])
+async def api_events_publish(request: Request) -> JSONResponse:
+    """Accept a fire-and-forget event from a hook subprocess or MCP worker.
+
+    ``spellbook.admin.events.publish_sync`` only functions inside the daemon's
+    running event loop. Subprocess callers (hook scripts, CLI, MCP stdio
+    workers) cannot use it directly, so they delegate publishing to the daemon
+    by POSTing to this endpoint. We are already inside the daemon's event loop
+    here, so we can ``await event_bus.publish(...)`` directly.
+
+    This route lives at the MCP server root (not under ``/admin``) so it is
+    covered by ``BearerAuthMiddleware`` -- the same auth surface as every other
+    subprocess-facing endpoint (``/api/hook-log``, ``/api/memory/event``,
+    etc.).
+
+    Accepts JSON body:
+        {"subsystem": "worker_llm", "event_type": "call_ok", "data": {...}}
+
+    Returns:
+        {"ok": true} on success, 400 on unknown subsystem or missing fields.
+    """
+    from spellbook.admin.events import Event, Subsystem, event_bus
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    required = ["subsystem", "event_type", "data"]
+    missing = [f for f in required if f not in body]
+    if missing:
+        return JSONResponse(
+            {"error": f"missing required fields: {missing}"}, status_code=400
+        )
+
+    data = body["data"]
+    if not isinstance(data, dict):
+        return JSONResponse(
+            {"error": "field 'data' must be an object"}, status_code=400
+        )
+
+    try:
+        subsystem = Subsystem(body["subsystem"])
+    except ValueError as e:
+        return JSONResponse(
+            {"error": f"unknown subsystem: {e}"}, status_code=400
+        )
+
+    await event_bus.publish(
+        Event(
+            subsystem=subsystem,
+            event_type=str(body["event_type"]),
+            data=data,
+        )
+    )
+    return JSONResponse({"ok": True})

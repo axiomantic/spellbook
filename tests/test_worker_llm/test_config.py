@@ -34,6 +34,7 @@ def test_configured_reads_all_keys():
         "worker_llm_feature_tool_safety": True,
         "worker_llm_feature_roundtable": False,
         "worker_llm_feature_memory_rerank": False,
+        "worker_llm_safety_cache_ttl_s": 600,
     }
     with patch("spellbook.worker_llm.config.config_get", _patched_get(vals)):
         cfg = wl_config.get_worker_config()
@@ -50,6 +51,7 @@ def test_configured_reads_all_keys():
         assert cfg.feature_tool_safety is True
         assert cfg.feature_roundtable is False
         assert cfg.feature_memory_rerank is False
+        assert cfg.safety_cache_ttl_s == 600
         assert wl_config.is_configured(cfg) is True
 
 
@@ -66,6 +68,7 @@ def test_defaults_when_keys_absent():
         assert cfg.feature_roundtable is False
         assert cfg.feature_memory_rerank is False
         assert cfg.feature_tool_safety is False
+        assert cfg.safety_cache_ttl_s == 300
 
 
 def test_feature_enabled_requires_endpoint():

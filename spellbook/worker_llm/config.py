@@ -28,6 +28,7 @@ class WorkerConfig:
     feature_roundtable: bool
     feature_memory_rerank: bool
     feature_tool_safety: bool
+    safety_cache_ttl_s: int
 
 
 def get_worker_config() -> WorkerConfig:
@@ -68,6 +69,7 @@ def get_worker_config() -> WorkerConfig:
         feature_tool_safety=bool(
             config_get("worker_llm_feature_tool_safety") or False
         ),
+        safety_cache_ttl_s=int(config_get("worker_llm_safety_cache_ttl_s") or 300),
     )
 
 
