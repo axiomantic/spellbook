@@ -154,10 +154,6 @@ function ConfigField({
 
 const SECTIONS: { title: string; keys: string[] }[] = [
   {
-    title: 'Text-to-Speech',
-    keys: ['tts_enabled', 'tts_voice', 'tts_volume'],
-  },
-  {
     title: 'Notifications',
     keys: ['notify_enabled', 'notify_title'],
   },

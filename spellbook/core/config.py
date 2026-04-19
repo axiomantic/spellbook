@@ -179,11 +179,8 @@ def _get_session_state(session_id: Optional[str] = None) -> dict:
     sid = session_id or DEFAULT_SESSION_ID
     _session_activity[sid] = datetime.now()
     if sid not in _session_states:
-        _session_states[sid] = {"mode": None, "tts": {}, "notify": {}}
-    # Ensure tts key exists for sessions created before TTS feature
+        _session_states[sid] = {"mode": None, "notify": {}}
     state = _session_states[sid]
-    if "tts" not in state:
-        state["tts"] = {}
     # Ensure notify key exists for sessions created before notification feature
     if "notify" not in state:
         state["notify"] = {}
@@ -510,113 +507,9 @@ def session_mode_get(session_id: Optional[str] = None) -> dict:
         return {"mode": None, "source": "unset", "permanent": False}
 
 
-# TTS defaults (used when neither session nor config has a value)
-TTS_DEFAULT_ENABLED = True
-TTS_DEFAULT_VOICE = ""               # Empty = use Wyoming server default
-TTS_DEFAULT_VOLUME = 0.3
-WYOMING_DEFAULT_HOST = "127.0.0.1"
-WYOMING_DEFAULT_PORT = 10200
-
 # Notification defaults (used when neither session nor config has a value)
 NOTIFY_DEFAULT_ENABLED = True
 NOTIFY_DEFAULT_TITLE = "Spellbook"
-
-
-def tts_session_set(
-    enabled: bool = None,
-    voice: str = None,
-    volume: float = None,
-    session_id: Optional[str] = None,
-) -> dict:
-    """Set TTS overrides for this session (not persisted to config).
-
-    Pass only the settings you want to change. Omitted settings keep
-    their current value.
-
-    Args:
-        enabled: Enable/disable TTS for this session
-        voice: Override voice for this session
-        volume: Override volume for this session (0.0-1.0)
-        session_id: Session identifier for multi-session isolation.
-                    If None, uses default session for backward compatibility.
-
-    Returns:
-        Dict with status and current session TTS overrides
-    """
-    session_state = _get_session_state(session_id)
-    tts_state = session_state["tts"]
-
-    if enabled is not None:
-        tts_state["enabled"] = enabled
-    if voice is not None:
-        tts_state["voice"] = voice
-    if volume is not None:
-        tts_state["volume"] = volume
-
-    return {"status": "ok", "session_tts": dict(tts_state)}
-
-
-def tts_session_get(session_id: Optional[str] = None) -> dict:
-    """Get effective TTS settings with resolution: session > config > defaults.
-
-    Each setting is resolved independently. For example, voice may come
-    from session while volume comes from config and enabled from defaults.
-
-    Does NOT check Wyoming server availability. This is the settings layer only.
-
-    Args:
-        session_id: Session identifier for multi-session isolation.
-                    If None, uses default session for backward compatibility.
-
-    Returns:
-        Dict with effective enabled, voice, volume and their sources
-    """
-    session_state = _get_session_state(session_id)
-    tts_state = session_state["tts"]
-
-    # Resolve each setting: session > config > default
-    result = {}
-
-    # enabled
-    if "enabled" in tts_state:
-        result["enabled"] = tts_state["enabled"]
-        result["source_enabled"] = "session"
-    else:
-        config_val = config_get("tts_enabled")
-        if config_val is not None:
-            result["enabled"] = config_val
-            result["source_enabled"] = "config"
-        else:
-            result["enabled"] = TTS_DEFAULT_ENABLED
-            result["source_enabled"] = "default"
-
-    # voice
-    if "voice" in tts_state:
-        result["voice"] = tts_state["voice"]
-        result["source_voice"] = "session"
-    else:
-        config_val = config_get("tts_voice")
-        if config_val is not None:
-            result["voice"] = config_val
-            result["source_voice"] = "config"
-        else:
-            result["voice"] = TTS_DEFAULT_VOICE
-            result["source_voice"] = "default"
-
-    # volume
-    if "volume" in tts_state:
-        result["volume"] = tts_state["volume"]
-        result["source_volume"] = "session"
-    else:
-        config_val = config_get("tts_volume")
-        if config_val is not None:
-            result["volume"] = config_val
-            result["source_volume"] = "config"
-        else:
-            result["volume"] = TTS_DEFAULT_VOLUME
-            result["source_volume"] = "default"
-
-    return result
 
 
 def notify_session_set(
@@ -793,35 +686,11 @@ def _get_repairs() -> list[dict]:
         message: Human-readable description
         fix_command: Command the user can run to fix the issue
 
-    Uses a blocking socket probe to check Wyoming TTS server connectivity
-    when TTS is enabled. This function is called from sync context
-    (session_init), so blocking I/O is acceptable here.
+    Called from sync context (session_init). Currently returns an empty
+    list; retained so callers of session_init can rely on a stable shape
+    and future repairs can be added without another signature change.
     """
-    repairs = []
-
-    # Check TTS: enabled but Wyoming server unreachable
-    tts_enabled = config_get("tts_enabled")
-    if tts_enabled is True:
-        try:
-            import socket
-            host = config_get("tts_wyoming_host") or WYOMING_DEFAULT_HOST
-            port = config_get("tts_wyoming_port") or WYOMING_DEFAULT_PORT
-            s = socket.create_connection((host, port), timeout=2.0)
-            s.close()
-        except (OSError, socket.timeout):
-            repairs.append({
-                "id": "tts-server-unreachable",
-                "severity": "warning",
-                "message": f"TTS enabled but Wyoming server not reachable at {host}:{port}",
-                "fix_command": (
-                    "Start a Wyoming TTS server (e.g., wyoming-piper or wyoming-kokoro) "
-                    f"listening on {host}:{port}"
-                ),
-            })
-        except Exception:
-            logger.debug("TTS availability check failed", exc_info=True)
-
-    return repairs
+    return []
 
 
 def _regenerate_memory_md(project_path: Optional[str]) -> None:

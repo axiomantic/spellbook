@@ -10,10 +10,9 @@ class TestConfigGet:
 
     def test_get_config_returns_dict(self, client, monkeypatch):
         mock_config = {
-            "tts_enabled": True,
-            "tts_voice": "bf_emma",
-            "tts_volume": 0.8,
             "notify_enabled": True,
+            "notify_title": "Custom",
+            "worker_llm_timeout_s": 5.0,
             "admin_enabled": True,
         }
         monkeypatch.setattr(
@@ -27,11 +26,11 @@ class TestConfigGet:
         data = response.json()
         assert "config" in data
         # Explicit values override defaults
-        assert data["config"]["tts_enabled"] is True
-        assert data["config"]["tts_voice"] == "bf_emma"
-        assert data["config"]["tts_volume"] == 0.8
+        assert data["config"]["notify_enabled"] is True
+        assert data["config"]["notify_title"] == "Custom"
+        assert data["config"]["worker_llm_timeout_s"] == 5.0
         # Defaults are present for non-explicit keys
-        assert data["config"]["notify_title"] == "Spellbook"
+        assert data["config"]["admin_enabled"] is True
 
     def test_get_config_returns_defaults_when_no_file(self, client, monkeypatch):
         monkeypatch.setattr(
@@ -44,11 +43,10 @@ class TestConfigGet:
         assert response.status_code == 200
         config = response.json()["config"]
         # Should include defaults even when no explicit config exists
-        assert config["tts_enabled"] is True
-        assert config["tts_voice"] == ""
-        assert config["tts_volume"] == 0.3
         assert config["notify_enabled"] is True
         assert config["notify_title"] == "Spellbook"
+        assert config["admin_enabled"] is True
+        assert config["telemetry_enabled"] is False
 
     def test_get_config_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/config")
@@ -64,7 +62,6 @@ class TestConfigSchema:
         data = response.json()
         assert "keys" in data
         keys = {k["key"] for k in data["keys"]}
-        assert "tts_enabled" in keys
         assert "notify_enabled" in keys
         assert "admin_enabled" in keys
         assert "telemetry_enabled" in keys
@@ -90,43 +87,43 @@ class TestConfigUpdate:
         calls = []
         monkeypatch.setattr(
             "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_enabled": False}}),
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"notify_enabled": False}}),
         )
 
         response = client.put(
-            "/api/config/tts_enabled", json={"value": False}
+            "/api/config/notify_enabled", json={"value": False}
         )
 
         assert response.status_code == 200
-        assert calls == [("tts_enabled", False)]
+        assert calls == [("notify_enabled", False)]
 
     def test_update_string_key(self, client, monkeypatch):
         calls = []
         monkeypatch.setattr(
             "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_voice": "af_heart"}}),
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"notify_title": "Custom"}}),
         )
 
         response = client.put(
-            "/api/config/tts_voice", json={"value": "af_heart"}
+            "/api/config/notify_title", json={"value": "Custom"}
         )
 
         assert response.status_code == 200
-        assert calls == [("tts_voice", "af_heart")]
+        assert calls == [("notify_title", "Custom")]
 
     def test_update_number_key(self, client, monkeypatch):
         calls = []
         monkeypatch.setattr(
             "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"tts_volume": 0.5}}),
+            lambda key, value: (calls.append((key, value)) or {"status": "ok", "config": {"worker_llm_timeout_s": 5.0}}),
         )
 
         response = client.put(
-            "/api/config/tts_volume", json={"value": 0.5}
+            "/api/config/worker_llm_timeout_s", json={"value": 5.0}
         )
 
         assert response.status_code == 200
-        assert calls == [("tts_volume", 0.5)]
+        assert calls == [("worker_llm_timeout_s", 5.0)]
 
     def test_update_unknown_key_returns_404(self, client):
         response = client.put(
@@ -138,7 +135,7 @@ class TestConfigUpdate:
 
     def test_update_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.put(
-            "/api/config/tts_enabled", json={"value": False}
+            "/api/config/notify_enabled", json={"value": False}
         )
         assert response.status_code == 401
 
@@ -149,7 +146,7 @@ class TestConfigUpdateEvent:
     def test_event_published_on_update(self, client, monkeypatch):
         monkeypatch.setattr(
             "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: {"status": "ok", "config": {"tts_enabled": False}},
+            lambda key, value: {"status": "ok", "config": {"notify_enabled": False}},
         )
 
         captured_events = []
@@ -165,7 +162,7 @@ class TestConfigUpdateEvent:
         monkeypatch.setattr(real_event_bus, "publish", capture_publish)
 
         response = client.put(
-            "/api/config/tts_enabled", json={"value": False}
+            "/api/config/notify_enabled", json={"value": False}
         )
 
         assert response.status_code == 200
@@ -173,7 +170,7 @@ class TestConfigUpdateEvent:
         assert len(captured_events) == 1
         event = captured_events[0]
         assert event.event_type == "config.updated"
-        assert event.data["key"] == "tts_enabled"
+        assert event.data["key"] == "notify_enabled"
         assert event.data["value"] is False
 
 
@@ -188,23 +185,23 @@ class TestConfigBatchUpdate:
                 calls.append(updates)
                 or {
                     "status": "ok",
-                    "config": {"tts_enabled": False, "notify_enabled": True},
+                    "config": {"notify_enabled": False, "admin_enabled": True},
                 }
             ),
         )
 
         response = client.put(
             "/api/config",
-            json={"updates": {"tts_enabled": False, "notify_enabled": True}},
+            json={"updates": {"notify_enabled": False, "admin_enabled": True}},
         )
 
         assert response.status_code == 200
-        assert calls == [{"tts_enabled": False, "notify_enabled": True}]
+        assert calls == [{"notify_enabled": False, "admin_enabled": True}]
 
     def test_batch_update_rejects_unknown_keys(self, client):
         response = client.put(
             "/api/config",
-            json={"updates": {"tts_enabled": False, "bad_key": "value"}},
+            json={"updates": {"notify_enabled": False, "bad_key": "value"}},
         )
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "CONFIG_KEY_UNKNOWN"
@@ -212,7 +209,7 @@ class TestConfigBatchUpdate:
     def test_batch_update_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.put(
             "/api/config",
-            json={"updates": {"tts_enabled": False}},
+            json={"updates": {"notify_enabled": False}},
         )
         assert response.status_code == 401
 
@@ -283,7 +280,7 @@ class TestTranscriptHarvestModeValidator:
             "/api/config",
             json={
                 "updates": {
-                    "tts_enabled": False,
+                    "notify_enabled": False,
                     "worker_llm_transcript_harvest_mode": "replce",
                 }
             },

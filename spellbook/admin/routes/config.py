@@ -29,24 +29,6 @@ router = APIRouter(prefix="/config", tags=["config"])
 # Known config keys with type, description, and defaults
 CONFIG_SCHEMA = [
     {
-        "key": "tts_enabled",
-        "type": "boolean",
-        "description": "Enable text-to-speech announcements for long-running tool completions",
-        "default": True,
-    },
-    {
-        "key": "tts_voice",
-        "type": "string",
-        "description": "Voice name for TTS (depends on your Wyoming TTS server)",
-        "default": "",
-    },
-    {
-        "key": "tts_volume",
-        "type": "number",
-        "description": "TTS playback volume (0.0 to 1.0)",
-        "default": 0.3,
-    },
-    {
         "key": "notify_enabled",
         "type": "boolean",
         "description": "Enable native OS notifications for long-running tool completions",
