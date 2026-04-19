@@ -20,6 +20,7 @@ _COMMAND_MODULES = (
     "memory",
     "session",
     "events",
+    "worker_llm",
 )
 
 
