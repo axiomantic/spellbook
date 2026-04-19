@@ -25,6 +25,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from xml.sax.saxutils import escape as _xml_escape
 
 
 # ---------------------------------------------------------------------------
@@ -1542,12 +1543,18 @@ def _worker_error_block(task: str, err: BaseException) -> str:
     Consumed by Claude Code / OpenCode / Codex / Gemini CLI as a structured
     signal that a worker-LLM step failed. The <hint> points operators at
     the doctor CLI and admin event monitor.
+
+    The ``task`` is a known static tag and needs no escaping. ``type(err).__name__``
+    is a Python class name (safe). ``str(err)[:500]`` comes from worker-LLM
+    code paths which may include arbitrary characters, including ``<``, ``>``,
+    ``&``, or even closing-tag strings, so it MUST be XML-escaped before
+    interpolation to prevent tag injection into the orchestrator stream.
     """
     return (
         "<worker-llm-error>\n"
         f"  <task>{task}</task>\n"
         f"  <type>{type(err).__name__}</type>\n"
-        f"  <message>{str(err)[:500]}</message>\n"
+        f"  <message>{_xml_escape(str(err)[:500])}</message>\n"
         "  <hint>Check `spellbook worker-llm doctor` and the admin EventMonitorPage.</hint>\n"
         "</worker-llm-error>"
     )
@@ -1784,10 +1791,17 @@ _SAFETY_APPLICABLE_TOOLS = frozenset({"Bash", "Write", "Edit"})
 
 
 def _safety_warn_block(reasoning: str) -> str:
-    """Render the <worker-llm-tool-safety verdict="WARN"> output block."""
+    """Render the ``<worker-llm-tool-safety verdict="WARN">`` output block.
+
+    ``reasoning`` originates from the worker LLM and may contain arbitrary
+    characters, including ``<``, ``>``, ``&``, and (under a prompt-injection
+    attack) literal closing-tag strings. Escape before interpolation so a
+    drifty or adversarial response cannot inject sibling tags into the
+    orchestrator's output stream.
+    """
     return (
         '<worker-llm-tool-safety verdict="WARN">\n'
-        f"  {reasoning}\n"
+        f"  {_xml_escape(reasoning)}\n"
         "</worker-llm-tool-safety>"
     )
 
@@ -1798,10 +1812,12 @@ def _emit_block_and_exit(reasoning: str) -> None:
     Claude Code convention: exit 2 with the message on stderr; the platform
     presents the reasoning to the user and vetoes the tool call. The 30-second
     bypass note lets a user retry the exact same invocation to override.
+
+    ``reasoning`` is escaped for the same reason as ``_safety_warn_block``.
     """
     print(
         '<worker-llm-tool-safety verdict="BLOCK">\n'
-        f"  {reasoning}\n"
+        f"  {_xml_escape(reasoning)}\n"
         "  Retry the same tool call within 30 seconds to bypass this check.\n"
         "</worker-llm-tool-safety>",
         file=sys.stderr,

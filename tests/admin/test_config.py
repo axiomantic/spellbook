@@ -215,3 +215,78 @@ class TestConfigBatchUpdate:
             json={"updates": {"tts_enabled": False}},
         )
         assert response.status_code == 401
+
+
+class TestTranscriptHarvestModeValidator:
+    """worker_llm_transcript_harvest_mode accepts only replace|merge|skip."""
+
+    def test_accepts_replace(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: {"status": "ok", "config": {key: value}},
+        )
+        response = client.put(
+            "/api/config/worker_llm_transcript_harvest_mode",
+            json={"value": "replace"},
+        )
+        assert response.status_code == 200
+
+    def test_accepts_merge(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: {"status": "ok", "config": {key: value}},
+        )
+        response = client.put(
+            "/api/config/worker_llm_transcript_harvest_mode",
+            json={"value": "merge"},
+        )
+        assert response.status_code == 200
+
+    def test_accepts_skip(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda key, value: {"status": "ok", "config": {key: value}},
+        )
+        response = client.put(
+            "/api/config/worker_llm_transcript_harvest_mode",
+            json={"value": "skip"},
+        )
+        assert response.status_code == 200
+
+    def test_rejects_typo(self, client):
+        response = client.put(
+            "/api/config/worker_llm_transcript_harvest_mode",
+            json={"value": "replce"},
+        )
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"]["code"] == "CONFIG_VALUE_INVALID"
+        assert "worker_llm_transcript_harvest_mode" in data["error"]["message"]
+
+    def test_rejects_non_string(self, client):
+        response = client.put(
+            "/api/config/worker_llm_transcript_harvest_mode",
+            json={"value": 123},
+        )
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_batch_rejects_typo(self, client, monkeypatch):
+        # Even mixed with a valid key, a bad transcript_harvest_mode must
+        # reject the whole batch.
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: {"status": "ok", "config": {}},
+        )
+        response = client.put(
+            "/api/config",
+            json={
+                "updates": {
+                    "tts_enabled": False,
+                    "worker_llm_transcript_harvest_mode": "replce",
+                }
+            },
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"

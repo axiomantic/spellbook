@@ -186,9 +186,12 @@ async def test_roundtable_local_artifact_missing_returns_convene_error(
         archetypes=["magician"],
     )
 
-    # roundtable_convene signals artifact-not-found via empty dialogue + a
-    # Feedback entry; the local variant passes that through without
-    # invoking the worker.
+    # roundtable_convene signals artifact-not-found via empty dialogue +
+    # an ``error`` field carrying a stable prefix. The local variant passes
+    # that through without invoking the worker.
     assert seen == []
-    # The convene result's error surface is intact.
-    assert out.get("dialogue", "") == "" or "feedback" in out
+    # The convene result's error surface is intact — exact-prefix check so
+    # a regression that swallows or renames the error surfaces loudly.
+    assert out.get("dialogue", "") == ""
+    assert "error" in out
+    assert out["error"].startswith("Artifact not found")

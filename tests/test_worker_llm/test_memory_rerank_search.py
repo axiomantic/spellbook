@@ -339,7 +339,11 @@ class TestDoMemoryRecallSurfacesWorkerError:
         result = do_memory_recall(query="topic", namespace="/fake", limit=10)
         assert "worker_llm_error" in result
         assert "<worker-llm-error>" in result["worker_llm_error"]
-        assert "WorkerLLMTimeout" not in result["worker_llm_error"] or "budget exhausted" in result["worker_llm_error"]
+        # The marker MUST carry both the exception type and the exception
+        # message so operators can correlate an admin-UI event with the
+        # specific worker failure that produced it.
+        assert "WorkerLLMTimeout" in result["worker_llm_error"]
+        assert "budget exhausted" in result["worker_llm_error"]
         # Memories must still be present.
         assert result["count"] >= 1
 

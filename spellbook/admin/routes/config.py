@@ -177,6 +177,36 @@ CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}
 KNOWN_KEYS = {entry["key"] for entry in CONFIG_SCHEMA}
 
 
+# Per-key validators. Rejected values produce HTTP 400 with a machine-
+# readable error code so admin UIs / scripted callers can surface the
+# problem. Keep the dispatch table tiny — most keys are plain str/bool/
+# number and need no additional validation beyond the schema type.
+_ALLOWED_TRANSCRIPT_HARVEST_MODES = ("replace", "merge", "skip")
+
+
+def _validate_config_value(key: str, value: Any) -> str | None:
+    """Return an error string if ``value`` is invalid for ``key``, else None.
+
+    M4 (Chunk 4 cleanup): ``worker_llm_transcript_harvest_mode`` only accepts
+    ``replace`` | ``merge`` | ``skip``. A typo (e.g. ``replce``) would
+    otherwise silently degrade the Stop hook to regex-only behavior because
+    the consumer's default branch falls through to the regex path. Reject
+    typos at config-set time so the operator sees the problem immediately.
+    """
+    if key == "worker_llm_transcript_harvest_mode":
+        if not isinstance(value, str):
+            return (
+                "worker_llm_transcript_harvest_mode must be a string; got "
+                f"{type(value).__name__}"
+            )
+        if value not in _ALLOWED_TRANSCRIPT_HARVEST_MODES:
+            return (
+                f"worker_llm_transcript_harvest_mode={value!r} is not one of "
+                f"{list(_ALLOWED_TRANSCRIPT_HARVEST_MODES)}"
+            )
+    return None
+
+
 def get_all_config() -> dict[str, Any]:
     """Read all config from spellbook.json."""
     from spellbook.core.config import get_config_path
@@ -236,6 +266,18 @@ async def update_config_key(
             ).model_dump(),
         )
 
+    validation_error = _validate_config_value(key, body.value)
+    if validation_error:
+        return JSONResponse(
+            status_code=400,
+            content=ErrorResponse(
+                error=ErrorDetail(
+                    code="CONFIG_VALUE_INVALID",
+                    message=validation_error,
+                )
+            ).model_dump(),
+        )
+
     result = await asyncio.to_thread(set_config_value, key, body.value)
 
     await event_bus.publish(
@@ -267,6 +309,21 @@ async def batch_update_config(
                 )
             ).model_dump(),
         )
+
+    # Per-key value validation. Reject the whole batch atomically on the
+    # first invalid value so a partial apply never lands.
+    for _k, _v in body.updates.items():
+        _err = _validate_config_value(_k, _v)
+        if _err:
+            return JSONResponse(
+                status_code=400,
+                content=ErrorResponse(
+                    error=ErrorDetail(
+                        code="CONFIG_VALUE_INVALID",
+                        message=_err,
+                    )
+                ).model_dump(),
+            )
 
     result = await asyncio.to_thread(batch_set_config, body.updates)
 
