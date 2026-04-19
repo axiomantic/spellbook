@@ -6,9 +6,6 @@ __all__ = [
     "spellbook_session_init",
     "spellbook_session_mode_set",
     "spellbook_session_mode_get",
-    "spellbook_telemetry_enable",
-    "spellbook_telemetry_disable",
-    "spellbook_telemetry_status",
 ]
 
 import asyncio
@@ -220,49 +217,3 @@ def spellbook_session_mode_get(ctx: Context) -> dict:
     return session_mode_get(_get_session_id(ctx))
 
 
-@mcp.tool()
-@inject_recovery_context
-def spellbook_telemetry_enable(endpoint_url: str = None) -> dict:
-    """Enable anonymous telemetry aggregation.
-
-    Telemetry is opt-in and privacy-preserving:
-    - No session IDs, project paths, or user data
-    - No corrections (require content inspection)
-    - Only bucketed durations and token counts
-    - Minimum 5 samples before any aggregate is shared
-
-    Args:
-        endpoint_url: Custom endpoint (optional, future use)
-
-    Returns:
-        {"status": "enabled", "endpoint_url": str|None}
-    """
-    from spellbook.core.config import telemetry_enable as do_telemetry_enable
-
-    return do_telemetry_enable(endpoint_url=endpoint_url)
-
-
-@mcp.tool()
-@inject_recovery_context
-def spellbook_telemetry_disable() -> dict:
-    """Disable telemetry. Local persistence continues unaffected.
-
-    Returns:
-        {"status": "disabled"}
-    """
-    from spellbook.core.config import telemetry_disable as do_telemetry_disable
-
-    return do_telemetry_disable()
-
-
-@mcp.tool()
-@inject_recovery_context
-def spellbook_telemetry_status() -> dict:
-    """Get current telemetry configuration.
-
-    Returns:
-        {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
-    """
-    from spellbook.core.config import telemetry_status as do_telemetry_status
-
-    return do_telemetry_status()

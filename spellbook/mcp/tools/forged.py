@@ -7,10 +7,8 @@ __all__ = [
     "forge_project_init",
     "forge_project_status",
     "forge_feature_update",
-    "forge_select_skill",
     "forge_roundtable_convene",
     "forge_roundtable_convene_local",
-    "forge_roundtable_debate",
     "forge_process_roundtable_response",
     "forge_record_gate_completion",
     "skill_instructions_get",
@@ -30,12 +28,10 @@ from spellbook.forged.project_tools import (
     forge_feature_update as do_forge_feature_update,
     forge_project_init as do_forge_project_init,
     forge_project_status as do_forge_project_status,
-    forge_select_skill as do_forge_select_skill,
 )
 from spellbook.forged.roundtable import (
     process_roundtable_response as do_process_roundtable_response,
     roundtable_convene as do_roundtable_convene,
-    roundtable_debate as do_roundtable_debate,
 )
 from spellbook.sessions.injection import inject_recovery_context
 
@@ -279,42 +275,6 @@ def forge_feature_update(
 
 @mcp.tool()
 @inject_recovery_context
-def forge_select_skill(
-    project_path: str,
-    feature_id: str,
-    stage: str,
-    feedback_history: list = None,
-) -> dict:
-    """
-    Select the appropriate skill for current context.
-
-    Uses stage and feedback history to recommend the best skill
-    for the current development context.
-
-    Args:
-        project_path: Absolute path to project directory
-        feature_id: ID of current feature
-        stage: Current workflow stage
-        feedback_history: Optional list of feedback dicts from prior iterations
-
-    Returns:
-        Dict containing:
-        - success: True if skill selected
-        - skill: Recommended skill name
-        - feature_id: The feature ID
-        - stage: The current stage
-        - error: Error message if success is False
-    """
-    return do_forge_select_skill(
-        project_path=project_path,
-        feature_id=feature_id,
-        stage=stage,
-        feedback_history=feedback_history,
-    )
-
-
-@mcp.tool()
-@inject_recovery_context
 def forge_roundtable_convene(
     feature_name: str,
     stage: str,
@@ -460,39 +420,6 @@ async def forge_roundtable_convene_local(
     parsed["gate"] = gate
     parsed["worker_llm_raw_response"] = raw_response
     return parsed
-
-
-@mcp.tool()
-@inject_recovery_context
-def forge_roundtable_debate(
-    feature_name: str,
-    conflicting_verdicts: dict,
-    artifact_path: str,
-) -> dict:
-    """
-    Moderate debate when archetypes disagree.
-
-    Justice archetype synthesizes conflicting perspectives and
-    renders a binding decision when roundtable has mixed verdicts.
-
-    Args:
-        feature_name: Name of the feature
-        conflicting_verdicts: Dict mapping archetype names to verdicts
-        artifact_path: Path to the artifact under debate
-
-    Returns:
-        Dict containing:
-        - binding_decision: "ABSTAIN" (updated after processing)
-        - reasoning: Empty string (populated after processing)
-        - moderator: "Justice"
-        - dialogue: Generated prompt for LLM
-        - error: Error message if artifact not found
-    """
-    return do_roundtable_debate(
-        feature_name=feature_name,
-        conflicting_verdicts=conflicting_verdicts,
-        artifact_path=artifact_path,
-    )
 
 
 @mcp.tool()
