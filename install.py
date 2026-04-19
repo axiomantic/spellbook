@@ -765,200 +765,6 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
 
 # =============================================================================
-# Optional TTS Setup
-# =============================================================================
-
-
-def check_tts_available() -> bool:
-    """Check if Wyoming TTS server is reachable.
-
-    Delegates to ``installer.utils.check_tts_available`` so that installer
-    sub-modules can import the function without ``sys.path`` manipulation.
-    Re-exported here for backward compatibility with existing callers and
-    test patches that reference ``install.check_tts_available``.
-
-    Function-level import: installer.utils is only available after
-    bootstrap adds spellbook_dir to sys.path (see run_installation).
-    """
-    from installer.utils import check_tts_available as _check
-    return _check()
-
-
-def _set_tts_config(enabled: bool) -> None:
-    """Persist the tts_enabled config value via spellbook config_tools.
-
-    Function-level import: spellbook.core.config is only available after
-    bootstrap adds spellbook_dir to sys.path (see run_installation).
-    """
-    try:
-        from spellbook.core.config import config_set as _cfg_set
-        _cfg_set("tts_enabled", enabled)
-    except ImportError:
-        pass
-
-
-def _provision_tts_eager(renderer=None) -> dict:
-    """Eagerly provision TTS: install deps, create service, update config.
-
-    Called when the wizard ``tts_intent`` is ``True``. Uses
-    ``provision_sync()`` to install the TTS venv, dependencies, and
-    OS service in one shot.
-
-    Always sets ``tts_enabled=True`` regardless of outcome so that the
-    user's intent is preserved. On failure the user can retry later
-    via ``tts_config_set``.
-
-    Function-level import: spellbook.tts.provisioner is only available
-    after bootstrap adds spellbook_dir to sys.path (see run_installation).
-
-    Args:
-        renderer: Optional installer renderer for display output.
-            When ``None``, falls back to plain ``print_*`` helpers.
-
-    Returns:
-        Dict with keys ``status``, ``detail``, ``steps_completed``
-        from :func:`~spellbook.tts.provisioner.provision_sync`.
-    """
-    try:
-        from spellbook.tts.provisioner import provision_sync
-        result = provision_sync()
-    except Exception as exc:
-        import traceback
-        print(f"Eager TTS provisioning failed:\n{traceback.format_exc()}", file=sys.stderr)
-        result = {
-            "status": "error",
-            "detail": str(exc),
-            "steps_completed": [],
-        }
-
-    # Always honour the user's intent
-    _set_tts_config(True)
-
-    status = result["status"]
-
-    if status == "ok":
-        print_success("TTS server installed and running")
-    elif status == "already_provisioning":
-        print_info(
-            "TTS provisioning already in progress. "
-            "Config set; service will finish in background"
-        )
-    else:
-        msg = (
-            f"TTS setup incomplete: {result['detail']}. "
-            "You can retry later by setting tts_enabled=true"
-        )
-        if renderer is not None:
-            renderer.render_warning(msg)
-        else:
-            print_warning(msg)
-
-    return result
-
-
-def setup_tts(
-    dry_run: bool = False,
-    auto_yes: bool = False,
-    spellbook_dir: Path | None = None,
-) -> None:
-    """Offer to enable TTS.
-
-    Skipped during dry-run or if user already configured TTS previously.
-    Checks if a Wyoming TTS server is reachable and asks to enable.
-    """
-    if dry_run:
-        return
-
-    # Check if user already made a TTS decision (don't re-prompt on reinstall)
-    try:
-        from spellbook.core.config import config_get as _cfg_get
-        existing = _cfg_get("tts_enabled")
-        if existing is not None:
-            if check_tts_available():
-                print_info(f"TTS already configured (enabled={existing})")
-                return
-    except ImportError:
-        pass
-
-    print()
-    if check_tts_available():
-        # Wyoming server reachable, ask to enable
-        enabled = prompt_yn(
-            "Wyoming TTS server detected. Enable text-to-speech notifications?",
-            default=True,
-            auto_yes=auto_yes,
-        )
-        _set_tts_config(enabled)
-        if enabled:
-            print_success("TTS enabled")
-            print_info("Change settings with tts_session_set or tts_config_set MCP tools")
-        else:
-            print_info("TTS disabled. Enable later with tts_config_set MCP tool")
-    else:
-        # Server not reachable, inform user
-        enabled = prompt_yn(
-            "Enable text-to-speech notifications? (Requires a Wyoming TTS server)",
-            default=False,
-            auto_yes=False,  # Never auto-enable when server not available
-        )
-        _set_tts_config(enabled)
-        if enabled:
-            print_info("TTS enabled. Start a Wyoming TTS server (e.g., wyoming-piper) on localhost:10200")
-        else:
-            print_info("TTS skipped. Enable later with tts_config_set MCP tool")
-
-
-def _run_tts_setup(
-    dry_run: bool,
-    auto_yes: bool,
-    spellbook_dir: Path,
-    live_display=None,
-) -> bool:
-    """TTS setup integrated with LiveProgressDisplay.
-
-    Returns True if any TTS steps were added to the display.
-    """
-    if dry_run:
-        return False
-
-    try:
-        from spellbook.core.config import config_get as _cfg_get
-        existing = _cfg_get("tts_enabled")
-    except (ImportError, Exception):
-        existing = None
-
-    if existing is None:
-        # First install: TTS choice handled by interactive setup_tts after progress
-        if live_display:
-            live_display.add_step("TTS: not yet configured (skip)")
-            live_display.complete_step(success=True)
-        return True
-
-    if existing is False:
-        if live_display:
-            live_display.add_step("TTS: disabled by user")
-            live_display.complete_step(success=True)
-        return True
-
-    # TTS is enabled - check if Wyoming server is reachable
-    if check_tts_available():
-        if live_display:
-            live_display.add_step("TTS: available")
-            live_display.complete_step(success=True)
-        else:
-            print_info("TTS already configured (enabled=True)")
-        return True
-
-    # TTS enabled but server not reachable
-    if live_display:
-        live_display.add_step("TTS: enabled but Wyoming server not reachable")
-        live_display.complete_step(success=False)
-    else:
-        print_warning("TTS enabled but Wyoming server not reachable at configured host:port")
-    return True
-
-
-# =============================================================================
 # Upgrade Awareness
 # =============================================================================
 
@@ -1137,10 +943,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # ---- Assemble WizardContext and run upfront wizard ----
     if renderer is not None:
         if _config_available:
-            tts_already_configured = _cfg_get_early("tts_enabled") is not None
             profile_already_configured = _cfg_is_set("profile.default")
         else:
-            tts_already_configured = False
             profile_already_configured = False
 
         # Discover available profiles
@@ -1154,8 +958,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         wizard_ctx = WizardContext(
             available_platforms=installer.detect_platforms(),
             cli_platforms=args.platforms.split(",") if args.platforms else None,
-            tts_disabled=getattr(args, "no_tts", False),
-            tts_already_configured=tts_already_configured,
             profile_already_configured=profile_already_configured,
             available_profiles=available_profiles,
             is_upgrade=is_upgrade,
@@ -1268,34 +1070,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         renderer=renderer,
     )
 
-    # Post-install TTS handling based on wizard results
-    if not args.dry_run:
-        if wizard_results is not None:
-            # Wizard-based flow: use tts_intent from upfront wizard
-            if wizard_results.tts_intent is True:
-                # Eager provisioning: install TTS venv, deps, and service
-                _provision_tts_eager(renderer=renderer)
-            elif wizard_results.tts_intent is False:
-                _set_tts_config(False)
-            # tts_intent is None means skipped; do nothing
-        elif not getattr(args, "no_tts", False):
-            # No-renderer fallback: use old TTS setup
-            if renderer is not None:
-                tts_config = renderer.render_tts_wizard()
-                if tts_config.get("tts_enabled") is not None:
-                    _set_tts_config(tts_config["tts_enabled"])
-            else:
-                setup_tts(
-                    dry_run=args.dry_run,
-                    auto_yes=getattr(args, "yes", False),
-                    spellbook_dir=spellbook_dir,
-                )
-
     # Shared installer wizards. Must run on BOTH install entry paths per
-    # the "Adding Config Options" contract in AGENTS.md. Placed after the
-    # TTS wizard so run_defaults_wizard can gate its tts_voice prompt on
-    # the just-configured tts_enabled value. Each wizard is itself
-    # idempotent, gated on stdin.isatty(), and respects --reconfigure.
+    # the "Adding Config Options" contract in AGENTS.md. Each wizard is
+    # itself idempotent, gated on stdin.isatty(), and respects --reconfigure.
     if not args.dry_run:
         try:
             from installer.wizards import (
@@ -1486,12 +1263,6 @@ Examples:
         "--bootstrapped",
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
-    )
-    parser.add_argument(
-        "--no-tts",
-        action="store_true",
-        default=False,
-        help="Disable TTS, skipping the TTS setup wizard",
     )
     parser.add_argument(
         "--reconfigure",

@@ -24,11 +24,6 @@ daemon = [
     "uvicorn>=0.30.0",
     "httpx>=0.25.0",
 ]
-tts = [
-    "sounddevice>=0.4.6",
-    "numpy>=1.24.0",
-    "wyoming",
-]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",

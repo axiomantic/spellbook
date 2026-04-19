@@ -1,9 +1,9 @@
 """Shared defaults wizard for previously never-prompted config keys.
 
-Seven keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
-``tts_voice``, ``tts_volume``, ``notify_enabled``, ``notify_title``,
-``telemetry_enabled``, ``auto_update``, ``session_mode``. Without a prompt
-users discover them only via the admin UI or by reading source.
+Five keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
+``notify_enabled``, ``notify_title``, ``telemetry_enabled``,
+``auto_update``, ``session_mode``. Without a prompt users discover them
+only via the admin UI or by reading source.
 
 This wizard closes the gap by walking the user through each key on
 fresh installs. It respects the idempotency rule defined in AGENTS.md:
@@ -59,23 +59,6 @@ def _prompt_string(prompt: str, current: str) -> str:
     return current if not raw else raw
 
 
-def _prompt_float(prompt: str, current: float, lo: float, hi: float) -> float:
-    """Prompt for a float in [lo, hi] with enter-to-keep-default."""
-    while True:
-        raw = input(f"{prompt} [{current}]: ").strip()
-        if not raw:
-            return current
-        try:
-            value = float(raw)
-        except ValueError:
-            print("  Please enter a number.")
-            continue
-        if value < lo or value > hi:
-            print(f"  Must be between {lo} and {hi}.")
-            continue
-        return value
-
-
 def _prompt_choice(prompt: str, current: str, options: tuple[str, ...]) -> str:
     """Numbered-list prompt for a string enum. Enter keeps current."""
     print()
@@ -109,12 +92,11 @@ def _write(key: str, value: Any) -> None:
 
 
 def run_defaults_wizard(args: Optional[Any] = None) -> None:
-    """Prompt the user for the seven never-prompted config keys.
+    """Prompt the user for the five never-prompted config keys.
 
     Skipped when stdin is not a tty or ``args.dry_run`` is True. Each key
     is skipped when already explicitly set unless ``args.reconfigure`` is
-    truthy. The ``tts_voice`` prompt is conditional on ``tts_enabled``
-    being True (we do not ask about voice when TTS is off).
+    truthy.
 
     Args:
         args: Optional argparse ``Namespace``. Checked for ``dry_run``
@@ -129,10 +111,7 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
 
     # Decide whether to ask about anything at all. If every key is already
     # set and --reconfigure is not active, stay silent.
-    tts_enabled = _config_get("tts_enabled", True)
     candidate_keys = [
-        "tts_voice",
-        "tts_volume",
         "notify_enabled",
         "notify_title",
         "telemetry_enabled",
@@ -144,33 +123,6 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
 
     print()
     print("Additional defaults (press Enter to keep the current value):")
-
-    # ----- TTS voice / volume (voice gated on tts_enabled) -----
-    if reconfigure or not _is_explicit("tts_voice"):
-        if tts_enabled:
-            current = _config_get("tts_voice", "")
-            try:
-                value = _prompt_string(
-                    "TTS voice (Wyoming server-specific; blank = server default)",
-                    str(current),
-                )
-            except (EOFError, KeyboardInterrupt):
-                print()
-                print("  (defaults wizard cancelled)")
-                return
-            _write("tts_voice", value)
-        # else: TTS is off; silently skip voice prompt.
-    if reconfigure or not _is_explicit("tts_volume"):
-        current = _config_get("tts_volume", 0.3)
-        try:
-            value = _prompt_float(
-                "TTS volume (0.0 to 1.0)", float(current), 0.0, 1.0
-            )
-        except (EOFError, KeyboardInterrupt):
-            print()
-            print("  (defaults wizard cancelled)")
-            return
-        _write("tts_volume", value)
 
     # ----- Notifications -----
     if reconfigure or not _is_explicit("notify_enabled"):

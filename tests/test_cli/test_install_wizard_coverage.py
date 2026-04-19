@@ -85,8 +85,7 @@ def tty(monkeypatch):
 def stub_config_get(monkeypatch):
     """Return a controllable ``config_get`` that consults a dict fixture.
 
-    Use this when a wizard must see a specific current value (e.g.
-    ``tts_enabled=True`` gating the voice prompt).
+    Use this when a wizard must see a specific current value.
     """
     state: dict[str, object] = {}
 
@@ -111,8 +110,6 @@ def stub_config_get(monkeypatch):
 _DEFAULTS_KEY_SCRIPT = [
     # (key, default-accept-answer, expected-value)
     # All accept bare Enter except session_mode (needs choice index "1" -> none).
-    ("tts_voice", "", ""),
-    ("tts_volume", "", 0.3),
     ("notify_enabled", "", True),
     ("notify_title", "", "Spellbook"),
     ("telemetry_enabled", "", False),
@@ -128,8 +125,6 @@ class TestDefaultsWizardCoverage:
         self, captured_config, scripted_input, tty, stub_config_get
     ):
         calls, _ = captured_config
-        # tts_enabled True so the voice prompt fires.
-        stub_config_get["tts_enabled"] = True
 
         # Enter for every default; session_mode is a numbered list so the
         # bare-Enter branch returns the current value without a choice.
@@ -152,7 +147,6 @@ class TestDefaultsWizardCoverage:
         """When a key is already explicit, no prompt fires for that key."""
         calls, explicit = captured_config
         explicit[key] = True
-        stub_config_get["tts_enabled"] = True
 
         # Supply Enter answers for the remaining keys. If the code under
         # test prompts for the "already set" key, the queue length would
@@ -178,7 +172,6 @@ class TestDefaultsWizardCoverage:
         # Mark every key as already set.
         for key, _a, _v in _DEFAULTS_KEY_SCRIPT:
             explicit[key] = True
-        stub_config_get["tts_enabled"] = True
 
         scripted_input([ans for (_k, ans, _v) in _DEFAULTS_KEY_SCRIPT])
 
@@ -223,31 +216,6 @@ class TestDefaultsWizardCoverage:
         run_defaults_wizard(SimpleNamespace(dry_run=True, reconfigure=False))
 
         assert calls == []
-
-    def test_tts_voice_gated_on_tts_enabled(
-        self, captured_config, scripted_input, tty, stub_config_get
-    ):
-        """tts_voice prompt is suppressed when tts_enabled is False."""
-        calls, _ = captured_config
-        stub_config_get["tts_enabled"] = False
-
-        # Skip the voice answer entirely; provide only the remaining six.
-        # tts_volume through session_mode.
-        scripted_input([ans for (k, ans, _v) in _DEFAULTS_KEY_SCRIPT
-                        if k != "tts_voice"])
-
-        from installer.wizards import run_defaults_wizard
-
-        run_defaults_wizard(SimpleNamespace(dry_run=False, reconfigure=False))
-
-        written_keys = {k for (k, _v) in calls}
-        assert "tts_voice" not in written_keys, (
-            "tts_voice should not be prompted when tts_enabled is False"
-        )
-        # Other keys still fire.
-        assert "tts_volume" in written_keys
-        assert "session_mode" in written_keys
-
 
 # ---------------------------------------------------------------------------
 # Worker-LLM wizard: advanced-tier prompt coverage

@@ -455,9 +455,9 @@ class CrossPlatformLock:
 # Service configuration and management (canonical source: spellbook.core.services)
 # ---------------------------------------------------------------------------
 
-# Re-export ServiceConfig, ServiceManager, and tts_service_config from
-# spellbook.core.services so existing installer.compat consumers keep working.
-from spellbook.core.services import ServiceConfig, ServiceManager, tts_service_config  # noqa: E402,F811
+# Re-export ServiceConfig and ServiceManager from spellbook.core.services so
+# existing installer.compat consumers keep working.
+from spellbook.core.services import ServiceConfig, ServiceManager  # noqa: E402,F811
 
 
 def _get_daemon_python_for_config() -> Optional[str]:

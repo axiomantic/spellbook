@@ -42,12 +42,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         help="Show what would be done without making changes",
     )
     parser.add_argument(
-        "--no-tts",
-        action="store_true",
-        default=False,
-        help="Disable TTS, skipping the TTS setup wizard",
-    )
-    parser.add_argument(
         "--reconfigure",
         action="store_true",
         default=False,
@@ -153,31 +147,9 @@ def run(args: argparse.Namespace) -> None:
         renderer=renderer,
     )
 
-    # TTS setup runs after the install loop completes
-    if not getattr(args, "dry_run", False) and not getattr(args, "no_tts", False):
-        if renderer is not None:
-            tts_config = renderer.render_tts_wizard()
-            if tts_config.get("tts_enabled") is not None:
-                try:
-                    from spellbook.core.config import config_set as _cfg_set
-                    _cfg_set("tts_enabled", tts_config["tts_enabled"])
-                except ImportError:
-                    pass
-            if tts_config.get("tts_install"):
-                try:
-                    from installer.components.mcp import install_tts_to_daemon_venv
-                    success, _msg = install_tts_to_daemon_venv(spellbook_dir)
-                    if success:
-                        from spellbook.core.config import config_set as _cfg_set
-                        _cfg_set("tts_enabled", True)
-                except (ImportError, Exception):
-                    pass
-
-    # Defaults wizard for previously never-prompted keys (tts_voice,
-    # tts_volume, notify_*, telemetry_enabled, auto_update, session_mode).
-    # Runs AFTER the TTS wizard so the voice prompt can gate on the
-    # just-configured tts_enabled value. Idempotent: each key is skipped
-    # when already explicitly set unless --reconfigure is active.
+    # Defaults wizard for previously never-prompted keys (notify_*,
+    # telemetry_enabled, auto_update, session_mode). Idempotent: each key
+    # is skipped when already explicitly set unless --reconfigure is active.
     if not getattr(args, "dry_run", False):
         from installer.wizards import run_defaults_wizard
         run_defaults_wizard(args)
@@ -224,7 +196,7 @@ def run(args: argparse.Namespace) -> None:
                             + " (continuing without memory system)"
                         )
 
-    # Profile selection runs after TTS
+    # Profile selection
     if not getattr(args, "dry_run", False):
         if renderer is not None:
             profile_config = renderer.render_profile_wizard()
