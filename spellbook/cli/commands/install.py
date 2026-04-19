@@ -450,6 +450,12 @@ def _run_worker_llm_wizard() -> None:
         "Run `spellbook worker-llm doctor` to verify."
     )
 
+    # 6.5) Drop a breadcrumb README in the override directory so users who
+    # want to customize a task prompt can discover the convention without
+    # reading source. Gated on ``worker_llm_allow_prompt_overrides`` so it
+    # only appears when overrides are actually respected at load time.
+    _write_worker_prompt_override_readme()
+
     # 7) Offer to run doctor inline.
     run_doctor = input("Run doctor now? [y/N]: ").strip().lower()
     if run_doctor in ("y", "yes"):
@@ -467,3 +473,98 @@ def _run_worker_llm_wizard() -> None:
                 pass
         except Exception as e:  # noqa: BLE001
             print(f"  (doctor failed to run: {type(e).__name__}: {e})")
+
+
+# ---------------------------------------------------------------------------
+# Worker prompt override breadcrumb
+# ---------------------------------------------------------------------------
+
+
+_WORKER_PROMPT_OVERRIDE_README = """\
+# Worker LLM prompt overrides
+
+This directory lets you override the default system prompts that ship with
+spellbook for worker-LLM background tasks. If a matching file exists here,
+spellbook loads it instead of the built-in default.
+
+## Supported tasks
+
+Drop a file named `<task>.md` into this directory to override that task:
+
+- `transcript_harvest.md` - Stop-hook memory extraction from assistant output.
+- `memory_rerank.md`      - Reranks `memory_recall` candidates by relevance.
+- `roundtable_voice.md`   - Drives tarot-mode roundtable archetype voices.
+- `tool_safety.md`        - PreToolUse OK/WARN/BLOCK safety sniff.
+
+## File format
+
+Each file is plain markdown and replaces the task's **system prompt**
+verbatim. There are no `{placeholder}` substitutions: the user-side payload
+(tool input, transcript text, candidate list, dialogue) is injected by the
+task at call time on its own turn, not interpolated into this file. See
+`spellbook/worker_llm/default_prompts/<task>.md` for the current built-in
+version of each prompt to use as a starting point.
+
+## Verifying an override is live
+
+After dropping a file, run `spellbook worker-llm doctor` - it reports which
+prompts are currently overridden. The worker also writes a one-line
+`[worker-llm] using override prompt for <task>` notice to stderr the first
+time it loads your version in a session.
+
+## Disabling overrides
+
+Set `worker_llm_allow_prompt_overrides` to `false` via `spellbook config set`
+to make the worker ignore this directory entirely and always use defaults.
+"""
+
+
+def _write_worker_prompt_override_readme() -> None:
+    """Create a breadcrumb README in the prompt-override directory.
+
+    Noop when ``worker_llm_allow_prompt_overrides`` resolves to False (the
+    worker will not respect overrides anyway, so the breadcrumb would be
+    misleading). Never overwrites an existing README - prints an
+    "already exists" notice instead so a user's local edits are preserved
+    across reinstalls.
+
+    Errors are caught and logged to stdout: the wizard has already written
+    the config successfully at this point, and a failed breadcrumb MUST NOT
+    abort the install flow.
+    """
+    try:
+        from spellbook.worker_llm.config import get_worker_config
+        from spellbook.worker_llm.prompts import OVERRIDE_PROMPT_DIR
+    except ImportError as e:
+        print(f"  (override README skipped: {type(e).__name__}: {e})")
+        return
+
+    try:
+        cfg = get_worker_config()
+    except Exception as e:  # noqa: BLE001
+        print(f"  (override README skipped: {type(e).__name__}: {e})")
+        return
+
+    if not cfg.allow_prompt_overrides:
+        # User (or admin) has disabled overrides; don't drop a breadcrumb
+        # that points at a path the worker won't read.
+        return
+
+    try:
+        OVERRIDE_PROMPT_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        print(f"  (override README skipped: could not create {OVERRIDE_PROMPT_DIR}: {e})")
+        return
+
+    readme_path = OVERRIDE_PROMPT_DIR / "README.md"
+    if readme_path.exists():
+        print(f"  Worker prompt override README already exists at {readme_path}; leaving it alone.")
+        return
+
+    try:
+        readme_path.write_text(_WORKER_PROMPT_OVERRIDE_README, encoding="utf-8")
+    except OSError as e:
+        print(f"  (override README skipped: could not write {readme_path}: {e})")
+        return
+
+    print(f"  Worker prompt override README written to {readme_path}.")

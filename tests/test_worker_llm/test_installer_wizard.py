@@ -328,3 +328,179 @@ class TestNonTtyGuard:
 
         _run_worker_llm_wizard()
         assert captured_config == []
+
+
+# ---------------------------------------------------------------------------
+# Prompt override breadcrumb README
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def override_dir(tmp_path, monkeypatch):
+    """Redirect the prompt-override directory into a tmp path.
+
+    Patches the module constant `OVERRIDE_PROMPT_DIR` in
+    `spellbook.worker_llm.prompts`, which is what the install helper imports,
+    so the real `~/.local/spellbook/worker_prompts` is never touched.
+    """
+    target = tmp_path / "worker_prompts"
+
+    from spellbook.worker_llm import prompts as _pm
+
+    monkeypatch.setattr(_pm, "OVERRIDE_PROMPT_DIR", target)
+    return target
+
+
+@pytest.fixture
+def allow_overrides(monkeypatch):
+    """Drive ``cfg.allow_prompt_overrides`` without touching real config.
+
+    Returns a callable ``set_flag(value: bool) -> None``.
+    """
+    state = {"allow": True}
+
+    from spellbook.cli.commands import install as _install_mod
+    from spellbook.worker_llm import config as _wl_cfg
+
+    def _fake_get_worker_config():
+        # Minimal shim: only the attributes the breadcrumb code reads.
+        return SimpleNamespace(allow_prompt_overrides=state["allow"])
+
+    monkeypatch.setattr(_wl_cfg, "get_worker_config", _fake_get_worker_config)
+    # install.py does a lazy ``from spellbook.worker_llm.config import ...``
+    # inside the helper, so patching the source module is sufficient; if the
+    # helper ever caches a top-level import, this attr patch also covers it.
+    if hasattr(_install_mod, "get_worker_config"):
+        monkeypatch.setattr(_install_mod, "get_worker_config", _fake_get_worker_config)
+
+    def _set_flag(value):
+        state["allow"] = value
+
+    return _set_flag
+
+
+class TestPromptOverrideBreadcrumb:
+    """Breadcrumb README creation is gated, idempotent, and only runs on opt-in."""
+
+    def test_readme_created_on_default_opt_in(
+        self,
+        stub_probe,
+        captured_config,
+        scripted_input,
+        monkeypatch,
+        override_dir,
+        allow_overrides,
+    ):
+        """User opts in, overrides allowed: README appears with the known content."""
+        from spellbook.worker_llm.probe import DetectedEndpoint
+
+        stub_probe(
+            [
+                DetectedEndpoint(
+                    base_url="http://localhost:11434/v1",
+                    label="Ollama",
+                    models=["qwen2.5-coder:7b"],
+                    reachable=True,
+                )
+            ]
+        )
+        allow_overrides(True)
+        # 1. Enable? y   2. Pick endpoint 1   3. Pick model 1   4. key blank
+        # 5-8. Features all n   9. Doctor n
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n"])
+        monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+        from spellbook.cli.commands.install import _run_worker_llm_wizard
+
+        _run_worker_llm_wizard()
+
+        readme = override_dir / "README.md"
+        assert readme.is_file(), (
+            f"expected {readme} to be created after successful wizard"
+        )
+        body = readme.read_text(encoding="utf-8")
+        # Spot-check the contract: all four task names + override convention.
+        for task in (
+            "transcript_harvest",
+            "memory_rerank",
+            "roundtable_voice",
+            "tool_safety",
+        ):
+            assert task in body, f"README missing task name {task!r}"
+        assert "spellbook worker-llm doctor" in body
+        assert "worker_llm_allow_prompt_overrides" in body
+
+    def test_existing_readme_is_not_overwritten(
+        self,
+        stub_probe,
+        captured_config,
+        scripted_input,
+        monkeypatch,
+        override_dir,
+        allow_overrides,
+    ):
+        """If the user has edited the README, reinstalling MUST NOT clobber it."""
+        from spellbook.worker_llm.probe import DetectedEndpoint
+
+        stub_probe(
+            [
+                DetectedEndpoint(
+                    base_url="http://localhost:11434/v1",
+                    label="Ollama",
+                    models=["qwen2.5-coder:7b"],
+                    reachable=True,
+                )
+            ]
+        )
+        allow_overrides(True)
+        # Pre-populate with a hand-edited README.
+        override_dir.mkdir(parents=True, exist_ok=True)
+        readme = override_dir / "README.md"
+        sentinel = "# my custom README - do not touch\n"
+        readme.write_text(sentinel, encoding="utf-8")
+
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n"])
+        monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+        from spellbook.cli.commands.install import _run_worker_llm_wizard
+
+        _run_worker_llm_wizard()
+
+        assert readme.read_text(encoding="utf-8") == sentinel, (
+            "existing README was overwritten; user content lost"
+        )
+
+    def test_no_readme_when_wizard_declined(
+        self,
+        stub_probe,
+        captured_config,
+        scripted_input,
+        monkeypatch,
+        override_dir,
+        allow_overrides,
+    ):
+        """User declines the wizard: override dir MUST stay untouched."""
+        from spellbook.worker_llm.probe import DetectedEndpoint
+
+        stub_probe(
+            [
+                DetectedEndpoint(
+                    base_url="http://localhost:11434/v1",
+                    label="Ollama",
+                    models=["qwen2.5-coder:7b"],
+                    reachable=True,
+                )
+            ]
+        )
+        allow_overrides(True)
+        scripted_input(["n"])
+        monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+        from spellbook.cli.commands.install import _run_worker_llm_wizard
+
+        _run_worker_llm_wizard()
+
+        # Neither the directory nor the README should exist. The wizard
+        # returns before the breadcrumb step when the user declines.
+        assert not (override_dir / "README.md").exists()
+        assert not override_dir.exists()
