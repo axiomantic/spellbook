@@ -7,6 +7,7 @@ guarantees parity between the two entry points so every user-facing config
 option is offered through both.
 """
 
+from installer.wizards.defaults import run_defaults_wizard
 from installer.wizards.worker_llm import run_worker_llm_wizard
 
-__all__ = ["run_worker_llm_wizard"]
+__all__ = ["run_defaults_wizard", "run_worker_llm_wizard"]

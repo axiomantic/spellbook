@@ -169,6 +169,15 @@ def run(args: argparse.Namespace) -> None:
                 except (ImportError, Exception):
                     pass
 
+    # Defaults wizard for previously never-prompted keys (tts_voice,
+    # tts_volume, notify_*, telemetry_enabled, auto_update, session_mode).
+    # Runs AFTER the TTS wizard so the voice prompt can gate on the
+    # just-configured tts_enabled value. Idempotent: each key is skipped
+    # when already explicitly set unless --reconfigure is active.
+    if not getattr(args, "dry_run", False):
+        from installer.wizards import run_defaults_wizard
+        run_defaults_wizard(args)
+
     # Worker LLM endpoint wizard (optional; default OFF so existing users
     # see zero behavior change). Skipped under --dry-run and on non-tty stdin
     # (CI, piped installs) so the installer never blocks.
