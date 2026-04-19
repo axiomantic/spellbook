@@ -75,9 +75,9 @@ Load `session-mode-init` skill for mode dispatch table and selection question. H
 
 When `resume_available: true`, load `session-resume` skill and execute `resume_boot_prompt` immediately. The skill contains resume field definitions, protocol, continuation detection, and session repairs handling.
 
-## Audio and Notification Configuration
+## Notification Configuration
 
-Load `audio-notifications` skill for TTS (Wyoming protocol) and OS notification configuration, MCP tool tables, and quick commands. Auto-loads when TTS is enabled.
+Load `audio-notifications` skill for OS notification configuration, MCP tool tables, and quick commands.
 
 ## Project Knowledge (AGENTS.md)
 
@@ -402,7 +402,7 @@ The following skills are referenced throughout this document. Load on demand:
 - `fun-mode`, `tarot-mode`: Session mode personas
 - `session-mode-init`: Session mode dispatch and selection question
 - `session-resume`: Resume protocol, continuation detection, session repairs
-- `audio-notifications`: TTS and OS notification configuration
+- `audio-notifications`: OS notification configuration
 - `testing-strategy`: Test tier classification, marks, batching, selection
 - `opportunity-awareness`: Artifact and knowledge gap detection
 - `branch-context`: Script usage, stacked branches, branch-relative docs

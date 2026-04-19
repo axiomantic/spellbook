@@ -74,7 +74,7 @@ The `spellbook/` directory contains a FastMCP server providing 100+ tools across
 - **Forge (autonomous development)** - project initialization, iteration management, roundtable convening
 - **Experiments / A-B testing** - create, start, pause, complete, view results
 - **PR distillation** - fetch PRs, diff analysis, pattern matching and blessing
-- **Notifications and TTS** - native OS notifications, Kokoro text-to-speech
+- **Notifications** - native OS notifications
 - **Workflow state persistence** - save, load, update workflow state across sessions
 - **Focus tracking** - stint push, pop, check, replace
 - **Configuration management** - get/set config values, skill instructions

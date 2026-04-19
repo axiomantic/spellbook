@@ -4,7 +4,7 @@
 
 ```bash
 # Install dependencies
-uv pip install -e ".[dev,test,tts]"
+uv pip install -e ".[dev,test]"
 
 # Run tests (targeted)
 uv run pytest tests/test_specific_file.py -x
@@ -113,7 +113,7 @@ spellbook/
 │   ├── memory/          # Memory storage and consolidation
 │   ├── sessions/        # Session parsing, resume, compaction
 │   ├── security/        # Security scanning, canary, trust
-│   ├── notifications/   # TTS and OS notifications
+│   ├── notifications/   # OS notifications
 │   ├── daemon/          # Server daemon management
 │   ├── mcp/             # MCP server and tool definitions
 │   │   └── tools/       # 13 tool modules (memory, security, etc.)

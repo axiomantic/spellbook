@@ -67,4 +67,4 @@ When `spellbook_session_init` returns a `repairs` array, display each repair acc
 > Welcome to spellbook-enhanced Claude.
 >
 > Repairs needed:
-> - TTS enabled but Wyoming server not reachable at localhost:10200. Fix: Start a Wyoming TTS server (e.g., wyoming-piper or wyoming-kokoro) listening on localhost:10200
+> - (warnings surfaced by `spellbook_session_init`; suggest each entry's `fix_command`)

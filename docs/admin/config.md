@@ -6,14 +6,6 @@ The config page provides an editor for Spellbook settings. Changes are saved imm
 
 ## Setting Groups
 
-### TTS (Text-to-Speech)
-
-Settings for Kokoro text-to-speech announcements:
-
-- **Enabled**: Toggle TTS on or off
-- **Voice**: Voice identifier (e.g., `bf_emma`)
-- **Volume**: Output volume level
-
 ### Notifications
 
 Settings for native OS notifications:
