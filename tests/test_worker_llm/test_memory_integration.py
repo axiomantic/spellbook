@@ -25,6 +25,7 @@ Scenarios covered:
 from __future__ import annotations
 
 import datetime
+import json
 import os
 from pathlib import Path
 
@@ -136,7 +137,9 @@ class TestRerankComposition:
         )
 
         # Real memory_rerank task + mock transport returning relevance=0.9.
-        content = f'[{{"id":"{path}","relevance_0_1":0.9}}]'
+        # json.dumps escapes backslashes in Windows paths (e.g. ``C:\Users\...``)
+        # so they survive the rerank worker's JSON parser.
+        content = json.dumps([{"id": path, "relevance_0_1": 0.9}])
         seen = worker_llm_transport(_scripted({"status": 200, "body": _ok(content)}))
 
         from spellbook.memory.search_qmd import search_memories
@@ -395,8 +398,9 @@ class TestMergeGatingEndToEnd:
             home, str(tmp_path), "cl.md", "claude body distinct"
         )
 
-        # Rerank returns 0.9 for the spellbook hit.
-        content = f'[{{"id":"{sb_path}","relevance_0_1":0.9}}]'
+        # Rerank returns 0.9 for the spellbook hit. json.dumps escapes
+        # backslashes in Windows paths so the worker can parse the response.
+        content = json.dumps([{"id": sb_path, "relevance_0_1": 0.9}])
         seen = worker_llm_transport(_scripted({"status": 200, "body": _ok(content)}))
 
         from spellbook.memory.search_qmd import search_memories
@@ -445,8 +449,9 @@ class TestContextVarLifecycle:
         )
 
         # First call: transport raises -> WorkerLLMUnreachable.
-        # Second call: transport returns a valid rerank response.
-        content = f'[{{"id":"{path}","relevance_0_1":0.9}}]'
+        # Second call: transport returns a valid rerank response. json.dumps
+        # escapes backslashes in Windows paths for correct round-trip.
+        content = json.dumps([{"id": path, "relevance_0_1": 0.9}])
         worker_llm_transport(
             _scripted(
                 {"raise": httpx.ConnectError("refused")},
