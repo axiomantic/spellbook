@@ -8,7 +8,6 @@ coercion, timeout propagation, and event emission.
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import patch
 
 import httpx
 import pytest
@@ -178,11 +177,28 @@ def test_timeout_propagates(worker_llm_transport, worker_llm_config):
 # ---------------------------------------------------------------------------
 
 
+# ``transcript_harvest`` is a SYNC entry point that internally does
+# ``asyncio.run(...)`` to drive the httpx async client. Bigfoot's
+# ``SocketPlugin`` intercepts ``socket.socket.close`` whenever a verifier is
+# active, and the self-pipe socket teardown that ``asyncio.run`` performs on
+# loop close has no associated mock session — which makes bigfoot blow up
+# with ``UnmockedInteractionError`` on the event-loop shutdown, regardless
+# of whether we wrap the call in ``with bigfoot:`` or use the per-mock
+# context manager (both set ``_active_verifier``). Until bigfoot offers a
+# way to opt out of socket state-machine tracking for a specific test, we
+# keep ``monkeypatch.setattr`` for the ``publish_call`` replacement in the
+# two tests below. This is the same kind of pragmatic carve-out made in
+# ``test_config.py`` (commit a3e4a58a) for non-callable module state.
+
+
 def test_publishes_call_event_on_success(
     worker_llm_transport, worker_llm_config, monkeypatch
 ):
     worker_llm_transport([SimpleNamespace(status=200, body=_ok("[]"))])
     calls: list = []
+    # Intentional monkeypatch on a callable: bigfoot's sandbox is
+    # incompatible with the asyncio.run-driven socket teardown inside
+    # ``transcript_harvest``. See comment above.
     monkeypatch.setattr(
         "spellbook.worker_llm.client.publish_call",
         lambda **kw: calls.append(kw),
@@ -204,6 +220,8 @@ def test_publishes_failed_event_on_bad_response(
     # 200 OK but malformed OpenAI envelope: raises from client, not from task.
     worker_llm_transport([SimpleNamespace(status=200, body={"no_choices": True})])
     calls: list = []
+    # Intentional monkeypatch on a callable: same asyncio-vs-bigfoot
+    # incompatibility as the test above.
     monkeypatch.setattr(
         "spellbook.worker_llm.client.publish_call",
         lambda **kw: calls.append(kw),

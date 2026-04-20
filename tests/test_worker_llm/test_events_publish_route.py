@@ -12,13 +12,12 @@ regression where the route drifts back under ``/admin``.
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
+import bigfoot
 import httpx
 import pytest
+from dirty_equals import IsInstance
 
-from spellbook.admin.events import Subsystem, event_bus
-from spellbook.worker_llm import events as wl_events
+from spellbook.admin.events import Event, Subsystem, event_bus
 
 
 @pytest.fixture
@@ -52,18 +51,19 @@ def test_publish_route_registered_at_root_not_under_admin(mcp_http_app):
 
 @pytest.mark.asyncio
 async def test_publish_route_routes_to_event_bus(mcp_http_app):
-    transport = httpx.ASGITransport(app=mcp_http_app)
-    async with httpx.AsyncClient(
-        transport=transport, base_url="http://testserver"
-    ) as client:
-        with patch(
-            "spellbook.admin.events.event_bus.publish"
-        ) as mock_publish:
-            # AsyncMock-like behavior: event_bus.publish is a coroutine
-            async def _coro(evt):
-                mock_publish.last_event = evt
+    captured: list[Event] = []
 
-            mock_publish.side_effect = _coro
+    async def _capture_publish(evt):
+        captured.append(evt)
+
+    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock.calls(_capture_publish)
+
+    transport = httpx.ASGITransport(app=mcp_http_app)
+    async with bigfoot:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as client:
             r = await client.post(
                 "/api/events/publish",
                 json={
@@ -73,10 +73,11 @@ async def test_publish_route_routes_to_event_bus(mcp_http_app):
                 },
             )
 
+    publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
     assert r.status_code == 200, r.text
     assert r.json() == {"ok": True}
-    assert mock_publish.call_count == 1
-    evt = mock_publish.last_event
+    assert len(captured) == 1
+    evt = captured[0]
     assert evt.subsystem == Subsystem.WORKER_LLM
     assert evt.event_type == "call_ok"
     assert evt.data == {"task": "t", "latency_ms": 42}
@@ -89,12 +90,15 @@ async def test_publish_route_accepts_every_known_subsystem(mcp_http_app):
     async def _noop(evt):
         return None
 
-    async with httpx.AsyncClient(
-        transport=transport, base_url="http://testserver"
-    ) as client:
-        with patch(
-            "spellbook.admin.events.event_bus.publish", side_effect=_noop
-        ):
+    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    # One .calls() per expected invocation; bigfoot pops from a FIFO queue.
+    for _ in Subsystem:
+        publish_mock.calls(_noop)
+
+    async with bigfoot:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as client:
             for subsystem in Subsystem:
                 r = await client.post(
                     "/api/events/publish",
@@ -105,6 +109,10 @@ async def test_publish_route_accepts_every_known_subsystem(mcp_http_app):
                     },
                 )
                 assert r.status_code == 200, (subsystem, r.text)
+
+    with bigfoot.in_any_order():
+        for _ in Subsystem:
+            publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
 
 
 @pytest.mark.asyncio
@@ -204,20 +212,22 @@ async def test_fallback_publisher_payload_reaches_mcp_root_route(mcp_http_app):
         },
     }
 
-    captured_events = []
+    captured_events: list[Event] = []
 
     async def _fake_publish(evt):
         captured_events.append(evt)
 
+    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock.calls(_fake_publish)
+
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with httpx.AsyncClient(
-        transport=transport, base_url="http://testserver"
-    ) as client:
-        with patch(
-            "spellbook.admin.events.event_bus.publish", side_effect=_fake_publish
-        ):
+    async with bigfoot:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as client:
             r = await client.post("/api/events/publish", json=payload)
 
+    publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
     assert r.status_code == 200, r.text
     assert r.json() == {"ok": True}
     assert len(captured_events) == 1
