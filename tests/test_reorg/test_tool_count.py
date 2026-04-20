@@ -33,13 +33,15 @@ class TestToolRegistrationCount:
     def test_tool_count_at_least_65(self):
         """After register_all_tools(), at least 65 tools should be registered.
 
-        Target lowered from 90 after two rounds of MCP tool pruning:
+        Target lowered from 90 after three rounds of MCP tool pruning:
           - 15 tools removed with the ``messaging`` and ``experiments`` module
             deletions (both had zero external callers).
           - 10 further dead tools removed (health/misc debug tools, telemetry
             triad, forge_roundtable_debate, forge_select_skill).
+          - 2 more forge_* tools removed with zero skill/command/extension
+            callers (forge_feature_update, forge_process_roundtable_response).
 
-        67 tools remain. This floor guards against accidental further
+        65 tools remain. This floor guards against accidental further
         regression.
         """
         from spellbook.mcp.server import mcp, register_all_tools

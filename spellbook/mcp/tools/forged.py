@@ -6,10 +6,8 @@ __all__ = [
     "forge_iteration_return",
     "forge_project_init",
     "forge_project_status",
-    "forge_feature_update",
     "forge_roundtable_convene",
     "forge_roundtable_convene_local",
-    "forge_process_roundtable_response",
     "forge_record_gate_completion",
     "skill_instructions_get",
 ]
@@ -25,7 +23,6 @@ from spellbook.forged.iteration_tools import (
     forge_iteration_start as do_forge_iteration_start,
 )
 from spellbook.forged.project_tools import (
-    forge_feature_update as do_forge_feature_update,
     forge_project_init as do_forge_project_init,
     forge_project_status as do_forge_project_status,
 )
@@ -241,40 +238,6 @@ def forge_project_status(project_path: str) -> dict:
 
 @mcp.tool()
 @inject_recovery_context
-def forge_feature_update(
-    project_path: str,
-    feature_id: str,
-    status: str = None,
-    assigned_skill: str = None,
-    artifacts: list = None,
-) -> dict:
-    """
-    Update a feature's status and/or artifacts.
-
-    Args:
-        project_path: Absolute path to project directory
-        feature_id: ID of feature to update
-        status: New status (pending, in_progress, complete, blocked)
-        assigned_skill: Skill assigned to this feature
-        artifacts: List of artifact paths to add
-
-    Returns:
-        Dict containing:
-        - success: True if update succeeded
-        - feature: Updated feature data
-        - error: Error message if success is False
-    """
-    return do_forge_feature_update(
-        project_path=project_path,
-        feature_id=feature_id,
-        status=status,
-        assigned_skill=assigned_skill,
-        artifacts=artifacts,
-    )
-
-
-@mcp.tool()
-@inject_recovery_context
 def forge_roundtable_convene(
     feature_name: str,
     stage: str,
@@ -364,7 +327,7 @@ async def forge_roundtable_convene_local(
         archetypes: List of archetype names (uses stage defaults if omitted).
 
     Returns:
-        Dict mirroring ``forge_process_roundtable_response`` output plus:
+        Dict mirroring ``process_roundtable_response`` output plus:
         - ``worker_llm_raw_response``: raw string the worker produced.
         - ``worker_llm_error``: ``<worker-llm-error>`` block when the worker
           call failed or the feature is not configured (key absent on
@@ -420,46 +383,6 @@ async def forge_roundtable_convene_local(
     parsed["gate"] = gate
     parsed["worker_llm_raw_response"] = raw_response
     return parsed
-
-
-@mcp.tool()
-@inject_recovery_context
-async def forge_process_roundtable_response(
-    response: str,
-    stage: str,
-    gate: str,
-    feature_name: str,
-    iteration: int = 1,
-) -> dict:
-    """
-    Process an LLM response from roundtable convene.
-
-    Parses the LLM response to extract verdicts, determine consensus,
-    and generate feedback items. Auto-records gate completion on consensus.
-
-    Args:
-        response: Raw LLM response text from roundtable convene
-        stage: The workflow stage being validated
-        gate: Quality gate being validated. Required. Auto-records gate completion on consensus.
-        feature_name: Feature name for gate completion recording.
-        iteration: Current iteration number (default: 1)
-
-    Returns:
-        Dict containing:
-        - consensus: True if all active verdicts are APPROVE
-        - verdicts: Dict mapping archetype names to verdict strings
-        - feedback: List of Feedback dicts from ITERATE verdicts
-        - return_to: Stage to return to if ITERATE, else None
-        - parsed_verdicts: List of parsed verdict details
-        - gate: The gate being validated
-    """
-    return await do_process_roundtable_response(
-        response=response,
-        stage=stage,
-        gate=gate,
-        feature_name=feature_name,
-        iteration=iteration,
-    )
 
 
 @mcp.tool()
