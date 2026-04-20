@@ -65,13 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `assert_*` methods. Adds explicit forbidden/allowed reviewer phrasings
   so automated reviewers cannot suggest `monkeypatch` or fabricated
   APIs without the guidance catching it.
-- **`tests/test_worker_llm/test_config.py`** migrated from
-  `unittest.mock` to bigfoot (register -> sandbox -> assert). Non-callable
-  `monkeypatch.setattr` uses on module state (bool flags, Path
-  constants, int counters) retained; they fall outside the bigfoot
-  mocking paradigm. Remaining worker_llm test files (`test_events.py`,
-  `test_events_publish_route.py`, `test_transcript_harvest.py`) queued
-  for a follow-up PR.
+- **All worker_llm test files migrated to bigfoot**
+  (`test_config.py`, `test_events.py`, `test_events_publish_route.py`,
+  `test_transcript_harvest.py`). `unittest.mock` usage eliminated from
+  the worker_llm test suite. Non-callable `monkeypatch.setattr` uses
+  on module state (bool flags, Path constants, int counters) retained
+  — they fall outside the bigfoot mocking paradigm. One narrow
+  `monkeypatch` carve-out in `test_transcript_harvest.py` documents a
+  bigfoot `SocketPlugin` / `asyncio.run()` interaction limitation at
+  bigfoot 0.19.2.
 
 ### Removed
 
@@ -83,8 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   optional dependency, PortAudio CI install, sounddevice/wyoming deps,
   11 TTS-only test files. The `audio-notifications` skill now covers
   only OS notifications.
-- **MCP tool surface pruned from 96 to 67 tools** (breaking change,
-  −25 tools):
+- **MCP tool surface pruned from 96 to 65 tools** (breaking change,
+  −27 tools):
   - Deleted unused domains: `messaging` (8 tools, 0 callers),
     `experiments` (7 tools, 0 callers). Domain modules in
     `spellbook/messaging/` and `spellbook/experiments/` also removed.
@@ -95,6 +97,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `spellbook_telemetry_disable`, `spellbook_telemetry_status`.
   - Deleted `forge_roundtable_debate` and `forge_select_skill`
     (0 callers).
+  - Deleted `forge_feature_update` and
+    `forge_process_roundtable_response` (0 callers — neither
+    referenced from any skill, command, doc, or OpenCode extension).
+    Underlying library functions retained in `spellbook/forged/`
+    because they still have internal callers.
 - **`render_config_wizard` stub** and a `WIZARD_CONFIG_KEYS` key-name
   drift in the installer.
 - **TTS-related dependabot groups** (kokoro, soundfile, sounddevice);
@@ -111,6 +118,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI `python-tests` job**: removed the now-invalid
   `uv sync --group tts` and the PortAudio system-install step left
   behind after the TTS removal.
+- **Windows CI failure in `test_memory_integration.py`**: the rerank
+  mock response was built via f-string interpolation of a
+  `pathlib.Path`, so Windows temp paths (`C:\Users\runneradmin\...`)
+  embedded raw backslashes that were rejected as invalid JSON escape
+  sequences. Switched the three affected construction sites to
+  `json.dumps(...)` so paths round-trip cleanly on every platform.
 
 ### Breaking Changes
 
@@ -118,10 +131,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tts_status`, `tts_session_set`, or `tts_config_set` must adapt. The
   `[tts]` extra, `--no-tts` install flag, and
   `tts_enabled`/`tts_voice`/`tts_volume` config keys no longer exist.
-- **25 MCP tools removed.** Callers of the messaging domain,
+- **27 MCP tools removed.** Callers of the messaging domain,
   experiments domain, telemetry triad, `forge_roundtable_debate`,
-  `forge_select_skill`, and the dead utility tools listed under
-  "Removed" must migrate or drop those calls.
+  `forge_select_skill`, `forge_feature_update`,
+  `forge_process_roundtable_response`, and the dead utility tools
+  listed under "Removed" must migrate or drop those calls.
 
 ## [0.53.1] - 2026-04-18
 
