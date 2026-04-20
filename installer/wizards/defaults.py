@@ -1,9 +1,9 @@
 """Shared defaults wizard for previously never-prompted config keys.
 
-Five keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
-``notify_enabled``, ``notify_title``, ``telemetry_enabled``,
-``auto_update``, ``session_mode``. Without a prompt users discover them
-only via the admin UI or by reading source.
+Four keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
+``notify_enabled``, ``notify_title``, ``auto_update``, ``session_mode``.
+Without a prompt users discover them only via the admin UI or by
+reading source.
 
 This wizard closes the gap by walking the user through each key on
 fresh installs. It respects the idempotency rule defined in AGENTS.md:
@@ -114,7 +114,6 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
     candidate_keys = [
         "notify_enabled",
         "notify_title",
-        "telemetry_enabled",
         "auto_update",
         "session_mode",
     ]
@@ -143,17 +142,6 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
             print("  (defaults wizard cancelled)")
             return
         _write("notify_title", value)
-
-    # ----- Telemetry -----
-    if reconfigure or not _is_explicit("telemetry_enabled"):
-        current = bool(_config_get("telemetry_enabled", False))
-        try:
-            value = _prompt_bool("Enable anonymous usage telemetry?", current)
-        except (EOFError, KeyboardInterrupt):
-            print()
-            print("  (defaults wizard cancelled)")
-            return
-        _write("telemetry_enabled", value)
 
     # ----- Auto-update -----
     if reconfigure or not _is_explicit("auto_update"):

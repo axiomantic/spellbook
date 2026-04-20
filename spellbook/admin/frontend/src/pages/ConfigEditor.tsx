@@ -159,7 +159,7 @@ const SECTIONS: { title: string; keys: string[] }[] = [
   },
   {
     title: 'General',
-    keys: ['telemetry_enabled', 'auto_update', 'session_mode', 'admin_enabled'],
+    keys: ['auto_update', 'session_mode', 'admin_enabled'],
   },
 ]
 

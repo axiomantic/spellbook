@@ -112,7 +112,6 @@ _DEFAULTS_KEY_SCRIPT = [
     # All accept bare Enter except session_mode (needs choice index "1" -> none).
     ("notify_enabled", "", True),
     ("notify_title", "", "Spellbook"),
-    ("telemetry_enabled", "", False),
     ("auto_update", "", True),
     ("session_mode", "", "none"),
 ]

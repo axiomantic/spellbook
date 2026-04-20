@@ -41,12 +41,6 @@ CONFIG_SCHEMA = [
         "default": "Spellbook",
     },
     {
-        "key": "telemetry_enabled",
-        "type": "boolean",
-        "description": "Enable anonymous usage telemetry",
-        "default": False,
-    },
-    {
         "key": "auto_update",
         "type": "boolean",
         "description": "Automatically check for and apply spellbook updates",

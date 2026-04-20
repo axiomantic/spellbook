@@ -148,8 +148,8 @@ def run(args: argparse.Namespace) -> None:
     )
 
     # Defaults wizard for previously never-prompted keys (notify_*,
-    # telemetry_enabled, auto_update, session_mode). Idempotent: each key
-    # is skipped when already explicitly set unless --reconfigure is active.
+    # auto_update, session_mode). Idempotent: each key is skipped when
+    # already explicitly set unless --reconfigure is active.
     if not getattr(args, "dry_run", False):
         from installer.wizards import run_defaults_wizard
         run_defaults_wizard(args)

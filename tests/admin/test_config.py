@@ -46,7 +46,6 @@ class TestConfigGet:
         assert config["notify_enabled"] is True
         assert config["notify_title"] == "Spellbook"
         assert config["admin_enabled"] is True
-        assert config["telemetry_enabled"] is False
 
     def test_get_config_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/config")
@@ -64,7 +63,6 @@ class TestConfigSchema:
         keys = {k["key"] for k in data["keys"]}
         assert "notify_enabled" in keys
         assert "admin_enabled" in keys
-        assert "telemetry_enabled" in keys
 
     def test_schema_keys_have_type_and_description(self, client):
         response = client.get("/api/config/schema")
