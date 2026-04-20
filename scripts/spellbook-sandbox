@@ -2,9 +2,9 @@
 # spellbook-sandbox: launch Claude Code / OpenCode / Codex under nikvdp/cco
 # with $HOME reads hidden and only spellbook paths allowlisted.
 #
-# Hook filesystem writes (error logs, messaging) are routed through the
-# spellbook daemon HTTP API, so the sandbox only needs read access to
-# $SPELLBOOK_DIR and the config directories. No write access is granted.
+# Hook filesystem writes (error logs) are routed through the spellbook daemon
+# HTTP API, so the sandbox only needs read access to $SPELLBOOK_DIR and the
+# config directories. No write access is granted.
 #
 # Usage:
 #   spellbook-sandbox                          # == cco claude (default)
@@ -45,7 +45,7 @@ fi
 set -- --safe --add-dir "$SPELLBOOK_DIR":ro "$@"
 
 # The hook may need access to multiple config locations:
-# - ~/.local/spellbook (.mcp-token, messaging state)
+# - ~/.local/spellbook (.mcp-token)
 # - ~/.config/spellbook (spellbook.json config)
 # Mount all that exist. cco handles duplicate mounts gracefully.
 if [ -d "$HOME/.local/spellbook" ]; then

@@ -5,7 +5,6 @@ and monitoring tools that need HTTP access without full MCP protocol.
 """
 
 import asyncio
-import json
 import logging
 import time
 
@@ -446,86 +445,6 @@ async def api_hook_log(request: Request) -> JSONResponse:
         await asyncio.to_thread(_write_log, log_file, entry)
 
     return JSONResponse({"ok": True})
-
-
-def _poll_inbox_sync(messaging_base: Path, session_id: str) -> list[dict]:
-    """Synchronous inbox polling -- runs in thread pool via asyncio.to_thread()."""
-    messages: list[dict] = []
-    for alias_dir in sorted(messaging_base.iterdir()):
-        if not alias_dir.is_dir():
-            continue
-
-        # Only drain inboxes with a matching .session_id marker
-        marker = alias_dir / ".session_id"
-        if not marker.exists():
-            continue
-        try:
-            marker_session_id = marker.read_text().strip()
-        except OSError:
-            continue
-        if marker_session_id != session_id:
-            continue
-
-        inbox = alias_dir / "inbox"
-        if not inbox.exists():
-            continue
-
-        for msg_file in sorted(inbox.glob("*.json")):
-            try:
-                data = json.loads(msg_file.read_text())
-                messages.append({
-                    "message_type": data.get("message_type", "direct"),
-                    "sender": data.get("sender", "unknown"),
-                    "payload": data.get("payload", {}),
-                    "correlation_id": data.get("correlation_id"),
-                    "filename": msg_file.name,
-                })
-                # Delete after processing
-                msg_file.unlink()
-            except Exception:
-                # Log broken message files before deleting
-                logger.warning("Malformed inbox message %s, deleting", msg_file)
-                try:
-                    msg_file.unlink()
-                except OSError:
-                    pass
-    return messages
-
-
-@mcp.custom_route("/api/messaging/poll", methods=["POST"])
-async def api_messaging_poll(request: Request) -> JSONResponse:
-    """REST endpoint for hook scripts to poll messaging inbox via the daemon.
-
-    Accepts JSON body: {"session_id": "string"}
-    Returns JSON: {"messages": [...]} where each message has fields:
-        message_type, sender, payload, correlation_id, filename
-
-    Iterates all alias directories under ~/.local/spellbook/messaging/,
-    draining only those whose .session_id marker matches the request.
-    This replicates the behavior formerly in hooks/spellbook_hook.py
-    _messaging_check(), eliminating the need for hook processes to have
-    write access to the config directory.
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "invalid JSON"}, status_code=400)
-
-    session_id = body.get("session_id", "")
-    if not session_id:
-        return JSONResponse(
-            {"error": "missing required field: session_id"},
-            status_code=400,
-        )
-
-    messaging_base = get_spellbook_config_dir() / "messaging"
-    if not messaging_base.exists():
-        return JSONResponse({"messages": []})
-
-    messages = await asyncio.to_thread(
-        _poll_inbox_sync, messaging_base, session_id
-    )
-    return JSONResponse({"messages": messages})
 
 
 # ---------------------------------------------------------------------------

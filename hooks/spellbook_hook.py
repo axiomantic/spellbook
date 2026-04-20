@@ -698,46 +698,6 @@ def _stint_depth_check(data: dict) -> str | None:
     return "\n".join(parts) if parts else None
 
 
-def _messaging_check(session_id: str = "") -> str | None:
-    """Check messaging inbox for pending messages and format for injection.
-
-    Polls the daemon's /api/messaging/poll endpoint which handles file I/O
-    (reading and deleting inbox files) on the daemon side.  The hook only
-    performs presentation formatting.
-
-    If no ``session_id`` is provided, no inboxes are drained to prevent one
-    session from consuming another session's messages.
-
-    Returns formatted message text or None if inbox is empty.
-    """
-    if not session_id:
-        return None
-
-    resp = _http_post("/api/messaging/poll", {"session_id": session_id})
-    if resp is None or not resp.get("messages"):
-        return None
-
-    outputs = []
-    for msg in resp["messages"]:
-        msg_type = msg.get("message_type", "direct")
-        sender = msg.get("sender", "unknown")
-        correlation_id = msg.get("correlation_id")
-        payload = msg.get("payload", {})
-        payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
-
-        corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
-        if msg_type == "broadcast":
-            formatted = f"[BROADCAST from {sender}]\n{payload_str}"
-        elif msg_type == "reply":
-            formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
-        else:
-            formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
-
-        outputs.append(formatted)
-
-    return "\n\n".join(outputs) if outputs else None
-
-
 def _build_recovery_directive(state: dict) -> str:
     """Build a recovery directive string from saved workflow state."""
     parts = []
@@ -1976,11 +1936,6 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     # Auto-memory bridge (specific matcher: Write to auto-memory paths)
     if tool_name == "Write":
         _fire_and_forget(_memory_bridge, tool_name, data)
-
-    # Messaging inbox check (catch-all, synchronous - injects into context)
-    out = _messaging_check(session_id=data.get("session_id", ""))
-    if out:
-        outputs.append(out)
 
     return outputs
 
