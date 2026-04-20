@@ -304,11 +304,16 @@ def test_example():
 
 #### Domain Plugins
 
-Use bigfoot's domain-specific plugins when applicable instead of generic mocks:
-- `bigfoot.http` for HTTP requests (httpx, requests)
-- `bigfoot.subprocess_mock` for subprocess calls
-- `bigfoot.database` for SQLite/database calls
-- `bigfoot.socket` for socket operations
+Use bigfoot's domain-specific plugins when applicable instead of generic mocks. All plugin proxy names end in `_mock` except `http`:
+- `bigfoot.http` — HTTP requests (httpx, requests, urllib, aiohttp). Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
+- `bigfoot.subprocess_mock` — `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
+- `bigfoot.popen_mock` — `subprocess.Popen`.
+- `bigfoot.async_subprocess_mock` — `asyncio.create_subprocess_*`.
+- `bigfoot.db_mock` — sqlite3 / generic DB. State-machine plugin with step sentinels `bigfoot.db_mock.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `bigfoot.db_mock.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected → connected → in_transaction → connected → closed`.
+- `bigfoot.socket_mock` — raw socket operations.
+- Other plugins: `bigfoot.smtp_mock`, `bigfoot.redis_mock`, `bigfoot.mongo_mock`, `bigfoot.boto3_mock`, `bigfoot.pika_mock`, `bigfoot.ssh_mock`, `bigfoot.log_mock`, `bigfoot.jwt_mock`, `bigfoot.crypto_mock`, `bigfoot.file_io_mock`, `bigfoot.dns_mock`, `bigfoot.memcache_mock`, `bigfoot.celery_mock`, `bigfoot.elasticsearch_mock`, `bigfoot.grpc_mock`, `bigfoot.mcp_mock`, `bigfoot.psycopg2_mock`, `bigfoot.asyncpg_mock`, `bigfoot.sync_websocket_mock`, `bigfoot.async_websocket_mock`, `bigfoot.native_mock`.
+
+**Do NOT write** `bigfoot.database`, `bigfoot.socket`, `bigfoot.patch`, `bigfoot.MagicMock`, `@bigfoot.mock(...)` (decorator form) — none of these exist.
 
 #### Guard Mode
 
