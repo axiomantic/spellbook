@@ -7,6 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-04-20
+
+### Added
+
+- **Worker LLM** (opt-in, fully feature-flagged, all flags default OFF):
+  first direct LLM integration in spellbook, targeting cheap
+  OpenAI-compatible local endpoints (Ollama, vllm-mlx, LM Studio, etc.)
+  for passive/augmentation tasks. Capabilities each gate independently:
+  transcript-harvesting memory on the Stop hook (replace/merge/skip
+  modes); PreToolUse safety sniff with fail-open on worker outage and
+  a persistent on-disk block cache; memory rerank composition inside
+  `memory_recall`; optional Claude-memory read-side merge via a new
+  `claude_memory` scanner and schema translator.
+- **`forge_roundtable_convene_local` MCP tool** (async) for
+  worker-LLM-powered roundtable execution without orchestrator tokens.
+- **`spellbook worker-llm doctor` CLI** probes config, transport,
+  prompts, safety cache, event publish path, and feature flags.
+- **Shared installer wizards** under `installer/wizards/`: `worker_llm`
+  for the new subsystem, `defaults` covering 7 previously-unprompted
+  config keys (`notify_*`, `auto_update`, `session_mode`,
+  `profile.default`). Both install entry paths (root `install.py` and
+  `spellbook/cli/commands/install.py`) now share the same wizards;
+  previously they had drifted. `--reconfigure` bypasses the
+  `config_is_explicitly_set` idempotency gate.
+- **`profile.default` CONFIG_SCHEMA entry** (was invisible to the admin
+  UI before).
+- **Hybrid event transport**: in-daemon publishes use in-process
+  `EventBus.publish`; subprocess callers POST to root
+  `/api/events/publish` with bearer auth. Resolves events dropped when
+  emitted from hook subprocesses.
+- **Worker-prompt overrides**: four default prompts ship in the wheel
+  and are overrideable via `~/.local/spellbook/worker_prompts/<task>.md`
+  with a breadcrumb README.
+- **`tests/conftest.py` autouse fixture** that isolates
+  `worker_llm_*` config reads from the developer's real environment,
+  preventing the "passes locally, fails for others" class of bug.
+- **`fractal_claim_work(..., session_id=)`** parameter, documented in
+  the skill, command, and mirrored docs. Enables linking a claimed node
+  to the worker's chat log for replay in the admin UI.
+- **AGENTS.md "Adding Config Options" section** with the three-point
+  rule: prompt new users, prompt existing users on reinstall if still
+  unset, never re-prompt once answered.
+- **Pre-commit hook (`check-admin-frontend`)** staged for a future
+  admin-frontend lint+typecheck path; currently inert.
+
+### Changed
+
+- **Bigfoot-only mocking rule hardened** in AGENTS.md and
+  `.gemini/styleguide.md`. Rewrites the mocking section to document
+  the register -> sandbox -> assert paradigm and the three guarantees.
+  Narrows the `monkeypatch` allowlist to env vars, cwd, and sys.path
+  only. Replaces fabricated plugin names (`bigfoot.database`,
+  `bigfoot.socket`, `bigfoot.patch`, `@bigfoot.mock` decorator) with
+  the real API surface from bigfoot 0.19.2. Documents
+  `bigfoot.db_mock` as a state-machine plugin with step sentinels and
+  `assert_*` methods. Adds explicit forbidden/allowed reviewer phrasings
+  so automated reviewers cannot suggest `monkeypatch` or fabricated
+  APIs without the guidance catching it.
+- **`tests/test_worker_llm/test_config.py`** migrated from
+  `unittest.mock` to bigfoot (register -> sandbox -> assert). Non-callable
+  `monkeypatch.setattr` uses on module state (bool flags, Path
+  constants, int counters) retained; they fall outside the bigfoot
+  mocking paradigm. Remaining worker_llm test files (`test_events.py`,
+  `test_events_publish_route.py`, `test_transcript_harvest.py`) queued
+  for a follow-up PR.
+
+### Removed
+
+- **TTS subsystem** (breaking change): `spellbook/tts/` (~6000 lines),
+  `tts_speak`/`tts_status`/`tts_session_set`/`tts_config_set` MCP
+  tools, the TTS installer wizard, the `--no-tts` install flag,
+  daemon-venv provisioning for sounddevice/wyoming, the
+  `tts_enabled`/`tts_voice`/`tts_volume` config keys, the `[tts]`
+  optional dependency, PortAudio CI install, sounddevice/wyoming deps,
+  11 TTS-only test files. The `audio-notifications` skill now covers
+  only OS notifications.
+- **MCP tool surface pruned from 96 to 67 tools** (breaking change,
+  −25 tools):
+  - Deleted unused domains: `messaging` (8 tools, 0 callers),
+    `experiments` (7 tools, 0 callers). Domain modules in
+    `spellbook/messaging/` and `spellbook/experiments/` also removed.
+  - Deleted dead tools: `spellbook_check_compaction`,
+    `spellbook_context_ping`, `analyze_skill_usage`,
+    `spellbook_analytics_summary`, `spellbook_inject_test_reminder`.
+  - Removed telemetry MCP triad: `spellbook_telemetry_enable`,
+    `spellbook_telemetry_disable`, `spellbook_telemetry_status`.
+  - Deleted `forge_roundtable_debate` and `forge_select_skill`
+    (0 callers).
+- **`render_config_wizard` stub** and a `WIZARD_CONFIG_KEYS` key-name
+  drift in the installer.
+- **TTS-related dependabot groups** (kokoro, soundfile, sounddevice);
+  `daemon-core` simplified to a catch-all.
+
+### Fixed
+
+- **`ContextVar _MEMORY_RECALL_ERROR`** surfaces worker failures to
+  `memory_recall` callers without raising, preserving the contract
+  that `memory_recall` never fails hard.
+- **Hook subprocess event publish path**: subprocess-originated events
+  (e.g., from hook scripts) previously dropped silently; now routed
+  through `/api/events/publish` with bearer auth.
+- **CI `python-tests` job**: removed the now-invalid
+  `uv sync --group tts` and the PortAudio system-install step left
+  behind after the TTS removal.
+
+### Breaking Changes
+
+- **TTS removed.** Any user or extension that called `tts_speak`,
+  `tts_status`, `tts_session_set`, or `tts_config_set` must adapt. The
+  `[tts]` extra, `--no-tts` install flag, and
+  `tts_enabled`/`tts_voice`/`tts_volume` config keys no longer exist.
+- **25 MCP tools removed.** Callers of the messaging domain,
+  experiments domain, telemetry triad, `forge_roundtable_debate`,
+  `forge_select_skill`, and the dead utility tools listed under
+  "Removed" must migrate or drop those calls.
+
 ## [0.53.1] - 2026-04-18
 
 ### Fixed
