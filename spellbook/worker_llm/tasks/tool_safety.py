@@ -28,12 +28,15 @@ See design doc §2.7, §4.4, §5.2 and impl plan Task C4.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 
 from spellbook.worker_llm import client, prompts
 from spellbook.worker_llm.config import get_worker_config
 from spellbook.worker_llm.errors import WorkerLLMError
 from spellbook.worker_llm.events import publish_fail_open
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -112,10 +115,16 @@ def tool_safety(
             task="tool_safety",
             override_loaded=override,
         )
-    except WorkerLLMError:
+    except WorkerLLMError as e:
+        logger.warning("worker_llm tool_safety failed open: %s", e)
         return _FAIL_OPEN
-    except Exception:
+    except Exception as e:
         # Paranoid catch: any unexpected exception must not block the user.
+        logger.warning(
+            "worker_llm tool_safety failed open (unexpected %s): %s",
+            type(e).__name__,
+            e,
+        )
         return _FAIL_OPEN
 
     verdict = _parse_verdict(raw)

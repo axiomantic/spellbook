@@ -24,8 +24,11 @@ time with enter-to-keep-default behavior.
 
 from __future__ import annotations
 
+import logging
 import sys as _sys
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 # Advanced settings prompted only when the user opts in to the second tier.
@@ -145,8 +148,13 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
             try:
                 from spellbook.core.config import config_set
                 config_set("worker_llm_base_url", "")
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                logger.warning(
+                    "worker_llm installer: failed to persist empty "
+                    "worker_llm_base_url sentinel: %s: %s",
+                    type(e).__name__,
+                    e,
+                )
         return
 
     # 1) Probe for running local endpoints.
