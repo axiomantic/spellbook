@@ -47,7 +47,7 @@ _HAPPY_SCRIPT = [
     ),
     SimpleNamespace(  # memory_rerank
         status=200,
-        body=_chat_completion('[{"id":"a.md","relevance":0.9}]'),
+        body=_chat_completion('[{"id":"a.md","relevance_0_1":0.9}]'),
         delay_s=0.0,
         raise_on_send=None,
     ),

@@ -2,9 +2,10 @@
 
 The worker sees ``{"query": ..., "candidates": [{"id", "excerpt"}]}`` and
 returns ``[{"id", "relevance_0_1"}]``. We realign the model output against
-the caller's input list — missing entries default to ``0.0`` relevance, and
-values outside ``[0, 1]`` are clamped so a drifty small model cannot
-promote a candidate to 5x its neighbors.
+the caller's input list — missing entries fall back to their ordinal
+position (``1.0 - i / N``) so we preserve the upstream QMD rank instead
+of pushing them to the bottom, and values outside ``[0, 1]`` are clamped
+so a drifty small model cannot promote a candidate to 5x its neighbors.
 
 Excerpts are capped at 600 characters upstream (see design doc §14 "600-
 char excerpt cap") so the per-call budget stays predictable regardless of
@@ -27,7 +28,10 @@ class ScoredCandidate:
     """Single reranked candidate.
 
     ``id`` is the memory path (matches the input ``{"id": ...}``).
-    ``relevance`` is ``0.0..1.0`` (clamped; missing entries default to 0.0).
+    ``relevance`` is ``0.0..1.0`` (clamped; missing entries fall back to
+    ``1.0 - i / N`` where ``i`` is the 0-based input index and ``N`` is
+    the total candidate count, matching the system prompt's ordinal
+    fallback rule).
     """
 
     id: str
@@ -48,8 +52,9 @@ def memory_rerank(query: str, candidates: list[dict]) -> list[ScoredCandidate]:
 
     Returns:
         A list of ``ScoredCandidate`` aligned to the input order. A candidate
-        whose id does not appear in the worker response is assigned
-        ``relevance=0.0``.
+        whose id does not appear in the worker response falls back to its
+        ordinal position (``1.0 - i / N``) so we preserve the upstream QMD
+        rank rather than pushing the omitted candidate to the bottom.
 
     Raises:
         WorkerLLMBadResponse: Response was non-JSON or the top-level JSON
@@ -101,9 +106,16 @@ def memory_rerank(query: str, candidates: list[dict]) -> list[ScoredCandidate]:
             rel = 0.0
         by_id[mid] = max(0.0, min(1.0, rel))
 
+    n = len(candidates)
     return [
-        ScoredCandidate(id=c["id"], relevance=by_id.get(c["id"], 0.0))
-        for c in candidates
+        ScoredCandidate(
+            id=c["id"],
+            # Ordinal fallback mirrors the system prompt: when the worker
+            # omits a candidate, preserve the upstream QMD rank instead
+            # of sinking it to the bottom with 0.0.
+            relevance=by_id.get(c["id"], 1.0 - (i / max(n, 1))),
+        )
+        for i, c in enumerate(candidates)
     ]
 
 

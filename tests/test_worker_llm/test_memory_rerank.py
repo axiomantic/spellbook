@@ -73,13 +73,16 @@ def test_happy_path_returns_scored_candidates_in_input_order(
     ]
 
 
-def test_missing_id_defaults_to_zero(worker_llm_transport, worker_llm_config):
-    # Model scores only "a"; "b" must appear with 0.0.
+def test_missing_id_falls_back_to_ordinal_position(
+    worker_llm_transport, worker_llm_config
+):
+    # Model scores only "a"; "b" is missing, so it falls back to its
+    # ordinal position (index 1 of 2 candidates -> 1.0 - 1/2 = 0.5).
     worker_llm_transport(
         [
             SimpleNamespace(
                 status=200,
-                body=_ok('[{"id":"a.md","relevance_0_1":0.5}]'),
+                body=_ok('[{"id":"a.md","relevance_0_1":0.9}]'),
             )
         ]
     )
@@ -95,9 +98,44 @@ def test_missing_id_defaults_to_zero(worker_llm_transport, worker_llm_config):
     )
 
     assert out == [
-        ScoredCandidate(id="a.md", relevance=0.5),
-        ScoredCandidate(id="b.md", relevance=0.0),
+        ScoredCandidate(id="a.md", relevance=0.9),
+        ScoredCandidate(id="b.md", relevance=0.5),
     ]
+
+
+def test_missing_ids_preserve_qmd_ordinal_rank(
+    worker_llm_transport, worker_llm_config
+):
+    # Three candidates in QMD-ranked order; worker scores only the middle
+    # one. First and last must fall back to 1.0 - i/N so the upstream
+    # ranking is preserved rather than pushing omissions to the bottom.
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('[{"id":"b.md","relevance_0_1":0.42}]'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.memory_rerank import (
+        ScoredCandidate,
+        memory_rerank,
+    )
+
+    out = memory_rerank(
+        "q",
+        [
+            {"id": "a.md", "excerpt": ""},
+            {"id": "b.md", "excerpt": ""},
+            {"id": "c.md", "excerpt": ""},
+        ],
+    )
+
+    assert out[0] == ScoredCandidate(id="a.md", relevance=1.0)
+    assert out[1] == ScoredCandidate(id="b.md", relevance=0.42)
+    assert out[2].id == "c.md"
+    assert out[2].relevance == pytest.approx(1.0 - 2 / 3)
 
 
 def test_relevance_clamped_to_unit_interval(
