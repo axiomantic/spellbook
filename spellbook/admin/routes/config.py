@@ -107,7 +107,11 @@ CONFIG_SCHEMA = [
     {
         "key": "worker_llm_transcript_harvest_mode",
         "type": "string",
-        "description": "Stop-hook harvest mode: 'replace' (worker supersedes regex) or 'merge'",
+        "description": (
+            "Stop-hook harvest mode: 'replace' (worker supersedes regex), "
+            "'merge' (combine worker + regex), or 'skip' (disable worker "
+            "harvest; regex-only)"
+        ),
         "default": "replace",
     },
     {
