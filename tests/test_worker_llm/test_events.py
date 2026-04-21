@@ -102,6 +102,49 @@ def test_error_emits_call_failed_event(monkeypatch):
     }
 
 
+def test_publish_call_fail_open_event_type(monkeypatch):
+    """``status='fail_open'`` routes to ``event_type='call_fail_open'``.
+
+    The fail-open branch must take precedence over the ``error`` truthy
+    branch: even when ``error`` is a non-empty string (as produced by the
+    ``tool_safety`` prompt-load short-circuit), the emitted event type is
+    ``call_fail_open``, NOT ``call_failed``. Design §4.1 + Step 4 of the
+    impl plan — separating event types is load-bearing for the subscriber
+    audit and DB write path.
+    """
+    monkeypatch.setattr(event_bus, "_in_daemon", True)
+    captured: list = []
+    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm.calls(_capture_publish_sync(captured))
+
+    with bigfoot:
+        wl_events.publish_call(
+            task="tool_safety",
+            model="",
+            latency_ms=0,
+            status="fail_open",
+            prompt_len=0,
+            response_len=0,
+            error="prompt_load_error: boom",
+        )
+
+    pm.assert_call(args=(IsInstance(Event),), kwargs={})
+    assert len(captured) == 1
+    evt = captured[0]
+    assert evt.subsystem == Subsystem.WORKER_LLM
+    assert evt.event_type == "call_fail_open"
+    assert evt.data == {
+        "task": "tool_safety",
+        "model": "",
+        "latency_ms": 0,
+        "status": "fail_open",
+        "prompt_len": 0,
+        "response_len": 0,
+        "error": "prompt_load_error: boom",
+        "override_loaded": False,
+    }
+
+
 def test_subprocess_posts_to_daemon(monkeypatch):
     monkeypatch.setattr(event_bus, "_in_daemon", False)
     calls: list = []

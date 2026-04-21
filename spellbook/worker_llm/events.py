@@ -158,9 +158,15 @@ def publish_call(
     Always safe to call from any context (daemon, hook subprocess, CLI).
     Event routing is decided per-call by inspecting the daemon marker.
     """
+    if status == "fail_open":
+        event_type = "call_fail_open"
+    elif error:
+        event_type = "call_failed"
+    else:
+        event_type = "call_ok"
     _publish(
         Subsystem.WORKER_LLM,
-        "call_failed" if error else "call_ok",
+        event_type,
         {
             "task": task,
             "model": model,
