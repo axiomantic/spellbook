@@ -216,6 +216,87 @@ class TestEnvPyStructure:
         assert callable(env_module._get_target_db)
 
 
+class TestPerDbVersionLocations:
+    """Verify ``alembic.ini`` declares every per-DB versions directory so
+    ``alembic upgrade head -x db=<name>`` actually discovers migrations under
+    ``versions/<name>/`` instead of silently no-op'ing.
+
+    Alembic builds its ``ScriptDirectory`` from config BEFORE ``env.py``
+    runs, so ``version_locations`` must live in the .ini file rather than
+    being set dynamically from env.py. Without it, revisions under
+    ``versions/<db>/`` subdirectories are invisible to Alembic's default
+    flat ``versions/`` scanner and every ``upgrade head`` reports no work.
+
+    Alembic uses ScriptDirectory to walk ALL discovered revisions across
+    every listed location; per-DB filtering at run time is handled by
+    ``env.py``'s ``-x db=<name>`` argument (which selects the engine).
+    Revision ids are namespaced per-DB (e.g. ``0001_worker_llm_calls``
+    belongs only to the spellbook DB), so cross-DB scanning is safe.
+    """
+
+    @pytest.fixture()
+    def parsed_ini(self) -> configparser.ConfigParser:
+        """Parse ``alembic.ini`` with the ``%(here)s`` default resolved so
+        ``version_locations`` comes back as real filesystem paths.
+        """
+        ini_path = MIGRATIONS_DIR / "alembic.ini"
+        parser = configparser.ConfigParser(
+            defaults={"here": str(MIGRATIONS_DIR.resolve())}
+        )
+        parser.read(str(ini_path))
+        return parser
+
+    def test_ini_sets_version_path_separator_to_space(self, parsed_ini):
+        """Alembic needs an explicit separator to split multiple version
+        locations; we use ``space`` so the four per-DB paths are parsed as
+        four entries.
+        """
+        assert parsed_ini.get("alembic", "version_path_separator") == "space"
+
+    def test_ini_version_locations_contains_every_per_db_directory(
+        self, parsed_ini
+    ):
+        """Every DB's ``versions/<db_name>/`` absolute path must appear in
+        ``version_locations``. Missing any one would silently skip all
+        revisions for that DB.
+        """
+        value = parsed_ini.get("alembic", "version_locations")
+        # Alembic's "space" separator splits on a single space character.
+        actual_locations = value.split(" ")
+        expected_locations = [
+            str((MIGRATIONS_DIR.resolve() / "versions" / db_name))
+            for db_name in ("spellbook", "fractal", "forged", "coordination")
+        ]
+        # Assert EXACT equality against the complete expected list (order
+        # matches ini file order). Broken implementation caught by this
+        # assertion: dropping any entry, reordering across DBs silently,
+        # or pointing at wrong subdirectory.
+        assert actual_locations == expected_locations
+
+    @pytest.mark.parametrize(
+        "db_name", ["spellbook", "fractal", "forged", "coordination"]
+    )
+    def test_ini_version_locations_entry_is_absolute_and_exists(
+        self, parsed_ini, db_name
+    ):
+        """Each version_locations entry must be an absolute path pointing
+        to a real ``versions/<db_name>/`` directory on disk. Catches typos
+        in DB names and relative-path regressions (%(here)s dropped).
+        """
+        value = parsed_ini.get("alembic", "version_locations")
+        actual_locations = value.split(" ")
+        expected_path = MIGRATIONS_DIR.resolve() / "versions" / db_name
+        expected_str = str(expected_path)
+        assert expected_str in actual_locations, (
+            f"version_locations missing entry for {db_name!r}: "
+            f"expected {expected_str!r} in {actual_locations!r}"
+        )
+        assert Path(expected_str).is_absolute()
+        assert expected_path.is_dir(), (
+            f"version_locations entry {expected_str!r} is not a directory"
+        )
+
+
 class TestWorkerLLMCallsMigration:
     """Verify the 0001_worker_llm_calls Alembic revision creates and drops
     the ``worker_llm_calls`` table with its 5 indexes.
