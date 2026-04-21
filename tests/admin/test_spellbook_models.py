@@ -99,6 +99,10 @@ EXPECTED_TABLES = {
         "id", "session_id", "tool_ids", "tokens_saved", "strategy",
         "timestamp",
     ],
+    "worker_llm_calls": [
+        "id", "timestamp", "task", "model", "status", "latency_ms",
+        "prompt_len", "response_len", "error", "override_loaded",
+    ],
 }
 
 
@@ -112,6 +116,7 @@ def engine():
         SpawnRateLimit, Memory, MemoryCitation,
         MemoryLink, MemoryBranch, RawEvent, MemoryAuditLog,
         StintStack, StintCorrectionEvent, CuratorEvent,
+        WorkerLLMCall,
     )
     engine = create_engine("sqlite:///:memory:")
     SpellbookBase.metadata.create_all(engine)
@@ -871,3 +876,170 @@ class TestCuratorEventModel:
             "strategy": "aggressive",
             "timestamp": "2026-01-15T10:00:00",
         }
+
+
+class TestWorkerLLMCall:
+    """Tests for the WorkerLLMCall ORM model (section 26)."""
+
+    def test_column_order_and_names(self):
+        """WorkerLLMCall has exactly the 10 columns in the specified order."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        assert list(WorkerLLMCall.__table__.columns.keys()) == [
+            "id",
+            "timestamp",
+            "task",
+            "model",
+            "status",
+            "latency_ms",
+            "prompt_len",
+            "response_len",
+            "error",
+            "override_loaded",
+        ]
+
+    def test_column_types(self):
+        """WorkerLLMCall columns have the correct SQL types."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        cols = {c.name: c for c in WorkerLLMCall.__table__.columns}
+        # Timestamp is TEXT (ISO-8601), matches RawEvent convention.
+        assert str(cols["timestamp"].type).upper() == "TEXT"
+        assert str(cols["task"].type).upper() == "TEXT"
+        assert str(cols["model"].type).upper() == "TEXT"
+        assert str(cols["status"].type).upper() == "TEXT"
+        assert str(cols["error"].type).upper() == "TEXT"
+        # Numeric / boolean-as-int columns.
+        assert str(cols["id"].type).upper() == "INTEGER"
+        assert str(cols["latency_ms"].type).upper() == "INTEGER"
+        assert str(cols["prompt_len"].type).upper() == "INTEGER"
+        assert str(cols["response_len"].type).upper() == "INTEGER"
+        # override_loaded is Integer-as-bool (matches RawEvent.consolidated).
+        assert str(cols["override_loaded"].type).upper() == "INTEGER"
+
+    def test_nullability(self):
+        """Only `error` is nullable; other columns are NOT NULL."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        cols = {c.name: c for c in WorkerLLMCall.__table__.columns}
+        # PK auto-increment counts as "not null" at ORM level.
+        assert cols["timestamp"].nullable is False
+        assert cols["task"].nullable is False
+        assert cols["model"].nullable is False
+        assert cols["status"].nullable is False
+        assert cols["latency_ms"].nullable is False
+        assert cols["prompt_len"].nullable is False
+        assert cols["response_len"].nullable is False
+        assert cols["override_loaded"].nullable is False
+        assert cols["error"].nullable is True
+
+    def test_single_column_indexes(self):
+        """`timestamp`, `task`, `status` each have a single-column index."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        cols = {c.name: c for c in WorkerLLMCall.__table__.columns}
+        assert cols["timestamp"].index is True
+        assert cols["task"].index is True
+        assert cols["status"].index is True
+
+    def test_compound_indexes(self):
+        """Compound indexes ix_..._ts_status and ix_..._ts_task are declared."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        index_map = {
+            idx.name: [c.name for c in idx.columns]
+            for idx in WorkerLLMCall.__table__.indexes
+        }
+        assert index_map["ix_worker_llm_calls_ts_status"] == ["timestamp", "status"]
+        assert index_map["ix_worker_llm_calls_ts_task"] == ["timestamp", "task"]
+
+    def test_tablename(self):
+        """Table name is `worker_llm_calls`."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        assert WorkerLLMCall.__tablename__ == "worker_llm_calls"
+
+    def test_to_dict_all_fields_override_true(self):
+        """to_dict() returns all 10 keys; override_loaded coerced to True."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        row = WorkerLLMCall(
+            id=1,
+            timestamp="2026-04-20T12:34:56Z",
+            task="tool_safety",
+            model="claude-3-5-haiku-20241022",
+            status="success",
+            latency_ms=123,
+            prompt_len=456,
+            response_len=789,
+            error=None,
+            override_loaded=1,
+        )
+        assert row.to_dict() == {
+            "id": 1,
+            "timestamp": "2026-04-20T12:34:56Z",
+            "task": "tool_safety",
+            "model": "claude-3-5-haiku-20241022",
+            "status": "success",
+            "latency_ms": 123,
+            "prompt_len": 456,
+            "response_len": 789,
+            "error": None,
+            "override_loaded": True,
+        }
+
+    def test_to_dict_override_false_and_error_populated(self):
+        """override_loaded=0 coerces to False; error string preserved."""
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        row = WorkerLLMCall(
+            id=2,
+            timestamp="2026-04-20T13:00:00Z",
+            task="tool_safety",
+            model="",
+            status="fail_open",
+            latency_ms=0,
+            prompt_len=0,
+            response_len=0,
+            error="prompt_load_error: missing default prompt",
+            override_loaded=0,
+        )
+        assert row.to_dict() == {
+            "id": 2,
+            "timestamp": "2026-04-20T13:00:00Z",
+            "task": "tool_safety",
+            "model": "",
+            "status": "fail_open",
+            "latency_ms": 0,
+            "prompt_len": 0,
+            "response_len": 0,
+            "error": "prompt_load_error: missing default prompt",
+            "override_loaded": False,
+        }
+
+    def test_round_trip_through_sqlite(self):
+        """Row persists and reloads via in-memory SQLite with full schema."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import Session
+        from spellbook.db.spellbook_models import WorkerLLMCall
+        eng = create_engine("sqlite:///:memory:")
+        SpellbookBase.metadata.create_all(eng)
+        with Session(eng) as session:
+            session.add(WorkerLLMCall(
+                timestamp="2026-04-20T14:00:00Z",
+                task="tool_safety",
+                model="claude-3-5-haiku-20241022",
+                status="error",
+                latency_ms=250,
+                prompt_len=100,
+                response_len=0,
+                error="timeout",
+                override_loaded=0,
+            ))
+            session.commit()
+            loaded = session.query(WorkerLLMCall).one()
+            assert loaded.to_dict() == {
+                "id": loaded.id,
+                "timestamp": "2026-04-20T14:00:00Z",
+                "task": "tool_safety",
+                "model": "claude-3-5-haiku-20241022",
+                "status": "error",
+                "latency_ms": 250,
+                "prompt_len": 100,
+                "response_len": 0,
+                "error": "timeout",
+                "override_loaded": False,
+            }
+            assert isinstance(loaded.id, int) and loaded.id > 0

@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     Float,
     ForeignKey,
+    Index,
     Integer,
     Text,
     UniqueConstraint,
@@ -605,6 +606,57 @@ class CuratorEvent(SpellbookBase):
             "tokens_saved": self.tokens_saved,
             "strategy": self.strategy,
             "timestamp": self.timestamp,
+        }
+
+
+# ---- 26. worker_llm_calls ----
+
+class WorkerLLMCall(SpellbookBase):
+    """One row per executed worker-LLM `client.call` outcome.
+
+    Written best-effort from `record_call` (daemon path) or from
+    `/api/events/publish` (subprocess path). Rows are purged on a rolling
+    basis by the background purge loop registered in `admin/app.py`.
+    """
+
+    __tablename__ = "worker_llm_calls"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    timestamp: Mapped[str] = mapped_column(
+        Text, nullable=False, index=True,
+    )  # ISO-8601 UTC, matches existing event tables (RawEvent, etc.)
+    task: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    model: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(
+        Text, nullable=False, index=True,
+    )  # 'success' | 'error' | 'timeout' | 'fail_open'
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    prompt_len: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    response_len: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    override_loaded: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0,
+    )  # 0/1 boolean; matches existing Integer-boolean pattern (RawEvent.consolidated)
+
+    __table_args__ = (
+        # Compound indexes on the hot admin query shapes
+        # (filter-by-status-then-range, filter-by-task-then-range).
+        Index("ix_worker_llm_calls_ts_status", "timestamp", "status"),
+        Index("ix_worker_llm_calls_ts_task", "timestamp", "task"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp,
+            "task": self.task,
+            "model": self.model,
+            "status": self.status,
+            "latency_ms": self.latency_ms,
+            "prompt_len": self.prompt_len,
+            "response_len": self.response_len,
+            "error": self.error,
+            "override_loaded": bool(self.override_loaded),
         }
 
 
