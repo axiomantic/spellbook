@@ -42,21 +42,25 @@ def test_transport_empty_script_returns_empty_request_list(worker_llm_transport)
 
 @pytest.mark.asyncio
 async def test_transport_replays_scripted_response(worker_llm_transport):
+    """The fixture registers mocks for the ``/chat/completions`` URL the
+    worker_llm client actually hits; smoke test verifies replay + capture."""
     from types import SimpleNamespace
 
     seen = worker_llm_transport(
         [SimpleNamespace(status=200, body={"ok": True}, delay_s=0.0, raise_on_send=None)]
     )
+    target = "http://test.local/v1/chat/completions"
     async with httpx.AsyncClient() as http:
-        r = await http.post("http://test.local/v1/anything", json={"x": 1})
+        r = await http.post(target, json={"x": 1})
     assert r.status_code == 200
     assert r.json() == {"ok": True}
     assert len(seen) == 1
-    assert str(seen[0].url) == "http://test.local/v1/anything"
+    assert str(seen[0].url) == target
 
 
 @pytest.mark.asyncio
 async def test_transport_raises_when_raise_on_send_set(worker_llm_transport):
+    """A scripted ``raise_on_send`` is surfaced via ``bigfoot.http.mock_error``."""
     from types import SimpleNamespace
 
     worker_llm_transport(
@@ -69,15 +73,20 @@ async def test_transport_raises_when_raise_on_send_set(worker_llm_transport):
             )
         ]
     )
+    target = "http://test.local/v1/chat/completions"
     with pytest.raises(httpx.ConnectError):
         async with httpx.AsyncClient() as http:
-            await http.get("http://test.local/v1/models")
+            await http.post(target, json={"x": 1})
 
 
 @pytest.mark.asyncio
 async def test_transport_raises_when_script_exhausted(worker_llm_transport):
+    """With no mocks registered, any outbound call raises bigfoot's
+    ``UnmockedInteractionError`` instead of the legacy RuntimeError."""
+    from bigfoot._errors import UnmockedInteractionError
+
     worker_llm_transport([])
-    with pytest.raises(RuntimeError) as excinfo:
+    target = "http://test.local/v1/chat/completions"
+    with pytest.raises(UnmockedInteractionError):
         async with httpx.AsyncClient() as http:
-            await http.get("http://test.local/v1/models")
-    assert str(excinfo.value) == "worker_llm_transport: script exhausted"
+            await http.post(target, json={"x": 1})
