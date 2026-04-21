@@ -186,6 +186,12 @@ def shutdown() -> None:
         close_all_fractal_connections()
     except Exception:
         pass
+    try:
+        from spellbook.worker_llm.client import close_all_shared_clients_sync
+
+        close_all_shared_clients_sync()
+    except Exception:
+        pass
 
 
 atexit.register(shutdown)

@@ -3,6 +3,17 @@
 Single-shot (no retries) by design. Callers are responsible for fail-open or
 surface-error policy based on the exception type raised. Every call — success
 or failure — emits a ``publish_call`` event in the ``finally`` block.
+
+Shared client: we cache one ``httpx.AsyncClient`` per running event loop so
+HTTP keep-alive actually pools connections across rerank / harvest / tool
+safety calls within the same loop. ``call_sync`` uses ``asyncio.run`` which
+creates a fresh loop each invocation, so the sync path does not benefit from
+pooling — but async callers (roundtable, future daemon integrations) do. The
+per-loop cache avoids the classic footgun of binding a client to a loop that
+has since been torn down.
+
+Bigfoot's ``http`` plugin intercepts at the transport layer, so shared-client
+lifetime does not affect test mocking.
 """
 
 from __future__ import annotations
@@ -10,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+import weakref
 from typing import Any
 
 import httpx
@@ -24,6 +36,80 @@ from spellbook.worker_llm.errors import (
 from spellbook.worker_llm.events import publish_call
 
 logger = logging.getLogger(__name__)
+
+
+# Per-event-loop client cache. httpx.AsyncClient holds transport / pool state
+# bound to the loop it was first used on; reusing it on a different (or
+# closed) loop fails. ``WeakKeyDictionary`` keyed on the loop lets the entry
+# drop automatically when the loop is garbage-collected.
+_shared_clients: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, httpx.AsyncClient]" = (
+    weakref.WeakKeyDictionary()
+)
+
+
+def _get_shared_client() -> httpx.AsyncClient:
+    """Return (and lazily create) the shared client for the current loop.
+
+    MUST be called from inside a running event loop. Per-request timeouts
+    are passed to each ``post`` call; the constructor's ``timeout`` acts as
+    a generous upper bound so the client does not impose its own floor.
+    """
+    loop = asyncio.get_running_loop()
+    cli = _shared_clients.get(loop)
+    if cli is None or cli.is_closed:
+        cli = httpx.AsyncClient(timeout=httpx.Timeout(60.0))
+        _shared_clients[loop] = cli
+    return cli
+
+
+async def aclose_shared_client() -> None:
+    """Close the shared client for the current loop.
+
+    Safe to call during daemon shutdown; a no-op if no client was ever
+    created on this loop.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    cli = _shared_clients.pop(loop, None)
+    if cli is not None and not cli.is_closed:
+        await cli.aclose()
+
+
+def close_all_shared_clients_sync() -> None:
+    """Close every shared client, including ones bound to non-running loops.
+
+    Wired into the MCP ``atexit`` shutdown path so pooled sockets get closed
+    on process exit. Uses ``asyncio.run`` only if the loop is still alive;
+    otherwise the client and its transport are dropped — the GC will close
+    the underlying sockets.
+    """
+    for loop, cli in list(_shared_clients.items()):
+        if cli.is_closed:
+            _shared_clients.pop(loop, None)
+            continue
+        if loop.is_closed():
+            # Loop is gone; we cannot await aclose. Drop the reference and
+            # let finalizers clean up.
+            _shared_clients.pop(loop, None)
+            continue
+        try:
+            # Best-effort: drive the loop to close the client cleanly.
+            if loop.is_running():
+                # Another task is driving this loop; schedule the close and
+                # move on. We cannot block here.
+                asyncio.run_coroutine_threadsafe(cli.aclose(), loop)
+            else:
+                loop.run_until_complete(cli.aclose())
+        except Exception as e:  # noqa: BLE001
+            logger.warning(
+                "worker_llm: failed to close shared client: %s: %s",
+                type(e).__name__,
+                e,
+            )
+        finally:
+            _shared_clients.pop(loop, None)
 
 
 async def call(
@@ -83,15 +169,17 @@ async def call(
     error: Exception | None = None
 
     try:
-        async with httpx.AsyncClient(timeout=eff_timeout) as http:
-            try:
-                r = await http.post(url, headers=headers, json=body)
-            except httpx.TimeoutException as e:
-                raise WorkerLLMTimeout(
-                    f"{task} timed out after {eff_timeout}s"
-                ) from e
-            except httpx.HTTPError as e:
-                raise WorkerLLMUnreachable(f"{task} connect failed: {e}") from e
+        http = _get_shared_client()
+        try:
+            r = await http.post(
+                url, headers=headers, json=body, timeout=eff_timeout
+            )
+        except httpx.TimeoutException as e:
+            raise WorkerLLMTimeout(
+                f"{task} timed out after {eff_timeout}s"
+            ) from e
+        except httpx.HTTPError as e:
+            raise WorkerLLMUnreachable(f"{task} connect failed: {e}") from e
 
         if r.status_code >= 500:
             raise WorkerLLMUnreachable(
@@ -140,14 +228,24 @@ def call_sync(
     task: str = "unknown",
     override_loaded: bool = False,
 ) -> str:
-    """Sync wrapper over ``call``. Safe from sync hook handlers."""
-    return asyncio.run(
-        call(
-            system_prompt,
-            user_prompt,
-            max_tokens=max_tokens,
-            timeout_s=timeout_s,
-            task=task,
-            override_loaded=override_loaded,
-        )
-    )
+    """Sync wrapper over ``call``. Safe from sync hook handlers.
+
+    ``asyncio.run`` creates and tears down a fresh loop per invocation, so
+    the shared client cached inside ``call`` is loop-scoped and closed
+    here to release pooled sockets rather than leaking per-call.
+    """
+
+    async def _run() -> str:
+        try:
+            return await call(
+                system_prompt,
+                user_prompt,
+                max_tokens=max_tokens,
+                timeout_s=timeout_s,
+                task=task,
+                override_loaded=override_loaded,
+            )
+        finally:
+            await aclose_shared_client()
+
+    return asyncio.run(_run())

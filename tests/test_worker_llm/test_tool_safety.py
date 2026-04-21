@@ -209,15 +209,17 @@ def test_uses_short_tool_safety_timeout(
         [SimpleNamespace(status=200, body=_ok('{"verdict":"OK","reasoning":""}'))]
     )
 
+    # The shared client has a generous constructor timeout; per-call
+    # overrides are passed to ``post``. Capture the ``timeout`` kwarg on
+    # each post call to assert the tool_safety override is forwarded.
     seen_timeouts: list = []
-    # Wrap httpx.AsyncClient to record the timeout each call uses.
-    orig_init = httpx.AsyncClient.__init__
+    orig_post = httpx.AsyncClient.post
 
-    def capture(self, *args, **kwargs):
+    async def capture(self, *args, **kwargs):
         seen_timeouts.append(kwargs.get("timeout"))
-        return orig_init(self, *args, **kwargs)
+        return await orig_post(self, *args, **kwargs)
 
-    monkeypatch.setattr(httpx.AsyncClient, "__init__", capture)
+    monkeypatch.setattr(httpx.AsyncClient, "post", capture)
 
     from spellbook.worker_llm.tasks.tool_safety import tool_safety
 
