@@ -44,6 +44,17 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_feature_memory_rerank": False,
     "worker_llm_feature_tool_safety": False,
     "worker_llm_safety_cache_ttl_s": 300,
+    # worker_llm observability (design §7). Consumed by the purge loop and
+    # edge-triggered threshold notifier via single-arg config_get(key); missing
+    # defaults would make config_get return None and crash the int/float casts
+    # in observability.py.
+    "worker_llm_observability_retention_hours": 24,
+    "worker_llm_observability_max_rows": 10000,
+    "worker_llm_observability_purge_interval_seconds": 300,
+    "worker_llm_observability_notify_enabled": False,
+    "worker_llm_observability_notify_threshold": 0.8,
+    "worker_llm_observability_notify_window": 20,
+    "worker_llm_observability_notify_eval_interval_seconds": 60,
 }
 
 

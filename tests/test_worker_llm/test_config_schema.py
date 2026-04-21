@@ -40,8 +40,14 @@ def test_all_fourteen_worker_keys_in_admin_schema():
 
 
 def test_fourteen_entries_added():
+    # Observability keys also share the ``worker_llm_`` prefix but land under
+    # a disjoint ``worker_llm_observability_`` namespace — exclude them here so
+    # this assertion stays scoped to the original 14-key core worker_llm set.
     schema_worker_keys = {
-        e["key"] for e in CONFIG_SCHEMA if e["key"].startswith("worker_llm_")
+        e["key"]
+        for e in CONFIG_SCHEMA
+        if e["key"].startswith("worker_llm_")
+        and not e["key"].startswith("worker_llm_observability_")
     }
     assert schema_worker_keys == WORKER_KEYS
     assert len(schema_worker_keys) == 14
@@ -104,6 +110,105 @@ def test_core_defaults_match_admin_schema_defaults():
 
 def test_every_entry_has_required_fields():
     for k in WORKER_KEYS:
+        entry = _entry(k)
+        assert set(entry.keys()) == {"key", "type", "description", "default"}
+        assert isinstance(entry["description"], str)
+        assert entry["description"] != ""
+
+
+# ---------------------------------------------------------------------------
+# 7 observability keys — landed alongside the Worker LLM Observability feature
+# (design §7). Ints/floats carry schema type "number"; the single boolean flag
+# carries type "boolean". No custom validators.
+# ---------------------------------------------------------------------------
+
+OBSERVABILITY_KEYS = {
+    "worker_llm_observability_retention_hours",
+    "worker_llm_observability_max_rows",
+    "worker_llm_observability_purge_interval_seconds",
+    "worker_llm_observability_notify_enabled",
+    "worker_llm_observability_notify_threshold",
+    "worker_llm_observability_notify_window",
+    "worker_llm_observability_notify_eval_interval_seconds",
+}
+
+
+def test_all_seven_observability_keys_in_admin_schema():
+    assert OBSERVABILITY_KEYS.issubset(KNOWN_KEYS)
+
+
+def test_seven_observability_entries_added():
+    schema_observability_keys = {
+        e["key"]
+        for e in CONFIG_SCHEMA
+        if e["key"].startswith("worker_llm_observability_")
+    }
+    assert schema_observability_keys == OBSERVABILITY_KEYS
+    assert len(schema_observability_keys) == 7
+
+
+def test_observability_retention_hours_schema():
+    e = _entry("worker_llm_observability_retention_hours")
+    assert e["type"] == "number"
+    assert e["default"] == 24
+
+
+def test_observability_max_rows_schema():
+    e = _entry("worker_llm_observability_max_rows")
+    assert e["type"] == "number"
+    assert e["default"] == 10000
+
+
+def test_observability_purge_interval_seconds_schema():
+    e = _entry("worker_llm_observability_purge_interval_seconds")
+    assert e["type"] == "number"
+    assert e["default"] == 300
+
+
+def test_observability_notify_enabled_schema():
+    e = _entry("worker_llm_observability_notify_enabled")
+    assert e["type"] == "boolean"
+    assert e["default"] is False
+
+
+def test_observability_notify_threshold_schema():
+    e = _entry("worker_llm_observability_notify_threshold")
+    assert e["type"] == "number"
+    assert e["default"] == 0.8
+
+
+def test_observability_notify_window_schema():
+    e = _entry("worker_llm_observability_notify_window")
+    assert e["type"] == "number"
+    assert e["default"] == 20
+
+
+def test_observability_notify_eval_interval_seconds_schema():
+    e = _entry("worker_llm_observability_notify_eval_interval_seconds")
+    assert e["type"] == "number"
+    assert e["default"] == 60
+
+
+def test_observability_admin_config_defaults_derived_from_schema():
+    for k in OBSERVABILITY_KEYS:
+        assert k in CONFIG_DEFAULTS
+        assert CONFIG_DEFAULTS[k] == _entry(k)["default"]
+
+
+def test_observability_core_config_defaults_carry_all_keys():
+    for k in OBSERVABILITY_KEYS:
+        assert k in CORE_DEFAULTS, (
+            f"{k} missing from spellbook/core/config.py CONFIG_DEFAULTS"
+        )
+
+
+def test_observability_core_defaults_match_admin_schema_defaults():
+    for k in OBSERVABILITY_KEYS:
+        assert CORE_DEFAULTS[k] == _entry(k)["default"], k
+
+
+def test_observability_every_entry_has_required_fields():
+    for k in OBSERVABILITY_KEYS:
         entry = _entry(k)
         assert set(entry.keys()) == {"key", "type", "description", "default"}
         assert isinstance(entry["description"], str)

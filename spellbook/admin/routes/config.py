@@ -160,6 +160,74 @@ CONFIG_SCHEMA = [
         "description": "Tool-safety verdict cache TTL (seconds)",
         "default": 300,
     },
+    # Worker LLM observability — design §7. The purge loop and threshold
+    # notifier read these via config_get; schema entries surface them to the
+    # admin UI.
+    {
+        "key": "worker_llm_observability_retention_hours",
+        "type": "number",
+        "description": (
+            "Retention window (hours) for worker_llm_calls rows before the "
+            "batched purge loop deletes them"
+        ),
+        "default": 24,
+    },
+    {
+        "key": "worker_llm_observability_max_rows",
+        "type": "number",
+        "description": (
+            "Hard ceiling on the number of worker_llm_calls rows kept; the "
+            "count-cap branch of the purge loop trims overflow above this"
+        ),
+        "default": 10000,
+    },
+    {
+        "key": "worker_llm_observability_purge_interval_seconds",
+        "type": "number",
+        "description": (
+            "Sleep interval (seconds) between purge loop iterations; "
+            "clamped to a minimum of 10s inside the loop"
+        ),
+        "default": 300,
+    },
+    {
+        "key": "worker_llm_observability_notify_enabled",
+        "type": "boolean",
+        "description": (
+            "Enable edge-triggered OS notifications when the worker-LLM "
+            "success rate crosses the breach/recovery threshold"
+        ),
+        "default": False,
+    },
+    {
+        "key": "worker_llm_observability_notify_threshold",
+        "type": "number",
+        "description": (
+            "Success-rate floor (0.0-1.0) for the threshold notifier; "
+            "falling below triggers a breach, recovering above triggers a "
+            "recovery notification"
+        ),
+        "default": 0.8,
+    },
+    {
+        "key": "worker_llm_observability_notify_window",
+        "type": "number",
+        "description": (
+            "Number of most-recent worker_llm_calls rows evaluated when "
+            "computing the success rate for the threshold notifier; "
+            "evaluations with fewer rows are skipped"
+        ),
+        "default": 20,
+    },
+    {
+        "key": "worker_llm_observability_notify_eval_interval_seconds",
+        "type": "number",
+        "description": (
+            "Sleep interval (seconds) between threshold-evaluator "
+            "iterations; clamped to a minimum of 10s inside the loop"
+        ),
+        "default": 60,
+    },
 ]
 
 CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}

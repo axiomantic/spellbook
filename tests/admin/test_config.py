@@ -51,6 +51,28 @@ class TestConfigGet:
         response = unauthenticated_client.get("/api/config")
         assert response.status_code == 401
 
+    def test_get_config_returns_observability_defaults(self, client, monkeypatch):
+        """``/api/config`` envelope exposes the 7 observability keys with
+        their documented defaults when no explicit value is set."""
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {},
+        )
+
+        response = client.get("/api/config")
+
+        assert response.status_code == 200
+        config = response.json()["config"]
+        assert config["worker_llm_observability_retention_hours"] == 24
+        assert config["worker_llm_observability_max_rows"] == 10000
+        assert config["worker_llm_observability_purge_interval_seconds"] == 300
+        assert config["worker_llm_observability_notify_enabled"] is False
+        assert config["worker_llm_observability_notify_threshold"] == 0.8
+        assert config["worker_llm_observability_notify_window"] == 20
+        assert (
+            config["worker_llm_observability_notify_eval_interval_seconds"] == 60
+        )
+
 
 class TestConfigSchema:
     """GET /api/config/schema returns known config keys with metadata."""
