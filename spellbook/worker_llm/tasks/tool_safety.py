@@ -1,8 +1,8 @@
 """PreToolUse safety judgment for Bash/Write/Edit tool calls.
 
 Returns a ``SafetyVerdict`` of OK / WARN / BLOCK. The worker inspects the
-imminent tool call plus the last ~4 KB of transcript context and responds
-with a short JSON verdict.
+imminent tool call plus the trailing slice of transcript context and
+responds with a short JSON verdict.
 
 **Fail-open inside the task.** Any failure mode — timeout, connection
 error, malformed response, invalid verdict string — returns
@@ -53,8 +53,48 @@ class SafetyVerdict:
 
 
 _VALID_VERDICTS = frozenset({"OK", "WARN", "BLOCK"})
-_RECENT_CONTEXT_BYTES = 4000
+# Transcript tail forwarded to the worker. Safety judgments rarely benefit
+# from more than the immediate prior turn -- the 4000-char legacy cap was
+# most of the user prompt by volume and the prefill cost dominates wall
+# time on a small local model. 1500 chars keeps the "what did the user just
+# ask / what was the previous tool call" signal.
+_RECENT_CONTEXT_BYTES = 1500
+# Cap per-string value inside tool_params before serializing. Bash commands
+# express their destructive verb in the first ~100 chars; Edit/Write blobs
+# become unbounded when users paste files. Keep head+tail so the shape of
+# the mutation is still visible to the model without paying the prefill
+# cost of the whole payload. Only applied to the prompt view -- the cache
+# key uses the untrimmed params so verdicts remain keyed on true content.
+_PARAM_VALUE_CAP = 800
+_PARAM_VALUE_HEAD_TAIL = 300
 _FAIL_OPEN = SafetyVerdict(verdict="OK", reasoning="error; fail-open")
+
+
+def _trim_param_value(value: object) -> object:
+    """Return a display-only copy of a tool_params value with long strings truncated.
+
+    Non-strings are returned as-is. Strings at or under ``_PARAM_VALUE_CAP``
+    are returned unchanged. Longer strings become ``head + elision marker +
+    tail`` so the model can still see the start and end of the mutation.
+    """
+    if not isinstance(value, str):
+        return value
+    if len(value) <= _PARAM_VALUE_CAP:
+        return value
+    head = value[:_PARAM_VALUE_HEAD_TAIL]
+    tail = value[-_PARAM_VALUE_HEAD_TAIL:]
+    elided = len(value) - 2 * _PARAM_VALUE_HEAD_TAIL
+    return f"{head} ... [{elided} chars elided] ... {tail}"
+
+
+def _trim_params_for_prompt(tool_params: dict) -> dict:
+    """Shallow copy of ``tool_params`` with oversized string values truncated.
+
+    The original ``tool_params`` is never mutated; it still drives the cache
+    key in ``safety_cache.make_key`` so cached verdicts continue to reflect
+    the real call, not the trimmed view.
+    """
+    return {k: _trim_param_value(v) for k, v in tool_params.items()}
 
 
 def tool_safety(
@@ -65,7 +105,11 @@ def tool_safety(
     Args:
         tool_name: The name of the tool about to execute (Bash/Write/Edit).
         tool_params: The parameters the tool will receive.
-        recent_context: Transcript tail; the last 4000 chars are forwarded.
+        recent_context: Transcript tail; the last ``_RECENT_CONTEXT_BYTES``
+            chars are forwarded. Oversized string values inside
+            ``tool_params`` are head/tail-trimmed via
+            ``_trim_params_for_prompt`` before serialization; the cache key
+            still sees the untrimmed ``tool_params``.
 
     Returns:
         A ``SafetyVerdict``. On any worker failure or malformed response,
@@ -100,7 +144,7 @@ def tool_safety(
     user_prompt = json.dumps(
         {
             "tool_name": tool_name,
-            "tool_params": tool_params,
+            "tool_params": _trim_params_for_prompt(tool_params),
             "recent_context": recent_context[-_RECENT_CONTEXT_BYTES:],
         },
         ensure_ascii=False,

@@ -237,25 +237,79 @@ def test_uses_short_tool_safety_timeout(
     assert seen_timeouts == [worker_llm_config["worker_llm_tool_safety_timeout_s"]]
 
 
-def test_recent_context_trimmed_to_last_4kb(
+def test_recent_context_trimmed_to_last_window(
     worker_llm_transport, worker_llm_config
 ):
     seen = worker_llm_transport(
         [SimpleNamespace(status=200, body=_ok('{"verdict":"OK","reasoning":""}'))]
     )
 
-    # 10 KB of context; only last 4 KB should be sent.
-    huge = "AB" * 5000  # 10 000 chars
-    expected_tail = huge[-4000:]
-
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
     from spellbook.worker_llm.tasks.tool_safety import tool_safety
+
+    window = ts_mod._RECENT_CONTEXT_BYTES
+    huge = "AB" * (window * 2)  # ~4x the cap
+    expected_tail = huge[-window:]
 
     tool_safety("Bash", {"command": "ls"}, huge)
 
     body = json.loads(seen[0].content.decode())
     user_msg = json.loads(body["messages"][1]["content"])
     assert user_msg["recent_context"] == expected_tail
-    assert len(user_msg["recent_context"]) == 4000
+    assert len(user_msg["recent_context"]) == window
+
+
+def test_oversized_param_strings_are_head_tail_trimmed(
+    worker_llm_transport, worker_llm_config
+):
+    seen = worker_llm_transport(
+        [SimpleNamespace(status=200, body=_ok('{"verdict":"OK","reasoning":""}'))]
+    )
+
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+    from spellbook.worker_llm.tasks.tool_safety import tool_safety
+
+    cap = ts_mod._PARAM_VALUE_CAP
+    head_tail = ts_mod._PARAM_VALUE_HEAD_TAIL
+    huge_content = ("H" * head_tail) + ("M" * (cap * 5)) + ("T" * head_tail)
+
+    tool_safety(
+        "Write",
+        {"file_path": "/tmp/x.py", "content": huge_content},
+        "",
+    )
+
+    body = json.loads(seen[0].content.decode())
+    user_msg = json.loads(body["messages"][1]["content"])
+    content = user_msg["tool_params"]["content"]
+    # Short values are untouched.
+    assert user_msg["tool_params"]["file_path"] == "/tmp/x.py"
+    # Long value keeps head + tail and declares the elision.
+    assert content.startswith("H" * head_tail)
+    assert content.endswith("T" * head_tail)
+    assert "chars elided" in content
+    # Non-string params pass through unchanged.
+    assert ts_mod._trim_param_value(True) is True
+    assert ts_mod._trim_param_value(42) == 42
+
+
+def test_trim_does_not_affect_cache_key(worker_llm_transport, worker_llm_config):
+    """Trimming is display-only: caching still keys off the real tool_params."""
+    from spellbook.worker_llm import safety_cache
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    cap = ts_mod._PARAM_VALUE_CAP
+    big = "X" * (cap * 3)
+    params_real = {"file_path": "/tmp/x.py", "content": big}
+
+    key_real = safety_cache.make_key("Write", params_real)
+    key_trimmed = safety_cache.make_key(
+        "Write", ts_mod._trim_params_for_prompt(params_real)
+    )
+    assert key_real != key_trimmed, (
+        "If trimming changed the cache key, two distinct large writes "
+        "would alias to the same cached verdict."
+    )
 
 
 # ---------------------------------------------------------------------------
