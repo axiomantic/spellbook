@@ -89,11 +89,30 @@ class TestEnvPyStructure:
         fake_context.is_offline_mode = lambda: False
         fake_context.get_x_argument = lambda **kwargs: {}
 
-        # Temporarily replace alembic.context and alembic.op
-        original_context = sys.modules.get("alembic.context")
-        original_op = sys.modules.get("alembic.op")
+        # Temporarily replace alembic.context and alembic.op.
+        #
+        # `from alembic import X` resolves X both through sys.modules AND
+        # by caching X as an attribute on the `alembic` package. We must
+        # restore BOTH, otherwise a later `from alembic import op` (e.g.,
+        # in the 0001 revision module loaded by
+        # TestWorkerLLMCallsMigration) will pick up the fake module and
+        # silently no-op the migration calls.
+        import alembic as _alembic_pkg
+
+        had_ctx_attr = hasattr(_alembic_pkg, "context")
+        had_op_attr = hasattr(_alembic_pkg, "op")
+        original_ctx_attr = getattr(_alembic_pkg, "context", None)
+        original_op_attr = getattr(_alembic_pkg, "op", None)
+
+        fake_op_module = _FakeModule()
         monkeypatch.setitem(sys.modules, "alembic.context", fake_context)
-        monkeypatch.setitem(sys.modules, "alembic.op", _FakeModule())
+        monkeypatch.setitem(sys.modules, "alembic.op", fake_op_module)
+        # Also overwrite package attributes so `from alembic import context`
+        # / `from alembic import op` inside env.py resolve to the fakes
+        # even if the real submodules have already been imported earlier
+        # in the test session.
+        _alembic_pkg.context = fake_context
+        _alembic_pkg.op = fake_op_module
 
         env_path = MIGRATIONS_DIR / "env.py"
         spec = importlib.util.spec_from_file_location(
@@ -108,7 +127,19 @@ class TestEnvPyStructure:
         # are all no-ops on the fake module).
         fake_context.is_offline_mode = lambda: True
         spec.loader.exec_module(module)
-        yield module
+        try:
+            yield module
+        finally:
+            # Restore package attributes so `from alembic import op` in
+            # later tests picks up the real submodule.
+            if had_ctx_attr:
+                _alembic_pkg.context = original_ctx_attr
+            elif hasattr(_alembic_pkg, "context"):
+                delattr(_alembic_pkg, "context")
+            if had_op_attr:
+                _alembic_pkg.op = original_op_attr
+            elif hasattr(_alembic_pkg, "op"):
+                delattr(_alembic_pkg, "op")
 
     def test_db_configs_has_exactly_four_databases(self, env_module):
         assert isinstance(env_module.DB_CONFIGS, dict)
@@ -183,3 +214,157 @@ class TestEnvPyStructure:
         """Verify _get_target_db function exists for -x db=<name> support."""
         assert hasattr(env_module, "_get_target_db")
         assert callable(env_module._get_target_db)
+
+
+class TestWorkerLLMCallsMigration:
+    """Verify the 0001_worker_llm_calls Alembic revision creates and drops
+    the ``worker_llm_calls`` table with its 5 indexes.
+
+    Tests the migration module's ``upgrade()`` and ``downgrade()`` directly
+    against a temporary SQLite database, so we exercise the exact SQL the
+    revision will emit at deploy time without needing a configured env.py
+    to target the temp DB. This catches:
+      - missing/renamed columns (SELECT on the table after upgrade would fail)
+      - missing indexes (sqlite_master lookup)
+      - downgrade leaving orphan indexes or the table itself
+    """
+
+    REVISION_PATH = (
+        MIGRATIONS_DIR / "versions" / "spellbook" / "0001_add_worker_llm_calls.py"
+    )
+
+    EXPECTED_COLUMNS = {
+        "id",
+        "timestamp",
+        "task",
+        "model",
+        "status",
+        "latency_ms",
+        "prompt_len",
+        "response_len",
+        "error",
+        "override_loaded",
+    }
+
+    EXPECTED_INDEXES = {
+        "ix_worker_llm_calls_timestamp",
+        "ix_worker_llm_calls_task",
+        "ix_worker_llm_calls_status",
+        "ix_worker_llm_calls_ts_status",
+        "ix_worker_llm_calls_ts_task",
+    }
+
+    def _load_revision_module(self):
+        """Import the revision file as a standalone module."""
+        spec = importlib.util.spec_from_file_location(
+            "spellbook_migration_0001", str(self.REVISION_PATH)
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_revision_file_exists(self):
+        assert self.REVISION_PATH.is_file(), (
+            f"expected migration file at {self.REVISION_PATH}"
+        )
+
+    def test_revision_metadata(self):
+        module = self._load_revision_module()
+        assert module.revision == "0001_worker_llm_calls"
+        assert module.down_revision is None
+        assert module.branch_labels is None
+        assert module.depends_on is None
+
+    def test_upgrade_creates_table_with_all_columns_and_indexes(self, tmp_path):
+        from alembic.migration import MigrationContext
+        from alembic.operations import Operations
+        from sqlalchemy import create_engine, inspect
+
+        db_path = tmp_path / "test_migration.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+        module = self._load_revision_module()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.upgrade()
+
+        inspector = inspect(engine)
+
+        # Table and all columns exist with the exact expected set.
+        assert "worker_llm_calls" in inspector.get_table_names()
+        actual_columns = {c["name"] for c in inspector.get_columns("worker_llm_calls")}
+        assert actual_columns == self.EXPECTED_COLUMNS
+
+        # All 5 indexes (3 single-col + 2 compound) exist with exact names.
+        actual_indexes = {
+            idx["name"] for idx in inspector.get_indexes("worker_llm_calls")
+        }
+        assert actual_indexes == self.EXPECTED_INDEXES
+
+        # Compound indexes cover the correct columns in the correct order.
+        indexes_by_name = {
+            idx["name"]: idx for idx in inspector.get_indexes("worker_llm_calls")
+        }
+        assert indexes_by_name["ix_worker_llm_calls_ts_status"]["column_names"] == [
+            "timestamp",
+            "status",
+        ]
+        assert indexes_by_name["ix_worker_llm_calls_ts_task"]["column_names"] == [
+            "timestamp",
+            "task",
+        ]
+        assert indexes_by_name["ix_worker_llm_calls_timestamp"]["column_names"] == [
+            "timestamp",
+        ]
+        assert indexes_by_name["ix_worker_llm_calls_task"]["column_names"] == [
+            "task",
+        ]
+        assert indexes_by_name["ix_worker_llm_calls_status"]["column_names"] == [
+            "status",
+        ]
+
+        engine.dispose()
+
+    def test_downgrade_drops_table_and_all_indexes(self, tmp_path):
+        from alembic.migration import MigrationContext
+        from alembic.operations import Operations
+        from sqlalchemy import create_engine, inspect
+
+        db_path = tmp_path / "test_migration.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+        module = self._load_revision_module()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.upgrade()
+
+        # Sanity check: table+indexes exist after upgrade.
+        inspector = inspect(engine)
+        assert "worker_llm_calls" in inspector.get_table_names()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.downgrade()
+
+        inspector = inspect(engine)
+        # Table gone.
+        assert "worker_llm_calls" not in inspector.get_table_names()
+        # No orphan indexes (SQLite drops indexes with the table, but we verify
+        # the downgrade code explicitly ran without errors and left nothing).
+        # sqlite_master listing: no rows whose name begins with
+        # ix_worker_llm_calls_.
+        from sqlalchemy import text
+
+        with engine.connect() as conn:
+            orphan_indexes = conn.execute(
+                text(
+                    "SELECT name FROM sqlite_master WHERE type='index' "
+                    "AND name LIKE 'ix_worker_llm_calls_%'"
+                )
+            ).fetchall()
+        assert orphan_indexes == []
+
+        engine.dispose()
