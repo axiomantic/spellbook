@@ -2,6 +2,7 @@
 
 import configparser
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
@@ -262,9 +263,13 @@ class TestPerDbVersionLocations:
         """
         value = parsed_ini.get("alembic", "version_locations")
         # Alembic's "space" separator splits on a single space character.
-        actual_locations = value.split(" ")
+        # Normalize path separators on both sides so the comparison works on
+        # Windows, where alembic.ini uses forward slashes but pathlib
+        # produces backslashes. Alembic itself normalizes via os.path.normpath
+        # at runtime, so mixed separators in the .ini are intentional.
+        actual_locations = [os.path.normpath(p) for p in value.split(" ")]
         expected_locations = [
-            str((MIGRATIONS_DIR.resolve() / "versions" / db_name))
+            os.path.normpath(str(MIGRATIONS_DIR.resolve() / "versions" / db_name))
             for db_name in ("spellbook", "fractal", "forged", "coordination")
         ]
         # Assert EXACT equality against the complete expected list (order
@@ -284,9 +289,11 @@ class TestPerDbVersionLocations:
         in DB names and relative-path regressions (%(here)s dropped).
         """
         value = parsed_ini.get("alembic", "version_locations")
-        actual_locations = value.split(" ")
+        # Normalize path separators on both sides so the membership check
+        # works on Windows (see sibling test for full rationale).
+        actual_locations = [os.path.normpath(p) for p in value.split(" ")]
         expected_path = MIGRATIONS_DIR.resolve() / "versions" / db_name
-        expected_str = str(expected_path)
+        expected_str = os.path.normpath(str(expected_path))
         assert expected_str in actual_locations, (
             f"version_locations missing entry for {db_name!r}: "
             f"expected {expected_str!r} in {actual_locations!r}"
