@@ -45,7 +45,7 @@ async def test_call_happy_path(worker_llm_transport, worker_llm_config, monkeypa
     assert len(calls) == 1
     assert calls[0]["task"] == "test"
     assert calls[0]["model"] == "test-model"
-    assert calls[0]["status"] == "ok"
+    assert calls[0]["status"] == "success"
     assert calls[0]["prompt_len"] == len("sys") + len("usr")
     assert calls[0]["response_len"] == len("hello")
     assert calls[0]["error"] is None
@@ -105,7 +105,7 @@ async def test_call_timeout_raises_timeout(
         await client.call("s", "u", task="test")
     assert str(excinfo.value) == "test timed out after 2.0s"
     assert len(calls) == 1
-    assert calls[0]["status"] == "WorkerLLMTimeout"
+    assert calls[0]["status"] == "timeout"
     assert calls[0]["error"] == "test timed out after 2.0s"
     assert calls[0]["response_len"] == 0
 
@@ -124,7 +124,7 @@ async def test_call_5xx_raises_unreachable(
         await client.call("s", "u", task="test")
     assert str(excinfo.value) == "test HTTP 503: unavailable"
     assert len(calls) == 1
-    assert calls[0]["status"] == "WorkerLLMUnreachable"
+    assert calls[0]["status"] == "error"
 
 
 @pytest.mark.asyncio
@@ -217,8 +217,69 @@ async def test_call_publishes_event_on_success(
     assert len(calls) == 1
     assert calls[0]["task"] == "harvest"
     assert calls[0]["override_loaded"] is True
-    assert calls[0]["status"] == "ok"
+    assert calls[0]["status"] == "success"
     assert calls[0]["response_len"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Canonical status vocabulary (regression: publish_call must receive
+# {success, error, timeout, fail_open, dropped} -- NOT "ok" or exception
+# class names. Downstream aggregates filter on ``status == "success"`` and
+# break silently otherwise.)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_publish_call_uses_canonical_status_on_success(
+    worker_llm_transport, worker_llm_config, monkeypatch
+):
+    calls: list = []
+    monkeypatch.setattr(
+        "spellbook.worker_llm.client.publish_call",
+        lambda **kw: calls.append(kw),
+    )
+    worker_llm_transport(
+        [_script(status=200, body={"choices": [{"message": {"content": "r"}}]})]
+    )
+    await client.call("s", "u", task="test")
+    assert len(calls) == 1
+    assert calls[0]["status"] == "success"
+    assert calls[0]["error"] is None
+
+
+@pytest.mark.asyncio
+async def test_publish_call_uses_canonical_status_on_timeout(
+    worker_llm_transport, worker_llm_config, monkeypatch
+):
+    calls: list = []
+    monkeypatch.setattr(
+        "spellbook.worker_llm.client.publish_call",
+        lambda **kw: calls.append(kw),
+    )
+    worker_llm_transport([_script(raise_on_send=httpx.ConnectTimeout("slow"))])
+    with pytest.raises(WorkerLLMTimeout):
+        await client.call("s", "u", task="test")
+    assert len(calls) == 1
+    assert calls[0]["status"] == "timeout"
+    # Exception class info is preserved via ``error`` -- not swallowed.
+    assert calls[0]["error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_publish_call_uses_canonical_status_on_unreachable(
+    worker_llm_transport, worker_llm_config, monkeypatch
+):
+    calls: list = []
+    monkeypatch.setattr(
+        "spellbook.worker_llm.client.publish_call",
+        lambda **kw: calls.append(kw),
+    )
+    worker_llm_transport([_script(raise_on_send=httpx.ConnectError("refused"))])
+    with pytest.raises(WorkerLLMUnreachable):
+        await client.call("s", "u", task="test")
+    assert len(calls) == 1
+    assert calls[0]["status"] == "error"
+    assert calls[0]["error"] is not None
 
 
 def test_call_sync_runs_asyncio(monkeypatch):

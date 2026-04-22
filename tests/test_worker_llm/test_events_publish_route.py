@@ -488,7 +488,7 @@ async def test_publish_route_rejects_invalid_status(
     """Unknown ``status`` value returns 400 and skips ``record_call``.
 
     ESCAPE: test_publish_route_rejects_invalid_status
-      CLAIM:    A status outside {success, error, timeout, fail_open}
+      CLAIM:    A status outside {success, error, timeout, fail_open, dropped}
                 produces 400 AND record_call not invoked.
       PATH:     POST -> handler -> validation branch for status not in enum.
       CHECK:    (a) status 400; (b) error body names the offending value;

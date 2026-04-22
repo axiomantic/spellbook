@@ -38,6 +38,33 @@ from spellbook.worker_llm.events import publish_call
 logger = logging.getLogger(__name__)
 
 
+def _canonical_status(error: Exception | None) -> str:
+    """Translate a call outcome to the canonical status vocabulary.
+
+    The rest of the system (admin metrics in
+    ``spellbook.admin.routes.worker_llm``, the threshold notifier in
+    ``spellbook.worker_llm.observability``, the warm-probe gate in
+    ``spellbook.worker_llm.tasks.tool_safety``, and the publish-route enum
+    in ``spellbook.mcp.routes``) assumes the canonical set
+    ``{success, error, timeout, fail_open, dropped}``. Emitting raw
+    ``"ok"`` or ``type(e).__name__`` silently breaks every downstream
+    aggregate because ``status == "success"`` is always False.
+
+    This helper maps:
+      - ``None`` (success)                -> ``"success"``
+      - ``WorkerLLMTimeout``               -> ``"timeout"``
+      - any other exception                -> ``"error"``
+
+    The exception class name is preserved separately via the ``error``
+    field on the event payload, so diagnosis information is not lost.
+    """
+    if error is None:
+        return "success"
+    if isinstance(error, WorkerLLMTimeout):
+        return "timeout"
+    return "error"
+
+
 # Per-event-loop client cache. httpx.AsyncClient holds transport / pool state
 # bound to the loop it was first used on; reusing it on a different (or
 # closed) loop fails. ``WeakKeyDictionary`` keyed on the loop lets the entry
@@ -164,7 +191,6 @@ async def call(
 
     url = f"{cfg.base_url.rstrip('/')}/chat/completions"
     started = time.monotonic()
-    status = "ok"
     response_text = ""
     error: Exception | None = None
 
@@ -202,7 +228,6 @@ async def call(
             raise WorkerLLMBadResponse(f"{task} content not a string")
         return response_text
     except Exception as e:
-        status = type(e).__name__
         error = e
         raise
     finally:
@@ -211,7 +236,7 @@ async def call(
             task=task,
             model=cfg.model,
             latency_ms=latency_ms,
-            status=status,
+            status=_canonical_status(error),
             prompt_len=len(system_prompt) + len(user_prompt),
             response_len=len(response_text),
             error=str(error) if error else None,

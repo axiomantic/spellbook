@@ -638,7 +638,7 @@ async def api_events_publish(request: Request) -> JSONResponse:
                 {"error": "task/model too long (max 128 chars)"},
                 status_code=400,
             )
-        if status_val not in {"success", "error", "timeout", "fail_open"}:
+        if status_val not in {"success", "error", "timeout", "fail_open", "dropped"}:
             return JSONResponse(
                 {"error": f"invalid status: {status_val!r}"},
                 status_code=400,

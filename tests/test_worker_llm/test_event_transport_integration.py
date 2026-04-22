@@ -188,7 +188,7 @@ async def test_subprocess_publish_reaches_event_bus(
             "import sys; "
             "from spellbook.worker_llm.events import publish_call; "
             "publish_call(task='transcript_harvest', model='m', "
-            "latency_ms=1, status='ok', prompt_len=1, response_len=1); "
+            "latency_ms=1, status='success', prompt_len=1, response_len=1); "
             "sys.stdout.write('published'); sys.stdout.flush()"
         )
 
@@ -232,7 +232,7 @@ async def test_subprocess_publish_reaches_event_bus(
         assert event.data["task"] == "transcript_harvest"
         assert event.data["model"] == "m"
         assert event.data["latency_ms"] == 1
-        assert event.data["status"] == "ok"
+        assert event.data["status"] == "success"
 
     finally:
         await event_bus.unsubscribe(subscriber_id)

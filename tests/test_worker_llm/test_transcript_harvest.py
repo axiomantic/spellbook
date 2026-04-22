@@ -204,7 +204,7 @@ def test_publishes_call_event_on_success(
 
     assert len(calls) == 1
     assert calls[0]["task"] == "transcript_harvest"
-    assert calls[0]["status"] == "ok"
+    assert calls[0]["status"] == "success"
     assert calls[0]["error"] is None
 
 
@@ -227,7 +227,7 @@ def test_publishes_failed_event_on_bad_response(
 
     assert len(calls) == 1
     assert calls[0]["task"] == "transcript_harvest"
-    assert calls[0]["status"] == "WorkerLLMBadResponse"
+    assert calls[0]["status"] == "error"
     assert calls[0]["error"] is not None
 
 

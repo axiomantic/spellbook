@@ -111,7 +111,7 @@ async def test_publishes_call_event_with_roundtable_voice_task_tag(
 
     assert len(calls) == 1
     assert calls[0]["task"] == "roundtable_voice"
-    assert calls[0]["status"] == "ok"
+    assert calls[0]["status"] == "success"
 
 
 # ---------------------------------------------------------------------------
