@@ -76,6 +76,19 @@ export function WorkerLLMPage() {
     }
   }, [])
 
+  // Gemini review MEDIUM 2 (symmetric): Success Rate was hard-coded
+  // variant="success" regardless of value. Drive the variant off the rate
+  // so a degraded success rate renders red / amber rather than green.
+  const successRate = metrics?.success_rate ?? null
+  const successVariant =
+    successRate === null
+      ? 'default'
+      : successRate >= 0.95
+        ? 'success'
+        : successRate >= 0.8
+          ? 'warning'
+          : 'error'
+
   const columns = useMemo(
     () => [
       columnHelper.accessor('timestamp', {
@@ -155,9 +168,9 @@ export function WorkerLLMPage() {
       <div className="grid grid-cols-3 gap-3 mb-4">
         <MetricCard
           label="Success Rate"
-          value={formatPercent(metrics?.success_rate ?? null)}
+          value={formatPercent(successRate)}
           unit="%"
-          variant="success"
+          variant={successVariant}
         />
         <MetricCard
           label="P95 Latency"

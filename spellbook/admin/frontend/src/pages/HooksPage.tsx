@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
 import {
   useHookEvents,
@@ -11,10 +11,15 @@ import { MetricCard } from '../components/shared/MetricCard'
 import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 
+// Gemini review MEDIUM 1: match the WorkerLLMPage convention (time
+// windows, not row counts) so the "1h / 6h / 24h" chip row behaves
+// identically across both observability pages.
+type WindowHours = 1 | 6 | 24
+
 const WINDOW_OPTIONS = [
-  { value: '50', label: '50' },
-  { value: '200', label: '200' },
-  { value: '1000', label: '1000' },
+  { value: '1', label: '1h' },
+  { value: '6', label: '6h' },
+  { value: '24', label: '24h' },
 ]
 
 const EVENT_OPTIONS = [
@@ -48,7 +53,7 @@ function formatPercent(value: number | null | undefined): string | null {
 const columnHelper = createColumnHelper<HookEvent>()
 
 export function HooksPage() {
-  const [windowSize, setWindowSize] = useState<number>(50)
+  const [windowHours, setWindowHours] = useState<WindowHours>(24)
   const [eventName, setEventName] = useState<string>('')
   const [hookName, setHookName] = useState<string>('')
 
@@ -60,8 +65,22 @@ export function HooksPage() {
   }, [eventName, hookName])
 
   const listPage = useHookEvents(filters)
-  const metricsQuery = useHookMetrics(windowSize)
+  const metricsQuery = useHookMetrics(windowHours)
   const metrics = metricsQuery.data
+
+  const handleWindowChange = useCallback((value: string) => {
+    const parsed = Number(value) as WindowHours
+    if (parsed === 1 || parsed === 6 || parsed === 24) {
+      setWindowHours(parsed)
+    }
+  }, [])
+
+  // Gemini review MEDIUM 2: the Error Rate card was statically variant="success"
+  // regardless of value, so a red-alert rate still rendered green. Mirror the
+  // signal by driving the variant off the rate itself.
+  const errorRate = metrics?.summary?.error_rate ?? null
+  const errorVariant =
+    errorRate !== null && errorRate > 0 ? 'error' : 'success'
 
   const columns = useMemo(
     () => [
@@ -128,8 +147,8 @@ export function HooksPage() {
         <FilterBar
           type="chips"
           options={WINDOW_OPTIONS}
-          value={String(windowSize)}
-          onChange={(v) => setWindowSize(Number(v))}
+          value={String(windowHours)}
+          onChange={handleWindowChange}
         />
         <FilterBar
           type="chips"
@@ -162,9 +181,9 @@ export function HooksPage() {
         />
         <MetricCard
           label="Error Rate"
-          value={formatPercent(metrics?.summary?.error_rate ?? null)}
+          value={formatPercent(errorRate)}
           unit="%"
-          variant="success"
+          variant={errorVariant}
         />
       </div>
       {listPage.isError && (

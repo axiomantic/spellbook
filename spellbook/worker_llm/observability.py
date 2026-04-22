@@ -17,8 +17,12 @@ released between batches. ``purge_loop`` is the async wrapper.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
+import secrets
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from sqlalchemy import delete, desc, select
 
@@ -108,13 +112,79 @@ def record_call(
         _record_call_failures += 1
 
 
-# Single-writer invariant: ONLY ``_run_purge_once`` writes this after a
-# successful iteration. ``doctor`` (impl plan Step 19) reads it.
-# ``None`` sentinel means the purge loop has not yet run in this daemon
-# lifetime. No lock needed because the purge task is single-threaded and
-# the read in ``doctor`` only observes a monotonic timestamp — a stale
-# read is acceptable (off by one iteration at most).
-_last_purge_run_ts: datetime | None = None
+# Cross-process purge-last-ran record.
+#
+# Gemini review MEDIUM 3: the daemon (which runs the purge loop) and the
+# ``spellbook worker-llm doctor`` CLI are DIFFERENT processes; a
+# module-level variable in the daemon is invisible to the CLI. Persist the
+# timestamp to a small on-disk JSON file so the CLI can read it.
+#
+# File schema: ``{"ts": "<iso-8601 utc>"}``. Wall-clock (not monotonic) is
+# recorded so the CLI's "last ran at" report is meaningful across process
+# boundaries. Writes are atomic (tmp file + ``os.replace``) so a concurrent
+# CLI read never observes a partially-written file.
+_LAST_PURGE_PATH: Path = (
+    Path.home() / ".local" / "spellbook" / "cache" / "worker_llm_last_purge.json"
+)
+
+
+def read_last_purge_ts() -> datetime | None:
+    """Return the last-run timestamp written by ``_run_purge_once``, or ``None``.
+
+    ``None`` when the file does not exist (purge loop has not yet completed
+    an iteration in ANY process) OR when the file is unreadable / malformed.
+    Corrupt content never raises — the doctor must always terminate.
+    """
+    try:
+        if not _LAST_PURGE_PATH.exists():
+            return None
+        payload = json.loads(_LAST_PURGE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    ts = payload.get("ts")
+    if not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+
+
+def write_last_purge_ts(now: datetime | None = None) -> None:
+    """Atomically record the last-run timestamp for cross-process readers.
+
+    Fire-and-forget: OSErrors are logged at DEBUG and swallowed — the purge
+    loop must never fail because observability-of-observability failed.
+    """
+    ts = (now or datetime.now(timezone.utc)).isoformat()
+    payload = json.dumps({"ts": ts}).encode("utf-8")
+    try:
+        _LAST_PURGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # Atomic write: tempfile in the same directory + ``os.replace``.
+        # Mirrors ``safety_cache._atomic_write_json``.
+        for _ in range(5):
+            tmp = _LAST_PURGE_PATH.with_suffix(
+                f".tmp.{os.getpid()}.{secrets.token_hex(4)}",
+            )
+            try:
+                fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+            except FileExistsError:
+                continue
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(payload)
+                os.replace(tmp, _LAST_PURGE_PATH)
+                return
+            except Exception:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+                raise
+    except OSError:
+        log.debug("write_last_purge_ts failed (best-effort)", exc_info=True)
 
 
 def _run_purge_once() -> None:
@@ -141,7 +211,6 @@ def _run_purge_once() -> None:
     transcript_harvest, tool_safety, roundtable) for seconds. Per-batch
     commit releases the writer lock between batches.
     """
-    global _last_purge_run_ts
     retention_hours = int(config_get("worker_llm_observability_retention_hours"))
     max_rows = int(config_get("worker_llm_observability_max_rows"))
 
@@ -203,7 +272,7 @@ def _run_purge_once() -> None:
             if result.rowcount == 0:
                 break
 
-    _last_purge_run_ts = datetime.now(timezone.utc)
+    write_last_purge_ts()
 
 
 async def purge_loop() -> None:
@@ -218,7 +287,7 @@ async def purge_loop() -> None:
     Exception policy: any exception from ``_run_purge_once`` is logged at
     DEBUG (the first-loud policy lives at the ``record_call`` site, not
     here — a purge crash is a DB-is-broken signal that will show up in
-    ``doctor`` via ``_last_purge_run_ts`` staleness). The loop then
+    ``doctor`` via ``read_last_purge_ts()`` staleness). The loop then
     sleeps for ``_PURGE_LOOP_BACKOFF_SECONDS`` before retrying so a
     persistent failure doesn't hot-loop the CPU.
     """

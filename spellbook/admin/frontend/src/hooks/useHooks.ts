@@ -26,7 +26,7 @@ export interface HookMetricsGroup {
 
 export interface HookMetrics {
   total: number
-  window: number
+  window_hours: number
   groups: HookMetricsGroup[]
   summary: {
     avg_duration_ms: number | null
@@ -47,12 +47,12 @@ export function useHookEvents(
   })
 }
 
-export function useHookMetrics(window: number) {
+export function useHookMetrics(windowHours: number) {
   return useQuery<HookMetrics>({
-    queryKey: ['hook-metrics', window],
+    queryKey: ['hook-metrics', windowHours],
     queryFn: () =>
       fetchApi<HookMetrics>('/api/hooks/metrics', {
-        params: { window },
+        params: { window_hours: windowHours },
       }),
     refetchInterval: 10000,
   })

@@ -293,6 +293,93 @@ def test_oversized_param_strings_are_head_tail_trimmed(
     assert ts_mod._trim_param_value(42) == 42
 
 
+def test_nested_oversized_strings_are_truncated_recursively(
+    worker_llm_transport, worker_llm_config
+):
+    """Gemini review MEDIUM 4: nested structures (dicts/lists inside
+    ``tool_params``) must have their string values truncated, not just
+    top-level strings. The classic offender is ``Edit``-style tools that
+    pass a list of edit dicts with long ``old_string``/``new_string``
+    payloads; a shallow copy left those strings unbounded in the prompt.
+    """
+    seen = worker_llm_transport(
+        [SimpleNamespace(status=200, body=_ok('{"verdict":"OK","reasoning":""}'))]
+    )
+
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+    from spellbook.worker_llm.tasks.tool_safety import tool_safety
+
+    cap = ts_mod._PARAM_VALUE_CAP
+    head_tail = ts_mod._PARAM_VALUE_HEAD_TAIL
+    big = ("H" * head_tail) + ("M" * (cap * 5)) + ("T" * head_tail)
+    small = "fine"
+
+    # Simulate an Edit-style payload: a list of edit dicts nested inside
+    # tool_params. Both list-of-dicts AND dict-of-dicts must be walked.
+    tool_safety(
+        "Edit",
+        {
+            "file_path": "/tmp/x.py",
+            "edits": [
+                {"old_string": big, "new_string": small},
+                {"old_string": small, "new_string": big},
+            ],
+            "metadata": {"nested": {"deep": big}},
+        },
+        "",
+    )
+
+    body = json.loads(seen[0].content.decode())
+    user_msg = json.loads(body["messages"][1]["content"])
+    params = user_msg["tool_params"]
+
+    # Top-level non-string fields are unchanged.
+    assert params["file_path"] == "/tmp/x.py"
+
+    # Every nested long string inside the list of edits is trimmed.
+    assert "chars elided" in params["edits"][0]["old_string"]
+    assert params["edits"][0]["new_string"] == small
+    assert params["edits"][1]["old_string"] == small
+    assert "chars elided" in params["edits"][1]["new_string"]
+
+    # Doubly-nested dict leaves are also trimmed.
+    assert "chars elided" in params["metadata"]["nested"]["deep"]
+
+
+def test_trim_param_value_recurses_into_nested_types():
+    """Direct test of the recursion logic: dicts, lists, tuples all walked."""
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    cap = ts_mod._PARAM_VALUE_CAP
+    head_tail = ts_mod._PARAM_VALUE_HEAD_TAIL
+    big = ("A" * head_tail) + ("B" * (cap * 3)) + ("C" * head_tail)
+
+    # Scalars: strings truncated, non-strings pass through.
+    assert ts_mod._trim_param_value(True) is True
+    assert ts_mod._trim_param_value(42) == 42
+    assert ts_mod._trim_param_value(None) is None
+    assert ts_mod._trim_param_value("short") == "short"
+    assert "chars elided" in ts_mod._trim_param_value(big)
+
+    # Dict: every value is walked.
+    out = ts_mod._trim_param_value({"a": big, "b": "ok", "c": 1})
+    assert "chars elided" in out["a"]
+    assert out["b"] == "ok"
+    assert out["c"] == 1
+
+    # List: every element is walked.
+    out = ts_mod._trim_param_value([big, "ok", {"nested": big}])
+    assert "chars elided" in out[0]
+    assert out[1] == "ok"
+    assert "chars elided" in out[2]["nested"]
+
+    # Tuple collapses to list (JSON-serializes the same).
+    out = ts_mod._trim_param_value((big, "ok"))
+    assert isinstance(out, list)
+    assert "chars elided" in out[0]
+    assert out[1] == "ok"
+
+
 def test_trim_does_not_affect_cache_key(worker_llm_transport, worker_llm_config):
     """Trimming is display-only: caching still keys off the real tool_params."""
     from spellbook.worker_llm import safety_cache

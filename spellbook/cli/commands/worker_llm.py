@@ -229,10 +229,11 @@ def _observability_health() -> dict:
       - ``row_count``: total row count (0 when table exists but empty).
       - ``last_row_ts``: ISO-8601 of the most recent row's ``timestamp``, or
         ``None`` when the table is empty.
-      - ``purge_last_ran``: ISO-8601 of ``observability._last_purge_run_ts``,
-        or ``None`` when the purge loop has not yet run in this daemon
-        lifetime (single-writer invariant: only ``_run_purge_once`` writes
-        this attribute; we only read it here).
+      - ``purge_last_ran``: ISO-8601 of the cross-process purge timestamp
+        (``observability.read_last_purge_ts()``), or ``None`` when the
+        purge loop has not yet completed an iteration. The daemon and the
+        doctor CLI run in different processes, so this is read from disk
+        (Gemini review MEDIUM 3) rather than from a module-level variable.
       - ``notifications``: ``{reachable, reason}``. Reachability is a static
         importability check (``from spellbook.notifications.notify import
         send_notification``) rather than a live ``check_availability()`` probe
@@ -279,7 +280,9 @@ def _observability_health() -> dict:
         out["error"] = f"{type(e).__name__}: {e}"
 
     # --- Purge loop last-run timestamp ---
-    purge_ts = getattr(_obs, "_last_purge_run_ts", None)
+    # Gemini review MEDIUM 3: read from disk so the CLI observes the
+    # daemon's latest write even though they are in different processes.
+    purge_ts = _obs.read_last_purge_ts()
     if purge_ts is not None:
         try:
             out["purge_last_ran"] = purge_ts.isoformat()

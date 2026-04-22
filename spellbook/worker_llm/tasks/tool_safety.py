@@ -105,26 +105,43 @@ def _cold_threshold_s() -> float | None:
 def _trim_param_value(value: object) -> object:
     """Return a display-only copy of a tool_params value with long strings truncated.
 
-    Non-strings are returned as-is. Strings at or under ``_PARAM_VALUE_CAP``
-    are returned unchanged. Longer strings become ``head + elision marker +
-    tail`` so the model can still see the start and end of the mutation.
+    Recurses into ``dict`` and ``list`` structures (Gemini review MEDIUM 4)
+    so nested long strings — e.g. the ``Edit`` tool's ``edits: [{old_string,
+    new_string}]`` or the ``NotebookEdit`` tool's ``cell_source`` — are
+    truncated regardless of nesting depth. Previously only top-level string
+    values were trimmed, leaving the worker to prefill the full nested
+    payload.
+
+    Non-string leaves are returned as-is. Strings at or under
+    ``_PARAM_VALUE_CAP`` are returned unchanged. Longer strings become
+    ``head + elision marker + tail`` so the model can still see the start
+    and end of the mutation.
     """
-    if not isinstance(value, str):
-        return value
-    if len(value) <= _PARAM_VALUE_CAP:
-        return value
-    head = value[:_PARAM_VALUE_HEAD_TAIL]
-    tail = value[-_PARAM_VALUE_HEAD_TAIL:]
-    elided = len(value) - 2 * _PARAM_VALUE_HEAD_TAIL
-    return f"{head} ... [{elided} chars elided] ... {tail}"
+    if isinstance(value, str):
+        if len(value) <= _PARAM_VALUE_CAP:
+            return value
+        head = value[:_PARAM_VALUE_HEAD_TAIL]
+        tail = value[-_PARAM_VALUE_HEAD_TAIL:]
+        elided = len(value) - 2 * _PARAM_VALUE_HEAD_TAIL
+        return f"{head} ... [{elided} chars elided] ... {tail}"
+    if isinstance(value, dict):
+        return {k: _trim_param_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_trim_param_value(v) for v in value]
+    if isinstance(value, tuple):
+        # Tuples JSON-serialize as lists; keep the list shape the worker
+        # already sees (json.dumps converts tuples to arrays anyway).
+        return [_trim_param_value(v) for v in value]
+    return value
 
 
 def _trim_params_for_prompt(tool_params: dict) -> dict:
-    """Shallow copy of ``tool_params`` with oversized string values truncated.
+    """Display-only copy of ``tool_params`` with oversized strings truncated.
 
-    The original ``tool_params`` is never mutated; it still drives the cache
-    key in ``safety_cache.make_key`` so cached verdicts continue to reflect
-    the real call, not the trimmed view.
+    Walks the structure recursively (Gemini review MEDIUM 4); see
+    ``_trim_param_value``. The original ``tool_params`` is never mutated;
+    it still drives the cache key in ``safety_cache.make_key`` so cached
+    verdicts continue to reflect the real call, not the trimmed view.
     """
     return {k: _trim_param_value(v) for k, v in tool_params.items()}
 

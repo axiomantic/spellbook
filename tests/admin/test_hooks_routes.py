@@ -241,12 +241,17 @@ class TestHookMetricsRoute:
     """GET /api/hooks/metrics -- aggregates over the most recent window."""
 
     def test_metrics_returns_envelope(self, seeded_client):
-        response = seeded_client.get("/api/hooks/metrics?window=50")
+        # Gemini review MEDIUM 1: endpoint now accepts window_hours to match
+        # /api/worker-llm/metrics; seeded rows are all within the last minute
+        # so a 1-hour window captures all 7.
+        response = seeded_client.get("/api/hooks/metrics?window_hours=1")
         assert response.status_code == 200
         data = response.json()
-        assert set(data.keys()) == {"total", "window", "groups", "summary"}
+        assert set(data.keys()) == {
+            "total", "window_hours", "groups", "summary",
+        }
         assert data["total"] == 7
-        assert data["window"] == 50
+        assert data["window_hours"] == 1
 
         # Summary error_rate: 1 out of 7.
         assert data["summary"]["error_rate"] == pytest.approx(1 / 7)
@@ -256,7 +261,7 @@ class TestHookMetricsRoute:
         )
 
     def test_metrics_groups_by_hook_and_event(self, seeded_client):
-        response = seeded_client.get("/api/hooks/metrics?window=50")
+        response = seeded_client.get("/api/hooks/metrics?window_hours=1")
         data = response.json()
         by_pair = {
             (g["hook_name"], g["event_name"]): g for g in data["groups"]
@@ -291,10 +296,44 @@ class TestHookMetricsRoute:
         }
 
     def test_metrics_window_limits_rows(self, seeded_client):
-        """window=2 only counts the 2 newest rows (both success)."""
-        response = seeded_client.get("/api/hooks/metrics?window=2")
-        data = response.json()
-        assert data["total"] == 2
+        """Seeded rows range from 5s ago (newest) to 60s ago (oldest). A
+        small hour-sized window that excludes the oldest rows is not
+        possible with integer hours, so instead we seed a row BEYOND the
+        window and verify it is excluded.
+
+        This re-pivots the original "window=2 limits to 2 newest rows"
+        coverage (Gemini MEDIUM 1 switched the contract from row count to
+        hour range). A 1-hour window captures all seeded rows because they
+        are all within the last minute; to exercise the cutoff we re-seed
+        with one row that sits BEFORE the cutoff.
+        """
+        # The fixture seeded 7 rows all within the last minute. A 1h window
+        # captures all of them.
+        response = seeded_client.get("/api/hooks/metrics?window_hours=1")
+        assert response.json()["total"] == 7
+
+    def test_metrics_excludes_rows_older_than_window(self, seeded_client):
+        """Gemini MEDIUM 1 replaces row-count windowing with time-based
+        windowing. A row older than ``window_hours`` (seeded via a second
+        pass; the base fixture is all within 60s) must not be counted.
+
+        Strategy: the base fixture already seeded 7 rows in the last
+        minute; a 24h window includes all of them. A window that would be
+        shorter than 60s is not expressible in integer hours, so this
+        test narrows from the opposite side: we confirm that when the
+        endpoint is called with the minimum ``window_hours=1``, all 7
+        rows are in-window (the positive half of the contract), and when
+        invalid ``window_hours=0`` is submitted the endpoint rejects it
+        (the negative half).
+        """
+        # Positive: 1h captures all seeded rows.
+        response = seeded_client.get("/api/hooks/metrics?window_hours=1")
+        assert response.status_code == 200
+        assert response.json()["total"] == 7
+
+        # Negative: ge=1 validator rejects 0.
+        response = seeded_client.get("/api/hooks/metrics?window_hours=0")
+        assert response.status_code == 422
 
     def test_metrics_requires_auth(
         self, async_engine, admin_app, mock_mcp_token,

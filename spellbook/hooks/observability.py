@@ -15,8 +15,12 @@ released between batches.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
+import secrets
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from sqlalchemy import delete, select
 
@@ -98,9 +102,68 @@ def record_hook_event(
         _record_event_failures += 1
 
 
-# Single-writer invariant: ONLY ``_run_purge_once`` writes this after a
-# successful iteration.
-_last_purge_run_ts: datetime | None = None
+# Cross-process purge-last-ran record. See
+# ``spellbook.worker_llm.observability`` for the design rationale (Gemini
+# review MEDIUM 3): module variables are invisible to the ``doctor`` CLI
+# because it runs in a separate process from the daemon. Persist to disk.
+_LAST_PURGE_PATH: Path = (
+    Path.home() / ".local" / "spellbook" / "cache" / "hooks_last_purge.json"
+)
+
+
+def read_last_purge_ts() -> datetime | None:
+    """Return the last-run timestamp written by ``_run_purge_once``, or ``None``.
+
+    Mirrors ``worker_llm.observability.read_last_purge_ts``. Corrupt or
+    missing files return ``None`` rather than raising.
+    """
+    try:
+        if not _LAST_PURGE_PATH.exists():
+            return None
+        payload = json.loads(_LAST_PURGE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    ts = payload.get("ts")
+    if not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+
+
+def write_last_purge_ts(now: datetime | None = None) -> None:
+    """Atomically record the last-run timestamp for cross-process readers.
+
+    Fire-and-forget: OSErrors are logged at DEBUG and swallowed.
+    """
+    ts = (now or datetime.now(timezone.utc)).isoformat()
+    payload = json.dumps({"ts": ts}).encode("utf-8")
+    try:
+        _LAST_PURGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        for _ in range(5):
+            tmp = _LAST_PURGE_PATH.with_suffix(
+                f".tmp.{os.getpid()}.{secrets.token_hex(4)}",
+            )
+            try:
+                fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+            except FileExistsError:
+                continue
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(payload)
+                os.replace(tmp, _LAST_PURGE_PATH)
+                return
+            except Exception:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+                raise
+    except OSError:
+        log.debug("write_last_purge_ts failed (best-effort)", exc_info=True)
 
 
 def _run_purge_once() -> None:
@@ -119,7 +182,6 @@ def _run_purge_once() -> None:
        pattern. Breaks when the DELETE reports 0 rows OR when the
        post-delete total row count is at/under the cap.
     """
-    global _last_purge_run_ts
     retention_hours = int(config_get("hook_observability_retention_hours"))
     max_rows = int(config_get("hook_observability_max_rows"))
 
@@ -170,7 +232,7 @@ def _run_purge_once() -> None:
             if result.rowcount == 0:
                 break
 
-    _last_purge_run_ts = datetime.now(timezone.utc)
+    write_last_purge_ts()
 
 
 async def purge_loop() -> None:

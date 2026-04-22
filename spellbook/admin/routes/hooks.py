@@ -1,7 +1,7 @@
 """Hook observability API routes.
 
 Serves the admin ``/hooks`` page: paginated hook event list + rolling
-metrics over the most recent ``window`` rows. Both endpoints sit behind
+metrics over the trailing ``window_hours``. Both endpoints sit behind
 ``require_admin_auth`` to match every other admin route.
 
 Query shapes
@@ -11,9 +11,14 @@ Query shapes
 whitelisted against the ``HookEvent`` ORM columns; unknown sort falls
 back to ``timestamp``.
 
-``GET /api/hooks/metrics`` groups the most recent ``window`` rows by
-(hook_name, event_name) and returns count, avg/p50/p95 duration_ms, and
-error_rate per group, plus a top-level summary.
+``GET /api/hooks/metrics`` groups the rows from the trailing
+``window_hours`` by (hook_name, event_name) and returns count,
+avg/p50/p95 duration_ms, and error_rate per group, plus a top-level
+summary. Per Gemini review MEDIUM 1, the window is time-based (hours)
+to match ``/api/worker-llm/metrics`` so the admin UI presents a
+consistent "1h / 6h / 24h" control across both observability pages. The
+background retention + notifier loops still express their caps as row
+counts because those are operator tuning knobs, not dashboard windows.
 """
 
 from __future__ import annotations
@@ -24,7 +29,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
@@ -125,17 +130,23 @@ def _percentile(sorted_xs: list[int], pct: int) -> Optional[int]:
 
 @router.get("/metrics")
 async def hook_metrics(
-    window: int = Query(50, ge=1, le=5000),
+    window_hours: int = Query(24, ge=1, le=720),
     _session: str = Depends(require_admin_auth),
     db: AsyncSession = Depends(spellbook_db),
 ):
-    """Aggregate metrics over the most-recent ``window`` rows.
+    """Aggregate metrics over the trailing ``window_hours``.
+
+    Gemini review MEDIUM 1: the hook metrics endpoint used to take a row
+    count (``window``), while ``/api/worker-llm/metrics`` has always used
+    ``window_hours``. The two admin pages presented different mental
+    models for the "window" control. This endpoint now takes hours and
+    filters by ``timestamp >= cutoff`` to match.
 
     Returns an envelope:
 
         {
           "total": int,
-          "window": int,
+          "window_hours": int,
           "groups": [
             {
               "hook_name": str,
@@ -157,11 +168,10 @@ async def hook_metrics(
 
     A row counts as an error when ``exit_code != 0`` OR ``error`` is set.
     """
-    query = (
-        select(HookEvent)
-        .order_by(desc(HookEvent.timestamp))
-        .limit(window)
-    )
+    cutoff = (
+        datetime.now(timezone.utc) - timedelta(hours=window_hours)
+    ).isoformat()
+    query = select(HookEvent).where(HookEvent.timestamp >= cutoff)
     result = await db.execute(query)
     rows = list(result.scalars().all())
 
@@ -169,7 +179,7 @@ async def hook_metrics(
     if total == 0:
         return {
             "total": 0,
-            "window": window,
+            "window_hours": window_hours,
             "groups": [],
             "summary": {
                 "avg_duration_ms": None,
@@ -208,7 +218,7 @@ async def hook_metrics(
 
     return {
         "total": total,
-        "window": window,
+        "window_hours": window_hours,
         "groups": group_out,
         "summary": {
             "avg_duration_ms": sum(all_durations) / total,

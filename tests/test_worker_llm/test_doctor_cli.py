@@ -356,17 +356,18 @@ class TestDoctorObservabilityHealth:
         self,
         observability_db,
         monkeypatch,
+        tmp_path,
         worker_llm_transport,
         worker_llm_config,
         capsys,
     ):
-        """Empty ``worker_llm_calls`` table + ``_last_purge_run_ts`` = None.
+        """Empty ``worker_llm_calls`` table + unwritten last-purge file = None.
 
         ESCAPE: test_empty_table_reports_zero_rows_and_never
           CLAIM:    Doctor reports an empty worker_llm_calls table and a
                     never-run purge loop with the precise output format.
           PATH:     _run_doctor -> _observability_health -> SELECT COUNT(*) -> 0,
-                    reads _last_purge_run_ts (None) from observability module.
+                    reads read_last_purge_ts() (None) from disk (Gemini MEDIUM 3).
           CHECK:    JSON payload's ``observability`` dict is fully equal to the
                     expected dict; human-output section shows all three lines.
           MUTATION: If the row-count probe always returned >0, the assertion on
@@ -381,7 +382,11 @@ class TestDoctorObservabilityHealth:
         """
         from spellbook.worker_llm import observability
 
-        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+        # Point the cross-process last-purge record at a tmp path that has
+        # not been written -> read_last_purge_ts() returns None.
+        monkeypatch.setattr(
+            observability, "_LAST_PURGE_PATH", tmp_path / "last_purge.json",
+        )
 
         worker_llm_transport(list(_HAPPY_SCRIPT))
 
@@ -407,6 +412,7 @@ class TestDoctorObservabilityHealth:
         self,
         observability_db,
         monkeypatch,
+        tmp_path,
         worker_llm_transport,
         worker_llm_config,
         capsys,
@@ -426,7 +432,9 @@ class TestDoctorObservabilityHealth:
         """
         from spellbook.worker_llm import observability
 
-        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+        monkeypatch.setattr(
+            observability, "_LAST_PURGE_PATH", tmp_path / "last_purge.json",
+        )
 
         worker_llm_transport(list(_HAPPY_SCRIPT))
 
@@ -448,6 +456,7 @@ class TestDoctorObservabilityHealth:
         self,
         observability_db,
         monkeypatch,
+        tmp_path,
         worker_llm_transport,
         worker_llm_config,
         capsys,
@@ -484,7 +493,11 @@ class TestDoctorObservabilityHealth:
         insert(timestamp="2026-04-20T12:00:00+00:00", task="roundtable_voice", status="success")
 
         purge_dt = datetime(2026, 4, 20, 12, 30, 0, tzinfo=timezone.utc)
-        monkeypatch.setattr(observability, "_last_purge_run_ts", purge_dt)
+        # Write the cross-process last-purge record to a tmp file that
+        # read_last_purge_ts() will load from.
+        last_purge_path = tmp_path / "last_purge.json"
+        monkeypatch.setattr(observability, "_LAST_PURGE_PATH", last_purge_path)
+        observability.write_last_purge_ts(purge_dt)
 
         worker_llm_transport(list(_HAPPY_SCRIPT))
 
@@ -509,6 +522,7 @@ class TestDoctorObservabilityHealth:
     def test_missing_table_reports_error(
         self,
         monkeypatch,
+        tmp_path,
         worker_llm_transport,
         worker_llm_config,
         capsys,
@@ -556,7 +570,9 @@ class TestDoctorObservabilityHealth:
         monkeypatch.setattr(
             _engines, "get_spellbook_sync_session", _broken_session
         )
-        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+        monkeypatch.setattr(
+            observability, "_LAST_PURGE_PATH", tmp_path / "last_purge.json",
+        )
 
         worker_llm_transport(list(_HAPPY_SCRIPT))
 
@@ -582,6 +598,7 @@ class TestDoctorObservabilityHealth:
         self,
         observability_db,
         monkeypatch,
+        tmp_path,
         worker_llm_transport,
         worker_llm_config,
         capsys,
@@ -627,7 +644,9 @@ class TestDoctorObservabilityHealth:
         monkeypatch.setitem(
             sys.modules, "spellbook.notifications.notify", _BrokenNotifyModule()
         )
-        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+        monkeypatch.setattr(
+            observability, "_LAST_PURGE_PATH", tmp_path / "last_purge.json",
+        )
 
         worker_llm_transport(list(_HAPPY_SCRIPT))
 

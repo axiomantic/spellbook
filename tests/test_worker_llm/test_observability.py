@@ -304,26 +304,27 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
       6. Count-cap batch 5: 0 deletes (threshold NULL), break -> 1 connect.
       Total: 6 connects, final row count = 10000.
 
-    The module-global ``_last_purge_run_ts`` must be set to a datetime
-    after the purge run completes (used by Step 19's doctor CLI).
+    The on-disk last-purge record (``_LAST_PURGE_PATH``) must be written
+    after the purge run completes (used by Step 19's doctor CLI; see
+    Gemini review MEDIUM 3 for why the record is cross-process).
 
     ESCAPE: test_run_purge_once_count_cap_only_4_batches
       CLAIM:    _run_purge_once opens a fresh session per batch; time-cap
                 probes once (0 deletes) and count-cap runs 4 batches of
                 500 deletes each plus 1 empty probe, leaving 10000 rows
-                and setting _last_purge_run_ts.
+                and writing the cross-process last-purge record.
       PATH:     _run_purge_once -> time-cap while loop probes + breaks ->
                 count-cap while loop runs 5 fresh-session iterations
-                (4 work + 1 empty) -> sets _last_purge_run_ts.
-      CHECK:    connect_count == 6; row count == 10000; _last_purge_run_ts
-                is a datetime.
+                (4 work + 1 empty) -> write_last_purge_ts() to disk.
+      CHECK:    connect_count == 6; row count == 10000; the last-purge
+                record on disk round-trips to a datetime.
       MUTATION: If _run_purge_once holds ONE session across all batches,
                 connect_count would be 1 (or 2), not 6 — caught.
                 If batch size were not 500, the row count would not be
                 exactly 10000 — caught.
                 If the time-cap pass ran no probe (skipped straight to
                 count-cap), connect_count would be 5 — caught.
-                If _last_purge_run_ts were never written, the final
+                If the last-purge record were never written, the final
                 assertion would fail — caught.
       ESCAPE:   A no-op implementation would leave row count at 12000 and
                 connect_count at 0 — caught by both assertions.
@@ -368,8 +369,11 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
 
     monkeypatch.setattr(observability, "config_get", fake_config_get)
 
-    # Reset the module-global last-run timestamp so we can assert it was set.
-    monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+    # Redirect the on-disk last-purge record to a tmp path and confirm
+    # it is empty at the start so we can assert it was written.
+    last_purge_path = Path(counting_session.db_path).parent / "last_purge.json"
+    monkeypatch.setattr(observability, "_LAST_PURGE_PATH", last_purge_path)
+    assert not last_purge_path.exists()
 
     # Reset connect counter after the seed phase; only purge connects count.
     counting_session.connect_count = 0
@@ -389,6 +393,9 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
         ).scalars().all()
     assert len(remaining) == 10000
 
-    # _last_purge_run_ts is set to a datetime.
+    # The on-disk last-purge record round-trips to a datetime — this is the
+    # signal the doctor CLI reads when the daemon is in another process.
+    assert last_purge_path.exists()
     from datetime import datetime as _dt
-    assert isinstance(observability._last_purge_run_ts, _dt)
+    recorded = observability.read_last_purge_ts()
+    assert isinstance(recorded, _dt)
