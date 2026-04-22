@@ -505,3 +505,145 @@ class TestDoctorObservabilityHealth:
             "purge_last_ran": "2026-04-20T12:30:00+00:00",
             "notifications": {"reachable": True, "reason": None},
         }
+
+    def test_missing_table_reports_error(
+        self,
+        monkeypatch,
+        worker_llm_transport,
+        worker_llm_config,
+        capsys,
+    ):
+        """Table-missing branch: session factory raises OperationalError.
+
+        ESCAPE: test_missing_table_reports_error
+          CLAIM:    When the SQLAlchemy session factory raises
+                    ``OperationalError('no such table: worker_llm_calls')``
+                    (the exact symptom an operator sees before running
+                    ``alembic upgrade``), doctor reports ``table_present=False``
+                    AND a non-empty ``error`` string naming the proximate cause.
+          PATH:     _observability_health -> get_spellbook_sync_session() raises
+                    -> except branch sets table_present=False, error=<str>.
+          CHECK:    JSON payload's ``observability.table_present`` is False and
+                    ``observability.error`` contains the substring
+                    "no such table: worker_llm_calls". Notifications still
+                    report reachable (this branch is independent).
+          MUTATION: If the except branch swallowed the exception without
+                    writing ``error``, the substring check would fail. If the
+                    except branch set ``table_present=True`` (copy/paste miss),
+                    the False assertion would fail.
+          ESCAPE:   A handler that only catches a narrow subset of exceptions
+                    would propagate the OperationalError and crash the doctor;
+                    caught by the ``SystemExit`` assertion (exit code 0 required
+                    — doctor must never crash on broken observability).
+          IMPACT:   Operator with an un-migrated DB would either see a crash
+                    ("doctor is broken") or silent "healthy" (missed migration),
+                    both of which defeat the doctor's reason to exist.
+        """
+        from contextlib import contextmanager
+
+        from sqlalchemy.exc import OperationalError
+
+        from spellbook.db import engines as _engines
+        from spellbook.worker_llm import observability
+
+        @contextmanager
+        def _broken_session():
+            raise OperationalError(
+                "SELECT ...", {}, Exception("no such table: worker_llm_calls")
+            )
+            yield  # pragma: no cover -- unreachable; keeps contextmanager shape
+
+        monkeypatch.setattr(
+            _engines, "get_spellbook_sync_session", _broken_session
+        )
+        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+
+        worker_llm_transport(list(_HAPPY_SCRIPT))
+
+        from spellbook.cli.commands.worker_llm import _run_doctor
+
+        args = SimpleNamespace(
+            json=True, bench=None, runs=10, roundtable_sample=None
+        )
+        with pytest.raises(SystemExit) as ei:
+            _run_doctor(args)
+        assert ei.value.code == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["observability"]["table_present"] is False
+        assert "no such table: worker_llm_calls" in payload["observability"]["error"]
+        # Notifications branch is independent: should still report reachable.
+        assert payload["observability"]["notifications"] == {
+            "reachable": True,
+            "reason": None,
+        }
+
+    def test_notification_import_failure_reports_unreachable(
+        self,
+        observability_db,
+        monkeypatch,
+        worker_llm_transport,
+        worker_llm_config,
+        capsys,
+    ):
+        """Notification-unreachable branch: ``send_notification`` import fails.
+
+        ESCAPE: test_notification_import_failure_reports_unreachable
+          CLAIM:    When importing ``send_notification`` from
+                    ``spellbook.notifications.notify`` raises, doctor reports
+                    ``notifications.reachable=False`` AND a non-empty
+                    ``reason`` string capturing the error class + message.
+          PATH:     _observability_health -> ``from spellbook.notifications.notify
+                    import send_notification`` raises -> except branch sets
+                    reachable=False, reason=<str>.
+          CHECK:    JSON payload's ``observability.notifications`` dict reports
+                    reachable=False and reason is non-empty (type-prefixed).
+                    Table branch still reports present=True (independent).
+          MUTATION: If the except branch hard-coded reachable=True, the False
+                    assertion would fail. If the except branch dropped
+                    ``reason``, the non-empty assertion would fail.
+          ESCAPE:   A handler that only catches ImportError but re-raises other
+                    exception classes would propagate through and crash the
+                    doctor; caught by the SystemExit exit-code assertion.
+          IMPACT:   An operator whose notify subsystem is broken (missing
+                    platform binding, permission error at import time) would
+                    see "healthy" instead of the real diagnostic — exactly
+                    the failure mode the doctor is supposed to surface.
+        """
+        import sys
+
+        from spellbook.worker_llm import observability
+
+        class _BrokenNotifyModule:
+            """A stand-in for ``spellbook.notifications.notify`` that raises
+            on ``from ... import send_notification``. Python executes the
+            descriptor/``__getattr__`` when resolving the ``from`` target, so
+            raising here produces the exception the except branch must catch.
+            """
+
+            def __getattr__(self, name):
+                raise RuntimeError(f"notify subsystem unavailable (asked for {name!r})")
+
+        monkeypatch.setitem(
+            sys.modules, "spellbook.notifications.notify", _BrokenNotifyModule()
+        )
+        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+
+        worker_llm_transport(list(_HAPPY_SCRIPT))
+
+        from spellbook.cli.commands.worker_llm import _run_doctor
+
+        args = SimpleNamespace(
+            json=True, bench=None, runs=10, roundtable_sample=None
+        )
+        with pytest.raises(SystemExit) as ei:
+            _run_doctor(args)
+        assert ei.value.code == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        notifications = payload["observability"]["notifications"]
+        assert notifications["reachable"] is False
+        assert notifications["reason"], "expected non-empty reason string"
+        assert "notify subsystem unavailable" in notifications["reason"]
+        # Table branch is independent: should still report present.
+        assert payload["observability"]["table_present"] is True

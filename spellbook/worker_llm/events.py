@@ -154,7 +154,7 @@ def publish_call(
     error: str | None = None,
     override_loaded: bool = False,
 ) -> None:
-    """Emit a ``call_ok`` or ``call_failed`` event for a worker-LLM invocation.
+    """Emit a ``call_ok``, ``call_failed``, or ``call_fail_open`` event for a worker-LLM invocation.
 
     Always safe to call from any context (daemon, hook subprocess, CLI).
     Event routing is decided per-call by inspecting the daemon marker.

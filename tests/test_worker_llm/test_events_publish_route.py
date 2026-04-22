@@ -537,6 +537,79 @@ async def test_publish_route_rejects_invalid_status(
 
 
 @pytest.mark.asyncio
+async def test_publish_route_call_fail_open_invokes_record_call(
+    mcp_http_app, record_call_spy,
+):
+    """``call_fail_open`` events persist via ``record_call`` (fail-open path).
+
+    ESCAPE: test_publish_route_call_fail_open_invokes_record_call
+      CLAIM:    A valid worker_llm ``call_fail_open`` POST persists the call
+                via ``record_call`` (status='fail_open') AND returns 200.
+      PATH:     POST -> handler -> event_bus.publish -> validation ->
+                record_call(...status='fail_open', error=<reason>).
+      CHECK:    (a) status 200; (b) exactly one ``record_call`` invocation
+                whose kwargs match the payload ``data`` dict (including a
+                non-empty error string documenting the fail-open reason).
+      MUTATION: If ``call_fail_open`` were dropped from the trigger set in
+                ``spellbook/mcp/routes.py``, the spy would be empty and the
+                len-1 assertion would fail. If the handler mis-routed to a
+                different branch, kwargs would differ.
+      ESCAPE:   A no-op wiring that only returns 200 is caught by the spy
+                length check. A handler that preserves ``call_ok`` and
+                ``call_failed`` but silently skips ``call_fail_open`` is
+                caught here (and NOT by the non-call parametrize, which
+                only covers event types that truly should skip record_call).
+      IMPACT:   Fail-open calls (transport/parse errors the task recovered
+                from via fallback) would be invisible in the observability
+                table, breaking ``fail_open_rate`` aggregates.
+    """
+    async def _noop(evt):
+        return None
+
+    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock.calls(_noop)
+
+    transport = httpx.ASGITransport(app=mcp_http_app)
+    async with bigfoot:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as client:
+            r = await client.post(
+                "/api/events/publish",
+                json={
+                    "subsystem": "worker_llm",
+                    "event_type": "call_fail_open",
+                    "data": {
+                        "task": "tool_safety",
+                        "model": "gpt-test",
+                        "latency_ms": 0,
+                        "status": "fail_open",
+                        "prompt_len": 0,
+                        "response_len": 0,
+                        "error": "parser_failure: could not parse verdict",
+                        "override_loaded": False,
+                    },
+                },
+            )
+
+    publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
+    assert r.status_code == 200, r.text
+    assert r.json() == {"ok": True}
+    assert record_call_spy == [
+        {
+            "task": "tool_safety",
+            "model": "gpt-test",
+            "latency_ms": 0,
+            "status": "fail_open",
+            "prompt_len": 0,
+            "response_len": 0,
+            "error": "parser_failure: could not parse verdict",
+            "override_loaded": False,
+        }
+    ]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "event_type",
     ["call_metrics", "override_loaded", "hook_integration"],
