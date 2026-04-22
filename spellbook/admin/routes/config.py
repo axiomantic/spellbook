@@ -228,11 +228,197 @@ CONFIG_SCHEMA = [
         ),
         "default": 60,
     },
+    # --- General / session -------------------------------------------------
+    {
+        "key": "fun_mode",
+        "type": "boolean",
+        "description": (
+            "Legacy fun-mode flag. Honored by session_init when ``session_mode`` "
+            "is unset; prefer ``session_mode`` for new installs."
+        ),
+        "default": False,
+    },
+    {
+        "key": "persona",
+        "type": "string",
+        "description": (
+            "Free-form persona directive carried into fun-mode session greetings."
+        ),
+        "default": "",
+    },
+    # --- Security / Spotlighting ------------------------------------------
+    {
+        "key": "security.spotlighting.enabled",
+        "type": "boolean",
+        "description": "Enable spotlighting (prompt-injection delimiters around untrusted content).",
+        "default": True,
+    },
+    {
+        "key": "security.spotlighting.tier",
+        "type": "string",
+        "description": (
+            "Spotlighting aggressiveness tier. One of: basic, standard, strict."
+        ),
+        "default": "standard",
+    },
+    {
+        "key": "security.spotlighting.mcp_wrap",
+        "type": "boolean",
+        "description": "Wrap MCP tool results in spotlighting delimiters before returning to the model.",
+        "default": True,
+    },
+    {
+        "key": "security.spotlighting.custom_prefix",
+        "type": "string",
+        "description": "Optional custom prefix prepended to spotlighting envelopes.",
+        "default": "",
+    },
+    # --- Security / Crypto -------------------------------------------------
+    {
+        "key": "security.crypto.enabled",
+        "type": "boolean",
+        "description": "Enable crypto-signed workflow and config gate verification.",
+        "default": True,
+    },
+    {
+        "key": "security.crypto.keys_dir",
+        "type": "string",
+        "description": "Directory holding spellbook signing keys.",
+        "default": "~/.local/spellbook/keys",
+    },
+    {
+        "key": "security.crypto.gate_spawn_session",
+        "type": "boolean",
+        "description": "Require a valid signature before spawn_session accepts workflow state.",
+        "default": True,
+    },
+    {
+        "key": "security.crypto.gate_workflow_save",
+        "type": "boolean",
+        "description": "Require a valid signature before workflow save operations are accepted.",
+        "default": True,
+    },
+    {
+        "key": "security.crypto.gate_config_writes",
+        "type": "boolean",
+        "description": "Require a valid signature for config writes (off by default; noisy).",
+        "default": False,
+    },
+    {
+        "key": "security.crypto.auto_sign_on_install",
+        "type": "boolean",
+        "description": "Automatically sign installed artifacts during spellbook install.",
+        "default": True,
+    },
+    # --- Security / Sleuth -------------------------------------------------
+    {
+        "key": "security.sleuth.enabled",
+        "type": "boolean",
+        "description": "Enable Sleuth LLM-based prompt-injection classifier.",
+        "default": False,
+    },
+    {
+        "key": "security.sleuth.api_key",
+        "type": "string",
+        "description": "API key for the Sleuth backend (stored in plaintext; masked in GET responses).",
+        "default": "",
+        "secret": True,
+    },
+    {
+        "key": "security.sleuth.max_content_bytes",
+        "type": "number",
+        "description": "Maximum bytes of content sent to Sleuth per check.",
+        "default": 50000,
+    },
+    {
+        "key": "security.sleuth.max_tokens_per_check",
+        "type": "number",
+        "description": "Maximum completion tokens per Sleuth check.",
+        "default": 1024,
+    },
+    {
+        "key": "security.sleuth.calls_per_session",
+        "type": "number",
+        "description": "Hard cap on Sleuth calls per session before falling back.",
+        "default": 50,
+    },
+    {
+        "key": "security.sleuth.confidence_threshold",
+        "type": "number",
+        "description": "Minimum classifier confidence (0.0 - 1.0) to act on a Sleuth verdict.",
+        "default": 0.8,
+    },
+    {
+        "key": "security.sleuth.cache_ttl_seconds",
+        "type": "number",
+        "description": "TTL (seconds) for cached Sleuth verdicts.",
+        "default": 3600,
+    },
+    {
+        "key": "security.sleuth.timeout_seconds",
+        "type": "number",
+        "description": "Per-call timeout (seconds) for Sleuth requests.",
+        "default": 5,
+    },
+    {
+        "key": "security.sleuth.fallback_on_budget_exceeded",
+        "type": "string",
+        "description": (
+            "Behaviour when Sleuth budget is exhausted. Typically 'regex_only' "
+            "(fall back to regex scanner) or 'allow'."
+        ),
+        "default": "regex_only",
+    },
+    # --- Security / LODO ---------------------------------------------------
+    {
+        "key": "security.lodo.datasets_dir",
+        "type": "string",
+        "description": "Directory containing LODO (leave-one-dataset-out) evaluation datasets.",
+        "default": "tests/test_security/datasets",
+    },
+    {
+        "key": "security.lodo.min_detection_rate",
+        "type": "number",
+        "description": "Minimum detection rate (0.0 - 1.0) required by LODO evaluation gates.",
+        "default": 0.85,
+    },
+    {
+        "key": "security.lodo.max_false_positive_rate",
+        "type": "number",
+        "description": "Maximum false-positive rate (0.0 - 1.0) tolerated by LODO evaluation gates.",
+        "default": 0.05,
+    },
 ]
 
 CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}
 
 KNOWN_KEYS = {entry["key"] for entry in CONFIG_SCHEMA}
+
+# Keys whose values must be masked in ``GET /api/config`` responses. Set via
+# ``"secret": True`` in CONFIG_SCHEMA; admins editing the value see the fact
+# that it is set without the plaintext leaking through a logged response.
+SECRET_KEYS: frozenset[str] = frozenset(
+    entry["key"] for entry in CONFIG_SCHEMA if entry.get("secret") is True
+)
+
+# Sentinel returned in place of a set secret. Matches the convention commonly
+# shown in config UIs so users recognize "value is present but hidden".
+_SECRET_MASK = "***"
+
+
+def _mask_secrets(config: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of *config* with secret values replaced by a mask.
+
+    A secret is masked as ``"***"`` when it holds any non-empty value, and as
+    an empty string when unset. Writes are not intercepted; callers that PUT a
+    value go through the normal path.
+    """
+    masked = dict(config)
+    for key in SECRET_KEYS:
+        if key in masked:
+            value = masked[key]
+            masked[key] = _SECRET_MASK if value else ""
+    return masked
 
 
 # Per-key validators. Rejected values produce HTTP 400 with a machine-
@@ -294,10 +480,15 @@ def batch_set_config(updates: dict[str, Any]) -> dict:
 
 @router.get("", response_model=ConfigResponse)
 async def get_config(_session_id: str = Depends(require_admin_auth)):
-    """Read all config from spellbook.json, with defaults filled in."""
+    """Read all config from spellbook.json, with defaults filled in.
+
+    Secret keys (``"secret": True`` in CONFIG_SCHEMA) are masked in the
+    response so plaintext never leaves the daemon in a GET. Writes via PUT go
+    through the normal path.
+    """
     explicit = await asyncio.to_thread(get_all_config)
     config = {**CONFIG_DEFAULTS, **explicit}
-    return ConfigResponse(config=config)
+    return ConfigResponse(config=_mask_secrets(config))
 
 
 @router.get("/schema")

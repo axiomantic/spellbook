@@ -234,6 +234,170 @@ class TestConfigBatchUpdate:
         assert response.status_code == 401
 
 
+class TestHiddenConfigKeys:
+    """New schema entries for keys that already live in spellbook.json but were
+    previously unreachable through the admin UI."""
+
+    NEW_KEYS = [
+        ("fun_mode", False),
+        ("persona", ""),
+        ("security.spotlighting.enabled", True),
+        ("security.spotlighting.tier", "standard"),
+        ("security.spotlighting.mcp_wrap", True),
+        ("security.spotlighting.custom_prefix", ""),
+        ("security.crypto.enabled", True),
+        ("security.crypto.keys_dir", "~/.local/spellbook/keys"),
+        ("security.crypto.gate_spawn_session", True),
+        ("security.crypto.gate_workflow_save", True),
+        ("security.crypto.gate_config_writes", False),
+        ("security.crypto.auto_sign_on_install", True),
+        ("security.sleuth.enabled", False),
+        ("security.sleuth.max_content_bytes", 50000),
+        ("security.sleuth.max_tokens_per_check", 1024),
+        ("security.sleuth.calls_per_session", 50),
+        ("security.sleuth.confidence_threshold", 0.8),
+        ("security.sleuth.cache_ttl_seconds", 3600),
+        ("security.sleuth.timeout_seconds", 5),
+        ("security.sleuth.fallback_on_budget_exceeded", "regex_only"),
+        ("security.lodo.datasets_dir", "tests/test_security/datasets"),
+        ("security.lodo.min_detection_rate", 0.85),
+        ("security.lodo.max_false_positive_rate", 0.05),
+    ]
+
+    def test_schema_lists_every_new_key_with_a_type(self, client):
+        """GET /api/config/schema must advertise each new key."""
+        response = client.get("/api/config/schema")
+        assert response.status_code == 200
+        schema = {k["key"]: k for k in response.json()["keys"]}
+
+        for key, _default in self.NEW_KEYS:
+            assert key in schema, f"Missing schema entry for {key!r}"
+            assert schema[key]["type"] in ("boolean", "string", "number")
+            assert schema[key]["description"]
+
+    def test_defaults_surface_via_get_config(self, client, monkeypatch):
+        """An unset key returns the schema default via GET /api/config."""
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {},
+        )
+
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        config = response.json()["config"]
+
+        for key, default in self.NEW_KEYS:
+            assert config[key] == default, (
+                f"Expected {key}={default!r}, got {config[key]!r}"
+            )
+
+    @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("fun_mode", True),
+            ("persona", "Tech-lead archetype"),
+            ("security.spotlighting.enabled", False),
+            ("security.spotlighting.tier", "strict"),
+            ("security.crypto.gate_config_writes", True),
+            ("security.sleuth.enabled", True),
+            ("security.sleuth.max_content_bytes", 100000),
+            ("security.sleuth.confidence_threshold", 0.95),
+            ("security.lodo.min_detection_rate", 0.9),
+        ],
+    )
+    def test_put_known_new_key_roundtrip(self, client, monkeypatch, key, value):
+        """PUT a new key should reach set_config_value with (key, value)."""
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {k: v}}),
+        )
+
+        response = client.put(f"/api/config/{key}", json={"value": value})
+        assert response.status_code == 200, response.json()
+        assert calls == [(key, value)]
+
+
+class TestSecretMasking:
+    """Secret keys (e.g. security.sleuth.api_key) must be masked in GET."""
+
+    def test_set_secret_is_masked(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {"security.sleuth.api_key": "sk-live-supersecret"},
+        )
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        config = response.json()["config"]
+        assert config["security.sleuth.api_key"] == "***"
+
+    def test_unset_secret_returns_empty_string(self, client, monkeypatch):
+        """Secret key with empty stored value is surfaced as "" not the mask."""
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {"security.sleuth.api_key": ""},
+        )
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        assert response.json()["config"]["security.sleuth.api_key"] == ""
+
+    def test_null_stored_secret_returns_empty_string(self, client, monkeypatch):
+        """A ``null`` value carried over from legacy configs must not leak or
+        mask as ``***``. The user's actual spellbook.json contains
+        ``security.sleuth.api_key: null`` at the time this code was written."""
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {"security.sleuth.api_key": None},
+        )
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        assert response.json()["config"]["security.sleuth.api_key"] == ""
+
+    def test_none_default_returns_empty_string(self, client, monkeypatch):
+        """A default of None on a secret key should surface as empty, not null."""
+        # Simulate the case where the migration stripped the key: only the
+        # schema default (empty string) is present.
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {},
+        )
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        assert response.json()["config"]["security.sleuth.api_key"] == ""
+
+    def test_non_secret_values_pass_through(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.get_all_config",
+            lambda: {"notify_title": "CustomTitle"},
+        )
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        assert response.json()["config"]["notify_title"] == "CustomTitle"
+
+    def test_schema_flag_is_exposed(self, client):
+        """The schema endpoint must carry ``secret: true`` so the frontend can
+        render a password input."""
+        response = client.get("/api/config/schema")
+        entries = {k["key"]: k for k in response.json()["keys"]}
+        assert entries["security.sleuth.api_key"].get("secret") is True
+        # Non-secret entries should not expose the flag as True
+        assert entries["notify_enabled"].get("secret") in (None, False)
+
+    def test_put_secret_accepts_value(self, client, monkeypatch):
+        """Writing a secret should go through unmasked -- the admin wrote it."""
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config/security.sleuth.api_key",
+            json={"value": "sk-live-xyz"},
+        )
+        assert response.status_code == 200
+        assert calls == [("security.sleuth.api_key", "sk-live-xyz")]
+
+
 class TestTranscriptHarvestModeValidator:
     """worker_llm_transcript_harvest_mode accepts only replace|merge|skip."""
 
