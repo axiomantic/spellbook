@@ -88,6 +88,7 @@ def create_admin_app() -> FastAPI:
     from spellbook.admin.routes import events as events_routes
     from spellbook.admin.routes import focus as focus_routes
     from spellbook.admin.routes import health as health_routes
+    from spellbook.admin.routes import worker_llm as worker_llm_routes
 
     app.include_router(auth_routes.router, prefix="/api")
     app.include_router(config_routes.router, prefix="/api")
@@ -98,6 +99,7 @@ def create_admin_app() -> FastAPI:
     app.include_router(events_routes.router, prefix="/api")
     app.include_router(focus_routes.router, prefix="/api")
     app.include_router(health_routes.router, prefix="/api")
+    app.include_router(worker_llm_routes.router, prefix="/api")
 
     # WebSocket endpoint (no /api prefix -- connects at /ws)
     from spellbook.admin.routes.ws import websocket_handler
