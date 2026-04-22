@@ -500,11 +500,60 @@ async def api_events_publish(request: Request) -> JSONResponse:
             {"error": f"unknown subsystem: {e}"}, status_code=400
         )
 
+    event_type = str(body["event_type"])
     await event_bus.publish(
         Event(
             subsystem=subsystem,
-            event_type=str(body["event_type"]),
+            event_type=event_type,
             data=data,
         )
     )
+
+    # Persist subprocess-originated worker-LLM call events into the
+    # observability table. The daemon path writes via ``publish_call``
+    # (design §4.1); this branch covers hooks and other subprocesses that
+    # POST here because they have no event loop to call ``publish_sync``
+    # directly.
+    if subsystem is Subsystem.WORKER_LLM and event_type in (
+        "call_ok",
+        "call_failed",
+        "call_fail_open",
+    ):
+        # Input validation: ``BearerAuthMiddleware`` authenticates the
+        # caller but does NOT vet the payload, so this validation is
+        # necessary before the fields reach the indexed
+        # ``worker_llm_calls`` columns. Length caps keep the two indexed
+        # string columns bounded; the ``status`` enum check prevents
+        # typos from producing orphan values that would distort
+        # aggregates (``success_rate``, ``error_breakdown``).
+        task_val = str(data.get("task", ""))
+        model_val = str(data.get("model", ""))
+        status_val = str(data.get("status", ""))
+        if len(task_val) > 128 or len(model_val) > 128:
+            return JSONResponse(
+                {"error": "task/model too long (max 128 chars)"},
+                status_code=400,
+            )
+        if status_val not in {"success", "error", "timeout", "fail_open"}:
+            return JSONResponse(
+                {"error": f"invalid status: {status_val!r}"},
+                status_code=400,
+            )
+        try:
+            from spellbook.worker_llm.observability import record_call
+
+            record_call(
+                task=task_val,
+                model=model_val,
+                latency_ms=int(data.get("latency_ms", 0) or 0),
+                status=status_val,
+                prompt_len=int(data.get("prompt_len", 0) or 0),
+                response_len=int(data.get("response_len", 0) or 0),
+                error=data.get("error"),
+                override_loaded=bool(data.get("override_loaded", False)),
+            )
+        except Exception:
+            # Silent: ``record_call`` is best-effort. Route must still ack.
+            pass
+
     return JSONResponse({"ok": True})
