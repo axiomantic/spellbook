@@ -8,6 +8,40 @@ from pathlib import Path
 import pytest
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_worker_llm_calls_table():
+    """Create the ``worker_llm_calls`` table on the real spellbook.db.
+
+    CI runs against a fresh ``~/.local/spellbook/spellbook.db`` with no
+    Alembic migrations applied. Any test that enters a code path which
+    calls ``spellbook.worker_llm.observability.record_call`` (e.g. via
+    ``publish_call`` with ``_in_daemon=True``) hits an
+    ``OperationalError: no such table: worker_llm_calls``. ``record_call``
+    swallows the error but logs a WARNING on its first-per-process
+    failure, which bigfoot's autouse ``LogPlugin`` captures. Without an
+    assertion on that log, sandbox teardown raises
+    ``UnassertedInteractionsError`` and the test fails.
+
+    This fixture creates ONLY ``worker_llm_calls`` on the sync engine
+    that ``record_call`` uses (``get_spellbook_sync_session`` ->
+    ``_get_or_create_sync_engine(DB_DIR / "spellbook.db")``). Other
+    spellbook tables and the fractal/forged/coordination DBs are left
+    untouched. ``checkfirst=True`` makes this a no-op when the table
+    already exists (e.g. local dev DBs where Alembic has run).
+    """
+    try:
+        from spellbook.db.engines import DB_DIR, _get_or_create_sync_engine
+        from spellbook.db.spellbook_models import WorkerLLMCall
+    except ImportError:
+        # Some bootstrap test runs import conftest before spellbook is
+        # importable. Missing import here is benign — those runs never
+        # reach ``record_call``.
+        return
+
+    engine = _get_or_create_sync_engine(str(DB_DIR / "spellbook.db"))
+    WorkerLLMCall.__table__.create(engine, checkfirst=True)
+
+
 @pytest.fixture(autouse=True)
 def _isolate_worker_llm_config_from_user(monkeypatch):
     """Force worker_llm_* config keys to return None by default.
