@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, select
 from spellbook.admin.events import Event, Subsystem, event_bus
 from spellbook.db.engines import get_sync_session
 from spellbook.db.spellbook_models import SpellbookBase, WorkerLLMCall
+from spellbook.worker_llm import auth as wl_auth
 from spellbook.worker_llm import events as wl_events
 from spellbook.worker_llm import observability as wl_obs
 
@@ -389,8 +390,9 @@ def test_fallback_http_post_attaches_bearer_token_when_present(
     token_file = tmp_path / ".mcp-token"
     token_file.write_text("secret-token-abc")
     # ``_TOKEN_PATH`` is a ``Path`` object, not a callable; monkeypatch is
-    # appropriate per the bigfoot-callable-only rule.
-    monkeypatch.setattr(wl_events, "_TOKEN_PATH", token_file)
+    # appropriate per the bigfoot-callable-only rule. Lives in
+    # ``spellbook.worker_llm.auth`` (shared by events and tool_safety).
+    monkeypatch.setattr(wl_auth, "_TOKEN_PATH", token_file)
     monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
     monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
 
@@ -426,7 +428,8 @@ def test_fallback_http_post_no_auth_header_when_token_missing(
     """Token file absent: no Authorization header (request will 401; that's
     a deployment misconfiguration, not something we can fake)."""
     # ``_TOKEN_PATH`` is a ``Path`` object, not a callable; monkeypatch stays.
-    monkeypatch.setattr(wl_events, "_TOKEN_PATH", tmp_path / "does-not-exist")
+    # Lives in ``spellbook.worker_llm.auth`` (shared by events and tool_safety).
+    monkeypatch.setattr(wl_auth, "_TOKEN_PATH", tmp_path / "does-not-exist")
     monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
     monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
 

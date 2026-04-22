@@ -12,6 +12,7 @@ pre-compact-save.sh, post-compact-recover.sh).
 
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -26,6 +27,13 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape as _xml_escape
+
+# DEBUG-level logger for best-effort silent-except paths. Python's default
+# logging handler only emits WARNING and above, so DEBUG messages are a
+# no-op unless an operator explicitly configures logging (e.g., via
+# ``PYTHONLOGLEVEL=DEBUG``). This keeps the normal hook run quiet while
+# leaving a trail for investigations.
+logger = logging.getLogger("spellbook.hook")
 
 
 # ---------------------------------------------------------------------------
@@ -1463,16 +1471,18 @@ def _worker_error_block(task: str, err: BaseException) -> str:
     signal that a worker-LLM step failed. The <hint> points operators at
     the doctor CLI and admin event monitor.
 
-    The ``task`` is a known static tag and needs no escaping. ``type(err).__name__``
-    is a Python class name (safe). ``str(err)[:500]`` comes from worker-LLM
-    code paths which may include arbitrary characters, including ``<``, ``>``,
-    ``&``, or even closing-tag strings, so it MUST be XML-escaped before
-    interpolation to prevent tag injection into the orchestrator stream.
+    Every interpolated value is XML-escaped. ``task`` is typically a static
+    tag and ``type(err).__name__`` is a Python class name, but defensive
+    escaping costs nothing and protects the surrounding XML structure
+    against a drifty caller or unusual exception name that happens to
+    contain ``<``, ``>``, or ``&``. ``str(err)[:500]`` comes from
+    worker-LLM code paths and may include arbitrary characters including
+    closing-tag strings.
     """
     return (
         "<worker-llm-error>\n"
-        f"  <task>{task}</task>\n"
-        f"  <type>{type(err).__name__}</type>\n"
+        f"  <task>{_xml_escape(task)}</task>\n"
+        f"  <type>{_xml_escape(type(err).__name__)}</type>\n"
         f"  <message>{_xml_escape(str(err)[:500])}</message>\n"
         "  <hint>Check `spellbook worker-llm doctor` and the admin EventMonitorPage.</hint>\n"
         "</worker-llm-error>"
@@ -1526,6 +1536,14 @@ def _handle_stop(data: dict) -> None:
         from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
         _wl_import_ok = True
     except Exception:
+        # Standalone installer / sys.path-restricted invocations will not
+        # have the ``spellbook`` package importable; this is expected and
+        # must not break the regex fallback. DEBUG so operators can
+        # correlate unexplained "worker-llm skipped" rows.
+        logger.debug(
+            "stop_hook: worker-LLM import failed; using regex-only path",
+            exc_info=True,
+        )
         _wl_import_ok = False
         _wl_events = None  # type: ignore[assignment]
 
@@ -1865,6 +1883,13 @@ def _wl_tool_safety_sniff(
         if not feature_enabled("tool_safety"):
             return
     except Exception:
+        # Config read failing should never block a tool call. DEBUG so an
+        # operator auditing spurious fail-open traffic can correlate back
+        # to a broken config file without polluting normal output.
+        logger.debug(
+            "tool_safety_hook: feature_enabled raised; treating as disabled",
+            exc_info=True,
+        )
         return
 
     params = data.get("tool_input") or {}

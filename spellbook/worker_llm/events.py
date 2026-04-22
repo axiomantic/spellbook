@@ -20,10 +20,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from pathlib import Path
 from typing import Any, Callable
 
 from spellbook.admin.events import Event, Subsystem, event_bus, publish_sync
+from spellbook.worker_llm.auth import _load_bearer_token
 from spellbook.worker_llm.observability import record_call
 
 logger = logging.getLogger(__name__)
@@ -86,24 +86,6 @@ def _spawn_background(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None
 # masked route-mismatch bugs. One warning is enough to make the
 # misconfiguration loud.
 _publish_failures: int = 0
-
-_TOKEN_PATH = Path.home() / ".local" / "spellbook" / ".mcp-token"
-
-
-def _load_bearer_token() -> str | None:
-    """Read the daemon bearer token from the canonical location.
-
-    Mirrors ``spellbook.core.auth.TOKEN_PATH`` / ``load_token`` without
-    importing the auth module (keeps this subprocess-facing helper
-    dependency-light).
-    """
-    try:
-        if _TOKEN_PATH.exists():
-            token = _TOKEN_PATH.read_text().strip()
-            return token or None
-    except OSError:
-        return None
-    return None
 
 
 def _in_daemon_process() -> bool:

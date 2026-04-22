@@ -654,8 +654,13 @@ async def api_hooks_record(request: Request) -> JSONResponse:
             notes=notes,
         )
     except Exception:
-        # Silent: record_hook_event is best-effort. Route must still ack.
-        pass
+        # Best-effort: record_hook_event is fire-and-forget and the ack
+        # must go out regardless. Log at DEBUG so operators investigating
+        # missing hook-events have a trail; never surface to the caller.
+        logger.debug(
+            "api_hook_log: failed to spawn record_hook_event",
+            exc_info=True,
+        )
 
     return JSONResponse({"ok": True}, status_code=202)
 
@@ -775,7 +780,12 @@ async def api_events_publish(request: Request) -> JSONResponse:
                 override_loaded=bool(data.get("override_loaded", False)),
             )
         except Exception:
-            # Silent: ``record_call`` is best-effort. Route must still ack.
-            pass
+            # Best-effort: ``record_call`` is fire-and-forget and the ack
+            # must go out regardless. Log at DEBUG so operators can
+            # correlate missing worker-LLM rows; never surface to caller.
+            logger.debug(
+                "api_events_publish: failed to spawn record_call",
+                exc_info=True,
+            )
 
     return JSONResponse({"ok": True})

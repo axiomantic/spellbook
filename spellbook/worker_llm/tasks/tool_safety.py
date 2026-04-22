@@ -32,9 +32,9 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 
 from spellbook.worker_llm import client, prompts
+from spellbook.worker_llm.auth import _load_bearer_token
 from spellbook.worker_llm.config import get_worker_config
 from spellbook.worker_llm.errors import WorkerLLMError
 from spellbook.worker_llm.events import publish_call
@@ -202,14 +202,9 @@ def _post_warmup_enqueue() -> bool:
     host_part = f"[{host}]" if ":" in host else host
     url = f"http://{host_part}:{port}/api/worker-llm/enqueue"
     headers = {"Content-Type": "application/json"}
-    token_path = Path.home() / ".local" / "spellbook" / ".mcp-token"
-    try:
-        if token_path.exists():
-            token = token_path.read_text().strip()
-            if token:
-                headers["Authorization"] = f"Bearer {token}"
-    except OSError:
-        pass
+    token = _load_bearer_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     body = json.dumps(
         {"task_name": "tool_safety_warmup", "prompt": "ping"}
     ).encode()
@@ -220,6 +215,15 @@ def _post_warmup_enqueue() -> bool:
         with urllib.request.urlopen(req, timeout=_WARMUP_POST_TIMEOUT_S):
             return True
     except Exception:
+        # Best-effort warmup: daemon may not be running, the route may be
+        # missing, or the network stack may be unhappy. Log at DEBUG so
+        # operators investigating a cold-start WARN can correlate, but
+        # never surface to the user -- the fail-open verdict handles the
+        # caller's UX.
+        logger.debug(
+            "tool_safety: warmup POST failed; falling back to cold-path",
+            exc_info=True,
+        )
         return False
 
 

@@ -125,15 +125,15 @@ def bearer_token_present(tmp_path, monkeypatch):
     ``_load_bearer_token()`` returns something. Required because
     ``BearerAuthMiddleware`` gates the /api/events/publish route.
     """
-    # Override the token path used by worker_llm.events._load_bearer_token
+    # Override the token path used by worker_llm.auth._load_bearer_token
     # AND by spellbook.core.auth in both the test and subprocess processes.
     tok = tmp_path / ".mcp-token"
     tok.write_text("test-token", encoding="utf-8")
-    # Point the worker_llm.events module at it in-process (not strictly
+    # Point the worker_llm.auth module at it in-process (not strictly
     # needed here since the subprocess spawns fresh, but prevents the
     # test-side bearer-loading from hitting the real user's path).
-    from spellbook.worker_llm import events as wl_events
-    monkeypatch.setattr(wl_events, "_TOKEN_PATH", tok)
+    from spellbook.worker_llm import auth as wl_auth
+    monkeypatch.setattr(wl_auth, "_TOKEN_PATH", tok)
     return tok
 
 
