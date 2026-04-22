@@ -20,7 +20,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, desc, func, select
 
 from spellbook.core.config import config_get
 from spellbook.db.engines import get_spellbook_sync_session
@@ -229,3 +229,136 @@ async def purge_loop() -> None:
         except Exception:
             log.debug("purge_loop iteration failed", exc_info=True)
             await asyncio.sleep(_PURGE_LOOP_BACKOFF_SECONDS)
+
+
+# Edge-triggered success-rate threshold notifier (design §6 / impl plan Step 10).
+#
+# ``_breach_state`` is module-global and assumes single-task concurrency:
+# ``threshold_eval_loop`` is its SOLE writer (one task created in
+# ``admin/app.py:_lifespan``). No lock is required under this invariant. A
+# future parallel evaluator would need to replace this with per-task state
+# or a lock. External readers (e.g. the ``doctor`` CLI) may read freely; a
+# stale read is acceptable because the only meaningful assertion is
+# "currently breached vs. currently healthy" and the state is self-healing
+# on the next eval tick.
+#
+# Restart semantics: this state is in-memory only. A daemon restart during
+# an active breach loses the breach record, so the first post-restart
+# evaluation will either (a) re-notify on fresh detection or (b) silently
+# treat recovery as "was never breached, is now healthy" -> no notification.
+# Accepted trade-off per understanding doc §L2.
+_breach_state: dict[str, bool] = {"is_breached": False}
+
+
+async def _evaluate_threshold_once() -> None:
+    """One iteration of the edge-triggered success-rate breach notifier.
+
+    Reads the last ``notify_window`` rows from ``worker_llm_calls`` ordered
+    by timestamp DESC, computes ``success_rate`` = (count of
+    ``status == "success"``) / total, and fires
+    ``spellbook.notifications.notify.send_notification`` ONLY on state
+    transitions:
+
+    - healthy -> breached: fires a breach notification.
+    - breached -> healthy: fires a recovery notification.
+    - healthy -> healthy, breached -> breached: silent (edge-triggered).
+
+    Early-exits without reading rows or touching ``_breach_state`` when
+    ``worker_llm_observability_notify_enabled`` is False. Early-exits
+    (no-op) when the table has fewer than ``notify_window`` rows so a
+    cold daemon doesn't alert on a single failure at startup.
+
+    Statuses other than ``"success"`` (``"error"``, ``"timeout"``,
+    ``"fail_open"``) all count as failures for the purpose of this metric.
+    This must match the dashboard's ``success_rate`` definition (design §5).
+    """
+    if not config_get("worker_llm_observability_notify_enabled"):
+        return
+
+    threshold = float(
+        config_get("worker_llm_observability_notify_threshold"),
+    )
+    window = int(config_get("worker_llm_observability_notify_window"))
+
+    def _recent_success_rate() -> tuple[float | None, int]:
+        """Read the last ``window`` rows (DESC by timestamp); return
+        ``(rate, sample_size)`` or ``(None, n)`` if ``n < window``.
+
+        Run under ``asyncio.to_thread`` so the sync DB I/O doesn't block
+        the daemon event loop.
+        """
+        with get_spellbook_sync_session() as session:
+            rows = session.execute(
+                select(WorkerLLMCall.status)
+                .order_by(desc(WorkerLLMCall.timestamp))
+                .limit(window),
+            ).scalars().all()
+        if len(rows) < window:
+            return None, len(rows)
+        successes = sum(1 for s in rows if s == "success")
+        return successes / len(rows), len(rows)
+
+    rate, sample = await asyncio.to_thread(_recent_success_rate)
+    if rate is None:
+        # Not enough calls yet to evaluate. Do NOT touch _breach_state —
+        # a cold start must not be interpreted as a recovery event.
+        return
+
+    # Late-import ``send_notification`` so tests that monkeypatch the
+    # attribute on the ``notify`` module see the replacement (we bind the
+    # function object at call-time, not import-time). Mirrors the
+    # late-import pattern used in ``mcp/routes.py`` for ``record_call``.
+    from spellbook.notifications.notify import send_notification
+
+    was_breached = _breach_state["is_breached"]
+    now_breached = rate < threshold
+
+    if now_breached and not was_breached:
+        await send_notification(
+            title="Worker LLM: success rate breach",
+            body=(
+                f"Success rate {rate:.0%} over last {sample} calls "
+                f"(< {threshold:.0%})"
+            ),
+        )
+    elif was_breached and not now_breached:
+        await send_notification(
+            title="Worker LLM: success rate recovered",
+            body=f"Success rate back to {rate:.0%} over last {sample} calls",
+        )
+    _breach_state["is_breached"] = now_breached
+
+
+_THRESHOLD_LOOP_BACKOFF_SECONDS: float = 30.0
+
+
+async def threshold_eval_loop() -> None:
+    """Async forever-loop wrapper around ``_evaluate_threshold_once``.
+
+    Reads ``worker_llm_observability_notify_eval_interval_seconds`` from
+    config on every iteration so an operator can retune without a daemon
+    restart (the next tick picks up the new value).
+
+    Exception policy: any exception from ``_evaluate_threshold_once`` is
+    logged at DEBUG and the loop then sleeps for
+    ``_THRESHOLD_LOOP_BACKOFF_SECONDS`` before retrying so a persistent
+    failure doesn't hot-loop the CPU. The 10s floor on the eval interval
+    mirrors ``purge_loop``: a pathologically small interval would cause
+    steady DB pressure.
+    """
+    while True:
+        try:
+            interval = int(
+                config_get(
+                    "worker_llm_observability_notify_eval_interval_seconds",
+                ),
+            )
+            interval = max(10, interval)
+            await asyncio.sleep(interval)
+            await _evaluate_threshold_once()
+        except asyncio.CancelledError:
+            # Lifespan shutdown. Propagate so the awaiter sees the cancel.
+            raise
+        except Exception:
+            log.debug("threshold_eval_loop iteration failed", exc_info=True)
+            await asyncio.sleep(_THRESHOLD_LOOP_BACKOFF_SECONDS)
