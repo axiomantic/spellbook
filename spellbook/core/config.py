@@ -62,6 +62,7 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     # float-casts.
     "worker_llm_queue_enabled": False,
     "worker_llm_queue_max_depth": 256,
+    "worker_llm_tool_safety_cold_threshold_s": 45.0,
 }
 
 

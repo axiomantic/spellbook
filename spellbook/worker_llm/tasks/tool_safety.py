@@ -29,7 +29,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 
 from spellbook.worker_llm import client, prompts
 from spellbook.worker_llm.config import get_worker_config
@@ -53,6 +56,12 @@ class SafetyVerdict:
 
 
 _VALID_VERDICTS = frozenset({"OK", "WARN", "BLOCK"})
+# Warmup POST timeout. The enqueue POST is best-effort: if the daemon is
+# slow, tool_safety must NOT block on it -- the whole point of the warm
+# probe is to return fail-open fast. 0.5s is generous for a localhost
+# enqueue and still short enough that a hanging daemon cannot wedge the
+# PreToolUse hook.
+_WARMUP_POST_TIMEOUT_S: float = 0.5
 # Transcript tail forwarded to the worker. Safety judgments rarely benefit
 # from more than the immediate prior turn -- the 4000-char legacy cap was
 # most of the user prompt by volume and the prefill cost dominates wall
@@ -68,6 +77,29 @@ _RECENT_CONTEXT_BYTES = 1500
 _PARAM_VALUE_CAP = 800
 _PARAM_VALUE_HEAD_TAIL = 300
 _FAIL_OPEN = SafetyVerdict(verdict="OK", reasoning="error; fail-open")
+
+
+def _cold_threshold_s() -> float | None:
+    """Return the cold-start threshold (seconds) from config, or ``None``.
+
+    ``None`` disables the warm probe entirely: the configured key must be
+    present AND numeric AND > 0 for the probe to fire. Zero / negative /
+    missing / non-numeric values all short-circuit to ``None`` so the
+    legacy path (always call the worker) is preserved for operators who
+    have not opted in.
+    """
+    from spellbook.core.config import config_get
+
+    raw = config_get("worker_llm_tool_safety_cold_threshold_s")
+    if raw is None:
+        return None
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if val <= 0:
+        return None
+    return val
 
 
 def _trim_param_value(value: object) -> object:
@@ -95,6 +127,84 @@ def _trim_params_for_prompt(tool_params: dict) -> dict:
     the real call, not the trimmed view.
     """
     return {k: _trim_param_value(v) for k, v in tool_params.items()}
+
+
+def _last_success_age_s() -> float | None:
+    """Return seconds since the last successful worker-LLM call.
+
+    Reads ``MAX(timestamp) WHERE status='success'`` off the
+    ``worker_llm_calls`` table. The query is indexed on ``timestamp`` and
+    the table is size-bounded by the purge loop, so this is fast.
+
+    Returns:
+        The age in seconds (float) when a success row exists.
+        ``None`` when the table is empty OR when the query errors for any
+        reason -- the caller treats ``None`` as "cannot tell; assume warm"
+        so observability read failures never degrade tool_safety.
+    """
+    try:
+        # Late imports: keep the PreToolUse hot path from paying db-module
+        # import cost until the cold-probe actually runs.
+        from sqlalchemy import desc, select
+
+        from spellbook.db.engines import get_spellbook_sync_session
+        from spellbook.db.spellbook_models import WorkerLLMCall
+
+        with get_spellbook_sync_session() as session:
+            ts = session.execute(
+                select(WorkerLLMCall.timestamp)
+                .where(WorkerLLMCall.status == "success")
+                .order_by(desc(WorkerLLMCall.timestamp))
+                .limit(1),
+            ).scalar_one_or_none()
+        if ts is None:
+            return None
+        last = datetime.fromisoformat(ts)
+        # Normalize naive timestamps to UTC so the subtraction is legal.
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        return max(0.0, (datetime.now(timezone.utc) - last).total_seconds())
+    except Exception:  # noqa: BLE001 -- observability failures must not degrade tool_safety
+        logger.debug(
+            "tool_safety: _last_success_age_s read failed; treating as warm",
+            exc_info=True,
+        )
+        return None
+
+
+def _post_warmup_enqueue() -> bool:
+    """POST a ``tool_safety_warmup`` task to the daemon enqueue endpoint.
+
+    Best-effort: a short timeout, no retry, return False on any failure.
+    When False is returned we still fail-open; the warmup is nice-to-have.
+    """
+    import urllib.error
+    import urllib.request
+
+    host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
+    port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
+    host_part = f"[{host}]" if ":" in host else host
+    url = f"http://{host_part}:{port}/api/worker-llm/enqueue"
+    headers = {"Content-Type": "application/json"}
+    token_path = Path.home() / ".local" / "spellbook" / ".mcp-token"
+    try:
+        if token_path.exists():
+            token = token_path.read_text().strip()
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+    except OSError:
+        pass
+    body = json.dumps(
+        {"task_name": "tool_safety_warmup", "prompt": "ping"}
+    ).encode()
+    try:
+        req = urllib.request.Request(
+            url, data=body, headers=headers, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=_WARMUP_POST_TIMEOUT_S):
+            return True
+    except Exception:
+        return False
 
 
 def tool_safety(
@@ -125,6 +235,30 @@ def tool_safety(
     cached = safety_cache.get_cached_verdict(cache_key)
     if cached is not None:
         return cached
+
+    # Warm probe: if siesta is likely cold (last successful call older
+    # than the threshold), fail open immediately and kick off a
+    # background warmup via the async queue. This trades one cold-start
+    # PreToolUse judgment for not paying 35-48s of wall time on every
+    # Edit/Bash after siesta pauses.
+    cold_threshold = _cold_threshold_s()
+    age = _last_success_age_s()
+    if cold_threshold is not None and age is not None and age > cold_threshold:
+        warmup_posted = _post_warmup_enqueue()
+        publish_call(
+            task="tool_safety",
+            model="",
+            latency_ms=0,
+            status="fail_open",
+            prompt_len=0,
+            response_len=0,
+            error=(
+                "cold_start_skipped"
+                if warmup_posted
+                else "cold_start_skipped; warmup_post_failed"
+            ),
+        )
+        return _FAIL_OPEN
 
     cfg = get_worker_config()
     try:

@@ -399,6 +399,297 @@ def test_fail_open_result_is_not_cached(
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Warm probe (cold start skip): last-success age drives fast-path fail-open
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def warm_probe_seam(monkeypatch):
+    """Install seams for ``_last_success_age_s``, ``_post_warmup_enqueue``,
+    and the cold threshold so tests can assert the warm-probe branches.
+
+    Yields a dict with three keys:
+        - ``set_age(age_s)``: set the value ``_last_success_age_s`` returns.
+        - ``posts``: list of warmup POST calls (each appends ``True``).
+        - ``set_post_result(v)``: control whether the fake POST "succeeds".
+    """
+    from spellbook.core import config as _cfg
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    state = {"age": None, "post_result": True}
+    posts: list[bool] = []
+
+    def _fake_age():
+        return state["age"]
+
+    def _fake_post():
+        posts.append(state["post_result"])
+        return state["post_result"]
+
+    monkeypatch.setattr(ts_mod, "_last_success_age_s", _fake_age)
+    monkeypatch.setattr(ts_mod, "_post_warmup_enqueue", _fake_post)
+    # Default cold threshold 45s. Individual tests can override via set_cfg.
+    cfg_overrides = {"worker_llm_tool_safety_cold_threshold_s": 45.0}
+    real_config_get = _cfg.config_get
+
+    def _fake_config_get(key):
+        if key in cfg_overrides:
+            return cfg_overrides[key]
+        return real_config_get(key)
+
+    monkeypatch.setattr(_cfg, "config_get", _fake_config_get)
+
+    def set_age(age):
+        state["age"] = age
+
+    def set_post_result(v):
+        state["post_result"] = v
+
+    def set_cfg(key, value):
+        cfg_overrides[key] = value
+
+    return {
+        "set_age": set_age,
+        "set_post_result": set_post_result,
+        "set_cfg": set_cfg,
+        "posts": posts,
+    }
+
+
+def test_warm_path_when_last_success_is_recent(
+    worker_llm_transport, worker_llm_config, warm_probe_seam
+):
+    """Age 5s < 45s threshold -> normal path, worker is called."""
+    warm_probe_seam["set_age"](5.0)
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('{"verdict":"OK","reasoning":"fine"}'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    assert v == SafetyVerdict(verdict="OK", reasoning="fine")
+    # No warmup POST -- normal hot path.
+    assert warm_probe_seam["posts"] == []
+
+
+def test_cold_detection_returns_fail_open_and_posts_warmup(
+    worker_llm_transport, worker_llm_config, warm_probe_seam, monkeypatch
+):
+    """Age 120s > 45s threshold -> fail-open + warmup POST. No worker call."""
+    warm_probe_seam["set_age"](120.0)
+    # Empty HTTP script: if the code reaches client.call, the request would
+    # raise because no mock is registered for it.
+    worker_llm_transport([])
+
+    captured: list[dict] = []
+
+    def fake_publish_call(**kw):
+        captured.append(kw)
+
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    monkeypatch.setattr(ts_mod, "publish_call", fake_publish_call)
+
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    assert v == SafetyVerdict(verdict="OK", reasoning="error; fail-open")
+    # Exactly one warmup POST attempted.
+    assert warm_probe_seam["posts"] == [True]
+    # publish_call fired with status='fail_open' and the distinct reason.
+    fail_opens = [c for c in captured if c["status"] == "fail_open"]
+    assert len(fail_opens) == 1
+    assert fail_opens[0]["task"] == "tool_safety"
+    assert fail_opens[0]["error"] == "cold_start_skipped"
+
+
+def test_cold_detection_records_warmup_post_failure_in_error_field(
+    worker_llm_transport, worker_llm_config, warm_probe_seam, monkeypatch
+):
+    """When the warmup POST fails we still fail-open, and the event's
+    ``error`` field reflects the post failure."""
+    warm_probe_seam["set_age"](120.0)
+    warm_probe_seam["set_post_result"](False)
+    worker_llm_transport([])
+
+    captured: list[dict] = []
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    monkeypatch.setattr(ts_mod, "publish_call", lambda **kw: captured.append(kw))
+
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    assert v == SafetyVerdict(verdict="OK", reasoning="error; fail-open")
+    fail_opens = [c for c in captured if c["status"] == "fail_open"]
+    assert len(fail_opens) == 1
+    assert fail_opens[0]["error"] == "cold_start_skipped; warmup_post_failed"
+
+
+def test_empty_calls_table_treated_as_warm(
+    worker_llm_transport, worker_llm_config, warm_probe_seam
+):
+    """``_last_success_age_s`` returning None -> act as warm (normal path)."""
+    warm_probe_seam["set_age"](None)
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('{"verdict":"OK","reasoning":"warm"}'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    assert v == SafetyVerdict(verdict="OK", reasoning="warm")
+    assert warm_probe_seam["posts"] == []
+
+
+def test_last_success_age_s_reads_max_success_timestamp(tmp_path, monkeypatch):
+    """``_last_success_age_s`` queries the latest successful row's timestamp.
+
+    Seeds two rows on a tmp sqlite DB: one 120s-old success, one 30s-old
+    error. Expect the helper to return approximately 120s (ignoring the
+    error row entirely).
+    """
+    from contextlib import contextmanager
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import create_engine
+
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SpellbookBase, WorkerLLMCall
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    db_path = str(tmp_path / "spellbook.db")
+    engine = create_engine(f"sqlite:///{db_path}")
+    SpellbookBase.metadata.create_all(engine)
+    engine.dispose()
+
+    now = datetime.now(timezone.utc)
+    with get_sync_session(db_path) as session:
+        session.add(
+            WorkerLLMCall(
+                timestamp=(now - timedelta(seconds=120)).isoformat(),
+                task="tool_safety",
+                model="m",
+                status="success",
+                latency_ms=10,
+                prompt_len=0,
+                response_len=0,
+                error=None,
+                override_loaded=0,
+            )
+        )
+        session.add(
+            WorkerLLMCall(
+                timestamp=(now - timedelta(seconds=30)).isoformat(),
+                task="tool_safety",
+                model="m",
+                status="error",
+                latency_ms=0,
+                prompt_len=0,
+                response_len=0,
+                error="boom",
+                override_loaded=0,
+            )
+        )
+
+    @contextmanager
+    def _tmp_session():
+        with get_sync_session(db_path) as s:
+            yield s
+
+    # Redirect the db session factory at the import site used by the helper.
+    from spellbook.db import engines as _engines
+
+    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _tmp_session)
+
+    age = ts_mod._last_success_age_s()
+    assert age is not None
+    # Tolerance: between 115 and 130s given clock drift and test runtime.
+    assert 115.0 <= age <= 130.0
+
+
+def test_last_success_age_s_returns_none_on_empty_table(tmp_path, monkeypatch):
+    from contextlib import contextmanager
+
+    from sqlalchemy import create_engine
+
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SpellbookBase
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    db_path = str(tmp_path / "spellbook.db")
+    engine = create_engine(f"sqlite:///{db_path}")
+    SpellbookBase.metadata.create_all(engine)
+    engine.dispose()
+
+    @contextmanager
+    def _tmp_session():
+        with get_sync_session(db_path) as s:
+            yield s
+
+    from spellbook.db import engines as _engines
+
+    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _tmp_session)
+
+    assert ts_mod._last_success_age_s() is None
+
+
+def test_last_success_age_s_returns_none_on_query_error(monkeypatch):
+    """DB errors must degrade to ``None`` (treated as warm) rather than raise."""
+    from contextlib import contextmanager
+
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    @contextmanager
+    def _bad_session():
+        raise RuntimeError("simulated db failure")
+        yield  # unreachable; keeps the decorator signature valid.
+
+    from spellbook.db import engines as _engines
+
+    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _bad_session)
+
+    assert ts_mod._last_success_age_s() is None
+
+
+def test_missing_cold_threshold_disables_probe(
+    worker_llm_transport, worker_llm_config, warm_probe_seam
+):
+    """When the threshold is absent (None), the warm probe short-circuits
+    regardless of age: the legacy path is preserved for unconfigured users.
+    """
+    warm_probe_seam["set_cfg"](
+        "worker_llm_tool_safety_cold_threshold_s", None
+    )
+    warm_probe_seam["set_age"](9999.0)  # would otherwise be cold
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('{"verdict":"OK","reasoning":"legacy"}'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict, tool_safety
+
+    v = tool_safety("Bash", {"command": "ls"}, "")
+    assert v == SafetyVerdict(verdict="OK", reasoning="legacy")
+    assert warm_probe_seam["posts"] == []
+
+
 def test_prompt_load_error_emits_fail_open_event(
     worker_llm_transport, worker_llm_config, monkeypatch
 ):

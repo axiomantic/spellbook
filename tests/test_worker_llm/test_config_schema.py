@@ -229,6 +229,7 @@ def test_observability_every_entry_has_required_fields():
 QUEUE_KEYS = {
     "worker_llm_queue_enabled",
     "worker_llm_queue_max_depth",
+    "worker_llm_tool_safety_cold_threshold_s",
 }
 
 
@@ -246,6 +247,12 @@ def test_queue_max_depth_schema():
     e = _entry("worker_llm_queue_max_depth")
     assert e["type"] == "number"
     assert e["default"] == 256
+
+
+def test_tool_safety_cold_threshold_schema():
+    e = _entry("worker_llm_tool_safety_cold_threshold_s")
+    assert e["type"] == "number"
+    assert e["default"] == 45.0
 
 
 def test_queue_core_config_defaults_carry_all_keys():

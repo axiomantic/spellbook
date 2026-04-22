@@ -253,6 +253,16 @@ CONFIG_SCHEMA = [
         ),
         "default": 256,
     },
+    {
+        "key": "worker_llm_tool_safety_cold_threshold_s",
+        "type": "number",
+        "description": (
+            "If the last successful worker-LLM call is older than this, "
+            "treat siesta as cold: PreToolUse tool_safety returns fail-open "
+            "immediately and kicks off a background warmup via the queue."
+        ),
+        "default": 45.0,
+    },
     # --- General / session -------------------------------------------------
     {
         "key": "fun_mode",
