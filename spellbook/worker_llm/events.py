@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 
 from spellbook.admin.events import Event, Subsystem, event_bus, publish_sync
+from spellbook.worker_llm.observability import record_call
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,30 @@ def publish_call(
             "override_loaded": override_loaded,
         },
     )
+    # Fire-and-forget persistent log — daemon path only. Subprocess callers
+    # re-enter via ``/api/events/publish`` which has its own ``record_call``
+    # invocation (impl plan Step 8); gating on ``_in_daemon_process`` here
+    # prevents a double-insert. ``record_call`` already swallows exceptions
+    # internally, but we wrap in a second safety net so a future refactor
+    # that removes that guard still cannot propagate an exception out of
+    # ``publish_call`` — the LLM call must never be blocked by observability.
+    if _in_daemon_process():
+        try:
+            record_call(
+                task=task,
+                model=model,
+                latency_ms=latency_ms,
+                status=status,
+                prompt_len=prompt_len,
+                response_len=response_len,
+                error=error,
+                override_loaded=override_loaded,
+            )
+        except Exception:  # noqa: BLE001  (best-effort: swallow and move on)
+            logger.debug(
+                "record_call raised out of publish_call; swallowed",
+                exc_info=True,
+            )
 
 
 def publish_override_loaded(task: str, path: str) -> None:
