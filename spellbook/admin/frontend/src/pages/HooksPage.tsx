@@ -11,9 +11,9 @@ import { MetricCard } from '../components/shared/MetricCard'
 import { ErrorDisplay } from '../components/shared/ErrorDisplay'
 import { PageLayout } from '../components/layout/PageLayout'
 
-// Gemini review MEDIUM 1: match the WorkerLLMPage convention (time
-// windows, not row counts) so the "1h / 6h / 24h" chip row behaves
-// identically across both observability pages.
+// Match the WorkerLLMPage convention (time windows, not row counts) so the
+// "1h / 6h / 24h" chip row behaves identically across both observability
+// pages.
 type WindowHours = 1 | 6 | 24
 
 const WINDOW_OPTIONS = [
@@ -75,9 +75,8 @@ export function HooksPage() {
     }
   }, [])
 
-  // Gemini review MEDIUM 2: the Error Rate card was statically variant="success"
-  // regardless of value, so a red-alert rate still rendered green. Mirror the
-  // signal by driving the variant off the rate itself.
+  // Drive the Error Rate variant off the rate itself so a nonzero rate
+  // renders red instead of always green.
   const errorRate = metrics?.summary?.error_rate ?? null
   const errorVariant =
     errorRate !== null && errorRate > 0 ? 'error' : 'success'

@@ -14,11 +14,11 @@ back to ``timestamp``.
 ``GET /api/hooks/metrics`` groups the rows from the trailing
 ``window_hours`` by (hook_name, event_name) and returns count,
 avg/p50/p95 duration_ms, and error_rate per group, plus a top-level
-summary. Per Gemini review MEDIUM 1, the window is time-based (hours)
-to match ``/api/worker-llm/metrics`` so the admin UI presents a
-consistent "1h / 6h / 24h" control across both observability pages. The
-background retention + notifier loops still express their caps as row
-counts because those are operator tuning knobs, not dashboard windows.
+summary. The window is time-based (hours) to match
+``/api/worker-llm/metrics`` so the admin UI presents a consistent
+"1h / 6h / 24h" control across both observability pages. The background
+retention + notifier loops still express their caps as row counts
+because those are operator tuning knobs, not dashboard windows.
 """
 
 from __future__ import annotations
@@ -136,11 +136,10 @@ async def hook_metrics(
 ):
     """Aggregate metrics over the trailing ``window_hours``.
 
-    Gemini review MEDIUM 1: the hook metrics endpoint used to take a row
-    count (``window``), while ``/api/worker-llm/metrics`` has always used
-    ``window_hours``. The two admin pages presented different mental
-    models for the "window" control. This endpoint now takes hours and
-    filters by ``timestamp >= cutoff`` to match.
+    Takes hours (not a row count) and filters by ``timestamp >= cutoff``
+    so the window control aligns with ``/api/worker-llm/metrics``. A
+    row-count window would give the two admin pages different mental
+    models for the same "1h / 6h / 24h" chip row.
 
     Returns an envelope:
 

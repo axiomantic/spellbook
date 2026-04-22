@@ -1,5 +1,5 @@
 """Tests for ``spellbook.worker_llm.observability._evaluate_threshold_once``
-and ``threshold_eval_loop`` (impl plan Step 10 / design §6).
+and ``threshold_eval_loop``.
 
 Strategy
 --------

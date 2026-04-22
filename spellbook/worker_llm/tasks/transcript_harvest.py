@@ -22,6 +22,7 @@ from typing import Any
 
 from spellbook.worker_llm import client, prompts
 from spellbook.worker_llm.errors import WorkerLLMBadResponse
+from spellbook.worker_llm.queue import WorkerResult
 
 log = logging.getLogger(__name__)
 
@@ -171,7 +172,7 @@ def write_candidates_to_memory(
     return written
 
 
-async def async_consumer_callback(result) -> None:  # type: ignore[no-untyped-def]
+async def async_consumer_callback(result: WorkerResult) -> None:
     """Queue consumer callback for ``task_name == 'transcript_harvest'``.
 
     Invoked by ``spellbook.worker_llm.queue._consumer_loop`` with a

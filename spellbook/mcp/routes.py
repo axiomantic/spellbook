@@ -636,9 +636,9 @@ async def api_hooks_record(request: Request) -> JSONResponse:
         from spellbook.hooks.observability import record_hook_event
         from spellbook.worker_llm.events import _spawn_background
 
-        # Gemini review HIGH 3: ``record_hook_event`` runs a synchronous
-        # SQLite INSERT. Calling it directly from this async handler held
-        # the daemon event loop for the duration of the write. Offload via
+        # ``record_hook_event`` runs a synchronous SQLite INSERT; calling
+        # it directly from this async handler would hold the daemon event
+        # loop for the duration of the write. Offload via
         # ``_spawn_background``: fire-and-forget in the default executor
         # when a loop is running, direct sync call otherwise. The outer
         # try/except stays as a belt-and-braces guard; the helper itself
@@ -751,9 +751,9 @@ async def api_events_publish(request: Request) -> JSONResponse:
             from spellbook.worker_llm.events import _spawn_background
             from spellbook.worker_llm import observability as _wl_obs
 
-            # Gemini review HIGH 2: ``record_call`` is a synchronous SQLite
-            # INSERT. Calling it directly from this async handler held the
-            # daemon event loop for the duration of the write. Offload via
+            # ``record_call`` is a synchronous SQLite INSERT; calling it
+            # directly from this async handler would hold the daemon event
+            # loop for the duration of the write. Offload via
             # ``_spawn_background`` — fire-and-forget in the default
             # executor when a loop is running; sync call when not.
             #

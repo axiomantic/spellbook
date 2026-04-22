@@ -13,11 +13,11 @@ import pytest
 async def _await_len(collection, expected: int, timeout: float = 2.0) -> None:
     """Poll ``collection`` until it reaches ``expected`` length or ``timeout``.
 
-    Gemini review HIGH 3: ``record_hook_event`` is now offloaded to
-    ``loop.run_in_executor`` via ``_spawn_background``, so the handler
-    returns before the spy is populated. Tests poll here instead of
-    asserting synchronously. 2-second ceiling is generous relative to a
-    typical thread-pool hop (<1ms) but keeps CI hangs observable.
+    ``record_hook_event`` is offloaded to ``loop.run_in_executor`` via
+    ``_spawn_background``, so the handler returns before the spy is
+    populated. Tests poll here instead of asserting synchronously. The
+    2-second ceiling is generous relative to a typical thread-pool hop
+    (<1ms) but keeps CI hangs observable.
     """
     deadline = asyncio.get_running_loop().time() + timeout
     while len(collection) < expected:

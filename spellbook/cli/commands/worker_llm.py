@@ -233,13 +233,12 @@ def _observability_health() -> dict:
         (``observability.read_last_purge_ts()``), or ``None`` when the
         purge loop has not yet completed an iteration. The daemon and the
         doctor CLI run in different processes, so this is read from disk
-        (Gemini review MEDIUM 3) rather than from a module-level variable.
+        rather than from a module-level variable.
       - ``notifications``: ``{reachable, reason}``. Reachability is a static
         importability check (``from spellbook.notifications.notify import
         send_notification``) rather than a live ``check_availability()`` probe
         — the macOS path of the latter would trigger an OS permission dialog
-        on first run, which the doctor must never do. The import-level check
-        is the proxy documented in impl plan Step 19.
+        on first run, which the doctor must never do.
 
     All exceptions are swallowed and surfaced in the returned dict. The
     doctor must never crash on a broken observability subsystem — that is
@@ -280,8 +279,8 @@ def _observability_health() -> dict:
         out["error"] = f"{type(e).__name__}: {e}"
 
     # --- Purge loop last-run timestamp ---
-    # Gemini review MEDIUM 3: read from disk so the CLI observes the
-    # daemon's latest write even though they are in different processes.
+    # Read from disk so the CLI observes the daemon's latest write even
+    # though they are in different processes.
     purge_ts = _obs.read_last_purge_ts()
     if purge_ts is not None:
         try:
@@ -291,10 +290,10 @@ def _observability_health() -> dict:
             out["purge_error"] = f"{type(e).__name__}: {e}"
 
     # --- Notification subsystem reachability (importability proxy) ---
-    # Per impl plan Step 19: "if not feasible, just report 'send_notification
-    # importable' as a proxy". The live check_availability() call on macOS
-    # triggers an OS permission dialog on first invocation, which the doctor
-    # must never do — dialog timing is operator-driven, not diagnostic-driven.
+    # Use ``send_notification`` importability as a proxy for reachability.
+    # The live ``check_availability()`` call on macOS triggers an OS
+    # permission dialog on first invocation, which the doctor must never
+    # do — dialog timing is operator-driven, not diagnostic-driven.
     try:
         from spellbook.notifications.notify import send_notification  # noqa: F401
 
@@ -492,7 +491,7 @@ def _run_doctor(args: argparse.Namespace) -> None:
                 f"({daemon.get('error', 'unknown')})"
             )
 
-        # Observability health section (impl plan Step 19). Three lines:
+        # Observability health section. Three lines:
         # (1) table presence + row count + last-row ts; (2) purge loop last
         # ran; (3) notification subsystem reachability. Emitted after the
         # daemon line to match the top-down order of the operator's mental

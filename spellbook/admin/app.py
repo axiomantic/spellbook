@@ -27,10 +27,10 @@ async def _lifespan(app: FastAPI):
     flag to choose between direct ``publish_sync`` and the HTTP fallback.
 
     ``purge_loop`` and ``threshold_eval_loop`` are daemon-lifetime async
-    tasks (see impl plan Step 11 / design §6). They are created here so
-    they spawn exactly once per daemon process (not per request, not per
-    test-client instance) and are cancelled + awaited on shutdown so no
-    orphan task holds an in-flight DB writer lock past daemon exit.
+    tasks. They are created here so they spawn exactly once per daemon
+    process (not per request, not per test-client instance) and are
+    cancelled + awaited on shutdown so no orphan task holds an in-flight
+    DB writer lock past daemon exit.
 
     The monkeypatch-friendly indirection via ``purge_loop`` /
     ``threshold_eval_loop`` module-level names lets tests swap in

@@ -103,9 +103,9 @@ def record_hook_event(
 
 
 # Cross-process purge-last-ran record. See
-# ``spellbook.worker_llm.observability`` for the design rationale (Gemini
-# review MEDIUM 3): module variables are invisible to the ``doctor`` CLI
-# because it runs in a separate process from the daemon. Persist to disk.
+# ``spellbook.worker_llm.observability`` for the design rationale: module
+# variables are invisible to the ``doctor`` CLI because it runs in a
+# separate process from the daemon. Persist to disk so both can read.
 _LAST_PURGE_PATH: Path = (
     Path.home() / ".local" / "spellbook" / "cache" / "hooks_last_purge.json"
 )
@@ -204,12 +204,12 @@ def _run_purge_once() -> None:
                 break
 
     # --- Count cap pass ---
-    # Gemini review HIGH 4: same rewrite as worker_llm.observability.
-    # Previously used ``DELETE WHERE id NOT IN (SELECT ... LIMIT max_rows)``
-    # which has compile-time-optional LIMIT-inside-subquery support on
-    # SQLite and degrades to O(N*M). Inline a scalar subquery that returns
+    # Mirrors the rewrite in ``worker_llm.observability``. Avoid
+    # ``DELETE WHERE id NOT IN (SELECT ... LIMIT max_rows)``: LIMIT inside
+    # IN/NOT IN subqueries is a compile-time-optional SQLite feature and
+    # the pattern degrades to O(N*M). Inline a scalar subquery that returns
     # the id of the (``max_rows`` + 1)-th row in id-DESC order; rows with
-    # ``id <= threshold`` are deletable. When the table reaches max_rows,
+    # ``id <= threshold`` are deletable. When the table is under max_rows,
     # the OFFSET + LIMIT 1 returns NULL and ``id <= NULL`` yields no
     # victims -> rowcount 0 -> break.
     while True:

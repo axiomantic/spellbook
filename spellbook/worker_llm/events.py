@@ -44,11 +44,11 @@ def _spawn_background(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None
     the worker-LLM call and the hook dispatcher already committed their
     user-visible side effects by the time we reach this helper.
 
-    Gemini review HIGH 2/3: ``record_call`` (worker_llm events) and
-    ``record_hook_event`` (hook events) were being invoked inline from async
-    handlers; SQLite writer-lock contention under load could block the
-    daemon's event loop for the duration of the write. This helper is the
-    shared off-ramp.
+    ``record_call`` (worker_llm events) and ``record_hook_event`` (hook
+    events) must never run inline on the daemon event loop: SQLite writer-lock
+    contention under load would block the loop for the duration of the write.
+    This helper is the shared off-ramp that keeps those sync DB writes off
+    the async path.
     """
     def _safe_call() -> None:
         try:
@@ -83,8 +83,8 @@ def _spawn_background(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None
 # subprocess publish failure per process, then fall back to DEBUG for the
 # rest. Rationale: subprocess event publish is best-effort (fire-and-forget),
 # so we do not want to spam logs, but silent failures have historically
-# masked route-mismatch bugs (see review C1). One warning is enough to make
-# the misconfiguration loud.
+# masked route-mismatch bugs. One warning is enough to make the
+# misconfiguration loud.
 _publish_failures: int = 0
 
 _TOKEN_PATH = Path.home() / ".local" / "spellbook" / ".mcp-token"
@@ -234,19 +234,16 @@ def publish_call(
     )
     # Fire-and-forget persistent log — daemon path only. Subprocess callers
     # re-enter via ``/api/events/publish`` which has its own ``record_call``
-    # invocation (impl plan Step 8); gating on ``_in_daemon_process`` here
-    # prevents a double-insert. ``record_call`` already swallows exceptions
-    # internally, but ``_spawn_background`` adds a second safety net so a
-    # future refactor that removes that guard still cannot propagate an
-    # exception out of ``publish_call`` — the LLM call must never be blocked
-    # by observability.
+    # invocation; gating on ``_in_daemon_process`` here prevents a
+    # double-insert. ``record_call`` already swallows exceptions internally,
+    # but ``_spawn_background`` adds a second safety net so a future refactor
+    # that removes that guard still cannot propagate an exception out of
+    # ``publish_call`` — the LLM call must never be blocked by observability.
     #
-    # Gemini review HIGH 2: previously this was a bare ``record_call(...)``
-    # which, when called from a coroutine, blocks the daemon event loop for
-    # the duration of the SQLite write. ``_spawn_background`` offloads to
-    # ``loop.run_in_executor`` when a loop is running and falls back to a
-    # direct sync call otherwise. The gate on ``_in_daemon_process()`` is
-    # preserved to keep the subprocess path free of double-inserts.
+    # ``record_call`` is a synchronous SQLite write; calling it inline from a
+    # coroutine would block the daemon event loop for the duration of the
+    # write. ``_spawn_background`` offloads to ``loop.run_in_executor`` when
+    # a loop is running and falls back to a direct sync call otherwise.
     if _in_daemon_process():
         _spawn_background(
             record_call,

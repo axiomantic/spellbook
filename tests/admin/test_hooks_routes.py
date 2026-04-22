@@ -241,9 +241,9 @@ class TestHookMetricsRoute:
     """GET /api/hooks/metrics -- aggregates over the most recent window."""
 
     def test_metrics_returns_envelope(self, seeded_client):
-        # Gemini review MEDIUM 1: endpoint now accepts window_hours to match
-        # /api/worker-llm/metrics; seeded rows are all within the last minute
-        # so a 1-hour window captures all 7.
+        # The endpoint accepts window_hours to match /api/worker-llm/metrics;
+        # seeded rows are all within the last minute so a 1-hour window
+        # captures all 7.
         response = seeded_client.get("/api/hooks/metrics?window_hours=1")
         assert response.status_code == 200
         data = response.json()
@@ -302,10 +302,10 @@ class TestHookMetricsRoute:
         window and verify it is excluded.
 
         This re-pivots the original "window=2 limits to 2 newest rows"
-        coverage (Gemini MEDIUM 1 switched the contract from row count to
-        hour range). A 1-hour window captures all seeded rows because they
-        are all within the last minute; to exercise the cutoff we re-seed
-        with one row that sits BEFORE the cutoff.
+        coverage for the current contract (hour range rather than row
+        count). A 1-hour window captures all seeded rows because they are
+        all within the last minute; to exercise the cutoff we re-seed with
+        one row that sits BEFORE the cutoff.
         """
         # The fixture seeded 7 rows all within the last minute. A 1h window
         # captures all of them.
@@ -313,9 +313,9 @@ class TestHookMetricsRoute:
         assert response.json()["total"] == 7
 
     def test_metrics_excludes_rows_older_than_window(self, seeded_client):
-        """Gemini MEDIUM 1 replaces row-count windowing with time-based
-        windowing. A row older than ``window_hours`` (seeded via a second
-        pass; the base fixture is all within 60s) must not be counted.
+        """The metrics contract uses time-based (``window_hours``)
+        windowing, not row-count windowing. A row older than
+        ``window_hours`` must not be counted.
 
         Strategy: the base fixture already seeded 7 rows in the last
         minute; a 24h window includes all of them. A window that would be

@@ -296,11 +296,11 @@ def test_oversized_param_strings_are_head_tail_trimmed(
 def test_nested_oversized_strings_are_truncated_recursively(
     worker_llm_transport, worker_llm_config
 ):
-    """Gemini review MEDIUM 4: nested structures (dicts/lists inside
-    ``tool_params``) must have their string values truncated, not just
-    top-level strings. The classic offender is ``Edit``-style tools that
-    pass a list of edit dicts with long ``old_string``/``new_string``
-    payloads; a shallow copy left those strings unbounded in the prompt.
+    """Nested structures (dicts/lists inside ``tool_params``) must have
+    their string values truncated, not just top-level strings. The classic
+    offender is ``Edit``-style tools that pass a list of edit dicts with
+    long ``old_string``/``new_string`` payloads; a shallow copy left those
+    strings unbounded in the prompt.
     """
     seen = worker_llm_transport(
         [SimpleNamespace(status=200, body=_ok('{"verdict":"OK","reasoning":""}'))]

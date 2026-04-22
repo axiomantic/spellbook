@@ -25,12 +25,12 @@ from spellbook.admin.events import Event, Subsystem, event_bus
 async def _await_spy_count(spy_list: list, expected: int, timeout: float = 2.0) -> None:
     """Poll ``spy_list`` until it reaches ``expected`` length or ``timeout``.
 
-    Gemini review HIGH 2/3: ``record_call`` / ``record_hook_event`` are now
-    offloaded to ``loop.run_in_executor`` via ``_spawn_background``, so the
-    handler returns before the spy is populated. Tests poll here instead of
-    relying on inline execution; a 2-second ceiling is generous (the
-    executor's thread-pool hop is typically sub-millisecond) but gives CI
-    slack without making a hard failure look like a hang.
+    ``record_call`` / ``record_hook_event`` are offloaded to
+    ``loop.run_in_executor`` via ``_spawn_background``, so the handler
+    returns before the spy is populated. Tests poll here instead of relying
+    on inline execution; a 2-second ceiling is generous (the executor's
+    thread-pool hop is typically sub-millisecond) but gives CI slack
+    without making a hard failure look like a hang.
     """
     deadline = asyncio.get_running_loop().time() + timeout
     while len(spy_list) < expected:

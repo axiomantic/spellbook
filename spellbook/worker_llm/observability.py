@@ -4,12 +4,13 @@ Invoked fire-and-forget from ``publish_call`` (daemon path) and from the
 ``/api/events/publish`` route handler (subprocess path). All failures are
 swallowed — the LLM call must never be blocked by observability.
 
-See design doc §3 and impl plan Step 5 for the rationale of the
-first-failure-loud log policy (mirrors ``events.py:_publish_failures``).
+Uses a first-failure-loud log policy (mirrors
+``events.py:_publish_failures``) so a broken persistence path surfaces
+once without spamming subsequent writes.
 
-This module also hosts the retention purge loop (impl plan Step 9):
-``_run_purge_once`` performs two passes — time-cap and count-cap — each
-batched at ``LIMIT 500`` rows per transaction with a FRESH
+This module also hosts the retention purge loop: ``_run_purge_once``
+performs two passes — time-cap and count-cap — each batched at
+``LIMIT 500`` rows per transaction with a FRESH
 ``get_spellbook_sync_session()`` per batch so the SQLite writer lock is
 released between batches. ``purge_loop`` is the async wrapper.
 """
@@ -114,10 +115,10 @@ def record_call(
 
 # Cross-process purge-last-ran record.
 #
-# Gemini review MEDIUM 3: the daemon (which runs the purge loop) and the
-# ``spellbook worker-llm doctor`` CLI are DIFFERENT processes; a
-# module-level variable in the daemon is invisible to the CLI. Persist the
-# timestamp to a small on-disk JSON file so the CLI can read it.
+# The daemon (which runs the purge loop) and the ``spellbook worker-llm
+# doctor`` CLI are DIFFERENT processes; a module-level variable in the
+# daemon is invisible to the CLI. Persist the timestamp to a small on-disk
+# JSON file so the CLI can read it.
 #
 # File schema: ``{"ts": "<iso-8601 utc>"}``. Wall-clock (not monotonic) is
 # recorded so the CLI's "last ran at" report is meaningful across process
@@ -235,20 +236,19 @@ def _run_purge_once() -> None:
                 break
 
     # --- Count cap pass ---
-    # Gemini review HIGH 4: the previous implementation used
-    # ``DELETE WHERE id NOT IN (SELECT id ... LIMIT max_rows)``. SQLite's
-    # support for LIMIT inside IN/NOT IN subqueries is compile-time
-    # optional and the pattern is O(N*M) in the worst case because the
-    # keep-set subquery is re-evaluated per batch.
+    # Avoid ``DELETE WHERE id NOT IN (SELECT id ... LIMIT max_rows)``:
+    # SQLite's support for LIMIT inside IN/NOT IN subqueries is a
+    # compile-time option, and the pattern is O(N*M) in the worst case
+    # because the keep-set subquery is re-evaluated per batch.
     #
-    # Rewrite: inline a scalar subquery that returns the primary-key id of
+    # Instead: inline a scalar subquery that returns the primary-key id of
     # the (``max_rows`` + 1)-th row in id-DESC order. Rows with
     # ``id <= threshold`` are safe to delete (autoincrement PKs are
     # monotonic with insert order, so id-DESC == newest-first for the
     # purposes of "keep newest N"). Once the table reaches ``max_rows``,
     # the OFFSET + LIMIT 1 returns NULL; ``id <= NULL`` evaluates to NULL
     # in SQL, the victim subquery finds no rows, rowcount is 0, the loop
-    # breaks. Uses ``IN`` (always supported) rather than ``NOT IN``, and
+    # breaks. Uses ``IN`` (always supported) rather than ``NOT IN``, and is
     # O(N) overall because the threshold probe is indexed on the PK.
     while True:
         with get_spellbook_sync_session() as session:
@@ -309,7 +309,7 @@ async def purge_loop() -> None:
             await asyncio.sleep(_PURGE_LOOP_BACKOFF_SECONDS)
 
 
-# Edge-triggered success-rate threshold notifier (design §6 / impl plan Step 10).
+# Edge-triggered success-rate threshold notifier.
 #
 # ``_breach_state`` is module-global and assumes single-task concurrency:
 # ``threshold_eval_loop`` is its SOLE writer (one task created in

@@ -76,9 +76,8 @@ export function WorkerLLMPage() {
     }
   }, [])
 
-  // Gemini review MEDIUM 2 (symmetric): Success Rate was hard-coded
-  // variant="success" regardless of value. Drive the variant off the rate
-  // so a degraded success rate renders red / amber rather than green.
+  // Drive the Success Rate variant off the rate itself so a degraded rate
+  // renders red / amber instead of always green.
   const successRate = metrics?.success_rate ?? null
   const successVariant =
     successRate === null

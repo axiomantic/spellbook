@@ -115,7 +115,7 @@ def test_every_entry_has_required_fields():
     required = {"key", "type", "description", "default"}
     # Optional flags that entries may carry without triggering a schema
     # violation: ``secret`` marks a string entry for mask-on-GET (applied
-    # to ``worker_llm_api_key`` per Gemini review MEDIUM 1).
+    # to ``worker_llm_api_key``).
     optional = {"secret"}
     for k in WORKER_KEYS:
         entry = _entry(k)

@@ -286,7 +286,7 @@ class TestDoctorRegister:
 
 
 # ---------------------------------------------------------------------------
-# Observability health section (impl plan Step 19)
+# Observability health section
 # ---------------------------------------------------------------------------
 
 
@@ -341,7 +341,7 @@ def observability_db(tmp_path, monkeypatch):
 
 class TestDoctorObservabilityHealth:
     """Doctor reports observability health: table presence, rows, purge ts,
-    notification subsystem reachability (impl plan Step 19).
+    notification subsystem reachability.
 
     Strategy
     --------
@@ -367,7 +367,7 @@ class TestDoctorObservabilityHealth:
           CLAIM:    Doctor reports an empty worker_llm_calls table and a
                     never-run purge loop with the precise output format.
           PATH:     _run_doctor -> _observability_health -> SELECT COUNT(*) -> 0,
-                    reads read_last_purge_ts() (None) from disk (Gemini MEDIUM 3).
+                    reads read_last_purge_ts() (None) from disk (cross-process).
           CHECK:    JSON payload's ``observability`` dict is fully equal to the
                     expected dict; human-output section shows all three lines.
           MUTATION: If the row-count probe always returned >0, the assertion on

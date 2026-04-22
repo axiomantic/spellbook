@@ -105,12 +105,11 @@ def _cold_threshold_s() -> float | None:
 def _trim_param_value(value: object) -> object:
     """Return a display-only copy of a tool_params value with long strings truncated.
 
-    Recurses into ``dict`` and ``list`` structures (Gemini review MEDIUM 4)
-    so nested long strings — e.g. the ``Edit`` tool's ``edits: [{old_string,
-    new_string}]`` or the ``NotebookEdit`` tool's ``cell_source`` — are
-    truncated regardless of nesting depth. Previously only top-level string
-    values were trimmed, leaving the worker to prefill the full nested
-    payload.
+    Recurses into ``dict`` and ``list`` structures so nested long strings —
+    e.g. the ``Edit`` tool's ``edits: [{old_string, new_string}]`` or the
+    ``NotebookEdit`` tool's ``cell_source`` — are truncated regardless of
+    nesting depth. Without recursion, only top-level string values would be
+    trimmed, and the worker would still prefill the full nested payload.
 
     Non-string leaves are returned as-is. Strings at or under
     ``_PARAM_VALUE_CAP`` are returned unchanged. Longer strings become
@@ -138,10 +137,10 @@ def _trim_param_value(value: object) -> object:
 def _trim_params_for_prompt(tool_params: dict) -> dict:
     """Display-only copy of ``tool_params`` with oversized strings truncated.
 
-    Walks the structure recursively (Gemini review MEDIUM 4); see
-    ``_trim_param_value``. The original ``tool_params`` is never mutated;
-    it still drives the cache key in ``safety_cache.make_key`` so cached
-    verdicts continue to reflect the real call, not the trimmed view.
+    Walks the structure recursively; see ``_trim_param_value``. The original
+    ``tool_params`` is never mutated; it still drives the cache key in
+    ``safety_cache.make_key`` so cached verdicts continue to reflect the
+    real call, not the trimmed view.
     """
     return {k: _trim_param_value(v) for k, v in tool_params.items()}
 

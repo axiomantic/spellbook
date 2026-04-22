@@ -285,10 +285,10 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
     with an inlined threshold scalar subquery until the victim subquery
     returns zero rows.
 
-    Gemini review HIGH 4: the previous ``NOT IN (SELECT ... LIMIT N)``
-    implementation was replaced with an ``id <= (SELECT ... OFFSET
-    max_rows LIMIT 1)`` batched scalar subquery. Under that design a
-    12000-row seed produces FIVE count-cap iterations:
+    The count-cap uses an ``id <= (SELECT ... OFFSET max_rows LIMIT 1)``
+    batched scalar subquery (NOT ``NOT IN (SELECT ... LIMIT N)``, whose
+    LIMIT-inside-subquery support is compile-time optional on SQLite).
+    Under that design a 12000-row seed produces FIVE count-cap iterations:
 
       - Batches 1-4 each delete exactly 500 rows (total 2000 deleted).
       - Batch 5 finds the threshold subquery returning NULL (table is now
@@ -305,8 +305,8 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
       Total: 6 connects, final row count = 10000.
 
     The on-disk last-purge record (``_LAST_PURGE_PATH``) must be written
-    after the purge run completes (used by Step 19's doctor CLI; see
-    Gemini review MEDIUM 3 for why the record is cross-process).
+    after the purge run completes (used by the doctor CLI; the record is
+    cross-process because the daemon and CLI live in different processes).
 
     ESCAPE: test_run_purge_once_count_cap_only_4_batches
       CLAIM:    _run_purge_once opens a fresh session per batch; time-cap
