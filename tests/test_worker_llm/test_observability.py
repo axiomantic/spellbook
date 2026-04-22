@@ -227,3 +227,154 @@ def test_record_call_subsequent_failures_log_debug(
     assert records[0].levelname == "WARNING"
     assert records[1].levelname == "DEBUG"
     assert observability._record_call_failures == 2
+
+
+@pytest.fixture
+def counting_session(tmp_path, monkeypatch):
+    """tmp-file sqlite DB with the observability table + a connect counter.
+
+    The fixture mirrors ``fresh_db`` but wraps the replaced
+    ``get_spellbook_sync_session`` in a counter so purge-batch tests can
+    assert the exact number of fresh-session-per-batch openings. The counter
+    is exposed as ``counting_session.connect_count``; it increments on each
+    ``__enter__`` of the context manager.
+
+    Rationale for in-memory-style tmp-file SQLite over bigfoot.db_mock: the
+    purge loop opens a fresh session per batch and SQLAlchemy ORM statements
+    (SELECT + bulk DELETE) compile to multiple DB-API calls per batch, which
+    makes the bigfoot.db_mock state-machine queue tedious to seed
+    deterministically. Step 5's existing ``fresh_db`` fixture already
+    established the tmp-file SQLite convention for ``observability.py``
+    tests; T8 extends it by layering a connect counter on top, which keeps
+    the "fresh session per batch" invariant assertable without bigfoot.
+    """
+    db_path = str(tmp_path / "spellbook.db")
+
+    from sqlalchemy import create_engine
+
+    engine = create_engine(f"sqlite:///{db_path}")
+    SpellbookBase.metadata.create_all(engine)
+    engine.dispose()
+
+    from contextlib import contextmanager
+
+    class _Counter:
+        connect_count = 0
+
+    counter = _Counter()
+
+    @contextmanager
+    def _tmp_session():
+        counter.connect_count += 1
+        with get_sync_session(db_path) as session:
+            yield session
+
+    monkeypatch.setattr(
+        observability, "get_spellbook_sync_session", _tmp_session,
+    )
+    counter.db_path = db_path
+    return counter
+
+
+def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
+    """T8: 12000 in-retention rows -> 1 time-cap probe + 4 count-cap batches.
+
+    Seeds 12000 rows with timestamps WITHIN the retention window
+    (now - 1 minute) so the time-cap pass finds zero deletable rows and
+    breaks after exactly one probe SELECT. The count-cap pass then runs
+    until the surviving-row count is <= max_rows (10000): at batch size
+    500, that's (12000 - 10000) / 500 = 4 fresh-session batches.
+
+    Expected session sequence:
+      1. Time-cap probe session (SELECT returns 0, break) -> 1 connect.
+      2. Count-cap batch 1: 500 deletes -> 1 connect.
+      3. Count-cap batch 2: 500 deletes -> 1 connect.
+      4. Count-cap batch 3: 500 deletes -> 1 connect.
+      5. Count-cap batch 4: 500 deletes -> 1 connect.
+      Total: 5 connects, final row count = 10000.
+
+    The module-global ``_last_purge_run_ts`` must be set to a datetime
+    after the purge run completes (used by Step 19's doctor CLI).
+
+    ESCAPE: test_run_purge_once_count_cap_only_4_batches
+      CLAIM:    _run_purge_once opens a fresh session per batch; time-cap
+                probes once (0 deletes) and count-cap runs exactly 4 batches
+                of 500 deletes each, leaving 10000 rows and setting
+                _last_purge_run_ts.
+      PATH:     _run_purge_once -> time-cap while loop probes + breaks ->
+                count-cap while loop runs 4 fresh-session batches -> sets
+                _last_purge_run_ts.
+      CHECK:    connect_count == 5; row count == 10000; _last_purge_run_ts
+                is a datetime.
+      MUTATION: If _run_purge_once holds ONE session across all batches,
+                connect_count would be 1 (or 2), not 5 — caught.
+                If batch size were not 500, the row count would not be
+                exactly 10000 — caught.
+                If the time-cap pass ran no probe (skipped straight to
+                count-cap), connect_count would be 4 — caught.
+                If _last_purge_run_ts were never written, the final
+                assertion would fail — caught.
+      ESCAPE:   A no-op implementation would leave row count at 12000 and
+                connect_count at 0 — caught by both assertions.
+                An impl that deletes all 2000 overflow rows in a single
+                batch (no LIMIT 500) would have connect_count == 2 (time
+                probe + single delete), not 5 — caught.
+      IMPACT:   Without fresh-session-per-batch discipline, the purge task
+                holds a single writer lock for the entire DELETE sweep,
+                starving every other SQLite writer (record_call,
+                transcript_harvest, tool_safety) for seconds.
+    """
+    # Seed 12000 rows all WITHIN retention (ts = "now" - 60s).
+    from datetime import datetime, timedelta, timezone
+
+    recent_ts = (
+        datetime.now(timezone.utc) - timedelta(seconds=60)
+    ).isoformat()
+    with get_sync_session(counting_session.db_path) as session:
+        session.bulk_save_objects([
+            WorkerLLMCall(
+                timestamp=recent_ts,
+                task="t",
+                model="m",
+                status="success",
+                latency_ms=0,
+                prompt_len=0,
+                response_len=0,
+                error=None,
+                override_loaded=0,
+            )
+            for _ in range(12000)
+        ])
+        session.commit()
+
+    # Override config to deterministic values.
+    def fake_config_get(key):
+        return {
+            "worker_llm_observability_retention_hours": 24,
+            "worker_llm_observability_max_rows": 10000,
+            "worker_llm_observability_purge_interval_seconds": 300,
+        }.get(key)
+
+    monkeypatch.setattr(observability, "config_get", fake_config_get)
+
+    # Reset the module-global last-run timestamp so we can assert it was set.
+    monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+
+    # Reset connect counter after the seed phase; only purge connects count.
+    counting_session.connect_count = 0
+
+    observability._run_purge_once()
+
+    # 1 time-cap probe + 4 count-cap work batches = 5 sessions.
+    assert counting_session.connect_count == 5
+
+    # Final row count is exactly 10000.
+    with get_sync_session(counting_session.db_path) as session:
+        remaining = session.execute(
+            select(WorkerLLMCall),
+        ).scalars().all()
+    assert len(remaining) == 10000
+
+    # _last_purge_run_ts is set to a datetime.
+    from datetime import datetime as _dt
+    assert isinstance(observability._last_purge_run_ts, _dt)
