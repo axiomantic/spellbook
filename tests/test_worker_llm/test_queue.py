@@ -212,6 +212,83 @@ async def test_drop_oldest_on_overflow_publishes_drop_event(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Regression: concurrent drain during ``full()`` -> ``get_nowait`` window.
+#
+# ``enqueue`` checks ``_queue.full()`` and then pulls the oldest task via
+# ``get_nowait``. If a consumer drains between those two calls, the
+# pre-fix code raised ``asyncio.QueueEmpty`` and leaked the exception to
+# the caller. The guard swallows the ``QueueEmpty`` and suppresses the
+# spurious ``dropped`` event.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_concurrent_drain_between_full_check_and_get_nowait(monkeypatch):
+    """Simulate a consumer winning the race between ``_queue.full()`` and
+    ``_queue.get_nowait()`` by draining the queue inside a patched
+    ``full()``. The enqueue path must not raise and must not publish a
+    ``dropped`` event — there is nothing to drop once the consumer pulled
+    the victim.
+    """
+    published: list[dict] = []
+
+    def fake_publish_call(**kw):
+        published.append(kw)
+
+    monkeypatch.setattr(_queue, "publish_call", fake_publish_call)
+
+    q: asyncio.Queue[_queue.WorkerTask] = asyncio.Queue(maxsize=1)
+    await q.put(
+        _queue.WorkerTask(task_name="t_victim", prompt="oldest-payload")
+    )
+
+    # Wrap ``full()`` so the first call returns True (invariant is still
+    # "queue is at capacity at the check moment"), then drain the queue
+    # before ``enqueue`` proceeds to ``get_nowait``. This deterministically
+    # reproduces the race window.
+    original_full = q.full
+    call_count = {"n": 0}
+
+    def racing_full() -> bool:
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            # Consumer drains after we report "full".
+            try:
+                q.get_nowait()
+                q.task_done()
+            except asyncio.QueueEmpty:
+                pass
+            return True
+        return original_full()
+
+    # Bind the patched ``full`` onto the queue instance.
+    object.__setattr__(q, "full", racing_full)
+
+    monkeypatch.setattr(_queue, "_queue", q)
+    monkeypatch.setattr(
+        _queue, "_consumer_task",
+        asyncio.create_task(asyncio.sleep(60)),
+    )
+    monkeypatch.setattr(_queue, "_queue_loop", asyncio.get_running_loop())
+
+    try:
+        # Must NOT raise asyncio.QueueEmpty. The race guard falls through
+        # to the ``put`` and returns True (nothing was dropped).
+        result = await _queue.enqueue("t_new", "newest-payload")
+        assert result is True, "No drop occurred — consumer beat us to it"
+    finally:
+        _queue._consumer_task.cancel()
+        try:
+            await _queue._consumer_task
+        except asyncio.CancelledError:
+            pass
+
+    # No spurious ``dropped`` event should have been published.
+    drops = [p for p in published if p.get("status") == "dropped"]
+    assert drops == [], f"unexpected drop events: {drops!r}"
+
+
+# ---------------------------------------------------------------------------
 # Consumer surfaces worker errors to the callback
 # ---------------------------------------------------------------------------
 

@@ -66,10 +66,16 @@ function ConfigField({
   // invalidates the config query). Without this, editValue stays frozen
   // at mount value and the displayed input drifts from the authoritative
   // config for the lifetime of the component.
+  //
+  // Guarded by ``dirty``: if the user is actively editing, a background
+  // refetch must not clobber their in-progress keystrokes. The save path
+  // clears ``dirty`` on success so the next ``value`` tick resyncs
+  // normally. The cancel path (not currently exposed in UI) would also
+  // clear ``dirty``.
   useEffect(() => {
+    if (dirty) return
     setEditValue(value !== undefined && value !== null ? String(value) : '')
-    setDirty(false)
-  }, [value])
+  }, [value, dirty])
 
   const handleSave = useCallback(() => {
     let parsed: unknown = editValue

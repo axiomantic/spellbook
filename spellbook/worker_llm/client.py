@@ -258,6 +258,18 @@ def call_sync(
     ``asyncio.run`` creates and tears down a fresh loop per invocation, so
     the shared client cached inside ``call`` is loop-scoped and closed
     here to release pooled sockets rather than leaking per-call.
+
+    Running-loop safety
+    -------------------
+    The PreToolUse hook invokes this from a plain sync frame where no
+    event loop is running; ``asyncio.run`` is correct there. Some daemon
+    code paths (e.g. MCP tool handlers running inside FastAPI's loop that
+    offload to a thread-pool executor) may also reach ``call_sync`` with
+    a different loop already running on the current thread. In that case
+    ``asyncio.run`` raises ``RuntimeError: asyncio.run() cannot be called
+    from a running event loop``. To keep a single entry point safe from
+    both, we detect a running loop and dispatch to a dedicated worker
+    thread whose own fresh loop runs the coroutine to completion.
     """
 
     async def _run() -> str:
@@ -273,4 +285,37 @@ def call_sync(
         finally:
             await aclose_shared_client()
 
-    return asyncio.run(_run())
+    try:
+        asyncio.get_running_loop()
+        running_loop = True
+    except RuntimeError:
+        running_loop = False
+
+    if not running_loop:
+        # No loop in this thread -- happy path for hook-script callers.
+        return asyncio.run(_run())
+
+    # A loop is already running on this thread. ``asyncio.run`` would
+    # raise, so execute the coroutine on a dedicated worker thread with
+    # its own fresh loop. The per-loop shared-client cache in ``call``
+    # keys on the worker thread's loop, which is disposed when the
+    # coroutine returns, so no cross-thread client lifetime issues.
+    import concurrent.futures
+
+    # Compute an upper bound for how long the worker thread may take.
+    # ``call`` already bounds its own HTTP wait with ``eff_timeout``;
+    # this guards the outer ``future.result`` from hanging forever in
+    # pathological cases (e.g. event loop deadlock inside the worker).
+    from spellbook.worker_llm.config import get_worker_config
+
+    cfg = get_worker_config()
+    eff_timeout = (
+        timeout_s if timeout_s is not None else cfg.timeout_s
+    )
+    # Add headroom for client setup / publish_call overhead so the outer
+    # wait does not time-out before ``call``'s inner timeout fires.
+    outer_timeout = float(eff_timeout) + 5.0
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(asyncio.run, _run())
+        return future.result(timeout=outer_timeout)

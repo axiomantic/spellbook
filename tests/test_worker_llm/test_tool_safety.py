@@ -380,6 +380,48 @@ def test_trim_param_value_recurses_into_nested_types():
     assert out[1] == "ok"
 
 
+def test_trim_param_value_handles_circular_reference():
+    """A self-referential container must not blow the stack. The guard
+    tracks ``id(obj)`` through recursion and returns a ``"<circular>"``
+    sentinel on a revisit. JSON-deserialized ``tool_params`` cannot have
+    cycles in practice; this hardens against in-process constructors
+    (tests, future call sites) that could.
+    """
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    # Self-referential dict.
+    cyclic_d: dict = {"a": 1}
+    cyclic_d["self"] = cyclic_d
+    out = ts_mod._trim_param_value(cyclic_d)
+    assert out["a"] == 1
+    assert out["self"] == "<circular>"
+
+    # Self-referential list.
+    cyclic_l: list = [1, 2]
+    cyclic_l.append(cyclic_l)
+    out = ts_mod._trim_param_value(cyclic_l)
+    assert out[0] == 1
+    assert out[1] == 2
+    assert out[2] == "<circular>"
+
+    # Mutual reference between two containers.
+    a: dict = {"name": "a"}
+    b: dict = {"name": "b", "ref_to_a": a}
+    a["ref_to_b"] = b
+    out = ts_mod._trim_param_value(a)
+    assert out["name"] == "a"
+    assert out["ref_to_b"]["name"] == "b"
+    assert out["ref_to_b"]["ref_to_a"] == "<circular>"
+
+    # Top-level entry via ``_trim_params_for_prompt`` must also handle
+    # a cycle that points back to the outer dict.
+    top: dict = {"k": 1}
+    top["back"] = top
+    trimmed = ts_mod._trim_params_for_prompt(top)
+    assert trimmed["k"] == 1
+    assert trimmed["back"] == "<circular>"
+
+
 def test_trim_does_not_affect_cache_key(worker_llm_transport, worker_llm_config):
     """Trimming is display-only: caching still keys off the real tool_params."""
     from spellbook.worker_llm import safety_cache

@@ -305,3 +305,53 @@ def test_call_sync_runs_asyncio(monkeypatch):
             },
         )
     ]
+
+
+# ---------------------------------------------------------------------------
+# Regression: call_sync from inside a running event loop.
+#
+# Previous impl did ``asyncio.run(_run())`` unconditionally. When a daemon
+# path offloads ``call_sync`` to a thread executor that also happens to
+# have a running loop on the current thread (e.g. nested loops in certain
+# MCP entrypoints), ``asyncio.run`` raises ``RuntimeError: cannot be
+# called from a running event loop``. The fix detects a running loop and
+# dispatches to a worker thread with its own fresh loop.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_call_sync_from_running_loop_does_not_raise(monkeypatch):
+    """Invoking ``call_sync`` when a loop is running on this thread must not
+    raise ``RuntimeError`` about ``asyncio.run`` — it must transparently
+    dispatch the coroutine to a worker thread and return the result.
+    """
+    captured: list = []
+
+    async def fake_call(*args, **kwargs):
+        captured.append((args, kwargs))
+        return "from-worker-thread"
+
+    monkeypatch.setattr("spellbook.worker_llm.client.call", fake_call)
+
+    # Sanity: the test itself runs in a live event loop (pytest-asyncio).
+    # Previously, running ``call_sync`` here raised RuntimeError. After
+    # the fix, hop to an executor so the sync wrapper runs on a thread
+    # whose current thread also has a running loop reference... except
+    # executor threads do NOT inherit the parent's loop. To reproduce
+    # the original bug path, invoke ``call_sync`` directly inside the
+    # coroutine (the running loop IS on this thread).
+    out = client.call_sync(
+        "sys", "usr", task="t_running_loop", override_loaded=False
+    )
+    assert out == "from-worker-thread"
+    assert captured == [
+        (
+            ("sys", "usr"),
+            {
+                "max_tokens": None,
+                "timeout_s": None,
+                "task": "t_running_loop",
+                "override_loaded": False,
+            },
+        )
+    ]

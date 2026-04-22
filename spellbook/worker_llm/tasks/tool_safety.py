@@ -102,7 +102,9 @@ def _cold_threshold_s() -> float | None:
     return val
 
 
-def _trim_param_value(value: object) -> object:
+def _trim_param_value(
+    value: object, _visited: set[int] | None = None
+) -> object:
     """Return a display-only copy of a tool_params value with long strings truncated.
 
     Recurses into ``dict`` and ``list`` structures so nested long strings —
@@ -115,7 +117,17 @@ def _trim_param_value(value: object) -> object:
     ``_PARAM_VALUE_CAP`` are returned unchanged. Longer strings become
     ``head + elision marker + tail`` so the model can still see the start
     and end of the mutation.
+
+    Cycle guard: ``tool_params`` is JSON-deserialized in practice and
+    cannot contain self-referential structures, but a caller constructing
+    the dict in-process (tests, future non-JSON code paths) could pass in
+    a cycle. The ``_visited`` set tracks container ``id()`` through the
+    recursion; on a hit, we return a ``"<circular>"`` sentinel rather than
+    blowing the stack.
     """
+    if _visited is None:
+        _visited = set()
+
     if isinstance(value, str):
         if len(value) <= _PARAM_VALUE_CAP:
             return value
@@ -123,14 +135,23 @@ def _trim_param_value(value: object) -> object:
         tail = value[-_PARAM_VALUE_HEAD_TAIL:]
         elided = len(value) - 2 * _PARAM_VALUE_HEAD_TAIL
         return f"{head} ... [{elided} chars elided] ... {tail}"
-    if isinstance(value, dict):
-        return {k: _trim_param_value(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_trim_param_value(v) for v in value]
-    if isinstance(value, tuple):
-        # Tuples JSON-serialize as lists; keep the list shape the worker
-        # already sees (json.dumps converts tuples to arrays anyway).
-        return [_trim_param_value(v) for v in value]
+    if isinstance(value, (dict, list, tuple)):
+        vid = id(value)
+        if vid in _visited:
+            return "<circular>"
+        _visited.add(vid)
+        try:
+            if isinstance(value, dict):
+                return {
+                    k: _trim_param_value(v, _visited) for k, v in value.items()
+                }
+            if isinstance(value, list):
+                return [_trim_param_value(v, _visited) for v in value]
+            # Tuples JSON-serialize as lists; keep the list shape the worker
+            # already sees (json.dumps converts tuples to arrays anyway).
+            return [_trim_param_value(v, _visited) for v in value]
+        finally:
+            _visited.discard(vid)
     return value
 
 
@@ -142,7 +163,8 @@ def _trim_params_for_prompt(tool_params: dict) -> dict:
     ``safety_cache.make_key`` so cached verdicts continue to reflect the
     real call, not the trimmed view.
     """
-    return {k: _trim_param_value(v) for k, v in tool_params.items()}
+    visited: set[int] = {id(tool_params)}
+    return {k: _trim_param_value(v, visited) for k, v in tool_params.items()}
 
 
 def _last_success_age_s() -> float | None:
