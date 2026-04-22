@@ -214,14 +214,16 @@ class TestCheckForUpdates:
         ])
         config_fn = lambda key: {
             "auto_update_remote": "origin",
-            "auto_update_branch": "main",
         }.get(key)
+        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
-        # Call sequence: config_get x2, subprocess.run x2, shutil.which, config_get, subprocess.run x2
+        # Call sequence: config_get x2 (remote x2), subprocess.run x4, shutil.which, state x1
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 4)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 3)
+        _chain(mock_config, config_fn, 2)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(state_fn)
         mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
 
@@ -236,7 +238,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_config.assert_call(args=("auto_update_remote",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
@@ -267,15 +269,15 @@ class TestCheckForUpdates:
             _make_proc(0),                # git fetch
             _make_proc(0, "0.9.10\n"),    # git show (fallback)
         ])
-        config_fn = lambda key: {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }.get(key)
+        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
+        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.calls(config_fn)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(state_fn)
         mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
@@ -290,7 +292,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5})
@@ -316,15 +318,15 @@ class TestCheckForUpdates:
             _make_proc(0),
             _make_proc(0, "0.9.10\n"),
         ])
-        config_fn = lambda key: {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }.get(key)
+        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
+        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.calls(config_fn)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(state_fn)
         mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
@@ -338,7 +340,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5})
@@ -363,12 +365,13 @@ class TestCheckForUpdates:
             _make_proc(0, "origin\n"),
             _make_proc(1, "", "fatal: could not read from remote"),
         ])
-        config_fn = lambda key: None
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 2)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.returns(None)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
 
         with bigfoot:
             result = check_for_updates(spellbook_dir)
@@ -379,7 +382,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5})
@@ -401,12 +404,13 @@ class TestCheckForUpdates:
             _make_proc(0),
             _make_proc(0, "1.0.0\n"),
         ])
-        config_fn = lambda key: None
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.returns(None)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
         mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
@@ -418,7 +422,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5})
@@ -446,13 +450,14 @@ class TestCheckForUpdates:
             _make_proc(1, ""),
             _make_proc(0, "0.9.10\n"),
         ])
-        config_fn = lambda key: None
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 5)
-        # config_get: remote, branch, remote (in _get_owner_repo)
+        # config_get: remote (twice, once in _get_owner_repo). state: branch.
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 3)
+        _chain(mock_config, lambda key: None, 2)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
         mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
 
@@ -465,7 +470,7 @@ class TestCheckForUpdates:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_config.assert_call(args=("auto_update_remote",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "remote"],),
@@ -672,10 +677,8 @@ class TestApplyUpdate:
                 (spellbook_dir / ".version").write_text("0.9.10\n")
             return result
 
-        config_fn = lambda key: {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }.get(key)
+        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
+        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
         # Capture config_set calls for assertion (last_auto_update has dynamic timestamp)
         config_set_calls = []
@@ -687,7 +690,9 @@ class TestApplyUpdate:
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 5)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.calls(config_fn)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(state_fn)
         mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
         _chain(mock_config_set, capture_config_set, 3)
 
@@ -711,7 +716,7 @@ class TestApplyUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "status", "--porcelain"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 30})
@@ -751,7 +756,9 @@ class TestApplyUpdate:
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(mock_subprocess_run)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, lambda key: None, 2)
+        mock_config.returns(None)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
 
         with bigfoot:
             result = apply_update(spellbook_dir, lock_path=lock_path)
@@ -761,7 +768,7 @@ class TestApplyUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "status", "--porcelain"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 30})
@@ -791,7 +798,9 @@ class TestApplyUpdate:
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 4)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, lambda key: None, 2)
+        mock_config.returns(None)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
         mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
         mock_config_set.calls(lambda *a, **kw: None)
 
@@ -804,7 +813,7 @@ class TestApplyUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_config_set.assert_call(args=("pre_update_sha", "abc123"))
             mock_run.assert_call(
                 args=(["git", "-C", d, "status", "--porcelain"],),
@@ -847,7 +856,9 @@ class TestApplyUpdate:
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 6)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, lambda key: None, 2)
+        mock_config.returns(None)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.returns(None)
         mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
         mock_config_set.calls(lambda *a, **kw: None)
 
@@ -860,7 +871,7 @@ class TestApplyUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_config_set.assert_call(args=("pre_update_sha", "abc123"))
             mock_run.assert_call(
                 args=(["git", "-C", d, "status", "--porcelain"],),
@@ -907,17 +918,16 @@ class TestRollbackUpdate:
                 pass
             return result
 
-        config_state = {
-            "pre_update_sha": sha,
-            "auto_update_branch": "main",
-        }
-        config_fn = lambda key: config_state.get(key)
+        config_state = {"pre_update_sha": sha}
+        state_state = {"auto_update_branch": "main"}
 
         # branch check, reset, install = 3 calls
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 3)
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 2)
+        mock_config.calls(lambda key: config_state.get(key))
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(lambda key: state_state.get(key))
         # auto_update_paused, pre_update_sha, last_auto_update, available_update = 4 calls
         mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
         _chain(mock_config_set, lambda *a, **kw: None, 4)
@@ -932,7 +942,7 @@ class TestRollbackUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("pre_update_sha",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "rev-parse", "--abbrev-ref", "HEAD"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 10})
@@ -977,15 +987,15 @@ class TestRollbackUpdate:
         d = str(spellbook_dir)
         sha = "abc123" + "0" * 34
 
-        config_state = {
-            "pre_update_sha": sha,
-            "auto_update_branch": "main",
-        }
+        config_state = {"pre_update_sha": sha}
+        state_state = {"auto_update_branch": "main"}
 
         mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(0, "feature-branch"))
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, lambda key: config_state.get(key), 2)
+        mock_config.calls(lambda key: config_state.get(key))
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(lambda key: state_state.get(key))
 
         with bigfoot:
             result = rollback_update(spellbook_dir, lock_path=lock_path)
@@ -995,7 +1005,7 @@ class TestRollbackUpdate:
 
         with bigfoot.in_any_order():
             mock_config.assert_call(args=("pre_update_sha",))
-            mock_config.assert_call(args=("auto_update_branch",))
+            mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
                 args=(["git", "-C", d, "rev-parse", "--abbrev-ref", "HEAD"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 10})
@@ -1020,12 +1030,13 @@ class TestGetUpdateStatus:
             "last_auto_update": None,
             "pre_update_sha": "abc123",
             "last_update_check": "2026-02-19T10:00:00",
-            "update_check_failures": 0,
         }
-        config_fn = lambda key: config_state.get(key)
+        state_state = {"update_check_failures": 0}
 
         mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
-        _chain(mock_config, config_fn, 8)
+        _chain(mock_config, lambda key: config_state.get(key), 7)
+        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state.calls(lambda key: state_state.get(key))
 
         with bigfoot:
             result = get_update_status(spellbook_dir)
@@ -1045,7 +1056,7 @@ class TestGetUpdateStatus:
             mock_config.assert_call(args=("last_auto_update",))
             mock_config.assert_call(args=("pre_update_sha",))
             mock_config.assert_call(args=("last_update_check",))
-            mock_config.assert_call(args=("update_check_failures",))
+            mock_state.assert_call(args=("update_check_failures",))
 
 
 class TestInstallerUpdateOnlyFlag:

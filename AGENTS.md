@@ -201,6 +201,33 @@ commands/
 | OpenCode | `installer/platforms/opencode.py` | AGENTS.md + MCP |
 | Codex | `installer/platforms/codex.py` | AGENTS.md + MCP |
 
+## Config vs State
+
+Spellbook stores persistent key-value data in two places. Pick the right one:
+
+| File | Module | Purpose |
+|------|--------|---------|
+| `~/.config/spellbook/spellbook.json` | `spellbook.core.config` | User intent (what the user configured) |
+| `~/.local/spellbook/state.json` | `spellbook.core.state` | Runtime state (what the code wrote for itself) |
+
+**Config** keys are user-facing preferences and feature flags: `auto_update`,
+`session_mode`, `notify_enabled`, `worker_llm_*`. They appear in the admin UI
+(`CONFIG_SCHEMA`) and on install wizards. Reading uses `config_get(key)`,
+writing uses `config_set(key, value)`.
+
+**State** keys are facts the code discovered or counters the code maintains:
+`auto_update_branch` (auto-detected from git), `update_check_failures`
+(watcher failure counter). They must never appear in wizards and must never be
+edited via the admin UI. Reading uses `get_state(key)`, writing uses
+`set_state(key, value)`.
+
+When you add a new persistent key, decide up front:
+* Did the user choose this? -> config
+* Did the code derive it? -> state
+
+If the distinction is unclear, pick config and document the choice. Moving
+later is a migration (see `spellbook.core.state.migrate_config_to_state`).
+
 ## Adding Config Options
 
 <CRITICAL>

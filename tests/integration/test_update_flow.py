@@ -51,14 +51,16 @@ class TestFullUpdateDetection:
         """Detect update when GitHub releases API reports a newer version."""
         from spellbook.updates.tools import check_for_updates
 
-        config_map = {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }
+        config_map = {"auto_update_remote": "origin"}
+        state_map = {"auto_update_branch": "main"}
 
         monkeypatch.setattr(
             "spellbook.updates.tools.config_get",
             lambda key: config_map.get(key),
+        )
+        monkeypatch.setattr(
+            "spellbook.updates.tools.get_state",
+            lambda key: state_map.get(key),
         )
         monkeypatch.setattr(
             "spellbook.updates.tools._get_latest_release_version",
@@ -81,14 +83,16 @@ class TestFullUpdateDetection:
         """No update detected when versions match."""
         from spellbook.updates.tools import check_for_updates
 
-        config_map = {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }
+        config_map = {"auto_update_remote": "origin"}
+        state_map = {"auto_update_branch": "main"}
 
         monkeypatch.setattr(
             "spellbook.updates.tools.config_get",
             lambda key: config_map.get(key),
+        )
+        monkeypatch.setattr(
+            "spellbook.updates.tools.get_state",
+            lambda key: state_map.get(key),
         )
         monkeypatch.setattr(
             "spellbook.updates.tools._get_latest_release_version",
@@ -108,14 +112,16 @@ class TestFullUpdateDetection:
         """Major version bump is correctly detected."""
         from spellbook.updates.tools import check_for_updates
 
-        config_map = {
-            "auto_update_remote": "origin",
-            "auto_update_branch": "main",
-        }
+        config_map = {"auto_update_remote": "origin"}
+        state_map = {"auto_update_branch": "main"}
 
         monkeypatch.setattr(
             "spellbook.updates.tools.config_get",
             lambda key: config_map.get(key),
+        )
+        monkeypatch.setattr(
+            "spellbook.updates.tools.get_state",
+            lambda key: state_map.get(key),
         )
         monkeypatch.setattr(
             "spellbook.updates.tools._get_latest_release_version",

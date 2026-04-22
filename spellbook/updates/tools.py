@@ -28,6 +28,7 @@ from typing import Any, Optional
 from spellbook.core.compat import CrossPlatformLock, get_config_dir
 
 from spellbook.core.config import config_get, config_set
+from spellbook.core.state import get_state
 
 logger = logging.getLogger(__name__)
 
@@ -252,7 +253,7 @@ def check_for_updates(spellbook_dir: Path) -> dict:
 
     # Determine remote and branch
     remote = config_get("auto_update_remote") or "origin"
-    branch = config_get("auto_update_branch") or "main"
+    branch = get_state("auto_update_branch") or "main"
 
     # Validate remote exists
     try:
@@ -373,7 +374,7 @@ def apply_update(
         return result
 
     remote = config_get("auto_update_remote") or "origin"
-    branch = config_get("auto_update_branch") or "main"
+    branch = get_state("auto_update_branch") or "main"
 
     # Pre-flight: check clean working tree
     try:
@@ -550,7 +551,7 @@ def rollback_update(
         return result
 
     # Get expected branch
-    expected_branch = config_get("auto_update_branch") or "main"
+    expected_branch = get_state("auto_update_branch") or "main"
 
     # Verify current branch matches expected
     try:
@@ -664,5 +665,5 @@ def get_update_status(spellbook_dir: Path) -> dict:
         "last_auto_update": config_get("last_auto_update"),
         "pre_update_sha": config_get("pre_update_sha"),
         "last_check": config_get("last_update_check"),
-        "check_failures": config_get("update_check_failures") or 0,
+        "check_failures": get_state("update_check_failures") or 0,
     }

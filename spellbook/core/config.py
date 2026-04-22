@@ -755,6 +755,17 @@ def session_init(
         - resume_available: bool
         - resume_* fields if resume is available
     """
+    # One-shot migration: strip dead config keys and move runtime state into
+    # state.json. Safe to run every time; no-op once migrated. Kept inside
+    # session_init (not at import time) so the file I/O only happens when an
+    # LLM assistant actually starts a session, never during `python -c` smoke
+    # tests or when the config module is imported by unrelated tooling.
+    try:
+        from spellbook.core.state import migrate_config_to_state
+        migrate_config_to_state()
+    except Exception:  # pragma: no cover - migration must never block init
+        logger.exception("spellbook.json migration raised; continuing")
+
     # Validate and store platform
     if platform is not None and platform not in VALID_PLATFORMS:
         logger.warning("Unknown platform '%s', accepting as-is", platform)
