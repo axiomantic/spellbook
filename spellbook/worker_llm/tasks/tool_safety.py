@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from spellbook.worker_llm import client, prompts
 from spellbook.worker_llm.config import get_worker_config
 from spellbook.worker_llm.errors import WorkerLLMError
-from spellbook.worker_llm.events import publish_fail_open
+from spellbook.worker_llm.events import publish_call
 
 logger = logging.getLogger(__name__)
 
@@ -131,13 +131,19 @@ def tool_safety(
         system, override = prompts.load("tool_safety")
     except (FileNotFoundError, OSError, ValueError) as e:
         # Packaging bug or unknown task name: still fail open rather than
-        # crash the hook. Emit an explicit fail_open event so this branch
-        # is observable — client.call's finally-block event-emit never
-        # fires here because we short-circuit before reaching the client.
-        publish_fail_open(
+        # crash the hook. Emit via the unified publish_call surface with
+        # status='fail_open' so this branch lands on the observability
+        # dashboard — client.call's finally-block event-emit never fires
+        # here because we short-circuit before reaching the client.
+        # TODO: Phase 2 subscriber audit
+        publish_call(
             task="tool_safety",
-            reason="prompt_load_error",
-            error=str(e),
+            model="",
+            latency_ms=0,
+            status="fail_open",
+            prompt_len=0,
+            response_len=0,
+            error=f"prompt_load_error: {e}",
         )
         return _FAIL_OPEN
 

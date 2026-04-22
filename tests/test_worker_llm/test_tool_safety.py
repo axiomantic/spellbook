@@ -404,8 +404,9 @@ def test_prompt_load_error_emits_fail_open_event(
 ):
     """A prompt-loader failure short-circuits BEFORE ``client.call`` runs, so
     the ``call_failed`` event from ``client.call``'s finally-block never
-    fires. The branch must emit its own ``fail_open`` event so this failure
-    mode is visible to the admin UI."""
+    fires. The branch must emit its own ``publish_call(status='fail_open')``
+    so this failure mode is visible to the admin UI. The event_type routes
+    to ``call_fail_open`` per Step 4 of the observability impl plan."""
     worker_llm_transport([])  # any HTTP call would raise — should not be reached
 
     from spellbook.worker_llm import prompts
@@ -419,17 +420,45 @@ def test_prompt_load_error_emits_fail_open_event(
 
     captured: list = []
 
-    def fake_publish(task, reason, error):
-        captured.append({"task": task, "reason": reason, "error": error})
+    def fake_publish_call(
+        task,
+        model,
+        latency_ms,
+        status,
+        prompt_len,
+        response_len,
+        error=None,
+        override_loaded=False,
+    ):
+        captured.append(
+            {
+                "task": task,
+                "model": model,
+                "latency_ms": latency_ms,
+                "status": status,
+                "prompt_len": prompt_len,
+                "response_len": response_len,
+                "error": error,
+                "override_loaded": override_loaded,
+            }
+        )
 
-    monkeypatch.setattr(tool_safety_mod, "publish_fail_open", fake_publish)
+    monkeypatch.setattr(tool_safety_mod, "publish_call", fake_publish_call)
 
     v = tool_safety("Bash", {"command": "ls"}, "")
     # Still fails open — user action is not blocked.
     assert v == SafetyVerdict(verdict="OK", reasoning="error; fail-open")
-    # But the fail-open is observable.
-    assert len(captured) == 1
-    evt = captured[0]
-    assert evt["task"] == "tool_safety"
-    assert evt["reason"] == "prompt_load_error"
-    assert "packaging bug" in evt["error"]
+    # But the fail-open is observable via publish_call(status='fail_open'),
+    # which routes to event_type='call_fail_open' (see events.py:publish_call).
+    assert captured == [
+        {
+            "task": "tool_safety",
+            "model": "",
+            "latency_ms": 0,
+            "status": "fail_open",
+            "prompt_len": 0,
+            "response_len": 0,
+            "error": "prompt_load_error: packaging bug: tool_safety.md missing",
+            "override_loaded": False,
+        }
+    ]
