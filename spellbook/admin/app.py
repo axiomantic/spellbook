@@ -1,5 +1,6 @@
 """FastAPI sub-application factory for Spellbook Admin."""
 
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +9,7 @@ from pathlib import Path
 import logging
 
 from spellbook.admin.events import event_bus
+from spellbook.worker_llm.observability import purge_loop, threshold_eval_loop
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +18,48 @@ STATIC_DIR = Path(__file__).parent / "static"
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
-    """Mark the event bus as in-daemon while this app is running.
+    """Mark the event bus as in-daemon and spawn worker-LLM background tasks.
 
-    ``spellbook.worker_llm.events._in_daemon_process`` consults this flag to
-    choose between direct ``publish_sync`` and the HTTP fallback. The bus is
-    module-global, so nothing needs to be torn down on shutdown.
+    ``spellbook.worker_llm.events._in_daemon_process`` consults the daemon
+    flag to choose between direct ``publish_sync`` and the HTTP fallback.
+
+    ``purge_loop`` and ``threshold_eval_loop`` are daemon-lifetime async
+    tasks (see impl plan Step 11 / design §6). They are created here so
+    they spawn exactly once per daemon process (not per request, not per
+    test-client instance) and are cancelled + awaited on shutdown so no
+    orphan task holds an in-flight DB writer lock past daemon exit.
+
+    The monkeypatch-friendly indirection via ``purge_loop`` /
+    ``threshold_eval_loop`` module-level names lets tests swap in
+    lightweight stubs without patching the observability module itself.
     """
     event_bus._in_daemon = True
+    purge_task = asyncio.create_task(
+        purge_loop(), name="spellbook-worker-llm-purge"
+    )
+    eval_task = asyncio.create_task(
+        threshold_eval_loop(), name="spellbook-worker-llm-threshold-eval"
+    )
     try:
         yield
     finally:
         event_bus._in_daemon = False
+        # Cancel and await both tasks. ``CancelledError`` is the expected
+        # terminal exception; any other exception is logged but does not
+        # block shutdown (an in-flight DB error on cancel must not hang
+        # the daemon).
+        for task in (purge_task, eval_task):
+            task.cancel()
+        for task in (purge_task, eval_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                logger.debug(
+                    "worker-llm background task raised during shutdown",
+                    exc_info=True,
+                )
 
 
 def create_admin_app() -> FastAPI:
