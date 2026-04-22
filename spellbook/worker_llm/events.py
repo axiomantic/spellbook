@@ -17,14 +17,67 @@ loop, where it works correctly. See design doc §2.5 for the full rationale.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from pathlib import Path
+from typing import Any, Callable
 
 from spellbook.admin.events import Event, Subsystem, event_bus, publish_sync
 from spellbook.worker_llm.observability import record_call
 
 logger = logging.getLogger(__name__)
+
+
+def _spawn_background(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    """Run ``fn`` without blocking a running event loop.
+
+    If a loop is running in the current thread, offload ``fn`` to the default
+    executor via ``loop.run_in_executor`` and DO NOT await the returned future
+    (fire-and-forget). If no loop is running, call ``fn`` directly on the
+    current thread -- subprocess callers, CLI, and sync test paths go through
+    this branch.
+
+    Exceptions raised by ``fn`` are swallowed both when the loop is running
+    (via the wrapper closure below) and when it is not (try/except around the
+    direct call). Observability writes must never surface through the caller:
+    the worker-LLM call and the hook dispatcher already committed their
+    user-visible side effects by the time we reach this helper.
+
+    Gemini review HIGH 2/3: ``record_call`` (worker_llm events) and
+    ``record_hook_event`` (hook events) were being invoked inline from async
+    handlers; SQLite writer-lock contention under load could block the
+    daemon's event loop for the duration of the write. This helper is the
+    shared off-ramp.
+    """
+    def _safe_call() -> None:
+        try:
+            fn(*args, **kwargs)
+        except Exception:
+            # Best-effort: swallow every exception. ``fn`` is expected to
+            # also have its own first-loud-then-debug log policy (see
+            # ``record_call`` / ``record_hook_event``); we just guarantee
+            # nothing escapes ``_spawn_background``.
+            logger.debug(
+                "_spawn_background: suppressed exception from %s",
+                getattr(fn, "__name__", repr(fn)),
+                exc_info=True,
+            )
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No event loop on this thread: run synchronously. This keeps
+        # subprocess callers, the CLI, and non-async tests on the original
+        # fast path where the write completes before the call returns.
+        _safe_call()
+        return
+
+    # Fire-and-forget: we DO NOT store the Future. The default executor
+    # holds its own reference to the submitted work via its internal queue,
+    # so the callable will run regardless. Any exception is swallowed inside
+    # ``_safe_call`` so there is no "exception never retrieved" warning.
+    loop.run_in_executor(None, _safe_call)
 
 # Module-level counter so we can emit a single loud warning on the first
 # subprocess publish failure per process, then fall back to DEBUG for the
@@ -183,26 +236,29 @@ def publish_call(
     # re-enter via ``/api/events/publish`` which has its own ``record_call``
     # invocation (impl plan Step 8); gating on ``_in_daemon_process`` here
     # prevents a double-insert. ``record_call`` already swallows exceptions
-    # internally, but we wrap in a second safety net so a future refactor
-    # that removes that guard still cannot propagate an exception out of
-    # ``publish_call`` — the LLM call must never be blocked by observability.
+    # internally, but ``_spawn_background`` adds a second safety net so a
+    # future refactor that removes that guard still cannot propagate an
+    # exception out of ``publish_call`` — the LLM call must never be blocked
+    # by observability.
+    #
+    # Gemini review HIGH 2: previously this was a bare ``record_call(...)``
+    # which, when called from a coroutine, blocks the daemon event loop for
+    # the duration of the SQLite write. ``_spawn_background`` offloads to
+    # ``loop.run_in_executor`` when a loop is running and falls back to a
+    # direct sync call otherwise. The gate on ``_in_daemon_process()`` is
+    # preserved to keep the subprocess path free of double-inserts.
     if _in_daemon_process():
-        try:
-            record_call(
-                task=task,
-                model=model,
-                latency_ms=latency_ms,
-                status=status,
-                prompt_len=prompt_len,
-                response_len=response_len,
-                error=error,
-                override_loaded=override_loaded,
-            )
-        except Exception:  # noqa: BLE001  (best-effort: swallow and move on)
-            logger.debug(
-                "record_call raised out of publish_call; swallowed",
-                exc_info=True,
-            )
+        _spawn_background(
+            record_call,
+            task=task,
+            model=model,
+            latency_ms=latency_ms,
+            status=status,
+            prompt_len=prompt_len,
+            response_len=response_len,
+            error=error,
+            override_loaded=override_loaded,
+        )
 
 
 def publish_override_loaded(task: str, path: str) -> None:

@@ -18,7 +18,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 
 from spellbook.core.config import config_get
 from spellbook.db.engines import get_spellbook_sync_session
@@ -142,27 +142,32 @@ def _run_purge_once() -> None:
                 break
 
     # --- Count cap pass ---
+    # Gemini review HIGH 4: same rewrite as worker_llm.observability.
+    # Previously used ``DELETE WHERE id NOT IN (SELECT ... LIMIT max_rows)``
+    # which has compile-time-optional LIMIT-inside-subquery support on
+    # SQLite and degrades to O(N*M). Inline a scalar subquery that returns
+    # the id of the (``max_rows`` + 1)-th row in id-DESC order; rows with
+    # ``id <= threshold`` are deletable. When the table reaches max_rows,
+    # the OFFSET + LIMIT 1 returns NULL and ``id <= NULL`` yields no
+    # victims -> rowcount 0 -> break.
     while True:
         with get_spellbook_sync_session() as session:
-            keep_ids = (
+            threshold_subq = (
                 select(HookEvent.id)
-                .order_by(HookEvent.timestamp.desc())
-                .limit(max_rows)
+                .order_by(HookEvent.id.desc())
+                .offset(max_rows)
+                .limit(1)
+                .scalar_subquery()
             )
             victim_ids = (
                 select(HookEvent.id)
-                .where(HookEvent.id.not_in(keep_ids))
+                .where(HookEvent.id <= threshold_subq)
                 .limit(_PURGE_BATCH_LIMIT)
             )
             result = session.execute(
                 delete(HookEvent).where(HookEvent.id.in_(victim_ids)),
             )
             if result.rowcount == 0:
-                break
-            total = session.execute(
-                select(func.count()).select_from(HookEvent),
-            ).scalar()
-            if total is not None and total <= max_rows:
                 break
 
     _last_purge_run_ts = datetime.now(timezone.utc)

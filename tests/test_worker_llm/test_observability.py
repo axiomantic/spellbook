@@ -277,13 +277,23 @@ def counting_session(tmp_path, monkeypatch):
 
 
 def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
-    """T8: 12000 in-retention rows -> 1 time-cap probe + 4 count-cap batches.
+    """T8: 12000 in-retention rows -> 1 time-cap probe + 5 count-cap batches.
 
     Seeds 12000 rows with timestamps WITHIN the retention window
     (now - 1 minute) so the time-cap pass finds zero deletable rows and
     breaks after exactly one probe SELECT. The count-cap pass then runs
-    until the surviving-row count is <= max_rows (10000): at batch size
-    500, that's (12000 - 10000) / 500 = 4 fresh-session batches.
+    with an inlined threshold scalar subquery until the victim subquery
+    returns zero rows.
+
+    Gemini review HIGH 4: the previous ``NOT IN (SELECT ... LIMIT N)``
+    implementation was replaced with an ``id <= (SELECT ... OFFSET
+    max_rows LIMIT 1)`` batched scalar subquery. Under that design a
+    12000-row seed produces FIVE count-cap iterations:
+
+      - Batches 1-4 each delete exactly 500 rows (total 2000 deleted).
+      - Batch 5 finds the threshold subquery returning NULL (table is now
+        at max_rows), ``id <= NULL`` yields no victims, rowcount is 0,
+        the loop breaks.
 
     Expected session sequence:
       1. Time-cap probe session (SELECT returns 0, break) -> 1 connect.
@@ -291,34 +301,35 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
       3. Count-cap batch 2: 500 deletes -> 1 connect.
       4. Count-cap batch 3: 500 deletes -> 1 connect.
       5. Count-cap batch 4: 500 deletes -> 1 connect.
-      Total: 5 connects, final row count = 10000.
+      6. Count-cap batch 5: 0 deletes (threshold NULL), break -> 1 connect.
+      Total: 6 connects, final row count = 10000.
 
     The module-global ``_last_purge_run_ts`` must be set to a datetime
     after the purge run completes (used by Step 19's doctor CLI).
 
     ESCAPE: test_run_purge_once_count_cap_only_4_batches
       CLAIM:    _run_purge_once opens a fresh session per batch; time-cap
-                probes once (0 deletes) and count-cap runs exactly 4 batches
-                of 500 deletes each, leaving 10000 rows and setting
-                _last_purge_run_ts.
+                probes once (0 deletes) and count-cap runs 4 batches of
+                500 deletes each plus 1 empty probe, leaving 10000 rows
+                and setting _last_purge_run_ts.
       PATH:     _run_purge_once -> time-cap while loop probes + breaks ->
-                count-cap while loop runs 4 fresh-session batches -> sets
-                _last_purge_run_ts.
-      CHECK:    connect_count == 5; row count == 10000; _last_purge_run_ts
+                count-cap while loop runs 5 fresh-session iterations
+                (4 work + 1 empty) -> sets _last_purge_run_ts.
+      CHECK:    connect_count == 6; row count == 10000; _last_purge_run_ts
                 is a datetime.
       MUTATION: If _run_purge_once holds ONE session across all batches,
-                connect_count would be 1 (or 2), not 5 — caught.
+                connect_count would be 1 (or 2), not 6 — caught.
                 If batch size were not 500, the row count would not be
                 exactly 10000 — caught.
                 If the time-cap pass ran no probe (skipped straight to
-                count-cap), connect_count would be 4 — caught.
+                count-cap), connect_count would be 5 — caught.
                 If _last_purge_run_ts were never written, the final
                 assertion would fail — caught.
       ESCAPE:   A no-op implementation would leave row count at 12000 and
                 connect_count at 0 — caught by both assertions.
                 An impl that deletes all 2000 overflow rows in a single
                 batch (no LIMIT 500) would have connect_count == 2 (time
-                probe + single delete), not 5 — caught.
+                probe + single delete), not 6 — caught.
       IMPACT:   Without fresh-session-per-batch discipline, the purge task
                 holds a single writer lock for the entire DELETE sweep,
                 starving every other SQLite writer (record_call,
@@ -365,8 +376,11 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
 
     observability._run_purge_once()
 
-    # 1 time-cap probe + 4 count-cap work batches = 5 sessions.
-    assert counting_session.connect_count == 5
+    # 1 time-cap probe + 4 count-cap work batches + 1 empty-threshold probe
+    # = 6 sessions. The trailing probe is the HIGH 4 rewrite's natural
+    # terminator: once the table is at max_rows, the scalar subquery
+    # returns NULL, ``id <= NULL`` yields no victims, rowcount is 0, break.
+    assert counting_session.connect_count == 6
 
     # Final row count is exactly 10000.
     with get_sync_session(counting_session.db_path) as session:

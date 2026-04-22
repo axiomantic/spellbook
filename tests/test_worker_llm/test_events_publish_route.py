@@ -12,12 +12,34 @@ regression where the route drifts back under ``/admin``.
 
 from __future__ import annotations
 
+import asyncio
+
 import bigfoot
 import httpx
 import pytest
 from dirty_equals import IsInstance
 
 from spellbook.admin.events import Event, Subsystem, event_bus
+
+
+async def _await_spy_count(spy_list: list, expected: int, timeout: float = 2.0) -> None:
+    """Poll ``spy_list`` until it reaches ``expected`` length or ``timeout``.
+
+    Gemini review HIGH 2/3: ``record_call`` / ``record_hook_event`` are now
+    offloaded to ``loop.run_in_executor`` via ``_spawn_background``, so the
+    handler returns before the spy is populated. Tests poll here instead of
+    relying on inline execution; a 2-second ceiling is generous (the
+    executor's thread-pool hop is typically sub-millisecond) but gives CI
+    slack without making a hard failure look like a hang.
+    """
+    deadline = asyncio.get_running_loop().time() + timeout
+    while len(spy_list) < expected:
+        if asyncio.get_running_loop().time() > deadline:
+            raise AssertionError(
+                f"spy did not reach {expected} entries within {timeout}s; "
+                f"current len={len(spy_list)}"
+            )
+        await asyncio.sleep(0.01)
 
 
 @pytest.fixture
@@ -354,6 +376,7 @@ async def test_publish_route_call_ok_invokes_record_call(
     publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
     assert r.status_code == 200, r.text
     assert r.json() == {"ok": True}
+    await _await_spy_count(record_call_spy, 1)
     assert record_call_spy == [
         {
             "task": "transcript_harvest",
@@ -595,6 +618,7 @@ async def test_publish_route_call_fail_open_invokes_record_call(
     publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
     assert r.status_code == 200, r.text
     assert r.json() == {"ok": True}
+    await _await_spy_count(record_call_spy, 1)
     assert record_call_spy == [
         {
             "task": "tool_safety",

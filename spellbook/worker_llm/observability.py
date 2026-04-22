@@ -20,7 +20,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, desc, func, select
+from sqlalchemy import delete, desc, select
 
 from spellbook.core.config import config_get
 from spellbook.db.engines import get_spellbook_sync_session
@@ -166,32 +166,41 @@ def _run_purge_once() -> None:
                 break
 
     # --- Count cap pass ---
-    # Keep the top-`max_rows` rows by ts DESC; delete the rest in
-    # batches of 500. We pre-compute the id list per batch via
-    # subquery so the DELETE is indexed.
+    # Gemini review HIGH 4: the previous implementation used
+    # ``DELETE WHERE id NOT IN (SELECT id ... LIMIT max_rows)``. SQLite's
+    # support for LIMIT inside IN/NOT IN subqueries is compile-time
+    # optional and the pattern is O(N*M) in the worst case because the
+    # keep-set subquery is re-evaluated per batch.
+    #
+    # Rewrite: inline a scalar subquery that returns the primary-key id of
+    # the (``max_rows`` + 1)-th row in id-DESC order. Rows with
+    # ``id <= threshold`` are safe to delete (autoincrement PKs are
+    # monotonic with insert order, so id-DESC == newest-first for the
+    # purposes of "keep newest N"). Once the table reaches ``max_rows``,
+    # the OFFSET + LIMIT 1 returns NULL; ``id <= NULL`` evaluates to NULL
+    # in SQL, the victim subquery finds no rows, rowcount is 0, the loop
+    # breaks. Uses ``IN`` (always supported) rather than ``NOT IN``, and
+    # O(N) overall because the threshold probe is indexed on the PK.
     while True:
         with get_spellbook_sync_session() as session:
-            # Subquery: ids of the rows to KEEP (top max_rows by ts DESC).
-            keep_ids = (
+            threshold_subq = (
                 select(WorkerLLMCall.id)
-                .order_by(WorkerLLMCall.timestamp.desc())
-                .limit(max_rows)
+                .order_by(WorkerLLMCall.id.desc())
+                .offset(max_rows)
+                .limit(1)
+                .scalar_subquery()
             )
-            # Delete LIMIT 500 rows not in the keep set.
             victim_ids = (
                 select(WorkerLLMCall.id)
-                .where(WorkerLLMCall.id.not_in(keep_ids))
+                .where(WorkerLLMCall.id <= threshold_subq)
                 .limit(_PURGE_BATCH_LIMIT)
             )
             result = session.execute(
-                delete(WorkerLLMCall).where(WorkerLLMCall.id.in_(victim_ids)),
+                delete(WorkerLLMCall).where(
+                    WorkerLLMCall.id.in_(victim_ids),
+                ),
             )
             if result.rowcount == 0:
-                break
-            total = session.execute(
-                select(func.count()).select_from(WorkerLLMCall),
-            ).scalar()
-            if total is not None and total <= max_rows:
                 break
 
     _last_purge_run_ts = datetime.now(timezone.utc)

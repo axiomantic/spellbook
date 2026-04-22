@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-04-22
+
+### Added
+
+- **Async worker queue** (opt-in): bounded `asyncio.Queue` with a daemon
+  consumer task and drop-oldest overflow semantics. New
+  `POST /api/worker-llm/enqueue` endpoint colocated with
+  `/api/events/publish` at the MCP root. Fire-and-forget worker-LLM paths
+  (transcript_harvest and the new tool_safety warm probe) enqueue when
+  `worker_llm_queue_enabled=True` and fall back to the sync call
+  otherwise. Each overflow drop publishes a `call` event with
+  `status="dropped"` so queue pressure is observable in the admin UI.
+  Two config keys: `worker_llm_queue_enabled` (default False) and
+  `worker_llm_queue_max_depth` (default 256).
+- **Warm probe for tool_safety** (PreToolUse): when the last successful
+  worker-LLM call is older than `worker_llm_tool_safety_cold_threshold_s`
+  (default 45s), the PreToolUse path skips the sniff (fail-open) and
+  kicks off a background warmup enqueue. Prevents cold-start latency
+  from stalling tool invocations while keeping the worker primed.
+- **Hook execution observability**: new `hook_events` SQLite table (one
+  row per dispatcher invocation) plus `/api/hooks/record`,
+  `/api/hooks/events`, and `/api/hooks/metrics` endpoints. New
+  `/admin/hooks` page renders metric cards (p50/p95 duration, success
+  rate, recent event count) and a filterable event table. Retention
+  governed by three config keys (`hook_observability_retention_hours`,
+  `hook_observability_max_rows`,
+  `hook_observability_purge_interval_seconds`) matching the worker-LLM
+  observability shape.
+- **Admin config page now exposes 23 previously-hidden keys** (`fun_mode`,
+  `persona`, `security.spotlighting.*`, `security.crypto.*`,
+  `security.sleuth.*`, `security.lodo.*`). Schema entries grouped by
+  dotted prefix so the admin UI can render collapsible sections. New
+  `secret: True` schema flag masks values in `GET /api/config`
+  responses; applied to `security.sleuth.api_key` and now also
+  `worker_llm_api_key`.
+- **Runtime state file** `~/.local/spellbook/state.json` separated from
+  `spellbook.json` to keep user-chosen config distinct from
+  daemon-authored runtime state. Currently carries
+  `update_check_failures` and `auto_update_branch`. A one-shot migration
+  at `session_init` moves any legacy values out of `spellbook.json`.
+
+### Changed
+
+- **`spellbook.json` dead keys removed**: `tts_enabled`, `tts_volume`,
+  `telemetry_enabled`. The TTS subsystem was removed in 0.54.0 but these
+  keys lingered in the schema; the migration also drops them from
+  existing config files on first session_init.
+- **Worker-LLM call `status` vocabulary normalized** to
+  `{success, error, timeout, fail_open, dropped}` at the client publish
+  site. Previously the client emitted raw `"ok"` and exception-class
+  names (`"TimeoutError"`, `"ConnectionError"`, ...), which broke the
+  admin-UI aggregate metrics, the threshold notifier, and the warm-probe
+  "last success" calculation.
+- **Background offload for observability writes**
+  (Gemini review HIGH 2/3): added a shared `_spawn_background` helper in
+  `spellbook/worker_llm/events.py` that runs a callable via
+  `loop.run_in_executor` when an event loop is active and falls back to
+  a direct sync call otherwise. Applied to `record_call` inside
+  `publish_call` (daemon path) and to `record_hook_event` inside the
+  `/api/hooks/record` route so the daemon event loop is never blocked
+  on SQLite writer-lock contention.
+- **Count-cap purge rewrite** in both
+  `spellbook/worker_llm/observability.py` and
+  `spellbook/hooks/observability.py` (Gemini review HIGH 4): replaces
+  `DELETE ... WHERE id NOT IN (SELECT id ... LIMIT max_rows)` with an
+  inlined scalar subquery `id <= (SELECT id ORDER BY id DESC OFFSET
+  max_rows LIMIT 1)`. SQLite's support for LIMIT inside IN/NOT IN
+  subqueries is compile-time optional, and the old pattern was O(N*M)
+  because the keep-set was re-evaluated per batch. The new shape uses
+  `IN` (always supported) against an indexed PK scan and terminates
+  naturally when the OFFSET returns NULL.
+
+### Fixed
+
+- **`session_mode` config validation**: `_validate_config_value` now
+  rejects values outside `{fun, tarot, none}` so an admin UI typo cannot
+  land an invalid persisted mode. Mirrors the existing
+  `worker_llm_transcript_harvest_mode` guard.
+
 ## [0.54.0] - 2026-04-20
 
 ### Added

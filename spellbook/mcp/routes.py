@@ -634,8 +634,17 @@ async def api_hooks_record(request: Request) -> JSONResponse:
 
     try:
         from spellbook.hooks.observability import record_hook_event
+        from spellbook.worker_llm.events import _spawn_background
 
-        record_hook_event(
+        # Gemini review HIGH 3: ``record_hook_event`` runs a synchronous
+        # SQLite INSERT. Calling it directly from this async handler held
+        # the daemon event loop for the duration of the write. Offload via
+        # ``_spawn_background``: fire-and-forget in the default executor
+        # when a loop is running, direct sync call otherwise. The outer
+        # try/except stays as a belt-and-braces guard; the helper itself
+        # also swallows internal exceptions.
+        _spawn_background(
+            record_hook_event,
             hook_name=hook_name,
             event_name=event_name,
             duration_ms=duration_ms,
@@ -739,9 +748,23 @@ async def api_events_publish(request: Request) -> JSONResponse:
                 status_code=400,
             )
         try:
-            from spellbook.worker_llm.observability import record_call
+            from spellbook.worker_llm.events import _spawn_background
+            from spellbook.worker_llm import observability as _wl_obs
 
-            record_call(
+            # Gemini review HIGH 2: ``record_call`` is a synchronous SQLite
+            # INSERT. Calling it directly from this async handler held the
+            # daemon event loop for the duration of the write. Offload via
+            # ``_spawn_background`` — fire-and-forget in the default
+            # executor when a loop is running; sync call when not.
+            #
+            # We resolve ``record_call`` off the module attribute (rather
+            # than binding via ``from ... import record_call``) so that
+            # tests monkeypatching ``observability.record_call`` still see
+            # their spy invoked through the background path. The helper
+            # itself swallows any exception the spy / real function
+            # raises.
+            _spawn_background(
+                _wl_obs.record_call,
                 task=task_val,
                 model=model_val,
                 latency_ms=int(data.get("latency_ms", 0) or 0),

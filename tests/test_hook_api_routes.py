@@ -4,9 +4,29 @@ Tests /api/hook-log endpoint by calling the route handler function
 directly with stub Starlette Request objects.
 """
 
+import asyncio
 import json
 
 import pytest
+
+
+async def _await_len(collection, expected: int, timeout: float = 2.0) -> None:
+    """Poll ``collection`` until it reaches ``expected`` length or ``timeout``.
+
+    Gemini review HIGH 3: ``record_hook_event`` is now offloaded to
+    ``loop.run_in_executor`` via ``_spawn_background``, so the handler
+    returns before the spy is populated. Tests poll here instead of
+    asserting synchronously. 2-second ceiling is generous relative to a
+    typical thread-pool hop (<1ms) but keeps CI hangs observable.
+    """
+    deadline = asyncio.get_running_loop().time() + timeout
+    while len(collection) < expected:
+        if asyncio.get_running_loop().time() > deadline:
+            raise AssertionError(
+                f"collection did not reach {expected} entries within "
+                f"{timeout}s; current len={len(collection)}"
+            )
+        await asyncio.sleep(0.01)
 
 
 # ---------------------------------------------------------------------------
@@ -135,7 +155,7 @@ class TestApiHooksRecord:
         body = json.loads(resp.body.decode())
         assert body == {"ok": True}
 
-        assert len(calls) == 1
+        await _await_len(calls, 1)
         c = calls[0]
         assert c["hook_name"] == "spellbook_hook"
         assert c["event_name"] == "PreToolUse"

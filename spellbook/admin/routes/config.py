@@ -85,6 +85,7 @@ CONFIG_SCHEMA = [
         "type": "string",
         "description": "Bearer token for the worker LLM endpoint (plaintext; often empty for local servers)",
         "default": "",
+        "secret": True,
     },
     {
         "key": "worker_llm_timeout_s",
@@ -490,6 +491,7 @@ def _mask_secrets(config: dict[str, Any]) -> dict[str, Any]:
 # problem. Keep the dispatch table tiny — most keys are plain str/bool/
 # number and need no additional validation beyond the schema type.
 _ALLOWED_TRANSCRIPT_HARVEST_MODES = ("replace", "merge", "skip")
+_ALLOWED_SESSION_MODES = ("fun", "tarot", "none")
 
 
 def _validate_config_value(key: str, value: Any) -> str | None:
@@ -500,6 +502,11 @@ def _validate_config_value(key: str, value: Any) -> str | None:
     otherwise silently degrade the Stop hook to regex-only behavior because
     the consumer's default branch falls through to the regex path. Reject
     typos at config-set time so the operator sees the problem immediately.
+
+    ``session_mode`` gets the same treatment against
+    ``spellbook.core.config.session_mode_set``'s canonical enum so an admin
+    UI typo cannot land an invalid persisted mode that ``session_mode_get``
+    would then hand back unchanged to the greeting path.
     """
     if key == "worker_llm_transcript_harvest_mode":
         if not isinstance(value, str):
@@ -511,6 +518,17 @@ def _validate_config_value(key: str, value: Any) -> str | None:
             return (
                 f"worker_llm_transcript_harvest_mode={value!r} is not one of "
                 f"{list(_ALLOWED_TRANSCRIPT_HARVEST_MODES)}"
+            )
+    if key == "session_mode":
+        if not isinstance(value, str):
+            return (
+                "session_mode must be a string; got "
+                f"{type(value).__name__}"
+            )
+        if value not in _ALLOWED_SESSION_MODES:
+            return (
+                f"session_mode={value!r} is not one of "
+                f"{list(_ALLOWED_SESSION_MODES)}"
             )
     return None
 
