@@ -221,6 +221,90 @@ def _feature_flags_state() -> dict:
     }
 
 
+def _observability_health() -> dict:
+    """Probe the worker-LLM observability subsystem.
+
+    Reports:
+      - ``table_present``: True if the ``worker_llm_calls`` table exists.
+      - ``row_count``: total row count (0 when table exists but empty).
+      - ``last_row_ts``: ISO-8601 of the most recent row's ``timestamp``, or
+        ``None`` when the table is empty.
+      - ``purge_last_ran``: ISO-8601 of ``observability._last_purge_run_ts``,
+        or ``None`` when the purge loop has not yet run in this daemon
+        lifetime (single-writer invariant: only ``_run_purge_once`` writes
+        this attribute; we only read it here).
+      - ``notifications``: ``{reachable, reason}``. Reachability is a static
+        importability check (``from spellbook.notifications.notify import
+        send_notification``) rather than a live ``check_availability()`` probe
+        — the macOS path of the latter would trigger an OS permission dialog
+        on first run, which the doctor must never do. The import-level check
+        is the proxy documented in impl plan Step 19.
+
+    All exceptions are swallowed and surfaced in the returned dict. The
+    doctor must never crash on a broken observability subsystem — that is
+    precisely the condition it is designed to report.
+    """
+    from sqlalchemy import func, select
+
+    from spellbook.db.engines import get_spellbook_sync_session
+    from spellbook.db.spellbook_models import WorkerLLMCall
+    from spellbook.worker_llm import observability as _obs
+
+    out: dict = {
+        "table_present": False,
+        "row_count": 0,
+        "last_row_ts": None,
+        "purge_last_ran": None,
+        "notifications": {"reachable": False, "reason": None},
+    }
+
+    # --- Table presence + row count + last-row timestamp ---
+    try:
+        with get_spellbook_sync_session() as session:
+            count = session.execute(
+                select(func.count()).select_from(WorkerLLMCall),
+            ).scalar()
+            last_ts = session.execute(
+                select(func.max(WorkerLLMCall.timestamp)),
+            ).scalar()
+        out["table_present"] = True
+        out["row_count"] = int(count or 0)
+        out["last_row_ts"] = last_ts
+    except Exception as e:  # noqa: BLE001
+        # "no such table: worker_llm_calls" is the expected failure when the
+        # operator has not run ``alembic upgrade`` yet. Any other exception
+        # (disk full, DB corruption) is surfaced the same way: ``error``
+        # string captures the proximate cause for the operator.
+        out["table_present"] = False
+        out["error"] = f"{type(e).__name__}: {e}"
+
+    # --- Purge loop last-run timestamp ---
+    purge_ts = getattr(_obs, "_last_purge_run_ts", None)
+    if purge_ts is not None:
+        try:
+            out["purge_last_ran"] = purge_ts.isoformat()
+        except Exception as e:  # noqa: BLE001
+            out["purge_last_ran"] = None
+            out["purge_error"] = f"{type(e).__name__}: {e}"
+
+    # --- Notification subsystem reachability (importability proxy) ---
+    # Per impl plan Step 19: "if not feasible, just report 'send_notification
+    # importable' as a proxy". The live check_availability() call on macOS
+    # triggers an OS permission dialog on first invocation, which the doctor
+    # must never do — dialog timing is operator-driven, not diagnostic-driven.
+    try:
+        from spellbook.notifications.notify import send_notification  # noqa: F401
+
+        out["notifications"] = {"reachable": True, "reason": None}
+    except Exception as e:  # noqa: BLE001
+        out["notifications"] = {
+            "reachable": False,
+            "reason": f"{type(e).__name__}: {e}",
+        }
+
+    return out
+
+
 def _daemon_reachable(timeout: float = 1.0) -> dict:
     """Probe the daemon's ``/api/events/publish`` endpoint with an empty event.
 
@@ -351,6 +435,7 @@ def _run_doctor(args: argparse.Namespace) -> None:
     cache = _safety_cache_report()
     flags = _feature_flags_state()
     daemon = _daemon_reachable()
+    observability = _observability_health()
 
     if json_mode:
         print(
@@ -363,6 +448,7 @@ def _run_doctor(args: argparse.Namespace) -> None:
                     "safety_cache": cache,
                     "feature_flags": flags,
                     "daemon": daemon,
+                    "observability": observability,
                 },
                 indent=2,
             )
@@ -401,6 +487,36 @@ def _run_doctor(args: argparse.Namespace) -> None:
             print(
                 f"Daemon: unreachable at {daemon['url']} "
                 f"({daemon.get('error', 'unknown')})"
+            )
+
+        # Observability health section (impl plan Step 19). Three lines:
+        # (1) table presence + row count + last-row ts; (2) purge loop last
+        # ran; (3) notification subsystem reachability. Emitted after the
+        # daemon line to match the top-down order of the operator's mental
+        # model: transport -> storage -> retention -> alerting.
+        if observability.get("table_present"):
+            rows = observability["row_count"]
+            last_ts = observability.get("last_row_ts")
+            tail = f", last {last_ts}" if last_ts else ""
+            print(f"worker_llm_calls table: ok ({rows} rows{tail})")
+        else:
+            err = observability.get("error", "unknown")
+            print(
+                f"worker_llm_calls table: MISSING — run alembic upgrade "
+                f"({err})"
+            )
+        purge_last = observability.get("purge_last_ran")
+        if purge_last:
+            print(f"purge loop: last ran at {purge_last}")
+        else:
+            print("purge loop: never run in this daemon lifetime")
+        notif = observability.get("notifications", {})
+        if notif.get("reachable"):
+            print("notification subsystem: reachable")
+        else:
+            print(
+                f"notification subsystem: degraded: "
+                f"{notif.get('reason', 'unknown')}"
             )
 
     sys.exit(2 if failures else 0)

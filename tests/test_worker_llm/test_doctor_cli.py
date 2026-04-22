@@ -283,3 +283,225 @@ class TestDoctorRegister:
         with pytest.raises(SystemExit) as ei:
             parser.parse_args(["worker-llm", "doctor", "--help"])
         assert ei.value.code == 0
+
+
+# ---------------------------------------------------------------------------
+# Observability health section (impl plan Step 19)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def observability_db(tmp_path, monkeypatch):
+    """Create a tmp-file SQLite DB with ``worker_llm_calls`` + redirect
+    ``spellbook.db.engines.get_spellbook_sync_session`` to it.
+
+    The doctor's observability section imports the session factory at call
+    time from ``spellbook.db.engines``, so patching the attribute on that
+    module is sufficient. Returns (db_path, insert_row) for tests that seed
+    rows.
+    """
+    from contextlib import contextmanager
+
+    from sqlalchemy import create_engine
+
+    from spellbook.db import engines as _engines
+    from spellbook.db.engines import get_sync_session
+    from spellbook.db.spellbook_models import SpellbookBase, WorkerLLMCall
+
+    db_path = str(tmp_path / "spellbook.db")
+    engine = create_engine(f"sqlite:///{db_path}")
+    SpellbookBase.metadata.create_all(engine)
+    engine.dispose()
+
+    @contextmanager
+    def _tmp_session():
+        with get_sync_session(db_path) as session:
+            yield session
+
+    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _tmp_session)
+
+    def insert(timestamp: str, task: str = "tool_safety", status: str = "success") -> None:
+        with get_sync_session(db_path) as session:
+            session.add(
+                WorkerLLMCall(
+                    timestamp=timestamp,
+                    task=task,
+                    model="m",
+                    status=status,
+                    latency_ms=0,
+                    prompt_len=0,
+                    response_len=0,
+                    error=None,
+                    override_loaded=0,
+                )
+            )
+
+    return db_path, insert
+
+
+class TestDoctorObservabilityHealth:
+    """Doctor reports observability health: table presence, rows, purge ts,
+    notification subsystem reachability (impl plan Step 19).
+
+    Strategy
+    --------
+    All three tests run the doctor in ``--json`` mode with the canned happy
+    script so the 4 worker-LLM tasks succeed and the doctor exits 0. The
+    new observability section is asserted on the JSON payload under the
+    ``observability`` key. We also spot-check the human-mode output in one
+    test so the plain-text format matches the three required lines.
+    """
+
+    def test_empty_table_reports_zero_rows_and_never(
+        self,
+        observability_db,
+        monkeypatch,
+        worker_llm_transport,
+        worker_llm_config,
+        capsys,
+    ):
+        """Empty ``worker_llm_calls`` table + ``_last_purge_run_ts`` = None.
+
+        ESCAPE: test_empty_table_reports_zero_rows_and_never
+          CLAIM:    Doctor reports an empty worker_llm_calls table and a
+                    never-run purge loop with the precise output format.
+          PATH:     _run_doctor -> _observability_health -> SELECT COUNT(*) -> 0,
+                    reads _last_purge_run_ts (None) from observability module.
+          CHECK:    JSON payload's ``observability`` dict is fully equal to the
+                    expected dict; human-output section shows all three lines.
+          MUTATION: If the row-count probe always returned >0, the assertion on
+                    row_count=0 would fail. If the purge-ts branch dropped the
+                    None check, ``purge_last_ran`` would not be "never". If the
+                    notification probe reported unreachable, the assertion on
+                    reachable=True would fail.
+          ESCAPE:   A broken impl that reports a non-zero count OR swaps the
+                    None sentinel label would fail full-dict equality.
+          IMPACT:   Operator would see stale/fake counts and mis-diagnose a
+                    silently empty observability pipeline as healthy.
+        """
+        from spellbook.worker_llm import observability
+
+        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+
+        worker_llm_transport(list(_HAPPY_SCRIPT))
+
+        from spellbook.cli.commands.worker_llm import _run_doctor
+
+        args = SimpleNamespace(
+            json=True, bench=None, runs=10, roundtable_sample=None
+        )
+        with pytest.raises(SystemExit) as ei:
+            _run_doctor(args)
+        assert ei.value.code == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["observability"] == {
+            "table_present": True,
+            "row_count": 0,
+            "last_row_ts": None,
+            "purge_last_ran": None,
+            "notifications": {"reachable": True, "reason": None},
+        }
+
+    def test_human_output_contains_three_observability_lines(
+        self,
+        observability_db,
+        monkeypatch,
+        worker_llm_transport,
+        worker_llm_config,
+        capsys,
+    ):
+        """Plain-text output includes the three required observability lines.
+
+        ESCAPE: test_human_output_contains_three_observability_lines
+          CLAIM:    Human-mode doctor emits the three required section lines.
+          PATH:     _run_doctor (json=False) -> prints observability section.
+          CHECK:    stdout contains the three exact-prefix lines in order.
+          MUTATION: If any line were dropped or re-worded, the substring check
+                    on that specific line would fail.
+          ESCAPE:   A broken impl that emits only 2 of 3 lines would fail the
+                    missing-line assertion.
+          IMPACT:   Operators running ``spellbook worker-llm doctor`` without
+                    ``--json`` would lose the observability signal entirely.
+        """
+        from spellbook.worker_llm import observability
+
+        monkeypatch.setattr(observability, "_last_purge_run_ts", None)
+
+        worker_llm_transport(list(_HAPPY_SCRIPT))
+
+        from spellbook.cli.commands.worker_llm import _run_doctor
+
+        args = SimpleNamespace(
+            json=False, bench=None, runs=10, roundtable_sample=None
+        )
+        with pytest.raises(SystemExit) as ei:
+            _run_doctor(args)
+        assert ei.value.code == 0
+
+        out = capsys.readouterr().out
+        assert "worker_llm_calls table: ok (0 rows)" in out
+        assert "purge loop: never run in this daemon lifetime" in out
+        assert "notification subsystem: reachable" in out
+
+    def test_seeded_rows_report_count_and_last_ts(
+        self,
+        observability_db,
+        monkeypatch,
+        worker_llm_transport,
+        worker_llm_config,
+        capsys,
+    ):
+        """Seeded rows: count + last_row_ts match the most recent seeded row.
+
+        ESCAPE: test_seeded_rows_report_count_and_last_ts
+          CLAIM:    Doctor reports exact row count and the MAX(timestamp) of
+                    the seeded rows.
+          PATH:     _observability_health -> SELECT COUNT + MAX(timestamp) ->
+                    payload keys row_count, last_row_ts.
+          CHECK:    JSON payload's ``observability`` dict equals the expected
+                    dict verbatim (row count 3, most recent ts from the seed,
+                    purge_last_ran isoformat of the seeded datetime).
+          MUTATION: If the MAX-ts probe returned the first row instead of the
+                    last, last_row_ts would not equal the most recent seed. If
+                    COUNT returned 0 or len(rows)-1, row_count would mismatch.
+                    If the isoformat of _last_purge_run_ts were dropped, the
+                    purge_last_ran string would not match.
+          ESCAPE:   A stale count (e.g. cached 0) would fail the count
+                    assertion; a wrong ordering (oldest instead of newest)
+                    would fail the last_row_ts assertion.
+          IMPACT:   Operator would see stale/wrong recent-activity signal; a
+                    stuck purge loop could be misread as recent if the wrong
+                    ts leaked through.
+        """
+        from datetime import datetime, timezone
+
+        from spellbook.worker_llm import observability
+
+        _, insert = observability_db
+        insert(timestamp="2026-04-20T10:00:00+00:00", task="tool_safety", status="success")
+        insert(timestamp="2026-04-20T11:00:00+00:00", task="memory_rerank", status="error")
+        insert(timestamp="2026-04-20T12:00:00+00:00", task="roundtable_voice", status="success")
+
+        purge_dt = datetime(2026, 4, 20, 12, 30, 0, tzinfo=timezone.utc)
+        monkeypatch.setattr(observability, "_last_purge_run_ts", purge_dt)
+
+        worker_llm_transport(list(_HAPPY_SCRIPT))
+
+        from spellbook.cli.commands.worker_llm import _run_doctor
+
+        args = SimpleNamespace(
+            json=True, bench=None, runs=10, roundtable_sample=None
+        )
+        with pytest.raises(SystemExit) as ei:
+            _run_doctor(args)
+        assert ei.value.code == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["observability"] == {
+            "table_present": True,
+            "row_count": 3,
+            "last_row_ts": "2026-04-20T12:00:00+00:00",
+            "purge_last_ran": "2026-04-20T12:30:00+00:00",
+            "notifications": {"reachable": True, "reason": None},
+        }
