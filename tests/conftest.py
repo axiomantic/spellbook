@@ -42,6 +42,30 @@ def _ensure_worker_llm_calls_table():
     WorkerLLMCall.__table__.create(engine, checkfirst=True)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_hook_events_table():
+    """Create the ``hook_events`` table on the real spellbook.db.
+
+    Mirrors ``_ensure_worker_llm_calls_table``: CI runs against a fresh
+    ``~/.local/spellbook/spellbook.db`` with no Alembic migrations applied.
+    Any test that enters a code path which calls
+    ``spellbook.hooks.observability.record_hook_event`` hits an
+    ``OperationalError: no such table: hook_events``. ``record_hook_event``
+    swallows the error but logs a WARNING on its first-per-process
+    failure, which bigfoot's autouse ``LogPlugin`` captures.
+
+    ``checkfirst=True`` makes this a no-op when the table already exists.
+    """
+    try:
+        from spellbook.db.engines import DB_DIR, _get_or_create_sync_engine
+        from spellbook.db.spellbook_models import HookEvent
+    except ImportError:
+        return
+
+    engine = _get_or_create_sync_engine(str(DB_DIR / "spellbook.db"))
+    HookEvent.__table__.create(engine, checkfirst=True)
+
+
 @pytest.fixture(autouse=True)
 def _isolate_worker_llm_config_from_user(monkeypatch):
     """Force worker_llm_* config keys to return None by default.

@@ -100,3 +100,115 @@ class TestApiHookLog:
         assert "event" in body.get("error", "")
 
 
+# ---------------------------------------------------------------------------
+# Tests: /api/hooks/record
+# ---------------------------------------------------------------------------
+
+
+class TestApiHooksRecord:
+    @pytest.mark.asyncio
+    async def test_accepts_valid_payload(self, monkeypatch):
+        """Valid payload invokes record_hook_event with the right args."""
+        calls: list[dict] = []
+
+        def _fake_record(**kwargs):
+            calls.append(kwargs)
+
+        monkeypatch.setattr(
+            "spellbook.hooks.observability.record_hook_event",
+            _fake_record,
+        )
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "spellbook_hook",
+            "event_name": "PreToolUse",
+            "duration_ms": 42,
+            "exit_code": 0,
+            "tool_name": "Bash",
+            "error": None,
+            "notes": None,
+        })
+
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 202
+        body = json.loads(resp.body.decode())
+        assert body == {"ok": True}
+
+        assert len(calls) == 1
+        c = calls[0]
+        assert c["hook_name"] == "spellbook_hook"
+        assert c["event_name"] == "PreToolUse"
+        assert c["duration_ms"] == 42
+        assert c["exit_code"] == 0
+        assert c["tool_name"] == "Bash"
+
+    @pytest.mark.asyncio
+    async def test_rejects_missing_hook_name(self):
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "event_name": "Stop",
+            "duration_ms": 10,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_rejects_negative_duration(self):
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": -1,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_rejects_oversized_notes(self):
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": 0,
+            "exit_code": 0,
+            "notes": "x" * 4001,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_rejects_invalid_json(self):
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_bad_request()
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_record_failure_still_returns_202(self, monkeypatch):
+        """record_hook_event is best-effort; route still returns 202."""
+        def _boom(**kwargs):
+            raise RuntimeError("DB down")
+
+        monkeypatch.setattr(
+            "spellbook.hooks.observability.record_hook_event",
+            _boom,
+        )
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": 0,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 202
+
+

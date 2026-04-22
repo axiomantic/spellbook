@@ -63,6 +63,12 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_queue_enabled": False,
     "worker_llm_queue_max_depth": 256,
     "worker_llm_tool_safety_cold_threshold_s": 45.0,
+    # Hook observability. Consumed by the purge loop via single-arg
+    # config_get(key); missing defaults would make config_get return None and
+    # crash the int casts in spellbook/hooks/observability.py.
+    "hook_observability_retention_hours": 24,
+    "hook_observability_max_rows": 50000,
+    "hook_observability_purge_interval_seconds": 300,
 }
 
 

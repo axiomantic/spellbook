@@ -263,6 +263,35 @@ CONFIG_SCHEMA = [
         ),
         "default": 45.0,
     },
+    # Hook observability. The purge loop reads these via config_get; schema
+    # entries surface them to the admin UI.
+    {
+        "key": "hook_observability_retention_hours",
+        "type": "number",
+        "description": (
+            "Retention window (hours) for hook_events rows before the "
+            "batched purge loop deletes them"
+        ),
+        "default": 24,
+    },
+    {
+        "key": "hook_observability_max_rows",
+        "type": "number",
+        "description": (
+            "Hard ceiling on the number of hook_events rows kept; the "
+            "count-cap branch of the purge loop trims overflow above this"
+        ),
+        "default": 50000,
+    },
+    {
+        "key": "hook_observability_purge_interval_seconds",
+        "type": "number",
+        "description": (
+            "Sleep interval (seconds) between hook_events purge loop "
+            "iterations; clamped to a minimum of 10s inside the loop"
+        ),
+        "default": 300,
+    },
     # --- General / session -------------------------------------------------
     {
         "key": "fun_mode",

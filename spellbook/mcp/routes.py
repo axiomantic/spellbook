@@ -556,6 +556,101 @@ def _resolve_task_callback(task_name: str):
 # ---------------------------------------------------------------------------
 
 
+@mcp.custom_route("/api/hooks/record", methods=["POST"])
+async def api_hooks_record(request: Request) -> JSONResponse:
+    """Persist a hook dispatcher invocation into ``hook_events``.
+
+    Subprocess hook scripts (``hooks/spellbook_hook.py`` etc.) have no
+    running event loop, so they POST here and the daemon writes the row
+    on their behalf. Co-lives with ``/api/events/publish`` at the MCP
+    root so ``BearerAuthMiddleware`` authenticates it.
+
+    Accepts JSON body:
+        {
+          "hook_name": str,     # required; <=128 chars
+          "event_name": str,    # required; <=128 chars
+          "tool_name": str,     # optional; <=128 chars
+          "duration_ms": int,   # required; >=0
+          "exit_code": int,     # required
+          "error": str,         # optional; <=1000 chars
+          "notes": str          # optional; <=4000 chars
+        }
+
+    Returns:
+        - 202 ``{"ok": true}`` when accepted.
+        - 400 on missing/invalid fields.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    hook_name = body.get("hook_name")
+    event_name = body.get("event_name")
+    duration_ms = body.get("duration_ms")
+    exit_code = body.get("exit_code")
+    tool_name = body.get("tool_name")
+    error = body.get("error")
+    notes = body.get("notes")
+
+    if not isinstance(hook_name, str) or not hook_name or len(hook_name) > 128:
+        return JSONResponse(
+            {"error": "missing or invalid 'hook_name' (1..128 chars)"},
+            status_code=400,
+        )
+    if not isinstance(event_name, str) or not event_name or len(event_name) > 128:
+        return JSONResponse(
+            {"error": "missing or invalid 'event_name' (1..128 chars)"},
+            status_code=400,
+        )
+    if tool_name is not None:
+        if not isinstance(tool_name, str) or len(tool_name) > 128:
+            return JSONResponse(
+                {"error": "invalid 'tool_name' (<=128 chars or null)"},
+                status_code=400,
+            )
+    if not isinstance(duration_ms, int) or isinstance(duration_ms, bool) or duration_ms < 0:
+        return JSONResponse(
+            {"error": "missing or invalid 'duration_ms' (non-negative int)"},
+            status_code=400,
+        )
+    if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+        return JSONResponse(
+            {"error": "missing or invalid 'exit_code' (int)"},
+            status_code=400,
+        )
+    if error is not None:
+        if not isinstance(error, str) or len(error) > 1000:
+            return JSONResponse(
+                {"error": "invalid 'error' (<=1000 chars or null)"},
+                status_code=400,
+            )
+    if notes is not None:
+        if not isinstance(notes, str) or len(notes) > 4000:
+            return JSONResponse(
+                {"error": "invalid 'notes' (<=4000 chars or null)"},
+                status_code=400,
+            )
+
+    try:
+        from spellbook.hooks.observability import record_hook_event
+
+        record_hook_event(
+            hook_name=hook_name,
+            event_name=event_name,
+            duration_ms=duration_ms,
+            exit_code=exit_code,
+            tool_name=tool_name,
+            error=error,
+            notes=notes,
+        )
+    except Exception:
+        # Silent: record_hook_event is best-effort. Route must still ack.
+        pass
+
+    return JSONResponse({"ok": True}, status_code=202)
+
+
 @mcp.custom_route("/api/events/publish", methods=["POST"])
 async def api_events_publish(request: Request) -> JSONResponse:
     """Accept a fire-and-forget event from a hook subprocess or MCP worker.

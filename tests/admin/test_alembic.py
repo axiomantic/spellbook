@@ -456,3 +456,133 @@ class TestWorkerLLMCallsMigration:
         assert orphan_indexes == []
 
         engine.dispose()
+
+
+class TestHookEventsMigration:
+    """Verify the 0002_hook_events Alembic revision creates and drops the
+    ``hook_events`` table with its 3 indexes.
+
+    Mirrors ``TestWorkerLLMCallsMigration``: exercises the migration
+    module's ``upgrade()`` and ``downgrade()`` directly against a
+    temporary SQLite DB.
+    """
+
+    REVISION_PATH = (
+        MIGRATIONS_DIR / "versions" / "spellbook" / "0002_add_hook_events.py"
+    )
+
+    EXPECTED_COLUMNS = {
+        "id",
+        "timestamp",
+        "hook_name",
+        "event_name",
+        "tool_name",
+        "duration_ms",
+        "exit_code",
+        "error",
+        "notes",
+    }
+
+    EXPECTED_INDEXES = {
+        "ix_hook_events_timestamp",
+        "ix_hook_events_event_name",
+        "ix_hook_events_hook_event",
+    }
+
+    def _load_revision_module(self):
+        spec = importlib.util.spec_from_file_location(
+            "spellbook_migration_0002", str(self.REVISION_PATH),
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_revision_file_exists(self):
+        assert self.REVISION_PATH.is_file(), (
+            f"expected migration file at {self.REVISION_PATH}"
+        )
+
+    def test_revision_metadata(self):
+        module = self._load_revision_module()
+        assert module.revision == "0002_hook_events"
+        assert module.down_revision == "0001_worker_llm_calls"
+        assert module.branch_labels is None
+        assert module.depends_on is None
+
+    def test_upgrade_creates_table_with_all_columns_and_indexes(self, tmp_path):
+        from alembic.migration import MigrationContext
+        from alembic.operations import Operations
+        from sqlalchemy import create_engine, inspect
+
+        db_path = tmp_path / "test_migration.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+        module = self._load_revision_module()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.upgrade()
+
+        inspector = inspect(engine)
+        assert "hook_events" in inspector.get_table_names()
+        actual_columns = {
+            c["name"] for c in inspector.get_columns("hook_events")
+        }
+        assert actual_columns == self.EXPECTED_COLUMNS
+
+        actual_indexes = {
+            idx["name"] for idx in inspector.get_indexes("hook_events")
+        }
+        assert actual_indexes == self.EXPECTED_INDEXES
+
+        indexes_by_name = {
+            idx["name"]: idx for idx in inspector.get_indexes("hook_events")
+        }
+        assert indexes_by_name["ix_hook_events_hook_event"]["column_names"] == [
+            "hook_name",
+            "event_name",
+        ]
+        assert indexes_by_name["ix_hook_events_timestamp"]["column_names"] == [
+            "timestamp",
+        ]
+        assert indexes_by_name["ix_hook_events_event_name"]["column_names"] == [
+            "event_name",
+        ]
+
+        engine.dispose()
+
+    def test_downgrade_drops_table_and_all_indexes(self, tmp_path):
+        from alembic.migration import MigrationContext
+        from alembic.operations import Operations
+        from sqlalchemy import create_engine, inspect, text
+
+        db_path = tmp_path / "test_migration.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+        module = self._load_revision_module()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.upgrade()
+
+        inspector = inspect(engine)
+        assert "hook_events" in inspector.get_table_names()
+
+        with engine.begin() as conn:
+            ctx = MigrationContext.configure(conn)
+            with Operations.context(ctx):
+                module.downgrade()
+
+        inspector = inspect(engine)
+        assert "hook_events" not in inspector.get_table_names()
+
+        with engine.connect() as conn:
+            orphan_indexes = conn.execute(
+                text(
+                    "SELECT name FROM sqlite_master WHERE type='index' "
+                    "AND name LIKE 'ix_hook_events_%'"
+                )
+            ).fetchall()
+        assert orphan_indexes == []
+
+        engine.dispose()

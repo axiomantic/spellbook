@@ -2103,15 +2103,60 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     return combined if combined else None
 
 
+def _record_hook_event_fire_and_forget(
+    event_name: str,
+    tool_name: str,
+    duration_ms: int,
+    exit_code: int,
+    error: str | None,
+) -> None:
+    """POST a hook event record to the daemon. <0.5s timeout; swallow errors.
+
+    In-daemon writers use ``spellbook.hooks.observability.record_hook_event``
+    directly; subprocess hook callers (this module) re-enter via the daemon
+    endpoint because they have no running event loop.
+    """
+    payload = {
+        "hook_name": "spellbook_hook",
+        "event_name": event_name or "unknown",
+        "duration_ms": int(max(0, duration_ms)),
+        "exit_code": int(exit_code),
+    }
+    if tool_name:
+        payload["tool_name"] = tool_name[:128]
+    if error:
+        payload["error"] = error[:1000]
+    try:
+        _http_post("/api/hooks/record", payload, timeout=0.5)
+    except Exception:
+        pass  # Best-effort; hooks must never fail on observability.
+
+
 def main():
     """Parse stdin and dispatch to handlers."""
+    start = time.monotonic()
+    event_name = ""
+    tool_name = ""
+    exit_code = 0
+    error_str: str | None = None
+
+    def _emit_record() -> None:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        _fire_and_forget(
+            _record_hook_event_fire_and_forget,
+            event_name, tool_name, duration_ms, exit_code, error_str,
+        )
+
     raw = sys.stdin.read().strip()
     if not raw:
+        _emit_record()
         sys.exit(0)
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        error_str = "JSONDecodeError"
+        _emit_record()
         sys.exit(0)
 
     event_name = data.get("hook_event_name", "")
@@ -2121,6 +2166,7 @@ def main():
         elif "tool_name" in data:
             event_name = "PreToolUse"
         else:
+            _emit_record()
             sys.exit(0)
 
     tool_name = data.get("tool_name", "")
@@ -2129,8 +2175,17 @@ def main():
         output = dispatch(event_name, tool_name, data)
         if output:
             print(output)
+    except SystemExit as e:
+        # _emit_block_and_exit calls sys.exit(2); capture exit code.
+        exit_code = int(e.code) if isinstance(e.code, int) else 1
+        _emit_record()
+        raise
     except Exception as e:
+        error_str = f"{type(e).__name__}: {e}"[:1000]
+        exit_code = 1
         _log_hook_error(event_name, tool_name, e)
+
+    _emit_record()
 
 
 if __name__ == "__main__":

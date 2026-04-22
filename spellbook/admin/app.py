@@ -10,6 +10,7 @@ import logging
 
 from spellbook.admin.events import event_bus
 from spellbook.core.config import config_get
+from spellbook.hooks.observability import purge_loop as hook_purge_loop
 from spellbook.worker_llm.observability import purge_loop, threshold_eval_loop
 from spellbook.worker_llm.queue import start_queue, stop_queue
 
@@ -42,6 +43,9 @@ async def _lifespan(app: FastAPI):
     eval_task = asyncio.create_task(
         threshold_eval_loop(), name="spellbook-worker-llm-threshold-eval"
     )
+    hook_purge_task = asyncio.create_task(
+        hook_purge_loop(), name="spellbook-hook-events-purge"
+    )
     # Opt-in fire-and-forget queue (design: async enqueue for hook-originated
     # worker calls). Only start the consumer when the operator enabled it;
     # otherwise the module stays dormant and ``is_available()`` returns
@@ -64,9 +68,9 @@ async def _lifespan(app: FastAPI):
         # is the expected terminal exception; any other exception is logged
         # but does not block shutdown (an in-flight DB error on cancel must
         # not hang the daemon).
-        for task in (purge_task, eval_task):
+        for task in (purge_task, eval_task, hook_purge_task):
             task.cancel()
-        for task in (purge_task, eval_task):
+        for task in (purge_task, eval_task, hook_purge_task):
             try:
                 await task
             except asyncio.CancelledError:
@@ -113,6 +117,7 @@ def create_admin_app() -> FastAPI:
     from spellbook.admin.routes import focus as focus_routes
     from spellbook.admin.routes import health as health_routes
     from spellbook.admin.routes import worker_llm as worker_llm_routes
+    from spellbook.admin.routes import hooks as hooks_routes
 
     app.include_router(auth_routes.router, prefix="/api")
     app.include_router(config_routes.router, prefix="/api")
@@ -124,6 +129,7 @@ def create_admin_app() -> FastAPI:
     app.include_router(focus_routes.router, prefix="/api")
     app.include_router(health_routes.router, prefix="/api")
     app.include_router(worker_llm_routes.router, prefix="/api")
+    app.include_router(hooks_routes.router, prefix="/api")
 
     # WebSocket endpoint (no /api prefix -- connects at /ws)
     from spellbook.admin.routes.ws import websocket_handler

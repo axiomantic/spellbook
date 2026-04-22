@@ -103,6 +103,10 @@ EXPECTED_TABLES = {
         "id", "timestamp", "task", "model", "status", "latency_ms",
         "prompt_len", "response_len", "error", "override_loaded",
     ],
+    "hook_events": [
+        "id", "timestamp", "hook_name", "event_name", "tool_name",
+        "duration_ms", "exit_code", "error", "notes",
+    ],
 }
 
 
@@ -116,7 +120,7 @@ def engine():
         SpawnRateLimit, Memory, MemoryCitation,
         MemoryLink, MemoryBranch, RawEvent, MemoryAuditLog,
         StintStack, StintCorrectionEvent, CuratorEvent,
-        WorkerLLMCall,
+        WorkerLLMCall, HookEvent,
     )
     engine = create_engine("sqlite:///:memory:")
     SpellbookBase.metadata.create_all(engine)

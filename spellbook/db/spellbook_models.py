@@ -660,3 +660,49 @@ class WorkerLLMCall(SpellbookBase):
         }
 
 
+# ---- 27. hook_events ----
+
+class HookEvent(SpellbookBase):
+    """One row per hook dispatcher invocation.
+
+    Instrumentation landing for ``hooks/spellbook_hook.py`` (and any other
+    stdin/stdout hook subprocesses). Written best-effort via
+    ``record_hook_event`` (in-daemon path) or via ``POST /api/hooks/record``
+    (subprocess path). Rows are purged on a rolling basis by the background
+    purge loop registered in ``admin/app.py``.
+    """
+
+    __tablename__ = "hook_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    timestamp: Mapped[str] = mapped_column(
+        Text, nullable=False, index=True,
+    )  # ISO-8601 UTC, matches existing event tables
+    hook_name: Mapped[str] = mapped_column(Text, nullable=False)
+    event_name: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    tool_name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    exit_code: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        # Compound index on the hot admin query shape
+        # (filter-by-hook-and-event-then-range).
+        Index("ix_hook_events_hook_event", "hook_name", "event_name"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp,
+            "hook_name": self.hook_name,
+            "event_name": self.event_name,
+            "tool_name": self.tool_name,
+            "duration_ms": self.duration_ms,
+            "exit_code": self.exit_code,
+            "error": self.error,
+            "notes": self.notes,
+        }
+
+
