@@ -219,10 +219,11 @@ def _post_warmup_enqueue() -> bool:
     import urllib.error
     import urllib.request
 
+    from spellbook.worker_llm.net import build_host_url
+
     host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
     port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
-    host_part = f"[{host}]" if ":" in host else host
-    url = f"http://{host_part}:{port}/api/worker-llm/enqueue"
+    url = build_host_url(host, port, "/api/worker-llm/enqueue")
     headers = {"Content-Type": "application/json"}
     token = _load_bearer_token()
     if token:

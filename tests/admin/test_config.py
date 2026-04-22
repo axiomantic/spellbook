@@ -596,3 +596,216 @@ class TestSecretRoundTripSafe:
         )
         assert response.status_code == 200
         assert calls == [("notify_title", "***")]
+
+
+class TestNumericConfigValidation:
+    """Numeric config keys reject out-of-range or wrong-type values.
+
+    Follow-up to the transcript_harvest_mode / session_mode enum validators:
+    range-check the numeric knobs that drive observability, retention, and
+    timeout behavior. An operator typing ``notify_threshold=1.5`` or
+    ``retention_hours=0`` would otherwise silently disable or corrupt the
+    feature — those must fail at config-set time.
+    """
+
+    # ------------------------------------------------------------------
+    # Unit-interval: 0.0 <= x <= 1.0
+    # ------------------------------------------------------------------
+
+    @pytest.mark.parametrize("value", [0.0, 0.5, 0.8, 1.0])
+    def test_notify_threshold_accepts_valid(self, client, monkeypatch, value):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: {"status": "ok", "config": {k: v}},
+        )
+        response = client.put(
+            "/api/config/worker_llm_observability_notify_threshold",
+            json={"value": value},
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("value", [-0.1, 1.1, 2.0, -1])
+    def test_notify_threshold_rejects_out_of_range(self, client, value):
+        response = client.put(
+            "/api/config/worker_llm_observability_notify_threshold",
+            json={"value": value},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_notify_threshold_rejects_string(self, client):
+        response = client.put(
+            "/api/config/worker_llm_observability_notify_threshold",
+            json={"value": "0.8"},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_notify_threshold_rejects_bool(self, client):
+        """``True`` is an ``int`` subclass; reject it explicitly."""
+        response = client.put(
+            "/api/config/worker_llm_observability_notify_threshold",
+            json={"value": True},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    # ------------------------------------------------------------------
+    # Positive integers (>= 1)
+    # ------------------------------------------------------------------
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "worker_llm_observability_max_rows",
+            "hook_observability_max_rows",
+            "worker_llm_observability_notify_window",
+            "worker_llm_max_tokens",
+            "worker_llm_queue_max_depth",
+        ],
+    )
+    def test_positive_int_accepts_one_and_large(self, client, monkeypatch, key):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: {"status": "ok", "config": {k: v}},
+        )
+        for good in (1, 10_000):
+            response = client.put(
+                f"/api/config/{key}",
+                json={"value": good},
+            )
+            assert response.status_code == 200, (key, good, response.json())
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "worker_llm_observability_max_rows",
+            "hook_observability_max_rows",
+            "worker_llm_observability_notify_window",
+            "worker_llm_max_tokens",
+            "worker_llm_queue_max_depth",
+        ],
+    )
+    def test_positive_int_rejects_zero_and_negative(self, client, key):
+        for bad in (0, -1):
+            response = client.put(
+                f"/api/config/{key}",
+                json={"value": bad},
+            )
+            assert response.status_code == 400, (key, bad, response.json())
+            assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_positive_int_rejects_float(self, client):
+        """Row caps / token caps are ints; reject ``10.5``."""
+        response = client.put(
+            "/api/config/worker_llm_max_tokens",
+            json={"value": 10.5},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_positive_int_rejects_bool(self, client):
+        response = client.put(
+            "/api/config/worker_llm_max_tokens",
+            json={"value": True},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    # ------------------------------------------------------------------
+    # Positive numbers (int or float, > 0)
+    # ------------------------------------------------------------------
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "worker_llm_observability_retention_hours",
+            "hook_observability_retention_hours",
+            "worker_llm_observability_purge_interval_seconds",
+            "hook_observability_purge_interval_seconds",
+            "worker_llm_observability_notify_eval_interval_seconds",
+            "worker_llm_timeout_s",
+            "worker_llm_tool_safety_timeout_s",
+            "worker_llm_tool_safety_cold_threshold_s",
+            "worker_llm_safety_cache_ttl_s",
+        ],
+    )
+    def test_positive_number_accepts_small_float(self, client, monkeypatch, key):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: {"status": "ok", "config": {k: v}},
+        )
+        for good in (0.5, 1, 24, 3600.0):
+            response = client.put(
+                f"/api/config/{key}",
+                json={"value": good},
+            )
+            assert response.status_code == 200, (key, good, response.json())
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "worker_llm_observability_retention_hours",
+            "worker_llm_timeout_s",
+            "worker_llm_tool_safety_timeout_s",
+            "worker_llm_safety_cache_ttl_s",
+        ],
+    )
+    def test_positive_number_rejects_zero_and_negative(self, client, key):
+        for bad in (0, 0.0, -0.5, -1):
+            response = client.put(
+                f"/api/config/{key}",
+                json={"value": bad},
+            )
+            assert response.status_code == 400, (key, bad, response.json())
+            assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_positive_number_rejects_string(self, client):
+        response = client.put(
+            "/api/config/worker_llm_timeout_s",
+            json={"value": "10"},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_positive_number_rejects_bool(self, client):
+        response = client.put(
+            "/api/config/worker_llm_timeout_s",
+            json={"value": False},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    # ------------------------------------------------------------------
+    # Batch path honors the same validators.
+    # ------------------------------------------------------------------
+
+    def test_batch_rejects_out_of_range_threshold(self, client, monkeypatch):
+        """A bad numeric in a mixed batch rejects the whole batch atomically."""
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: {"status": "ok", "config": {}},
+        )
+        response = client.put(
+            "/api/config",
+            json={
+                "updates": {
+                    "notify_enabled": False,
+                    "worker_llm_observability_notify_threshold": 1.5,
+                }
+            },
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+    def test_batch_rejects_zero_max_rows(self, client, monkeypatch):
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: {"status": "ok", "config": {}},
+        )
+        response = client.put(
+            "/api/config",
+            json={"updates": {"worker_llm_observability_max_rows": 0}},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"

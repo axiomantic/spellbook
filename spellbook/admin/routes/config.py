@@ -497,6 +497,86 @@ _ALLOWED_TRANSCRIPT_HARVEST_MODES = ("replace", "merge", "skip")
 _ALLOWED_SESSION_MODES = SESSION_MODES
 
 
+def _validate_enum(allowed: tuple[str, ...]):
+    """Build a validator that rejects non-strings and out-of-enum values."""
+
+    def _check(key: str, value: Any) -> str | None:
+        if not isinstance(value, str):
+            return f"{key} must be a string; got {type(value).__name__}"
+        if value not in allowed:
+            return f"{key}={value!r} is not one of {list(allowed)}"
+        return None
+
+    return _check
+
+
+def _validate_unit_interval(key: str, value: Any) -> str | None:
+    """Require a float/int in the closed range [0.0, 1.0]."""
+    # ``bool`` is a subclass of ``int`` in Python; reject it explicitly so
+    # ``True``/``False`` don't quietly validate as 1.0/0.0.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return f"{key} must be a number; got {type(value).__name__}"
+    if not (0.0 <= float(value) <= 1.0):
+        return f"{key}={value!r} must be between 0.0 and 1.0"
+    return None
+
+
+def _validate_positive_int(key: str, value: Any) -> str | None:
+    """Require an ``int`` >= 1. Rejects bool, float, and non-positive ints."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        return f"{key} must be an integer; got {type(value).__name__}"
+    if value < 1:
+        return f"{key}={value!r} must be >= 1"
+    return None
+
+
+def _validate_positive_number(key: str, value: Any) -> str | None:
+    """Require a float/int strictly greater than zero."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return f"{key} must be a number; got {type(value).__name__}"
+    if float(value) <= 0:
+        return f"{key}={value!r} must be > 0"
+    return None
+
+
+# Data-driven dispatch: {config_key: validator_fn}. Each validator returns
+# None on success or an error string on failure. Adding a new numeric-range
+# check is one line here instead of another if-branch below.
+#
+# Categories:
+#   * Enum string keys (harvest mode, session mode).
+#   * Unit-interval floats: success-rate floor in [0.0, 1.0].
+#   * Positive integers: row caps, windowed sample counts, token ceilings.
+#   * Positive numbers (int or float, > 0): retention hours, timeouts,
+#     cache TTLs, purge/eval intervals.
+_VALIDATORS: dict[str, Any] = {
+    "worker_llm_transcript_harvest_mode": _validate_enum(
+        _ALLOWED_TRANSCRIPT_HARVEST_MODES
+    ),
+    "session_mode": _validate_enum(_ALLOWED_SESSION_MODES),
+    # Unit-interval floats.
+    "worker_llm_observability_notify_threshold": _validate_unit_interval,
+    # Positive integers.
+    "worker_llm_observability_max_rows": _validate_positive_int,
+    "hook_observability_max_rows": _validate_positive_int,
+    "worker_llm_observability_notify_window": _validate_positive_int,
+    "worker_llm_max_tokens": _validate_positive_int,
+    "worker_llm_queue_max_depth": _validate_positive_int,
+    # Positive numbers (int or float, > 0).
+    "worker_llm_observability_retention_hours": _validate_positive_number,
+    "hook_observability_retention_hours": _validate_positive_number,
+    "worker_llm_observability_purge_interval_seconds": _validate_positive_number,
+    "hook_observability_purge_interval_seconds": _validate_positive_number,
+    "worker_llm_observability_notify_eval_interval_seconds": (
+        _validate_positive_number
+    ),
+    "worker_llm_timeout_s": _validate_positive_number,
+    "worker_llm_tool_safety_timeout_s": _validate_positive_number,
+    "worker_llm_tool_safety_cold_threshold_s": _validate_positive_number,
+    "worker_llm_safety_cache_ttl_s": _validate_positive_number,
+}
+
+
 def _validate_config_value(key: str, value: Any) -> str | None:
     """Return an error string if ``value`` is invalid for ``key``, else None.
 
@@ -510,30 +590,16 @@ def _validate_config_value(key: str, value: Any) -> str | None:
     ``spellbook.core.config.session_mode_set``'s canonical enum so an admin
     UI typo cannot land an invalid persisted mode that ``session_mode_get``
     would then hand back unchanged to the greeting path.
+
+    Numeric config keys (observability thresholds, retention windows,
+    timeouts, token/row caps) are range-checked here too so a typo like
+    ``retention_hours=0`` or ``notify_threshold=1.5`` cannot disable or
+    corrupt the feature silently at read time.
     """
-    if key == "worker_llm_transcript_harvest_mode":
-        if not isinstance(value, str):
-            return (
-                "worker_llm_transcript_harvest_mode must be a string; got "
-                f"{type(value).__name__}"
-            )
-        if value not in _ALLOWED_TRANSCRIPT_HARVEST_MODES:
-            return (
-                f"worker_llm_transcript_harvest_mode={value!r} is not one of "
-                f"{list(_ALLOWED_TRANSCRIPT_HARVEST_MODES)}"
-            )
-    if key == "session_mode":
-        if not isinstance(value, str):
-            return (
-                "session_mode must be a string; got "
-                f"{type(value).__name__}"
-            )
-        if value not in _ALLOWED_SESSION_MODES:
-            return (
-                f"session_mode={value!r} is not one of "
-                f"{list(_ALLOWED_SESSION_MODES)}"
-            )
-    return None
+    validator = _VALIDATORS.get(key)
+    if validator is None:
+        return None
+    return validator(key, value)
 
 
 def get_all_config() -> dict[str, Any]:

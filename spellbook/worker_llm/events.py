@@ -24,6 +24,7 @@ from typing import Any, Callable
 
 from spellbook.admin.events import Event, Subsystem, event_bus, publish_sync
 from spellbook.worker_llm.auth import _load_bearer_token
+from spellbook.worker_llm.net import build_host_url
 from spellbook.worker_llm.observability import record_call
 
 logger = logging.getLogger(__name__)
@@ -118,7 +119,7 @@ def _fallback_http_post(path: str, payload: dict, timeout: float = 1.0) -> None:
 
     host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
     port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
-    url = f"http://{host}:{port}{path}"
+    url = build_host_url(host, port, path)
     headers = {"Content-Type": "application/json"}
     token = _load_bearer_token()
     if token:

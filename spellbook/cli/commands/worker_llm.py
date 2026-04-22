@@ -320,9 +320,11 @@ def _daemon_reachable(timeout: float = 1.0) -> dict:
     import urllib.request
     from pathlib import Path
 
+    from spellbook.worker_llm.net import build_host_url
+
     host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
     port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
-    url = f"http://{host}:{port}/api/events/publish"
+    url = build_host_url(host, port, "/api/events/publish")
     token_path = Path.home() / ".local" / "spellbook" / ".mcp-token"
     headers = {"Content-Type": "application/json"}
     try:
