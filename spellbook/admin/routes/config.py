@@ -597,6 +597,13 @@ async def update_config_key(
             ).model_dump(),
         )
 
+    # Secret round-trip guard: GET masks secret values as "***". If a client
+    # echoes the whole config back with the masked value intact, treat it as
+    # "no change" for this key so the real stored value is preserved instead
+    # of being overwritten with the literal mask string.
+    if key in SECRET_KEYS and body.value == _SECRET_MASK:
+        return {"status": "ok", "key": key, "value": _SECRET_MASK, "preserved": True}
+
     validation_error = _validate_config_value(key, body.value)
     if validation_error:
         return JSONResponse(
@@ -641,9 +648,23 @@ async def batch_update_config(
             ).model_dump(),
         )
 
+    # Secret round-trip guard: drop any secret key whose incoming value is the
+    # exact mask string. This preserves the real stored secret when a client
+    # echoes back the whole config (which had secrets masked on GET).
+    effective_updates = {
+        k: v
+        for k, v in body.updates.items()
+        if not (k in SECRET_KEYS and v == _SECRET_MASK)
+    }
+    preserved_secret_keys = [
+        k for k in body.updates.keys() if k not in effective_updates
+    ]
+
     # Per-key value validation. Reject the whole batch atomically on the
-    # first invalid value so a partial apply never lands.
-    for _k, _v in body.updates.items():
+    # first invalid value so a partial apply never lands. Run on the
+    # effective (post-mask-strip) set so a preserved secret does not trip
+    # validators that forbid the mask string.
+    for _k, _v in effective_updates.items():
         _err = _validate_config_value(_k, _v)
         if _err:
             return JSONResponse(
@@ -656,15 +677,20 @@ async def batch_update_config(
                 ).model_dump(),
             )
 
-    result = await asyncio.to_thread(batch_set_config, body.updates)
+    if effective_updates:
+        result = await asyncio.to_thread(batch_set_config, effective_updates)
 
-    for key, value in body.updates.items():
-        await event_bus.publish(
-            Event(
-                subsystem=Subsystem.CONFIG,
-                event_type="config.updated",
-                data={"key": key, "value": value},
+        for key, value in effective_updates.items():
+            await event_bus.publish(
+                Event(
+                    subsystem=Subsystem.CONFIG,
+                    event_type="config.updated",
+                    data={"key": key, "value": value},
+                )
             )
-        )
 
-    return {"status": "ok", "updated": list(body.updates.keys())}
+    return {
+        "status": "ok",
+        "updated": list(effective_updates.keys()),
+        "preserved": preserved_secret_keys,
+    }

@@ -471,3 +471,128 @@ class TestTranscriptHarvestModeValidator:
         )
         assert response.status_code == 400
         assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
+
+
+class TestSecretRoundTripSafe:
+    """Secret keys must not be overwritten when the client echoes the mask.
+
+    The failure mode this guards: ``GET /api/config`` masks secret values as
+    ``"***"``. If an admin frontend reads the full config, edits an unrelated
+    field, and PUTs the whole object back, the masked ``"***"`` would
+    otherwise clobber the real stored secret. The PUT handler treats an
+    incoming value of exactly ``"***"`` on a ``secret: True`` key as a
+    no-op for that key, preserving the existing stored value.
+    """
+
+    def test_put_mask_preserves_existing_secret(self, client, monkeypatch):
+        """PUT with value=='***' on a secret key must NOT call set_config_value."""
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config/security.sleuth.api_key",
+            json={"value": "***"},
+        )
+        assert response.status_code == 200
+        assert response.json().get("preserved") is True
+        # The write helper must not have been invoked.
+        assert calls == []
+
+    def test_put_non_mask_value_writes_normally(self, client, monkeypatch):
+        """PUT with a real (non-mask) value on a secret key writes through."""
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config/security.sleuth.api_key",
+            json={"value": "sk-new-value"},
+        )
+        assert response.status_code == 200
+        assert calls == [("security.sleuth.api_key", "sk-new-value")]
+
+    def test_put_empty_string_clears_secret(self, client, monkeypatch):
+        """Empty string is a valid clear signal; empty != mask and must write."""
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config/security.sleuth.api_key",
+            json={"value": ""},
+        )
+        assert response.status_code == 200
+        assert calls == [("security.sleuth.api_key", "")]
+
+    def test_batch_mask_on_secret_is_dropped(self, client, monkeypatch):
+        """Batch PUT with mask on a secret key drops that key; others write."""
+        captured = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: (captured.append(updates) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config",
+            json={
+                "updates": {
+                    "security.sleuth.api_key": "***",  # masked echo, must be dropped
+                    "notify_enabled": False,
+                }
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        # The secret key was preserved (not written).
+        assert "security.sleuth.api_key" in body.get("preserved", [])
+        # Only the non-secret non-mask key was written.
+        assert captured == [{"notify_enabled": False}]
+        assert body["updated"] == ["notify_enabled"]
+
+    def test_batch_all_masks_is_noop_write(self, client, monkeypatch):
+        """Batch PUT containing only masked secrets writes nothing and 200s."""
+        captured = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.batch_set_config",
+            lambda updates: (captured.append(updates) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config",
+            json={
+                "updates": {
+                    "security.sleuth.api_key": "***",
+                    "worker_llm_api_key": "***",
+                }
+            },
+        )
+        assert response.status_code == 200
+        # The write helper must not be invoked when nothing needs writing.
+        assert captured == []
+        body = response.json()
+        assert body["updated"] == []
+        assert set(body["preserved"]) == {
+            "security.sleuth.api_key",
+            "worker_llm_api_key",
+        }
+
+    def test_non_secret_key_mask_literal_passes_through(self, client, monkeypatch):
+        """A non-secret key receiving the literal '***' writes normally.
+
+        The round-trip guard is scoped to secret keys only; a non-secret
+        string key has no reason to be masked on GET, so '***' is a real
+        user-supplied value for it.
+        """
+        calls = []
+        monkeypatch.setattr(
+            "spellbook.admin.routes.config.set_config_value",
+            lambda k, v: (calls.append((k, v)) or {"status": "ok", "config": {}}),
+        )
+        response = client.put(
+            "/api/config/notify_title",
+            json={"value": "***"},
+        )
+        assert response.status_code == 200
+        assert calls == [("notify_title", "***")]

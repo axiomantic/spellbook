@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useConfig, useConfigSchema, useUpdateConfig } from '../hooks/useConfig'
 import type { ConfigSchemaKey } from '../hooks/useConfig'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
@@ -60,6 +60,16 @@ function ConfigField({
     value !== undefined && value !== null ? String(value) : ''
   )
   const [dirty, setDirty] = useState(false)
+
+  // Resync local state when the prop changes externally (e.g., after a
+  // successful save refetches config, or a sibling field's save
+  // invalidates the config query). Without this, editValue stays frozen
+  // at mount value and the displayed input drifts from the authoritative
+  // config for the lifetime of the component.
+  useEffect(() => {
+    setEditValue(value !== undefined && value !== null ? String(value) : '')
+    setDirty(false)
+  }, [value])
 
   const handleSave = useCallback(() => {
     let parsed: unknown = editValue
