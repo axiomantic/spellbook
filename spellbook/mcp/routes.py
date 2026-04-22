@@ -448,6 +448,110 @@ async def api_hook_log(request: Request) -> JSONResponse:
 
 
 # ---------------------------------------------------------------------------
+# Worker-LLM async enqueue (subprocess fallback for spellbook.worker_llm.queue)
+# ---------------------------------------------------------------------------
+
+
+@mcp.custom_route("/api/worker-llm/enqueue", methods=["POST"])
+async def api_worker_llm_enqueue(request: Request) -> JSONResponse:
+    """Accept a fire-and-forget worker-LLM task from a hook subprocess.
+
+    The async queue lives in-daemon only (see
+    ``spellbook.worker_llm.queue``). Hook subprocesses have no running
+    event loop, so they POST here and the daemon enqueues on their behalf.
+
+    Route co-lives with ``/api/events/publish`` at the MCP root so
+    ``BearerAuthMiddleware`` authenticates it without going through the
+    admin cookie mount.
+
+    Accepts JSON body:
+        {
+          "task_name": str,  # required; e.g. "transcript_harvest"
+          "prompt": str,     # required; user_prompt for the worker call
+          "context": dict    # optional; opaque context forwarded to the
+                             # consumer callback via WorkerTask.context
+        }
+
+    Returns:
+        - 202 ``{"ok": true, "dropped": false}`` when queued.
+        - 202 ``{"ok": true, "dropped": true}`` when queued with drop-oldest.
+        - 503 when ``worker_llm_queue_enabled`` is False or the queue is
+          not running in this process.
+        - 400 on missing/invalid fields.
+
+    The 202 status signals "accepted, not yet processed" which matches the
+    fire-and-forget contract: callers must not wait for the underlying
+    worker call to finish.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    task_name = body.get("task_name")
+    prompt = body.get("prompt")
+    if not isinstance(task_name, str) or not task_name:
+        return JSONResponse(
+            {"error": "missing or invalid 'task_name'"}, status_code=400
+        )
+    if not isinstance(prompt, str):
+        return JSONResponse(
+            {"error": "missing or invalid 'prompt'"}, status_code=400
+        )
+    raw_context = body.get("context")
+    if raw_context is not None and not isinstance(raw_context, dict):
+        return JSONResponse(
+            {"error": "field 'context' must be an object"}, status_code=400
+        )
+    context = raw_context or {}
+
+    from spellbook.core.config import config_get as _config_get
+    from spellbook.worker_llm import queue as _queue
+
+    if not _config_get("worker_llm_queue_enabled"):
+        return JSONResponse(
+            {"error": "worker_llm_queue_enabled is False"}, status_code=503
+        )
+    if not _queue.is_available():
+        return JSONResponse(
+            {"error": "worker_llm queue is not running"}, status_code=503
+        )
+
+    # Dispatch to a task-aware consumer callback when one is registered.
+    # Today we register ``transcript_harvest``; other tasks enqueue with
+    # ``callback=None`` and rely on ``client.call``'s event emission for
+    # observability.
+    callback = _resolve_task_callback(task_name)
+
+    try:
+        queued = await _queue.enqueue(
+            task_name, prompt, callback=callback, context=context
+        )
+    except RuntimeError as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+
+    # 202 Accepted: queued, not yet processed. ``dropped`` reflects the
+    # drop-oldest eviction; callers may log it.
+    return JSONResponse(
+        {"ok": True, "dropped": not queued}, status_code=202
+    )
+
+
+def _resolve_task_callback(task_name: str):
+    """Return the consumer-side callback for ``task_name`` or ``None``.
+
+    Lazy-imports the task module so the MCP server doesn't pull in every
+    task handler at registration time.
+    """
+    if task_name == "transcript_harvest":
+        from spellbook.worker_llm.tasks.transcript_harvest import (
+            async_consumer_callback as _cb,
+        )
+        return _cb
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Worker-LLM event publish (subprocess fallback for spellbook.worker_llm.events)
 # ---------------------------------------------------------------------------
 

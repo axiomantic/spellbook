@@ -55,6 +55,13 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_observability_notify_threshold": 0.8,
     "worker_llm_observability_notify_window": 20,
     "worker_llm_observability_notify_eval_interval_seconds": 60,
+    # worker_llm async queue (fire-and-forget) and warm probe thresholds.
+    # Schema entries live in spellbook/admin/routes/config.py alongside the
+    # other worker_llm keys; defaults are co-located here so config_get does
+    # not return None for opt-in / threshold values the consumer integer/
+    # float-casts.
+    "worker_llm_queue_enabled": False,
+    "worker_llm_queue_max_depth": 256,
 }
 
 

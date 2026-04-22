@@ -40,14 +40,17 @@ def test_all_fourteen_worker_keys_in_admin_schema():
 
 
 def test_fourteen_entries_added():
-    # Observability keys also share the ``worker_llm_`` prefix but land under
-    # a disjoint ``worker_llm_observability_`` namespace — exclude them here so
-    # this assertion stays scoped to the original 14-key core worker_llm set.
+    # Observability keys share the ``worker_llm_`` prefix but land under the
+    # disjoint ``worker_llm_observability_`` namespace. The queue / warm-probe
+    # keys (``worker_llm_queue_*``, ``worker_llm_tool_safety_cold_threshold_s``)
+    # are a separate, newer cluster. Exclude both so this assertion stays
+    # scoped to the original 14-key core worker_llm set.
     schema_worker_keys = {
         e["key"]
         for e in CONFIG_SCHEMA
         if e["key"].startswith("worker_llm_")
         and not e["key"].startswith("worker_llm_observability_")
+        and e["key"] not in QUEUE_KEYS
     }
     assert schema_worker_keys == WORKER_KEYS
     assert len(schema_worker_keys) == 14
@@ -213,3 +216,45 @@ def test_observability_every_entry_has_required_fields():
         assert set(entry.keys()) == {"key", "type", "description", "default"}
         assert isinstance(entry["description"], str)
         assert entry["description"] != ""
+
+
+# ---------------------------------------------------------------------------
+# 3 queue / warm-probe keys — landed alongside the async-queue feature and
+# the tool-safety cold-start skip. All opt-in (queue_enabled defaults False);
+# ``worker_llm_tool_safety_cold_threshold_s`` defaults 45.0 but only fires
+# the warm probe once the async queue is running and the last-success age
+# crosses the threshold.
+# ---------------------------------------------------------------------------
+
+QUEUE_KEYS = {
+    "worker_llm_queue_enabled",
+    "worker_llm_queue_max_depth",
+}
+
+
+def test_all_queue_keys_in_admin_schema():
+    assert QUEUE_KEYS.issubset(KNOWN_KEYS)
+
+
+def test_queue_enabled_schema():
+    e = _entry("worker_llm_queue_enabled")
+    assert e["type"] == "boolean"
+    assert e["default"] is False
+
+
+def test_queue_max_depth_schema():
+    e = _entry("worker_llm_queue_max_depth")
+    assert e["type"] == "number"
+    assert e["default"] == 256
+
+
+def test_queue_core_config_defaults_carry_all_keys():
+    for k in QUEUE_KEYS:
+        assert k in CORE_DEFAULTS, (
+            f"{k} missing from spellbook/core/config.py CONFIG_DEFAULTS"
+        )
+
+
+def test_queue_core_defaults_match_admin_schema_defaults():
+    for k in QUEUE_KEYS:
+        assert CORE_DEFAULTS[k] == _entry(k)["default"], k

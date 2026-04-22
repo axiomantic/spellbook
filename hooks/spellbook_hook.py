@@ -1209,6 +1209,17 @@ def _auto_store_enabled() -> bool:
     return bool(val)
 
 
+def _queue_enabled() -> bool:
+    """Return True when the async worker queue is enabled in config.
+
+    Read via ``_get_config_value`` so the hook does not import the full
+    ``spellbook.core.config`` module (the Stop hook must stay
+    subprocess-cheap). The daemon also checks ``is_available()`` at the
+    POST endpoint, so a stale-config False-positive here is caught there.
+    """
+    return bool(_get_config_value("worker_llm_queue_enabled", default=False))
+
+
 def _classify_prompt_for_autostore(prompt: str) -> tuple[str, str, str] | None:
     """Classify a user prompt for auto-store.
 
@@ -1528,6 +1539,48 @@ def _handle_stop(data: dict) -> None:
     )
     worker_cands: list[dict] = []
     worker_error: BaseException | None = None
+
+    # Async enqueue fast-path: when the queue is enabled, POST to the
+    # daemon and return immediately with regex-only fallback (merge mode)
+    # or an empty worker-candidate set (replace mode -- we still fall
+    # through below, but with worker_error left unset and worker_cands
+    # empty, which is treated as "worker returned nothing substantive").
+    # The daemon's consumer runs asynchronously and writes candidates via
+    # its own path; no blocking on the hook side.
+    async_enqueued = False
+    if use_worker and _queue_enabled():
+        namespace, _resolved_cwd, branch = _derive_namespace(data.get("cwd", ""))
+        enqueue_body = {
+            "task_name": "transcript_harvest",
+            "prompt": text_body,
+            "context": {
+                "namespace": namespace,
+                "branch": branch,
+                "session_id": str(data.get("session_id", "")),
+            },
+        }
+        resp = _http_post(
+            "/api/worker-llm/enqueue", enqueue_body, timeout=1.0,
+        )
+        # ``_http_post`` returns ``None`` on any non-2xx / exception. 202
+        # Accepted returns a dict with ``{"ok": true, "dropped": ...}``.
+        if resp is not None and resp.get("ok") is True:
+            async_enqueued = True
+
+    if async_enqueued:
+        # Record sha immediately so subsequent Stops don't re-harvest. The
+        # async consumer writes candidates via log_raw_event in the daemon
+        # path; from the hook's point of view this transcript is done.
+        _record_stop_harvest(transcript_path, text_sha)
+        if _wl_events is not None:
+            _wl_events.publish_hook_integration(
+                task="transcript_harvest",
+                mode="async",
+                candidate_count=-1,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="ok",
+            )
+        return
 
     if use_worker:
         try:

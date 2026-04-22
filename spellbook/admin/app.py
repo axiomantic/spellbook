@@ -9,7 +9,9 @@ from pathlib import Path
 import logging
 
 from spellbook.admin.events import event_bus
+from spellbook.core.config import config_get
 from spellbook.worker_llm.observability import purge_loop, threshold_eval_loop
+from spellbook.worker_llm.queue import start_queue, stop_queue
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +42,28 @@ async def _lifespan(app: FastAPI):
     eval_task = asyncio.create_task(
         threshold_eval_loop(), name="spellbook-worker-llm-threshold-eval"
     )
+    # Opt-in fire-and-forget queue (design: async enqueue for hook-originated
+    # worker calls). Only start the consumer when the operator enabled it;
+    # otherwise the module stays dormant and ``is_available()`` returns
+    # False so callers fall back to the sync path.
+    queue_started = False
+    if config_get("worker_llm_queue_enabled"):
+        try:
+            await start_queue()
+            queue_started = True
+        except Exception:
+            logger.warning(
+                "worker_llm queue failed to start; continuing without it",
+                exc_info=True,
+            )
     try:
         yield
     finally:
         event_bus._in_daemon = False
-        # Cancel and await both tasks. ``CancelledError`` is the expected
-        # terminal exception; any other exception is logged but does not
-        # block shutdown (an in-flight DB error on cancel must not hang
-        # the daemon).
+        # Cancel and await the purge + threshold tasks. ``CancelledError``
+        # is the expected terminal exception; any other exception is logged
+        # but does not block shutdown (an in-flight DB error on cancel must
+        # not hang the daemon).
         for task in (purge_task, eval_task):
             task.cancel()
         for task in (purge_task, eval_task):
@@ -58,6 +74,14 @@ async def _lifespan(app: FastAPI):
             except Exception:
                 logger.debug(
                     "worker-llm background task raised during shutdown",
+                    exc_info=True,
+                )
+        if queue_started:
+            try:
+                await stop_queue()
+            except Exception:
+                logger.debug(
+                    "worker_llm queue failed to stop cleanly",
                     exc_info=True,
                 )
 

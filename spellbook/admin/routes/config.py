@@ -228,6 +228,31 @@ CONFIG_SCHEMA = [
         ),
         "default": 60,
     },
+    # Worker LLM async queue (fire-and-forget). When enabled, the daemon
+    # spawns a background consumer that drains queued tasks so callers like
+    # the Stop-hook transcript_harvest do not block on the worker endpoint.
+    {
+        "key": "worker_llm_queue_enabled",
+        "type": "boolean",
+        "description": (
+            "Opt-in async enqueue of fire-and-forget worker-LLM calls. "
+            "When True, the daemon runs a consumer task that drains the "
+            "queue; callers (transcript_harvest, tool_safety warm probe) "
+            "return immediately instead of blocking on client.call_sync."
+        ),
+        "default": False,
+    },
+    {
+        "key": "worker_llm_queue_max_depth",
+        "type": "number",
+        "description": (
+            "Bound on the async queue depth. When full, the OLDEST task is "
+            "dropped (the incoming task is the most recent signal); each "
+            "drop publishes a call event with status='dropped' so overflow "
+            "is observable."
+        ),
+        "default": 256,
+    },
     # --- General / session -------------------------------------------------
     {
         "key": "fun_mode",

@@ -229,3 +229,135 @@ def test_publishes_failed_event_on_bad_response(
     assert calls[0]["task"] == "transcript_harvest"
     assert calls[0]["status"] == "WorkerLLMBadResponse"
     assert calls[0]["error"] is not None
+
+
+# ---------------------------------------------------------------------------
+# Async consumer callback (queue path)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_async_callback_parses_and_writes_candidates(monkeypatch):
+    """On success, the consumer callback parses the response and writes
+    candidates via ``write_candidates_to_memory``."""
+    from spellbook.worker_llm import queue as _queue
+    from spellbook.worker_llm.tasks import transcript_harvest as th
+
+    writes: list[dict] = []
+
+    def fake_write(
+        *, namespace, branch, candidates, session_id="", source="stop_hook"
+    ):
+        writes.append(
+            {
+                "namespace": namespace,
+                "branch": branch,
+                "candidates": list(candidates),
+                "session_id": session_id,
+                "source": source,
+            }
+        )
+        return len(candidates)
+
+    monkeypatch.setattr(th, "write_candidates_to_memory", fake_write)
+
+    result = _queue.WorkerResult(
+        task_name="transcript_harvest",
+        text='[{"type":"user","content":"remember X"}]',
+        context={
+            "namespace": "Users-test-proj",
+            "branch": "main",
+            "session_id": "sess-1",
+        },
+    )
+
+    await th.async_consumer_callback(result)
+
+    assert len(writes) == 1
+    w = writes[0]
+    assert w["namespace"] == "Users-test-proj"
+    assert w["branch"] == "main"
+    assert w["session_id"] == "sess-1"
+    assert w["source"] == "stop_hook_async"
+    assert len(w["candidates"]) == 1
+    assert w["candidates"][0].content == "remember X"
+
+
+@pytest.mark.asyncio
+async def test_async_callback_ignores_worker_errors(monkeypatch):
+    """A ``WorkerResult`` with ``error`` set never writes candidates."""
+    from spellbook.worker_llm import queue as _queue
+    from spellbook.worker_llm.tasks import transcript_harvest as th
+
+    calls: list = []
+    monkeypatch.setattr(
+        th, "write_candidates_to_memory", lambda **kw: calls.append(kw) or 0
+    )
+
+    result = _queue.WorkerResult(
+        task_name="transcript_harvest",
+        error=RuntimeError("boom"),
+        context={"namespace": "ns"},
+    )
+
+    await th.async_consumer_callback(result)
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_async_callback_skips_when_namespace_missing(monkeypatch):
+    """Without a namespace we cannot route the write; skip rather than guess."""
+    from spellbook.worker_llm import queue as _queue
+    from spellbook.worker_llm.tasks import transcript_harvest as th
+
+    calls: list = []
+    monkeypatch.setattr(
+        th, "write_candidates_to_memory", lambda **kw: calls.append(kw) or 0
+    )
+
+    result = _queue.WorkerResult(
+        task_name="transcript_harvest",
+        text='[{"type":"user","content":"c"}]',
+        context={},  # no namespace
+    )
+
+    await th.async_consumer_callback(result)
+    assert calls == []
+
+
+@pytest.mark.asyncio
+async def test_async_callback_swallows_bad_worker_response(monkeypatch):
+    """A malformed response logs and returns without raising."""
+    from spellbook.worker_llm import queue as _queue
+    from spellbook.worker_llm.tasks import transcript_harvest as th
+
+    calls: list = []
+    monkeypatch.setattr(
+        th, "write_candidates_to_memory", lambda **kw: calls.append(kw) or 0
+    )
+
+    result = _queue.WorkerResult(
+        task_name="transcript_harvest",
+        text="definitely not json",
+        context={"namespace": "ns"},
+    )
+
+    await th.async_consumer_callback(result)
+    assert calls == []
+
+
+# ---------------------------------------------------------------------------
+# parse_candidates is shared across sync + async paths
+# ---------------------------------------------------------------------------
+
+
+def test_parse_candidates_shared_parser():
+    from spellbook.worker_llm.tasks.transcript_harvest import (
+        Candidate,
+        parse_candidates,
+    )
+
+    raw = '[{"type":"feedback","content":"c"}]'
+    assert parse_candidates(raw) == [
+        Candidate(type="feedback", content="c", tags=[], citations=[])
+    ]
