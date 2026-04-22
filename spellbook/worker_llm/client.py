@@ -19,9 +19,11 @@ lifetime does not affect test mocking.
 from __future__ import annotations
 
 import asyncio
+import atexit
 import logging
 import time
 import weakref
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import httpx
@@ -137,6 +139,24 @@ def close_all_shared_clients_sync() -> None:
             )
         finally:
             _shared_clients.pop(loop, None)
+
+
+# Shared executor for ``call_sync``'s loop-already-running fallback. A tiny pool
+# is plenty — call_sync-from-loop is rare in practice, and reusing threads
+# avoids the per-call spawn/join cost of a fresh ThreadPoolExecutor every
+# invocation. Lazy-initialized on first use so module import stays cheap. The
+# atexit shutdown mirrors the shared-httpx-client cleanup above.
+_loop_bridge_executor: ThreadPoolExecutor | None = None
+
+
+def _get_loop_bridge_executor() -> ThreadPoolExecutor:
+    global _loop_bridge_executor
+    if _loop_bridge_executor is None:
+        _loop_bridge_executor = ThreadPoolExecutor(
+            max_workers=2, thread_name_prefix="worker-llm-sync-bridge"
+        )
+        atexit.register(_loop_bridge_executor.shutdown, wait=False)
+    return _loop_bridge_executor
 
 
 async def call(
@@ -296,12 +316,10 @@ def call_sync(
         return asyncio.run(_run())
 
     # A loop is already running on this thread. ``asyncio.run`` would
-    # raise, so execute the coroutine on a dedicated worker thread with
-    # its own fresh loop. The per-loop shared-client cache in ``call``
-    # keys on the worker thread's loop, which is disposed when the
-    # coroutine returns, so no cross-thread client lifetime issues.
-    import concurrent.futures
-
+    # raise, so execute the coroutine on a shared worker pool with its
+    # own fresh loop. The per-loop shared-client cache in ``call`` keys
+    # on the worker thread's loop, which is disposed when the coroutine
+    # returns, so no cross-thread client lifetime issues.
     # Compute an upper bound for how long the worker thread may take.
     # ``call`` already bounds its own HTTP wait with ``eff_timeout``;
     # this guards the outer ``future.result`` from hanging forever in
@@ -316,6 +334,5 @@ def call_sync(
     # wait does not time-out before ``call``'s inner timeout fires.
     outer_timeout = float(eff_timeout) + 5.0
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(asyncio.run, _run())
-        return future.result(timeout=outer_timeout)
+    future = _get_loop_bridge_executor().submit(asyncio.run, _run())
+    return future.result(timeout=outer_timeout)

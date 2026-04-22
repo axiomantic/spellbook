@@ -21,9 +21,21 @@ import sys as _sys
 from typing import Any, Optional
 
 
-# Session mode enum mirrors the validator in
-# ``spellbook.core.config.session_mode_set``.
-_SESSION_MODE_OPTIONS: tuple[str, ...] = ("none", "fun", "tarot")
+# Session mode enum is sourced from ``spellbook.core.config.SESSION_MODES`` so
+# the installer, admin PATCH validator, and ``session_mode_set`` share one
+# definition. The presentation order here intentionally leads with "none" so
+# the wizard default shows first; the canonical set itself is unordered.
+def _session_mode_options() -> tuple[str, ...]:
+    try:
+        from spellbook.core.config import SESSION_MODES
+    except ImportError:
+        # Fallback keeps the installer runnable even if spellbook.core is not
+        # importable (e.g. partially installed environments during bootstrap).
+        return ("none", "fun", "tarot")
+    return ("none",) + tuple(m for m in SESSION_MODES if m != "none")
+
+
+_SESSION_MODE_OPTIONS: tuple[str, ...] = _session_mode_options()
 
 
 def _is_explicit(key: str) -> bool:

@@ -21,6 +21,7 @@ from spellbook.admin.routes.schemas import (
     ErrorResponse,
     ErrorDetail,
 )
+from spellbook.core.config import SESSION_MODES
 
 logger = logging.getLogger(__name__)
 
@@ -491,7 +492,9 @@ def _mask_secrets(config: dict[str, Any]) -> dict[str, Any]:
 # problem. Keep the dispatch table tiny — most keys are plain str/bool/
 # number and need no additional validation beyond the schema type.
 _ALLOWED_TRANSCRIPT_HARVEST_MODES = ("replace", "merge", "skip")
-_ALLOWED_SESSION_MODES = ("fun", "tarot", "none")
+# Sourced from ``spellbook.core.config.SESSION_MODES`` so the admin validator,
+# the installer defaults wizard, and ``session_mode_set`` share one definition.
+_ALLOWED_SESSION_MODES = SESSION_MODES
 
 
 def _validate_config_value(key: str, value: Any) -> str | None:

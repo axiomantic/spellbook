@@ -22,7 +22,6 @@ are ``None``; the frontend renders null as an em-dash.
 
 from __future__ import annotations
 
-import statistics
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -34,6 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.routes.list_helpers import (
     build_list_response,
+    percentile,
     validate_sort_order,
 )
 from spellbook.db import spellbook_db
@@ -113,24 +113,6 @@ async def worker_llm_calls(
     return build_list_response(items, total=total, page=page, per_page=per_page)
 
 
-def _percentile(sorted_xs: list[int], pct: int) -> Optional[int]:
-    """Nearest-rank percentile over a pre-sorted list.
-
-    ``statistics.quantiles(n=100, method='inclusive')`` returns 99
-    cutpoints; ``pct=95`` maps to index 94. For a single sample,
-    ``statistics.quantiles`` raises; fall back to the lone value.
-    Returns ``None`` for an empty list so the route can distinguish
-    "no data" from "genuinely 0 ms".
-    """
-    if not sorted_xs:
-        return None
-    if len(sorted_xs) == 1:
-        return sorted_xs[0]
-    quantiles = statistics.quantiles(sorted_xs, n=100, method="inclusive")
-    idx = max(0, min(98, int(pct) - 1))
-    return int(quantiles[idx])
-
-
 @router.get("/metrics")
 async def worker_llm_metrics(
     window_hours: int = Query(24, ge=1, le=720),
@@ -175,8 +157,8 @@ async def worker_llm_metrics(
 
     return {
         "success_rate": successes / total,
-        "p95_latency_ms": _percentile(latencies, 95),
-        "p99_latency_ms": _percentile(latencies, 99),
+        "p95_latency_ms": percentile(latencies, 95),
+        "p99_latency_ms": percentile(latencies, 99),
         "error_breakdown": dict(errors.most_common(10)),
         "total_calls": total,
         "window_hours": window_hours,

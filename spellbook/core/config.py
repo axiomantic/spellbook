@@ -21,6 +21,14 @@ logger = logging.getLogger(__name__)
 # Built-in defaults for config keys. config_get returns these when a key is
 # absent from the user's spellbook.json config file. Adding an entry here
 # means the key has a well-known default that callers can rely on.
+# Canonical session-mode vocabulary. Session mode controls which session-level
+# persona/mode is active ("fun", "tarot", or off). Centralized here so the
+# admin PATCH validator, the installer defaults wizard, and ``session_mode_set``
+# cannot drift apart on spelling or membership. Ordering is not significant to
+# validation; the installer wizard presents its own display order.
+SESSION_MODES: tuple[str, ...] = ("fun", "tarot", "none")
+
+
 CONFIG_DEFAULTS: dict[str, Any] = {
     "memory.auto_recall": True,
     "memory.auto_store": True,
@@ -485,7 +493,7 @@ def session_mode_set(
     Returns:
         Dict with status and current mode state
     """
-    if mode not in ("fun", "tarot", "none"):
+    if mode not in SESSION_MODES:
         return {"status": "error", "message": f"Invalid mode: {mode}. Use 'fun', 'tarot', or 'none'."}
 
     session_state = _get_session_state(session_id)

@@ -23,7 +23,6 @@ because those are operator tuning knobs, not dashboard windows.
 
 from __future__ import annotations
 
-import statistics
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -35,6 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.routes.list_helpers import (
     build_list_response,
+    percentile,
     validate_sort_order,
 )
 from spellbook.db import spellbook_db
@@ -110,22 +110,6 @@ async def hook_events(
     result = await db.execute(query)
     items = [r.to_dict() for r in result.scalars().all()]
     return build_list_response(items, total=total, page=page, per_page=per_page)
-
-
-def _percentile(sorted_xs: list[int], pct: int) -> Optional[int]:
-    """Nearest-rank percentile over a pre-sorted list.
-
-    Returns ``None`` for an empty list so callers can distinguish "no
-    data" from "genuinely 0 ms". For a single sample, returns the lone
-    value (``statistics.quantiles`` raises on n=1).
-    """
-    if not sorted_xs:
-        return None
-    if len(sorted_xs) == 1:
-        return sorted_xs[0]
-    quantiles = statistics.quantiles(sorted_xs, n=100, method="inclusive")
-    idx = max(0, min(98, int(pct) - 1))
-    return int(quantiles[idx])
 
 
 @router.get("/metrics")
@@ -205,8 +189,8 @@ async def hook_metrics(
             "avg_duration_ms": (
                 sum(durations) / count if count else None
             ),
-            "p50_duration_ms": _percentile(durations, 50),
-            "p95_duration_ms": _percentile(durations, 95),
+            "p50_duration_ms": percentile(durations, 50),
+            "p95_duration_ms": percentile(durations, 95),
             "error_rate": errors / count if count else 0.0,
         })
 
@@ -221,7 +205,7 @@ async def hook_metrics(
         "groups": group_out,
         "summary": {
             "avg_duration_ms": sum(all_durations) / total,
-            "p95_duration_ms": _percentile(all_durations, 95),
+            "p95_duration_ms": percentile(all_durations, 95),
             "error_rate": all_errors / total,
         },
     }
