@@ -137,6 +137,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `forge_process_roundtable_response`, and the dead utility tools
   listed under "Removed" must migrate or drop those calls.
 
+### Track 6: Worker LLM Observability
+
+- **`worker_llm_calls` SQLite-backed rolling log** records every worker
+  LLM call for operator introspection. Writes happen fire-and-forget
+  from two paths: `publish_call` on the in-daemon publish path and the
+  `/api/events/publish` route handler on the subprocess path. Writes
+  are sync SQLAlchemy, wrapped in best-effort try/except with
+  first-failure-loud logging so a DB hiccup never interrupts a
+  worker call but also never fails silently forever.
+- **First Alembic migration for the spellbook DB**
+  (`0001_add_worker_llm_calls`). `alembic.ini` was wired up with
+  `version_locations` for per-DB subdirectories so
+  `alembic upgrade -x db=spellbook` now actually applies migrations to
+  the live DB. Prior to this change the spellbook DB had no migration
+  history path even though the Alembic scaffolding existed.
+- **`tool_safety` fail-open path unified.** The prompt-load
+  short-circuit that previously emitted via `publish_fail_open` now
+  goes through `publish_call(status='fail_open')`, which routes to a
+  new `call_fail_open` event_type inside `publish_call`'s routing
+  logic. This makes fail-open events visible to the new admin
+  dashboard alongside successes and errors. The `publish_fail_open`
+  helper itself is left in place for a post-audit cleanup pass.
+- **Admin API**: `GET /api/worker-llm/calls` (paginated, filterable
+  list) and `GET /api/worker-llm/metrics` (success rate, p95, p99,
+  error breakdown, total).
+- **Admin page `/admin/worker-llm`** with `WorkerLLMPage`,
+  `MetricCard`, `ErrorBreakdownCard`, React Query hooks
+  `useWorkerLLMCalls` + `useWorkerLLMMetrics`, and a Sidebar nav link
+  "// WORKER LLM CALLS".
+- **Background tasks registered in the daemon lifespan**:
+  `purge_loop` (batched `DELETE ... LIMIT 500`, fresh session per
+  batch, enforces `retention_hours` + `max_rows` caps) and
+  `threshold_eval_loop` (edge-triggered desktop notifications via the
+  existing `notifications.notify.send_notification` when the success
+  rate drops below threshold over the last N calls; recovery
+  notification fires on return to healthy).
+- **Seven new `CONFIG_SCHEMA` / `CONFIG_DEFAULTS` keys**:
+  `worker_llm_observability_retention_hours` (24),
+  `worker_llm_observability_max_rows` (10000),
+  `worker_llm_observability_purge_interval_seconds` (300),
+  `worker_llm_observability_notify_enabled` (false),
+  `worker_llm_observability_notify_threshold` (0.8),
+  `worker_llm_observability_notify_window` (20),
+  `worker_llm_observability_notify_eval_interval_seconds` (60).
+- **`spellbook worker-llm doctor` extended** with an observability
+  health check: reports `worker_llm_calls` table presence and row
+  count, last-row timestamp, last-purge timestamp, and notification
+  subsystem reachability.
+
 ## [0.53.1] - 2026-04-18
 
 ### Fixed
