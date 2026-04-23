@@ -170,34 +170,27 @@ def _trim_params_for_prompt(tool_params: dict) -> dict:
 def _last_success_age_s() -> float | None:
     """Return seconds since the last successful worker-LLM call.
 
-    Reads ``MAX(timestamp) WHERE status='success'`` off the
-    ``worker_llm_calls`` table. The query is indexed on ``timestamp`` and
-    the table is size-bounded by the purge loop, so this is fast.
+    Reads the cross-process cache file written by
+    ``spellbook.worker_llm.observability.record_call`` on every success.
+    Avoids the SQLAlchemy-session cost that the prior DB-query version
+    paid on every PreToolUse hot path: the file is a ~30-byte JSON blob
+    and the fast path becomes a single ``stat + read``.
 
     Returns:
-        The age in seconds (float) when a success row exists.
-        ``None`` when the table is empty OR when the query errors for any
-        reason -- the caller treats ``None`` as "cannot tell; assume warm"
-        so observability read failures never degrade tool_safety.
+        The age in seconds (float) when a success has been recorded.
+        ``None`` when the cache file does not exist (fresh install, no
+        successful call yet on this host) OR when the read errors for
+        any reason — the caller treats ``None`` as "cannot tell; assume
+        warm" so observability read failures never degrade tool_safety.
     """
     try:
-        # Late imports: keep the PreToolUse hot path from paying db-module
-        # import cost until the cold-probe actually runs.
-        from sqlalchemy import desc, select
+        # Late import: avoid paying module-import cost for the observability
+        # surface on the PreToolUse hot path until the probe actually runs.
+        from spellbook.worker_llm.observability import read_last_success_ts
 
-        from spellbook.db.engines import get_spellbook_sync_session
-        from spellbook.db.spellbook_models import WorkerLLMCall
-
-        with get_spellbook_sync_session() as session:
-            ts = session.execute(
-                select(WorkerLLMCall.timestamp)
-                .where(WorkerLLMCall.status == "success")
-                .order_by(desc(WorkerLLMCall.timestamp))
-                .limit(1),
-            ).scalar_one_or_none()
-        if ts is None:
+        last = read_last_success_ts()
+        if last is None:
             return None
-        last = datetime.fromisoformat(ts)
         # Normalize naive timestamps to UTC so the subtraction is legal.
         if last.tzinfo is None:
             last = last.replace(tzinfo=timezone.utc)
@@ -211,43 +204,68 @@ def _last_success_age_s() -> float | None:
 
 
 def _post_warmup_enqueue() -> bool:
-    """POST a ``tool_safety_warmup`` task to the daemon enqueue endpoint.
+    """Schedule a background ``tool_safety_warmup`` POST to the daemon.
 
-    Best-effort: a short timeout, no retry, return False on any failure.
-    When False is returned we still fail-open; the warmup is nice-to-have.
+    The PreToolUse hot path is the caller; blocking even 0.5s on a
+    synchronous POST per cold detection is a noticeable UX tax when the
+    daemon is slow to respond. Instead, build the request here and spawn
+    a daemon thread to actually issue it — the thread dies with the
+    process, so a crashed hook does not leak workers.
+
+    Returns ``True`` when the POST was scheduled (the normal path). The
+    return is retained for the call site that reports
+    ``cold_start_skipped`` vs. ``warmup_post_failed`` in its observability
+    event: once the POST is backgrounded the actual HTTP outcome is
+    not known synchronously, so ``False`` is reserved for the narrow
+    pre-POST failure (url-build / token-load blew up). Operators watching
+    the admin UI for a run of ``cold_start_skipped`` events will see the
+    warmups did their job when the worker starts answering successfully
+    again; a daemon that genuinely never wakes up shows up as a sustained
+    breach of the success-rate threshold, which is the right alert.
     """
     import urllib.error
     import urllib.request
 
     from spellbook.worker_llm.net import build_host_url
 
-    host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
-    port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
-    url = build_host_url(host, port, "/api/worker-llm/enqueue")
-    headers = {"Content-Type": "application/json"}
-    token = _load_bearer_token()
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    body = json.dumps(
-        {"task_name": "tool_safety_warmup", "prompt": "ping"}
-    ).encode()
     try:
+        host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
+        port = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
+        url = build_host_url(host, port, "/api/worker-llm/enqueue")
+        headers = {"Content-Type": "application/json"}
+        token = _load_bearer_token()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        body = json.dumps(
+            {"task_name": "tool_safety_warmup", "prompt": "ping"}
+        ).encode()
         req = urllib.request.Request(
             url, data=body, headers=headers, method="POST",
         )
-        with urllib.request.urlopen(req, timeout=_WARMUP_POST_TIMEOUT_S):
-            return True
     except Exception:
-        # Best-effort warmup: daemon may not be running, the route may be
-        # missing, or the network stack may be unhappy. Log at DEBUG so
-        # operators investigating a cold-start WARN can correlate, but
-        # never surface to the user -- the fail-open verdict handles the
-        # caller's UX.
         logger.debug(
-            "tool_safety: warmup POST failed; falling back to cold-path",
+            "tool_safety: warmup request-build failed; skipping warmup",
             exc_info=True,
         )
         return False
+
+    def _do_post() -> None:
+        try:
+            with urllib.request.urlopen(req, timeout=_WARMUP_POST_TIMEOUT_S):
+                return
+        except Exception:
+            # Background failure — log at DEBUG so operators investigating a
+            # cold-start WARN can correlate, but never surface to the user:
+            # the fail-open verdict already handled the caller's UX.
+            logger.debug(
+                "tool_safety: background warmup POST failed",
+                exc_info=True,
+            )
+
+    import threading
+    t = threading.Thread(target=_do_post, daemon=True)
+    t.start()
+    return True
 
 
 def tool_safety(

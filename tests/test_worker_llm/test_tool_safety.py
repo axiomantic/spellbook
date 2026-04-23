@@ -683,65 +683,24 @@ def test_empty_calls_table_treated_as_warm(
     assert warm_probe_seam["posts"] == []
 
 
-def test_last_success_age_s_reads_max_success_timestamp(tmp_path, monkeypatch):
-    """``_last_success_age_s`` queries the latest successful row's timestamp.
+def test_last_success_age_s_reads_cache_file(tmp_path, monkeypatch):
+    """``_last_success_age_s`` reads the cross-process cache file.
 
-    Seeds two rows on a tmp sqlite DB: one 120s-old success, one 30s-old
-    error. Expect the helper to return approximately 120s (ignoring the
-    error row entirely).
+    Writes a 120s-old success timestamp to the cache path via the public
+    ``write_last_success_ts`` helper and asserts the helper returns ~120s.
+    Before round-7 this branch queried the worker_llm_calls table directly
+    on every PreToolUse — see observability.py:_LAST_SUCCESS_PATH.
     """
-    from contextlib import contextmanager
     from datetime import datetime, timedelta, timezone
 
-    from sqlalchemy import create_engine
-
-    from spellbook.db.engines import get_sync_session
-    from spellbook.db.spellbook_models import SpellbookBase, WorkerLLMCall
+    from spellbook.worker_llm import observability
     from spellbook.worker_llm.tasks import tool_safety as ts_mod
 
-    db_path = str(tmp_path / "spellbook.db")
-    engine = create_engine(f"sqlite:///{db_path}")
-    SpellbookBase.metadata.create_all(engine)
-    engine.dispose()
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
 
-    now = datetime.now(timezone.utc)
-    with get_sync_session(db_path) as session:
-        session.add(
-            WorkerLLMCall(
-                timestamp=(now - timedelta(seconds=120)).isoformat(),
-                task="tool_safety",
-                model="m",
-                status="success",
-                latency_ms=10,
-                prompt_len=0,
-                response_len=0,
-                error=None,
-                override_loaded=0,
-            )
-        )
-        session.add(
-            WorkerLLMCall(
-                timestamp=(now - timedelta(seconds=30)).isoformat(),
-                task="tool_safety",
-                model="m",
-                status="error",
-                latency_ms=0,
-                prompt_len=0,
-                response_len=0,
-                error="boom",
-                override_loaded=0,
-            )
-        )
-
-    @contextmanager
-    def _tmp_session():
-        with get_sync_session(db_path) as s:
-            yield s
-
-    # Redirect the db session factory at the import site used by the helper.
-    from spellbook.db import engines as _engines
-
-    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _tmp_session)
+    ts_120s_ago = datetime.now(timezone.utc) - timedelta(seconds=120)
+    observability.write_last_success_ts(ts_120s_ago)
 
     age = ts_mod._last_success_age_s()
     assert age is not None
@@ -749,46 +708,44 @@ def test_last_success_age_s_reads_max_success_timestamp(tmp_path, monkeypatch):
     assert 115.0 <= age <= 130.0
 
 
-def test_last_success_age_s_returns_none_on_empty_table(tmp_path, monkeypatch):
-    from contextlib import contextmanager
-
-    from sqlalchemy import create_engine
-
-    from spellbook.db.engines import get_sync_session
-    from spellbook.db.spellbook_models import SpellbookBase
+def test_last_success_age_s_returns_none_when_cache_missing(tmp_path, monkeypatch):
+    """Absent cache file -> None (treated as warm; matches legacy empty-table
+    behavior so a fresh install does not fire the cold probe)."""
+    from spellbook.worker_llm import observability
     from spellbook.worker_llm.tasks import tool_safety as ts_mod
 
-    db_path = str(tmp_path / "spellbook.db")
-    engine = create_engine(f"sqlite:///{db_path}")
-    SpellbookBase.metadata.create_all(engine)
-    engine.dispose()
-
-    @contextmanager
-    def _tmp_session():
-        with get_sync_session(db_path) as s:
-            yield s
-
-    from spellbook.db import engines as _engines
-
-    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _tmp_session)
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+    assert not cache_path.exists()
 
     assert ts_mod._last_success_age_s() is None
 
 
-def test_last_success_age_s_returns_none_on_query_error(monkeypatch):
-    """DB errors must degrade to ``None`` (treated as warm) rather than raise."""
-    from contextlib import contextmanager
-
+def test_last_success_age_s_returns_none_on_corrupt_cache(tmp_path, monkeypatch):
+    """Corrupt / malformed cache file -> None. Must not raise."""
+    from spellbook.worker_llm import observability
     from spellbook.worker_llm.tasks import tool_safety as ts_mod
 
-    @contextmanager
-    def _bad_session():
-        raise RuntimeError("simulated db failure")
-        yield  # unreachable; keeps the decorator signature valid.
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    cache_path.write_text("not even json {{{{", encoding="utf-8")
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
 
-    from spellbook.db import engines as _engines
+    assert ts_mod._last_success_age_s() is None
 
-    monkeypatch.setattr(_engines, "get_spellbook_sync_session", _bad_session)
+
+def test_last_success_age_s_returns_none_on_read_error(monkeypatch):
+    """Unexpected errors during the read must degrade to ``None`` rather
+    than raise — keeps the PreToolUse hot path robust to observability
+    failures."""
+    from spellbook.worker_llm import observability
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    def _bad_read():
+        raise RuntimeError("simulated cache read failure")
+
+    monkeypatch.setattr(
+        observability, "read_last_success_ts", _bad_read,
+    )
 
     assert ts_mod._last_success_age_s() is None
 
@@ -882,3 +839,71 @@ def test_prompt_load_error_emits_fail_open_event(
             "override_loaded": False,
         }
     ]
+
+
+# ---------------------------------------------------------------------------
+# Round-7 MEDIUM 3: ``_post_warmup_enqueue`` must return immediately — the POST
+# is offloaded to a daemon thread so the PreToolUse hot path never blocks.
+# ---------------------------------------------------------------------------
+
+
+def test_post_warmup_enqueue_returns_immediately(monkeypatch):
+    """The function must spawn a background thread and return in < 100ms
+    even when the underlying POST takes longer than the timeout."""
+    import time
+    import urllib.request
+
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    slow_post_started = [False]
+
+    class _SlowResponse:
+        def __enter__(self):
+            slow_post_started[0] = True
+            time.sleep(0.4)  # far longer than any hot-path budget
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return b""
+
+    def _slow_urlopen(*args, **kwargs):
+        return _SlowResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", _slow_urlopen)
+    # Avoid touching the real daemon / token loader. The reference is
+    # imported into tool_safety's module namespace at module load, so
+    # monkeypatch the binding on the consuming module rather than the
+    # origin module.
+    monkeypatch.setattr(
+        ts_mod, "_load_bearer_token", lambda: None,
+    )
+
+    t0 = time.monotonic()
+    result = ts_mod._post_warmup_enqueue()
+    elapsed = time.monotonic() - t0
+
+    # Scheduling the POST is fast: the function returns True essentially
+    # immediately. The 0.4s sleep inside urlopen runs on a background
+    # thread and does NOT count against this elapsed time.
+    assert result is True
+    assert elapsed < 0.1, (
+        f"_post_warmup_enqueue blocked caller for {elapsed:.3f}s; "
+        "expected < 0.1s (work must happen on a daemon thread)."
+    )
+
+
+def test_post_warmup_enqueue_returns_false_on_pre_post_failure(monkeypatch):
+    """When the pre-request build fails (e.g. env lookup crashes), the
+    function returns False without scheduling a thread. The return value
+    still drives the fail-open event's ``error`` field at the call site."""
+    from spellbook.worker_llm.tasks import tool_safety as ts_mod
+
+    def _boom(*_a, **_kw):
+        raise RuntimeError("build failure")
+
+    monkeypatch.setattr(ts_mod, "_load_bearer_token", _boom)
+
+    assert ts_mod._post_warmup_enqueue() is False

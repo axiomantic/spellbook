@@ -399,3 +399,120 @@ def test_run_purge_once_count_cap_only_4_batches(counting_session, monkeypatch):
     from datetime import datetime as _dt
     recorded = observability.read_last_purge_ts()
     assert isinstance(recorded, _dt)
+
+
+# ---------------------------------------------------------------------------
+# Last-success cache: record_call writes the cross-process file only on
+# success, not on failure / timeout / fail_open. tool_safety._last_success_age_s
+# reads this file instead of querying the DB (see round-7 MEDIUM 4).
+# ---------------------------------------------------------------------------
+
+
+def test_record_call_writes_last_success_cache_on_success(
+    fresh_db, tmp_path, monkeypatch,
+):
+    """A successful call updates ``_LAST_SUCCESS_PATH`` atomically."""
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+    assert not cache_path.exists()
+
+    observability.record_call(
+        task="tool_safety",
+        model="gpt-test",
+        latency_ms=12,
+        status="success",
+        prompt_len=10,
+        response_len=20,
+        timestamp="2026-04-22T12:00:00+00:00",
+    )
+
+    assert cache_path.exists()
+    recorded = observability.read_last_success_ts()
+    assert recorded is not None
+    assert recorded.isoformat() == "2026-04-22T12:00:00+00:00"
+
+
+@pytest.mark.parametrize("failure_status", ["error", "timeout", "fail_open"])
+def test_record_call_does_not_write_cache_on_failure(
+    fresh_db, tmp_path, monkeypatch, failure_status,
+):
+    """Non-success statuses MUST NOT touch the cache file — otherwise a
+    transient outage papers over itself and the cold-start probe never
+    fires again."""
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+    assert not cache_path.exists()
+
+    observability.record_call(
+        task="tool_safety",
+        model="gpt-test",
+        latency_ms=0,
+        status=failure_status,
+        prompt_len=0,
+        response_len=0,
+        error="boom",
+    )
+
+    assert not cache_path.exists()
+    assert observability.read_last_success_ts() is None
+
+
+def test_record_call_success_does_not_overwrite_on_failure_after_success(
+    fresh_db, tmp_path, monkeypatch,
+):
+    """A success writes; a later failure does NOT clobber it."""
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+
+    observability.record_call(
+        task="t", model="m", latency_ms=1, status="success",
+        prompt_len=0, response_len=0,
+        timestamp="2026-04-22T12:00:00+00:00",
+    )
+    observability.record_call(
+        task="t", model="m", latency_ms=0, status="error",
+        prompt_len=0, response_len=0, error="boom",
+    )
+
+    recorded = observability.read_last_success_ts()
+    assert recorded is not None
+    assert recorded.isoformat() == "2026-04-22T12:00:00+00:00"
+
+
+def test_read_last_success_ts_handles_corrupt_file(tmp_path, monkeypatch):
+    """Corrupt / non-JSON / non-dict payloads all return None without raising."""
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+
+    # Corrupt bytes.
+    cache_path.write_text("not json {{", encoding="utf-8")
+    assert observability.read_last_success_ts() is None
+
+    # JSON array instead of dict.
+    cache_path.write_text("[1,2,3]", encoding="utf-8")
+    assert observability.read_last_success_ts() is None
+
+    # Dict without ``ts`` key.
+    cache_path.write_text('{"other": "key"}', encoding="utf-8")
+    assert observability.read_last_success_ts() is None
+
+    # ``ts`` not a string.
+    cache_path.write_text('{"ts": 12345}', encoding="utf-8")
+    assert observability.read_last_success_ts() is None
+
+    # ``ts`` not an ISO-8601 date.
+    cache_path.write_text('{"ts": "yesterday"}', encoding="utf-8")
+    assert observability.read_last_success_ts() is None
+
+
+def test_write_last_success_ts_is_atomic(tmp_path, monkeypatch):
+    """Atomic replace: tmp file is renamed into place, no .tmp suffix lingers."""
+    cache_path = tmp_path / "worker_llm_last_success.json"
+    monkeypatch.setattr(observability, "_LAST_SUCCESS_PATH", cache_path)
+
+    observability.write_last_success_ts()
+
+    # Only the canonical path, no leftover tmp files.
+    assert cache_path.exists()
+    leftover = list(tmp_path.glob("*.tmp.*"))
+    assert leftover == []

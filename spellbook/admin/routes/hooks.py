@@ -23,12 +23,11 @@ because those are operator tuning knobs, not dashboard windows.
 
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
@@ -154,12 +153,37 @@ async def hook_metrics(
     cutoff = (
         datetime.now(timezone.utc) - timedelta(hours=window_hours)
     ).isoformat()
-    query = select(HookEvent).where(HookEvent.timestamp >= cutoff)
-    result = await db.execute(query)
-    rows = list(result.scalars().all())
 
-    total = len(rows)
-    if total == 0:
+    # An "error" is ``exit_code != 0`` OR a non-empty ``error`` string.
+    # SQL cannot portably express "non-empty" with a single idiom (SQLite
+    # treats NULL as falsy in CASE, so the COALESCE-to-empty-string lets us
+    # push the whole is_error flag into SQL).
+    is_error = case(
+        (HookEvent.exit_code != 0, 1),
+        (func.coalesce(HookEvent.error, "") != "", 1),
+        else_=0,
+    )
+
+    # SQL-side aggregation: count, error-count, avg/min/max of duration_ms.
+    # Python-side percentiles still need per-group duration arrays, but we
+    # now fetch ONLY the ``duration_ms`` column (not full ORM objects) for
+    # those — much lighter than pulling the whole row graph into memory.
+    group_agg_q = (
+        select(
+            HookEvent.hook_name,
+            HookEvent.event_name,
+            func.count().label("cnt"),
+            func.sum(is_error).label("errors"),
+            func.avg(HookEvent.duration_ms).label("avg_ms"),
+            func.min(HookEvent.duration_ms).label("min_ms"),
+            func.max(HookEvent.duration_ms).label("max_ms"),
+        )
+        .where(HookEvent.timestamp >= cutoff)
+        .group_by(HookEvent.hook_name, HookEvent.event_name)
+    )
+    group_rows = (await db.execute(group_agg_q)).all()
+
+    if not group_rows:
         return {
             "total": 0,
             "window_hours": window_hours,
@@ -171,41 +195,69 @@ async def hook_metrics(
             },
         }
 
-    groups: dict[tuple[str, str], list[HookEvent]] = defaultdict(list)
-    for r in rows:
-        groups[(r.hook_name, r.event_name)].append(r)
-
+    # Per-group percentiles: one narrow select per group (only duration_ms,
+    # ordered). For the typical 1h/24h window this dominates the loop but
+    # each query is a narrow column scan on the timestamp-bounded set.
     group_out = []
-    for (hname, ename), members in sorted(groups.items()):
-        durations = sorted(int(m.duration_ms) for m in members)
-        errors = sum(
-            1 for m in members if m.exit_code != 0 or (m.error or "")
+    for r in sorted(group_rows, key=lambda x: (x.hook_name, x.event_name)):
+        dur_q = (
+            select(HookEvent.duration_ms)
+            .where(
+                HookEvent.timestamp >= cutoff,
+                HookEvent.hook_name == r.hook_name,
+                HookEvent.event_name == r.event_name,
+            )
+            .order_by(HookEvent.duration_ms.asc())
         )
-        count = len(members)
+        durations = [int(d) for d in (await db.execute(dur_q)).scalars().all()]
+        count = int(r.cnt)
+        errors = int(r.errors or 0)
         group_out.append({
-            "hook_name": hname,
-            "event_name": ename,
+            "hook_name": r.hook_name,
+            "event_name": r.event_name,
             "count": count,
             "avg_duration_ms": (
-                sum(durations) / count if count else None
+                float(r.avg_ms) if r.avg_ms is not None else None
             ),
             "p50_duration_ms": percentile(durations, 50),
             "p95_duration_ms": percentile(durations, 95),
             "error_rate": errors / count if count else 0.0,
         })
 
-    all_durations = sorted(int(r.duration_ms) for r in rows)
-    all_errors = sum(
-        1 for r in rows if r.exit_code != 0 or (r.error or "")
+    # Top-level summary: SQL for count/sum/avg; Python for p95 on a single
+    # column fetch.
+    summary_agg_q = (
+        select(
+            func.count().label("cnt"),
+            func.sum(is_error).label("errors"),
+            func.avg(HookEvent.duration_ms).label("avg_ms"),
+        )
+        .where(HookEvent.timestamp >= cutoff)
     )
+    summary_row = (await db.execute(summary_agg_q)).one()
+    total = int(summary_row.cnt)
+    all_errors = int(summary_row.errors or 0)
+
+    all_dur_q = (
+        select(HookEvent.duration_ms)
+        .where(HookEvent.timestamp >= cutoff)
+        .order_by(HookEvent.duration_ms.asc())
+    )
+    all_durations = [
+        int(d) for d in (await db.execute(all_dur_q)).scalars().all()
+    ]
 
     return {
         "total": total,
         "window_hours": window_hours,
         "groups": group_out,
         "summary": {
-            "avg_duration_ms": sum(all_durations) / total,
+            "avg_duration_ms": (
+                float(summary_row.avg_ms)
+                if summary_row.avg_ms is not None
+                else None
+            ),
             "p95_duration_ms": percentile(all_durations, 95),
-            "error_rate": all_errors / total,
+            "error_rate": all_errors / total if total else 0.0,
         },
     }

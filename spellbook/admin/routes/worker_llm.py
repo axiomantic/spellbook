@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spellbook.admin.auth import require_admin_auth
@@ -134,11 +134,19 @@ async def worker_llm_metrics(
     cutoff = (
         datetime.now(timezone.utc) - timedelta(hours=window_hours)
     ).isoformat()
-    query = select(WorkerLLMCall).where(WorkerLLMCall.timestamp >= cutoff)
-    result = await db.execute(query)
-    rows = list(result.scalars().all())
 
-    total = len(rows)
+    # SQL-side: total + success count via a single aggregate query. Pulling
+    # full ORM objects just to tally these two numbers was the original
+    # waste.
+    totals_q = select(
+        func.count().label("total"),
+        func.sum(
+            case((WorkerLLMCall.status == "success", 1), else_=0)
+        ).label("successes"),
+    ).where(WorkerLLMCall.timestamp >= cutoff)
+    totals_row = (await db.execute(totals_q)).one()
+    total = int(totals_row.total)
+
     if total == 0:
         return {
             "success_rate": None,
@@ -149,10 +157,32 @@ async def worker_llm_metrics(
             "window_hours": window_hours,
         }
 
-    successes = sum(1 for r in rows if r.status == "success")
-    latencies = sorted(r.latency_ms for r in rows if r.status == "success")
+    successes = int(totals_row.successes or 0)
+
+    # Narrow single-column fetch for the success latencies that feed the
+    # percentile helper. Ordered on the DB so the helper can skip a Python
+    # sort.
+    lat_q = (
+        select(WorkerLLMCall.latency_ms)
+        .where(
+            WorkerLLMCall.timestamp >= cutoff,
+            WorkerLLMCall.status == "success",
+        )
+        .order_by(WorkerLLMCall.latency_ms.asc())
+    )
+    latencies = [int(l) for l in (await db.execute(lat_q)).scalars().all()]
+
+    # Error breakdown: fetch only (error, status) for non-success rows and
+    # apply the same Counter.most_common logic. Full-row SELECT avoided.
+    err_q = select(
+        WorkerLLMCall.error, WorkerLLMCall.status
+    ).where(
+        WorkerLLMCall.timestamp >= cutoff,
+        WorkerLLMCall.status != "success",
+    )
     errors = Counter(
-        (r.error or r.status) for r in rows if r.status != "success"
+        (err or status)
+        for (err, status) in (await db.execute(err_q)).all()
     )
 
     return {

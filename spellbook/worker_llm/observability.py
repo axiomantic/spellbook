@@ -111,6 +111,23 @@ def record_call(
         else:
             log.debug("record_call failed (best-effort)", exc_info=True)
         _record_call_failures += 1
+        return
+
+    # Success-only: update the cross-process last-success timestamp that
+    # ``tool_safety._last_success_age_s`` reads without touching the DB.
+    # Failure/fail_open/timeout must NOT write this file — a transient
+    # worker outage would otherwise paper over itself and suppress the
+    # cold-start probe next time siesta wakes up. Isolated from the DB
+    # write above: a file-system failure here does NOT count against the
+    # record_call failure budget.
+    if status == "success":
+        try:
+            write_last_success_ts(datetime.fromisoformat(ts))
+        except Exception:
+            # write_last_success_ts swallows OSError internally; this
+            # outer catch is a defense-in-depth guard against the
+            # fromisoformat parse or any future pre-write failure.
+            log.debug("write_last_success_ts failed", exc_info=True)
 
 
 # Cross-process purge-last-ran record.
@@ -126,6 +143,25 @@ def record_call(
 # CLI read never observes a partially-written file.
 _LAST_PURGE_PATH: Path = (
     Path.home() / ".local" / "spellbook" / "cache" / "worker_llm_last_purge.json"
+)
+
+# Cross-process last-successful-call timestamp.
+#
+# The PreToolUse cold-start probe in ``tasks/tool_safety.py`` previously
+# queried ``MAX(timestamp) WHERE status='success'`` off the database on
+# every Bash/Edit/Write -- a synchronous SQLite read in the hot path that
+# added avoidable latency to each PreToolUse hook. Persisting the last
+# successful timestamp here on every success lets the probe read a tiny
+# JSON file instead of spinning up a SQLAlchemy session.
+#
+# Failure-mode contract: if the file does not exist (cold process, fresh
+# install) OR is unreadable, tool_safety treats the absence as "cannot
+# tell -- assume warm" so observability-of-observability failures never
+# degrade the PreToolUse decision. Write failures inside ``record_call``
+# are swallowed silently (DEBUG log only) to match the broader
+# "record_call must never raise" invariant.
+_LAST_SUCCESS_PATH: Path = (
+    Path.home() / ".local" / "spellbook" / "cache" / "worker_llm_last_success.json"
 )
 
 
@@ -186,6 +222,67 @@ def write_last_purge_ts(now: datetime | None = None) -> None:
                 raise
     except OSError:
         log.debug("write_last_purge_ts failed (best-effort)", exc_info=True)
+
+
+def read_last_success_ts() -> datetime | None:
+    """Return the last-successful-call timestamp written by ``record_call``.
+
+    Returns ``None`` when the file does not exist (no success on this host
+    yet) OR the file is unreadable / malformed. Callers in the PreToolUse
+    hot path must interpret ``None`` as "assume warm" so the cold-probe
+    never degrades on observability failures — this mirrors the "query
+    error -> None -> assume warm" contract of the prior SQL-based
+    implementation.
+    """
+    try:
+        if not _LAST_SUCCESS_PATH.exists():
+            return None
+        payload = json.loads(_LAST_SUCCESS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    ts = payload.get("ts")
+    if not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+
+
+def write_last_success_ts(now: datetime | None = None) -> None:
+    """Atomically record the last-successful-call timestamp.
+
+    Fire-and-forget: OSErrors are logged at DEBUG and swallowed — the
+    caller is ``record_call`` on the happy path, and that call must never
+    fail just because the side-channel cache write hit a broken disk.
+    """
+    ts = (now or datetime.now(timezone.utc)).isoformat()
+    payload = json.dumps({"ts": ts}).encode("utf-8")
+    try:
+        _LAST_SUCCESS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        for _ in range(5):
+            tmp = _LAST_SUCCESS_PATH.with_suffix(
+                f".tmp.{os.getpid()}.{secrets.token_hex(4)}",
+            )
+            try:
+                fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+            except FileExistsError:
+                continue
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(payload)
+                os.replace(tmp, _LAST_SUCCESS_PATH)
+                return
+            except Exception:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+                raise
+    except OSError:
+        log.debug("write_last_success_ts failed (best-effort)", exc_info=True)
 
 
 def _run_purge_once() -> None:

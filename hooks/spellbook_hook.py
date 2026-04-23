@@ -177,8 +177,16 @@ def _log_hook_error(event: str, tool: str, exc: BaseException) -> None:
         print(f"[spellbook-hook] Error in {event}:{tool}:\n{tb}", file=sys.stderr)
 
 
+_pending_emitter_threads: list[threading.Thread] = []
+
+
 def _fire_and_forget(fn, *args):
-    """Run a function in a daemon thread (dies with process)."""
+    """Run a function in a daemon thread (dies with process).
+
+    The thread is tracked in ``_pending_emitter_threads`` so ``main()`` can
+    drain outstanding emitters with a short aggregate timeout before exit —
+    otherwise the hook's ``sys.exit`` can race the POST and drop the record.
+    """
 
     def _wrapper():
         try:
@@ -187,7 +195,30 @@ def _fire_and_forget(fn, *args):
             _log_hook_error("fire_and_forget", fn.__name__, e)
 
     t = threading.Thread(target=_wrapper, daemon=True)
+    _pending_emitter_threads.append(t)
     t.start()
+
+
+def _drain_pending_emitters(deadline_s: float = 1.0) -> None:
+    """Best-effort wait for outstanding fire-and-forget threads.
+
+    Joins each thread with a shrinking slice of ``deadline_s``. If the
+    budget is exhausted before every thread finishes, the remaining ones
+    stay daemonic and die with the process — same behavior as before the
+    drain, no worse. The goal is to give fast, localhost emitters the
+    ~10-50ms they need to flush WITHOUT materially slowing down the hook
+    perceptibly when everything is healthy.
+
+    Never raises: a thread that raised its own exception has already been
+    logged via ``_log_hook_error`` inside ``_wrapper``.
+    """
+    deadline = time.monotonic() + deadline_s
+    for t in _pending_emitter_threads:
+        remaining = max(0.0, deadline - time.monotonic())
+        if remaining <= 0:
+            break
+        t.join(timeout=remaining)
+    _pending_emitter_threads.clear()
 
 
 def _fallback_directive() -> dict:
@@ -2172,45 +2203,52 @@ def main():
             event_name, tool_name, duration_ms, exit_code, error_str,
         )
 
-    raw = sys.stdin.read().strip()
-    if not raw:
-        _emit_record()
-        sys.exit(0)
-
+    # Wrap the entire body in try/finally so outstanding emitter threads are
+    # drained before the process exits, including when an inner ``sys.exit``
+    # fires. Without this, the hook process can exit before the daemon POST
+    # completes and the record is silently dropped.
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        error_str = "JSONDecodeError"
-        _emit_record()
-        sys.exit(0)
-
-    event_name = data.get("hook_event_name", "")
-    if not event_name:
-        if "tool_result" in data:
-            event_name = "PostToolUse"
-        elif "tool_name" in data:
-            event_name = "PreToolUse"
-        else:
+        raw = sys.stdin.read().strip()
+        if not raw:
             _emit_record()
             sys.exit(0)
 
-    tool_name = data.get("tool_name", "")
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            error_str = "JSONDecodeError"
+            _emit_record()
+            sys.exit(0)
 
-    try:
-        output = dispatch(event_name, tool_name, data)
-        if output:
-            print(output)
-    except SystemExit as e:
-        # _emit_block_and_exit calls sys.exit(2); capture exit code.
-        exit_code = int(e.code) if isinstance(e.code, int) else 1
+        event_name = data.get("hook_event_name", "")
+        if not event_name:
+            if "tool_result" in data:
+                event_name = "PostToolUse"
+            elif "tool_name" in data:
+                event_name = "PreToolUse"
+            else:
+                _emit_record()
+                sys.exit(0)
+
+        tool_name = data.get("tool_name", "")
+
+        try:
+            output = dispatch(event_name, tool_name, data)
+            if output:
+                print(output)
+        except SystemExit as e:
+            # _emit_block_and_exit calls sys.exit(2); capture exit code.
+            exit_code = int(e.code) if isinstance(e.code, int) else 1
+            _emit_record()
+            raise
+        except Exception as e:
+            error_str = f"{type(e).__name__}: {e}"[:1000]
+            exit_code = 1
+            _log_hook_error(event_name, tool_name, e)
+
         _emit_record()
-        raise
-    except Exception as e:
-        error_str = f"{type(e).__name__}: {e}"[:1000]
-        exit_code = 1
-        _log_hook_error(event_name, tool_name, e)
-
-    _emit_record()
+    finally:
+        _drain_pending_emitters(1.0)
 
 
 if __name__ == "__main__":
