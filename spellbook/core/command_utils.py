@@ -2,10 +2,53 @@
 
 import os
 import json
+import platform
 import time
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
+
+# Windows-transient-error retry budget for ``os.replace``.
+#
+# On Windows, ``os.replace(tmp, target)`` raises ``PermissionError``
+# (``WinError 5``) when ``target`` currently has an open handle held by a
+# concurrent reader. POSIX rename() atomically swaps the inode without
+# caring about open handles; Windows does not. A ``FileNotFoundError``
+# can also fire when ``tmp`` was superseded by another writer's rename
+# between our stat and our replace. 6 attempts with exponential backoff
+# (2, 4, 8, 16, 32, 64 ms) cover realistic contention without blocking
+# the caller meaningfully. On non-Windows, exceptions propagate unchanged.
+_ATOMIC_REPLACE_MAX_ATTEMPTS: int = 6
+
+
+def atomic_replace(tmp_path: str, target_path: str) -> None:
+    """``os.replace`` with Windows transient-error retry.
+
+    On non-Windows, calls ``os.replace`` directly and lets exceptions
+    propagate unchanged (POSIX rename() is unaffected by concurrent
+    readers). On Windows, retries ``PermissionError`` (WinError 5: target
+    has an open handle) and ``FileNotFoundError`` (tmp was concurrently
+    renamed-away by another writer's superseding replace) for up to
+    ``_ATOMIC_REPLACE_MAX_ATTEMPTS`` attempts with 2/4/8/16/32/64ms
+    backoff. Re-raises the final exception if every retry fails; all
+    other exceptions propagate immediately on the first occurrence.
+    """
+    if platform.system() != "Windows":
+        os.replace(tmp_path, target_path)
+        return
+    last_exc: OSError | None = None
+    for attempt in range(_ATOMIC_REPLACE_MAX_ATTEMPTS):
+        try:
+            os.replace(tmp_path, target_path)
+            return
+        except (PermissionError, FileNotFoundError) as exc:
+            last_exc = exc
+            if attempt == _ATOMIC_REPLACE_MAX_ATTEMPTS - 1:
+                break
+            time.sleep(0.002 * (2**attempt))
+    assert last_exc is not None
+    raise last_exc
+
 
 def atomic_write_json(path: str, data: dict, timeout: int = 5):
     """
@@ -21,8 +64,18 @@ def atomic_write_json(path: str, data: dict, timeout: int = 5):
     start = time.time()
     while os.path.exists(lock_path):
         if time.time() - start > timeout:
-            if time.time() - os.path.getmtime(lock_path) > 30:
-                os.remove(lock_path)
+            try:
+                if time.time() - os.path.getmtime(lock_path) > 30:
+                    try:
+                        os.remove(lock_path)
+                    except FileNotFoundError:
+                        # Another writer released the stale lock first;
+                        # fall through to re-acquire.
+                        pass
+                    break
+            except FileNotFoundError:
+                # Lock disappeared between exists() and getmtime() — a
+                # concurrent writer released it. Re-check the loop.
                 break
             raise TimeoutError(f"Could not acquire lock for {path}")
         time.sleep(0.1)
@@ -31,17 +84,29 @@ def atomic_write_json(path: str, data: dict, timeout: int = 5):
         lock.write(str(os.getpid()))
 
     try:
-        # Use thread-safe temp file name (PID + timestamp)
+        # Use thread-safe temp file name (PID + thread id + random token)
+        # to guarantee uniqueness across concurrent writers, including the
+        # narrow window where two threads in the same PID race past the
+        # weak lock acquisition above.
+        import secrets
         import threading
-        temp_path = f"{path}.tmp.{os.getpid()}.{threading.get_ident()}"
+        temp_path = (
+            f"{path}.tmp.{os.getpid()}.{threading.get_ident()}."
+            f"{secrets.token_hex(4)}"
+        )
+        # Ensure parent directory exists BEFORE writing tmp so both
+        # tmp and target land in the same dir (required for atomic rename).
+        os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
         with open(temp_path, 'w') as f:
             json.dump(data, f, indent=2)
-        # Ensure parent directory exists
-        os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
-        os.replace(temp_path, path)  # atomic on POSIX
+        atomic_replace(temp_path, path)
     finally:
-        if os.path.exists(lock_path):
+        try:
             os.remove(lock_path)
+        except FileNotFoundError:
+            # Another writer already reclaimed/removed our lock (weak
+            # lock discipline); nothing to do.
+            pass
 
 def read_json_safe(path: str) -> dict:
     """Read JSON file safely with retry."""
