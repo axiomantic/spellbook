@@ -18,7 +18,9 @@ import asyncio
 import json
 import logging
 import os
+import platform
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -111,6 +113,34 @@ _LAST_PURGE_PATH: Path = (
 )
 
 
+# Windows-transient-error retry budget for ``os.replace``. Mirrors
+# ``spellbook.worker_llm.observability._atomic_replace_with_retry`` — kept
+# local here to avoid a shared-module refactor that would touch every
+# other ``os.replace`` call site in the codebase. On Windows, a
+# ``PermissionError`` (``WinError 5``) fires when ``target_path`` has an
+# open handle held by a concurrent reader (the ``doctor`` CLI). POSIX
+# rename() is unaffected.
+_ATOMIC_REPLACE_MAX_RETRIES: int = 5
+
+
+def _atomic_replace_with_retry(tmp_path: str, target_path: str) -> None:
+    """``os.replace`` with Windows PermissionError retry. See twin in
+    ``spellbook.worker_llm.observability`` for full rationale."""
+    if platform.system() != "Windows":
+        os.replace(tmp_path, target_path)
+        return
+    last_exc: PermissionError | None = None
+    for attempt in range(_ATOMIC_REPLACE_MAX_RETRIES):
+        try:
+            os.replace(tmp_path, target_path)
+            return
+        except PermissionError as exc:
+            last_exc = exc
+            time.sleep(0.002 * (2**attempt))
+    assert last_exc is not None
+    raise last_exc
+
+
 def read_last_purge_ts() -> datetime | None:
     """Return the last-run timestamp written by ``_run_purge_once``, or ``None``.
 
@@ -154,7 +184,7 @@ def write_last_purge_ts(now: datetime | None = None) -> None:
             try:
                 with os.fdopen(fd, "wb") as fh:
                     fh.write(payload)
-                os.replace(tmp, _LAST_PURGE_PATH)
+                _atomic_replace_with_retry(str(tmp), str(_LAST_PURGE_PATH))
                 return
             except Exception:
                 try:

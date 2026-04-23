@@ -21,7 +21,9 @@ import asyncio
 import json
 import logging
 import os
+import platform
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -145,6 +147,44 @@ _LAST_PURGE_PATH: Path = (
     Path.home() / ".local" / "spellbook" / "cache" / "worker_llm_last_purge.json"
 )
 
+
+# Windows-transient-error retry budget for ``os.replace``.
+#
+# On Windows, ``os.replace(tmp, target)`` raises ``PermissionError``
+# (``WinError 5``) when ``target`` currently has an open handle (e.g. a
+# concurrent reader from ``tool_safety._last_success_age_s`` or the
+# ``doctor`` CLI). POSIX rename() atomically swaps the inode without
+# caring about open handles; Windows does not. 5 retries with exponential
+# backoff (2, 4, 8, 16, 32 ms) cover realistic contention without
+# blocking the caller meaningfully. No-op on non-Windows platforms.
+_ATOMIC_REPLACE_MAX_RETRIES: int = 5
+
+
+def _atomic_replace_with_retry(tmp_path: str, target_path: str) -> None:
+    """``os.replace`` with Windows PermissionError retry.
+
+    On non-Windows, calls ``os.replace`` directly and lets exceptions
+    propagate unchanged (POSIX rename() is unaffected by concurrent
+    readers). On Windows, wraps the call in a short retry loop that
+    swallows ``PermissionError`` for up to ``_ATOMIC_REPLACE_MAX_RETRIES``
+    attempts with 2ms/4ms/8ms/16ms/32ms backoff. Re-raises the final
+    ``PermissionError`` if every retry fails; all other exceptions
+    propagate immediately on the first occurrence.
+    """
+    if platform.system() != "Windows":
+        os.replace(tmp_path, target_path)
+        return
+    last_exc: PermissionError | None = None
+    for attempt in range(_ATOMIC_REPLACE_MAX_RETRIES):
+        try:
+            os.replace(tmp_path, target_path)
+            return
+        except PermissionError as exc:
+            last_exc = exc
+            time.sleep(0.002 * (2**attempt))
+    assert last_exc is not None  # loop ran at least once
+    raise last_exc
+
 # Cross-process last-successful-call timestamp.
 #
 # The PreToolUse cold-start probe in ``tasks/tool_safety.py`` previously
@@ -212,7 +252,7 @@ def write_last_purge_ts(now: datetime | None = None) -> None:
             try:
                 with os.fdopen(fd, "wb") as fh:
                     fh.write(payload)
-                os.replace(tmp, _LAST_PURGE_PATH)
+                _atomic_replace_with_retry(str(tmp), str(_LAST_PURGE_PATH))
                 return
             except Exception:
                 try:
@@ -273,7 +313,7 @@ def write_last_success_ts(now: datetime | None = None) -> None:
             try:
                 with os.fdopen(fd, "wb") as fh:
                     fh.write(payload)
-                os.replace(tmp, _LAST_SUCCESS_PATH)
+                _atomic_replace_with_retry(str(tmp), str(_LAST_SUCCESS_PATH))
                 return
             except Exception:
                 try:
