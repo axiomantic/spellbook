@@ -19,9 +19,10 @@ we log a single WARNING and start with empty caches. The next successful
 write heals the file.
 
 **Size cap.** ``MAX_CACHE_ENTRIES`` (default 500) bounds the on-disk
-footprint. Once full, insertion-order eviction (FIFO) drops the oldest
-entry. Worst-case collision rate is tiny because verdict keys are
-sha256 of the (tool_name, params) pair.
+footprint. Once full, LRU eviction drops the least-recently-touched
+entry (reads move hits to MRU, writes rotate). Worst-case collision
+rate is tiny because verdict keys are sha256 of the (tool_name, params)
+pair.
 
 See impl plan Task SC1, design §5.2, §14.4.
 """
@@ -56,7 +57,9 @@ class _Entry:
     expires_at: float  # wall-clock
 
 
-# Insertion-ordered dicts (CPython 3.7+) give us FIFO eviction for free.
+# Insertion-ordered dicts (CPython 3.7+) give us move-to-end for free:
+# reads rotate hits to MRU position (``get_cached_verdict``) and writes
+# evict the LRU (oldest-touched) entry when ``MAX_CACHE_ENTRIES`` is full.
 _VERDICT_CACHE: dict[str, _Entry] = {}
 _BLOCK_CACHE: dict[str, float] = {}
 
@@ -94,21 +97,25 @@ def get_cached_verdict(key: str) -> SafetyVerdict | None:
         _VERDICT_CACHE.pop(key, None)
         _persist_to_disk()
         return None
+    # LRU: rotate this key to MRU position so eviction drops cold entries.
+    # In-memory only -- on-disk order isn't persisted (order is rebuilt on
+    # subsequent writes), so no _persist_to_disk() call on the hot read path.
+    _VERDICT_CACHE[key] = _VERDICT_CACHE.pop(key)
     return entry.verdict
 
 
 def cache_verdict(key: str, verdict: SafetyVerdict) -> None:
     """Store ``verdict`` under ``key`` with a wall-clock expiry.
 
-    Enforces ``MAX_CACHE_ENTRIES`` via insertion-order eviction: when
-    the cache is full and the key is new, the oldest entry is dropped.
+    Enforces ``MAX_CACHE_ENTRIES`` via LRU eviction: reads move hits to
+    MRU, writes evict the oldest-touched entry when the cache is full.
     """
     ttl = _ttl_seconds()
     # If key already present, rotate it to MRU position by popping first.
     if key in _VERDICT_CACHE:
         _VERDICT_CACHE.pop(key)
     elif len(_VERDICT_CACHE) >= MAX_CACHE_ENTRIES:
-        # Evict oldest insertion (FIFO) to make room.
+        # Evict LRU (least-recently-read-or-written) to make room.
         oldest_key = next(iter(_VERDICT_CACHE))
         _VERDICT_CACHE.pop(oldest_key, None)
 

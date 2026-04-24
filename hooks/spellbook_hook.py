@@ -1559,12 +1559,13 @@ def _handle_stop(data: dict) -> None:
     # ---------- Worker-LLM gate ----------
     # Imports are deferred to function scope so the hook module remains
     # importable by the installer / standalone checks that do not carry
-    # the ``spellbook`` package on ``sys.path``.
+    # the ``spellbook`` package on ``sys.path``. ``transcript_harvest`` is
+    # deferred further (inside ``if use_worker:`` below) so the regex-only
+    # fast path does not pay its httpx / client-adapter import cost.
     try:
         from spellbook.worker_llm import errors as _wl_errors
         from spellbook.worker_llm import events as _wl_events
         from spellbook.worker_llm.config import feature_enabled, get_worker_config
-        from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
         _wl_import_ok = True
     except Exception:
         # Standalone installer / sys.path-restricted invocations will not
@@ -1630,6 +1631,20 @@ def _handle_stop(data: dict) -> None:
                 status="ok",
             )
         return
+
+    if use_worker:
+        try:
+            from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
+        except Exception:
+            # Defensive: the sibling worker_llm imports above succeeded, so
+            # this should not happen. If it does, degrade to regex-only
+            # rather than crashing the Stop hook.
+            logger.debug(
+                "stop_hook: late import of transcript_harvest failed",
+                exc_info=True,
+            )
+            use_worker = False
+            mode = "skip"
 
     if use_worker:
         try:

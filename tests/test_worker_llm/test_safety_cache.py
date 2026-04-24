@@ -201,6 +201,34 @@ def test_size_cap_evicts_oldest_insert(_isolate_cache, monkeypatch):
         assert safety_cache.get_cached_verdict(k) is not None
 
 
+def test_size_cap_lru_evicts_least_recently_read(_isolate_cache, monkeypatch):
+    """A read rotates the hit to MRU; next eviction drops the untouched entry."""
+    monkeypatch.setattr(safety_cache, "MAX_CACHE_ENTRIES", 3)
+    monkeypatch.setattr(
+        "spellbook.core.config.config_get",
+        lambda k: 300.0 if k == "worker_llm_safety_cache_ttl_s" else None,
+    )
+    start_t = 1_700_000_000.0
+    monkeypatch.setattr("time.time", lambda: start_t)
+
+    keys = [safety_cache.make_key("Bash", {"i": i}) for i in range(4)]
+    for k in keys[:3]:
+        safety_cache.cache_verdict(k, SafetyVerdict(verdict="OK", reasoning=""))
+
+    # Touch k0 so it becomes MRU; cache order now: k1 (LRU), k2, k0 (MRU).
+    assert safety_cache.get_cached_verdict(keys[0]) is not None
+
+    # Insert a 4th key. With LRU, k1 is evicted (not k0, which was read).
+    safety_cache.cache_verdict(keys[3], SafetyVerdict(verdict="OK", reasoning=""))
+
+    assert safety_cache.get_cached_verdict(keys[1]) is None, (
+        "LRU eviction should drop the least-recently-touched key (k1), "
+        "not the oldest-inserted key (k0)."
+    )
+    for k in (keys[0], keys[2], keys[3]):
+        assert safety_cache.get_cached_verdict(k) is not None
+
+
 # ---------------------------------------------------------------------------
 # Atomic write + corruption recovery
 # ---------------------------------------------------------------------------
