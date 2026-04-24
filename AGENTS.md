@@ -163,6 +163,62 @@ Any changes to shell scripts (`.sh` files in `hooks/`, `scripts/`, or elsewhere)
 
 **Commands**: Create `commands/<name>.md` with `description` frontmatter. Hooks generate docs.
 
+## Adding Config Options
+
+<CRITICAL>
+Any new user-facing config key MUST satisfy all three points below. Missing any point means a silently-unseen feature, a spammy re-prompt, or a config that only the admin UI can ever set.
+</CRITICAL>
+
+A "user-facing config" is anything that governs behavior the user cares about (feature flags, endpoints, modes, thresholds). Internal state and cached values are not user-facing.
+
+### The three-point rule
+
+1. **NEW users** are presented with the option during initial installation.
+2. **EXISTING users** re-running install are presented with the option if (and only if) they have never answered it before — i.e., the key is unset in their config.
+3. **Users who have already answered** (any explicit value, including `False`, `""`, `0`, `null`) are NOT re-prompted during subsequent installs.
+
+### Required changes per new config key
+
+| Where | What to add |
+|-------|-------------|
+| `spellbook/admin/routes/config.py` | `CONFIG_SCHEMA` entry (key/type/description/default) |
+| `spellbook/core/config.py` | `CONFIG_DEFAULTS` entry (matching key) |
+| Installer (BOTH entry points — see below) | Prompt gated by `config_is_explicitly_set(key)` or equivalent `config_get(key) is None` check |
+| Relevant wizard | Default surfaced to the user so they see what "don't change" means |
+
+### Divergent install entry points
+
+Spellbook has **two** install entry paths that must be kept in sync:
+
+- **Root** `install.py` (the curl-pipe target, documented entry) — handles fresh installs and upgrades via `python3 install.py`.
+- **CLI wrapper** `spellbook/cli/commands/install.py` — invoked by `spellbook install` after spellbook is on PATH.
+
+Any new config prompt MUST be wired into both. A prompt that lives only in the CLI wrapper is invisible to users following the documented curl-pipe install, and vice versa. When touching either file, verify parity with the other.
+
+### Idempotency pattern
+
+```python
+from spellbook.core.config import config_get, config_set
+
+# Skip if user has already answered (any explicit value counts as "answered")
+if config_get("my_feature_enabled") is not None:
+    return
+
+# Prompt, then persist exactly once
+answer = input("Enable my-feature? [y/N]: ").strip().lower()
+config_set("my_feature_enabled", answer in ("y", "yes"))
+```
+
+For keys using dotted names or stored in `profile_store`, use `config_is_explicitly_set(key)` from `spellbook.core.config` — it distinguishes "unset" from "set to default-valued literal".
+
+### Non-tty fallbacks
+
+Interactive prompts must be skipped cleanly when `sys.stdin.isatty()` is False (CI, piped installs). Default behavior in that path must match the "user said no / accept default" branch — NEVER silently write an opt-in flag to True.
+
+### Re-configure flag
+
+The installer accepts `--reconfigure`. When set, idempotency checks are bypassed so users can re-answer. Support this by gating your skip-check on `not getattr(args, "reconfigure", False)`.
+
 ## Size Limits and Splitting
 
 <CRITICAL>
@@ -285,7 +341,25 @@ uv run pytest tests/ -m "not docker" --override-ini="addopts="
 
 ### Testing with Bigfoot
 
-Bigfoot is the ONLY mocking framework for this project. Do NOT use `unittest.mock` (no `patch()`, `MagicMock`, `AsyncMock`, `mock_open`, etc.).
+<CRITICAL>
+**Bigfoot is the ONLY acceptable mocking framework in this project.** This rule is absolute.
+
+**Forbidden:**
+- `unittest.mock` in any form — `patch()`, `patch.object()`, `MagicMock`, `AsyncMock`, `Mock`, `mock_open`, `PropertyMock`, `create_autospec`, etc.
+- `pytest-mock` / `mocker` fixture
+- `monkeypatch.setattr()`, `monkeypatch.setitem()`, `monkeypatch.delattr()`, `monkeypatch.delitem()` for mocking module attributes, class methods, or functions
+- Hand-rolled mock objects or stub classes that exist only to stand in for real dependencies
+- `@pytest.fixture` that returns a fake replacement for a real dependency
+
+**Allowed uses of `monkeypatch`** (pytest-builtin, not a mocking framework):
+- `monkeypatch.setenv()` / `monkeypatch.delenv()` for environment variables
+- `monkeypatch.chdir()` for working directory
+- `monkeypatch.syspath_prepend()` for sys.path
+
+That's it. Any other mocking need — function replacement, method stubbing, object patching, HTTP mocking, subprocess mocking, database mocking — MUST use bigfoot. No exceptions. If bigfoot can't express what you need, that is a signal to refactor the code under test, not to reach for `unittest.mock`.
+
+PR reviewers (including automated ones) that suggest "use bigfoot OR monkeypatch" are wrong. The correct phrasing is "use bigfoot; monkeypatch is restricted to environment / cwd / sys.path only."
+</CRITICAL>
 
 #### Why Bigfoot Instead of unittest.mock
 
