@@ -339,7 +339,16 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
             try:
                 _run_doctor(doctor_args)
             except SystemExit:
-                pass
+                # Doctor is a CLI command and uses ``sys.exit(N)`` to signal
+                # success/failure to the shell. Inside the wizard that exit
+                # code is already reflected in doctor's own stdout output,
+                # so we swallow the propagation rather than abort the
+                # wizard. Log the swallow at DEBUG for diagnostics without
+                # adding user-visible noise.
+                logger.debug(
+                    "worker_llm installer: doctor SystemExit swallowed",
+                    exc_info=True,
+                )
         except Exception as e:  # noqa: BLE001
             print(f"  (doctor failed to run: {type(e).__name__}: {e})")
 

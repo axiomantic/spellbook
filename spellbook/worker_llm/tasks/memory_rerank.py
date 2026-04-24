@@ -100,10 +100,16 @@ def memory_rerank(query: str, candidates: list[dict]) -> list[ScoredCandidate]:
         mid = str(item.get("id", ""))
         if not mid:
             continue
+        # Missing/non-numeric ``relevance_0_1`` leaves the candidate out of
+        # ``by_id`` so it falls through to the ordinal-position fallback
+        # below (matching the system prompt). Storing 0.0 here would sink
+        # the candidate to the bottom instead of preserving upstream rank.
+        if "relevance_0_1" not in item:
+            continue
         try:
-            rel = float(item.get("relevance_0_1", 0.0))
+            rel = float(item["relevance_0_1"])
         except (TypeError, ValueError):
-            rel = 0.0
+            continue
         by_id[mid] = max(0.0, min(1.0, rel))
 
     n = len(candidates)

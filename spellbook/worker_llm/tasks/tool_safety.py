@@ -331,6 +331,10 @@ def tool_safety(
         # dashboard — client.call's finally-block event-emit never fires
         # here because we short-circuit before reaching the client.
         # TODO: Phase 2 subscriber audit
+        logger.warning(
+            "tool_safety: prompt failed to load; failing open",
+            exc_info=True,
+        )
         publish_call(
             task="tool_safety",
             model="",
@@ -374,6 +378,13 @@ def tool_safety(
 
     verdict = _parse_verdict(raw)
     if verdict is None:
+        # Drifty small model: response parsed but verdict token was unknown
+        # (or payload was non-JSON). Log a truncated body so operators can
+        # diagnose without flooding the log with full worker output.
+        logger.warning(
+            "tool_safety: verdict parse returned None (body=%s); failing open",
+            raw[:200],
+        )
         return _FAIL_OPEN
 
     safety_cache.cache_verdict(cache_key, verdict)

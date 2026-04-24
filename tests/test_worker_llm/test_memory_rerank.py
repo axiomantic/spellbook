@@ -1,8 +1,8 @@
 """Tests for ``spellbook.worker_llm.tasks.memory_rerank``.
 
 Covers: happy path, empty-input short-circuit, excerpt truncation at 600
-chars, alignment to input order, missing-id defaults to 0.0, relevance
-clamping, malformed responses, and event emission.
+chars, alignment to input order, missing-id and missing-field ordinal
+fallback, relevance clamping, malformed responses, and event emission.
 """
 
 from __future__ import annotations
@@ -163,9 +163,12 @@ def test_relevance_clamped_to_unit_interval(
     ]
 
 
-def test_relevance_non_numeric_defaults_to_zero(
+def test_relevance_non_numeric_falls_back_to_ordinal(
     worker_llm_transport, worker_llm_config
 ):
+    # Non-numeric ``relevance_0_1`` is treated as "field missing" and falls
+    # back to the ordinal-position rule (1.0 - i/N) rather than sinking the
+    # candidate to 0.0. Preserves upstream QMD rank when the model drifts.
     payload = '[{"id":"a.md","relevance_0_1":"nope"}]'
     worker_llm_transport([SimpleNamespace(status=200, body=_ok(payload))])
 
@@ -175,7 +178,99 @@ def test_relevance_non_numeric_defaults_to_zero(
     )
 
     out = memory_rerank("q", [{"id": "a.md", "excerpt": ""}])
-    assert out == [ScoredCandidate(id="a.md", relevance=0.0)]
+    assert out == [ScoredCandidate(id="a.md", relevance=1.0)]
+
+
+def test_missing_relevance_field_falls_back_to_ordinal(
+    worker_llm_transport, worker_llm_config
+):
+    # Worker returns the id but omits ``relevance_0_1`` entirely. The
+    # candidate must fall back to ordinal position, not be stored as 0.0.
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('[{"id":"a.md"},{"id":"b.md"}]'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.memory_rerank import (
+        ScoredCandidate,
+        memory_rerank,
+    )
+
+    out = memory_rerank(
+        "q",
+        [{"id": "a.md", "excerpt": ""}, {"id": "b.md", "excerpt": ""}],
+    )
+    assert out == [
+        ScoredCandidate(id="a.md", relevance=1.0),
+        ScoredCandidate(id="b.md", relevance=0.5),
+    ]
+
+
+def test_mixed_present_and_missing_relevance_fields(
+    worker_llm_transport, worker_llm_config
+):
+    # Some candidates have ``relevance_0_1``, some do not. Present entries
+    # use the model's score (clamped); missing entries use ordinal fallback.
+    payload = (
+        '[{"id":"a.md"},'
+        '{"id":"b.md","relevance_0_1":0.2},'
+        '{"id":"c.md","relevance_0_1":0.9}]'
+    )
+    worker_llm_transport([SimpleNamespace(status=200, body=_ok(payload))])
+
+    from spellbook.worker_llm.tasks.memory_rerank import (
+        ScoredCandidate,
+        memory_rerank,
+    )
+
+    out = memory_rerank(
+        "q",
+        [
+            {"id": "a.md", "excerpt": ""},
+            {"id": "b.md", "excerpt": ""},
+            {"id": "c.md", "excerpt": ""},
+        ],
+    )
+
+    # ``a.md`` (index 0 of 3) -> 1.0 - 0/3 = 1.0 ordinal fallback.
+    assert out[0] == ScoredCandidate(id="a.md", relevance=1.0)
+    assert out[1] == ScoredCandidate(id="b.md", relevance=0.2)
+    assert out[2] == ScoredCandidate(id="c.md", relevance=0.9)
+
+
+def test_all_missing_relevance_fields_use_ordinal_fallback(
+    worker_llm_transport, worker_llm_config
+):
+    # Garbage-response case: worker returns the ids but no scores. Every
+    # candidate must fall back to ordinal position, preserving input order.
+    worker_llm_transport(
+        [
+            SimpleNamespace(
+                status=200,
+                body=_ok('[{"id":"a.md"},{"id":"b.md"},{"id":"c.md"}]'),
+            )
+        ]
+    )
+
+    from spellbook.worker_llm.tasks.memory_rerank import memory_rerank
+
+    out = memory_rerank(
+        "q",
+        [
+            {"id": "a.md", "excerpt": ""},
+            {"id": "b.md", "excerpt": ""},
+            {"id": "c.md", "excerpt": ""},
+        ],
+    )
+
+    assert [o.id for o in out] == ["a.md", "b.md", "c.md"]
+    assert out[0].relevance == pytest.approx(1.0)
+    assert out[1].relevance == pytest.approx(1.0 - 1 / 3)
+    assert out[2].relevance == pytest.approx(1.0 - 2 / 3)
 
 
 # ---------------------------------------------------------------------------
