@@ -45,8 +45,6 @@ MODULE_MAP: dict[str, str] = {
     # Updates
     "spellbook.updates.tools": "spellbook.updates.tools",
     "spellbook.updates.watcher": "spellbook.updates.watcher",
-    # Experiments
-    "spellbook.experiments.ab_test": "spellbook.experiments.ab_test",
     # MCP server
     "spellbook.mcp.server": "spellbook.mcp.server",
     # Subpackages: prefix swap (order matters, longer first in sorted keys)

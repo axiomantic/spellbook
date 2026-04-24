@@ -222,45 +222,6 @@ def test_split_session_file_not_found():
 # --- Tests for _shutdown_cleanup ---
 
 
-async def _async_noop_list():
-    """Async stub returning empty list for message_bus.list_sessions()."""
-    return []
-
-
-async def _async_noop(*args, **kwargs):
-    """Async no-op stub for message_bus.unregister()."""
-    return None
-
-
-def _patch_message_bus_for_shutdown(monkeypatch):
-    """Stub the message bus and asyncio so shutdown's async cleanup is a no-op.
-
-    The shutdown() function imports message_bus and calls asyncio.run() (or
-    loop.run_until_complete()) to clean up sessions. Inside bigfoot's sandbox
-    both paths trigger socket operations that bigfoot intercepts, causing
-    spurious failures. We neutralise this by:
-      1. Stubbing message_bus with no-op async methods.
-      2. Making get_running_loop() raise RuntimeError (no loop) so the code
-         falls through to the asyncio.run() path.
-      3. Replacing asyncio.run() with a function that just closes the
-         coroutine without executing it, preventing any I/O.
-    """
-    import asyncio
-    import spellbook.messaging as _messaging_mod
-
-    _stub_bus = SimpleNamespace(list_sessions=_async_noop_list, unregister=_async_noop)
-    monkeypatch.setattr(_messaging_mod, "message_bus", _stub_bus)
-
-    def _no_loop():
-        raise RuntimeError("no running event loop")
-
-    def _fake_run(coro, **kwargs):
-        coro.close()
-
-    monkeypatch.setattr(asyncio, "get_running_loop", _no_loop)
-    monkeypatch.setattr(asyncio, "run", _fake_run)
-
-
 def test_shutdown_cleanup_stops_watchers_and_closes_connections(monkeypatch):
     """Test that _shutdown_cleanup calls stop() on watchers and close functions."""
     from spellbook import server
@@ -270,7 +231,6 @@ def test_shutdown_cleanup_stops_watchers_and_closes_connections(monkeypatch):
 
     monkeypatch.setattr(server, "_watcher", mock_watcher)
     monkeypatch.setattr(server, "_update_watcher", mock_update_watcher)
-    _patch_message_bus_for_shutdown(monkeypatch)
 
     mock_watcher_stop = bigfoot.mock.object(mock_watcher, "stop")
     mock_watcher_stop.returns(None)
@@ -299,7 +259,6 @@ def test_shutdown_cleanup_handles_none_watchers(monkeypatch):
 
     monkeypatch.setattr(server, "_watcher", None)
     monkeypatch.setattr(server, "_update_watcher", None)
-    _patch_message_bus_for_shutdown(monkeypatch)
 
     mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
     mock_close_db.returns(None)
@@ -323,7 +282,6 @@ def test_shutdown_cleanup_resilient_to_close_failures(monkeypatch):
 
     monkeypatch.setattr(server, "_watcher", None)
     monkeypatch.setattr(server, "_update_watcher", None)
-    _patch_message_bus_for_shutdown(monkeypatch)
 
     mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
     mock_close_db.raises(RuntimeError("db error"))
@@ -349,7 +307,6 @@ def test_shutdown_cleanup_watcher_stop_not_guarded(monkeypatch):
 
     monkeypatch.setattr(server, "_watcher", mock_watcher)
     monkeypatch.setattr(server, "_update_watcher", None)
-    _patch_message_bus_for_shutdown(monkeypatch)
 
     mock_watcher_stop = bigfoot.mock.object(mock_watcher, "stop")
     mock_watcher_stop.raises(RuntimeError("watcher stop error"))

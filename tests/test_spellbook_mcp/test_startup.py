@@ -106,13 +106,10 @@ class TestStartupProfiling:
         )
 
     def test_startup_times_mount_phases(self):
-        """startup() should time admin and messaging app mounts."""
+        """startup() should time admin app mount."""
         from spellbook.mcp.server import startup
 
         source = inspect.getsource(startup)
         assert '_timed("mount_admin"' in source, (
             "startup() does not time admin mount"
-        )
-        assert '_timed("mount_messaging"' in source, (
-            "startup() does not time messaging mount"
         )

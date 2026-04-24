@@ -9,7 +9,6 @@ import atexit
 import functools
 import logging
 import os
-import threading
 import time
 from typing import Any, Dict
 
@@ -19,8 +18,6 @@ from fastmcp import FastMCP
 from starlette.routing import Mount
 
 from spellbook.mcp import state
-from spellbook.messaging import message_bus
-from spellbook.messaging.sse import create_messaging_app
 
 logger = logging.getLogger(__name__)
 
@@ -158,20 +155,8 @@ def startup() -> None:
         _timed("update_watcher_start", update_watcher.start)
         state.update_watcher = update_watcher
 
-    # Preload TTS model in background (non-blocking)
-    try:
-        from spellbook.notifications import tts as tts_module
-
-        tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
-        tts_preload.start()
-    except Exception:
-        pass
-
     # Mount admin web interface
     _timed("mount_admin", _mount_admin_app)
-
-    # Mount messaging SSE sub-app
-    _timed("mount_messaging", _mount_messaging_app)
 
     logger.info("startup timings: %s", {k: f"{v:.3f}s" for k, v in timings.items()})
 
@@ -182,20 +167,6 @@ def shutdown() -> None:
         state.watcher.stop()
     if state.update_watcher is not None:
         state.update_watcher.stop()
-
-    # Clean up message bus sessions.
-    # Bypass the async lock: atexit runs after the event loop has stopped, so
-    # asyncio.run() creates a NEW loop. The lock was bound to the old loop and
-    # would raise RuntimeError. Since shutdown is single-threaded with no
-    # concurrent access, we can safely manipulate the data structures directly.
-    try:
-        for bridge in list(message_bus._bridges.values()):
-            bridge.stop()
-        message_bus._bridges.clear()
-        message_bus._sessions.clear()
-        message_bus._pending_correlations.clear()
-    except Exception:
-        logger.warning("Failed to clean up message bus sessions during shutdown", exc_info=True)
 
     try:
         from spellbook.core.db import close_all_connections
@@ -213,6 +184,12 @@ def shutdown() -> None:
         from spellbook.fractal.schema import close_all_fractal_connections
 
         close_all_fractal_connections()
+    except Exception:
+        pass
+    try:
+        from spellbook.worker_llm.client import close_all_shared_clients_sync
+
+        close_all_shared_clients_sync()
     except Exception:
         pass
 
@@ -239,18 +216,6 @@ def _mount_admin_app() -> None:
         logger.debug("Admin package not available, skipping mount")
     except Exception:
         logger.warning("Failed to mount admin interface", exc_info=True)
-
-
-def _mount_messaging_app() -> None:
-    """Mount the messaging SSE sub-app for cross-session communication."""
-    try:
-        messaging_app = create_messaging_app()
-        mcp._additional_http_routes.append(Mount("/messaging", app=messaging_app))
-        logger.info("Messaging SSE interface mounted at /messaging")
-    except ImportError:
-        logger.debug("Messaging package not available, skipping mount")
-    except Exception:
-        logger.warning("Failed to mount messaging interface", exc_info=True)
 
 
 def build_http_run_kwargs() -> Dict[str, Any]:

@@ -24,10 +24,6 @@ class WizardContext:
     available_platforms: list[str]
     cli_platforms: list[str] | None
 
-    # TTS
-    tts_disabled: bool
-    tts_already_configured: bool
-
     # Profile
     profile_already_configured: bool
     available_profiles: list[Any]
@@ -48,14 +44,10 @@ class WizardResults:
 
     - platforms: None means "not asked, use auto-detect".
       A list (even empty) means the user made an explicit selection.
-    - tts_intent: None means "not asked / already configured".
-      True means user wants TTS enabled. False means user declined or
-      --no-tts was passed.
     - profile_selection: None means "not asked / already configured".
       A slug string (e.g. "zen") means user picked a profile.
       Empty string "" means user explicitly chose "None" (no profile).
     """
 
     platforms: list[str] | None = None
-    tts_intent: bool | None = None
     profile_selection: str | None = None

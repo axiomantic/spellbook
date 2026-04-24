@@ -22,6 +22,7 @@ class Subsystem(str, Enum):
     EXPERIMENT = "experiment"
     FORGE = "forge"
     FOCUS = "focus"
+    WORKER_LLM = "worker_llm"
 
 
 @dataclass
@@ -48,6 +49,12 @@ class EventBus:
         self._dropped_counts: dict[str, int] = {}
         self._total_dropped: int = 0
         self._lock = asyncio.Lock()
+        # Daemon-vs-subprocess marker. Set to True in the FastAPI lifespan
+        # handler when the admin app boots; remains False in hook subprocesses,
+        # CLI invocations, MCP stdio workers. Consumed by
+        # ``spellbook.worker_llm.events._in_daemon_process`` to decide between
+        # in-process ``publish_sync`` and the HTTP fallback.
+        self._in_daemon: bool = False
 
     async def subscribe(self, subscriber_id: str) -> asyncio.Queue:
         """Register a subscriber and return their event queue."""

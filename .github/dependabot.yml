@@ -21,15 +21,6 @@ updates:
       daemon-core:
         patterns:
           - "*"
-        exclude-patterns:
-          - "kokoro*"
-          - "soundfile*"
-          - "sounddevice*"
-      daemon-tts:
-        patterns:
-          - "kokoro*"
-          - "soundfile*"
-          - "sounddevice*"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"

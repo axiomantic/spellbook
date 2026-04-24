@@ -45,7 +45,6 @@ class TestDomainPackages:
             "spellbook.sessions",
             "spellbook.notifications",
             "spellbook.updates",
-            "spellbook.experiments",
         ],
     )
     def test_import_domain_package(self, package):

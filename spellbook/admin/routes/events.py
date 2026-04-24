@@ -2,11 +2,15 @@
 
 Returns historical security_events so the page has data on load
 instead of waiting for live WebSocket events.
+
+The subprocess event-publish surface lives at the MCP server root
+(``POST /api/events/publish`` in ``spellbook/mcp/routes.py``) so it is covered
+by ``BearerAuthMiddleware``. See ``spellbook/worker_llm/events.py`` for the
+client side.
 """
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Query
+
 from spellbook.admin.auth import require_admin_auth
 from spellbook.admin.db import query_spellbook_db
 

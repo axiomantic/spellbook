@@ -7,10 +7,12 @@ before invoking these functions.
 QMD is accessed via CLI subprocess, NOT via MCP-to-MCP.
 """
 
+import hashlib
 import json
 import logging
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 
 from spellbook.memory.models import MemoryResult
@@ -219,7 +221,13 @@ def search_memories(
     qmd_results = qmd_query(query, rerank=rerank, limit=limit)
 
     query_terms = [t.lower() for t in query.split() if t.strip()] if query else []
-    scored: list[MemoryResult] = []
+
+    # ``pre_scored`` preserves the per-hit ``(qr.score, custom_score)`` pair so
+    # the worker-LLM rerank branch below can re-blend those components with
+    # the LLM relevance as ``(qr + custom + llm) / 3`` instead of
+    # ``(combined + llm) / 2`` (which would double-weight the QMD/custom
+    # components).
+    pre_scored: list[tuple[MemoryResult, tuple[float, float]]] = []
 
     for qr in qmd_results:
         if not os.path.exists(qr.path):
@@ -246,7 +254,138 @@ def search_memories(
         custom_score = compute_score(mf, query_terms, branch) if query_terms else 1.0
         combined_score = (qr.score + custom_score) / 2.0
         context = qr.snippet if qr.snippet else None
-        scored.append(MemoryResult(memory=mf, score=combined_score, match_context=context))
+        pre_scored.append(
+            (
+                MemoryResult(memory=mf, score=combined_score, match_context=context),
+                (qr.score, custom_score),
+            )
+        )
+
+    # D3: worker-LLM rerank composition (top-20 of the candidate pool).
+    # Gated on `worker_llm_feature_memory_rerank` AND endpoint configured
+    # (feature_enabled() enforces both). Worker failures set the shared
+    # ``_MEMORY_RECALL_ERROR`` ContextVar and otherwise fall through to the
+    # baseline scoring — never raised. Rerank sees ONLY spellbook-native
+    # hits; the claude_memory merge below happens afterwards so the LLM
+    # budget is not spent reranking claude-sourced content.
+    _apply_worker_rerank(query, query_terms, pre_scored)
+
+    scored: list[MemoryResult] = [mr for (mr, _) in pre_scored]
+
+    # D5: feature-flagged merge of Claude Code's per-project memory files.
+    # Gated on ``worker_llm_read_claude_memory`` (default False). Content-
+    # hash dedup keeps spellbook-native hits when both sources carry the
+    # same body text.
+    _merge_claude_memory(scored, query_terms, branch)
 
     scored.sort(key=lambda r: r.score, reverse=True)
     return scored[:limit]
+
+
+def _content_hash(body: str) -> str:
+    """Stable sha256 over whitespace-stripped body. Matches the dedup key."""
+    return hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
+
+
+def _merge_claude_memory(
+    scored: list[MemoryResult],
+    query_terms: list[str],
+    branch: str | None,
+) -> None:
+    """Append Claude-memory hits to ``scored`` when the feature flag is on.
+
+    Deduped by content hash so a body that already appeared via a
+    spellbook-native hit is not duplicated from the claude side. On any
+    unexpected failure inside the claude scanner, a warning is logged and
+    the function returns silently — Claude-memory is a best-effort
+    sidecar, never load-bearing.
+    """
+    # Deferred imports: keep the worker-LLM package optional at module load.
+    from spellbook.worker_llm.config import get_worker_config as _wl_get_cfg
+
+    if not _wl_get_cfg().read_claude_memory:
+        return
+
+    from spellbook.memory import claude_memory as _claude_mem
+
+    try:
+        claude_hits = _claude_mem.scan(
+            project_root=os.getcwd(),
+            query_terms=query_terms,
+            branch=branch,
+        )
+    except Exception as e:
+        logger.warning("claude_memory scan failed: %s", e)
+        return
+
+    if not claude_hits:
+        return
+
+    seen_hashes = {_content_hash(mr.memory.content) for mr in scored}
+    for mr in claude_hits:
+        h = _content_hash(mr.memory.content)
+        if h in seen_hashes:
+            # Spellbook-native already carries this content; do not
+            # double-count the claude copy.
+            continue
+        seen_hashes.add(h)
+        scored.append(mr)
+
+
+def _apply_worker_rerank(
+    query: str,
+    query_terms: list[str],
+    pre_scored: list[tuple[MemoryResult, tuple[float, float]]],
+) -> None:
+    """Mutate ``pre_scored`` entries in place with blended LLM relevance scores.
+
+    Only runs when ``worker_llm_feature_memory_rerank`` is enabled AND the
+    endpoint is configured (see ``worker_llm.config.feature_enabled``). On
+    any ``WorkerLLMError`` the entries are left untouched and a
+    ``<worker-llm-error>`` XML marker is stored in ``_MEMORY_RECALL_ERROR``
+    so the MCP tool boundary can surface it. No exception escapes.
+    """
+    # Deferred imports: avoids a hard load-time dependency on the worker-LLM
+    # package and keeps `search_qmd` importable in environments where the
+    # worker is not configured.
+    from spellbook.worker_llm import errors as _wl_errors
+    from spellbook.worker_llm.config import feature_enabled as _wl_feature_enabled
+
+    if not query_terms or not pre_scored:
+        return
+    if not _wl_feature_enabled("memory_rerank"):
+        return
+
+    # Top-20 ranked by baseline score. Hits beyond top-20 stay at baseline.
+    top_n = sorted(pre_scored, key=lambda p: p[0].score, reverse=True)[:20]
+    candidates = [
+        {"id": mr.memory.path, "excerpt": mr.memory.content[:600]}
+        for (mr, _) in top_n
+    ]
+
+    # Import lazily so callers that stub ``memory_rerank`` via monkeypatch see
+    # the patched name even when it happens after module import.
+    from spellbook.worker_llm.tasks import memory_rerank as _mr_module
+
+    try:
+        scored = _mr_module.memory_rerank(query, candidates)
+    except _wl_errors.WorkerLLMError as e:
+        marker = (
+            f"<worker-llm-error>"
+            f"<task>memory_rerank</task>"
+            f"<type>{type(e).__name__}</type>"
+            f"<message>{str(e)[:500]}</message>"
+            f"</worker-llm-error>"
+        )
+        print(f"[worker-llm] memory_rerank: {e}", file=sys.stderr)
+        # Deferred import avoids a tools.py <-> search_qmd.py cycle at load.
+        from spellbook.memory.tools import _MEMORY_RECALL_ERROR
+        _MEMORY_RECALL_ERROR.set(marker)
+        return
+
+    by_id = {s.id: s.relevance for s in scored}
+    for (mr, (qr_score, custom_score)) in top_n:
+        llm = by_id.get(mr.memory.path)
+        if llm is None:
+            continue
+        mr.score = (qr_score + custom_score + llm) / 3.0

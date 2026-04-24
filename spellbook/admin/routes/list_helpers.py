@@ -5,6 +5,8 @@ the admin-specific response envelope {items, total, page, per_page, pages}.
 """
 
 import math
+import statistics
+from typing import Optional
 
 
 def validate_sort_order(order: str) -> str:
@@ -43,3 +45,29 @@ def build_list_response(
     """
     meta = compute_pagination(total, page, per_page)
     return {"items": items, **meta}
+
+
+def percentile(sorted_xs: list[int], pct: int) -> Optional[int]:
+    """Nearest-rank percentile over a pre-sorted ascending list.
+
+    ``statistics.quantiles(n=100, method='inclusive')`` returns 99
+    cutpoints; ``pct=95`` maps to index 94. The boundary cases
+    (``pct <= 0`` and ``pct >= 100``) bypass ``quantiles`` entirely and
+    return the min / max of the sample — clamping into the cutpoint array
+    would yield the 1st / 99th percentile instead of the true extrema.
+
+    For a single sample, ``statistics.quantiles`` raises; fall back to
+    the lone value. Returns ``None`` for an empty list so callers can
+    distinguish "no data" from "genuinely 0 ms".
+    """
+    if not sorted_xs:
+        return None
+    if len(sorted_xs) == 1:
+        return sorted_xs[0]
+    if pct <= 0:
+        return int(sorted_xs[0])
+    if pct >= 100:
+        return int(sorted_xs[-1])
+    quantiles = statistics.quantiles(sorted_xs, n=100, method="inclusive")
+    idx = int(pct) - 1
+    return int(quantiles[idx])

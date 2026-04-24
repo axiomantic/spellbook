@@ -1,8 +1,6 @@
 """MCP tools for health checks."""
 
 __all__ = [
-    "spellbook_check_compaction",
-    "spellbook_context_ping",
     "spellbook_health_check",
 ]
 
@@ -12,38 +10,15 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
-from fastmcp import Context
-
 from spellbook.mcp.server import mcp
 from spellbook.mcp import state as _state
-from spellbook.sessions.compaction import (
-    check_for_compaction,
-    get_pending_context,
-    get_recovery_reminder,
-    mark_context_injected,
-)
-from spellbook.core.config import (
-    config_get,
-    get_spellbook_dir,
-    session_init,
-    session_mode_get,
-)
+from spellbook.core.config import get_spellbook_dir
 from spellbook.core.db import get_db_path
 from spellbook.health.checker import run_health_check
 from spellbook.sessions.injection import inject_recovery_context
-from spellbook.core.path_utils import get_project_path_from_context, get_spellbook_config_dir
+from spellbook.core.path_utils import get_spellbook_config_dir
 
 # Use shared state from spellbook.mcp.state for health check tracking
-
-
-def _get_session_id(ctx):
-    """Extract session_id from Context if available."""
-    if ctx is None:
-        return None
-    try:
-        return ctx.session_id
-    except RuntimeError:
-        return None
 
 
 def _get_version() -> str:
@@ -92,83 +67,6 @@ def get_tool_names() -> List[str]:
         ]
     except AttributeError:
         return []
-
-
-@mcp.tool()
-@inject_recovery_context
-async def spellbook_check_compaction(ctx: Context) -> dict:
-    """
-    Check for recent compaction events in the current session.
-
-    Scans the current project's Claude Code session file for compaction
-    markers and returns any pending context that should be recovered.
-
-    Returns:
-        {
-            "compaction_detected": bool,
-            "pending_context": dict | None,
-            "session_file": str | None
-        }
-    """
-    project_path = await get_project_path_from_context(ctx)
-
-    # Check for new compaction events
-    event = check_for_compaction(project_path)
-
-    # Get any pending context
-    pending = get_pending_context(project_path)
-
-    return {
-        "compaction_detected": event is not None,
-        "pending_context": pending,
-        "project_path": project_path,
-    }
-
-
-@mcp.tool()
-@inject_recovery_context
-async def spellbook_context_ping(ctx: Context) -> str:
-    """
-    Ping tool that checks for pending compaction recovery context.
-
-    This tool can be called periodically or after any operation to check
-    if context recovery is needed. If compaction was detected, it returns
-    a <system-reminder> with recovery context.
-
-    This is a TEST tool to validate whether <system-reminder> tags in
-    MCP tool results are honored by Claude Code.
-
-    Returns:
-        String with <system-reminder> if recovery needed, otherwise simple ack
-    """
-    project_path = await get_project_path_from_context(ctx)
-
-    # First, check for any new compaction events
-    check_for_compaction(project_path)
-
-    # Get pending context
-    pending = get_pending_context(project_path)
-
-    if pending:
-        # Get current mode info for context (use session-isolated state)
-        sid = _get_session_id(ctx)
-        mode_info = session_mode_get(sid)
-        mode_data = None
-
-        if mode_info.get('mode') in ('fun', 'tarot'):
-            # Fetch full mode info including persona
-            init_result = session_init(sid)
-            mode_data = init_result.get('mode', {})
-
-        # Generate recovery reminder
-        reminder = get_recovery_reminder(mode_data)
-
-        # Mark as injected
-        mark_context_injected(project_path)
-
-        return f"Context recovery triggered.\n\n{reminder}"
-
-    return "pong - no pending context recovery"
 
 
 @mcp.tool()

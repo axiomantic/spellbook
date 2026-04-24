@@ -17,6 +17,8 @@ import { HealthPage } from './pages/HealthPage'
 import { EventMonitorPage } from './pages/EventMonitorPage'
 import { StacksPage } from './pages/StacksPage'
 import { CorrectionsPage } from './pages/CorrectionsPage'
+import { WorkerLLMPage } from './pages/WorkerLLMPage'
+import { HooksPage } from './pages/HooksPage'
 
 function AuthGate() {
   const { authenticated, checking } = useAuth()
@@ -49,6 +51,8 @@ function AuthGate() {
             <Route path="/analytics" element={<ErrorBoundary><AnalyticsPage /></ErrorBoundary>} />
             <Route path="/health" element={<ErrorBoundary><HealthPage /></ErrorBoundary>} />
             <Route path="/events" element={<ErrorBoundary><EventMonitorPage /></ErrorBoundary>} />
+            <Route path="/worker-llm" element={<ErrorBoundary><WorkerLLMPage /></ErrorBoundary>} />
+            <Route path="/hooks" element={<ErrorBoundary><HooksPage /></ErrorBoundary>} />
             <Route path="/stacks" element={<ErrorBoundary><StacksPage /></ErrorBoundary>} />
             <Route path="/corrections" element={<ErrorBoundary><CorrectionsPage /></ErrorBoundary>} />
             <Route path="/focus" element={<Navigate to="/stacks" replace />} />

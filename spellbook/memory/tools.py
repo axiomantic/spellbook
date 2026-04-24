@@ -8,6 +8,7 @@ for hooks and REST endpoints.
 import json
 import logging
 import os
+from contextvars import ContextVar
 from typing import Any, Dict, List, Optional
 
 from spellbook.core.db import get_db_path as _get_db_path
@@ -32,6 +33,44 @@ from spellbook.memory.store import (
 from spellbook.memory.sync_pipeline import memory_sync as _run_sync_pipeline
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Worker-LLM recall-error propagation
+# ---------------------------------------------------------------------------
+#
+# ``_MEMORY_RECALL_ERROR`` ferries a ``<worker-llm-error>`` XML string from
+# deep inside ``spellbook.memory.search_qmd.search_memories`` (the rerank
+# branch) up to the MCP tool boundary (``do_memory_recall``) without
+# changing any function's return type. A ``ContextVar`` (not a module-level
+# global) is required because multiple ``memory_recall`` calls may run
+# concurrently under async MCP, and the value must be isolated per call.
+#
+# Lifecycle:
+#   1. ``do_memory_recall`` resets the ContextVar to ``None`` on entry so
+#      stale errors from a previous call cannot leak.
+#   2. ``search_memories`` sets the ContextVar when a worker rerank call
+#      raises ``WorkerLLMError``; results still come from the baseline
+#      ranking (the error is never raised out of ``search_memories``).
+#   3. ``do_memory_recall`` reads the ContextVar before returning and, when
+#      non-``None``, attaches it to the response dict under the key
+#      ``worker_llm_error``. When ``None``, the key is omitted so the
+#      orchestrator sees no field and takes no action.
+_MEMORY_RECALL_ERROR: ContextVar[str | None] = ContextVar(
+    "_MEMORY_RECALL_ERROR", default=None
+)
+
+
+def get_last_memory_recall_error() -> str | None:
+    """Public accessor for the worker-LLM recall-error marker.
+
+    Callers that want to inspect the most recent ``memory_recall`` worker
+    failure without importing the ``ContextVar`` directly use this helper.
+    Returns the ``<worker-llm-error>`` XML string that was stored by
+    ``search_memories`` during the most recent ``do_memory_recall``, or
+    ``None`` when the last recall succeeded or has not yet run.
+    """
+    return _MEMORY_RECALL_ERROR.get()
 
 
 MEMORY_STORE_SCHEMA = {
@@ -197,6 +236,11 @@ def do_memory_recall(
     Returns:
         Dict with memories list, count, query, and namespace.
     """
+    # Clear any stale worker-LLM error marker from a prior call on this
+    # task/context before delegating. Populated by
+    # ``search_qmd.search_memories`` on worker rerank failure (D7).
+    _MEMORY_RECALL_ERROR.set(None)
+
     try:
         ensure_memory_system_available()
     except MemorySystemNotAvailable as e:
@@ -243,12 +287,17 @@ def do_memory_recall(
             "match_context": r.match_context,
         })
 
-    return {
+    response: Dict[str, Any] = {
         "memories": memories,
         "count": len(memories),
         "query": query,
         "namespace": namespace,
     }
+    # D7: surface worker-LLM rerank failures without raising.
+    recall_error = _MEMORY_RECALL_ERROR.get()
+    if recall_error:
+        response["worker_llm_error"] = recall_error
+    return response
 
 
 def do_memory_forget(

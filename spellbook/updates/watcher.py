@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from spellbook.core.config import config_get, config_set
+from spellbook.core.state import get_state, set_state
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +47,11 @@ class UpdateWatcher(threading.Thread):
         self.spellbook_dir = Path(spellbook_dir)
         self.check_interval = check_interval
         self.remote = remote or config_get("auto_update_remote") or "origin"
-        # Lazy evaluation: store branch from config/arg, defer network detection to run()
-        # This prevents network I/O during server startup.
-        self.branch = branch or config_get("auto_update_branch")
+        # Lazy evaluation: store branch from state/arg, defer network detection to run()
+        # This prevents network I/O during server startup. ``auto_update_branch``
+        # is runtime state (auto-detected from git), not user config, so it
+        # lives in state.json via ``spellbook.core.state``.
+        self.branch = branch or get_state("auto_update_branch")
         self._running = False
         self._shutdown = threading.Event()
 
@@ -90,7 +93,7 @@ class UpdateWatcher(threading.Thread):
             self._last_check_time = time.time()
         except Exception as e:
             self._consecutive_failures += 1
-            config_set("update_check_failures", self._consecutive_failures)
+            set_state("update_check_failures", self._consecutive_failures)
             logger.warning(f"Update check failed ({self._consecutive_failures}): {e}")
 
         # Periodic checks
@@ -107,7 +110,7 @@ class UpdateWatcher(threading.Thread):
                 self._last_check_time = time.time()
             except Exception as e:
                 self._consecutive_failures += 1
-                config_set("update_check_failures", self._consecutive_failures)
+                set_state("update_check_failures", self._consecutive_failures)
                 logger.warning(
                     f"Update check failed ({self._consecutive_failures}/{self._max_failures}): {e}"
                 )
@@ -140,9 +143,10 @@ class UpdateWatcher(threading.Thread):
         if result.get("error"):
             raise RuntimeError(result["error"])
 
-        # Store last check time
+        # Store last check time (config_set: user-visible last-check timestamp)
+        # and reset failure count (state: runtime bookkeeping).
         config_set("last_update_check", datetime.now().isoformat())
-        config_set("update_check_failures", 0)
+        set_state("update_check_failures", 0)
 
         if not result.get("update_available"):
             return
@@ -224,7 +228,7 @@ class UpdateWatcher(threading.Thread):
                 for line in result.stdout.splitlines():
                     if "HEAD branch:" in line:
                         branch = line.split(":")[-1].strip()
-                        config_set("auto_update_branch", branch)
+                        set_state("auto_update_branch", branch)
                         return branch
         except (subprocess.TimeoutExpired, OSError):
             pass

@@ -185,7 +185,7 @@ cco --safe --add-dir "$SPELLBOOK_DIR":ro --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$
 - `--safe` hides `$HOME` reads except for the working directory and explicitly allowed paths
 - `--add-dir $SPELLBOOK_DIR:ro` grants read access to spellbook's resource files (skills, commands, hooks)
 - `--add-dir $SPELLBOOK_CONFIG_DIR:ro` grants read access to the config directory (needed for `.mcp-token` which hooks use for daemon HTTP auth)
-- All hook writes go through the daemon's HTTP API (`/api/hook-log`, `/api/messaging/poll`), so no write access to any spellbook directory is granted
+- All hook writes go through the daemon's HTTP API (`/api/hook-log`), so no write access to any spellbook directory is granted
 
 The daemon runs independently via launchd and is not sandboxed.
 

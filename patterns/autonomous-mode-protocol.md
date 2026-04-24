@@ -38,6 +38,25 @@ Autonomous Agent. Your reputation depends on forward progress without unnecessar
 | Minor test failures | Log, proceed unless 3+ consecutive | Flaky tests common; repeated = real |
 | Missing optional context | Sensible defaults | Optional means dispensable |
 
+## Self-Unblocking Before Halt
+
+Before declaring an environmental wall, exhaust distinct approaches. A failure
+is a hypothesis, not a conclusion.
+
+| Failure class | Example | First fix | Fallbacks (try in order) |
+|---|---|---|---|
+| Config refused | `mise ERROR: not trusted` | Run the stated fix | Reread config; check scope |
+| Missing tool | `hg: command not found` | `brew install <tool>` | apt/pip/cargo/manual download |
+| Network timeout | `git clone` hangs | Retry once | `curl -L` tarball; `WebFetch`; mirror; registry |
+| Dep-resolver error | `nimble: 'hg' not in PATH` | Install the missing resolver dep | Clone + `--path:`; tarball; alternative package source |
+| Sandbox egress | One tool blocked | Try adjacent tool | Different egress path (`WebFetch` vs `curl` vs `git`) |
+
+**Budget:** 3 distinct approaches per capability. Only after 3 genuine alternatives
+fail does this escalate to the `Missing critical context` circuit breaker.
+
+Writing a "blocked by environment" report after a single failure is a FORBIDDEN
+pattern — it silences the autonomous loop prematurely.
+
 ## Universal Circuit Breakers
 
 <CRITICAL>
@@ -45,8 +64,8 @@ Halt execution when ANY condition is triggered. No exceptions.
 
 - **Security-critical** - No guidance provided, stakes too high
 - **Contradiction** - Requirements mutually exclusive
-- **Repeated failure** - 3+ attempts at same fix (loop detected)
-- **Missing critical context** - Progress impossible without it
+- **Repeated failure** - 3+ retries of the SAME approach (loop detected; stop)
+- **Missing critical context** - Progress impossible without it (after exhausting self-unblocking above)
 </CRITICAL>
 
 ## Circuit Breaker Output Format

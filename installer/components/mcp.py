@@ -418,7 +418,6 @@ def _refresh_editable_install(daemon_python: Path) -> Tuple[bool, str]:
 def ensure_daemon_venv(
     spellbook_dir: Path,
     force: bool = False,
-    include_tts: bool = False,
 ) -> Tuple[bool, str]:
     """
     Create or update the daemon-dedicated venv from pyproject.toml groups.
@@ -429,7 +428,6 @@ def ensure_daemon_venv(
     Args:
         spellbook_dir: Path to spellbook installation (contains pyproject.toml).
         force: If True, always rebuild the venv even if hashes match.
-        include_tts: If True, also install TTS dependencies from the 'tts' group.
 
     Returns: (success, message)
     """
@@ -466,11 +464,7 @@ def ensure_daemon_venv(
             if stored_source != current_source:
                 source_path_changed = True
 
-    # Check if TTS was requested but not installed previously
-    tts_installed_marker = venv_dir / ".tts-installed"
-    tts_needs_install = include_tts and not tts_installed_marker.exists()
-
-    if not needs_rebuild and not tts_needs_install and not source_path_changed:
+    if not needs_rebuild and not source_path_changed:
         return (True, "Daemon venv is up to date")
 
     # Stop any running daemon before rebuilding
@@ -544,7 +538,6 @@ def ensure_daemon_venv(
         # Store pyproject hash and source-path marker
         hash_file.write_text(current_hash)
         source_path_file.write_text(current_source)
-        tts_needs_install = include_tts
 
     # Source-path refresh path: venv is otherwise fine but editable install
     # points at a stale worktree (or marker is missing). Force-reinstall
@@ -555,52 +548,7 @@ def ensure_daemon_venv(
             return (False, err)
         source_path_file.write_text(current_source)
 
-    # Install TTS deps if requested
-    if tts_needs_install:
-        success, msg = install_tts_to_daemon_venv(spellbook_dir)
-        if not success:
-            return (False, f"Daemon venv created but TTS install failed: {msg}")
-        # Mark TTS as installed
-        tts_installed_marker.touch()
-
     return (True, "Daemon venv created and dependencies installed")
-
-
-def install_tts_to_daemon_venv(spellbook_dir: Path) -> Tuple[bool, str]:
-    """
-    Install TTS dependencies from the tts dependency group in pyproject.toml.
-    """
-    daemon_python = get_daemon_python()
-    if not daemon_python.exists():
-        return (False, "Daemon venv does not exist; run ensure_daemon_venv first")
-
-    pyproject = spellbook_dir / "pyproject.toml"
-    if not pyproject.exists():
-        return (False, f"pyproject.toml not found: {pyproject}")
-
-    try:
-        result = subprocess.run(
-            [
-                "uv", "pip", "install",
-                "--python", str(daemon_python),
-                "--requirement", str(pyproject),
-                "--group", "tts",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=180,
-        )
-        if result.returncode != 0:
-            error = result.stderr.strip() or result.stdout.strip()
-            return (False, f"TTS group installation failed: {error}")
-    except FileNotFoundError:
-        return (False, "uv not found; cannot install TTS deps into daemon venv")
-    except subprocess.TimeoutExpired:
-        return (False, "TTS group installation timed out")
-    except OSError as e:
-        return (False, f"TTS group installation failed: {e}")
-
-    return (True, "TTS dependencies installed into daemon venv")
 
 
 # =============================================================================
@@ -843,19 +791,7 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
         return (True, "Would install daemon service")
 
     # Ensure daemon venv is set up with pinned deps.
-    # If TTS was previously enabled, include TTS deps in the venv build
-    # so they survive venv rebuilds (lockfile hash change).
-    include_tts = False
-    try:
-        from spellbook.core.config import config_get as _cfg_get
-        if _cfg_get("tts_enabled"):
-            include_tts = True
-    except (ImportError, Exception):
-        pass
-
-    venv_ok, venv_msg = ensure_daemon_venv(
-        spellbook_dir, force=False, include_tts=include_tts,
-    )
+    venv_ok, venv_msg = ensure_daemon_venv(spellbook_dir, force=False)
     if not venv_ok:
         return (False, f"Daemon venv setup failed: {venv_msg}")
 

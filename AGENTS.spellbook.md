@@ -75,9 +75,9 @@ Load `session-mode-init` skill for mode dispatch table and selection question. H
 
 When `resume_available: true`, load `session-resume` skill and execute `resume_boot_prompt` immediately. The skill contains resume field definitions, protocol, continuation detection, and session repairs handling.
 
-## Audio and Notification Configuration
+## Notification Configuration
 
-Load `audio-notifications` skill for TTS (Wyoming protocol) and OS notification configuration, MCP tool tables, and quick commands. Auto-loads when TTS is enabled.
+Load `audio-notifications` skill for OS notification configuration, MCP tool tables, and quick commands.
 
 ## Project Knowledge (AGENTS.md)
 
@@ -158,6 +158,32 @@ Load `branch-context` skill for `branch-context.sh` usage, stacked branch handli
 - NEVER cherry-pick only "relevant" parts or claim context limits prevent full execution
 - If a skill output is truncated, use the Task tool to have an explore agent read the full content
 - YOLO mode grants permission to ACT without asking. It does NOT grant permission to SKIP skill phases, subagent dispatch, or quality gates.
+
+### Self-Unblocking Before Declaring Constraints
+
+<CRITICAL>
+In autonomous mode, a single failure is a hypothesis, not a conclusion. Before
+declaring any environmental constraint ("sandbox blocks X", "network down",
+"tool unavailable"), try at least **3 distinct approaches** — not 3 retries
+of the same thing.
+
+Common failure → try next:
+- Config error (`mise ERROR: not trusted`) → run the fix (`mise trust`), retry
+- Missing system tool (`hg: command not found`) → install it (`brew install mercurial`)
+- Network timeout on `git clone` → retry once (transient) → `curl -L` tarball → `WebFetch` → package registry
+- `nimble install` from github fails → registry alias → manual clone + `--path:` → tarball
+- Permission/egress failure on one tool → try adjacent tools; `WebFetch` / `curl` / `git` may route differently
+
+**FORBIDDEN:** writing an "environment constraints" journal/notes entry after a
+single failure, pivoting away, and never retesting. That is not autonomous — that
+is giving up on the first "no."
+
+**Budget:** 3 distinct approaches per capability. If all 3 fail, declare the
+constraint honestly in a journal entry that enumerates what was tried.
+
+Applies to: installs, network fetches, tool invocations, auth flows, sandbox
+probes — any capability where the environment might be richer than it first appears.
+</CRITICAL>
 
 ### Shared Skill Principles
 
@@ -402,7 +428,7 @@ The following skills are referenced throughout this document. Load on demand:
 - `fun-mode`, `tarot-mode`: Session mode personas
 - `session-mode-init`: Session mode dispatch and selection question
 - `session-resume`: Resume protocol, continuation detection, session repairs
-- `audio-notifications`: TTS and OS notification configuration
+- `audio-notifications`: OS notification configuration
 - `testing-strategy`: Test tier classification, marks, batching, selection
 - `opportunity-awareness`: Artifact and knowledge gap detection
 - `branch-context`: Script usage, stacked branches, branch-relative docs

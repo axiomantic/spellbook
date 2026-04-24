@@ -1,6 +1,5 @@
 """Tests for ServiceConfig dataclass, factory functions, and ServiceManager."""
 
-import sys
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -12,9 +11,8 @@ from installer.compat import (
     ServiceConfig,
     ServiceManager,
     mcp_service_config,
-    tts_service_config,
 )
-from spellbook.core.paths import get_data_dir, get_log_dir
+from spellbook.core.paths import get_log_dir
 
 
 class TestServiceConfig:
@@ -162,80 +160,6 @@ class TestMcpServiceConfig:
             mock_get_daemon_python.assert_call(args=(), kwargs={})
             mock_get_daemon_path.assert_call(args=(), kwargs={})
             mock_which.assert_call(args=("uv",), kwargs={})
-
-
-class TestTtsServiceConfig:
-    def test_returns_service_config_defaults(self):
-        tts_venv = Path("/home/user/.local/spellbook/tts-venv")
-        config = tts_service_config(tts_venv_dir=tts_venv)
-
-        assert isinstance(config, ServiceConfig)
-        assert config.launchd_label == "com.spellbook.tts"
-        assert config.service_name == "spellbook-tts"
-        assert config.schtasks_name == "SpellbookTTS"
-        assert config.description == "Spellbook TTS Server"
-        if sys.platform == "win32":
-            assert config.executable == tts_venv / "Scripts" / "python.exe"
-        else:
-            assert config.executable == tts_venv / "bin" / "python"
-        assert config.working_directory == get_data_dir()
-        assert config.environment == {}
-        assert config.pid_file is None
-        assert config.keep_alive is True
-        assert config.health_check_port == 10200
-        assert config.health_check_host == "127.0.0.1"
-
-    def test_default_args_include_port_and_voice(self):
-        tts_venv = Path("/home/user/.local/spellbook/tts-venv")
-        config = tts_service_config(tts_venv_dir=tts_venv)
-
-        assert config.args == [
-            "-m", "wyoming_kokoro_torch",
-            "--uri", "tcp://127.0.0.1:10200",
-            "--device", "cpu",
-            "--voice", "af_heart",
-            "--data-dir", str(get_data_dir() / "tts-data"),
-        ]
-
-    def test_custom_port_device_voice(self):
-        tts_venv = Path("/home/user/.local/spellbook/tts-venv")
-        config = tts_service_config(
-            tts_venv_dir=tts_venv,
-            port=10300,
-            device="cuda",
-            voice="af_bella",
-        )
-
-        assert config.args == [
-            "-m", "wyoming_kokoro_torch",
-            "--uri", "tcp://127.0.0.1:10300",
-            "--device", "cuda",
-            "--voice", "af_bella",
-            "--data-dir", str(get_data_dir() / "tts-data"),
-        ]
-        assert config.health_check_port == 10300
-
-    def test_custom_data_dir(self):
-        tts_venv = Path("/home/user/.local/spellbook/tts-venv")
-        config = tts_service_config(
-            tts_venv_dir=tts_venv,
-            data_dir=Path("/custom/data"),
-        )
-
-        assert config.args == [
-            "-m", "wyoming_kokoro_torch",
-            "--uri", "tcp://127.0.0.1:10200",
-            "--device", "cpu",
-            "--voice", "af_heart",
-            "--data-dir", str(Path("/custom/data")),
-        ]
-
-    def test_log_paths(self):
-        tts_venv = Path("/home/user/.local/spellbook/tts-venv")
-        config = tts_service_config(tts_venv_dir=tts_venv)
-
-        assert config.log_stdout == get_log_dir() / "tts.log"
-        assert config.log_stderr == get_log_dir() / "tts.err.log"
 
 
 # ---------------------------------------------------------------------------

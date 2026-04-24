@@ -127,7 +127,7 @@ Node operations:
 - `fractal_add_node(graph_id, parent_id, node_type, text, owner?, metadata?)` -> `{node_id, graph_id, parent_id, depth, node_type, status}`
 - `fractal_update_node(graph_id, node_id, metadata)` -> merge metadata, auto-create edges
 - `fractal_mark_saturated(graph_id, node_id, reason)` -> mark branch done
-- `fractal_claim_work(graph_id, worker_id)` -> atomically claim next open node with branch affinity
+- `fractal_claim_work(graph_id, worker_id, session_id?)` -> atomically claim next open node with branch affinity; session_id links the node to the worker's chat log for replay
 - `fractal_synthesize_node(graph_id, node_id, synthesis_text)` -> mark node synthesized with local synthesis
 
 Query operations:

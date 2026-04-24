@@ -42,12 +42,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         help="Show what would be done without making changes",
     )
     parser.add_argument(
-        "--no-tts",
-        action="store_true",
-        default=False,
-        help="Disable TTS, skipping the TTS setup wizard",
-    )
-    parser.add_argument(
         "--reconfigure",
         action="store_true",
         default=False,
@@ -111,26 +105,30 @@ def run(args: argparse.Namespace) -> None:
 
     renderer = _create_renderer()
 
-    # Handle --reconfigure: run config wizard for unset keys only
+    # Handle --reconfigure: run the shared installer wizards for every
+    # prompt-registered config key. Each wizard skips its idempotency gate
+    # when --reconfigure is active so users can revisit answers.
     if getattr(args, "reconfigure", False):
         is_dry_run = getattr(args, "dry_run", False)
-        from spellbook.core.config import get_unset_config_keys, config_set
+        from spellbook.core.config import config_set
 
-        unset_keys = get_unset_config_keys()
-        if unset_keys and renderer is not None:
-            selections = renderer.render_config_wizard(unset_keys, {}, is_upgrade=False)
-            if not is_dry_run:
-                for key, value in selections.items():
-                    config_set(key, value)
+        if not is_dry_run:
+            try:
+                from installer.wizards import (
+                    run_defaults_wizard,
+                    run_worker_llm_wizard,
+                )
+            except ImportError as _exc:
+                print(f"Warning: Could not load installer wizards: {_exc}")
+            else:
+                run_defaults_wizard(args)
+                run_worker_llm_wizard(args)
 
         # Offer profile selection during reconfigure
         if renderer is not None:
             profile_config = renderer.render_profile_wizard(reconfigure=True)
             if "profile.default" in profile_config and not is_dry_run:
                 config_set("profile.default", profile_config["profile.default"])
-
-        if not unset_keys:
-            print("All config keys are already set.")
         return
 
     # Show welcome panel
@@ -149,25 +147,19 @@ def run(args: argparse.Namespace) -> None:
         renderer=renderer,
     )
 
-    # TTS setup runs after the install loop completes
-    if not getattr(args, "dry_run", False) and not getattr(args, "no_tts", False):
-        if renderer is not None:
-            tts_config = renderer.render_tts_wizard()
-            if tts_config.get("tts_enabled") is not None:
-                try:
-                    from spellbook.core.config import config_set as _cfg_set
-                    _cfg_set("tts_enabled", tts_config["tts_enabled"])
-                except ImportError:
-                    pass
-            if tts_config.get("tts_install"):
-                try:
-                    from installer.components.mcp import install_tts_to_daemon_venv
-                    success, _msg = install_tts_to_daemon_venv(spellbook_dir)
-                    if success:
-                        from spellbook.core.config import config_set as _cfg_set
-                        _cfg_set("tts_enabled", True)
-                except (ImportError, Exception):
-                    pass
+    # Defaults wizard for previously never-prompted keys (notify_*,
+    # auto_update, session_mode). Idempotent: each key is skipped when
+    # already explicitly set unless --reconfigure is active.
+    if not getattr(args, "dry_run", False):
+        from installer.wizards import run_defaults_wizard
+        run_defaults_wizard(args)
+
+    # Worker LLM endpoint wizard (optional; default OFF so existing users
+    # see zero behavior change). Skipped under --dry-run and on non-tty stdin
+    # (CI, piped installs) so the installer never blocks.
+    if not getattr(args, "dry_run", False):
+        from installer.wizards import run_worker_llm_wizard
+        run_worker_llm_wizard(args)
 
     # Memory system setup (QMD + Serena)
     if not getattr(args, "dry_run", False):
@@ -204,7 +196,7 @@ def run(args: argparse.Namespace) -> None:
                             + " (continuing without memory system)"
                         )
 
-    # Profile selection runs after TTS
+    # Profile selection
     if not getattr(args, "dry_run", False):
         if renderer is not None:
             profile_config = renderer.render_profile_wizard()
@@ -253,3 +245,19 @@ def run(args: argparse.Namespace) -> None:
         else:
             print("Installation completed with errors.", file=sys.stderr)
             sys.exit(1)
+
+
+# ---------------------------------------------------------------------------
+# Worker LLM wizard -- thin shim preserved for backward compatibility with
+# tests and external callers. Logic lives in installer.wizards.worker_llm
+# so both this entry path and the root install.py share a single prompt
+# implementation.
+# ---------------------------------------------------------------------------
+
+
+def _run_worker_llm_wizard() -> None:
+    """Backward-compat wrapper delegating to the shared wizard."""
+    from installer.wizards import run_worker_llm_wizard
+    run_worker_llm_wizard(None)
+
+

@@ -7,6 +7,263 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-04-22
+
+### Added
+
+- **Worker LLM** (opt-in, fully feature-flagged, all flags default OFF):
+  first direct LLM integration in spellbook, targeting cheap
+  OpenAI-compatible local endpoints (Ollama, vllm-mlx, LM Studio, etc.)
+  for passive/augmentation tasks. Capabilities each gate independently:
+  transcript-harvesting memory on the Stop hook (replace/merge/skip
+  modes); PreToolUse safety sniff with fail-open on worker outage and
+  a persistent on-disk block cache; memory rerank composition inside
+  `memory_recall`; optional Claude-memory read-side merge via a new
+  `claude_memory` scanner and schema translator.
+- **`forge_roundtable_convene_local` MCP tool** (async) for
+  worker-LLM-powered roundtable execution without orchestrator tokens.
+- **`spellbook worker-llm doctor` CLI** probes config, transport,
+  prompts, safety cache, event publish path, and feature flags.
+- **Shared installer wizards** under `installer/wizards/`: `worker_llm`
+  for the new subsystem, `defaults` covering 7 previously-unprompted
+  config keys (`notify_*`, `auto_update`, `session_mode`,
+  `profile.default`). Both install entry paths (root `install.py` and
+  `spellbook/cli/commands/install.py`) now share the same wizards;
+  previously they had drifted. `--reconfigure` bypasses the
+  `config_is_explicitly_set` idempotency gate.
+- **`profile.default` CONFIG_SCHEMA entry** (was invisible to the admin
+  UI before).
+- **Hybrid event transport**: in-daemon publishes use in-process
+  `EventBus.publish`; subprocess callers POST to root
+  `/api/events/publish` with bearer auth. Resolves events dropped when
+  emitted from hook subprocesses.
+- **Worker-prompt overrides**: four default prompts ship in the wheel
+  and are overrideable via `~/.local/spellbook/worker_prompts/<task>.md`
+  with a breadcrumb README.
+- **`tests/conftest.py` autouse fixture** that isolates
+  `worker_llm_*` config reads from the developer's real environment,
+  preventing the "passes locally, fails for others" class of bug.
+- **`fractal_claim_work(..., session_id=)`** parameter, documented in
+  the skill, command, and mirrored docs. Enables linking a claimed node
+  to the worker's chat log for replay in the admin UI.
+- **AGENTS.md "Adding Config Options" section** with the three-point
+  rule: prompt new users, prompt existing users on reinstall if still
+  unset, never re-prompt once answered.
+- **Pre-commit hook (`check-admin-frontend`)** staged for a future
+  admin-frontend lint+typecheck path; currently inert.
+
+### Changed
+
+- **Bigfoot-only mocking rule hardened** in AGENTS.md and
+  `.gemini/styleguide.md`. Rewrites the mocking section to document
+  the register -> sandbox -> assert paradigm and the three guarantees.
+  Narrows the `monkeypatch` allowlist to env vars, cwd, and sys.path
+  only. Replaces fabricated plugin names (`bigfoot.database`,
+  `bigfoot.socket`, `bigfoot.patch`, `@bigfoot.mock` decorator) with
+  the real API surface from bigfoot 0.19.2. Documents
+  `bigfoot.db_mock` as a state-machine plugin with step sentinels and
+  `assert_*` methods. Adds explicit forbidden/allowed reviewer phrasings
+  so automated reviewers cannot suggest `monkeypatch` or fabricated
+  APIs without the guidance catching it.
+- **All worker_llm test files migrated to bigfoot**
+  (`test_config.py`, `test_events.py`, `test_events_publish_route.py`,
+  `test_transcript_harvest.py`). `unittest.mock` usage eliminated from
+  the worker_llm test suite. Non-callable `monkeypatch.setattr` uses
+  on module state (bool flags, Path constants, int counters) retained
+  — they fall outside the bigfoot mocking paradigm. One narrow
+  `monkeypatch` carve-out in `test_transcript_harvest.py` documents a
+  bigfoot `SocketPlugin` / `asyncio.run()` interaction limitation at
+  bigfoot 0.19.2.
+
+### Removed
+
+- **TTS subsystem** (breaking change): `spellbook/tts/` (~6000 lines),
+  `tts_speak`/`tts_status`/`tts_session_set`/`tts_config_set` MCP
+  tools, the TTS installer wizard, the `--no-tts` install flag,
+  daemon-venv provisioning for sounddevice/wyoming, the
+  `tts_enabled`/`tts_voice`/`tts_volume` config keys, the `[tts]`
+  optional dependency, PortAudio CI install, sounddevice/wyoming deps,
+  11 TTS-only test files. The `audio-notifications` skill now covers
+  only OS notifications.
+- **MCP tool surface pruned from 96 to 65 tools** (breaking change,
+  −27 tools):
+  - Deleted unused domains: `messaging` (8 tools, 0 callers),
+    `experiments` (7 tools, 0 callers). Domain modules in
+    `spellbook/messaging/` and `spellbook/experiments/` also removed.
+  - Deleted dead tools: `spellbook_check_compaction`,
+    `spellbook_context_ping`, `analyze_skill_usage`,
+    `spellbook_analytics_summary`, `spellbook_inject_test_reminder`.
+  - Removed telemetry MCP triad: `spellbook_telemetry_enable`,
+    `spellbook_telemetry_disable`, `spellbook_telemetry_status`.
+  - Deleted `forge_roundtable_debate` and `forge_select_skill`
+    (0 callers).
+  - Deleted `forge_feature_update` and
+    `forge_process_roundtable_response` (0 callers — neither
+    referenced from any skill, command, doc, or OpenCode extension).
+    Underlying library functions retained in `spellbook/forged/`
+    because they still have internal callers.
+- **`render_config_wizard` stub** and a `WIZARD_CONFIG_KEYS` key-name
+  drift in the installer.
+- **TTS-related dependabot groups** (kokoro, soundfile, sounddevice);
+  `daemon-core` simplified to a catch-all.
+
+### Fixed
+
+- **`ContextVar _MEMORY_RECALL_ERROR`** surfaces worker failures to
+  `memory_recall` callers without raising, preserving the contract
+  that `memory_recall` never fails hard.
+- **Hook subprocess event publish path**: subprocess-originated events
+  (e.g., from hook scripts) previously dropped silently; now routed
+  through `/api/events/publish` with bearer auth.
+- **CI `python-tests` job**: removed the now-invalid
+  `uv sync --group tts` and the PortAudio system-install step left
+  behind after the TTS removal.
+- **Windows CI failure in `test_memory_integration.py`**: the rerank
+  mock response was built via f-string interpolation of a
+  `pathlib.Path`, so Windows temp paths (`C:\Users\runneradmin\...`)
+  embedded raw backslashes that were rejected as invalid JSON escape
+  sequences. Switched the three affected construction sites to
+  `json.dumps(...)` so paths round-trip cleanly on every platform.
+
+### Breaking Changes
+
+- **TTS removed.** Any user or extension that called `tts_speak`,
+  `tts_status`, `tts_session_set`, or `tts_config_set` must adapt. The
+  `[tts]` extra, `--no-tts` install flag, and
+  `tts_enabled`/`tts_voice`/`tts_volume` config keys no longer exist.
+- **27 MCP tools removed.** Callers of the messaging domain,
+  experiments domain, telemetry triad, `forge_roundtable_debate`,
+  `forge_select_skill`, `forge_feature_update`,
+  `forge_process_roundtable_response`, and the dead utility tools
+  listed under "Removed" must migrate or drop those calls.
+
+### Track 6: Worker LLM Observability
+
+- **`worker_llm_calls` SQLite-backed rolling log** records every worker
+  LLM call for operator introspection. Writes happen fire-and-forget
+  from two paths: `publish_call` on the in-daemon publish path and the
+  `/api/events/publish` route handler on the subprocess path. Writes
+  are sync SQLAlchemy, wrapped in best-effort try/except with
+  first-failure-loud logging so a DB hiccup never interrupts a
+  worker call but also never fails silently forever.
+- **First Alembic migration for the spellbook DB**
+  (`0001_add_worker_llm_calls`). `alembic.ini` was wired up with
+  `version_locations` for per-DB subdirectories so
+  `alembic upgrade -x db=spellbook` now actually applies migrations to
+  the live DB. Prior to this change the spellbook DB had no migration
+  history path even though the Alembic scaffolding existed.
+- **`tool_safety` fail-open path unified.** The prompt-load
+  short-circuit that previously emitted via `publish_fail_open` now
+  goes through `publish_call(status='fail_open')`, which routes to a
+  new `call_fail_open` event_type inside `publish_call`'s routing
+  logic. This makes fail-open events visible to the new admin
+  dashboard alongside successes and errors. The `publish_fail_open`
+  helper itself is left in place for a post-audit cleanup pass.
+- **Admin API**: `GET /api/worker-llm/calls` (paginated, filterable
+  list) and `GET /api/worker-llm/metrics` (success rate, p95, p99,
+  error breakdown, total).
+- **Admin page `/admin/worker-llm`** with `WorkerLLMPage`,
+  `MetricCard`, `ErrorBreakdownCard`, React Query hooks
+  `useWorkerLLMCalls` + `useWorkerLLMMetrics`, and a Sidebar nav link
+  "// WORKER LLM CALLS".
+- **Background tasks registered in the daemon lifespan**:
+  `purge_loop` (batched `DELETE ... LIMIT 500`, fresh session per
+  batch, enforces `retention_hours` + `max_rows` caps) and
+  `threshold_eval_loop` (edge-triggered desktop notifications via the
+  existing `notifications.notify.send_notification` when the success
+  rate drops below threshold over the last N calls; recovery
+  notification fires on return to healthy).
+- **Seven new `CONFIG_SCHEMA` / `CONFIG_DEFAULTS` keys**:
+  `worker_llm_observability_retention_hours` (24),
+  `worker_llm_observability_max_rows` (10000),
+  `worker_llm_observability_purge_interval_seconds` (300),
+  `worker_llm_observability_notify_enabled` (false),
+  `worker_llm_observability_notify_threshold` (0.8),
+  `worker_llm_observability_notify_window` (20),
+  `worker_llm_observability_notify_eval_interval_seconds` (60).
+- **`spellbook worker-llm doctor` extended** with an observability
+  health check: reports `worker_llm_calls` table presence and row
+  count, last-row timestamp, last-purge timestamp, and notification
+  subsystem reachability.
+
+### Track 7: Async Queue, Warm Probe, Hook Observability, Config Audit
+
+- **Async worker queue** (opt-in): bounded `asyncio.Queue` with a daemon
+  consumer task and drop-oldest overflow semantics. New
+  `POST /api/worker-llm/enqueue` endpoint colocated with
+  `/api/events/publish` at the MCP root. Fire-and-forget worker-LLM paths
+  (transcript_harvest and the new tool_safety warm probe) enqueue when
+  `worker_llm_queue_enabled=True` and fall back to the sync call
+  otherwise. Each overflow drop publishes a `call` event with
+  `status="dropped"` so queue pressure is observable in the admin UI.
+  Two config keys: `worker_llm_queue_enabled` (default False) and
+  `worker_llm_queue_max_depth` (default 256).
+- **Warm probe for tool_safety** (PreToolUse): when the last successful
+  worker-LLM call is older than `worker_llm_tool_safety_cold_threshold_s`
+  (default 45s), the PreToolUse path skips the sniff (fail-open) and
+  kicks off a background warmup enqueue. Prevents cold-start latency
+  from stalling tool invocations while keeping the worker primed.
+- **Hook execution observability**: new `hook_events` SQLite table (one
+  row per dispatcher invocation) plus `/api/hooks/record`,
+  `/api/hooks/events`, and `/api/hooks/metrics` endpoints. New
+  `/admin/hooks` page renders metric cards (p50/p95 duration, success
+  rate, recent event count) and a filterable event table. Retention
+  governed by three config keys (`hook_observability_retention_hours`,
+  `hook_observability_max_rows`,
+  `hook_observability_purge_interval_seconds`) matching the worker-LLM
+  observability shape.
+- **Admin config page now exposes 23 previously-hidden keys** (`fun_mode`,
+  `persona`, `security.spotlighting.*`, `security.crypto.*`,
+  `security.sleuth.*`, `security.lodo.*`). Schema entries grouped by
+  dotted prefix so the admin UI can render collapsible sections. New
+  `secret: True` schema flag masks values in `GET /api/config`
+  responses; applied to `security.sleuth.api_key` and now also
+  `worker_llm_api_key`. PUT handlers treat an incoming `"***"` on a
+  secret key as a no-op for that key so a whole-config echo from the
+  frontend cannot overwrite the real stored secret with the mask.
+- **Runtime state file** `~/.local/spellbook/state.json` separated from
+  `spellbook.json` to keep user-chosen config distinct from
+  daemon-authored runtime state. Currently carries
+  `update_check_failures` and `auto_update_branch`. A one-shot migration
+  at `session_init` moves any legacy values out of `spellbook.json`.
+- **`spellbook.json` dead keys removed**: `tts_enabled`, `tts_volume`,
+  `telemetry_enabled`. The TTS subsystem was removed earlier in 0.54.0
+  but these keys lingered in the schema; the migration also drops them
+  from existing config files on first session_init.
+- **Worker-LLM call `status` vocabulary normalized** to
+  `{success, error, timeout, fail_open, dropped}` at the client publish
+  site. Previously the client emitted raw `"ok"` and exception-class
+  names (`"TimeoutError"`, `"ConnectionError"`, ...), which broke the
+  admin-UI aggregate metrics, the threshold notifier, and the warm-probe
+  "last success" calculation.
+- **Background offload for observability writes**: shared
+  `_spawn_background` helper in `spellbook/worker_llm/events.py` that
+  runs a callable via `loop.run_in_executor` when an event loop is
+  active and falls back to a direct sync call otherwise. Applied to
+  `record_call` inside `publish_call` (daemon path) and to
+  `record_hook_event` inside the `/api/hooks/record` route so the
+  daemon event loop is never blocked on SQLite writer-lock contention.
+- **Count-cap purge rewrite** in both
+  `spellbook/worker_llm/observability.py` and
+  `spellbook/hooks/observability.py`: replaces
+  `DELETE ... WHERE id NOT IN (SELECT id ... LIMIT max_rows)` with an
+  inlined scalar subquery `id <= (SELECT id ORDER BY id DESC OFFSET
+  max_rows LIMIT 1)`. SQLite's support for LIMIT inside IN/NOT IN
+  subqueries is compile-time optional, and the old pattern was O(N*M)
+  because the keep-set was re-evaluated per batch. The new shape uses
+  `IN` (always supported) against an indexed PK scan and terminates
+  naturally when the OFFSET returns NULL.
+- **`session_mode` config validation**: `_validate_config_value` now
+  rejects values outside `{fun, tarot, none}` so an admin UI typo cannot
+  land an invalid persisted mode. Mirrors the existing
+  `worker_llm_transcript_harvest_mode` guard.
+- **`ConfigField` value resync**: `spellbook/admin/frontend/src/pages/ConfigEditor.tsx`
+  now resyncs the local `editValue` state via `useEffect` when the
+  `value` prop changes externally (e.g., after a successful save
+  refetches config, or when the user cancels an edit). Previously the
+  field remained frozen on its first-mount value until the component
+  unmounted.
+
 ## [0.53.1] - 2026-04-18
 
 ### Fixed

@@ -1,6 +1,6 @@
 """Tests for spellbook.mcp.tools modules.
 
-Verifies that all 13 tool modules are importable and each contains
+Verifies that all tool modules are importable and each contains
 @mcp.tool()-decorated functions.
 """
 
@@ -18,7 +18,6 @@ TOOL_MODULES = [
     "spellbook.mcp.tools.forged",
     "spellbook.mcp.tools.fractal",
     "spellbook.mcp.tools.coordination",
-    "spellbook.mcp.tools.experiments",
     "spellbook.mcp.tools.notifications",
     "spellbook.mcp.tools.updates",
     "spellbook.mcp.tools.misc",
@@ -26,7 +25,7 @@ TOOL_MODULES = [
 
 
 class TestToolModulesImportable:
-    """Test that all 13 tool modules are importable."""
+    """Test that all tool modules are importable."""
 
     @pytest.mark.parametrize("module_name", TOOL_MODULES)
     def test_module_importable(self, module_name):

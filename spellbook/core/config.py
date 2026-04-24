@@ -21,18 +21,63 @@ logger = logging.getLogger(__name__)
 # Built-in defaults for config keys. config_get returns these when a key is
 # absent from the user's spellbook.json config file. Adding an entry here
 # means the key has a well-known default that callers can rely on.
+# Canonical session-mode vocabulary. Session mode controls which session-level
+# persona/mode is active ("fun", "tarot", or off). Centralized here so the
+# admin PATCH validator, the installer defaults wizard, and ``session_mode_set``
+# cannot drift apart on spelling or membership. Ordering is not significant to
+# validation; the installer wizard presents its own display order.
+SESSION_MODES: tuple[str, ...] = ("fun", "tarot", "none")
+
+
 CONFIG_DEFAULTS: dict[str, Any] = {
     "memory.auto_recall": True,
     "memory.auto_store": True,
+    # Default session profile slug (empty string = no profile). Kept in
+    # CONFIG_DEFAULTS so session_init's ``config_get("profile.default")``
+    # never raises KeyError on fresh installs.
+    "profile.default": "",
+    # worker_llm: 14 flat keys. All feature flags default False (opt-in).
+    # Matches CONFIG_SCHEMA in spellbook/admin/routes/config.py.
+    "worker_llm_base_url": "",
+    "worker_llm_model": "",
+    "worker_llm_api_key": "",
+    "worker_llm_timeout_s": 10.0,
+    "worker_llm_max_tokens": 1024,
+    "worker_llm_tool_safety_timeout_s": 1.5,
+    "worker_llm_transcript_harvest_mode": "replace",
+    "worker_llm_allow_prompt_overrides": True,
+    "worker_llm_read_claude_memory": False,
+    "worker_llm_feature_transcript_harvest": False,
+    "worker_llm_feature_roundtable": False,
+    "worker_llm_feature_memory_rerank": False,
+    "worker_llm_feature_tool_safety": False,
+    "worker_llm_safety_cache_ttl_s": 300,
+    # worker_llm observability (design §7). Consumed by the purge loop and
+    # edge-triggered threshold notifier via single-arg config_get(key); missing
+    # defaults would make config_get return None and crash the int/float casts
+    # in observability.py.
+    "worker_llm_observability_retention_hours": 24,
+    "worker_llm_observability_max_rows": 10000,
+    "worker_llm_observability_purge_interval_seconds": 300,
+    "worker_llm_observability_notify_enabled": False,
+    "worker_llm_observability_notify_threshold": 0.8,
+    "worker_llm_observability_notify_window": 20,
+    "worker_llm_observability_notify_eval_interval_seconds": 60,
+    # worker_llm async queue (fire-and-forget) and warm probe thresholds.
+    # Schema entries live in spellbook/admin/routes/config.py alongside the
+    # other worker_llm keys; defaults are co-located here so config_get does
+    # not return None for opt-in / threshold values the consumer integer/
+    # float-casts.
+    "worker_llm_queue_enabled": False,
+    "worker_llm_queue_max_depth": 256,
+    "worker_llm_tool_safety_cold_threshold_s": 45.0,
+    # Hook observability. Consumed by the purge loop via single-arg
+    # config_get(key); missing defaults would make config_get return None and
+    # crash the int casts in spellbook/hooks/observability.py.
+    "hook_observability_retention_hours": 24,
+    "hook_observability_max_rows": 50000,
+    "hook_observability_purge_interval_seconds": 300,
 }
-
-
-# Wizard-relevant config keys. Used by get_unset_config_keys() to determine
-# which keys to prompt for during installation.
-WIZARD_CONFIG_KEYS: list[str] = [
-    "tts.enabled",
-    "tts.voice",
-]
 
 
 def config_is_explicitly_set(key: str) -> bool:
@@ -57,14 +102,17 @@ def config_is_explicitly_set(key: str) -> bool:
         return False
 
 
-def get_unset_config_keys(keys: list[str] = WIZARD_CONFIG_KEYS) -> list[str]:
+def get_unset_config_keys(keys: list[str]) -> list[str]:
     """Return the subset of keys not yet explicitly set in spellbook.json.
 
-    Preserves input order.
+    Preserves input order. This is a generic helper consumed by callers
+    that know which keys they care about; it does not carry an opinion
+    about the "install wizard key set" (that lived in the previous
+    ``WIZARD_CONFIG_KEYS`` constant, which was removed in favor of
+    per-wizard opinions in ``installer/wizards/*``).
 
     Args:
-        keys: List of dotted config key strings to check. Defaults to
-              WIZARD_CONFIG_KEYS.
+        keys: List of config key strings to check.
 
     Returns:
         Keys from the input list for which config_is_explicitly_set() is False.
@@ -164,11 +212,8 @@ def _get_session_state(session_id: Optional[str] = None) -> dict:
     sid = session_id or DEFAULT_SESSION_ID
     _session_activity[sid] = datetime.now()
     if sid not in _session_states:
-        _session_states[sid] = {"mode": None, "tts": {}, "notify": {}}
-    # Ensure tts key exists for sessions created before TTS feature
+        _session_states[sid] = {"mode": None, "notify": {}}
     state = _session_states[sid]
-    if "tts" not in state:
-        state["tts"] = {}
     # Ensure notify key exists for sessions created before notification feature
     if "notify" not in state:
         state["notify"] = {}
@@ -448,7 +493,7 @@ def session_mode_set(
     Returns:
         Dict with status and current mode state
     """
-    if mode not in ("fun", "tarot", "none"):
+    if mode not in SESSION_MODES:
         return {"status": "error", "message": f"Invalid mode: {mode}. Use 'fun', 'tarot', or 'none'."}
 
     session_state = _get_session_state(session_id)
@@ -495,113 +540,9 @@ def session_mode_get(session_id: Optional[str] = None) -> dict:
         return {"mode": None, "source": "unset", "permanent": False}
 
 
-# TTS defaults (used when neither session nor config has a value)
-TTS_DEFAULT_ENABLED = True
-TTS_DEFAULT_VOICE = ""               # Empty = use Wyoming server default
-TTS_DEFAULT_VOLUME = 0.3
-WYOMING_DEFAULT_HOST = "127.0.0.1"
-WYOMING_DEFAULT_PORT = 10200
-
 # Notification defaults (used when neither session nor config has a value)
 NOTIFY_DEFAULT_ENABLED = True
 NOTIFY_DEFAULT_TITLE = "Spellbook"
-
-
-def tts_session_set(
-    enabled: bool = None,
-    voice: str = None,
-    volume: float = None,
-    session_id: Optional[str] = None,
-) -> dict:
-    """Set TTS overrides for this session (not persisted to config).
-
-    Pass only the settings you want to change. Omitted settings keep
-    their current value.
-
-    Args:
-        enabled: Enable/disable TTS for this session
-        voice: Override voice for this session
-        volume: Override volume for this session (0.0-1.0)
-        session_id: Session identifier for multi-session isolation.
-                    If None, uses default session for backward compatibility.
-
-    Returns:
-        Dict with status and current session TTS overrides
-    """
-    session_state = _get_session_state(session_id)
-    tts_state = session_state["tts"]
-
-    if enabled is not None:
-        tts_state["enabled"] = enabled
-    if voice is not None:
-        tts_state["voice"] = voice
-    if volume is not None:
-        tts_state["volume"] = volume
-
-    return {"status": "ok", "session_tts": dict(tts_state)}
-
-
-def tts_session_get(session_id: Optional[str] = None) -> dict:
-    """Get effective TTS settings with resolution: session > config > defaults.
-
-    Each setting is resolved independently. For example, voice may come
-    from session while volume comes from config and enabled from defaults.
-
-    Does NOT check Wyoming server availability. This is the settings layer only.
-
-    Args:
-        session_id: Session identifier for multi-session isolation.
-                    If None, uses default session for backward compatibility.
-
-    Returns:
-        Dict with effective enabled, voice, volume and their sources
-    """
-    session_state = _get_session_state(session_id)
-    tts_state = session_state["tts"]
-
-    # Resolve each setting: session > config > default
-    result = {}
-
-    # enabled
-    if "enabled" in tts_state:
-        result["enabled"] = tts_state["enabled"]
-        result["source_enabled"] = "session"
-    else:
-        config_val = config_get("tts_enabled")
-        if config_val is not None:
-            result["enabled"] = config_val
-            result["source_enabled"] = "config"
-        else:
-            result["enabled"] = TTS_DEFAULT_ENABLED
-            result["source_enabled"] = "default"
-
-    # voice
-    if "voice" in tts_state:
-        result["voice"] = tts_state["voice"]
-        result["source_voice"] = "session"
-    else:
-        config_val = config_get("tts_voice")
-        if config_val is not None:
-            result["voice"] = config_val
-            result["source_voice"] = "config"
-        else:
-            result["voice"] = TTS_DEFAULT_VOICE
-            result["source_voice"] = "default"
-
-    # volume
-    if "volume" in tts_state:
-        result["volume"] = tts_state["volume"]
-        result["source_volume"] = "session"
-    else:
-        config_val = config_get("tts_volume")
-        if config_val is not None:
-            result["volume"] = config_val
-            result["source_volume"] = "config"
-        else:
-            result["volume"] = TTS_DEFAULT_VOLUME
-            result["source_volume"] = "default"
-
-    return result
 
 
 def notify_session_set(
@@ -778,35 +719,11 @@ def _get_repairs() -> list[dict]:
         message: Human-readable description
         fix_command: Command the user can run to fix the issue
 
-    Uses a blocking socket probe to check Wyoming TTS server connectivity
-    when TTS is enabled. This function is called from sync context
-    (session_init), so blocking I/O is acceptable here.
+    Called from sync context (session_init). Currently returns an empty
+    list; retained so callers of session_init can rely on a stable shape
+    and future repairs can be added without another signature change.
     """
-    repairs = []
-
-    # Check TTS: enabled but Wyoming server unreachable
-    tts_enabled = config_get("tts_enabled")
-    if tts_enabled is True:
-        try:
-            import socket
-            host = config_get("tts_wyoming_host") or WYOMING_DEFAULT_HOST
-            port = config_get("tts_wyoming_port") or WYOMING_DEFAULT_PORT
-            s = socket.create_connection((host, port), timeout=2.0)
-            s.close()
-        except (OSError, socket.timeout):
-            repairs.append({
-                "id": "tts-server-unreachable",
-                "severity": "warning",
-                "message": f"TTS enabled but Wyoming server not reachable at {host}:{port}",
-                "fix_command": (
-                    "Start a Wyoming TTS server (e.g., wyoming-piper or wyoming-kokoro) "
-                    f"listening on {host}:{port}"
-                ),
-            })
-        except Exception:
-            logger.debug("TTS availability check failed", exc_info=True)
-
-    return repairs
+    return []
 
 
 def _regenerate_memory_md(project_path: Optional[str]) -> None:
@@ -860,6 +777,17 @@ def session_init(
         - resume_available: bool
         - resume_* fields if resume is available
     """
+    # One-shot migration: strip dead config keys and move runtime state into
+    # state.json. Safe to run every time; no-op once migrated. Kept inside
+    # session_init (not at import time) so the file I/O only happens when an
+    # LLM assistant actually starts a session, never during `python -c` smoke
+    # tests or when the config module is imported by unrelated tooling.
+    try:
+        from spellbook.core.state import migrate_config_to_state
+        migrate_config_to_state()
+    except Exception:  # pragma: no cover - migration must never block init
+        logger.exception("spellbook.json migration raised; continuing")
+
     # Validate and store platform
     if platform is not None and platform not in VALID_PLATFORMS:
         logger.warning("Unknown platform '%s', accepting as-is", platform)

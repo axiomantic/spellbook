@@ -5,13 +5,14 @@ Single Python script handling all hook events. Dispatches to handler
 functions based on hook_event_name and tool_name from stdin JSON.
 
 Replaces all individual shell hooks (bash-gate.sh, spawn-guard.sh,
-state-sanitize.sh, tts-timer-start.sh, audit-log.sh, canary-check.sh,
-memory-inject.sh, notify-on-complete.sh, tts-notify.sh, memory-capture.sh,
+state-sanitize.sh, notify-timer-start.sh, audit-log.sh, canary-check.sh,
+memory-inject.sh, notify-on-complete.sh, memory-capture.sh,
 pre-compact-save.sh, post-compact-recover.sh).
 """
 
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -25,6 +26,14 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from xml.sax.saxutils import escape as _xml_escape
+
+# DEBUG-level logger for best-effort silent-except paths. Python's default
+# logging handler only emits WARNING and above, so DEBUG messages are a
+# no-op unless an operator explicitly configures logging (e.g., via
+# ``PYTHONLOGLEVEL=DEBUG``). This keeps the normal hook run quiet while
+# leaving a trail for investigations.
+logger = logging.getLogger("spellbook.hook")
 
 
 # ---------------------------------------------------------------------------
@@ -168,8 +177,16 @@ def _log_hook_error(event: str, tool: str, exc: BaseException) -> None:
         print(f"[spellbook-hook] Error in {event}:{tool}:\n{tb}", file=sys.stderr)
 
 
+_pending_emitter_threads: list[threading.Thread] = []
+
+
 def _fire_and_forget(fn, *args):
-    """Run a function in a daemon thread (dies with process)."""
+    """Run a function in a daemon thread (dies with process).
+
+    The thread is tracked in ``_pending_emitter_threads`` so ``main()`` can
+    drain outstanding emitters with a short aggregate timeout before exit —
+    otherwise the hook's ``sys.exit`` can race the POST and drop the record.
+    """
 
     def _wrapper():
         try:
@@ -178,7 +195,30 @@ def _fire_and_forget(fn, *args):
             _log_hook_error("fire_and_forget", fn.__name__, e)
 
     t = threading.Thread(target=_wrapper, daemon=True)
+    _pending_emitter_threads.append(t)
     t.start()
+
+
+def _drain_pending_emitters(deadline_s: float = 1.0) -> None:
+    """Best-effort wait for outstanding fire-and-forget threads.
+
+    Joins each thread with a shrinking slice of ``deadline_s``. If the
+    budget is exhausted before every thread finishes, the remaining ones
+    stay daemonic and die with the process — same behavior as before the
+    drain, no worse. The goal is to give fast, localhost emitters the
+    ~10-50ms they need to flush WITHOUT materially slowing down the hook
+    perceptibly when everything is healthy.
+
+    Never raises: a thread that raised its own exception has already been
+    logged via ``_log_hook_error`` inside ``_wrapper``.
+    """
+    deadline = time.monotonic() + deadline_s
+    for t in _pending_emitter_threads:
+        remaining = max(0.0, deadline - time.monotonic())
+        if remaining <= 0:
+            break
+        t.join(timeout=remaining)
+    _pending_emitter_threads.clear()
 
 
 def _fallback_directive() -> dict:
@@ -268,7 +308,7 @@ def _send_os_notification(title: str, body: str) -> None:
         pass
 
 
-# Excluded tools for notifications and TTS (high-frequency, fast tools)
+# Excluded tools for notifications (high-frequency, fast tools)
 _EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
@@ -379,10 +419,9 @@ def _gate_state_sanitize(data: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def _record_tool_start(tool_name: str, data: dict) -> None:
-    """Record tool start time for TTS/notification thresholds.
+    """Record tool start time for notification thresholds.
 
-    Writes current Unix timestamp to two files:
-    - {tempdir}/claude-tool-start-{tool_use_id} (for TTS)
+    Writes current Unix timestamp to:
     - {tempdir}/claude-notify-start-{tool_use_id} (for OS notifications)
     """
     tool_use_id = data.get("tool_use_id", "")
@@ -390,11 +429,10 @@ def _record_tool_start(tool_name: str, data: dict) -> None:
         return
     now = str(int(time.time()))
     tmpdir = tempfile.gettempdir()
-    for prefix in ("claude-tool-start-", "claude-notify-start-"):
-        try:
-            Path(os.path.join(tmpdir, f"{prefix}{tool_use_id}")).write_text(now)
-        except OSError:
-            pass
+    try:
+        Path(os.path.join(tmpdir, f"claude-notify-start-{tool_use_id}")).write_text(now)
+    except OSError:
+        pass
 
 
 def _memory_inject(tool_name: str, data: dict) -> str | None:
@@ -474,56 +512,6 @@ def _notify_on_complete(tool_name: str, data: dict) -> None:
     title = os.environ.get("SPELLBOOK_NOTIFY_TITLE", "Spellbook")
     body = f"{tool_name} finished ({elapsed}s)"
     _send_os_notification(title, body)
-
-
-def _tts_notify(tool_name: str, data: dict) -> None:
-    """TTS announcement for long-running tools. FAIL-OPEN.
-
-    Reads timer file created by _record_tool_start, checks elapsed time
-    against threshold, and POSTs to MCP server /api/speak endpoint.
-    """
-    if tool_name in _EXCLUDED_TOOLS:
-        return
-    tool_use_id = data.get("tool_use_id", "")
-    if not _validate_tool_use_id(tool_use_id):
-        return
-    start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
-    if not start_file.exists():
-        return
-    try:
-        start_ts = int(start_file.read_text().strip())
-        start_file.unlink(missing_ok=True)
-    except (ValueError, OSError):
-        return
-    elapsed = int(time.time()) - start_ts
-    threshold = int(os.environ.get("SPELLBOOK_TTS_THRESHOLD", "30"))
-    if elapsed < threshold:
-        return
-    # Build message
-    cwd = data.get("cwd", "")
-    project = os.path.basename(cwd) if cwd else "unknown"
-    inp = data.get("tool_input") or {}
-    detail = ""
-    if tool_name == "Bash":
-        cmd = inp.get("command", "")
-        if cmd:
-            try:
-                parts = shlex.split(cmd)
-            except ValueError:
-                parts = cmd.split()
-            detail = parts[0].split("/")[-1] if parts else ""
-    elif tool_name == "Task":
-        detail = inp.get("description", "")[:40]
-    msg_parts = [project, tool_name]
-    if detail:
-        msg_parts.append(detail)
-    msg_parts.append("finished")
-    message = " ".join(msg_parts)
-    _http_post(
-        "/api/speak",
-        {"text": message},
-        timeout=10,
-    )
 
 
 def _memory_capture(tool_name: str, data: dict) -> None:
@@ -747,46 +735,6 @@ def _stint_depth_check(data: dict) -> str | None:
         parts.append("\n".join(lines))
 
     return "\n".join(parts) if parts else None
-
-
-def _messaging_check(session_id: str = "") -> str | None:
-    """Check messaging inbox for pending messages and format for injection.
-
-    Polls the daemon's /api/messaging/poll endpoint which handles file I/O
-    (reading and deleting inbox files) on the daemon side.  The hook only
-    performs presentation formatting.
-
-    If no ``session_id`` is provided, no inboxes are drained to prevent one
-    session from consuming another session's messages.
-
-    Returns formatted message text or None if inbox is empty.
-    """
-    if not session_id:
-        return None
-
-    resp = _http_post("/api/messaging/poll", {"session_id": session_id})
-    if resp is None or not resp.get("messages"):
-        return None
-
-    outputs = []
-    for msg in resp["messages"]:
-        msg_type = msg.get("message_type", "direct")
-        sender = msg.get("sender", "unknown")
-        correlation_id = msg.get("correlation_id")
-        payload = msg.get("payload", {})
-        payload_str = json.dumps(payload, indent=2) if isinstance(payload, dict) else str(payload)
-
-        corr_part = f" (correlation_id: {correlation_id})" if correlation_id else ""
-        if msg_type == "broadcast":
-            formatted = f"[BROADCAST from {sender}]\n{payload_str}"
-        elif msg_type == "reply":
-            formatted = f"[REPLY from {sender}]{corr_part}\n{payload_str}"
-        else:
-            formatted = f"[MESSAGE from {sender}]{corr_part}\n{payload_str}"
-
-        outputs.append(formatted)
-
-    return "\n\n".join(outputs) if outputs else None
 
 
 def _build_recovery_directive(state: dict) -> str:
@@ -1300,6 +1248,17 @@ def _auto_store_enabled() -> bool:
     return bool(val)
 
 
+def _queue_enabled() -> bool:
+    """Return True when the async worker queue is enabled in config.
+
+    Read via ``_get_config_value`` so the hook does not import the full
+    ``spellbook.core.config`` module (the Stop hook must stay
+    subprocess-cheap). The daemon also checks ``is_available()`` at the
+    POST endpoint, so a stale-config False-positive here is caught there.
+    """
+    return bool(_get_config_value("worker_llm_queue_enabled", default=False))
+
+
 def _classify_prompt_for_autostore(prompt: str) -> tuple[str, str, str] | None:
     """Classify a user prompt for auto-store.
 
@@ -1517,11 +1476,67 @@ def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
         pass
 
 
+def _merge_candidates(
+    regex_cands: list[dict], worker_cands: list[dict]
+) -> list[dict]:
+    """Content-hash dedup for merge-mode transcript harvest.
+
+    Worker wins on collision: the worker response carries strongly-typed
+    tags/citations (lists converted to comma strings), while the regex
+    path produces whatever the assistant wrote verbatim.
+    """
+    seen: dict[str, dict] = {}
+    for c in worker_cands:
+        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
+        seen[key] = c
+    for c in regex_cands:
+        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
+        seen.setdefault(key, c)
+    return list(seen.values())
+
+
+def _worker_error_block(task: str, err: BaseException) -> str:
+    """Render a ``<worker-llm-error>`` block for injection into the orchestrator.
+
+    Consumed by Claude Code / OpenCode / Codex / Gemini CLI as a structured
+    signal that a worker-LLM step failed. The <hint> points operators at
+    the doctor CLI and admin event monitor.
+
+    Every interpolated value is XML-escaped. ``task`` is typically a static
+    tag and ``type(err).__name__`` is a Python class name, but defensive
+    escaping costs nothing and protects the surrounding XML structure
+    against a drifty caller or unusual exception name that happens to
+    contain ``<``, ``>``, or ``&``. ``str(err)[:500]`` comes from
+    worker-LLM code paths and may include arbitrary characters including
+    closing-tag strings.
+    """
+    return (
+        "<worker-llm-error>\n"
+        f"  <task>{_xml_escape(task)}</task>\n"
+        f"  <type>{_xml_escape(type(err).__name__)}</type>\n"
+        f"  <message>{_xml_escape(str(err)[:500])}</message>\n"
+        "  <hint>Check `spellbook worker-llm doctor` and the admin EventMonitorPage.</hint>\n"
+        "</worker-llm-error>"
+    )
+
+
 def _handle_stop(data: dict) -> None:
     """Stop hook: harvest <memory-candidate> blocks and POST each. FAIL-OPEN.
 
     Idempotent: we hash the extracted final-assistant text per transcript
     and skip harvest when the hash matches the most-recent processed value.
+
+    Three modes driven by ``worker_llm_feature_transcript_harvest`` +
+    ``worker_llm_transcript_harvest_mode``:
+
+    - Feature off (default): regex path unchanged. Byte-identical to the
+      pre-worker-LLM baseline.
+    - ``replace``: worker supersedes regex. Loud-fail on worker error —
+      inject ``<worker-llm-error>``, POST nothing, DO NOT record sha so the
+      next Stop retries.
+    - ``merge``: run both, content-hash dedup. Soft-fail on worker error
+      so existing regex behavior never regresses; record sha when regex
+      posts succeeded (the error block carries the loss-of-fidelity signal).
     """
     if not _auto_store_enabled():
         return
@@ -1541,7 +1556,144 @@ def _handle_stop(data: dict) -> None:
     if cache.get(transcript_path) == text_sha:
         return  # Already processed this exact transcript + final message.
 
-    candidates = _parse_memory_candidates(text_body)
+    # ---------- Worker-LLM gate ----------
+    # Imports are deferred to function scope so the hook module remains
+    # importable by the installer / standalone checks that do not carry
+    # the ``spellbook`` package on ``sys.path``. ``transcript_harvest`` is
+    # deferred further (inside ``if use_worker:`` below) so the regex-only
+    # fast path does not pay its httpx / client-adapter import cost.
+    try:
+        from spellbook.worker_llm import errors as _wl_errors
+        from spellbook.worker_llm import events as _wl_events
+        from spellbook.worker_llm.config import feature_enabled, get_worker_config
+        _wl_import_ok = True
+    except Exception:
+        # Standalone installer / sys.path-restricted invocations will not
+        # have the ``spellbook`` package importable; this is expected and
+        # must not break the regex fallback. DEBUG so operators can
+        # correlate unexplained "worker-llm skipped" rows.
+        logger.debug(
+            "stop_hook: worker-LLM import failed; using regex-only path",
+            exc_info=True,
+        )
+        _wl_import_ok = False
+        _wl_events = None  # type: ignore[assignment]
+
+    _wl_start = time.monotonic()
+
+    use_worker = _wl_import_ok and feature_enabled("transcript_harvest")
+    mode = (
+        get_worker_config().transcript_harvest_mode.lower()
+        if use_worker
+        else "skip"
+    )
+    worker_cands: list[dict] = []
+    worker_error: BaseException | None = None
+
+    # Async enqueue fast-path: when the queue is enabled, POST to the
+    # daemon and return immediately with regex-only fallback (merge mode)
+    # or an empty worker-candidate set (replace mode -- we still fall
+    # through below, but with worker_error left unset and worker_cands
+    # empty, which is treated as "worker returned nothing substantive").
+    # The daemon's consumer runs asynchronously and writes candidates via
+    # its own path; no blocking on the hook side.
+    async_enqueued = False
+    if use_worker and _queue_enabled():
+        namespace, _resolved_cwd, branch = _derive_namespace(data.get("cwd", ""))
+        enqueue_body = {
+            "task_name": "transcript_harvest",
+            "prompt": text_body,
+            "context": {
+                "namespace": namespace,
+                "branch": branch,
+                "session_id": str(data.get("session_id", "")),
+            },
+        }
+        resp = _http_post(
+            "/api/worker-llm/enqueue", enqueue_body, timeout=1.0,
+        )
+        # ``_http_post`` returns ``None`` on any non-2xx / exception. 202
+        # Accepted returns a dict with ``{"ok": true, "dropped": ...}``.
+        if resp is not None and resp.get("ok") is True:
+            async_enqueued = True
+
+    if async_enqueued:
+        # Record sha immediately so subsequent Stops don't re-harvest. The
+        # async consumer writes candidates via log_raw_event in the daemon
+        # path; from the hook's point of view this transcript is done.
+        _record_stop_harvest(transcript_path, text_sha)
+        if _wl_events is not None:
+            _wl_events.publish_hook_integration(
+                task="transcript_harvest",
+                mode="async",
+                candidate_count=-1,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="ok",
+            )
+        return
+
+    if use_worker:
+        try:
+            from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
+        except Exception:
+            # Defensive: the sibling worker_llm imports above succeeded, so
+            # this should not happen. If it does, degrade to regex-only
+            # rather than crashing the Stop hook.
+            logger.debug(
+                "stop_hook: late import of transcript_harvest failed",
+                exc_info=True,
+            )
+            use_worker = False
+            mode = "skip"
+
+    if use_worker:
+        try:
+            result = _wl_harvest.transcript_harvest(text_body)
+            worker_cands = [
+                {
+                    "type": c.type,
+                    "content": c.content,
+                    "tags": ",".join(c.tags),
+                    "citations": ",".join(c.citations),
+                }
+                for c in result
+            ]
+        except _wl_errors.WorkerLLMError as e:
+            worker_error = e
+            print(f"[worker-llm] transcript_harvest: {e}", file=sys.stderr)
+
+    if use_worker and mode == "replace":
+        if worker_error is not None:
+            # Loud: do not fall back, do not record sha.
+            print(
+                _worker_error_block("transcript_harvest", worker_error),
+                file=sys.stdout,
+            )
+            if _wl_events is not None:
+                _wl_events.publish_hook_integration(
+                    task="transcript_harvest",
+                    mode=mode,
+                    candidate_count=0,
+                    duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                    status="worker_error",
+                    error=type(worker_error).__name__,
+                )
+            return
+        candidates = worker_cands
+    elif use_worker and mode == "merge":
+        regex_cands = _parse_memory_candidates(text_body)
+        if worker_error is not None:
+            candidates = regex_cands
+            print(
+                _worker_error_block("transcript_harvest", worker_error),
+                file=sys.stdout,
+            )
+        else:
+            candidates = _merge_candidates(regex_cands, worker_cands)
+    else:
+        # Feature off (or mode == "skip"): existing regex path unchanged.
+        candidates = _parse_memory_candidates(text_body)
+
     if not candidates:
         _record_stop_harvest(transcript_path, text_sha)
         return
@@ -1558,27 +1710,55 @@ def _handle_stop(data: dict) -> None:
             branch=branch,
             mtype=cand["type"],
             content=cand["content"],
-            tags=cand["tags"],
-            citations=cand["citations"],
+            tags=cand.get("tags", ""),
+            citations=cand.get("citations", ""),
             source="stop_hook",
         )
         if not ok:
             failed += 1
 
-    if failed == 0:
+    # Sha recording policy:
+    #   REPLACE mode: recorded only when the worker succeeded (early return
+    #     above covers worker_error) AND every POST succeeded.
+    #   MERGE mode: record sha even when worker_error is set, because the
+    #     regex candidates were already POSTed successfully; NOT recording
+    #     would cause the same transcript to be re-harvested on every Stop
+    #     (duplicate regex posts) even though the only thing that failed is
+    #     the optional worker augmentation. The <worker-llm-error> block has
+    #     already been injected into the orchestrator, so the loss-of-fidelity
+    #     signal is preserved.
+    merge_mode_with_worker_only_error = (
+        use_worker
+        and mode == "merge"
+        and worker_error is not None
+        and failed == 0
+    )
+    if failed == 0 and (worker_error is None or merge_mode_with_worker_only_error):
         _record_stop_harvest(transcript_path, text_sha)
+        _status = "ok" if worker_error is None else "worker_error"
     else:
         # Do NOT record the sha: the next Stop invocation must retry the
         # whole harvest. Server-side consolidation dedups on content, so
-        # double-posting on retry is acceptable. Log the partial failure
-        # so operators can correlate with daemon outages.
+        # double-posting on retry is acceptable.
         _log_hook_error(
             "stop_harvest_partial_failure",
             "Stop",
             RuntimeError(
                 f"stop_harvest_partial_failure failed={failed} "
-                f"total={len(candidates)}"
+                f"total={len(candidates)} "
+                f"worker_error={type(worker_error).__name__ if worker_error else 'none'}"
             ),
+        )
+        _status = "partial"
+
+    if use_worker and _wl_events is not None:
+        _wl_events.publish_hook_integration(
+            task="transcript_harvest",
+            mode=mode,
+            candidate_count=len(candidates),
+            duration_ms=int((time.monotonic() - _wl_start) * 1000),
+            status=_status,
+            error=(type(worker_error).__name__ if worker_error else None),
         )
 
 
@@ -1632,8 +1812,67 @@ def _memory_recall_for_tool(tool_name: str, tool_input: dict, cwd: str) -> str |
 # Event Handlers
 # ---------------------------------------------------------------------------
 
+_SAFETY_APPLICABLE_TOOLS = frozenset({"Bash", "Write", "Edit"})
+
+
+def _safety_warn_block(reasoning: str) -> str:
+    """Render the ``<worker-llm-tool-safety verdict="WARN">`` output block.
+
+    ``reasoning`` originates from the worker LLM and may contain arbitrary
+    characters, including ``<``, ``>``, ``&``, and (under a prompt-injection
+    attack) literal closing-tag strings. Escape before interpolation so a
+    drifty or adversarial response cannot inject sibling tags into the
+    orchestrator's output stream.
+    """
+    return (
+        '<worker-llm-tool-safety verdict="WARN">\n'
+        f"  {_xml_escape(reasoning)}\n"
+        "</worker-llm-tool-safety>"
+    )
+
+
+def _emit_block_and_exit(reasoning: str) -> None:
+    """Signal BLOCK to the platform via stderr + ``sys.exit(2)``.
+
+    Claude Code convention: exit 2 with the message on stderr; the platform
+    presents the reasoning to the user and vetoes the tool call. The 30-second
+    bypass note lets a user retry the exact same invocation to override.
+
+    ``reasoning`` is escaped for the same reason as ``_safety_warn_block``.
+    """
+    print(
+        '<worker-llm-tool-safety verdict="BLOCK">\n'
+        f"  {_xml_escape(reasoning)}\n"
+        "  Retry the same tool call within 30 seconds to bypass this check.\n"
+        "</worker-llm-tool-safety>",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
+def _recent_context_snippet(data: dict) -> str:
+    """Best-effort grab of the last few transcript turns (<= 4KB)."""
+    transcript_path = data.get("transcript_path", "") or ""
+    if not transcript_path:
+        return ""
+    try:
+        lines = Path(transcript_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    return "\n".join(lines[-6:])[-4000:]
+
+
 def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
-    """PreToolUse handlers. Return list of output strings."""
+    """PreToolUse handlers. Return list of output strings.
+
+    Order of operations:
+      1. Existing security gates (can exit non-zero) — untouched.
+      2. Temporal tracking — untouched.
+      3. Existing memory recall — untouched.
+      4. NEW: worker-LLM tool-safety sniff. Fails OPEN on any error, and is
+         cache-first (consults safety_cache before calling the worker). A
+         fresh BLOCK triggers a 30-second bypass window so the user can retry.
+    """
     outputs = []
 
     # Security gates (blocking - can exit non-zero)
@@ -1658,7 +1897,124 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
         except Exception as e:
             _log_hook_error("memory_recall_for_tool", tool_name, e)
 
+    # Worker-LLM tool-safety sniff (fails OPEN)
+    if tool_name in _SAFETY_APPLICABLE_TOOLS:
+        _wl_tool_safety_sniff(tool_name, data, outputs)
+
     return outputs
+
+
+def _wl_tool_safety_sniff(
+    tool_name: str, data: dict, outputs: list[str]
+) -> None:
+    """Inline gate that consults the worker LLM for an OK/WARN/BLOCK verdict.
+
+    Separated from the handler body to keep the handler's existing flow
+    readable and so the paranoid outer try/except only wraps the new code.
+    A ``sys.exit(2)`` raised here propagates through the handler as expected
+    (``SystemExit`` is re-raised from the catch-all below).
+    """
+    _wl_start = time.monotonic()
+    try:
+        from spellbook.worker_llm import errors as _wl_errors
+        from spellbook.worker_llm import events as _wl_events
+        from spellbook.worker_llm import safety_cache as _wl_cache
+        from spellbook.worker_llm.config import feature_enabled
+        from spellbook.worker_llm.tasks import tool_safety as _wl_safety
+    except Exception:
+        # Import failure should never block a tool call.
+        return
+
+    try:
+        if not feature_enabled("tool_safety"):
+            return
+    except Exception:
+        # Config read failing should never block a tool call. DEBUG so an
+        # operator auditing spurious fail-open traffic can correlate back
+        # to a broken config file without polluting normal output.
+        logger.debug(
+            "tool_safety_hook: feature_enabled raised; treating as disabled",
+            exc_info=True,
+        )
+        return
+
+    params = data.get("tool_input") or {}
+    cache_hit = False
+    try:
+        key = _wl_cache.make_key(tool_name, params)
+
+        # 30-second bypass: a fresh BLOCK lets the user retry once without
+        # re-consulting the worker. ``should_bypass`` consumes the bypass.
+        if _wl_cache.should_bypass(key):
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=-1,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="bypass",
+                error=None,
+            )
+            return
+
+        cached = _wl_cache.get_cached_verdict(key)
+        if cached is not None:
+            cache_hit = True
+            verdict = cached
+        else:
+            verdict = _wl_safety.tool_safety(
+                tool_name, params, _recent_context_snippet(data)
+            )
+            # tool_safety has fail-open semantics; it returns an OK "error;
+            # fail-open" verdict on failure and does NOT cache those. Real
+            # OK/WARN/BLOCK verdicts are already cached inside the task.
+
+        if verdict.verdict == "WARN":
+            outputs.append(_safety_warn_block(verdict.reasoning))
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="warn",
+                error=None,
+            )
+        elif verdict.verdict == "BLOCK":
+            _wl_cache.record_block(key)
+            # Emit the event BEFORE exiting so it still lands.
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="block",
+                error=None,
+            )
+            _emit_block_and_exit(verdict.reasoning)
+        else:
+            # OK verdict (including fail-open OK).
+            _wl_events.publish_hook_integration(
+                task="tool_safety",
+                mode="",
+                candidate_count=1 if cache_hit else 0,
+                duration_ms=int((time.monotonic() - _wl_start) * 1000),
+                status="ok",
+                error=None,
+            )
+
+    except SystemExit:
+        # BLOCK exits with code 2 -- let it through.
+        raise
+    except (_wl_errors.WorkerLLMTimeout,
+            _wl_errors.WorkerLLMUnreachable,
+            _wl_errors.WorkerLLMBadResponse) as e:
+        # Known transient failures: FAIL OPEN. Stderr notice only.
+        print(
+            f"[worker-llm] tool_safety: {e} (failing open)",
+            file=sys.stderr,
+        )
+    except Exception as e:
+        # Paranoid catch: any unexpected exception must not block the user.
+        _log_hook_error("worker_llm_tool_safety", tool_name, e)
 
 
 def _handle_user_prompt_submit(data: dict) -> list[str]:
@@ -1695,9 +2051,8 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     if out:
         outputs.append(out)
 
-    # Notifications and TTS (catch-all, non-blocking)
+    # Notifications (catch-all, non-blocking)
     _fire_and_forget(_notify_on_complete, tool_name, data)
-    _fire_and_forget(_tts_notify, tool_name, data)
 
     # Memory capture (catch-all, non-blocking)
     _fire_and_forget(_memory_capture, tool_name, data)
@@ -1705,11 +2060,6 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     # Auto-memory bridge (specific matcher: Write to auto-memory paths)
     if tool_name == "Write":
         _fire_and_forget(_memory_bridge, tool_name, data)
-
-    # Messaging inbox check (catch-all, synchronous - injects into context)
-    out = _messaging_check(session_id=data.get("session_id", ""))
-    if out:
-        outputs.append(out)
 
     return outputs
 
@@ -1824,34 +2174,96 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     return combined if combined else None
 
 
+def _record_hook_event_fire_and_forget(
+    event_name: str,
+    tool_name: str,
+    duration_ms: int,
+    exit_code: int,
+    error: str | None,
+) -> None:
+    """POST a hook event record to the daemon. <0.5s timeout; swallow errors.
+
+    In-daemon writers use ``spellbook.hooks.observability.record_hook_event``
+    directly; subprocess hook callers (this module) re-enter via the daemon
+    endpoint because they have no running event loop.
+    """
+    payload = {
+        "hook_name": "spellbook_hook",
+        "event_name": event_name or "unknown",
+        "duration_ms": int(max(0, duration_ms)),
+        "exit_code": int(exit_code),
+    }
+    if tool_name:
+        payload["tool_name"] = tool_name[:128]
+    if error:
+        payload["error"] = error[:1000]
+    try:
+        _http_post("/api/hooks/record", payload, timeout=0.5)
+    except Exception:
+        pass  # Best-effort; hooks must never fail on observability.
+
+
 def main():
     """Parse stdin and dispatch to handlers."""
-    raw = sys.stdin.read().strip()
-    if not raw:
-        sys.exit(0)
+    start = time.monotonic()
+    event_name = ""
+    tool_name = ""
+    exit_code = 0
+    error_str: str | None = None
 
+    def _emit_record() -> None:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        _fire_and_forget(
+            _record_hook_event_fire_and_forget,
+            event_name, tool_name, duration_ms, exit_code, error_str,
+        )
+
+    # Wrap the entire body in try/finally so outstanding emitter threads are
+    # drained before the process exits, including when an inner ``sys.exit``
+    # fires. Without this, the hook process can exit before the daemon POST
+    # completes and the record is silently dropped.
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        sys.exit(0)
-
-    event_name = data.get("hook_event_name", "")
-    if not event_name:
-        if "tool_result" in data:
-            event_name = "PostToolUse"
-        elif "tool_name" in data:
-            event_name = "PreToolUse"
-        else:
+        raw = sys.stdin.read().strip()
+        if not raw:
+            _emit_record()
             sys.exit(0)
 
-    tool_name = data.get("tool_name", "")
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            error_str = "JSONDecodeError"
+            _emit_record()
+            sys.exit(0)
 
-    try:
-        output = dispatch(event_name, tool_name, data)
-        if output:
-            print(output)
-    except Exception as e:
-        _log_hook_error(event_name, tool_name, e)
+        event_name = data.get("hook_event_name", "")
+        if not event_name:
+            if "tool_result" in data:
+                event_name = "PostToolUse"
+            elif "tool_name" in data:
+                event_name = "PreToolUse"
+            else:
+                _emit_record()
+                sys.exit(0)
+
+        tool_name = data.get("tool_name", "")
+
+        try:
+            output = dispatch(event_name, tool_name, data)
+            if output:
+                print(output)
+        except SystemExit as e:
+            # _emit_block_and_exit calls sys.exit(2); capture exit code.
+            exit_code = int(e.code) if isinstance(e.code, int) else 1
+            _emit_record()
+            raise
+        except Exception as e:
+            error_str = f"{type(e).__name__}: {e}"[:1000]
+            exit_code = 1
+            _log_hook_error(event_name, tool_name, e)
+
+        _emit_record()
+    finally:
+        _drain_pending_emitters(1.0)
 
 
 if __name__ == "__main__":

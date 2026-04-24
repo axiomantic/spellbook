@@ -44,7 +44,7 @@ WebSocket connection status is shown in the header.
 | [Health](health.md) | Subsystem health matrix for all 4 SQLite databases |
 | [Events](events.md) | Live WebSocket event bus monitor with subsystem filtering |
 | [Focus](focus.md) | Zeigarnik focus stacks and stint correction log |
-| [Config](config.md) | Configuration editor for TTS, notifications, and general settings |
+| [Config](config.md) | Configuration editor for notifications and general settings |
 | [Fractal](fractal.md) | Interactive graph explorer for fractal-thinking exploration graphs |
 
 ## Access

@@ -24,11 +24,6 @@ daemon = [
     "uvicorn>=0.30.0",
     "httpx>=0.25.0",
 ]
-tts = [
-    "sounddevice>=0.4.6",
-    "numpy>=1.24.0",
-    "wyoming",
-]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -36,7 +31,7 @@ dev = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.2.0",
     "httpx>=0.25.0",
-    "bigfoot>=0.19.1",
+    "bigfoot[http]>=0.19.1",
     "dirty-equals>=0.8.0",
     "fastmcp>=0.4.1",
     "fastapi>=0.115.0",
@@ -85,6 +80,13 @@ markers = [
 
 [tool.bigfoot]
 guard = "error"
+# SocketPlugin intercepts socket.socket.close on the active verifier. The
+# asyncio.run-driven loop teardown inside sync task entry points closes
+# its self-pipe socket after the sandbox's active verifier is set, which
+# makes bigfoot blow up with UnmockedInteractionError on loop shutdown.
+# No test in this repo uses bigfoot.socket_mock; disabling the plugin
+# globally lets HttpPlugin-only tests drive asyncio.run() safely.
+disabled_plugins = ["socket"]
 
 [tool.bigfoot.firewall]
 allow = ["socket:*", "database:*", "db:*", "subprocess:*", "http:*", "dns:*"]

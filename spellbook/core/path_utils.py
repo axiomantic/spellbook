@@ -1,9 +1,7 @@
 """Path encoding and project directory resolution for session storage."""
 
-import hashlib
 import logging
 import os
-import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,12 +12,6 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from fastmcp import Context
-
-MAX_ALIAS_BASE = 50  # Leave room for "-NNN" suffix (up to 4 chars)
-HASH_LEN = 4
-
-# Must match _ALIAS_PATTERN in spellbook/mcp/tools/messaging.py
-_ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
 @dataclass
@@ -118,74 +110,6 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
         is_worktree=is_worktree,
         repo_root=repo_root,
     )
-
-
-def slugify_alias(name: str) -> str:
-    """Convert a string to a valid messaging alias.
-
-    Rules:
-    1. Lowercase the input
-    2. Replace any character not matching [a-z0-9_-] with a hyphen
-    3. Collapse consecutive hyphens into one
-    4. Strip leading/trailing hyphens
-    5. If empty after processing, return "session"
-
-    Returns:
-        String matching ^[a-zA-Z0-9_-]+$ (lowercase subset).
-    """
-    slug = name.lower()
-    slug = re.sub(r"[^a-z0-9_-]", "-", slug)
-    slug = re.sub(r"-{2,}", "-", slug)
-    slug = slug.strip("-")
-    return slug if slug else "session"
-
-
-def derive_messaging_alias(
-    project_path: str,
-    session_name: Optional[str] = None,
-    git_context: Optional[GitContext] = None,
-) -> str:
-    """Derive a human-readable messaging alias.
-
-    Priority:
-    1. Explicit session_name (slugified), if non-empty
-    2. Git-derived: "{project_basename}-{branch_or_worktree}" (slugified)
-    3. Project directory basename (slugified)
-    4. "session" (fallback via slugify)
-
-    Truncation: if result > MAX_ALIAS_BASE chars, truncate to
-    (MAX_ALIAS_BASE - HASH_LEN - 1) chars and append "-{hash}" where
-    hash is first HASH_LEN hex chars of sha256(full_untruncated_alias).
-
-    Args:
-        project_path: Absolute path to the project directory.
-        session_name: Explicit alias override from user.
-        git_context: Pre-fetched git context (avoids redundant subprocess calls).
-
-    Returns:
-        Alias string, max MAX_ALIAS_BASE chars, valid per messaging alias rules.
-    """
-    if session_name:
-        raw = session_name
-    elif git_context and (git_context.worktree_name or git_context.branch):
-        root = git_context.repo_root or resolve_repo_root(project_path)
-        basename = os.path.basename(root)
-        suffix = git_context.worktree_name or git_context.branch
-        raw = f"{basename}-{suffix}"
-    else:
-        root = (git_context.repo_root if git_context else None) or resolve_repo_root(project_path)
-        raw = os.path.basename(root)
-
-    slug = slugify_alias(raw)
-
-    if not _ALIAS_PATTERN.fullmatch(slug):
-        slug = "session"
-
-    if len(slug) > MAX_ALIAS_BASE:
-        hash_hex = hashlib.sha256(slug.encode()).hexdigest()[:HASH_LEN]
-        slug = slug[:(MAX_ALIAS_BASE - HASH_LEN - 1)] + "-" + hash_hex
-
-    return slug
 
 
 def resolve_repo_root(path: str) -> str:

@@ -6,6 +6,10 @@ interface ConfigSchemaKey {
   key: string
   type: 'boolean' | 'string' | 'number'
   description: string
+  // Backend adds ``secret: true`` for sensitive keys (API tokens, etc).
+  // Absent means non-secret. Secret values are masked in GET responses and
+  // rendered with ``input type="password"`` in the editor.
+  secret?: boolean
 }
 
 interface ConfigSchemaResponse {

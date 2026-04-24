@@ -147,59 +147,6 @@ class ServiceConfig:
 # ---------------------------------------------------------------------------
 
 
-def tts_service_config(
-    tts_venv_dir: Path,
-    port: int = 10200,
-    device: str = "cpu",
-    voice: str = "af_heart",
-    data_dir: Optional[Path] = None,
-) -> ServiceConfig:
-    """Build ServiceConfig for the TTS server.
-
-    Args:
-        tts_venv_dir: Path to the TTS venv directory.
-        port: Wyoming server port (default 10200).
-        device: Compute device ("mps", "cuda", "cpu").
-        voice: Voice name for kokoro engine.
-        data_dir: Model data directory (default ~/.local/spellbook/tts-data).
-
-    Returns:
-        ServiceConfig with TTS server parameters.
-    """
-    if sys.platform == "win32":
-        python = tts_venv_dir / "Scripts" / "python.exe"
-    else:
-        python = tts_venv_dir / "bin" / "python"
-
-    if data_dir is None:
-        data_dir = get_data_dir() / "tts-data"
-
-    log_dir = get_log_dir()
-
-    return ServiceConfig(
-        launchd_label="com.spellbook.tts",
-        service_name="spellbook-tts",
-        schtasks_name="SpellbookTTS",
-        description="Spellbook TTS Server",
-        executable=python,
-        args=[
-            "-m", "wyoming_kokoro_torch",
-            "--uri", f"tcp://127.0.0.1:{port}",
-            "--device", device,
-            "--voice", voice,
-            "--data-dir", str(data_dir),
-        ],
-        working_directory=get_data_dir(),
-        environment={},
-        log_stdout=log_dir / "tts.log",
-        log_stderr=log_dir / "tts.err.log",
-        pid_file=None,
-        keep_alive=True,
-        health_check_port=port,
-        health_check_host="127.0.0.1",
-    )
-
-
 # ---------------------------------------------------------------------------
 # Service management
 # ---------------------------------------------------------------------------

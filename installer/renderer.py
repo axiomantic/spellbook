@@ -12,11 +12,6 @@ SD-1: ``render_admin_info`` accepts ``admin_url: str`` and ``show_token: bool``
     rather than the original ``(admin_url, token)`` from the design doc. The
     raw token is never passed to the renderer; the caller controls whether
     token visibility is requested.
-
-SD-2: ``render_tts_wizard()`` is a separate top-level method rather than a
-    step inside ``render_config_wizard()``. TTS configuration is a post-install
-    step because it requires confirming that TTS dependencies are installed,
-    which only makes sense after the install loop completes.
 """
 
 from __future__ import annotations
@@ -61,43 +56,6 @@ class InstallerRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        """Run the interactive configuration wizard and return collected config.
-
-        Only prompts for keys listed in ``unset_keys``. When ``unset_keys``
-        is empty, must return ``{}`` immediately without prompting.
-
-        When ``is_upgrade`` is ``True`` and ``existing_config`` is non-empty,
-        the renderer should display existing configuration before prompting for
-        new keys.
-
-        When ``self.auto_yes`` is ``True``, must return ``{}`` without
-        prompting for any input.
-
-        The returned dict must be compatible with the ``security_selections``
-        parameter expected by ``Installer.run()``. Keys are feature IDs
-        (e.g. ``"spotlighting"``, ``"crypto"``) with ``bool`` values.
-
-        Args:
-            unset_keys: Config keys not yet explicitly set in ``spellbook.json``.
-                From ``get_unset_config_keys()`` or ``WIZARD_CONFIG_KEYS``
-                when ``--reconfigure`` is active.
-            existing_config: Current resolved config dict for display during
-                upgrades. May be empty on a fresh install.
-            is_upgrade: ``True`` when a previous installation was detected.
-
-        Returns:
-            Dict of security feature selections, or ``{}`` to skip security
-            configuration entirely.
-        """
-        ...
-
-    @abstractmethod
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
         """Run the consolidated upfront wizard.
 
@@ -133,22 +91,6 @@ class InstallerRenderer(ABC):
 
         Returns:
             ``True`` if the user confirmed (or auto-yes), ``False`` to abort.
-        """
-        ...
-
-    @abstractmethod
-    def render_tts_wizard(self) -> dict[str, Any]:
-        """Run the TTS (text-to-speech) configuration wizard post-install.
-
-        Called after ``render_completion()``, not before the install loop.
-        TTS setup is post-install because it requires confirming that the
-        ``[tts]`` extras are installed (SD-2).
-
-        When ``self.auto_yes`` is ``True`` or in non-interactive contexts,
-        must return ``{}`` without prompting.
-
-        Returns:
-            Dict of TTS config keys to persist, or ``{}`` to skip TTS setup.
         """
         ...
 
@@ -433,22 +375,12 @@ class RichRenderer(InstallerRenderer):
         else:
             render_welcome_panel(console, version=version, auto_yes=self.auto_yes)
 
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        return {}
-
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
         results = WizardResults()
 
         try:
             if context.auto_yes:
                 results.platforms = context.cli_platforms or context.available_platforms
-                if context.tts_disabled:
-                    results.tts_intent = False
                 return results
 
             console = self._get_console()
@@ -460,12 +392,6 @@ class RichRenderer(InstallerRenderer):
                 results.platforms = context.available_platforms
             else:
                 results.platforms = self._wizard_platform_select(console, context)
-
-            # --- Section 3: TTS Intent ---
-            if context.tts_disabled:
-                results.tts_intent = False
-            elif not context.tts_already_configured:
-                results.tts_intent = self._wizard_tts_intent(console)
 
             # --- Section 4: Profile Selection ---
             if context.available_profiles and (
@@ -518,24 +444,6 @@ class RichRenderer(InstallerRenderer):
 
         return [o["id"] for o in options if o["selected"]]
 
-    def _wizard_tts_intent(self, console: Any) -> bool:
-        """Ask if user wants TTS."""
-        from rich.panel import Panel
-        from rich.prompt import Confirm
-
-        console.print(Panel(
-            "Wyoming protocol TTS provides spoken notifications.\n"
-            "Requires a running Wyoming TTS server (e.g., wyoming-piper).",
-            title="Text-to-Speech",
-            border_style="cyan",
-        ))
-
-        return Confirm.ask(
-            "Enable TTS notifications?",
-            default=False,
-            console=console,
-        )
-
     def _wizard_profile(self, console: Any, context: WizardContext) -> str | None:
         """Collect profile selection by delegating to render_profile_wizard().
 
@@ -551,57 +459,6 @@ class RichRenderer(InstallerRenderer):
         self, config: dict[str, Any], confirmed: bool
     ) -> bool:
         return True
-
-    def render_tts_wizard(self) -> dict[str, Any]:
-        if self.auto_yes:
-            return {}
-
-        from .tui import supports_rich
-        console = self._get_console()
-
-        # Check if TTS is already configured
-        try:
-            from spellbook.core.config import config_get as _cfg_get
-            existing = _cfg_get("tts_enabled")
-        except (ImportError, Exception):
-            existing = None
-
-        from installer.utils import check_tts_available
-
-        if existing is not None:
-            console.print(
-                f"[dim]TTS already configured (enabled={existing})[/dim]"
-            )
-            return {}
-
-        from rich.prompt import Confirm
-
-        server_available = check_tts_available()
-        enabled = Confirm.ask(
-            "Enable text-to-speech notifications? (Requires a Wyoming TTS server)",
-            default=server_available,
-            console=console,
-        )
-        if enabled:
-            from rich.panel import Panel
-            msg = "[green]TTS enabled[/green]\n"
-            if server_available:
-                msg += "Wyoming TTS server: detected\n"
-            else:
-                msg += "Wyoming TTS server: not detected (start one on localhost:10200)\n"
-            msg += (
-                "Change settings with tts_session_set or tts_config_set MCP tools\n"
-                "[dim]Ensure a Wyoming-compatible TTS server (Piper, Kokoro, etc.) is running[/dim]"
-            )
-            console.print(Panel(
-                msg,
-                title="Text-to-Speech",
-                border_style="green",
-                padding=(0, 2),
-            ))
-        else:
-            console.print("[dim]TTS disabled. Enable later with tts_config_set MCP tool.[/dim]")
-        return {"tts_enabled": enabled}
 
     # ------------------------------------------------------------------
     # Progress display
@@ -764,22 +621,12 @@ class PlainTextRenderer(InstallerRenderer):
         label = "Upgrading" if is_upgrade else "Installing"
         print(f"=== Spellbook Installer - {label} {version} ===")
 
-    def render_config_wizard(
-        self,
-        unset_keys: list[str],
-        existing_config: dict[str, Any],
-        is_upgrade: bool,
-    ) -> dict[str, Any]:
-        return {}
-
     def render_upfront_wizard(self, context: WizardContext) -> WizardResults | None:
         results = WizardResults()
 
         try:
             if context.auto_yes:
                 results.platforms = context.cli_platforms or context.available_platforms
-                if context.tts_disabled:
-                    results.tts_intent = False
                 return results
 
             # --- Section 1: Platform Selection ---
@@ -789,13 +636,6 @@ class PlainTextRenderer(InstallerRenderer):
                 results.platforms = context.available_platforms
             else:
                 results.platforms = self._wizard_platform_select_plain(context)
-
-            # --- Section 3: TTS Intent ---
-            if context.tts_disabled:
-                results.tts_intent = False
-            elif not context.tts_already_configured:
-                answer = input("Enable TTS notifications? [y/N] ").strip().lower()
-                results.tts_intent = answer in ("y", "yes")
 
             # --- Section 4: Profile Selection ---
             if context.available_profiles and (
@@ -865,31 +705,6 @@ class PlainTextRenderer(InstallerRenderer):
 
         answer = input("Proceed with this configuration? [Y/n] ").strip().lower()
         return answer in ("", "y", "yes")
-
-    def render_tts_wizard(self) -> dict[str, Any]:
-        if self.auto_yes:
-            return {}
-
-        try:
-            from spellbook.core.config import config_get as _cfg_get
-            existing = _cfg_get("tts_enabled")
-        except (ImportError, Exception):
-            existing = None
-
-        if existing is not None:
-            print(f"TTS already configured (enabled={existing})")
-            return {}
-
-        answer = input(
-            "Enable text-to-speech notifications? (Requires a Wyoming TTS server) [Y/n] "
-        ).strip().lower()
-        enabled = answer in ("", "y", "yes")
-        if enabled:
-            print("TTS enabled. Wyoming TTS server: localhost:10200")
-            print("Ensure a Wyoming-compatible TTS server (Piper, Kokoro, etc.) is running.")
-        else:
-            print("TTS disabled. Enable later with tts_config_set MCP tool.")
-        return {"tts_enabled": enabled}
 
     # ------------------------------------------------------------------
     # Progress display

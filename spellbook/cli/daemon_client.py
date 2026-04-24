@@ -62,7 +62,9 @@ def daemon_request(
     ConnectionError
         When the daemon is unreachable.
     """
-    url = f"http://{host}:{port}{path}"
+    from spellbook.worker_llm.net import build_host_url
+
+    url = build_host_url(host, port, path)
 
     body = None
     if data is not None:

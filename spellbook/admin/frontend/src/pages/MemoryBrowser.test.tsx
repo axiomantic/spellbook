@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import { MemoryBrowser } from './MemoryBrowser'
+import type { MemoryItem } from '../api/types'
 
 // Mock the three hooks the page consumes. The page is pure UI over these hooks.
 vi.mock('../hooks/useMemories', () => ({
@@ -25,7 +26,7 @@ const mockUseMemorySearch = useMemorySearch as Mock
 
 const PAGE_SIZE = 50
 
-const memoryA = {
+const memoryA: MemoryItem = {
   id: 'project/foo.md',
   type: 'convention',
   kind: 'rule',
@@ -33,13 +34,13 @@ const memoryA = {
   citations: [
     { file: 'spellbook/memory/store.py', symbol: 'MemoryStore', symbol_type: 'class' },
   ],
-  confidence: 'high' as const,
+  confidence: 'high',
   created: '2026-03-01T10:00:00Z',
   last_verified: '2026-03-05T10:00:00Z',
   body: 'Prefer top-level imports. Only use function-level imports for known circular imports.',
 }
 
-const memoryB = {
+const memoryB: MemoryItem = {
   id: 'project/bar.md',
   type: 'decision',
   kind: null,
@@ -51,19 +52,19 @@ const memoryB = {
   body: 'Short body for memory B.',
 }
 
-const memoryC = {
+const memoryC: MemoryItem = {
   id: 'project/baz.md',
   type: 'fact',
   kind: 'observation',
   tags: ['perf'],
   citations: [],
-  confidence: 'medium' as const,
+  confidence: 'medium',
   created: '2026-03-03T12:00:00Z',
   last_verified: null,
   body: 'Body text for memory C that has enough characters to exercise preview behavior cleanly.',
 }
 
-function listResponse(items: typeof memoryA[], total?: number, offset = 0) {
+function listResponse(items: MemoryItem[], total?: number, offset = 0) {
   return {
     items,
     total: total ?? items.length,

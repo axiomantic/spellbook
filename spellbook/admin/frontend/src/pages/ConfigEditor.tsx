@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useConfig, useConfigSchema, useUpdateConfig } from '../hooks/useConfig'
 import type { ConfigSchemaKey } from '../hooks/useConfig'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
@@ -61,6 +61,22 @@ function ConfigField({
   )
   const [dirty, setDirty] = useState(false)
 
+  // Resync local state when the prop changes externally (e.g., after a
+  // successful save refetches config, or a sibling field's save
+  // invalidates the config query). Without this, editValue stays frozen
+  // at mount value and the displayed input drifts from the authoritative
+  // config for the lifetime of the component.
+  //
+  // Guarded by ``dirty``: if the user is actively editing, a background
+  // refetch must not clobber their in-progress keystrokes. The save path
+  // clears ``dirty`` on success so the next ``value`` tick resyncs
+  // normally. The cancel path (not currently exposed in UI) would also
+  // clear ``dirty``.
+  useEffect(() => {
+    if (dirty) return
+    setEditValue(value !== undefined && value !== null ? String(value) : '')
+  }, [value, dirty])
+
   const handleSave = useCallback(() => {
     let parsed: unknown = editValue
     if (schema.type === 'number') {
@@ -110,17 +126,32 @@ function ConfigField({
     )
   }
 
+  const inputType =
+    schema.secret
+      ? 'password'
+      : schema.type === 'number'
+      ? 'number'
+      : 'text'
+
   return (
     <div className="flex items-center justify-between py-3 px-4 border-b border-bg-border last:border-b-0">
       <div className="flex-1 mr-4">
-        <div className="font-mono text-sm text-text-primary">{schema.key}</div>
+        <div className="font-mono text-sm text-text-primary">
+          {schema.key}
+          {schema.secret && (
+            <span className="ml-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wider bg-accent-yellow/10 border border-accent-yellow/30 rounded text-accent-yellow">
+              secret
+            </span>
+          )}
+        </div>
         <div className="text-xs text-text-dim mt-0.5">{schema.description}</div>
       </div>
       <div className="flex items-center gap-2">
         <input
-          type={schema.type === 'number' ? 'number' : 'text'}
+          type={inputType}
           step={schema.type === 'number' ? '0.1' : undefined}
           value={editValue}
+          autoComplete={schema.secret ? 'new-password' : undefined}
           onChange={(e) => {
             setEditValue(e.target.value)
             setDirty(true)
@@ -152,20 +183,108 @@ function ConfigField({
   )
 }
 
-const SECTIONS: { title: string; keys: string[] }[] = [
-  {
-    title: 'Text-to-Speech',
-    keys: ['tts_enabled', 'tts_voice', 'tts_volume'],
-  },
-  {
-    title: 'Notifications',
-    keys: ['notify_enabled', 'notify_title'],
-  },
-  {
-    title: 'General',
-    keys: ['telemetry_enabled', 'auto_update', 'session_mode', 'admin_enabled'],
-  },
-]
+/**
+ * Convert a dotted config key into a human-readable section title.
+ *
+ * ``security.spotlighting.tier`` -> ``Security / Spotlighting``
+ * ``notify_enabled``             -> ``General``
+ */
+function sectionTitleForKey(key: string): string {
+  if (!key.includes('.')) {
+    // worker_llm_* keys get their own logical group so the worker-llm panel
+    // does not dominate "General". Anything else without a dot falls into
+    // "General".
+    if (key.startsWith('worker_llm_')) return 'Worker LLM'
+    if (key.startsWith('notify_')) return 'Notifications'
+    return 'General'
+  }
+  const parts = key.split('.')
+  // Keep the first two segments: security.spotlighting.* -> "Security / Spotlighting".
+  const head = parts.slice(0, 2).map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+  return head.join(' / ')
+}
+
+interface Section {
+  title: string
+  keys: ConfigSchemaKey[]
+}
+
+function groupKeys(keys: ConfigSchemaKey[]): Section[] {
+  const map = new Map<string, ConfigSchemaKey[]>()
+  for (const k of keys) {
+    const title = sectionTitleForKey(k.key)
+    if (!map.has(title)) map.set(title, [])
+    map.get(title)!.push(k)
+  }
+
+  // Stable ordering: General first, Notifications second, Worker LLM third,
+  // then everything else alphabetically. Inside a section, preserve the
+  // schema-declared order so admins read them consistently.
+  const priority: Record<string, number> = {
+    General: 0,
+    Notifications: 1,
+    'Worker LLM': 2,
+  }
+  return Array.from(map.entries())
+    .map(([title, entries]) => ({ title, keys: entries }))
+    .sort((a, b) => {
+      const pa = priority[a.title] ?? 10
+      const pb = priority[b.title] ?? 10
+      if (pa !== pb) return pa - pb
+      return a.title.localeCompare(b.title)
+    })
+}
+
+function CollapsibleSection({
+  section,
+  config,
+  onSave,
+  saving,
+  savedKey,
+  errorKey,
+}: {
+  section: Section
+  config: Record<string, unknown>
+  onSave: (key: string, value: unknown) => void
+  saving: boolean
+  savedKey: string | null
+  errorKey: string | null
+}) {
+  // Default expanded; admins can collapse noisier sections they rarely touch.
+  const [open, setOpen] = useState(true)
+
+  return (
+    <div className="mb-6">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 mb-2 font-mono text-xs uppercase tracking-widest text-text-dim hover:text-text-primary focus:outline-none"
+        aria-expanded={open}
+      >
+        <span className="inline-block w-3 text-accent-green">
+          {open ? 'v' : '>'}
+        </span>
+        <span>{section.title}</span>
+        <span className="text-text-dim/50">({section.keys.length})</span>
+      </button>
+      {open && (
+        <div className="bg-bg-surface border border-bg-border rounded">
+          {section.keys.map((schema) => (
+            <ConfigField
+              key={schema.key}
+              schema={schema}
+              value={config[schema.key]}
+              onSave={onSave}
+              saving={saving}
+              savedKey={savedKey}
+              errorKey={errorKey}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function ConfigEditor() {
   const { data: configData, isLoading: configLoading, error: configError } = useConfig()
@@ -196,6 +315,11 @@ export function ConfigEditor() {
     [updateConfig],
   )
 
+  const sections = useMemo(
+    () => groupKeys(schemaData?.keys ?? []),
+    [schemaData],
+  )
+
   if (configLoading || schemaLoading) {
     return (
       <PageLayout segments={[{ label: 'CONFIG' }]}>
@@ -217,44 +341,26 @@ export function ConfigEditor() {
   }
 
   const config = configData?.config ?? {}
-  const schemaKeys = schemaData?.keys ?? []
-  const schemaMap = new Map(schemaKeys.map((k) => [k.key, k]))
 
   return (
     <PageLayout segments={[{ label: 'CONFIG' }]}>
       <div className="max-w-3xl">
-      <p className="text-sm text-text-secondary mb-6">
-        Spellbook configuration. Changes are saved to spellbook.json immediately.
-      </p>
+        <p className="text-sm text-text-secondary mb-6">
+          Spellbook configuration. Changes are saved to spellbook.json immediately.
+          Secret values (e.g. API keys) are stored in plaintext locally but masked in this view.
+        </p>
 
-      {SECTIONS.map((section) => {
-        const sectionKeys = section.keys
-          .map((k) => schemaMap.get(k))
-          .filter((s): s is ConfigSchemaKey => s !== undefined)
-
-        if (sectionKeys.length === 0) return null
-
-        return (
-          <div key={section.title} className="mb-6">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim mb-2">
-              {section.title}
-            </h2>
-            <div className="bg-bg-surface border border-bg-border rounded">
-              {sectionKeys.map((schema) => (
-                <ConfigField
-                  key={schema.key}
-                  schema={schema}
-                  value={config[schema.key]}
-                  onSave={handleSave}
-                  saving={updateConfig.isPending}
-                  savedKey={savedKey}
-                  errorKey={errorKey}
-                />
-              ))}
-            </div>
-          </div>
-        )
-      })}
+        {sections.map((section) => (
+          <CollapsibleSection
+            key={section.title}
+            section={section}
+            config={config}
+            onSave={handleSave}
+            saving={updateConfig.isPending}
+            savedKey={savedKey}
+            errorKey={errorKey}
+          />
+        ))}
       </div>
     </PageLayout>
   )

@@ -1,14 +1,32 @@
 """Tests for hook-related REST API routes in spellbook/mcp/routes.py.
 
-Tests /api/hook-log and /api/messaging/poll endpoints by calling the
-route handler functions directly with stub Starlette Request objects.
+Tests /api/hook-log endpoint by calling the route handler function
+directly with stub Starlette Request objects.
 """
 
 import asyncio
 import json
-from pathlib import Path
 
 import pytest
+
+
+async def _await_len(collection, expected: int, timeout: float = 2.0) -> None:
+    """Poll ``collection`` until it reaches ``expected`` length or ``timeout``.
+
+    ``record_hook_event`` is offloaded to ``loop.run_in_executor`` via
+    ``_spawn_background``, so the handler returns before the spy is
+    populated. Tests poll here instead of asserting synchronously. The
+    2-second ceiling is generous relative to a typical thread-pool hop
+    (<1ms) but keeps CI hangs observable.
+    """
+    deadline = asyncio.get_running_loop().time() + timeout
+    while len(collection) < expected:
+        if asyncio.get_running_loop().time() > deadline:
+            raise AssertionError(
+                f"collection did not reach {expected} entries within "
+                f"{timeout}s; current len={len(collection)}"
+            )
+        await asyncio.sleep(0.01)
 
 
 # ---------------------------------------------------------------------------
@@ -103,138 +121,114 @@ class TestApiHookLog:
 
 
 # ---------------------------------------------------------------------------
-# Tests: /api/messaging/poll
+# Tests: /api/hooks/record
 # ---------------------------------------------------------------------------
 
-class TestApiMessagingPoll:
-    @pytest.mark.asyncio
-    async def test_returns_empty_for_no_messages(self, tmp_path, monkeypatch):
-        """No messaging directory returns empty list."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
-        from spellbook.mcp.routes import api_messaging_poll
 
-        request = _make_request({"session_id": "test-session"})
-        resp = await api_messaging_poll(request)
+class TestApiHooksRecord:
+    @pytest.mark.asyncio
+    async def test_accepts_valid_payload(self, monkeypatch):
+        """Valid payload invokes record_hook_event with the right args."""
+        calls: list[dict] = []
+
+        def _fake_record(**kwargs):
+            calls.append(kwargs)
+
+        monkeypatch.setattr(
+            "spellbook.hooks.observability.record_hook_event",
+            _fake_record,
+        )
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "spellbook_hook",
+            "event_name": "PreToolUse",
+            "duration_ms": 42,
+            "exit_code": 0,
+            "tool_name": "Bash",
+            "error": None,
+            "notes": None,
+        })
+
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 202
         body = json.loads(resp.body.decode())
-        assert body == {"messages": []}
+        assert body == {"ok": True}
+
+        await _await_len(calls, 1)
+        c = calls[0]
+        assert c["hook_name"] == "spellbook_hook"
+        assert c["event_name"] == "PreToolUse"
+        assert c["duration_ms"] == 42
+        assert c["exit_code"] == 0
+        assert c["tool_name"] == "Bash"
 
     @pytest.mark.asyncio
-    async def test_returns_and_deletes_messages(self, tmp_path, monkeypatch):
-        """Valid messages are returned and inbox files deleted."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
-        from spellbook.mcp.routes import api_messaging_poll
+    async def test_rejects_missing_hook_name(self):
+        from spellbook.mcp.routes import api_hooks_record
 
-        # Set up inbox
-        alias_dir = tmp_path / "messaging" / "worker-1"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text("test-session")
-
-        msg = {
-            "id": "msg-001",
-            "sender": "orchestrator",
-            "recipient": "worker-1",
-            "payload": {"task": "deploy"},
-            "message_type": "direct",
-            "correlation_id": "corr-123",
-        }
-        msg_file = inbox / "msg-001.json"
-        msg_file.write_text(json.dumps(msg))
-
-        request = _make_request({"session_id": "test-session"})
-        resp = await api_messaging_poll(request)
-        body = json.loads(resp.body.decode())
-
-        assert len(body["messages"]) == 1
-        assert body["messages"][0]["sender"] == "orchestrator"
-        assert body["messages"][0]["payload"] == {"task": "deploy"}
-        assert body["messages"][0]["correlation_id"] == "corr-123"
-        assert body["messages"][0]["message_type"] == "direct"
-
-        # File should be deleted
-        assert not msg_file.exists()
-
-    @pytest.mark.asyncio
-    async def test_rejects_missing_session_id(self, tmp_path, monkeypatch):
-        """Missing session_id returns 400."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
-        from spellbook.mcp.routes import api_messaging_poll
-
-        request = _make_request({})
-        resp = await api_messaging_poll(request)
+        request = _make_request({
+            "event_name": "Stop",
+            "duration_ms": 10,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_filters_by_session_id(self, tmp_path, monkeypatch):
-        """Only messages for the requested session_id are returned."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
-        from spellbook.mcp.routes import api_messaging_poll
+    async def test_rejects_negative_duration(self):
+        from spellbook.mcp.routes import api_hooks_record
 
-        # Set up two alias dirs with different session_ids
-        for alias, sid in [("mine", "my-session"), ("theirs", "other-session")]:
-            alias_dir = tmp_path / "messaging" / alias
-            inbox = alias_dir / "inbox"
-            inbox.mkdir(parents=True)
-            (alias_dir / ".session_id").write_text(sid)
-            msg = {"sender": alias, "payload": {}, "message_type": "direct"}
-            (inbox / "msg.json").write_text(json.dumps(msg))
-
-        request = _make_request({"session_id": "my-session"})
-        resp = await api_messaging_poll(request)
-        body = json.loads(resp.body.decode())
-
-        assert len(body["messages"]) == 1
-        assert body["messages"][0]["sender"] == "mine"
-
-        # Other session's file should still exist
-        assert (tmp_path / "messaging" / "theirs" / "inbox" / "msg.json").exists()
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": -1,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_rejects_invalid_json(self, tmp_path, monkeypatch):
-        """Invalid JSON body returns 400."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
-        from spellbook.mcp.routes import api_messaging_poll
+    async def test_rejects_oversized_notes(self):
+        from spellbook.mcp.routes import api_hooks_record
+
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": 0,
+            "exit_code": 0,
+            "notes": "x" * 4001,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_rejects_invalid_json(self):
+        from spellbook.mcp.routes import api_hooks_record
 
         request = _make_bad_request()
-        resp = await api_messaging_poll(request)
+        resp = await api_hooks_record(request)
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_handles_malformed_inbox_files(self, tmp_path, monkeypatch):
-        """Malformed JSON in inbox files is deleted and skipped."""
+    async def test_record_failure_still_returns_202(self, monkeypatch):
+        """record_hook_event is best-effort; route still returns 202."""
+        def _boom(**kwargs):
+            raise RuntimeError("DB down")
+
         monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
+            "spellbook.hooks.observability.record_hook_event",
+            _boom,
         )
-        from spellbook.mcp.routes import api_messaging_poll
+        from spellbook.mcp.routes import api_hooks_record
 
-        alias_dir = tmp_path / "messaging" / "worker"
-        inbox = alias_dir / "inbox"
-        inbox.mkdir(parents=True)
-        (alias_dir / ".session_id").write_text("test-session")
+        request = _make_request({
+            "hook_name": "h",
+            "event_name": "e",
+            "duration_ms": 0,
+            "exit_code": 0,
+        })
+        resp = await api_hooks_record(request)
+        assert resp.status_code == 202
 
-        bad_file = inbox / "bad.json"
-        bad_file.write_text("not valid json {{{")
 
-        request = _make_request({"session_id": "test-session"})
-        resp = await api_messaging_poll(request)
-        body = json.loads(resp.body.decode())
-
-        assert body["messages"] == []
-        # Bad file should be cleaned up
-        assert not bad_file.exists()

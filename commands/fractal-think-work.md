@@ -98,8 +98,10 @@ Repeat until no work remains.
 
 Call:
 ```
-fractal_claim_work(graph_id: "<graph_id>", worker_id: "<worker_id>")
+fractal_claim_work(graph_id: "<graph_id>", worker_id: "<worker_id>", session_id: "<your_claude_session_id>")
 ```
+
+**session_id:** Pass your Claude Code session ID (the value from your environment or session context). This links the claimed node to your chat log, enabling replay of the agent's reasoning in the admin UI. If you cannot determine your session ID, pass an empty string.
 
 Interpret result (shape `{node_id, graph_done, ...}`):
 - `node_id` not null: node claimed. Proceed with that node.

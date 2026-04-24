@@ -4,7 +4,7 @@
 
 ```bash
 # Install dependencies
-uv pip install -e ".[dev,test,tts]"
+uv pip install -e ".[dev,test]"
 
 # Run tests (targeted)
 uv run pytest tests/test_specific_file.py -x
@@ -113,7 +113,7 @@ spellbook/
 │   ├── memory/          # Memory storage and consolidation
 │   ├── sessions/        # Session parsing, resume, compaction
 │   ├── security/        # Security scanning, canary, trust
-│   ├── notifications/   # TTS and OS notifications
+│   ├── notifications/   # OS notifications
 │   ├── daemon/          # Server daemon management
 │   ├── mcp/             # MCP server and tool definitions
 │   │   └── tools/       # 13 tool modules (memory, security, etc.)
@@ -201,6 +201,55 @@ commands/
 | OpenCode | `installer/platforms/opencode.py` | AGENTS.md + MCP |
 | Codex | `installer/platforms/codex.py` | AGENTS.md + MCP |
 
+## Config vs State
+
+Spellbook stores persistent key-value data in two places. Pick the right one:
+
+| File | Module | Purpose |
+|------|--------|---------|
+| `~/.config/spellbook/spellbook.json` | `spellbook.core.config` | User intent (what the user configured) |
+| `~/.local/spellbook/state.json` | `spellbook.core.state` | Runtime state (what the code wrote for itself) |
+
+**Config** keys are user-facing preferences and feature flags: `auto_update`,
+`session_mode`, `notify_enabled`, `worker_llm_*`. They appear in the admin UI
+(`CONFIG_SCHEMA`) and on install wizards. Reading uses `config_get(key)`,
+writing uses `config_set(key, value)`.
+
+**State** keys are facts the code discovered or counters the code maintains:
+`auto_update_branch` (auto-detected from git), `update_check_failures`
+(watcher failure counter). They must never appear in wizards and must never be
+edited via the admin UI. Reading uses `get_state(key)`, writing uses
+`set_state(key, value)`.
+
+When you add a new persistent key, decide up front:
+* Did the user choose this? -> config
+* Did the code derive it? -> state
+
+If the distinction is unclear, pick config and document the choice. Moving
+later is a migration (see `spellbook.core.state.migrate_config_to_state`).
+
+## Adding Config Options
+
+<CRITICAL>
+Every user-facing configuration option MUST follow the three-point rule:
+
+1. **Prompted on fresh install.** If the user has never answered, offer a prompt. Either add the prompt to an existing wizard in `installer/wizards/` (`worker_llm.py`, `defaults.py`) or create a new shared wizard module there.
+2. **Prompted on re-install IF the key is still unset.** The idempotency gate uses `spellbook.core.config.config_is_explicitly_set(key)`. If it returns False, ask again. If it returns True, skip.
+3. **NOT re-prompted once the user has answered.** Any explicit value counts, including empty strings and False. Declining at the opener still writes a sentinel so the next run does not re-ask.
+
+Wire every wizard into BOTH install entry paths:
+- Root `install.py` (the curl-pipe entry point used by new users).
+- `spellbook/cli/commands/install.py` (the `spellbook install` CLI command, including the `--reconfigure` branch).
+
+A wizard that lives in only one entry path is a bug. `--reconfigure` must bypass the idempotency gate so users can revisit earlier answers.
+
+Register every new key in:
+- `spellbook/core/config.py::CONFIG_DEFAULTS` (runtime default).
+- `spellbook/admin/routes/config.py::CONFIG_SCHEMA` (admin UI visibility, validator dispatch).
+
+Tests live in `tests/test_cli/test_install_wizard_coverage.py` and must cover each new key: fresh-install prompt fires, re-install skip, `--reconfigure` bypass, non-tty noop, and presence in both install entry paths.
+</CRITICAL>
+
 ## Testing
 
 Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.
@@ -282,11 +331,16 @@ def test_example():
 
 #### Domain Plugins
 
-Use bigfoot's domain-specific plugins when applicable instead of generic mocks:
-- `bigfoot.http` for HTTP requests (httpx, requests)
-- `bigfoot.subprocess_mock` for subprocess calls
-- `bigfoot.database` for SQLite/database calls
-- `bigfoot.socket` for socket operations
+Use bigfoot's domain-specific plugins when applicable instead of generic mocks. All plugin proxy names end in `_mock` except `http`:
+- `bigfoot.http` — HTTP requests (httpx, requests, urllib, aiohttp). Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
+- `bigfoot.subprocess_mock` — `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
+- `bigfoot.popen_mock` — `subprocess.Popen`.
+- `bigfoot.async_subprocess_mock` — `asyncio.create_subprocess_*`.
+- `bigfoot.db_mock` — sqlite3 / generic DB. State-machine plugin with step sentinels `bigfoot.db_mock.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `bigfoot.db_mock.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected → connected → in_transaction → connected → closed`.
+- `bigfoot.socket_mock` — raw socket operations.
+- Other plugins: `bigfoot.smtp_mock`, `bigfoot.redis_mock`, `bigfoot.mongo_mock`, `bigfoot.boto3_mock`, `bigfoot.pika_mock`, `bigfoot.ssh_mock`, `bigfoot.log_mock`, `bigfoot.jwt_mock`, `bigfoot.crypto_mock`, `bigfoot.file_io_mock`, `bigfoot.dns_mock`, `bigfoot.memcache_mock`, `bigfoot.celery_mock`, `bigfoot.elasticsearch_mock`, `bigfoot.grpc_mock`, `bigfoot.mcp_mock`, `bigfoot.psycopg2_mock`, `bigfoot.asyncpg_mock`, `bigfoot.sync_websocket_mock`, `bigfoot.async_websocket_mock`, `bigfoot.native_mock`.
+
+**Do NOT write** `bigfoot.database`, `bigfoot.socket`, `bigfoot.patch`, `bigfoot.MagicMock`, `@bigfoot.mock(...)` (decorator form) — none of these exist.
 
 #### Guard Mode
 

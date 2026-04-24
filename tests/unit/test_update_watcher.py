@@ -10,15 +10,17 @@ class TestUpdateWatcherInit:
     """Tests for UpdateWatcher initialization."""
 
     def test_default_values(self, tmp_path):
+        # auto_update_remote still lives in config; auto_update_branch moved to state.
         mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
-        # Called twice in __init__: once for auto_update_remote, once for auto_update_branch
-        mock_cg.returns(None).returns(None)
+        mock_cg.returns(None)
+        mock_gs = bigfoot.mock("spellbook.updates.watcher:get_state")
+        mock_gs.returns(None)
 
         with bigfoot:
             watcher = UpdateWatcher(str(tmp_path))
 
         mock_cg.assert_call(args=("auto_update_remote",))
-        mock_cg.assert_call(args=("auto_update_branch",))
+        mock_gs.assert_call(args=("auto_update_branch",))
 
         assert watcher.check_interval == 86400.0
         assert watcher.remote == "origin"
@@ -30,13 +32,15 @@ class TestUpdateWatcherInit:
     def test_lazy_branch_detection(self, tmp_path):
         """Branch detection happens in run(), not __init__."""
         mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
-        mock_cg.returns(None).returns(None)
+        mock_cg.returns(None)
+        mock_gs = bigfoot.mock("spellbook.updates.watcher:get_state")
+        mock_gs.returns(None)
 
         with bigfoot:
             watcher = UpdateWatcher(str(tmp_path))
 
         mock_cg.assert_call(args=("auto_update_remote",))
-        mock_cg.assert_call(args=("auto_update_branch",))
+        mock_gs.assert_call(args=("auto_update_branch",))
 
         assert watcher.branch is None  # Not yet resolved
 
@@ -56,12 +60,10 @@ class TestUpdateWatcherInit:
         assert watcher.branch == "main"  # Now resolved
 
     def test_custom_values(self, tmp_path):
-        lookup = {
-            "auto_update_remote": "upstream",
-            "auto_update_branch": "develop",
-        }
         mock_cg = bigfoot.mock("spellbook.updates.watcher:config_get")
-        mock_cg.calls(lambda key: lookup.get(key)).calls(lambda key: lookup.get(key))
+        mock_cg.calls(lambda key: {"auto_update_remote": "upstream"}.get(key))
+        mock_gs = bigfoot.mock("spellbook.updates.watcher:get_state")
+        mock_gs.calls(lambda key: {"auto_update_branch": "develop"}.get(key))
 
         with bigfoot:
             watcher = UpdateWatcher(
@@ -70,7 +72,7 @@ class TestUpdateWatcherInit:
             )
 
         mock_cg.assert_call(args=("auto_update_remote",))
-        mock_cg.assert_call(args=("auto_update_branch",))
+        mock_gs.assert_call(args=("auto_update_branch",))
 
         assert watcher.check_interval == 3600.0
         assert watcher.remote == "upstream"
@@ -152,15 +154,15 @@ class TestUpdateWatcherBackoff:
 
         mock_check = bigfoot.mock.object(watcher, "_check_for_update")
         mock_check.calls(mock_check_and_stop)
-        mock_cset = bigfoot.mock("spellbook.updates.watcher:config_set")
-        mock_cset.returns(None)
+        mock_sset = bigfoot.mock("spellbook.updates.watcher:set_state")
+        mock_sset.returns(None)
 
         with bigfoot:
             watcher._running = True
             watcher.run()
 
         mock_check.assert_call()
-        mock_cset.assert_call(args=("update_check_failures", 1))
+        mock_sset.assert_call(args=("update_check_failures", 1))
         bigfoot.log_mock.assert_log(
             "WARNING",
             "Update check failed (1): simulated failure",
