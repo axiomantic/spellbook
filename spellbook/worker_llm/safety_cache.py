@@ -37,6 +37,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from spellbook.core.command_utils import atomic_replace
 from spellbook.worker_llm.tasks.tool_safety import SafetyVerdict
 
 logger = logging.getLogger(__name__)
@@ -265,7 +266,7 @@ def _atomic_write_json(path: Path, data: dict) -> None:
         try:
             with os.fdopen(fd, "wb") as fh:
                 fh.write(body)
-            os.replace(tmp, path)
+            atomic_replace(str(tmp), str(path))
             return
         except Exception:
             # Clean up the temp file so a failed write does not leave

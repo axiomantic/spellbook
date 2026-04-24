@@ -27,6 +27,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
+from spellbook.core.command_utils import atomic_replace
 from spellbook.core.paths import get_data_dir
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ def write_state(state: dict[str, Any]) -> None:
         os.write(fd_tmp, (json.dumps(state, indent=2) + "\n").encode("utf-8"))
         os.close(fd_tmp)
         fd_tmp_closed = True
-        os.replace(tmp_path, str(state_path))
+        atomic_replace(tmp_path, str(state_path))
     except BaseException:
         if not fd_tmp_closed:
             try:
@@ -199,7 +200,7 @@ def migrate_config_to_state() -> dict[str, Any]:
         os.write(fd_tmp, (json.dumps(new_config, indent=2) + "\n").encode("utf-8"))
         os.close(fd_tmp)
         fd_tmp_closed = True
-        os.replace(tmp_path, str(config_path))
+        atomic_replace(tmp_path, str(config_path))
     except BaseException as exc:
         logger.warning("Could not rewrite config during migration: %s", exc)
         if not fd_tmp_closed:
