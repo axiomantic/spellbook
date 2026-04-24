@@ -322,33 +322,38 @@ def _run_purge_once() -> None:
     while True:
         with get_spellbook_sync_session() as session:
             # Subquery-based delete: SQLite's DELETE LIMIT is a
-            # compile-time option not guaranteed to be present.
-            subq = (
-                select(WorkerLLMCall.id)
-                .where(WorkerLLMCall.timestamp < cutoff)
-                .limit(_PURGE_BATCH_LIMIT)
+            # compile-time option not guaranteed to be present. Fetch the
+            # victim ids in Python, then delete by explicit list -- avoids
+            # a subquery entirely so the DELETE plan stays simple.
+            victim_ids = (
+                session.execute(
+                    select(WorkerLLMCall.id)
+                    .where(WorkerLLMCall.timestamp < cutoff)
+                    .limit(_PURGE_BATCH_LIMIT)
+                )
+                .scalars()
+                .all()
             )
-            result = session.execute(
-                delete(WorkerLLMCall).where(WorkerLLMCall.id.in_(subq)),
-            )
-            if result.rowcount == 0:
+            if not victim_ids:
                 break
+            session.execute(
+                delete(WorkerLLMCall).where(WorkerLLMCall.id.in_(victim_ids)),
+            )
 
     # --- Count cap pass ---
     # Avoid ``DELETE WHERE id NOT IN (SELECT id ... LIMIT max_rows)``:
-    # SQLite's support for LIMIT inside IN/NOT IN subqueries is a
+    # SQLite's support for LIMIT inside NOT IN subqueries is a
     # compile-time option, and the pattern is O(N*M) in the worst case
     # because the keep-set subquery is re-evaluated per batch.
     #
-    # Instead: inline a scalar subquery that returns the primary-key id of
-    # the (``max_rows`` + 1)-th row in id-DESC order. Rows with
+    # Instead: a scalar subquery returns the primary-key id of the
+    # (``max_rows`` + 1)-th row in id-DESC order; rows with
     # ``id <= threshold`` are safe to delete (autoincrement PKs are
     # monotonic with insert order, so id-DESC == newest-first for the
-    # purposes of "keep newest N"). Once the table reaches ``max_rows``,
-    # the OFFSET + LIMIT 1 returns NULL; ``id <= NULL`` evaluates to NULL
-    # in SQL, the victim subquery finds no rows, rowcount is 0, the loop
-    # breaks. Uses ``IN`` (always supported) rather than ``NOT IN``, and is
-    # O(N) overall because the threshold probe is indexed on the PK.
+    # purposes of "keep newest N"). Once the table is under ``max_rows``,
+    # the OFFSET + LIMIT 1 returns NULL; ``id <= NULL`` yields no victims.
+    # Fetch victim ids in Python and DELETE by explicit list -- keeps the
+    # DELETE plan free of subqueries altogether.
     while True:
         with get_spellbook_sync_session() as session:
             threshold_subq = (
@@ -359,17 +364,19 @@ def _run_purge_once() -> None:
                 .scalar_subquery()
             )
             victim_ids = (
-                select(WorkerLLMCall.id)
-                .where(WorkerLLMCall.id <= threshold_subq)
-                .limit(_PURGE_BATCH_LIMIT)
+                session.execute(
+                    select(WorkerLLMCall.id)
+                    .where(WorkerLLMCall.id <= threshold_subq)
+                    .limit(_PURGE_BATCH_LIMIT)
+                )
+                .scalars()
+                .all()
             )
-            result = session.execute(
-                delete(WorkerLLMCall).where(
-                    WorkerLLMCall.id.in_(victim_ids),
-                ),
-            )
-            if result.rowcount == 0:
+            if not victim_ids:
                 break
+            session.execute(
+                delete(WorkerLLMCall).where(WorkerLLMCall.id.in_(victim_ids)),
+            )
 
     write_last_purge_ts()
 

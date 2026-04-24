@@ -191,28 +191,35 @@ def _run_purge_once() -> None:
     ).isoformat()
 
     # --- Time cap pass ---
+    # Fetch victim ids in Python, then delete by explicit list -- avoids
+    # a LIMIT-bearing subquery inside IN() so the DELETE plan stays simple.
     while True:
         with get_spellbook_sync_session() as session:
-            subq = (
-                select(HookEvent.id)
-                .where(HookEvent.timestamp < cutoff)
-                .limit(_PURGE_BATCH_LIMIT)
+            victim_ids = (
+                session.execute(
+                    select(HookEvent.id)
+                    .where(HookEvent.timestamp < cutoff)
+                    .limit(_PURGE_BATCH_LIMIT)
+                )
+                .scalars()
+                .all()
             )
-            result = session.execute(
-                delete(HookEvent).where(HookEvent.id.in_(subq)),
-            )
-            if result.rowcount == 0:
+            if not victim_ids:
                 break
+            session.execute(
+                delete(HookEvent).where(HookEvent.id.in_(victim_ids)),
+            )
 
     # --- Count cap pass ---
     # Mirrors the rewrite in ``worker_llm.observability``. Avoid
     # ``DELETE WHERE id NOT IN (SELECT ... LIMIT max_rows)``: LIMIT inside
-    # IN/NOT IN subqueries is a compile-time-optional SQLite feature and
-    # the pattern degrades to O(N*M). Inline a scalar subquery that returns
-    # the id of the (``max_rows`` + 1)-th row in id-DESC order; rows with
-    # ``id <= threshold`` are deletable. When the table is under max_rows,
-    # the OFFSET + LIMIT 1 returns NULL and ``id <= NULL`` yields no
-    # victims -> rowcount 0 -> break.
+    # NOT IN subqueries is a compile-time-optional SQLite feature and
+    # the pattern degrades to O(N*M). A scalar subquery returns the id of
+    # the (``max_rows`` + 1)-th row in id-DESC order; rows with
+    # ``id <= threshold`` are deletable. When the table is under
+    # ``max_rows``, OFFSET + LIMIT 1 returns NULL and ``id <= NULL`` yields
+    # no victims. Fetch victim ids in Python and DELETE by explicit list
+    # to keep the DELETE plan free of subqueries.
     while True:
         with get_spellbook_sync_session() as session:
             threshold_subq = (
@@ -223,15 +230,19 @@ def _run_purge_once() -> None:
                 .scalar_subquery()
             )
             victim_ids = (
-                select(HookEvent.id)
-                .where(HookEvent.id <= threshold_subq)
-                .limit(_PURGE_BATCH_LIMIT)
+                session.execute(
+                    select(HookEvent.id)
+                    .where(HookEvent.id <= threshold_subq)
+                    .limit(_PURGE_BATCH_LIMIT)
+                )
+                .scalars()
+                .all()
             )
-            result = session.execute(
+            if not victim_ids:
+                break
+            session.execute(
                 delete(HookEvent).where(HookEvent.id.in_(victim_ids)),
             )
-            if result.rowcount == 0:
-                break
 
     write_last_purge_ts()
 
