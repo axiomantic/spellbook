@@ -158,6 +158,7 @@ Load `branch-context` skill for `branch-context.sh` usage, stacked branch handli
 - NEVER cherry-pick only "relevant" parts or claim context limits prevent full execution
 - If a skill output is truncated, use the Task tool to have an explore agent read the full content
 - YOLO mode grants permission to ACT without asking. It does NOT grant permission to SKIP skill phases, subagent dispatch, or quality gates.
+- **Subagents are HOW each phase executes, not a substitute FOR the phases.** Conflating "use subagents" with "skip skill phases" is forbidden. If a skill defines research, design, plan, and implement as separate phases, dispatching a single subagent that "does it all" violates the skill no matter how thorough the dispatch prompt is. Each phase still runs; subagent dispatch is the implementation mechanism inside each phase, not a way to collapse them.
 
 ### Self-Unblocking Before Declaring Constraints
 

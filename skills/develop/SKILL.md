@@ -426,10 +426,13 @@ Task (or subagent simulation):
 
 After dispatching ANY subagent that should invoke a skill:
 
-1. Check subagent output for skill invocation confirmation
-2. Pattern match: output MUST contain "Launching skill: [skill-name]" or equivalent
-3. If pattern not found: subagent did NOT invoke the skill
-4. Re-dispatch with explicit instruction: "You MUST invoke the [skill-name] skill using the Skill tool BEFORE doing any work"
+1. Check subagent output for skill invocation confirmation.
+2. Pattern match: output MUST contain "Launching skill: [skill-name]" or equivalent.
+3. If pattern not found: REJECT the result. Do NOT integrate. Do NOT trust the subagent's findings; treat them as if the work was never performed. The subagent may have inline-executed the skill from memory, which is a silent-fallback contract violation.
+4. Re-dispatch using the canonical template in the `dispatching-parallel-agents` skill (Subagent Dispatch Template), which includes the silent-fallback prohibition and the Skill Availability by Agent Type table.
+5. If re-dispatch also produces no "Launching skill:" line: verify the `subagent_type` actually has the Skill tool. `claude-code-guide` and `statusline-setup` do not. If the agent type is correct and the line is still missing, escalate to the user. Do not silently accept.
+
+A subagent that reports "the skill is not available in this environment" without showing an attempted Skill tool call is making an untested claim. Reject it. Skills are delivered via system-reminder, NOT via the deferred-tools list, and the catalog is injected lazily after the first tool call. A subagent must attempt the call before declaring it impossible.
 
 Anti-rationalization #9 (Self-Review Substitution) applies here.
 </CRITICAL>

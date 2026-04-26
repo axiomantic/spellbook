@@ -213,8 +213,13 @@ Every subagent prompt MUST begin with:
    Then follow its complete workflow."
 
 After each subagent returns, verify its output contains
-"Launching skill: [name]". If not found, re-dispatch with explicit
-instruction to invoke the skill.
+"Launching skill: [name]". If not found, REJECT the result and re-dispatch
+using the dispatching-parallel-agents Subagent Dispatch Template. The
+subagent did not actually invoke the skill, so its findings are untrusted.
+A subagent that claims a skill "is not available" without showing an
+attempted Skill tool call is making an untested claim; reject and re-dispatch.
+If the agent type lacks the Skill tool (claude-code-guide, statusline-setup),
+the dispatch itself was the bug. Change agent type and try again.
 </CRITICAL>
 
 ### Per-Task Gate Sequence (mandatory, sequential, not batched)

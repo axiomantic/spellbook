@@ -569,6 +569,13 @@ Task(
 First, invoke the [SKILL-NAME] skill using the Skill tool.
 Then follow its complete workflow.
 
+If the Skill tool is unavailable in your context, or the named skill does
+not appear in your skills catalog after your first tool call, STOP and
+report the exact missing capability verbatim. Do NOT inline-execute the
+skill's behavior. Do NOT paraphrase the skill from memory. Do NOT proceed
+with the work. Silent fallback is a contract violation; the orchestrator
+will reject any result that does not contain a "Launching skill:" line.
+
 ## Context for the Skill
 
 [ONLY provide context - file paths, requirements, constraints]
@@ -585,6 +592,23 @@ Then follow its complete workflow.
 | `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
+
+### Skill Availability by Agent Type
+
+The Skill tool is included for most subagent types but not all. Verify before dispatching skill-dependent work:
+
+| Subagent Type | Has Skill tool | Notes |
+|---|---|---|
+| `general-purpose` (or `general`) | yes | Full toolset; default for develop dispatches |
+| `Explore` (or `explore`) | yes | Read-only exploration; cannot edit files |
+| `Plan` | yes | Read-only planning; cannot edit files |
+| `yolo`, `yolo-focused` (OpenCode) | yes | Inherit autonomous permissions |
+| `claude-code-guide` | no | Restricted to Bash, Read, WebFetch, WebSearch |
+| `statusline-setup` | no | Restricted to Read, Edit |
+
+Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no "Launching skill:" line and the orchestrator must reject the result.
+
+**Lazy-injection caveat:** The skills catalog system-reminder is injected into a subagent's context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
 
 ### Worktree Dispatch
 
