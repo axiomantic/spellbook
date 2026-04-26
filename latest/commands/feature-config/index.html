@@ -8725,79 +8725,88 @@
 <a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="k">-</span><span class="w"> </span>Zero test changes (no test files reference the changed values)
 <a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="k">-</span><span class="w"> </span>If ANY condition above is not met, the task is NOT Trivial
 <a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="gu">#### Step 3: Present and Confirm</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="gu">## Complexity Classification</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="gu">### Heuristic Results</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="gs">**Pure rename ceiling — cap at STANDARD:**</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>A pure rename is mechanical: rename a symbol (function/variable/class/type) or file, then update all references and imports. No behavior change, no signature change, no structural redesign. Test changes are limited to updating the renamed reference.
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="k">-</span><span class="w"> </span>A pure rename is <span class="gs">**at most STANDARD**</span>, even when the file count would otherwise indicate COMPLEX (e.g. a symbol used across 50 files).
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="k">-</span><span class="w"> </span>A pure rename of a symbol confined to a small set of files (≤5) is SIMPLE.
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">-</span><span class="w"> </span>If the rename is paired with a signature change, behavior change, or structural redesign, this ceiling does NOT apply — classify normally.
 <a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>| Heuristic | Result | Signal |
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>|-----------|--------|--------|
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>| File count | ~[N] files | [command output summary] |
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>| Behavioral change | [Yes/No] | [reason] |
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>| Test impact | [N] test files | [command output summary] |
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>| Structural change | [Yes/No] | [reason] |
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>| Integration points | [N] | [command output summary] |
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">### Derived Tier: **[TIER]**</span>
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>Rationale: [1-2 sentence explanation from heuristic results]
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gs">**Confirm or override?**</span> (Say &quot;confirm&quot; or specify a different tier with reason)
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="sb">```</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>Store confirmed tier in <span class="sb">`SESSION_PREFERENCES.complexity_tier`</span>.
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>Reason: rename refactors are cheap and fast regardless of fan-out. File count overstates effort because each touch is a near-identical mechanical edit, easily verified by typecheck/test.
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="gu">#### Step 3: Present and Confirm</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="gu">## Complexity Classification</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a><span class="gu">### Heuristic Results</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>| Heuristic | Result | Signal |
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>|-----------|--------|--------|
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>| File count | ~[N] files | [command output summary] |
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>| Behavioral change | [Yes/No] | [reason] |
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>| Test impact | [N] test files | [command output summary] |
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>| Structural change | [Yes/No] | [reason] |
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>| Integration points | [N] | [command output summary] |
 <a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="gu">#### Step 4: Route by Tier</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="gu">### Derived Tier: **[TIER]**</span>
 <a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>| Tier | Next Action |
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>|------|-------------|
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>| <span class="gs">**TRIVIAL**</span> | Exit skill. Log: &quot;Task classified as TRIVIAL. Exiting develop. Proceed with direct change.&quot; |
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a>| <span class="gs">**SIMPLE**</span> | Simple Path: Lightweight Research inline, then <span class="sb">`/feature-implement`</span> directly. |
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>| <span class="gs">**STANDARD**</span> | Proceed to <span class="sb">`/feature-research`</span> (Phase 1). |
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>| <span class="gs">**COMPLEX**</span> | Proceed to <span class="sb">`/feature-research`</span> (Phase 1). |
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>Rationale: [1-2 sentence explanation from heuristic results]
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="gs">**Confirm or override?**</span> (Say &quot;confirm&quot; or specify a different tier with reason)
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="sb">```</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>Store confirmed tier in <span class="sb">`SESSION_PREFERENCES.complexity_tier`</span>.
 <a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="gs">**Lightweight Research (SIMPLE path):**</span> Inline research without Phase 1 subagent dispatch. Grep for relevant files, read key modules, confirm scope, then write a brief inline plan before jumping to <span class="sb">`/feature-implement`</span>.
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="gu">#### Step 4: Route by Tier</span>
 <a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="k">-</span><span class="w"> </span>Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="k">-</span><span class="w"> </span>Running wizard questions before checking 0.5 continuation signals
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a><span class="k">-</span><span class="w"> </span>Trusting session summary without artifact verification
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="k">-</span><span class="w"> </span>Classifying complexity tier without running the bash heuristics
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="k">-</span><span class="w"> </span>Overriding tier classification without user confirmation
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">-</span><span class="w"> </span>Treating any single unmet Trivial condition as ignorable
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span>Skipping motivation clarification when request intent is ambiguous
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span>Asking wizard questions again when resuming (only re-ask the 4 preference questions)
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>---
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="gu">## Phase 0 Complete</span>
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>
-<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>Before proceeding, verify:
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">- [ ]</span> 0.5 Continuation check executed first (resume or fresh start determined)
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">- [ ]</span> Escape hatches detected (or confirmed none)
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="k">- [ ]</span> Motivation clarified (WHY)
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">- [ ]</span> Feature essence clarified (WHAT)
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">- [ ]</span> All 4 workflow preferences collected and stored in SESSION_PREFERENCES
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="k">- [ ]</span> Dialectic mode and level selected (if dialectic != none)
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a><span class="k">- [ ]</span> Token enforcement level selected
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="k">- [ ]</span> Refactoring mode detected if applicable
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="k">- [ ]</span> Complexity tier classified via mechanical heuristics and confirmed by user
-<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="k">- [ ]</span> Tier routing determined
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>If ANY unchecked: Complete Phase 0. Do NOT proceed.
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="gs">**Next (by tier):**</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="k">-</span><span class="w"> </span>TRIVIAL: Exit skill
-<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="k">-</span><span class="w"> </span>SIMPLE: Lightweight Research (inline, then <span class="sb">`/feature-implement`</span>)
-<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="k">-</span><span class="w"> </span>STANDARD/COMPLEX: Run <span class="sb">`/feature-research`</span> to begin Phase 1
-<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or a miscalculated complexity tier will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>| Tier | Next Action |
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>|------|-------------|
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>| <span class="gs">**TRIVIAL**</span> | Exit skill. Log: &quot;Task classified as TRIVIAL. Exiting develop. Proceed with direct change.&quot; |
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>| <span class="gs">**SIMPLE**</span> | Simple Path: Lightweight Research inline, then <span class="sb">`/feature-implement`</span> directly. |
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>| <span class="gs">**STANDARD**</span> | Proceed to <span class="sb">`/feature-research`</span> (Phase 1). |
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>| <span class="gs">**COMPLEX**</span> | Proceed to <span class="sb">`/feature-research`</span> (Phase 1). |
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="gs">**Lightweight Research (SIMPLE path):**</span> Inline research without Phase 1 subagent dispatch. Grep for relevant files, read key modules, confirm scope, then write a brief inline plan before jumping to <span class="sb">`/feature-implement`</span>.
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">-</span><span class="w"> </span>Running wizard questions before checking 0.5 continuation signals
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="k">-</span><span class="w"> </span>Trusting session summary without artifact verification
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="k">-</span><span class="w"> </span>Classifying complexity tier without running the bash heuristics
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="k">-</span><span class="w"> </span>Overriding tier classification without user confirmation
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="k">-</span><span class="w"> </span>Treating any single unmet Trivial condition as ignorable
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="k">-</span><span class="w"> </span>Skipping motivation clarification when request intent is ambiguous
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">-</span><span class="w"> </span>Asking wizard questions again when resuming (only re-ask the 4 preference questions)
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>---
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="gu">## Phase 0 Complete</span>
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>Before proceeding, verify:
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="k">- [ ]</span> 0.5 Continuation check executed first (resume or fresh start determined)
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="k">- [ ]</span> Escape hatches detected (or confirmed none)
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="k">- [ ]</span> Motivation clarified (WHY)
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="k">- [ ]</span> Feature essence clarified (WHAT)
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="k">- [ ]</span> All 4 workflow preferences collected and stored in SESSION_PREFERENCES
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="k">- [ ]</span> Dialectic mode and level selected (if dialectic != none)
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="k">- [ ]</span> Token enforcement level selected
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="k">- [ ]</span> Refactoring mode detected if applicable
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="k">- [ ]</span> Complexity tier classified via mechanical heuristics and confirmed by user
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="k">- [ ]</span> Tier routing determined
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>If ANY unchecked: Complete Phase 0. Do NOT proceed.
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="gs">**Next (by tier):**</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="k">-</span><span class="w"> </span>TRIVIAL: Exit skill
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="k">-</span><span class="w"> </span>SIMPLE: Lightweight Research (inline, then <span class="sb">`/feature-implement`</span>)
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a><span class="k">-</span><span class="w"> </span>STANDARD/COMPLEX: Run <span class="sb">`/feature-research`</span> to begin Phase 1
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or a miscalculated complexity tier will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
