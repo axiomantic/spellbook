@@ -392,6 +392,15 @@ For HEURISTIC 2 (Behavioral Change) and HEURISTIC 4 (Structural Change), analyze
 - Zero test changes (no test files reference the changed values)
 - If ANY condition above is not met, the task is NOT Trivial
 
+**Pure rename ceiling — cap at STANDARD:**
+A pure rename is mechanical: rename a symbol (function/variable/class/type) or file, then update all references and imports. No behavior change, no signature change, no structural redesign. Test changes are limited to updating the renamed reference.
+
+- A pure rename is **at most STANDARD**, even when the file count would otherwise indicate COMPLEX (e.g. a symbol used across 50 files).
+- A pure rename of a symbol confined to a small set of files (≤5) is SIMPLE.
+- If the rename is paired with a signature change, behavior change, or structural redesign, this ceiling does NOT apply — classify normally.
+
+Reason: rename refactors are cheap and fast regardless of fan-out. File count overstates effort because each touch is a near-identical mechanical edit, easily verified by typecheck/test.
+
 #### Step 3: Present and Confirm
 
 ```markdown

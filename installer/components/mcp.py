@@ -808,10 +808,13 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
         with contextlib.redirect_stdout(io.StringIO()):
             install_service()
 
-        # Wait for daemon to start and become healthy
-        for _ in range(30):
+        # Wait for daemon to start and become healthy.
+        # launchd/systemd can take a while to spawn the process on first install,
+        # and the daemon itself does non-trivial startup work (FastMCP boot,
+        # bytecode caches, memory store init), so allow ~90s before giving up.
+        for _ in range(90):
             time.sleep(1)
-            healthy, msg = check_daemon_health(timeout=2)
+            healthy, msg = check_daemon_health(timeout=3)
             if healthy:
                 return (True, f"Daemon installed and running on {get_spellbook_server_url()}")
 
