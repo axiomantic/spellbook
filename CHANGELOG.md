@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.1] - 2026-04-26
+
+### Changed
+
+- **Subagent skill dispatch contract hardened.** The canonical dispatch
+  template in `dispatching-parallel-agents` now prohibits silent fallback:
+  if the Skill tool is unavailable or the named skill is not in the
+  catalog, the subagent must report the missing capability verbatim
+  instead of inline-executing the skill from memory. The `develop`
+  skill's "Subagent Skill Invocation Verification" block (mirrored in
+  `commands/feature-implement.md` and `docs/skills/develop.md`) is now
+  a hard REJECT rather than a prose-level "verify and re-dispatch",
+  with explicit escalation when re-dispatch also fails.
+- **Skill Availability by Agent Type matrix** added to
+  `dispatching-parallel-agents`, documenting which subagent types
+  (`general-purpose`, `Explore`, `Plan`, `yolo`, `yolo-focused`) include
+  the Skill tool and which (`claude-code-guide`, `statusline-setup`)
+  do not. Includes the lazy-injection caveat: the skills catalog
+  system-reminder is platform-injected after a subagent's first tool
+  call, not at session start.
+- **`AGENTS.spellbook.md` Skill Execution rules** now explicitly name
+  the "subagents are HOW each phase executes, not a substitute FOR the
+  phases" conflation as a forbidden anti-pattern.
+- **`AGENTS.md` Adding Config Options section** added: three-point rule
+  for new user-facing config keys (prompt new users, prompt existing
+  users only if unset, never re-prompt once answered), divergent
+  install entry-point parity requirement, idempotency pattern,
+  non-tty fallback discipline, and `--reconfigure` flag guidance.
+- **Bigfoot mocking rule hardened in `AGENTS.md`** with explicit
+  forbidden/allowed lists. Narrows the `monkeypatch` allowlist to env
+  vars, cwd, and `sys.path` only. Adds reviewer-phrasing guidance to
+  prevent "use bigfoot OR monkeypatch" suggestions.
+
 ## [0.54.0] - 2026-04-22
 
 ### Added
