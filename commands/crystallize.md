@@ -261,7 +261,9 @@ SPLIT the block:
   introduces non-imperative content. Lift to canonical Rules section verbatim,
   preserving original tag wrapping.
 - Rationale portion: descriptive prose after the split. Stays in original
-  location as part of General Instructions, subject to compression.
+  location as part of General Instructions, **unwrapped** (the original
+  `<CRITICAL>` / `<RULE>` / etc. tag is removed since it no longer wraps
+  imperative content), and subject to normal compression.
 
 **Bias when uncertain:**
 
@@ -274,8 +276,16 @@ section that pass through verbatim (see Re-crystallization Protocol).
 **Output of Phase 1A:**
 
 - `RuleSet`: ordered list of detected rules in source order (preserved
-  end-to-end through emission). Each entry: `{id, content, original_location, tag_wrapping,
-  confidence}`. IDs assigned R1, R2, ... in source order.
+  end-to-end through emission). Each entry:
+  `{id, content, original_location, tag_wrapping, confidence,
+    metadata: {added, pass, last-confirmed, merged-from?}}`.
+  On FIRST-PASS crystallization, IDs are assigned R1, R2, ... in source
+  order, `added` and `last-confirmed` are set to today's ISO date,
+  `pass` is set to 1, and `merged-from` is omitted. On
+  RE-CRYSTALLIZATION, existing IDs and metadata are preserved verbatim
+  from each rule's `<!-- rule-meta: ... -->` provenance comment (IDs
+  are immutable across passes); only `last-confirmed` may advance to
+  today's date for rules the run preserved unchanged.
 - `Residual`: the document with rule content removed (or marked for removal).
   Subsequent phases operate on Residual.
 
@@ -637,11 +647,23 @@ Compare SYNTH to original and verify:
 
 **1. Token Count** (estimate: lines × 7):
 
-Let `original_compressible = original_bytes - rule_bytes_in_original`
-(rule_bytes_in_original is the total byte count of detected RuleSet content,
-including tag wrapping). The Rules section emits `rule_bytes` verbatim and is
-NOT subject to compression. All targets below apply to the General Instructions
-surface only.
+Let `original_compressible = original_bytes - rule_bytes_in_original`,
+where `rule_bytes_in_original` is:
+
+- **First-pass** (input has no canonical `## Rules` section): the total
+  byte count of detected RuleSet content, including tag wrapping.
+- **Re-crystallization** (input has a canonical `## Rules` section): the
+  total byte count of the entire canonical Rules section, including the
+  `## Rules` heading line, the `<!-- crystallize-meta: pass=N -->` comment,
+  surrounding blank lines, every `<RULE>...</RULE>` block (and equivalents),
+  every `<!-- rule-meta: ... -->` comment, plus any `<!-- rule-deprecated: ... -->`
+  markers. The point is to remove ALL non-compressible byte territory
+  from the compression budget so the heading and meta comments don't
+  consume it.
+
+The Rules section emits `rule_bytes` verbatim and is NOT subject to
+compression. All targets below apply to the General Instructions surface
+only.
 
 **Pass detection.** If the input contains a canonical `## Rules` section
 (per the disambiguation rule in `crystallize-verify.md`'s Verifier Read
@@ -1004,7 +1026,7 @@ Before completing crystallization:
 - [ ] All cycle completion steps preserved ("Repeat", "Continue until")
 - [ ] All negative guidance sections preserved as separate sections
 - [ ] Complete enumerations remain complete (not partial lists)
-- [ ] Token count is >= 80% of original (or manually reviewed if lower)
+- [ ] General Instructions output >= 80% of `original_compressible` on first-pass, or >= 90% of `original_compressible` on re-crystallization (or manually reviewed if lower; see Post-Synthesis Verification "Token Count")
 
 ### Meta-Rules
 - [ ] NOT crystallizing the crystallize command itself
