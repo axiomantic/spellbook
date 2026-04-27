@@ -256,11 +256,17 @@ rules — they are general guidance and remain subject to compression.
 **Mixed-content tag blocks:**
 
 When a tag-wrapped block contains both rule prose and explanatory rationale,
-SPLIT the block:
-- Rule portion: imperative prose ending at the first paragraph break that
-  introduces non-imperative content. Lift to canonical Rules section verbatim,
-  preserving original tag wrapping.
-- Rationale portion: descriptive prose after the split. Stays in original
+SPLIT the block. Rule and rationale paragraphs may appear in any order
+inside the block (rationale-then-rule, rule-then-rationale, or interleaved):
+
+- Rule portion: ALL imperative paragraphs within the block (sentences with
+  MUST / NEVER / ALWAYS / required action), regardless of their position
+  inside the block. Lift each to the canonical Rules section verbatim,
+  preserving original tag wrapping. Multiple imperative paragraphs from the
+  same block become separate rule entries (each with its own ID and
+  provenance) unless they are inseparably joined (a single rule whose
+  imperative spans multiple paragraphs); detection is semantic.
+- Rationale portion: ALL descriptive paragraphs within the block. Stays in original
   location as part of General Instructions, **unwrapped** (the original
   `<CRITICAL>` / `<RULE>` / etc. tag is removed since it no longer wraps
   imperative content), and subject to normal compression.
@@ -672,12 +678,17 @@ Compare SYNTH to original and verify:
 Let `original_compressible = original_bytes - rule_bytes_in_original - untouchable_bytes_in_original`,
 where `untouchable_bytes_in_original` is the total byte count of every
 section identified as UNTOUCHABLE in the Pre-Compression Identification
-phase (the `<ROLE>` block, `<FINAL_EMPHASIS>` / "Final Rule" closing,
-all `<CRITICAL>` and `<FORBIDDEN>` blocks, explanatory tables, calibration
-notes, and workflow-completion sections). Including untouchable bytes
-in the compressible baseline would tighten the target for the remaining
-prose and pressure the orchestrator into compressing sections it must
-not touch.
+phase, **excluding any bytes already counted in `rule_bytes_in_original`**.
+The two sets are disjoint by construction: a `<CRITICAL>` or `<FORBIDDEN>`
+block that Phase 1A lifted as a rule is counted in `rule_bytes_in_original`
+and NOT counted again here. The remaining UNTOUCHABLE territory in this
+term covers the `<ROLE>` block, `<FINAL_EMPHASIS>` / "Final Rule" closing,
+`<CRITICAL>` and `<FORBIDDEN>` blocks NOT classified as rules (descriptive
+emphasis, section-level warnings), explanatory tables, calibration notes,
+and workflow-completion sections. Including untouchable bytes in the
+compressible baseline would tighten the target for the remaining prose
+and pressure the orchestrator into compressing sections it must not
+touch; double-counting them would tighten it further still.
 
 `rule_bytes_in_original` is:
 
