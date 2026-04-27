@@ -131,9 +131,9 @@ access, forbidden by `<FORBIDDEN>`).
   3. **Provenance metadata** (HTML comments inside the canonical Rules
      section, format: `<!-- rule-meta: id=Rn, added=..., pass=..., last-confirmed=... -->`)
      is part of the canonical Rules section content; subject to the
-     byte-fidelity check WITH the `last-confirmed` exception described
-     in item #22 (the date may advance to any ISO date `>= original_value
-     AND <= today`; all other fields must be byte-identical).
+     byte-fidelity check WITH the `last-confirmed` exception (the date may
+     advance to any ISO date `>= original_value AND <= today`; all other
+     fields must be byte-identical).
 
 **External resources:**
 - The verifier does NOT read external files, skills, memory, MCP tools,
@@ -183,7 +183,7 @@ Finding F[N]:
 Severity miscalculation is the most common audit failure. CRITICAL and HIGH findings trigger forced restoration. Downgrading severity to avoid a FAIL verdict is forbidden.
 </CRITICAL>
 
-**ADVISORY findings** (item #15 / rules-split design): a fifth severity level
+**ADVISORY findings:** a fifth severity level
 below LOW. ADVISORY findings do NOT block a PASS verdict; they surface
 classification disagreements between the verifier's independent rule extractor
 (Phase 1A) and the crystallizer's classification. Listed under a new

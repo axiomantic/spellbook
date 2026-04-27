@@ -253,7 +253,7 @@ rules — they are general guidance and remain subject to compression.
      "this is important context") rather than imperative MUST/NEVER prose
    - Principles, dispositions, core values (general guidance, not rules)
 
-**Mixed-content tag blocks (per item #9):**
+**Mixed-content tag blocks:**
 
 When a tag-wrapped block contains both rule prose and explanatory rationale,
 SPLIT the block:
@@ -273,8 +273,8 @@ section that pass through verbatim (see Re-crystallization Protocol).
 
 **Output of Phase 1A:**
 
-- `RuleSet`: ordered list of detected rules (source-order preservation, see
-  item #24). Each entry: `{id, content, original_location, tag_wrapping,
+- `RuleSet`: ordered list of detected rules in source order (preserved
+  end-to-end through emission). Each entry: `{id, content, original_location, tag_wrapping,
   confidence}`. IDs assigned R1, R2, ... in source order.
 - `Residual`: the document with rule content removed (or marked for removal).
   Subsequent phases operate on Residual.
@@ -289,7 +289,7 @@ section that pass through verbatim (see Re-crystallization Protocol).
 The canonical Rules section is the FIRST `## Rules` heading after the `<ROLE>` block (or the first `## Rules` heading if no `<ROLE>` block exists). Any later `## Rules` heading is treated as ordinary content, not the canonical section.
 
 **Interactive mode for MEDIUM confidence:**
-Ask exactly the prompt in item #28 ("Lift question") for each MEDIUM-confidence
+Ask the consent prompt below (the "Lift question") for each MEDIUM-confidence
 candidate. Wait for response before continuing.
 
 ### Phase 1.5: Behavioral Spec Extraction
@@ -751,30 +751,52 @@ rule defined in Phase 1A above: the FIRST `## Rules` heading after the
 `<ROLE>` block, or the first `## Rules` heading if no `<ROLE>` block exists),
 the run is a RE-CRYSTALLIZATION. Behavior differs from a first-pass run in three ways:
 
-1. **Compression budget is RELAXED** (item #4): targets ≤95% / ≤98% / ≤105%
+1. **Compression budget is RELAXED:** targets ≤95% / ≤98% / ≤105%
    instead of first-pass ≤88% / ≤93% / ≤105%. Rationale: previously-compressed
    content shrinking again would produce unbounded shrinkage across passes.
 
-2. **Existing rules pass through verbatim by default** (item #6). In
+2. **Existing rules pass through verbatim by default.** In
    interactive mode, borderline-classified rules MAY surface for
-   re-confirmation via the Lift question (item #28); operator may demote,
+   re-confirmation via the Lift question; operator may demote,
    keep, or skip. In autonomous mode, all existing rules pass through
-   silently and any disagreements log to the Tightening Skipped footer
-   (item #5).
+   silently and any disagreements log to the Tightening Skipped footer.
 
 3. **Inline tag blocks in the residual ARE STILL LIFTED** to the canonical
-   Rules section (item P1-2 / item #14 row 6). Inline `<RULE>` /
-   `<FORBIDDEN>` / `<CRITICAL>` blocks present elsewhere in a re-crystallized
-   document are anomalies (rules that escaped consolidation in a prior
-   pass); bringing them into the canonical section is the correct outcome.
-   New IDs are assigned at the end of the existing Rules section per the
-   source-order rule (item #24).
+   Rules section. Inline `<RULE>` / `<FORBIDDEN>` / `<CRITICAL>` blocks
+   present elsewhere in a re-crystallized document are anomalies (rules
+   that escaped consolidation in a prior pass); bringing them into the
+   canonical section is the correct outcome. New IDs are assigned at the
+   end of the existing Rules section in source order.
 
 Provenance metadata `last-confirmed` field advances to today's ISO date for
 every rule the run preserved unchanged. Other provenance fields (`id`,
-`added`, `pass`, `merged-from`) are immutable (item #22). The HALT-floor
-on General Instructions output is enforced once, in Post-Synthesis Verification
-(item #1, "Token Count").
+`added`, `pass`, `merged-from`) are immutable. The HALT-floor on General
+Instructions output is enforced once, in the Post-Synthesis Verification
+"Token Count" check.
+
+**Pass-counter advancement and survival accounting.** A rule "survives a
+pass" when a re-crystallization run preserves it without operator demotion.
+The crystallizer increments the run's monotonic pass counter once at the
+start of every re-crystallization (the counter lives in the document's
+`<!-- crystallize-meta: pass=N -->` HTML comment immediately above the
+canonical `## Rules` section, written if absent on first pass). The
+`pass` field inside each rule's `<!-- rule-meta: ... -->` comment is set
+once at the rule's first emission and is immutable thereafter; survival
+is computed as `(current_doc_pass - rule_meta.pass) + 1`.
+
+**Deprecation-marker handling on re-crystallization.** When a rule
+carries a `<!-- rule-deprecated: ... removable-after-pass=K -->` marker
+written by a prior `/crystallize-consolidate` run, the re-crystallization
+pass:
+
+- If `current_doc_pass < K`: rule passes through verbatim with its
+  deprecation marker intact. It has not yet cleared the survival window.
+- If `current_doc_pass >= K`: surface a re-confirmation prompt to the
+  operator (interactive mode) asking whether to remove the rule. In
+  autonomous mode, the rule passes through verbatim and the deprecation
+  candidacy is logged to the Tightening Skipped footer. Removal is never
+  silent; it requires explicit operator consent on a re-crystallization
+  pass after the survival window has cleared.
 
 ## Companion Commands
 
@@ -791,7 +813,7 @@ AskUserQuestion: "Where should I deliver the crystallized prompt?"
 **Autonomous-mode footer:** if the run was in autonomous mode AND the
 "tightening skipped" log has at least one entry, append a footer to the
 delivery output. The footer appears AFTER `</FINAL_EMPHASIS>`, separated
-by a horizontal rule. Format per item #5 of the rules-split design:
+by a horizontal rule. Format:
 
 ```markdown
 ---
@@ -847,8 +869,8 @@ Present audit findings. If any MUST RESTORE items missing, restore before comple
 
 ## Tradeoff Acknowledgment
 
-Bias toward over-preservation (item #6 in the rules-split design) and AI slop
-prevention (the entire purpose of this command) are in productive tension.
+Bias toward over-preservation and AI slop prevention (the entire purpose
+of this command) are in productive tension.
 
 **The risk of over-preservation:** A canonical Rules section that lifts too
 much produces a different flavor of slop — rule sections so bloated that the
@@ -856,17 +878,17 @@ LLM averages across rules and loses the precision of any individual rule.
 A 50-rule Rules section is not actually 50 rules; it is one diffuse priority
 gradient.
 
-**Mitigations the design provides:**
-1. **Re-detection on re-crystallization (item #6):** in interactive mode,
+**Mitigations:**
+1. **Re-detection on re-crystallization:** in interactive mode,
    borderline-classified rules can be demoted on re-evaluation. The bias
    does not propagate forever; it is reviewable on every interactive pass.
-2. **`/crystallize-consolidate` companion (item #2):** explicit operator-
-   driven path to merge or deprecate accumulated rules. Bookkeeping the
-   bias would otherwise create.
-3. **Tightening Skipped footer (item #5):** autonomous mode does not silently
+2. **`/crystallize-consolidate` companion:** explicit operator-driven
+   path to merge or deprecate accumulated rules. Bookkeeping the bias
+   would otherwise create.
+3. **Tightening Skipped footer:** autonomous mode does not silently
    stuff the bookkeeping under the rug; the operator sees, in every delivery,
    what got skipped and what is queued for review.
-4. **LOW confidence does not lift (item #25):** the bias applies only to HIGH
+4. **LOW confidence does not lift:** the bias applies only to HIGH
    and MEDIUM categories, leaving genuinely informal prose unmodified.
 
 **This tradeoff is documented to prevent future maintainers from re-litigating
@@ -922,7 +944,7 @@ lift"), not to remove the bias entirely.
   rule-protection contract).
 - Treating `<CRITICAL>` blocks as rules when content is descriptive prose
   (`<CRITICAL>` is a formatting emphasis, not a rule marker; lift only when
-  content is imperative MUST/NEVER prose with named scope, per item #26).
+  content is imperative MUST/NEVER prose with named scope).
 </FORBIDDEN>
 
 ## Self-Check

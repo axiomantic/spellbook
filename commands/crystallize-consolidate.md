@@ -33,13 +33,14 @@ heading after the `<ROLE>` block, or the first `## Rules` heading if no
 ## Protocol
 
 1. Parse the target file's `## Rules` section. Build a rule-id-keyed map
-   from provenance metadata (item #22 in the rules-split design).
+   from each rule's `<!-- rule-meta: id=Rn, added=..., pass=..., last-confirmed=... [, merged-from=...] -->`
+   provenance comment.
 2. Run internal overlap / staleness analysis. Produce candidate list
    (pairs with content overlap; single rules referencing deprecated
    tools/phases; single rules that contradict another rule).
-3. For each candidate, present ONE `AskUserQuestion` invocation
-   (consolidation question per item #28 of the rules-split design).
-   Wait for operator response. Apply chosen action immediately.
+3. For each candidate, present ONE `AskUserQuestion` invocation (the
+   consolidation question shown below). Wait for operator response.
+   Apply chosen action immediately.
 
    ```
    AskUserQuestion({
@@ -59,8 +60,9 @@ heading after the `<ROLE>` block, or the first `## Rules` heading if no
    On `Merge`: emit a follow-up text-input prompt asking the operator to
    write the merged rule body. The operator-written text replaces both
    originals. Assign a new rule ID. Provenance metadata records
-   `merged-from: R[m], R[n]` and resets `added` and `pass` to current
-   values.
+   `merged-from: R[m], R[n]`, sets `added` to today's ISO date, and
+   initializes `pass` to `1` (the merged rule begins a fresh lifecycle;
+   the `merged-from` field preserves the lineage to the originals).
 
    On `Deprecate one`: emit a follow-up `AskUserQuestion` asking which
    rule to deprecate (options: R[m] / R[n]), then a text-input prompt
