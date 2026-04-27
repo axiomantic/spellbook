@@ -621,9 +621,11 @@ IF spec_gate_active = False: skip this group (simple file, no spec items)
       section, byte-for-byte identical to source content (including original
       tag wrapping)
 - [ ] Source order preserved: rules appear in the order they were detected
-- [ ] Provenance metadata present for each rule (HTML comment trailer, see #22)
+- [ ] Provenance metadata present for each rule (HTML comment trailer:
+      `<!-- rule-meta: id=Rn, added=YYYY-MM-DD, pass=N, last-confirmed=YYYY-MM-DD [, merged-from=...] -->`)
 - [ ] If RuleSet was empty: canonical Rules section contains exactly the
-      placeholder `<!-- no rules detected -->` (see #8)
+      placeholder `<!-- no rules detected -->` (byte-exact; any other
+      content is a placeholder mismatch finding)
 
 IF ANY BOX UNCHECKED: Revise before completing.
 </reflection>
@@ -777,11 +779,31 @@ Instructions output is enforced once, in the Post-Synthesis Verification
 **Pass-counter advancement and survival accounting.** A rule "survives a
 pass" when a re-crystallization run preserves it without operator demotion.
 The crystallizer increments the run's monotonic pass counter once at the
-start of every re-crystallization (the counter lives in the document's
-`<!-- crystallize-meta: pass=N -->` HTML comment immediately above the
-canonical `## Rules` section, written if absent on first pass). The
-`pass` field inside each rule's `<!-- rule-meta: ... -->` comment is set
-once at the rule's first emission and is immutable thereafter; survival
+start of every re-crystallization. The counter lives **inside** the
+canonical `## Rules` section, as the FIRST line of content immediately
+after the section heading:
+
+```markdown
+## Rules
+
+<!-- crystallize-meta: pass=N -->
+
+<RULE>...</RULE>
+<!-- rule-meta: id=R1, added=YYYY-MM-DD, pass=N, last-confirmed=YYYY-MM-DD -->
+
+...
+```
+
+Placing the counter inside the Rules section brings it under the verifier's
+byte-fidelity contract, so it cannot be silently lost or rewritten during
+General Instructions synthesis. The crystallize-verify tolerance permits
+exactly one change per re-crystallization run: the `pass` value advances
+by `+1` from its prior value (any other modification to this comment is
+a CRITICAL finding). The counter is written if absent on first pass
+(initial value `pass=1`).
+
+The `pass` field inside each rule's `<!-- rule-meta: ... -->` comment is
+set once at the rule's first emission and is immutable thereafter; survival
 is computed as `(current_doc_pass - rule_meta.pass) + 1`.
 
 **Deprecation-marker handling on re-crystallization.** When a rule

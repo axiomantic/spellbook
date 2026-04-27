@@ -60,9 +60,10 @@ heading after the `<ROLE>` block, or the first `## Rules` heading if no
    On `Merge`: emit a follow-up text-input prompt asking the operator to
    write the merged rule body. The operator-written text replaces both
    originals. Assign a new rule ID. Provenance metadata records
-   `merged-from: R[m], R[n]`, sets `added` to today's ISO date, and
-   initializes `pass` to `1` (the merged rule begins a fresh lifecycle;
-   the `merged-from` field preserves the lineage to the originals).
+   `merged-from: R[m], R[n]`, sets `added` and `last-confirmed` to today's
+   ISO date, and initializes `pass` to the document's current pass value
+   (the merged rule begins a fresh lifecycle: `(current_doc_pass - rule_meta.pass) + 1 = 1`;
+   the `merged-from` field preserves lineage to the originals).
 
    On `Deprecate one`: emit a follow-up `AskUserQuestion` asking which
    rule to deprecate (options: R[m] / R[n]), then a text-input prompt

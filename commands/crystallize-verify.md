@@ -109,6 +109,20 @@ exception:
 All other fields (`id`, `added`, `pass`, optional `merged-from`) MUST be
 byte-identical to the source. Any drift in those fields is a CRITICAL finding.
 
+**Crystallize-meta byte-fidelity exception.** A separate HTML comment
+appears as the FIRST line of content inside the canonical `## Rules`
+section (when present): `<!-- crystallize-meta: pass=N -->`. This counter
+tracks document-level re-crystallization passes and is permitted EXACTLY
+ONE change per re-crystallization run:
+
+- The `pass` value MAY advance by exactly `+1` from its prior value. Any
+  larger jump, decrement, or modification of any other character in this
+  comment is a CRITICAL finding.
+- A first-pass run MAY introduce this comment with `pass=1` if absent in
+  the original. Re-crystallization runs MUST NOT introduce it if the prior
+  output already had it (replacement = drift). If both inputs have it,
+  the +1 rule applies.
+
 ### Verifier Read Discipline
 
 The verifier may read EXACTLY the following from each input. Any other
