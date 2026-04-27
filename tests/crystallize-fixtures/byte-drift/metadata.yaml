@@ -1,0 +1,6 @@
+test_target: crystallize-verify
+description: "Verifier catches one-character drift in a rule body"
+expected_verdict: FAIL
+expected_findings:
+  - severity: CRITICAL
+    type: "Rule-inventory entry present in output Rules section but with byte-drift inside the rule body"

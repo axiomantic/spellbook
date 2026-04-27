@@ -191,6 +191,8 @@ failure even if the work product is correct.
 
 ### Develop = Thoroughness Mode (Operator Contract)
 
+_See: Core Philosophy: Steady correctness over speed._
+
 Invoking the develop skill is the operator's explicit opt-in to thoroughness.
 The operator has stated, durably:
 
@@ -275,6 +277,8 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 **Push through complexity.** "This is getting complex" means dig deeper, not retreat. Get explicit approval before scaling back scope.
 
 **Never remove functionality to solve a problem.** Preserve ALL existing behavior. If impossible, STOP and propose alternatives via AskUserQuestion.
+
+**Steady correctness over speed.** Thoroughness is the default; speed is the exception that requires explicit operator instruction. When in doubt, choose the tortoise's path: slow, steady, and arrives. The strongest specialization of this disposition is `Develop = Thoroughness Mode`.
 
 ## Code Quality
 

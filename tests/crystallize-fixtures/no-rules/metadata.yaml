@@ -1,0 +1,3 @@
+test_target: crystallize
+description: "SOP with no rule-shaped content"
+expected_verdict: PASS

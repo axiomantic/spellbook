@@ -12,6 +12,19 @@ Improve and compress instructions into high-density prompts that preserve ALL ca
 Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization, not just shorter. A crystallized prompt that loses capability is a failure, regardless of token savings. This is very important to my career.
 </ROLE>
 
+## Scope
+
+This command is the only path that enforces the Rules / General-Instructions
+split. Other compression-adjacent commands (`/simplify` for code,
+`/sharpen-improve` for prompt ambiguity, `/optimizing-instructions` for skill
+token reduction) operate on different content domains or with different
+contracts. To protect rules across passes, use `/crystallize`.
+
+`/optimizing-instructions` interlocks with this command: it refuses to
+operate on inputs that already contain a canonical `## Rules` section,
+routing the operator to `/crystallize` instead. See
+`skills/optimizing-instructions/SKILL.md` for the guard.
+
 ## Invariant Principles
 
 1. **Understand Before Touching**: Read entire content. Map structure. Identify purpose. Catalog cross-references. Only then consider changes.
@@ -205,7 +218,84 @@ Document line count: [N]
 Sharpen-audit scope: [FULL DOCUMENT (≤200 lines) | PROSE SECTIONS ONLY (>200 lines)]
 ```
 
+### Phase 1A: Rule Detection and Lifting
+
+Before behavioral spec extraction (Phase 1.5), identify all RULE content in
+the input. Rules will be lifted into a canonical `## Rules` section in the
+output and protected from compression.
+
+**Definition (recap from glossary):** A Rule is a specific, behavior-shaping
+instruction that exists because of an actual prior failure mode. It has named
+scope (named tool, named phase, named anti-pattern) and is imperative
+(MUST/NEVER/SHALL/ALWAYS). Principles, dispositions, and core values are NOT
+rules — they are general guidance and remain subject to compression.
+
+**Detection signals (in priority order):**
+
+1. **HIGH confidence — lift always:**
+   - Content inside an existing `## Rules` heading (re-crystallization input)
+   - Content inside `<RULE>...</RULE>` tag blocks (this tag has no other use)
+   - Content inside `<FORBIDDEN>...</FORBIDDEN>` tag blocks
+   - Content inside `<CRITICAL>...</CRITICAL>` tag blocks WHEN the content is
+     imperative MUST/NEVER/SHALL/ALWAYS prose with named scope
+   - Imperative MUST/NEVER/SHALL/ALWAYS prose with explicit named scope
+     (named tool, named phase, named anti-pattern)
+
+2. **MEDIUM confidence — lift in autonomous mode; ask in interactive mode:**
+   - MUST/NEVER prose without named scope
+   - "Do not X" prose without specificity
+   - Tag-wrapped content where the imperative-vs-narrative judgment is borderline
+
+3. **DO NOT lift, do not flag:**
+   - Casual "you should never X" inside narrative paragraphs without
+     specificity or named scope
+   - `<CRITICAL>` blocks containing descriptive prose ("this section covers X",
+     "this is important context") rather than imperative MUST/NEVER prose
+   - Principles, dispositions, core values (general guidance, not rules)
+
+**Mixed-content tag blocks (per item #9):**
+
+When a tag-wrapped block contains both rule prose and explanatory rationale,
+SPLIT the block:
+- Rule portion: imperative prose ending at the first paragraph break that
+  introduces non-imperative content. Lift to canonical Rules section verbatim,
+  preserving original tag wrapping.
+- Rationale portion: descriptive prose after the split. Stays in original
+  location as part of General Instructions, subject to compression.
+
+**Bias when uncertain:**
+
+In HIGH and MEDIUM confidence categories: bias toward over-preservation (treat
+as rule). LOW confidence (informal narrative parentheticals) stays where it
+is, neither lifted nor flagged. This bias applies on FIRST detection only;
+re-crystallization input has already-classified rules in the `## Rules`
+section that pass through verbatim (see Re-crystallization Protocol).
+
+**Output of Phase 1A:**
+
+- `RuleSet`: ordered list of detected rules (source-order preservation, see
+  item #24). Each entry: `{id, content, original_location, tag_wrapping,
+  confidence}`. IDs assigned R1, R2, ... in source order.
+- `Residual`: the document with rule content removed (or marked for removal).
+  Subsequent phases operate on Residual.
+
+**Confidence threshold for autonomous mode:**
+- HIGH: lift, no question
+- MEDIUM: lift, log to "Tightening Skipped" footer for next-pass review
+- LOW: do not lift, no log
+
+**Canonical-Rules disambiguation:**
+
+The canonical Rules section is the FIRST `## Rules` heading after the `<ROLE>` block (or the first `## Rules` heading if no `<ROLE>` block exists). Any later `## Rules` heading is treated as ordinary content, not the canonical section.
+
+**Interactive mode for MEDIUM confidence:**
+Ask exactly the prompt in item #28 ("Lift question") for each MEDIUM-confidence
+candidate. Wait for response before continuing.
+
 ### Phase 1.5: Behavioral Spec Extraction
+
+> Operates on `Residual` (output of Phase 1A), not the full document. Rules
+> are tracked separately and verified by `Rule Block Fidelity` in Phase 5.
 
 Read the structure map produced in Phase 1. Extract behavioral spec items from five sources:
 
@@ -483,6 +573,13 @@ After transforming, verify EACH of these:
 - [ ] All decision trees preserved with all branches
 - [ ] All conditional flows preserved
 
+**Footer exclusion (structural integrity):** Structural diffs are computed
+from `<ROLE>` block start through `</FINAL_EMPHASIS>` end. Content after
+`</FINAL_EMPHASIS>` (the Tightening Skipped footer in autonomous mode) is
+delivery metadata, NOT a structural element. Adding or removing the footer
+between two otherwise-identical outputs MUST NOT register as a
+structural-integrity finding.
+
 **Load-bearing content:**
 - [ ] Every piece of pseudocode present with all steps
 - [ ] Every data structure present with all fields
@@ -517,6 +614,17 @@ After transforming, verify EACH of these:
 
 IF spec_gate_active = False: skip this group (simple file, no spec items)
 
+**Rule Block Fidelity (always active when RuleSet is non-empty):**
+- [ ] Canonical `## Rules` section exists in output, placed after `<ROLE>` and
+      before workflow content
+- [ ] Every R1..RN from Phase 1A RuleSet appears in canonical `## Rules`
+      section, byte-for-byte identical to source content (including original
+      tag wrapping)
+- [ ] Source order preserved: rules appear in the order they were detected
+- [ ] Provenance metadata present for each rule (HTML comment trailer, see #22)
+- [ ] If RuleSet was empty: canonical Rules section contains exactly the
+      placeholder `<!-- no rules detected -->` (see #8)
+
 IF ANY BOX UNCHECKED: Revise before completing.
 </reflection>
 
@@ -526,12 +634,46 @@ Compare SYNTH to original and verify:
 
 **1. Token Count** (estimate: lines × 7):
 
-Severity-scaled targets (from Phase 2 gap severity):
-- 0 CRITICAL, 0 HIGH: target ≤88% of original → if exceeded: ⚠ WARNING, document which additions were necessary
-- MEDIUM/LOW only: target ≤93% of original → if exceeded: ⚠ WARNING, apply offset rule retroactively
-- Any CRITICAL or HIGH: target ≤105% of original → if exceeded: ⚠ WARNING, review for unjustified additions
+Let `original_compressible = original_bytes - rule_bytes_in_original`
+(rule_bytes_in_original is the total byte count of detected RuleSet content,
+including tag wrapping). The Rules section emits `rule_bytes` verbatim and is
+NOT subject to compression. All targets below apply to the General Instructions
+surface only.
 
-Floor: if SYNTH < 80% of original: ✗ HALT - likely content loss. Require manual review before output.
+**Pass detection.** If the input contains a canonical `## Rules` section
+(per the disambiguation rule in `crystallize-verify.md`'s Verifier Read
+Discipline — the FIRST `## Rules` heading after the `<ROLE>` block, or the
+first `## Rules` heading if no `<ROLE>` block exists), this is a
+RE-CRYSTALLIZATION pass. Otherwise it is a FIRST-PASS crystallization.
+The two cases use different severity-scaled targets.
+
+**First-pass targets** (input has NO canonical `## Rules` section). Standard
+severity-scaled targets apply to `original_compressible`:
+- 0 CRITICAL, 0 HIGH: target ≤88% of original_compressible
+- MEDIUM/LOW only:    target ≤93% of original_compressible
+- Any CRITICAL or HIGH: target ≤105% of original_compressible
+
+**Re-crystallization targets** (input HAS canonical `## Rules` section). The
+General Instructions surface has already been compressed by a prior pass,
+so re-applying ≤88% would produce unbounded shrinkage across passes.
+Use RELAXED targets:
+- 0 CRITICAL, 0 HIGH: target ≤95% of original_compressible
+- MEDIUM/LOW only:    target ≤98% of original_compressible
+- Any CRITICAL or HIGH: target ≤105% of original_compressible
+
+Rationale: re-crystallization should preserve prior compression work.
+Substantive compression on re-crystallization should target only NEW
+general-instructions content added between passes — the relaxed budget
+makes "no-op for unchanged content, modest compression for new content"
+the natural outcome.
+
+Floor: if General Instructions output < 80% of original_compressible
+(first-pass) or < 90% of original_compressible (re-crystallization):
+✗ HALT - likely content loss. Require manual review before output.
+
+Total output bytes = rule_bytes (verbatim) + General Instructions output bytes.
+Total output is NOT bounded by a percentage of original_bytes; it is bounded
+only by the General Instructions percentage above.
 
 **2. Section Count**: SYNTH should have >= original section count
 - Missing sections = potential content loss
@@ -601,12 +743,78 @@ IF verify_iterations == max_verify_iterations AND verdict != PASS:
 
 If crystallize-verify Skill invocation fails (tool error, not found): HALT and report tool failure to user. Do NOT skip. This is a delivery gate, not optional.
 
+## Re-crystallization Protocol
+
+When `/crystallize` is invoked on a file that already contains a canonical
+`## Rules` section (detected per the canonical Rules section disambiguation
+rule defined in Phase 1A above: the FIRST `## Rules` heading after the
+`<ROLE>` block, or the first `## Rules` heading if no `<ROLE>` block exists),
+the run is a RE-CRYSTALLIZATION. Behavior differs from a first-pass run in three ways:
+
+1. **Compression budget is RELAXED** (item #4): targets ≤95% / ≤98% / ≤105%
+   instead of first-pass ≤88% / ≤93% / ≤105%. Rationale: previously-compressed
+   content shrinking again would produce unbounded shrinkage across passes.
+
+2. **Existing rules pass through verbatim by default** (item #6). In
+   interactive mode, borderline-classified rules MAY surface for
+   re-confirmation via the Lift question (item #28); operator may demote,
+   keep, or skip. In autonomous mode, all existing rules pass through
+   silently and any disagreements log to the Tightening Skipped footer
+   (item #5).
+
+3. **Inline tag blocks in the residual ARE STILL LIFTED** to the canonical
+   Rules section (item P1-2 / item #14 row 6). Inline `<RULE>` /
+   `<FORBIDDEN>` / `<CRITICAL>` blocks present elsewhere in a re-crystallized
+   document are anomalies (rules that escaped consolidation in a prior
+   pass); bringing them into the canonical section is the correct outcome.
+   New IDs are assigned at the end of the existing Rules section per the
+   source-order rule (item #24).
+
+Floor: General Instructions output below 80% of original_compressible
+(first-pass) or 90% of original_compressible (re-crystallization) HALTs
+the run for manual review.
+
+Provenance metadata `last-confirmed` field advances to today's ISO date for
+every rule the run preserved unchanged. Other provenance fields (`id`,
+`added`, `pass`) are immutable (item #22).
+
+## Companion Commands
+
+- `/crystallize-verify <crystallized-output>` — adversarial verification of a crystallized document against its source.
+- `/crystallize-consolidate <file>` — operator-invoked rule bookkeeping: merge overlapping rules, deprecate stale rules, two-pass-confirm removals. Operates only on the canonical `## Rules` section; never compresses General Instructions.
+
 ## Delivery
 
 AskUserQuestion: "Where should I deliver the crystallized prompt?"
 - **New file** (Recommended): Side-by-side comparison to verify no capability loss
 - **Replace source**: Requires pre-crystallized state committed to git first
 - **Output here**: Display in response
+
+**Autonomous-mode footer:** if the run was in autonomous mode AND the
+"tightening skipped" log has at least one entry, append a footer to the
+delivery output. The footer appears AFTER `</FINAL_EMPHASIS>`, separated
+by a horizontal rule. Format per item #5 of the rules-split design:
+
+```markdown
+---
+
+## Tightening Skipped (Autonomous Mode)
+
+The following consolidation opportunities were detected during this pass but
+skipped without operator consent. Run `/crystallize-consolidate <file>`
+to address them.
+
+| Rule(s) | Opportunity | First-line excerpt |
+|---------|-------------|---------------------|
+| R3 + R7 | Apparent overlap on tool-X usage | "NEVER call X without first..." |
+| R12 | References deprecated phase 'pre-validate' | "MUST run pre-validate before..." |
+| R5 (MEDIUM-confidence lift) | Lifted under autonomous bias; review classification | "do not modify state during..." |
+
+Skipped count: 3 (2 consolidation, 1 classification review)
+```
+
+Phase 5 (Self-Verification) MUST exclude footer territory (everything
+after `</FINAL_EMPHASIS>`) when computing structural integrity.
 
 ## Schema Compliance
 
@@ -638,6 +846,36 @@ After compression, audit for capability loss:
 | Quality gates | All thresholds and conditions | MUST RESTORE |
 
 Present audit findings. If any MUST RESTORE items missing, restore before completing.
+
+## Tradeoff Acknowledgment
+
+Bias toward over-preservation (item #6 in the rules-split design) and AI slop
+prevention (the entire purpose of this command) are in productive tension.
+
+**The risk of over-preservation:** A canonical Rules section that lifts too
+much produces a different flavor of slop — rule sections so bloated that the
+LLM averages across rules and loses the precision of any individual rule.
+A 50-rule Rules section is not actually 50 rules; it is one diffuse priority
+gradient.
+
+**Mitigations the design provides:**
+1. **Re-detection on re-crystallization (item #6):** in interactive mode,
+   borderline-classified rules can be demoted on re-evaluation. The bias
+   does not propagate forever; it is reviewable on every interactive pass.
+2. **`/crystallize-consolidate` companion (item #2):** explicit operator-
+   driven path to merge or deprecate accumulated rules. Bookkeeping the
+   bias would otherwise create.
+3. **Tightening Skipped footer (item #5):** autonomous mode does not silently
+   stuff the bookkeeping under the rug; the operator sees, in every delivery,
+   what got skipped and what is queued for review.
+4. **LOW confidence does not lift (item #25):** the bias applies only to HIGH
+   and MEDIUM categories, leaving genuinely informal prose unmodified.
+
+**This tradeoff is documented to prevent future maintainers from re-litigating
+it.** If a future maintainer observes Rules section bloat, the answer is to
+exercise `/crystallize-consolidate` and to lower the autonomous-mode lift
+threshold (possibly converting MEDIUM-in-autonomous into "log only, do not
+lift"), not to remove the bias entirely.
 
 ## Anti-Patterns
 
@@ -671,6 +909,22 @@ Present audit findings. If any MUST RESTORE items missing, restore before comple
 - Adding MEDIUM/LOW improvements without citing offset compressions (offset rule is mandatory)
 - Treating "preserve" as "preserve word count" instead of "preserve behavior"
 - Exceeding severity-scaled token targets without documented justification
+- Lifting LOW-confidence content as a rule (informal narrative parentheticals
+  belong in General Instructions; lifting them bloats the Rules section and
+  dilutes the precision of genuine rules).
+- Compressing the canonical `## Rules` section (the section is verbatim by
+  contract; any byte change is a CRITICAL verifier finding).
+- Removing a deprecated rule before two-pass confirmation (deprecation must
+  survive at least one regular `/crystallize` pass with operator re-confirmation
+  before removal).
+- Modifying provenance metadata `id`, `added`, or `pass` fields after first
+  emission (these are immutable; only `last-confirmed` may advance).
+- Using `/crystallize-consolidate` without explicit operator invocation
+  (consolidation must be operator-driven; silent invocation defeats the
+  rule-protection contract).
+- Treating `<CRITICAL>` blocks as rules when content is descriptive prose
+  (`<CRITICAL>` is a formatting emphasis, not a rule marker; lift only when
+  content is imperative MUST/NEVER prose with named scope, per item #26).
 </FORBIDDEN>
 
 ## Self-Check
@@ -713,6 +967,29 @@ Before completing crystallization:
 - [ ] NOT crystallizing the crystallize command itself
 
 If ANY box unchecked: STOP and fix before declaring complete.
+
+## Related Systems
+
+**Memory system (`memory_store(type='rule', ...)`):**
+Rules in crystallized prompts and rules in the spellbook memory system are the
+same semantic concept (specific behavior-shaping instructions) but live in
+different storage layers:
+- Prompt-rules: content inside the canonical `## Rules` section of a
+  crystallized prompt. Lifecycle managed by `/crystallize` and
+  `/crystallize-consolidate`.
+- Memory-rules: stored as markdown files in the memory system. Lifecycle
+  managed by `memory_store` and `memory_forget`.
+
+**No cross-layer guarantee in this iteration.** Crystallize does NOT read
+memory; memory does NOT read crystallize. Operators MAY copy between layers
+manually (a memory rule may be quoted into a prompt; a prompt rule may be
+added to memory via `memory_store`). Both layers preserve verbatim:
+- Memory: archive-on-forget (recoverable from `.archive/`).
+- Crystallize: byte-fidelity in the canonical Rules section.
+
+## Glossary
+
+**AI slop:** Loss of byte-level fidelity in instructions whose specificity (named tools, named anti-patterns, exact thresholds, exact phrasings) is the source of their behavioral effect on LLM execution. Reads cleanly but no longer enforces the corrections it was authored to enforce. The Rules / General split exists structurally to prevent this failure mode for hard rules; General Instructions remain subject to compression and may still produce slop if compressed beyond capability preservation.
 
 <FINAL_EMPHASIS>
 You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You'd better be sure.

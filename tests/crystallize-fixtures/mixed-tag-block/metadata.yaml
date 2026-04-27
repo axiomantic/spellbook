@@ -1,0 +1,3 @@
+test_target: crystallize
+description: "Mixed-content `<CRITICAL>` block split per item #9.2"
+expected_verdict: PASS
