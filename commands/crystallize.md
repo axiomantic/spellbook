@@ -669,8 +669,17 @@ Compare SYNTH to original and verify:
 
 **1. Token Count** (estimate: lines × 7):
 
-Let `original_compressible = original_bytes - rule_bytes_in_original`,
-where `rule_bytes_in_original` is:
+Let `original_compressible = original_bytes - rule_bytes_in_original - untouchable_bytes_in_original`,
+where `untouchable_bytes_in_original` is the total byte count of every
+section identified as UNTOUCHABLE in the Pre-Compression Identification
+phase (the `<ROLE>` block, `<FINAL_EMPHASIS>` / "Final Rule" closing,
+all `<CRITICAL>` and `<FORBIDDEN>` blocks, explanatory tables, calibration
+notes, and workflow-completion sections). Including untouchable bytes
+in the compressible baseline would tighten the target for the remaining
+prose and pressure the orchestrator into compressing sections it must
+not touch.
+
+`rule_bytes_in_original` is:
 
 - **First-pass** (input has no canonical `## Rules` section): the total
   byte count of detected RuleSet content, including tag wrapping.

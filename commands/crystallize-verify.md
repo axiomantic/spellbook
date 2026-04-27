@@ -98,11 +98,21 @@ Outcomes:
   (verifier is more aggressive) → ADVISORY finding.
 
 Empty original rule inventory:
-- Crystallized `## Rules` section MUST contain `<!-- no rules detected -->`,
-  optionally preceded by the `<!-- crystallize-meta: pass=N -->` document
-  pass counter (and the standard surrounding blank lines). No other content
-  is permitted.
-- Anything else → CRITICAL finding (placeholder mismatch).
+- If the crystallized `## Rules` section contains `<!-- no rules detected -->`
+  (optionally preceded by `<!-- crystallize-meta: pass=N -->` and the
+  standard surrounding blank lines): no finding. The verifier and
+  crystallizer agree.
+- If the crystallized `## Rules` section instead contains rule-shaped
+  content (i.e., the crystallizer's bias-toward-over-preservation lifted
+  borderline content the verifier did not classify as a rule):
+  ADVISORY finding for each such rule. This is the same classification
+  disagreement as the "crystallizer more aggressive" outcome above and
+  must NOT escalate to CRITICAL just because the verifier's inventory
+  was empty.
+- If the crystallized `## Rules` section contains content that is
+  neither rule-shaped, the placeholder, nor the meta tag (e.g., random
+  prose, a stray heading, leaked General Instructions material):
+  CRITICAL finding (placeholder mismatch).
 
 **Provenance metadata byte-fidelity exception.** When checking the
 provenance HTML comment trailer (`<!-- rule-meta: id=Rn, added=YYYY-MM-DD,
@@ -232,7 +242,8 @@ classification disagreements between the verifier's independent rule extractor
 | Stylistic/phrasing difference only | NOT A FINDING |
 | Rule-inventory entry not present byte-for-byte in output `## Rules` section | CRITICAL |
 | Rule-inventory entry present in output Rules section but with byte-drift inside the rule body | CRITICAL |
-| Empty rule inventory but Rules section content is anything other than `<!-- no rules detected -->` (optionally preceded by `<!-- crystallize-meta: pass=N -->`) | CRITICAL |
+| Empty rule inventory but Rules section contains rule-shaped content not classified by the verifier (crystallizer's bias-toward-over-preservation lifted borderline content) | ADVISORY |
+| Empty rule inventory and Rules section contains neither the placeholder, the meta tag, nor rule-shaped content (placeholder mismatch with non-rule prose) | CRITICAL |
 | Verifier-classified rule found in General Instructions (crystallizer did not lift) | ADVISORY |
 | Crystallizer-lifted rule not classified as rule by verifier (crystallizer over-aggressive) | ADVISORY |
 
