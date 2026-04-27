@@ -240,7 +240,7 @@ classification disagreements between the verifier's independent rule extractor
 | Calibration note missing ("you are bad at...") | MEDIUM |
 | Redundant safety framing reduced | LOW |
 | Stylistic/phrasing difference only | NOT A FINDING |
-| Rule-inventory entry not present byte-for-byte in output `## Rules` section | CRITICAL |
+| Rule-inventory entry missing from output `## Rules` section (and not accounted for by any new rule's `merged-from` field) | CRITICAL |
 | Rule-inventory entry present in output Rules section but with byte-drift inside the rule body | CRITICAL |
 | Empty rule inventory but Rules section contains rule-shaped content not classified by the verifier (crystallizer's bias-toward-over-preservation lifted borderline content) | ADVISORY |
 | Empty rule inventory and Rules section contains neither the placeholder, the meta tag, nor rule-shaped content (placeholder mismatch with non-rule prose) | CRITICAL |
