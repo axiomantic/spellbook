@@ -95,7 +95,10 @@ Outcomes:
   (verifier is more aggressive) → ADVISORY finding.
 
 Empty original rule inventory:
-- Crystallized `## Rules` section MUST contain exactly `<!-- no rules detected -->`.
+- Crystallized `## Rules` section MUST contain `<!-- no rules detected -->`,
+  optionally preceded by the `<!-- crystallize-meta: pass=N -->` document
+  pass counter (and the standard surrounding blank lines). No other content
+  is permitted.
 - Anything else → CRITICAL finding (placeholder mismatch).
 
 **Provenance metadata byte-fidelity exception.** When checking the
@@ -125,9 +128,16 @@ ONE change per re-crystallization run:
 
 ### Verifier Read Discipline
 
-The verifier may read EXACTLY the following from each input. Any other
-read is a discipline violation (and would constitute external-resource
-access, forbidden by `<FORBIDDEN>`).
+The verifier may read EXACTLY the following from each input and from
+its own runtime context. Any other read is a discipline violation (and
+would constitute external-resource access, forbidden by `<FORBIDDEN>`).
+
+**From runtime context:**
+- The current date (today's ISO date), needed to evaluate the
+  `last-confirmed <= today` constraint and any other date-bounded
+  tolerance rule. The verifier MUST NOT consult any external clock,
+  filesystem mtime, or service to obtain it; the date is supplied as
+  part of the run's contextual metadata.
 
 **From the ORIGINAL document:**
 - Full content. The verifier runs its own independent extraction pass
@@ -151,9 +161,10 @@ access, forbidden by `<FORBIDDEN>`).
 
 **External resources:**
 - The verifier does NOT read external files, skills, memory, MCP tools,
-  or any other context. Phase 1A's "independent extraction pass" is a
-  logical pass over the already-provided original document content; it
-  does NOT call into external services.
+  or any other context (the only exception is the contextual current date
+  permitted in "From runtime context" above). Phase 1A's "independent
+  extraction pass" is a logical pass over the already-provided original
+  document content; it does NOT call into external services.
 
 ### Phase 2: Cross-Check Against Crystallized
 
@@ -218,7 +229,7 @@ classification disagreements between the verifier's independent rule extractor
 | Stylistic/phrasing difference only | NOT A FINDING |
 | Rule-inventory entry not present byte-for-byte in output `## Rules` section | CRITICAL |
 | Rule-inventory entry present in output Rules section but with byte-drift inside the rule body | CRITICAL |
-| Empty rule inventory but Rules section content is anything other than `<!-- no rules detected -->` | CRITICAL |
+| Empty rule inventory but Rules section content is anything other than `<!-- no rules detected -->` (optionally preceded by `<!-- crystallize-meta: pass=N -->`) | CRITICAL |
 | Verifier-classified rule found in General Instructions (crystallizer did not lift) | ADVISORY |
 | Crystallizer-lifted rule not classified as rule by verifier (crystallizer over-aggressive) | ADVISORY |
 

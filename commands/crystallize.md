@@ -623,9 +623,10 @@ IF spec_gate_active = False: skip this group (simple file, no spec items)
 - [ ] Source order preserved: rules appear in the order they were detected
 - [ ] Provenance metadata present for each rule (HTML comment trailer:
       `<!-- rule-meta: id=Rn, added=YYYY-MM-DD, pass=N, last-confirmed=YYYY-MM-DD [, merged-from=...] -->`)
-- [ ] If RuleSet was empty: canonical Rules section contains exactly the
-      placeholder `<!-- no rules detected -->` (byte-exact; any other
-      content is a placeholder mismatch finding)
+- [ ] If RuleSet was empty: canonical Rules section contains the
+      placeholder `<!-- no rules detected -->`, optionally preceded by
+      the `<!-- crystallize-meta: pass=N -->` document pass counter.
+      Any other content is a placeholder mismatch finding.
 
 IF ANY BOX UNCHECKED: Revise before completing.
 </reflection>
