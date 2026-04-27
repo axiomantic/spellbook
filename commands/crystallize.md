@@ -265,6 +265,16 @@ SPLIT the block:
   `<CRITICAL>` / `<RULE>` / etc. tag is removed since it no longer wraps
   imperative content), and subject to normal compression.
 
+  Why unwrap on split (and NOT on whole-block descriptive content): a tag
+  wrapper signals emphasis on imperative content. When a mixed block
+  splits, the wrapper travels WITH the rule (which keeps imperative
+  emphasis) — the rationale was riding along, not the actual subject of
+  emphasis. Whole-block descriptive content that was authored inside a
+  tag wrapper is treated as the operator's deliberate emphasis on that
+  prose, and the wrapper is preserved through compression. The
+  apparent inconsistency is intentional: tag = imperative emphasis;
+  remove the tag when imperative content is removed.
+
 **Bias when uncertain:**
 
 In HIGH and MEDIUM confidence categories: bias toward over-preservation (treat
@@ -281,11 +291,23 @@ section that pass through verbatim (see Re-crystallization Protocol).
     metadata: {added, pass, last-confirmed, merged-from?}}`.
   On FIRST-PASS crystallization, IDs are assigned R1, R2, ... in source
   order, `added` and `last-confirmed` are set to today's ISO date,
-  `pass` is set to 1, and `merged-from` is omitted. On
-  RE-CRYSTALLIZATION, existing IDs and metadata are preserved verbatim
-  from each rule's `<!-- rule-meta: ... -->` provenance comment (IDs
-  are immutable across passes); only `last-confirmed` may advance to
-  today's date for rules the run preserved unchanged.
+  `pass` is set to 1, and `merged-from` is omitted.
+
+  On RE-CRYSTALLIZATION, two sub-cases apply:
+
+  1. **Existing rules from the input's canonical Rules section:**
+     existing IDs and metadata are preserved verbatim from each rule's
+     `<!-- rule-meta: ... -->` provenance comment (IDs are immutable
+     across passes). Only `last-confirmed` may advance to today's date
+     for rules the run preserved unchanged.
+  2. **Newly-lifted rules from inline tag blocks in the residual:**
+     these are anomalies — rules that escaped consolidation in a prior
+     pass. They are initialized per FIRST-PASS rules with two
+     adjustments: assign new IDs at the END of the existing Rules
+     section in source order (e.g. if existing IDs go through R7, the
+     newly lifted rule gets R8); set `pass` to the document's CURRENT
+     pass value (not 1), and set `added` and `last-confirmed` to
+     today's ISO date.
 - `Residual`: the document with rule content removed (or marked for removal).
   Subsequent phases operate on Residual.
 
