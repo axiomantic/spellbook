@@ -160,6 +160,61 @@ Load `branch-context` skill for `branch-context.sh` usage, stacked branch handli
 - YOLO mode grants permission to ACT without asking. It does NOT grant permission to SKIP skill phases, subagent dispatch, or quality gates.
 - **Subagents are HOW each phase executes, not a substitute FOR the phases.** Conflating "use subagents" with "skip skill phases" is forbidden. If a skill defines research, design, plan, and implement as separate phases, dispatching a single subagent that "does it all" violates the skill no matter how thorough the dispatch prompt is. Each phase still runs; subagent dispatch is the implementation mechanism inside each phase, not a way to collapse them.
 
+### Develop Skill Phase Non-Fungibility
+
+When inside /develop or any of its sub-skills (feature-config, feature-research,
+feature-discover, feature-design, feature-implement), every Task() dispatch
+executes EXACTLY ONE row of the dispatch table at
+`$SPELLBOOK_DIR/skills/develop/SKILL.md` "Subagent Dispatch Points" section.
+
+Combining rows into a single dispatch is forbidden EVEN WHEN:
+
+- The feature is "small" or classified STANDARD ("doesn't need all gates")
+- The architecture is "pre-validated" or the operator "pre-resolved forks"
+- The operator said "wrap up", "and pause", "finish X items", or "close out"
+- Standing autonomous mode is active
+- Prior phases produced strong context
+- Subagents would burn context if dispatched separately
+- "It would be more efficient to combine..."
+- "We're trying to wrap up..."
+- "The user wants to pause..."
+
+ALL of the bullets above are Pattern 6 (Phase Collapse) rationalizations.
+Recognizing the rationalization IS the signal to stop, not the signal that
+the situation is exceptional. The dispatch table has no exception column.
+
+Each Task() dispatch inside /develop must be preceded by a Phase Declaration
+block (see `$SPELLBOOK_DIR/skills/develop/SKILL.md` "Pre-Dispatch Ritual").
+The block makes phase collapse mechanically detectable to the operator in
+real time. A dispatch without a preceding Phase Declaration is a process
+failure even if the work product is correct.
+
+### Develop = Thoroughness Mode (Operator Contract)
+
+Invoking the develop skill is the operator's explicit opt-in to thoroughness.
+The operator has stated, durably:
+
+> "I will NEVER ask you to 'speed up' a develop skill. If I want you to move
+> fast I will tell you this explicitly, and I will not invoke the develop
+> skill. If the develop skill is invoked, correctness and thoroughness
+> ALWAYS trumps speed. I HATE MOVING FAST AT THE EXPENSE OF THOROUGHNESS."
+
+Operational implications when the develop skill (or any of its sub-skills)
+is active:
+
+- NO operator phrasing during develop is license to compress phases.
+  Not "wrap up", not "and pause", not "finish X items", not "save tokens",
+  not "be efficient", not standing autonomous mode, not "pre-resolved forks".
+- If the operator wants speed, they will say so AND they will not invoke
+  develop. The presence of develop in the active skill list IS the contract.
+- Apparent time pressure ("pause when done", impending session end, etc.)
+  is NOT a circumstance that justifies skipping phases. The thorough path
+  is the only path inside develop. If completion does not fit, stop where
+  thoroughness ends and report the partial state honestly.
+- The operator's prior corrections on this point ("I want the full enchilada"
+  in the April 2026 paperplanes/A4 sessions) are durable and apply to all
+  future develop invocations across all projects.
+
 ### Self-Unblocking Before Declaring Constraints
 
 <CRITICAL>

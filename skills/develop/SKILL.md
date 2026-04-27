@@ -201,6 +201,61 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 ---
 
+## MANDATORY: Pre-Dispatch Ritual
+
+<CRITICAL>
+Before EVERY Task() dispatch inside /develop or any of its sub-skills
+(feature-config, feature-research, feature-discover, feature-design,
+feature-implement), output the following block IN YOUR VISIBLE RESPONSE
+(not in thinking, not summarized): the user must be able to read it.
+
+```
+## Phase Declaration
+- Dispatching for: Phase {N}, sub-step {N.M} ({step name from dispatch table below})
+- Single skill the subagent will invoke: {exact skill name}
+- Single artifact this dispatch produces: {exact path or short description}
+- This dispatch covers EXACTLY ONE row of the dispatch table below.
+```
+
+If you cannot fill all four fields with a SINGLE value (no "and", no "+",
+no "plus also", no comma-separated list), you are about to commit
+Pattern 6 (Phase Collapse). STOP. Decompose into N separate dispatches,
+recite a Phase Declaration for each, and dispatch them sequentially.
+
+### Banned Phrasings in Dispatch Prompts (mechanical scan)
+
+If your draft Task() prompt contains ANY of these phrasings, the dispatch
+is wrong by construction. Decompose before sending:
+
+- "design + impl plan", "design and impl plan", "design plus plan"
+- "implementation + gates", "impl plus gates", "implement and run gates"
+- "all per-task gates", "combined gates", "batched gates"
+- "plus commit", "and commit", "implement and commit"
+- "end-to-end", "everything", "the whole flow", "wrap it up"
+- Any phrasing that combines two distinct rows of the dispatch table
+  (e.g., "design + review", "plan + review", "TDD + code review")
+
+Operator phrasings that DO NOT authorize phase collapse (no exceptions):
+
+- "wrap up", "and pause", "finish X items", "let's wrap this", "close out"
+- "autonomous mode", "fully autonomous", "you decide"
+- "the architecture is settled", "forks pre-resolved", "pre-validated"
+- "STANDARD tier doesn't need all gates", "small change", "small extension"
+- "save context", "save tokens", "context efficiency"
+
+If you find yourself reading any of the above as license to combine rows,
+that IS the rationalization (see Anti-Rationalization Framework below,
+Patterns 3, 6, and 10). Run the prerequisite check, then dispatch one
+row at a time.
+
+The Phase Declaration block is not optional and not negotiable. The user
+relies on it to verify in real time that you are not collapsing phases.
+A dispatch without a preceding Phase Declaration is a process failure
+even if the work product is correct.
+</CRITICAL>
+
+---
+
 ## CRITICAL: Subagent Dispatch Points
 
 <CRITICAL>
