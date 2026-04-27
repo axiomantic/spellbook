@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/crystallize-consolidate` command** — operator-invoked rule
+  bookkeeping for crystallize. Merges overlapping rules (with a
+  `merged-from` provenance field), deprecates stale rules, and
+  requires two-pass confirmation for removals. Operates only on the
+  canonical `## Rules` section; never compresses General Instructions.
+- **Crystallize Rules-section fixtures** under `tests/crystallize-fixtures/`:
+  five fixture sets (mixed-format, no-rules, re-crystallize, byte-drift,
+  mixed-tag-block) covering input detection, output emission, and
+  byte-fidelity verification edge cases. Static input/expected pairs;
+  no programmatic runner yet (disclosed in the fixture README).
+
+### Changed
+
+- **`crystallize` Rules / General split.** Crystallize now distinguishes
+  lossless **Rules** (byte-preserved across passes, with provenance
+  metadata) from synthesizable **General Instructions** (subject to
+  normal compression). Detection is semantic with bias toward
+  over-preservation. First-pass borderline content can be tightened
+  with operator consent; in autonomous mode, tightening is silently
+  skipped and surfaced in a `Tightening Skipped` delivery footer.
+  Token-target arithmetic recomputes against
+  `(total_bytes - rule_bytes)` with separate first-pass and
+  re-crystallization envelopes plus a HALT floor enforced once in
+  Post-Synthesis Verification.
+- **`crystallize-verify` independent rule extractor.** The verifier no
+  longer trusts the crystallizer's classification: any rule-shaped
+  content present in the original but absent from the output Rules
+  section is `CRITICAL`, regardless of how the crystallizer treated it.
+  The verifier also accounts for consolidation via the `merged-from`
+  field. Verifier read discipline preserved (only the two artifacts
+  under review).
+- **`optimizing-instructions` skill guard.** Inputs containing a
+  `## Rules` heading are rejected with a redirect to `/crystallize`.
+  The Rules-preservation carve-out is scoped to `crystallize` and
+  `crystallize-consolidate`; `sharpen-improve` and other compression
+  paths keep their own contracts.
+- **`AGENTS.spellbook.md` Core Philosophy.** Adds *Steady correctness
+  over speed — thoroughness is the default; speed is the exception
+  that requires explicit operator instruction.* The existing
+  **Develop = Thoroughness Mode** contract is positioned as a
+  specialization of this umbrella.
+- **`develop` skill phase non-fungibility hardened.** Adds a
+  Pre-Dispatch Ritual that requires an explicit phase declaration
+  before any subagent dispatch, bans the "subagents are HOW phases
+  execute, not a substitute FOR phases" conflation in named-phrasing
+  form, and codifies the thoroughness contract for Phase 4 gate
+  sequencing (no batched gates across tasks).
+
 ## [0.54.1] - 2026-04-26
 
 ### Changed

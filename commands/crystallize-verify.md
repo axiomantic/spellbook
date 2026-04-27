@@ -87,7 +87,8 @@ wrapping; only line-boundary whitespace is normalized).
 Outcomes:
 - PRESENT, byte-identical → no finding.
 - PRESENT, with byte-drift in body → CRITICAL finding (Rule byte-drift).
-- ABSENT from `## Rules` section → CRITICAL finding (Rule missing).
+- ABSENT from `## Rules` section, AND not accounted for in any new rule's `merged-from` field → CRITICAL finding (Rule missing).
+- ABSENT from `## Rules` section, BUT a new rule lists this rule's id in its `merged-from` field → no finding (consolidation accounted for).
 - PRESENT in canonical Rules section, but verifier did not classify content
   as a rule (crystallizer was more aggressive) → ADVISORY finding.
 - Verifier classified as rule, crystallizer left in General Instructions

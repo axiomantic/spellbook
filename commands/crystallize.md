@@ -770,13 +770,11 @@ the run is a RE-CRYSTALLIZATION. Behavior differs from a first-pass run in three
    New IDs are assigned at the end of the existing Rules section per the
    source-order rule (item #24).
 
-Floor: General Instructions output below 80% of original_compressible
-(first-pass) or 90% of original_compressible (re-crystallization) HALTs
-the run for manual review.
-
 Provenance metadata `last-confirmed` field advances to today's ISO date for
 every rule the run preserved unchanged. Other provenance fields (`id`,
-`added`, `pass`) are immutable (item #22).
+`added`, `pass`, `merged-from`) are immutable (item #22). The HALT-floor
+on General Instructions output is enforced once, in Post-Synthesis Verification
+(item #1, "Token Count").
 
 ## Companion Commands
 
@@ -899,7 +897,7 @@ lift"), not to remove the bias entirely.
 - Merging "When NOT to Use" or similar negative guidance into other sections
 - Removing cycle completion steps ("Repeat", "Continue until")
 - Dropping complete enumerations to partial lists
-- Proceeding when token count < 80% of original without manual review
+- Proceeding when General Instructions output < 80% of original_compressible (first-pass) or < 90% of original_compressible (re-crystallization) without manual review
 - Skipping Phase 1.5 behavioral spec extraction (spec gate protects against silent capability loss)
 - Treating sharpening-prompts Part B failure as silent skip when CRITICAL findings exist (must HALT or document risk)
 - Invoking fractal-thinking as optional when 5+ cross-references or nested conditionals are present (it is required)
