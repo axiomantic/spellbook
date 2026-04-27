@@ -73,16 +73,27 @@ heading after the `<ROLE>` block, or the first `## Rules` heading if no
 4. After all candidates dispatched, write the modified `## Rules` section
    back to the file. Leave General Instructions content byte-identical.
 5. Two-pass deprecation: rules marked deprecated in this command's pass
-   receive an HTML comment marker:
+   receive an HTML comment marker. The marker MUST set
+   `removable-after-pass = current_doc_pass + 2` so the deprecated rule
+   survives at least one full regular `/crystallize` pass (present in
+   both input and output) before becoming eligible for removal:
 
    ```markdown
+   <!-- assumes current_doc_pass = 1 at time of deprecation -->
    <RULE>...rule body...</RULE>
-   <!-- rule-deprecated: id=R3, on=2026-04-27, reason="superseded by R7", removable-after-pass=2 -->
+   <!-- rule-deprecated: id=R3, on=2026-04-27, reason="superseded by R7", removable-after-pass=3 -->
    ```
 
-   Actual removal happens on a subsequent regular `/crystallize` pass
-   after re-confirmation with the operator. `/crystallize-consolidate`
-   never removes a rule on the same pass it was deprecated.
+   With the example above:
+   - Pass 2 (regular `/crystallize`): rule passes through verbatim
+     (`current_doc_pass < removable-after-pass`). Survives the pass.
+   - Pass 3 (regular `/crystallize`): rule becomes eligible for removal.
+     The operator is prompted to re-confirm in interactive mode; in
+     autonomous mode the candidacy is logged to the Tightening Skipped
+     footer and the rule still passes through. Removal is never silent.
+
+   `/crystallize-consolidate` never removes a rule on the same pass it
+   was deprecated.
 
 ## Output Format
 
