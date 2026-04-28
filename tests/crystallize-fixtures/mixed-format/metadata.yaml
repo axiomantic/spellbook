@@ -1,0 +1,3 @@
+test_target: crystallize
+description: "SOP with inline `<RULE>` + MUST/NEVER prose + `## Rules` heading"
+expected_verdict: PASS

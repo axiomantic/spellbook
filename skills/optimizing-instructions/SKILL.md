@@ -36,6 +36,20 @@ After optimization, verify:
 IF NO to ANY: revert changes to that section.
 </reflection>
 
+**Rule-section guard.** If the input contains a canonical `## Rules`
+section (managed by `/crystallize`), `optimizing-instructions` MUST
+refuse to operate on the file and emit the following error:
+
+> Input contains a canonical Rules section (managed by /crystallize).
+> Use /crystallize for rule-aware compression.
+
+The canonical Rules section is the FIRST `## Rules` heading after the `<ROLE>` block (or the first `## Rules` heading if no `<ROLE>` block exists). Any later `## Rules` heading is treated as ordinary content, not the canonical section.
+
+Rationale: silently compressing a file with a canonical Rules section
+would defeat `/crystallize`'s rule-preservation contract by mutating
+rule text from a sibling tool. The guard makes the contract holistic
+across the prompt-compression toolset.
+
 ## Inputs
 
 | Input | Required | Description |

@@ -1,0 +1,3 @@
+test_target: crystallize
+description: "Re-crystallization preserves canonical Rules section verbatim"
+expected_verdict: PASS

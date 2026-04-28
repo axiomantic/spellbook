@@ -65,6 +65,120 @@ Original Behavioral Inventory:
 ...
 ```
 
+### Phase 1A: Independent Rule Extraction Pass
+
+Run a logical extraction pass over the original document to build an
+Original Rule Inventory. This pass is independent of the crystallizer's
+classification — it is the verifier's adversarial check on rule preservation.
+
+Extraction signals (deliberately weighted differently from the crystallizer):
+- HEAVY weight: structural signals (tag wrapping, ## Rules heading, named
+  imperatives MUST/NEVER/SHALL with named scope).
+- DOWNWEIGHT: bias-toward-over-preservation (the verifier is willing to MISS
+  borderline rules; what matters is byte-fidelity of what it DOES classify).
+
+Produce Original Rule Inventory:
+- ORn: [rule content with tag wrapping] @ [original location]
+
+For each ORn, search the crystallized output's `## Rules` section for a
+byte-exact match (whitespace-significant inside the rule body and tag
+wrapping; only line-boundary whitespace is normalized).
+
+Outcomes:
+- PRESENT, byte-identical → no finding.
+- PRESENT, with byte-drift in body → CRITICAL finding (Rule byte-drift).
+- ABSENT from `## Rules` section, AND not accounted for in any new rule's `merged-from` field → CRITICAL finding (Rule missing).
+- ABSENT from `## Rules` section, BUT a new rule lists this rule's id in its `merged-from` field → no finding (consolidation accounted for).
+- PRESENT in canonical Rules section, but verifier did not classify content
+  as a rule (crystallizer was more aggressive) AND the rule does not
+  carry a `merged-from` provenance field → ADVISORY finding. (Rules with
+  `merged-from` were created by `/crystallize-consolidate` and are
+  expected to be present in the output but absent from the original.)
+- Verifier classified as rule, crystallizer left in General Instructions
+  (verifier is more aggressive) → ADVISORY finding.
+
+Empty original rule inventory:
+- If the crystallized `## Rules` section contains `<!-- no rules detected -->`
+  (optionally preceded by `<!-- crystallize-meta: pass=N -->` and the
+  standard surrounding blank lines): no finding. The verifier and
+  crystallizer agree.
+- If the crystallized `## Rules` section instead contains rule-shaped
+  content (i.e., the crystallizer's bias-toward-over-preservation lifted
+  borderline content the verifier did not classify as a rule):
+  ADVISORY finding for each such rule. This is the same classification
+  disagreement as the "crystallizer more aggressive" outcome above and
+  must NOT escalate to CRITICAL just because the verifier's inventory
+  was empty.
+- If the crystallized `## Rules` section contains content that is
+  neither rule-shaped, the placeholder, nor the meta tag (e.g., random
+  prose, a stray heading, leaked General Instructions material):
+  CRITICAL finding (placeholder mismatch).
+
+**Provenance metadata byte-fidelity exception.** When checking the
+provenance HTML comment trailer (`<!-- rule-meta: id=Rn, added=YYYY-MM-DD,
+pass=N, last-confirmed=YYYY-MM-DD -->`), the verifier allows EXACTLY ONE
+exception:
+
+- The `last-confirmed` field MAY advance to any ISO date `>= original_value
+  AND <= today`. Any change matching that constraint is NOT a finding.
+
+All other fields (`id`, `added`, `pass`, optional `merged-from`) MUST be
+byte-identical to the source. Any drift in those fields is a CRITICAL finding.
+
+**Crystallize-meta byte-fidelity exception.** A separate HTML comment
+appears as the FIRST line of content inside the canonical `## Rules`
+section (when present): `<!-- crystallize-meta: pass=N -->`. This counter
+tracks document-level re-crystallization passes and is permitted EXACTLY
+ONE change per re-crystallization run:
+
+- The `pass` value MAY advance by exactly `+1` from its prior value. Any
+  larger jump, decrement, or modification of any other character in this
+  comment is a CRITICAL finding.
+- A first-pass run MAY introduce this comment with `pass=1` if absent in
+  the original. Re-crystallization runs MUST NOT introduce it if the prior
+  output already had it (replacement = drift). If both inputs have it,
+  the +1 rule applies.
+
+### Verifier Read Discipline
+
+The verifier may read EXACTLY the following from each input and from
+its own runtime context. Any other read is a discipline violation (and
+would constitute external-resource access, forbidden by `<FORBIDDEN>`).
+
+**From runtime context:**
+- The current date (today's ISO date), needed to evaluate the
+  `last-confirmed <= today` constraint and any other date-bounded
+  tolerance rule. The verifier MUST NOT consult any external clock,
+  filesystem mtime, or service to obtain it; the date is supplied as
+  part of the run's contextual metadata.
+
+**From the ORIGINAL document:**
+- Full content. The verifier runs its own independent extraction pass
+  (Phase 1A) over the full original. Multiple logical re-reads of the
+  same content are permitted.
+
+**From the CRYSTALLIZED output:**
+- Full content, BUT with these disambiguation rules:
+
+  1. **Canonical Rules section.** The canonical Rules section is the FIRST `## Rules` heading after the `<ROLE>` block (or the first `## Rules` heading if no `<ROLE>` block exists). Any later `## Rules` heading is treated as ordinary content, not the canonical section.
+  2. **Tightening Skipped footer** is bounded by `</FINAL_EMPHASIS>`.
+     The footer follows the closing `</FINAL_EMPHASIS>` tag. The verifier
+     IGNORES everything after `</FINAL_EMPHASIS>` (footer territory is
+     delivery metadata, not crystallized content).
+  3. **Provenance metadata** (HTML comments inside the canonical Rules
+     section, format: `<!-- rule-meta: id=Rn, added=..., pass=..., last-confirmed=... -->`)
+     is part of the canonical Rules section content; subject to the
+     byte-fidelity check WITH the `last-confirmed` exception (the date may
+     advance to any ISO date `>= original_value AND <= today`; all other
+     fields must be byte-identical).
+
+**External resources:**
+- The verifier does NOT read external files, skills, memory, MCP tools,
+  or any other context (the only exception is the contextual current date
+  permitted in "From runtime context" above). Phase 1A's "independent
+  extraction pass" is a logical pass over the already-provided original
+  document content; it does NOT call into external services.
+
 ### Phase 2: Cross-Check Against Crystallized
 
 For each item in the original behavioral inventory, find its counterpart in the crystallized document.
@@ -107,6 +221,12 @@ Finding F[N]:
 Severity miscalculation is the most common audit failure. CRITICAL and HIGH findings trigger forced restoration. Downgrading severity to avoid a FAIL verdict is forbidden.
 </CRITICAL>
 
+**ADVISORY findings:** a fifth severity level
+below LOW. ADVISORY findings do NOT block a PASS verdict; they surface
+classification disagreements between the verifier's independent rule extractor
+(Phase 1A) and the crystallizer's classification. Listed under a new
+"ADVISORY" section in the report.
+
 **Severity assignment:**
 
 | Condition | Severity |
@@ -120,6 +240,12 @@ Severity miscalculation is the most common audit failure. CRITICAL and HIGH find
 | Calibration note missing ("you are bad at...") | MEDIUM |
 | Redundant safety framing reduced | LOW |
 | Stylistic/phrasing difference only | NOT A FINDING |
+| Rule-inventory entry missing from output `## Rules` section (and not accounted for by any new rule's `merged-from` field) | CRITICAL |
+| Rule-inventory entry present in output Rules section but with byte-drift inside the rule body | CRITICAL |
+| Empty rule inventory but Rules section contains rule-shaped content not classified by the verifier (crystallizer's bias-toward-over-preservation lifted borderline content) | ADVISORY |
+| Empty rule inventory and Rules section contains neither the placeholder, the meta tag, nor rule-shaped content (placeholder mismatch with non-rule prose) | CRITICAL |
+| Verifier-classified rule found in General Instructions (crystallizer did not lift) | ADVISORY |
+| Crystallizer-lifted rule not classified as rule by verifier (crystallizer over-aggressive) | ADVISORY |
 
 ### Phase 4: Produce Verdict and Report
 
@@ -156,6 +282,10 @@ Severity miscalculation is the most common audit failure. CRITICAL and HIGH find
 ### LOW
 [same format]
 
+### ADVISORY
+
+(verifier classification disagreements; informational only — does not block PASS)
+
 ## Verdict Rationale
 
 [PASS]: All core behaviors preserved. Crystallized document is behaviorally
@@ -171,6 +301,11 @@ Return only the Crystallize Verification Report. No advice, no suggestions.
 
 <FORBIDDEN>
 - Accessing files, skills, or context beyond the two provided documents
+  (Multiple logical analysis passes over the same provided documents — including
+  the Phase 1A independent rule extraction — are NOT external resource access.
+  The constraint forbids reaching outside the two-document input, not multiple
+  reads of that input. See the "Verifier Read Discipline" section for the
+  explicit enumeration of what each input may be read for.)
 - Flagging phrasing differences as findings (behavior-level only)
 - Marking a finding LOW when a workflow step is missing
 - Marking a finding LOW when a gate condition is absent
