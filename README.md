@@ -132,7 +132,7 @@ Three things distinguish it from harness-native features and from other skill co
 - **Shared centralized MCP server.** Memories, focus stints, and session-resume state live in one place, so context stored from a Claude Code session surfaces in an OpenCode session on the same repo. No individual harness ships this.
 - **Skills + hooks layer no harness ships natively.** Autonomy enforcement, quality gates, parallel subagent dispatch, and a session resume protocol sit on top of whatever the harness provides.
 
-Instead of just telling an assistant about your codebase, it gives the assistant structured workflows for research, design, implementation, testing, and review, along with guardrails for the specific ways LLMs tend to cut corners.
+Instead of just telling an assistant about your codebase, Spellbook gives the assistant structured workflows for research, design, implementation, testing, and review, along with guardrails for the specific ways LLMs tend to cut corners.
 
 ### The orchestrator pattern
 
