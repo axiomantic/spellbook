@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.56.0] - 2026-04-29
+## [0.55.1] - 2026-04-29
 
 ### Changed
 
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   continuity, and a skills+hooks layer no individual harness ships
   natively. Touches `README.md`, `docs/index.md`,
   `docs/getting-started/{platforms,quickstart}.md`, `AGENTS.spellbook.md`,
-  `pyproject.toml`.
+  `pyproject.toml`, `AGENTS.md`.
 
 ## [0.55.0] - 2026-04-27
 
