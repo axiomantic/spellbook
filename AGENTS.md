@@ -427,6 +427,12 @@ guard_allow = ["socket", "database", "subprocess", "http", "dns"]
 
 This catches any real I/O that escapes the sandbox during tests. Use `@pytest.mark.allow("plugin")` for tests that intentionally make real calls.
 
+### PR Review Bot
+
+- Bot username: `gemini-code-assist[bot]`
+- Re-review comment: `@gemini-code-assist please re-review`
+- Auto-reviews on PR creation: yes
+
 ## Pre-Commit Checklist
 
 Before any commit, verify:

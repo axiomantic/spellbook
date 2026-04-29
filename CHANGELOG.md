@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **README and docs positioning.** Reframes user-facing documentation to
+  articulate Spellbook as a harness-augmentation layer that runs across
+  coding harnesses (Claude Code, OpenCode, Codex, Gemini CLI), rather
+  than a peer product. Surfaces three differentiators on the front page:
+  harness-agnostic, shared centralized MCP server for cross-harness state
+  continuity, and a skills+hooks layer no individual harness ships
+  natively. Touches `README.md`, `docs/index.md`,
+  `docs/getting-started/{platforms,quickstart}.md`, `AGENTS.spellbook.md`,
+  `pyproject.toml`.
+
 ## [0.55.0] - 2026-04-27
 
 ### Added
