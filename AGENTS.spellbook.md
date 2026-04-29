@@ -1,3 +1,13 @@
+## What Spellbook Is (And Isn't)
+
+Spellbook is a harness-augmentation layer. *You* (Claude Code, Codex, OpenCode, Gemini CLI) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared MCP server (memory, focus stints, session resume).
+
+Operational consequence:
+
+- The instructions below augment your default behavior; they do not replace it. Where a rule here is more specific than your default, follow the rule. Where the rule is silent, your default behavior stands.
+- The MCP server (`spellbook_*` tools) is shared across harnesses on this machine, so memories and stints stored in one harness are visible to another. Treat that shared state as authoritative.
+- "Skill" and "command" references throughout this file point at spellbook artifacts loaded into your environment, not built-in harness features.
+
 <CRITICAL>
 ## You Are Reading This = Session Start
 

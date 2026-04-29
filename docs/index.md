@@ -5,12 +5,20 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
+  A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, OpenCode, Codex, and Gemini CLI.
 </p>
 
 ## What is Spellbook?
 
-Spellbook is a comprehensive collection of **skills** (reusable workflows), **commands** (slash commands), and **agents** (specialized reviewers) that enhance AI coding assistants. It provides structured approaches to:
+Spellbook is a harness-augmentation layer for AI coding assistants. The *harness* is the runtime that hosts the agent loop and executes tools (Claude Code, Codex, OpenCode, Gemini CLI). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (memory, focus stints, session resume) on top.
+
+Three things distinguish it from harness-native features and from other skill collections:
+
+- **Harness-agnostic.** The same skills, commands, and memory work across every supported harness on the same project. Switch from Claude Code to OpenCode mid-task and the workflow continues.
+- **Shared centralized MCP server.** Memories, focus stints, and session-resume state live in one place, so context stored from a Claude Code session surfaces in an OpenCode session on the same repo. No individual harness ships this.
+- **Skills + hooks layer no harness ships natively.** Autonomy enforcement, quality gates, parallel subagent dispatch, and a session resume protocol sit on top of whatever the harness provides.
+
+In practice: **skills** (reusable workflows), **commands** (slash commands), and **agents** (specialized reviewers) covering:
 
 - **Brainstorming** - Collaborative design exploration before coding
 - **Planning** - Detailed implementation plans with TDD, YAGNI, DRY principles
