@@ -22,7 +22,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..components.context_files import generate_codex_context
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
@@ -40,6 +40,33 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 SPELLBOOK_SERVER_KEY: str = "spellbook"
+
+
+def resolve_forgecode_config_dir(default_dir: Optional[Path] = None) -> Path:
+    """Return the effective ForgeCode config dir using the documented priority chain.
+
+    Resolution order (per design Section 3): if ``$FORGE_CONFIG`` is set in the
+    environment, the caller's ``default_dir`` (already env-honoring upstream) is
+    trusted and returned unchanged when supplied; otherwise ``Path($FORGE_CONFIG)``
+    is returned. With the env var unset, legacy ``~/forge`` is preferred when it
+    pre-exists as a directory and ``default_dir`` is either ``None`` or equals
+    the default ``~/.forge``. Falls back to ``default_dir`` if supplied or the
+    default ``~/.forge`` otherwise. Used by both the installer (which passes
+    ``self.config_dir`` as ``default_dir``) and the MCP health-check script
+    (which passes ``None`` to drive resolution end-to-end).
+    """
+    env_value = os.environ.get("FORGE_CONFIG")
+    if env_value:
+        # When upstream already resolved the env var into default_dir, trust it.
+        # Otherwise (caller passed None) parse the env var ourselves.
+        return default_dir if default_dir is not None else Path(env_value)
+
+    legacy = Path.home() / "forge"
+    default = Path.home() / ".forge"
+    effective_default = default_dir if default_dir is not None else default
+    if effective_default == default and legacy.exists() and legacy.is_dir():
+        return legacy
+    return effective_default
 
 
 def _load_mcp_config_dict(config_path: Path) -> dict:
@@ -167,20 +194,11 @@ class ForgeCodeInstaller(PlatformInstaller):
     def _resolve_effective_config_dir(self) -> Path:
         """Return the config dir to use for all install/detect operations.
 
-        Resolution priority (per design Section 3):
-        1. self.config_dir if $FORGE_CONFIG was set (resolve_config_dirs already
-           honored the env var; do not second-guess it).
-        2. ~/forge if it pre-exists AND $FORGE_CONFIG is unset AND self.config_dir
-           is the default (~/.forge).
-        3. self.config_dir unchanged (the default ~/.forge).
+        Thin wrapper over the module-level ``resolve_forgecode_config_dir`` so
+        the installer and the MCP health-check script share one source of truth
+        for the resolution priority chain.
         """
-        if os.environ.get("FORGE_CONFIG"):
-            return self.config_dir
-        legacy = Path.home() / "forge"
-        default = Path.home() / ".forge"
-        if self.config_dir == default and legacy.exists() and legacy.is_dir():
-            return legacy
-        return self.config_dir
+        return resolve_forgecode_config_dir(self.config_dir)
 
     def detect(self) -> PlatformStatus:
         """Detect ForgeCode install state via config dir and .mcp.json contents."""

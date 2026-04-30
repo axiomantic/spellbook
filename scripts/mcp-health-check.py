@@ -1003,21 +1003,24 @@ def check_opencode_mcp(verbose: bool = False) -> HealthCheckResult:
 def _resolve_forgecode_config_dir(config_dir: Optional[Path] = None) -> Path:
     """Return the effective ForgeCode config dir.
 
-    Resolution priority (mirrors installer/platforms/forgecode.py):
-    1. Explicit override (caller-supplied config_dir)
-    2. $FORGE_CONFIG environment variable
-    3. ~/forge if it pre-exists (legacy)
-    4. ~/.forge (default)
+    Thin wrapper that defers to the single source of truth in
+    ``installer.platforms.forgecode.resolve_forgecode_config_dir`` so the
+    installer and the health-check script never drift apart on resolution
+    rules. ``config_dir`` is forwarded as ``default_dir`` (an explicit override
+    that bypasses env/legacy lookups when supplied).
     """
-    if config_dir is not None:
-        return config_dir
-    env_dir = os.environ.get("FORGE_CONFIG")
-    if env_dir:
-        return Path(env_dir)
-    legacy = Path.home() / "forge"
-    if legacy.exists() and legacy.is_dir():
-        return legacy
-    return Path.home() / ".forge"
+    # Ensure the installer package is importable when the script is run from
+    # a checkout without the package installed. SPELLBOOK_DIR (set in the
+    # spawned environment) or the script's own parent dir is the project root.
+    spellbook_dir = os.environ.get(
+        "SPELLBOOK_DIR",
+        str(Path(__file__).resolve().parent.parent),
+    )
+    if spellbook_dir not in sys.path:
+        sys.path.insert(0, spellbook_dir)
+    from installer.platforms.forgecode import resolve_forgecode_config_dir
+
+    return resolve_forgecode_config_dir(config_dir)
 
 
 def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None) -> HealthCheckResult:
