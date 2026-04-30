@@ -85,6 +85,15 @@ def _detect_platform() -> str:
         return "gemini-cli"
     if os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("CLAUDE_ENV_FILE"):
         return "claude-code"
+    # ForgeCode session marker not yet exposed by upstream as of this writing;
+    # sessions running under forge will fall through to "unknown". Tracked as
+    # design follow-up #4 in 2026-04-30-forgecode-support-design.md. When
+    # upstream surfaces a stable env-var marker (e.g. FORGE_SESSION_ID), add
+    # an elif here returning "forgecode" (no dash form) to align with
+    # installer/config.py SUPPORTED_PLATFORMS naming. Note: spellbook hook
+    # IDs use dashes (claude-code, gemini-cli) while installer config uses
+    # underscores; for forgecode the canonical hook return should be
+    # "forgecode" to match the installer side.
     return "unknown"
 
 

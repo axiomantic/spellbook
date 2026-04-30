@@ -588,7 +588,7 @@ class TestTerminalEnvAllowlist:
         # Must NOT return the malicious value; should fall through to detection
         assert result == "xterm"  # final fallback
         mock_which.assert_call(args=("evil",))
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "TERMINAL env var '/tmp/evil' not found via which(), falling back to detection",
             "spellbook.daemon.terminal",
@@ -647,7 +647,7 @@ class TestTerminalEnvAllowlist:
 
         assert result == "gnome-terminal"
         mock_which.assert_call(args=("kitty",))
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "TERMINAL env var 'kitty' not found via which(), falling back to detection",
             "spellbook.daemon.terminal",

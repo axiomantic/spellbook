@@ -112,7 +112,7 @@ async def spellbook_session_init(
         continuation_message: User's first message for resume detection.
         platform: LLM platform self-identification. The calling LLM should
             identify itself from its own system prompt. Valid values:
-            "claude_code", "opencode", "codex", "gemini".
+            "claude_code", "opencode", "codex", "gemini", "forgecode".
 
     Returns:
         {

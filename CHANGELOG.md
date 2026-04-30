@@ -12,18 +12,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **PR Review Bot details.** Adds bot username and re-review command instructions to `AGENTS.md`.
+- **ForgeCode harness support (basic tier).** ForgeCode
+  (tailcallhq/forgecode) joins Claude Code, OpenCode, Codex, and
+  Gemini CLI as a 5th supported harness. Includes a dedicated
+  `ForgeCodeInstaller` that writes Claude-Code-style top-level
+  `mcpServers` to `<config_dir>/.mcp.json` (created with `0o600`
+  atomically), an AGENTS.md demarcated section, MCP health-check
+  integration, daemon CLI-tools list registration, and post-install
+  TUI/CLI messaging. The installer honors `$FORGE_CONFIG`, prefers a
+  legacy `~/forge` directory when pre-existing, and falls back to
+  `~/.forge` by default. Self-identification signal is the system
+  prompt opening with `You are Forge`, `You are Sage`, or
+  `You are Muse`.
 
 ### Changed
 
 - **README and docs positioning.** Reframes user-facing documentation to
   articulate Spellbook as a harness-augmentation layer that runs across
-  coding harnesses (Claude Code, OpenCode, Codex, Gemini CLI), rather
-  than a peer product. Surfaces three differentiators on the front page:
-  harness-agnostic, shared centralized MCP server for cross-harness state
-  continuity, and a skills+hooks layer no individual harness ships
+  coding harnesses (Claude Code, OpenCode, Codex, Gemini CLI, ForgeCode),
+  rather than a peer product. Surfaces three differentiators on the front
+  page: harness-agnostic, shared centralized MCP server for cross-harness
+  state continuity, and a skills+hooks layer no individual harness ships
   natively. Touches `README.md`, `docs/index.md`,
   `docs/getting-started/{platforms,quickstart}.md`, `AGENTS.spellbook.md`,
   and `pyproject.toml`.
+- **`.gemini/styleguide.md` updated for the python-tripwire 0.20+
+  rebrand.** bigfoot 0.21 is a thin namespace shim re-exporting
+  python-tripwire; the `_mock` suffix on proxies was dropped and
+  `[tool.tripwire]` is the canonical pyproject section. The styleguide
+  now matches reality so contributor PRs are not flagged for
+  conformance with stale aliases.
+- **`pyproject.toml` dev deps** require `python-tripwire[http]`
+  explicitly. The bigfoot 0.21 shim does not pull tripwire's `[http]`
+  extra transitively, which surfaced as `ImportError: python-tripwire
+  [http] is required` in CI.
+- **Test suite migrated** from `bigfoot.{log,subprocess,db}_mock` to
+  the renamed `bigfoot.{log,subprocess,db}` proxies (49 substitutions
+  across 13 files) to track tripwire 0.20+.
 
 ## [0.55.0] - 2026-04-27
 

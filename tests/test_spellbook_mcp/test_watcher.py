@@ -173,7 +173,7 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
         mock_get_file.assert_call(args=(str(project_path),))
         mock_extract.assert_call(args=(str(session_file),))
         # _analyze_skills fails parsing the simple test messages
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "Skill analysis failed: 'str' object has no attribute 'get'",
             "spellbook.sessions.watcher",

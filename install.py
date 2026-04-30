@@ -1171,6 +1171,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     _post_notes.append("Codex: AGENTS.md installed. Skills auto-trigger by intent")
                 elif p == "claude_code":
                     _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
+                elif p == "forgecode":
+                    _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
             renderer.render_post_install(_post_notes)
         elif is_interactive():
             try:
