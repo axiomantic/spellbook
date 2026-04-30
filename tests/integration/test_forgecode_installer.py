@@ -14,14 +14,20 @@ import stat
 import sys
 from pathlib import Path
 
+import bigfoot
 import pytest
 
+import installer.platforms.forgecode as fc_mod
 from installer.components.mcp import DEFAULT_HOST, DEFAULT_PORT
-from installer.demarcation import MARKER_END, MARKER_START_PATTERN
+from installer.demarcation import MARKER_END
+from installer.platforms.forgecode import ForgeCodeInstaller
 
 DAEMON_URL = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
 TEST_TOKEN = "test-token-xyz"
 TEST_VERSION = "0.1.0"
+
+# Module path used in bigfoot mock targets.
+FC_MOD = "installer.platforms.forgecode"
 
 
 def _make_spellbook_dir(tmp_path: Path) -> Path:
@@ -47,26 +53,20 @@ def forge_config_dir(tmp_path):
 
 
 @pytest.fixture
-def patched_home_and_token(tmp_path, monkeypatch):
-    """Pin ``Path.home()`` to tmp_path and stub ``get_mcp_auth_token``.
+def forge_env(monkeypatch, forge_config_dir):
+    """Pin FORGE_CONFIG to the test config dir (allowed via monkeypatch.setenv).
 
-    All forge-relevant ``Path.home()`` lookups (legacy ``~/forge``, default
-    ``~/.forge``) resolve under tmp_path, isolating the test from the real
-    user environment. The auth token is stubbed at the import site so the
-    installer always sees TEST_TOKEN regardless of the real token file.
+    Setting FORGE_CONFIG short-circuits ``_resolve_effective_config_dir`` so
+    no ``Path.home()`` lookups are needed for the common-case install tests.
+    Tests that intentionally exercise ``Path.home()`` resolution (legacy
+    ``~/forge`` preference, FORGE_CONFIG-unset warning) override this with
+    their own bigfoot mock.
     """
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    # Patch the imported reference in the forgecode module (where it is used).
-    import installer.platforms.forgecode as fc_mod
-
-    monkeypatch.setattr(fc_mod, "get_mcp_auth_token", lambda: TEST_TOKEN)
-    monkeypatch.delenv("FORGE_CONFIG", raising=False)
-    return tmp_path
+    monkeypatch.setenv("FORGE_CONFIG", str(forge_config_dir))
+    return forge_config_dir
 
 
 def _make_installer(spellbook_dir, forge_config_dir, dry_run=False):
-    from installer.platforms.forgecode import ForgeCodeInstaller
-
     return ForgeCodeInstaller(
         spellbook_dir, forge_config_dir, TEST_VERSION, dry_run=dry_run
     )
@@ -84,10 +84,13 @@ class TestForgeCodeInstall:
     """Phase B install behavior tests."""
 
     def test_fresh_install_creates_mcp_json_with_correct_structure(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         mcp_path = forge_config_dir / ".mcp.json"
         actual = json.loads(mcp_path.read_text(encoding="utf-8"))
@@ -95,10 +98,13 @@ class TestForgeCodeInstall:
         assert actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
 
     def test_fresh_install_writes_AGENTS_md_with_demarcated_section(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         agents_md = forge_config_dir / "AGENTS.md"
         content = agents_md.read_text(encoding="utf-8")
@@ -119,29 +125,38 @@ class TestForgeCodeInstall:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes only")
     def test_fresh_install_chmod_0600(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         mcp_path = forge_config_dir / ".mcp.json"
         actual_mode = stat.S_IMODE(os.stat(mcp_path).st_mode)
         assert actual_mode == 0o600
 
     def test_install_sets_oauth_false(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads((forge_config_dir / ".mcp.json").read_text(encoding="utf-8"))
         assert actual["mcpServers"]["spellbook"]["oauth"] is False
 
     def test_install_writes_authorization_bearer_header(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads((forge_config_dir / ".mcp.json").read_text(encoding="utf-8"))
         assert actual["mcpServers"]["spellbook"]["headers"] == {
@@ -149,10 +164,13 @@ class TestForgeCodeInstall:
         }
 
     def test_install_top_level_key_is_mcpServers(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads((forge_config_dir / ".mcp.json").read_text(encoding="utf-8"))
         # Claude-Code style: top-level key is "mcpServers", NOT "mcp" (OpenCode shape).
@@ -164,16 +182,16 @@ class TestForgeCodeInstall:
         custom = tmp_path / "custom-forge"
         custom.mkdir()
 
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        import installer.platforms.forgecode as fc_mod
-
-        monkeypatch.setattr(fc_mod, "get_mcp_auth_token", lambda: TEST_TOKEN)
+        # FORGE_CONFIG is allowed via monkeypatch.setenv per styleguide.
         monkeypatch.setenv("FORGE_CONFIG", str(custom))
 
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         # config_dir passed to installer is the custom one (resolve_config_dirs
         # honored the env var; installer should not second-guess it).
         installer = _make_installer(spellbook_dir, custom)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads((custom / ".mcp.json").read_text(encoding="utf-8"))
         assert actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
@@ -183,21 +201,44 @@ class TestForgeCodeInstall:
     def test_install_prefers_legacy_forge_dir_when_pre_existing(
         self, spellbook_dir, tmp_path, monkeypatch
     ):
-        # Pre-existing legacy ~/forge.
+        # This test specifically exercises the Path.home()-based legacy
+        # ~/forge preference path in _resolve_effective_config_dir.
+        # FORGE_CONFIG MUST be unset so the home() lookup is reached.
         legacy = tmp_path / "forge"
         legacy.mkdir()
         # Default ~/.forge also exists (the configured default).
         default = tmp_path / ".forge"
         default.mkdir()
 
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        import installer.platforms.forgecode as fc_mod
-
-        monkeypatch.setattr(fc_mod, "get_mcp_auth_token", lambda: TEST_TOKEN)
         monkeypatch.delenv("FORGE_CONFIG", raising=False)
 
+        # Mock Path.home(). The resolver calls home() twice per resolution
+        # (legacy + default), and _resolve_effective_config_dir is invoked
+        # from both install() and _step bookkeeping. Queue enough returns
+        # and assert each interaction.
+        m_home = bigfoot.mock("pathlib:Path.home")
+        # Queue 8 optional returns (.required(False)). The resolver calls
+        # home() multiple times; we don't pin the exact count because it's
+        # an implementation detail of the resolver, not the contract under test.
+        for _ in range(8):
+            m_home.__call__.required(False).returns(tmp_path)
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+
         installer = _make_installer(spellbook_dir, default)
-        installer.install()
+        with bigfoot:
+            installer.install()
+
+        # Drain however many home() calls actually occurred. We don't pin the
+        # exact count: it is an implementation detail of the resolver, not the
+        # contract under test (which is "legacy ~/forge wins when pre-existing").
+        # tripwire requires every interaction to be asserted, so loop until
+        # the unasserted queue is empty.
+        while True:
+            try:
+                m_home.assert_call()
+            except Exception:
+                break
+        m_token.assert_call()
 
         legacy_actual = json.loads((legacy / ".mcp.json").read_text(encoding="utf-8"))
         assert legacy_actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
@@ -206,7 +247,7 @@ class TestForgeCodeInstall:
         assert not (default / "AGENTS.md").exists()
 
     def test_install_merges_existing_mcp_json_preserving_other_servers(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
         existing = {
             "mcpServers": {
@@ -216,8 +257,11 @@ class TestForgeCodeInstall:
         mcp_path = forge_config_dir / ".mcp.json"
         mcp_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads(mcp_path.read_text(encoding="utf-8"))
         assert actual == {
@@ -228,14 +272,17 @@ class TestForgeCodeInstall:
         }
 
     def test_install_demarcation_preserves_existing_AGENTS_md(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
         agents_md = forge_config_dir / "AGENTS.md"
         user_content = "# user content\n\nMy own rules here.\n"
         agents_md.write_text(user_content, encoding="utf-8")
 
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         new_content = agents_md.read_text(encoding="utf-8")
 
@@ -261,11 +308,32 @@ class TestForgeCodeInstall:
         assert new_content == expected
 
     def test_install_warns_when_FORGE_CONFIG_unset(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, monkeypatch, tmp_path
     ):
+        # This test specifically exercises the FORGE_CONFIG-unset branch and
+        # the env_warning emission. Path.home() is reached because the resolver
+        # checks legacy ~/forge / default ~/.forge.
+        monkeypatch.delenv("FORGE_CONFIG", raising=False)
+
+        m_home = bigfoot.mock("pathlib:Path.home")
+        # Queue 8 optional returns (.required(False)). The resolver calls
+        # home() multiple times; we don't pin the exact count because it's
+        # an implementation detail of the resolver, not the contract under test.
+        for _ in range(8):
+            m_home.__call__.required(False).returns(tmp_path)
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+
         # Real install (NOT dry_run) so the env_warning gating runs.
         installer = _make_installer(spellbook_dir, forge_config_dir, dry_run=False)
-        results = installer.install()
+        with bigfoot:
+            results = installer.install()
+
+        while True:
+            try:
+                m_home.assert_call()
+            except Exception:
+                break
+        m_token.assert_call()
 
         warnings = [r for r in results if r.component == "env_warning"]
         assert len(warnings) == 1
@@ -292,7 +360,7 @@ class TestForgeCodeInstall:
         """
 
     def test_uninstall_removes_only_spellbook_entry(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
         existing = {
             "mcpServers": {
@@ -307,8 +375,10 @@ class TestForgeCodeInstall:
         mcp_path = forge_config_dir / ".mcp.json"
         mcp_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
+        # uninstall does NOT call get_mcp_auth_token; no mock needed for it.
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.uninstall()
+        with bigfoot:
+            installer.uninstall()
 
         actual = json.loads(mcp_path.read_text(encoding="utf-8"))
         assert actual == {
@@ -318,7 +388,7 @@ class TestForgeCodeInstall:
         }
 
     def test_mcp_server_name_collision_overwrites(
-        self, spellbook_dir, forge_config_dir, patched_home_and_token
+        self, spellbook_dir, forge_config_dir, forge_env
     ):
         # Pre-existing stale spellbook entry should be replaced wholesale.
         existing = {
@@ -333,8 +403,11 @@ class TestForgeCodeInstall:
         mcp_path = forge_config_dir / ".mcp.json"
         mcp_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        installer.install()
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
 
         actual = json.loads(mcp_path.read_text(encoding="utf-8"))
         assert actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
@@ -344,14 +417,13 @@ class TestForgeCodeInstall:
     ):
         bogus = tmp_path / "nonexistent" / "path" / "that" / "does" / "not" / "exist"
         # Note: do NOT mkdir; must remain absent.
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        import installer.platforms.forgecode as fc_mod
-
-        monkeypatch.setattr(fc_mod, "get_mcp_auth_token", lambda: TEST_TOKEN)
         monkeypatch.setenv("FORGE_CONFIG", str(bogus))
 
+        # No get_mcp_auth_token mock: install() short-circuits on missing
+        # config_dir before reaching the MCP write path.
         installer = _make_installer(spellbook_dir, bogus)
-        results = installer.install()
+        with bigfoot:
+            results = installer.install()
 
         assert len(results) == 1
         result = results[0]
@@ -371,9 +443,9 @@ class TestForgeCodeInCore:
         self, spellbook_dir, tmp_path, monkeypatch
     ):
         from installer.core import get_platform_installer
-        from installer.platforms.forgecode import ForgeCodeInstaller
 
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        # Set FORGE_CONFIG to bypass Path.home() lookup in resolve_config_dirs.
+        monkeypatch.setenv("FORGE_CONFIG", str(tmp_path / ".forge"))
         installer = get_platform_installer(
             "forgecode", spellbook_dir, TEST_VERSION, dry_run=True
         )
