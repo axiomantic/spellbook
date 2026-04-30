@@ -8,7 +8,7 @@ We swap that dependency for a real tmp-file SQLite database whose
 real SQLAlchemy ORM insert path (not a mock of a mock) while keeping the
 test hermetic.
 
-Tripwire has a ``db_mock`` state-machine plugin for sqlite3/DB-API-level
+Tripwire has a ``db`` state-machine plugin for sqlite3/DB-API-level
 assertions, but the production code goes through SQLAlchemy's ORM — the
 DB-API calls are compiled by SQLAlchemy and therefore fragile across
 SQLAlchemy versions. The impl plan (Step 5) explicitly permits the
@@ -17,7 +17,7 @@ fixture that ensures the table exists" alternative; we use a tmp-file DB
 (sqlite in-memory is per-connection, which breaks across sessions).
 
 ``caplog`` is allowed by AGENTS.md for log assertions; this file uses it
-because the tripwire ``log_mock`` plugin requires every log interaction to
+because the tripwire ``log`` plugin requires every log interaction to
 be asserted and the record_call happy path intentionally emits no logs.
 """
 
