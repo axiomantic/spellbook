@@ -10,10 +10,13 @@ Config dir resolution priority (per design Section 3):
 2. ~/forge (legacy, only when pre-existing AND default config dir)
 3. ~/.forge (default)
 
-The .mcp.json file is created with mode 0600 atomically (via ``os.open`` with
-the mode argument) because it contains a plaintext bearer token. The spellbook
-server entry sets ``oauth: false`` to disable OAuth auto-detection on the
-forge client side.
+The .mcp.json file is written with mode 0600 because it contains a plaintext
+bearer token. We use ``os.open`` with mode 0o600 to set restrictive
+permissions on creation, then ``os.fchmod`` on the fd to also tighten any
+pre-existing file (the ``mode`` arg to ``os.open`` only applies on creation,
+so an existing 0o644 file would otherwise survive ``O_TRUNC`` with broad
+permissions intact). The spellbook server entry sets ``oauth: false`` to
+disable OAuth auto-detection on the forge client side.
 
 Reference: design doc 2026-04-30-forgecode-support-design.md, Section 3.
 """
@@ -96,10 +99,17 @@ def _load_mcp_config_dict(config_path: Path) -> dict:
 def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
     """Write JSON config with mode 0600 atomically (no TOCTOU window).
 
-    Using ``os.open`` with the mode argument creates the file with 0600 from
-    the start, avoiding the brief 0644 window between ``write_text`` and
-    ``os.chmod`` that would let other local users read the bearer token.
-    Mode bits are ignored on Windows (chmod was already a no-op there).
+    ``os.open`` with mode 0o600 only applies to *newly created* files; if
+    ``config_path`` already exists with broader permissions (e.g. 0o644 from
+    a prior installer version), ``O_TRUNC`` preserves the existing mode.
+    We therefore explicitly ``os.fchmod`` the file descriptor after open to
+    tighten any pre-existing mode before writing the bearer token. This
+    closes the gap flagged in PR review (cycle 4): an existing 0o644
+    ``.mcp.json`` would otherwise leak the token to other local users.
+
+    Operating on the fd (not the path) avoids a TOCTOU window between
+    chmod and write. ``hasattr(os, "fchmod")`` guards Windows where chmod
+    is already a no-op.
     """
     payload = json.dumps(config, indent=2) + "\n"
     fd = os.open(
@@ -107,6 +117,13 @@ def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
         os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
         0o600,
     )
+    try:
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, 0o600)
+    except BaseException:
+        os.close(fd)
+        raise
+    # os.fdopen takes ownership of fd; its context manager closes it.
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(payload)
 
