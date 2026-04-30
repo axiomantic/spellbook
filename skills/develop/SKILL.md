@@ -182,7 +182,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 - [ ] Implementation plan exists
 - [ ] Plan review subagent (reviewing-impl-plans) was dispatched
-- [ ] Execution mode determined (work_items/delegated/direct)
+- [ ] Execution mode determined (work_items / sub_orchestrators / delegated / direct)
 
 ### During Phase 4 (for EACH task):
 
@@ -591,11 +591,12 @@ Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escap
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (work_items for large features, delegated for single-session)
+  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for COMPLEX 15+ tasks/2+ tracks, work_items for very large or cross-session, delegated for STANDARD single-session)
   ├─ 3.5: Generate work item prompts (if work_items)
   └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)
     ↓
-Phase 4: Implementation (if delegated/direct)
+Phase 4: Implementation (if delegated / direct / sub_orchestrators)
+  └─ If sub_orchestrators: 4.0 dispatches dispatching-sub-orchestrators (CEO/Manager loop), then resumes at 4.6.1 for end-of-Phase-4 gates
   ├─ 4.1: Setup worktree(s) per preference
   ├─ 4.2: Execute tasks (per worktree strategy)
   ├─ 4.2.5: Smart merge (if per_parallel_track worktrees)
@@ -638,7 +639,7 @@ interface SessionPreferences {
     path: string;
     handling: "review_first" | "treat_as_ready";
   };
-  execution_mode?: "work_items" | "delegated" | "direct";
+  execution_mode?: "work_items" | "sub_orchestrators" | "delegated" | "direct";
   estimated_tokens?: number;
   feature_stats?: {
     num_tasks: number;
@@ -807,7 +808,10 @@ After `/feature-config` completes (including Phase 0.7):
 
 **STANDARD tier:** Run all commands in order.
 
-**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines work item decomposition. Large features are split into work items with prompt files, not work packets.
+**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines decomposition strategy:
+- **15+ tasks across 2+ tracks (typical COMPLEX)**: `sub_orchestrators` mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See `dispatching-sub-orchestrators` skill.
+- **Very large COMPLEX (25+ tasks) or user-requested cross-session split**: `work_items` mode. Generates prompt files for separate-session execution.
+- **Smaller COMPLEX (under 15 tasks or single track)**: `delegated` mode (same as STANDARD).
 
 ### Simple Path Guardrails
 

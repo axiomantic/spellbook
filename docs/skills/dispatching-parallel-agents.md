@@ -387,6 +387,14 @@ Return: Summary of what you found and what you fixed.
 
 ## Specialized Subagent Templates
 
+### Sub-Orchestrator (Manager) Dispatch
+
+For COMPLEX features with 15+ tasks across 2+ tracks, the standard "one subagent per gate per task" dispatch pattern bloats the orchestrator's context with summaries. The sub-orchestrator pattern interposes Manager subagents (sub-orchestrators) between the CEO orchestrator and the per-gate subagents: the CEO dispatches one Manager per file-ownership cluster, and each Manager runs its own per-task gates internally before returning a single compact structured summary.
+
+This is a different dispatch shape from the templates in this skill, which assume the orchestrator dispatches gates directly. Do NOT inline a Manager dispatch template here. The canonical Manager Dispatch Template, the CEO loop, and the gotchas (Task-tool fallback to inline execution, single-worktree Manager serialization, file-ownership grouping vs wave grouping) live in the `dispatching-sub-orchestrators` skill.
+
+When you need the Manager pattern, invoke `dispatching-sub-orchestrators` from the orchestrator (or from `feature-implement` Phase 4.0 when `execution_mode == "sub_orchestrators"`). When you only need parallel gate dispatch within a single orchestrator's context, the templates below still apply.
+
 ### Test Writer Template
 
 Mandatory inclusion when dispatching any agent to write test code. Append to the agent's prompt:
@@ -689,6 +697,13 @@ Task(
 First, invoke the [SKILL-NAME] skill using the Skill tool.
 Then follow its complete workflow.
 
+If the Skill tool is unavailable in your context, or the named skill does
+not appear in your skills catalog after your first tool call, STOP and
+report the exact missing capability verbatim. Do NOT inline-execute the
+skill's behavior. Do NOT paraphrase the skill from memory. Do NOT proceed
+with the work. Silent fallback is a contract violation; the orchestrator
+will reject any result that does not contain a "Launching skill:" line.
+
 ## Context for the Skill
 
 [ONLY provide context - file paths, requirements, constraints]
@@ -705,6 +720,23 @@ Then follow its complete workflow.
 | `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
+
+### Skill Availability by Agent Type
+
+The Skill tool is included for most subagent types but not all. Verify before dispatching skill-dependent work:
+
+| Subagent Type | Has Skill tool | Notes |
+|---|---|---|
+| `general-purpose` (or `general`) | yes | Full toolset; default for develop dispatches |
+| `Explore` (or `explore`) | yes | Read-only exploration; cannot edit files |
+| `Plan` | yes | Read-only planning; cannot edit files |
+| `yolo`, `yolo-focused` (OpenCode) | yes | Inherit autonomous permissions |
+| `claude-code-guide` | no | Restricted to Bash, Read, WebFetch, WebSearch |
+| `statusline-setup` | no | Restricted to Read, Edit |
+
+Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no "Launching skill:" line and the orchestrator must reject the result.
+
+**Lazy-injection caveat:** The skills catalog system-reminder is injected into a subagent's context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
 
 ### Worktree Dispatch
 

@@ -377,7 +377,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 - [ ] Implementation plan exists
 - [ ] Plan review subagent (reviewing-impl-plans) was dispatched
-- [ ] Execution mode determined (work_items/delegated/direct)
+- [ ] Execution mode determined (work_items / sub_orchestrators / delegated / direct)
 
 ### During Phase 4 (for EACH task):
 
@@ -393,6 +393,61 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 - [ ] Green mirage audit subagent (auditing-green-mirage) dispatched
 - [ ] Comprehensive fact-checking done
 - [ ] Finishing subagent (finishing-a-development-branch) dispatched
+
+---
+
+## MANDATORY: Pre-Dispatch Ritual
+
+<CRITICAL>
+Before EVERY Task() dispatch inside /develop or any of its sub-skills
+(feature-config, feature-research, feature-discover, feature-design,
+feature-implement), output the following block IN YOUR VISIBLE RESPONSE
+(not in thinking, not summarized): the user must be able to read it.
+
+```
+## Phase Declaration
+- Dispatching for: Phase {N}, sub-step {N.M} ({step name from dispatch table below})
+- Single skill the subagent will invoke: {exact skill name}
+- Single artifact this dispatch produces: {exact path or short description}
+- This dispatch covers EXACTLY ONE row of the dispatch table below.
+```
+
+If you cannot fill all four fields with a SINGLE value (no "and", no "+",
+no "plus also", no comma-separated list), you are about to commit
+Pattern 6 (Phase Collapse). STOP. Decompose into N separate dispatches,
+recite a Phase Declaration for each, and dispatch them sequentially.
+
+### Banned Phrasings in Dispatch Prompts (mechanical scan)
+
+If your draft Task() prompt contains ANY of these phrasings, the dispatch
+is wrong by construction. Decompose before sending:
+
+- "design + impl plan", "design and impl plan", "design plus plan"
+- "implementation + gates", "impl plus gates", "implement and run gates"
+- "all per-task gates", "combined gates", "batched gates"
+- "plus commit", "and commit", "implement and commit"
+- "end-to-end", "everything", "the whole flow", "wrap it up"
+- Any phrasing that combines two distinct rows of the dispatch table
+  (e.g., "design + review", "plan + review", "TDD + code review")
+
+Operator phrasings that DO NOT authorize phase collapse (no exceptions):
+
+- "wrap up", "and pause", "finish X items", "let's wrap this", "close out"
+- "autonomous mode", "fully autonomous", "you decide"
+- "the architecture is settled", "forks pre-resolved", "pre-validated"
+- "STANDARD tier doesn't need all gates", "small change", "small extension"
+- "save context", "save tokens", "context efficiency"
+
+If you find yourself reading any of the above as license to combine rows,
+that IS the rationalization (see Anti-Rationalization Framework below,
+Patterns 3, 6, and 10). Run the prerequisite check, then dispatch one
+row at a time.
+
+The Phase Declaration block is not optional and not negotiable. The user
+relies on it to verify in real time that you are not collapsing phases.
+A dispatch without a preceding Phase Declaration is a process failure
+even if the work product is correct.
+</CRITICAL>
 
 ---
 
@@ -731,11 +786,12 @@ Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escap
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (work_items for large features, delegated for single-session)
+  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for COMPLEX 15+ tasks/2+ tracks, work_items for very large or cross-session, delegated for STANDARD single-session)
   ├─ 3.5: Generate work item prompts (if work_items)
   └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)
     ↓
-Phase 4: Implementation (if delegated/direct)
+Phase 4: Implementation (if delegated / direct / sub_orchestrators)
+  └─ If sub_orchestrators: 4.0 dispatches dispatching-sub-orchestrators (CEO/Manager loop), then resumes at 4.6.1 for end-of-Phase-4 gates
   ├─ 4.1: Setup worktree(s) per preference
   ├─ 4.2: Execute tasks (per worktree strategy)
   ├─ 4.2.5: Smart merge (if per_parallel_track worktrees)
@@ -778,7 +834,7 @@ interface SessionPreferences {
     path: string;
     handling: "review_first" | "treat_as_ready";
   };
-  execution_mode?: "work_items" | "delegated" | "direct";
+  execution_mode?: "work_items" | "sub_orchestrators" | "delegated" | "direct";
   estimated_tokens?: number;
   feature_stats?: {
     num_tasks: number;
@@ -947,7 +1003,10 @@ After `/feature-config` completes (including Phase 0.7):
 
 **STANDARD tier:** Run all commands in order.
 
-**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines work item decomposition. Large features are split into work items with prompt files, not work packets.
+**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines decomposition strategy:
+- **15+ tasks across 2+ tracks (typical COMPLEX)**: `sub_orchestrators` mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See `dispatching-sub-orchestrators` skill.
+- **Very large COMPLEX (25+ tasks) or user-requested cross-session split**: `work_items` mode. Generates prompt files for separate-session execution.
+- **Smaller COMPLEX (under 15 tasks or single track)**: `delegated` mode (same as STANDARD).
 
 ### Simple Path Guardrails
 
