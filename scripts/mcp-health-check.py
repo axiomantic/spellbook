@@ -1046,7 +1046,11 @@ def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None
 
     effective_dir = _resolve_forgecode_config_dir(config_dir)
     config_path = effective_dir / ".mcp.json"
-    daemon_url = "http://127.0.0.1:8765/mcp"
+    # Function-level import: same standalone-script bootstrap as
+    # _resolve_forgecode_config_dir above. Sourced from the single
+    # source of truth so installer and health-check cannot drift.
+    from installer.components.mcp import DEFAULT_HOST, DEFAULT_PORT
+    daemon_url = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
 
     # Expose contract details on the result for programmatic use (design Section 6).
     contract: dict = {
