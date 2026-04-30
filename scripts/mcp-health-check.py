@@ -1000,6 +1000,315 @@ def check_opencode_mcp(verbose: bool = False) -> HealthCheckResult:
     return result
 
 
+def _resolve_forgecode_config_dir(config_dir: Optional[Path] = None) -> Path:
+    """Return the effective ForgeCode config dir.
+
+    Thin wrapper that defers to the single source of truth in
+    ``installer.platforms.forgecode.resolve_forgecode_config_dir`` so the
+    installer and the health-check script never drift apart on resolution
+    rules. ``config_dir`` is forwarded as ``default_dir`` (an explicit override
+    that bypasses env/legacy lookups when supplied).
+    """
+    # Function-level import is INTENTIONAL: this script runs standalone via
+    # `python3 scripts/mcp-health-check.py`, where the spellbook package is
+    # not on sys.path until we insert it below. Hoisting to module scope
+    # would make the script unimportable in that mode. Top-level os/sys/Path
+    # imports satisfy the "prefer top-level" styleguide rule for stdlib.
+    spellbook_dir = os.environ.get(
+        "SPELLBOOK_DIR",
+        str(Path(__file__).resolve().parent.parent),
+    )
+    if spellbook_dir not in sys.path:
+        sys.path.insert(0, spellbook_dir)
+    from installer.platforms.forgecode import resolve_forgecode_config_dir
+
+    return resolve_forgecode_config_dir(config_dir)
+
+
+def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None) -> HealthCheckResult:
+    """Validate spellbook MCP entry in ForgeCode .mcp.json.
+
+    Mirrors the structure of check_opencode_mcp; implements the seven ordered
+    validations from design Section 6:
+
+    1. .mcp.json exists at resolved config dir.
+    2. File parses as JSON.
+    3. Top-level mcpServers key exists.
+    4. mcpServers.spellbook entry exists with matching daemon URL.
+    5. headers.Authorization matches "Bearer .+".
+    6. oauth is exactly False.
+    7. File mode is 0600 (soft warning if not).
+
+    Steps 1-6 short-circuit on failure. Step 7 always runs after 1-6 pass and
+    reports a soft warning (healthy=True, status=insecure_mode) on chmod drift.
+    """
+    result = HealthCheckResult(healthy=False, platform="forgecode")
+
+    effective_dir = _resolve_forgecode_config_dir(config_dir)
+    config_path = effective_dir / ".mcp.json"
+    # Function-level import: same standalone-script bootstrap as
+    # _resolve_forgecode_config_dir above. Sourced from the single
+    # source of truth so installer and health-check cannot drift.
+    from installer.components.mcp import DEFAULT_HOST, DEFAULT_PORT
+    daemon_url = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
+
+    # Expose contract details on the result for programmatic use (design Section 6).
+    contract: dict = {
+        "path": str(config_path),
+        "url": None,
+        "expected_url": daemon_url,
+        "has_auth": False,
+        "auth_format_ok": False,
+        "oauth": None,
+        "mode": None,
+        "status": "missing_file",
+    }
+
+    # Step 1: file exists.
+    if not config_path.exists():
+        result.error = f".mcp.json not found at {config_path}"
+        result.diagnostics.append(DiagnosticResult(
+            check="config_file_exists",
+            passed=False,
+            message=f".mcp.json not found at {config_path}",
+            details={"path": str(config_path), "suggestion": "Run the spellbook installer for forgecode"},
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_file",
+            details=contract,
+        ))
+        return result
+
+    result.diagnostics.append(DiagnosticResult(
+        check="config_file_exists",
+        passed=True,
+        message=f".mcp.json exists: {config_path}",
+    ))
+
+    # Step 2: parse as JSON.
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        contract["status"] = "invalid_json"
+        result.error = f"Invalid JSON in .mcp.json: {e}"
+        result.diagnostics.append(DiagnosticResult(
+            check="config_valid_json",
+            passed=False,
+            message=f".mcp.json is not valid JSON: {e}",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="invalid_json",
+            details=contract,
+        ))
+        return result
+    except OSError as e:
+        contract["status"] = "missing_file"
+        result.error = f"Cannot read .mcp.json: {e}"
+        result.diagnostics.append(DiagnosticResult(
+            check="config_readable",
+            passed=False,
+            message=f"Cannot read .mcp.json: {e}",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_file",
+            details=contract,
+        ))
+        return result
+
+    # Step 3: mcpServers top-level key.
+    mcp_servers = config.get("mcpServers")
+    if not isinstance(mcp_servers, dict) or "spellbook" not in mcp_servers:
+        contract["status"] = "missing_server"
+        result.configured = False
+        result.error = "Spellbook MCP not configured in .mcp.json"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_configured",
+            passed=False,
+            message="mcpServers.spellbook not found",
+            details={"suggestion": "Run the spellbook installer for forgecode"},
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_server",
+            details=contract,
+        ))
+        return result
+
+    spellbook_entry = mcp_servers["spellbook"]
+    if not isinstance(spellbook_entry, dict):
+        contract["status"] = "missing_server"
+        result.error = "mcpServers.spellbook is not an object"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_configured",
+            passed=False,
+            message="mcpServers.spellbook is not an object",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_server",
+            details=contract,
+        ))
+        return result
+
+    result.configured = True
+    result.diagnostics.append(DiagnosticResult(
+        check="mcp_configured",
+        passed=True,
+        message="mcpServers.spellbook is configured",
+        details={"config": spellbook_entry},
+    ))
+
+    # Step 4: url is set and matches the daemon URL.
+    url = spellbook_entry.get("url")
+    contract["url"] = url
+    if not url:
+        contract["status"] = "missing_url"
+        result.error = "mcpServers.spellbook.url is not set"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_url_set",
+            passed=False,
+            message="mcpServers.spellbook.url missing",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_url",
+            details=contract,
+        ))
+        return result
+    if url != daemon_url:
+        contract["status"] = "wrong_url"
+        result.error = f"mcpServers.spellbook.url ({url}) does not match daemon URL ({daemon_url})"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_url_matches",
+            passed=False,
+            message=f"url mismatch: got {url}, expected {daemon_url}",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="wrong_url",
+            details=contract,
+        ))
+        return result
+
+    result.diagnostics.append(DiagnosticResult(
+        check="mcp_url_matches",
+        passed=True,
+        message=f"url matches daemon URL: {daemon_url}",
+    ))
+
+    # Step 5: headers.Authorization matches "Bearer .+".
+    headers = spellbook_entry.get("headers") or {}
+    auth_value = headers.get("Authorization") if isinstance(headers, dict) else None
+    contract["has_auth"] = auth_value is not None
+    auth_format_ok = bool(
+        isinstance(auth_value, str) and re.match(r"^Bearer .+", auth_value)
+    )
+    contract["auth_format_ok"] = auth_format_ok
+    if not auth_format_ok:
+        contract["status"] = "missing_auth"
+        result.error = "mcpServers.spellbook.headers.Authorization missing or malformed"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_auth_header",
+            passed=False,
+            message="Authorization header missing or not 'Bearer <token>'",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="missing_auth",
+            details=contract,
+        ))
+        return result
+
+    result.diagnostics.append(DiagnosticResult(
+        check="mcp_auth_header",
+        passed=True,
+        message="Authorization: Bearer <token> present",
+    ))
+
+    # Step 6: oauth is exactly False.
+    oauth_value = spellbook_entry.get("oauth")
+    contract["oauth"] = oauth_value
+    if oauth_value is not False:
+        contract["status"] = "oauth_enabled"
+        result.error = f"mcpServers.spellbook.oauth must be false, got {oauth_value!r}"
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_oauth_disabled",
+            passed=False,
+            message=f"oauth must be exactly false, got {oauth_value!r}",
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=False,
+            message="oauth_enabled",
+            details=contract,
+        ))
+        return result
+
+    result.diagnostics.append(DiagnosticResult(
+        check="mcp_oauth_disabled",
+        passed=True,
+        message="oauth is false",
+    ))
+
+    # Step 7: file mode 0600 (soft warning, always runs after steps 1-6 pass).
+    try:
+        mode_bits = os.stat(config_path).st_mode & 0o777
+        mode_str = f"{mode_bits:04o}"
+    except OSError:
+        mode_bits = None
+        mode_str = None
+    contract["mode"] = mode_str
+
+    if mode_bits is not None and mode_bits != 0o600:
+        contract["status"] = "insecure_mode"
+        result.healthy = True
+        result.connected = True
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_file_mode",
+            passed=False,
+            message=f".mcp.json mode is {mode_str}, expected 0600 (soft warning; chmod drift is recoverable)",
+            details={"path": str(config_path), "mode": mode_str, "suggestion": f"chmod 600 {config_path}"},
+        ))
+        result.diagnostics.append(DiagnosticResult(
+            check="forgecode_contract",
+            passed=True,
+            message="insecure_mode",
+            details=contract,
+        ))
+        # Check process status for completeness.
+        _check_running_processes(result)
+        return result
+
+    contract["status"] = "ok"
+    result.healthy = True
+    result.connected = True
+    result.diagnostics.append(DiagnosticResult(
+        check="mcp_file_mode",
+        passed=True,
+        message=f".mcp.json mode is {mode_str or '(unknown)'}",
+    ))
+    result.diagnostics.append(DiagnosticResult(
+        check="forgecode_contract",
+        passed=True,
+        message="ok",
+        details=contract,
+    ))
+
+    _check_running_processes(result)
+    return result
+
+
 def get_check_function(platform: str):
     """Get the check function for a platform."""
     check_functions = {
@@ -1007,6 +1316,7 @@ def get_check_function(platform: str):
         "gemini": check_gemini_mcp,
         "codex": check_codex_mcp,
         "opencode": check_opencode_mcp,
+        "forgecode": check_forgecode_mcp,
     }
     return check_functions.get(platform, check_claude_mcp)
 
@@ -1020,6 +1330,7 @@ def get_config_check_function(platform: str):
         "gemini": check_gemini_mcp,  # Already fast
         "codex": check_codex_mcp,  # Already fast
         "opencode": check_opencode_mcp,  # Already fast
+        "forgecode": check_forgecode_mcp,  # Already fast
     }
     return config_functions.get(platform, check_claude_config_only)
 
@@ -1087,6 +1398,8 @@ def detect_platform() -> str:
         return "opencode"
     if (Path.home() / ".gemini").exists():
         return "gemini"
+    if _resolve_forgecode_config_dir().exists():
+        return "forgecode"
 
     return "claude"  # Default
 
@@ -1103,6 +1416,8 @@ def get_available_platforms() -> list[str]:
         available.append("codex")
     if (Path.home() / ".config" / "opencode").exists():
         available.append("opencode")
+    if shutil.which("forge") or _resolve_forgecode_config_dir().exists():
+        available.append("forgecode")
 
     return available
 
@@ -1146,7 +1461,7 @@ def main():
     )
     parser.add_argument(
         "--platform", "-p",
-        choices=["claude", "gemini", "codex", "opencode", "auto", "all"],
+        choices=["claude", "gemini", "codex", "opencode", "forgecode", "auto", "all"],
         default="auto",
         help="Platform to check (default: auto-detect, 'all' checks all installed)",
     )

@@ -737,7 +737,7 @@ def _regenerate_memory_md(project_path: Optional[str]) -> None:
         pass  # Fail-open: never block session init
 
 
-VALID_PLATFORMS = ("claude_code", "opencode", "codex", "gemini")
+VALID_PLATFORMS = ("claude_code", "opencode", "codex", "gemini", "forgecode")
 
 
 def session_init(

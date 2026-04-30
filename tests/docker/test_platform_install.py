@@ -132,7 +132,7 @@ def _collect_result_components(results: List[InstallResult]) -> set:
 # ---------------------------------------------------------------------------
 
 # Platforms that require their config dir to pre-exist (everything except claude_code).
-_PLATFORMS_NEEDING_CONFIG = ["opencode", "codex", "gemini"]
+_PLATFORMS_NEEDING_CONFIG = ["opencode", "codex", "gemini", "forgecode"]
 
 
 @pytest.fixture()
@@ -147,6 +147,7 @@ def platform_config_dir(tmp_path: Path, request) -> Path:
         "opencode": tmp_path / ".config" / "opencode",
         "codex": tmp_path / ".codex",
         "gemini": tmp_path / ".gemini",
+        "forgecode": tmp_path / ".forge",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -166,6 +167,7 @@ def test_fresh_install(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
+        "forgecode": tmp_path / "home" / ".forge",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -201,6 +203,9 @@ def test_fresh_install(platform: str, spellbook_dir: Path, tmp_path: Path):
     elif platform in ("opencode", "codex"):
         # These platforms install AGENTS.md
         assert "AGENTS.md" in actions or "platform" in actions
+    elif platform == "forgecode":
+        # ForgeCode installs AGENTS.md and registers MCP via .mcp.json
+        assert "AGENTS.md" in actions or "platform" in actions
 
 
 @pytest.mark.parametrize(
@@ -215,6 +220,7 @@ def test_skills_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
+        "forgecode": tmp_path / "home" / ".forge",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -257,6 +263,14 @@ def test_skills_available(platform: str, spellbook_dir: Path, tmp_path: Path):
             # If it did install, the extension would have skills
             pass
 
+    elif platform == "forgecode":
+        # ForgeCode accesses skills via MCP; the installer does not
+        # symlink skills. Verify install did not fail (excluding MCP
+        # components that need real daemon infrastructure).
+        for r in results:
+            if r.component not in ("mcp_daemon", "mcp_server"):
+                assert r.success
+
 
 @pytest.mark.parametrize(
     "platform",
@@ -270,6 +284,7 @@ def test_commands_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         "opencode": tmp_path / "home" / ".config" / "opencode",
         "codex": tmp_path / "home" / ".codex",
         "gemini": tmp_path / "home" / ".gemini",
+        "forgecode": tmp_path / "home" / ".forge",
     }
     config_dir = dirs[platform]
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -301,6 +316,15 @@ def test_commands_available(platform: str, spellbook_dir: Path, tmp_path: Path):
         # verify non-extension components succeed.
         for r in results:
             if r.component not in ("extension", "extension_skills", "security_policy"):
+                assert r.success
+
+    elif platform == "forgecode":
+        # ForgeCode accesses commands via AGENTS.md content or MCP.
+        # Verify install succeeded for context file and MCP config
+        # components (excluding mcp_daemon/mcp_server which need real
+        # daemon infrastructure).
+        for r in results:
+            if r.component not in ("mcp_daemon", "mcp_server"):
                 assert r.success
 
 

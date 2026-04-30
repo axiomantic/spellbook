@@ -171,7 +171,7 @@ def _mark_auto_interactions_asserted(verifier: Any) -> None:
     incidental log captures (stray WARNINGs from production modules
     under test) so tests that do not explicitly assert every log line
     still pass. Individual tests remain free to call
-    ``bigfoot.http.assert_request`` or ``bigfoot.log_mock.assert_log``
+    ``bigfoot.http.assert_request`` or ``bigfoot.log.assert_log``
     for stricter checks; already-asserted interactions stay asserted.
     """
     for i in list(verifier._timeline._interactions):  # noqa: SLF001
@@ -265,7 +265,7 @@ def worker_llm_transport() -> Iterator:
             # Auto-assert any http / log interactions the test did not
             # assert so verify_all() at sandbox exit does not fail. Tests
             # that want stricter assertions may call
-            # bigfoot.http.assert_request / bigfoot.log_mock.assert_log
+            # bigfoot.http.assert_request / bigfoot.log.assert_log
             # inside the test body; already-asserted interactions stay so.
             _mark_auto_interactions_asserted(verifier)
 

@@ -399,6 +399,8 @@ def render_post_install_notes(
         lines.append("[cyan]Codex[/cyan]: AGENTS.md installed. Skills auto-trigger by intent")
     if "claude_code" in platforms:
         lines.append("[cyan]Claude Code[/cyan]: MCP server registered. Verify: /mcp")
+    if "forgecode" in platforms:
+        lines.append("[cyan]ForgeCode[/cyan]: Restart forge to load the spellbook MCP server")
 
     if shutil.which("cco"):
         lines.append(
@@ -642,4 +644,10 @@ def show_post_install_instructions(platforms: List[str]) -> None:
         print(color("  Claude Code:", Colors.BLUE))
         print("    MCP server registered. Skills and commands are ready.")
         print("    Verify with: claude (then /mcp to check server status)")
+        print()
+
+    if "forgecode" in platforms:
+        print(color("  ForgeCode:", Colors.BLUE))
+        print("    MCP server registered.")
+        print("    Restart forge to load the spellbook MCP server.")
         print()

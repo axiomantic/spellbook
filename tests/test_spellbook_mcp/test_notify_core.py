@@ -373,7 +373,7 @@ class TestCheckAvailability:
             kwargs={"capture_output": True, "timeout": 5, "check": True},
             raised=IsInstance(subprocess.CalledProcessError),
         )
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "macOS notification test failed: Command 'osascript' returned "
             "non-zero exit status 1.",
@@ -602,7 +602,7 @@ class TestSendNotification:
             kwargs={},
             raised=IsInstance(subprocess.CalledProcessError),
         )
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "Notification failed: Command 'osascript' returned "
             "non-zero exit status 1.",

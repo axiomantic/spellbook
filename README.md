@@ -7,7 +7,7 @@
 
 <p align="center">
   <em>A structured skill system for AI coding assistants -- workflows, quality gates, and guardrails so they work more like experienced engineers.</em><br>
-  Primary platform: Claude Code. Basic support for OpenCode, Codex, and Gemini CLI.
+  Primary platform: Claude Code. Basic support for OpenCode, Codex, Gemini CLI, and ForgeCode.
 </p>
 
 <p align="center">
@@ -533,6 +533,7 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | **OpenCode** | Basic support | Skills, MCP server, YOLO agents. Some hooks and MCP tools are Claude Code-specific. |
 | **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
 | **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |
+| **ForgeCode** | Basic support | Skills via MCP, AGENTS.md context. Built-in agents (Forge, Sage, Muse) detected; custom agents fall through. |
 
 Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose. These features are noted in their documentation. Contributions to extend coverage for other platforms are welcome -- see [Contributing](#contributing).
 
@@ -1060,7 +1061,7 @@ Spellbook requires **agent skills** support. Agent skills are prompt files that 
 
 If your assistant supports agent skills with description-based triggers, see the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) for instructions on adding support.
 
-**Improving platform coverage:** Claude Code is the primary supported platform. OpenCode, Codex, and Gemini CLI have basic support. Some MCP tools, hooks, and skills are Claude Code-specific, but they can usually be implemented for other platforms. If you use one of these platforms and want fuller coverage, contributions are welcome.
+**Improving platform coverage:** Claude Code is the primary supported platform. OpenCode, Codex, Gemini CLI, and ForgeCode have basic support. Some MCP tools, hooks, and skills are Claude Code-specific, but they can usually be implemented for other platforms. If you use one of these platforms and want fuller coverage, contributions are welcome.
 
 ## Acknowledgments
 

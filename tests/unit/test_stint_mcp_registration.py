@@ -153,7 +153,7 @@ class TestStintPushBehavioralMode:
                 "session_id": "test-session-id",
             },
         )
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             IsStr(regex=r"(No event loop available|Event loop not running) for publish_sync, dropping event"),
             "spellbook.admin.events",

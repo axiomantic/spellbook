@@ -1,6 +1,6 @@
 # Platform Support
 
-Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, and Gemini CLI have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.
+Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and ForgeCode have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.
 
 ## Claude Code
 
@@ -106,6 +106,63 @@ Gemini CLI integration via native extension system. Skills and MCP tools work, b
 - No `Task` tool for subagent orchestration. Skills requiring subagents will inform the user to use Claude Code.
 - Native skill discovery is pending upstream support ([gemini-cli#15327](https://github.com/google-gemini/gemini-cli/issues/15327)). Until then, skills are loaded via the MCP server.
 
+## ForgeCode
+
+**Status:** Basic support
+
+ForgeCode integration via AGENTS.md, MCP server, and built-in agent detection. Skills and MCP tools work, but subagent orchestration is unavailable.
+
+### Setup
+
+1. Run the installer: `python3 install.py`
+2. The installer:
+   - Resolves the ForgeCode config directory using this priority:
+     1. `$FORGE_CONFIG` environment variable, if set (takes precedence)
+     2. Legacy `~/forge` directory, if it pre-exists (migration path for older forge installs)
+     3. `~/.forge` (default)
+   - Writes spellbook context to `<config-dir>/AGENTS.md`
+   - Registers the spellbook MCP server in `<config-dir>/.mcp.json` (mode 0600), top-level key `mcpServers`
+
+#### Install-time vs runtime divergence
+
+If you run the installer in a context where `$FORGE_CONFIG` is unset (CI, `sudo`, a fresh terminal that has not yet sourced your shell rc) but your interactive shell sets it via `.envrc` / direnv / shell-rc, the installer will write to `~/.forge` while forge itself reads from your custom path at runtime. The result is that the spellbook MCP server is invisible inside forge even though installation reported success.
+
+To avoid this, ensure `$FORGE_CONFIG` is set in the shell environment that runs the spellbook installer. The installer emits a warning at install time if `$FORGE_CONFIG` is unset.
+
+To recover after a divergent install, re-run the installer with the variable set explicitly:
+
+```bash
+FORGE_CONFIG=<your-path> uv run install.py --platforms forgecode
+```
+
+### Features
+
+- Context and instructions via spellbook's demarcated section in `<config-dir>/AGENTS.md`
+- MCP server registration in `<config-dir>/.mcp.json` (mode 0600, top-level `mcpServers` key)
+- Bearer-token authentication via mustache-template-supported `headers` (literal token in v1)
+- Platform self-identification via `You are Forge|Sage|Muse` system prompt opener for the three built-in agents
+
+### Limitations
+
+- **`forge` binary collision:** ForgeCode's CLI is named `forge`, which collides with [Foundry's `forge`](https://book.getfoundry.sh/) (Solidity toolkit) and [Laravel Forge](https://forge.laravel.com/) tooling. If you have either installed, ensure ForgeCode's `forge` is first on your `PATH`, or invoke it by absolute path.
+- **YOLO flag:** ForgeCode does not yet have a documented YOLO-equivalent flag in spellbook's matrix. Adding one is deferred pending research into ForgeCode's `permissions.yaml` model.
+- **Sage and Muse personas:** Spellbook detects Sage and Muse as `forgecode`, but their personas are tuned for non-coding tasks. Skill behavior is unchanged, but persona-driven tone may be unexpected.
+- **Custom agents fall through:** Agents defined in `~/.forge/agents/` (custom user agents) are not detected as `forgecode` by spellbook's `session_init`. Only the three built-in agents trigger forgecode-mode behavior. Custom agents will receive generic platform handling.
+- No subagent support (Task tool unavailable)
+
+## Provider authentication
+
+Spellbook is provider-agnostic, but third-party harnesses often have constraints worth knowing before you wire up keys.
+
+As of this writing (_Last reviewed: 2026-04_):
+
+- **Claude Code:** First-party Anthropic harness; expects an Anthropic API key or Claude subscription.
+- **OpenCode, Codex, Gemini CLI, ForgeCode:** Third-party harnesses that support multiple providers (OpenAI, Anthropic, Google, local models, etc.) via their own configuration. Spellbook does not impose additional auth requirements; refer to each harness's own documentation for provider setup.
+
+When using Anthropic models through a third-party harness, the harness routes API calls using its own credentials and configuration; Spellbook does not proxy or intercept these calls. Rate limits, quotas, and feature support (prompt caching, extended thinking, tool use) depend on the harness's implementation, not on Spellbook.
+
+_Last reviewed: 2026-04_
+
 ## Contributing Platform Support
 
-If you use OpenCode, Codex, or Gemini CLI and want fuller Spellbook coverage, contributions are welcome. See the [Porting Guide](../contributing/porting-to-your-assistant.md) for how to add or extend platform support.
+If you use OpenCode, Codex, Gemini CLI, or ForgeCode and want fuller Spellbook coverage, contributions are welcome. See the [Porting Guide](../contributing/porting-to-your-assistant.md) for how to add or extend platform support.

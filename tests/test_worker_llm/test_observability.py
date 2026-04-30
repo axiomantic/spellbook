@@ -239,10 +239,10 @@ def counting_session(tmp_path, monkeypatch):
     is exposed as ``counting_session.connect_count``; it increments on each
     ``__enter__`` of the context manager.
 
-    Rationale for in-memory-style tmp-file SQLite over bigfoot.db_mock: the
+    Rationale for in-memory-style tmp-file SQLite over bigfoot.db: the
     purge loop opens a fresh session per batch and SQLAlchemy ORM statements
     (SELECT + bulk DELETE) compile to multiple DB-API calls per batch, which
-    makes the bigfoot.db_mock state-machine queue tedious to seed
+    makes the bigfoot.db state-machine queue tedious to seed
     deterministically. Step 5's existing ``fresh_db`` fixture already
     established the tmp-file SQLite convention for ``observability.py``
     tests; T8 extends it by layering a connect counter on top, which keeps
