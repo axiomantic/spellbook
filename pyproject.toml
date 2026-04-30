@@ -78,15 +78,15 @@ markers = [
     "requires_memory_tools: test requires QMD and Serena to be installed",
 ]
 
-[tool.bigfoot]
+[tool.tripwire]
 guard = "error"
 # SocketPlugin intercepts socket.socket.close on the active verifier. The
 # asyncio.run-driven loop teardown inside sync task entry points closes
 # its self-pipe socket after the sandbox's active verifier is set, which
-# makes bigfoot blow up with UnmockedInteractionError on loop shutdown.
-# No test in this repo uses bigfoot.socket_mock; disabling the plugin
+# makes tripwire blow up with UnmockedInteractionError on loop shutdown.
+# No test in this repo uses tripwire.socket_mock; disabling the plugin
 # globally lets HttpPlugin-only tests drive asyncio.run() safely.
 disabled_plugins = ["socket"]
 
-[tool.bigfoot.firewall]
+[tool.tripwire.firewall]
 allow = ["socket:*", "database:*", "db:*", "subprocess:*", "http:*", "dns:*"]
