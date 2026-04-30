@@ -261,7 +261,7 @@ class TestForgeCodeInstall:
         EXPECTED_HOME_CALLS = 3
         m_home = bigfoot.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
-            m_home.__call__.returns(tmp_path)
+            m_home.returns(tmp_path)
         m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         installer = _make_installer(spellbook_dir, default)
@@ -356,7 +356,7 @@ class TestForgeCodeInstall:
         EXPECTED_HOME_CALLS = 3
         m_home = bigfoot.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
-            m_home.__call__.returns(tmp_path)
+            m_home.returns(tmp_path)
         m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         # Real install (NOT dry_run) so the env_warning gating runs.
