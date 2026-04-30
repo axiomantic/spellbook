@@ -7853,11 +7853,18 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
+  A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, OpenCode, Codex, Gemini CLI, and ForgeCode.
 </p>
 
 <h2 id="what-is-spellbook">What is Spellbook?<a class="headerlink" href="#what-is-spellbook" title="Permanent link">&para;</a></h2>
-<p>Spellbook is a comprehensive collection of <strong>skills</strong> (reusable workflows), <strong>commands</strong> (slash commands), and <strong>agents</strong> (specialized reviewers) that enhance AI coding assistants. It provides structured approaches to:</p>
+<p>Spellbook is a harness-augmentation layer for AI coding assistants. The <em>harness</em> is the runtime that hosts the agent loop and executes tools (Claude Code, Codex, OpenCode, Gemini CLI, ForgeCode). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (memory, focus stints, session resume) on top.</p>
+<p>Three things distinguish it from harness-native features and from other skill collections:</p>
+<ul>
+<li><strong>Harness-agnostic.</strong> The same skills, commands, and memory work across every supported harness on the same project. Switch from Claude Code to OpenCode mid-task and the workflow continues.</li>
+<li><strong>Shared centralized MCP server.</strong> Memories, focus stints, and session-resume state live in one place, so context stored from a Claude Code session surfaces in an OpenCode session on the same repo. No individual harness ships this.</li>
+<li><strong>Skills + hooks layer no harness ships natively.</strong> Autonomy enforcement, quality gates, parallel subagent dispatch, and a session resume protocol sit on top of whatever the harness provides.</li>
+</ul>
+<p>In practice: <strong>skills</strong> (reusable workflows), <strong>commands</strong> (slash commands), and <strong>agents</strong> (specialized reviewers) covering:</p>
 <ul>
 <li><strong>Brainstorming</strong> - Collaborative design exploration before coding</li>
 <li><strong>Planning</strong> - Detailed implementation plans with TDD, YAGNI, DRY principles</li>

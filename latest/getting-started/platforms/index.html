@@ -8323,7 +8323,8 @@
 
 
 <h1 id="platform-support">Platform Support<a class="headerlink" href="#platform-support" title="Permanent link">&para;</a></h1>
-<p>Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and ForgeCode have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.</p>
+<p>Spellbook is the augmentation layer; the harness is the host. Each supported AI coding assistant (Claude Code, OpenCode, Codex, Gemini CLI, ForgeCode) is a <em>harness</em>: it runs its own agent loop and executes tools. Spellbook plugs into whichever harness is running and adds skills, slash commands, hooks, and a shared MCP server (memory, focus stints, session resume) that the harness can reach.</p>
+<p>Coverage varies by harness because each one exposes different extension points. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and ForgeCode have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other harnesses are welcome.</p>
 <h2 id="claude-code">Claude Code<a class="headerlink" href="#claude-code" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Primary platform, full support</p>
 <p>Claude Code receives full support for all Spellbook features.</p>
