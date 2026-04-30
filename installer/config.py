@@ -88,7 +88,7 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "mcp_supported": True,  # Via extension
     },
     "forgecode": {
-        "name": "forgecode",
+        "name": "ForgeCode",
         "config_dir_env": "FORGE_CONFIG",
         "default_config_dir": Path.home() / ".forge",
         "cli_flag_name": "forge-config-dir",

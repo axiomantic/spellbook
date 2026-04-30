@@ -117,18 +117,30 @@ ForgeCode integration via AGENTS.md, MCP server, and built-in agent detection. S
 1. Run the installer: `python3 install.py`
 2. The installer:
    - Resolves the ForgeCode config directory using this priority:
-     1. `$FORGE_CONFIG` environment variable, if set
-     2. `~/.forge` (default)
-     3. Legacy `~/forge` directory, if detected (migration path for older installs)
+     1. `$FORGE_CONFIG` environment variable, if set (takes precedence)
+     2. Legacy `~/forge` directory, if it pre-exists (migration path for older forge installs)
+     3. `~/.forge` (default)
    - Writes spellbook context to `<config-dir>/AGENTS.md`
-   - Registers the spellbook MCP server in `<config-dir>/forge.yaml`
+   - Registers the spellbook MCP server in `<config-dir>/.mcp.json` (mode 0600), top-level key `mcpServers`
+
+#### Install-time vs runtime divergence
+
+If you run the installer in a context where `$FORGE_CONFIG` is unset (CI, `sudo`, a fresh terminal that has not yet sourced your shell rc) but your interactive shell sets it via `.envrc` / direnv / shell-rc, the installer will write to `~/.forge` while forge itself reads from your custom path at runtime. The result is that the spellbook MCP server is invisible inside forge even though installation reported success.
+
+To avoid this, ensure `$FORGE_CONFIG` is set in the shell environment that runs the spellbook installer. The installer emits a warning at install time if `$FORGE_CONFIG` is unset.
+
+To recover after a divergent install, re-run the installer with the variable set explicitly:
+
+```bash
+FORGE_CONFIG=<your-path> uv run install.py --platforms forgecode
+```
 
 ### Features
 
-- Context and instructions via AGENTS.md
-- MCP server for spellbook tools
-- Native skill discovery from `~/.claude/skills/*`
-- Platform self-identification for the three built-in agents (Forge, Sage, Muse)
+- Context and instructions via spellbook's demarcated section in `<config-dir>/AGENTS.md`
+- MCP server registration in `<config-dir>/.mcp.json` (mode 0600, top-level `mcpServers` key)
+- Bearer-token authentication via mustache-template-supported `headers` (literal token in v1)
+- Platform self-identification via `You are Forge|Sage|Muse` system prompt opener for the three built-in agents
 
 ### Limitations
 
