@@ -15,7 +15,7 @@ import json
 import os
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 
 

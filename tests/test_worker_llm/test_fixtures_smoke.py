@@ -60,7 +60,7 @@ async def test_transport_replays_scripted_response(worker_llm_transport):
 
 @pytest.mark.asyncio
 async def test_transport_raises_when_raise_on_send_set(worker_llm_transport):
-    """A scripted ``raise_on_send`` is surfaced via ``bigfoot.http.mock_error``."""
+    """A scripted ``raise_on_send`` is surfaced via ``tripwire.http.mock_error``."""
     from types import SimpleNamespace
 
     worker_llm_transport(
@@ -81,9 +81,9 @@ async def test_transport_raises_when_raise_on_send_set(worker_llm_transport):
 
 @pytest.mark.asyncio
 async def test_transport_raises_when_script_exhausted(worker_llm_transport):
-    """With no mocks registered, any outbound call raises bigfoot's
+    """With no mocks registered, any outbound call raises tripwire's
     ``UnmockedInteractionError`` instead of the legacy RuntimeError."""
-    from bigfoot._errors import UnmockedInteractionError
+    from tripwire._errors import UnmockedInteractionError
 
     worker_llm_transport([])
     target = "http://test.local/v1/chat/completions"

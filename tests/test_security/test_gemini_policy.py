@@ -11,7 +11,7 @@ Validates:
 import tomllib
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 
@@ -274,12 +274,12 @@ class TestGeminiInstallerIntegration:
         # Create the extension dir so the installer doesn't bail early
         ext_dir = spellbook_dir / "extensions" / "gemini"
 
-        cli_mock = bigfoot.mock("installer.platforms.gemini:check_gemini_cli_available")
+        cli_mock = tripwire.mock("installer.platforms.gemini:check_gemini_cli_available")
         cli_mock.returns(True)
-        link_mock = bigfoot.mock("installer.platforms.gemini:link_extension")
+        link_mock = tripwire.mock("installer.platforms.gemini:link_extension")
         link_mock.returns((True, "extension linked"))
 
-        with bigfoot:
+        with tripwire:
             installer = GeminiInstaller(
                 spellbook_dir, config_dir, "1.0.0", dry_run=False
             )

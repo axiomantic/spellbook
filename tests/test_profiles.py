@@ -57,7 +57,7 @@ class TestDiscoverProfiles:
 
     def test_bundled_only(self, tmp_path):
         """Discovers profiles from bundled directory only."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import discover_profiles
 
@@ -68,12 +68,12 @@ class TestDiscoverProfiles:
             encoding="utf-8",
         )
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")  # does not exist
 
-        with bigfoot:
+        with tripwire:
             profiles = discover_profiles()
 
         get_spellbook_dir.assert_call()
@@ -87,7 +87,7 @@ class TestDiscoverProfiles:
 
     def test_custom_overrides_bundled(self, tmp_path):
         """Custom profile with same slug takes precedence over bundled."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import discover_profiles
 
@@ -105,12 +105,12 @@ class TestDiscoverProfiles:
             encoding="utf-8",
         )
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             profiles = discover_profiles()
 
         get_spellbook_dir.assert_call()
@@ -122,7 +122,7 @@ class TestDiscoverProfiles:
 
     def test_empty_dirs(self, tmp_path):
         """Returns empty list when no profile files exist."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import discover_profiles
 
@@ -131,12 +131,12 @@ class TestDiscoverProfiles:
         custom_dir = tmp_path / "custom" / "profiles"
         custom_dir.mkdir(parents=True)
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             profiles = discover_profiles()
 
         get_spellbook_dir.assert_call()
@@ -146,16 +146,16 @@ class TestDiscoverProfiles:
 
     def test_no_dirs_exist(self, tmp_path):
         """Returns empty list when profile directories do not exist."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import discover_profiles
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "nonexistent-bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "nonexistent-custom")
 
-        with bigfoot:
+        with tripwire:
             profiles = discover_profiles()
 
         get_spellbook_dir.assert_call()
@@ -165,7 +165,7 @@ class TestDiscoverProfiles:
 
     def test_sorted_by_name(self, tmp_path):
         """Profiles are returned sorted by name."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import discover_profiles
 
@@ -180,12 +180,12 @@ class TestDiscoverProfiles:
             encoding="utf-8",
         )
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             profiles = discover_profiles()
 
         get_spellbook_dir.assert_call()
@@ -199,7 +199,7 @@ class TestLoadProfile:
 
     def test_found_in_custom(self, tmp_path):
         """Loads profile from custom directory when it exists there."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import load_profile
 
@@ -210,12 +210,12 @@ class TestLoadProfile:
             encoding="utf-8",
         )
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             content = load_profile("test")
 
         get_config_dir.assert_call()
@@ -225,7 +225,7 @@ class TestLoadProfile:
 
     def test_found_in_bundled(self, tmp_path):
         """Falls back to bundled directory when custom does not have it."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import load_profile
 
@@ -236,12 +236,12 @@ class TestLoadProfile:
             encoding="utf-8",
         )
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")  # no profiles dir here
 
-        with bigfoot:
+        with tripwire:
             content = load_profile("test")
 
         get_config_dir.assert_call()
@@ -251,16 +251,16 @@ class TestLoadProfile:
 
     def test_not_found(self, tmp_path):
         """Returns None when profile slug does not match any file."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import load_profile
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             content = load_profile("nonexistent")
 
         get_config_dir.assert_call()
@@ -270,7 +270,7 @@ class TestLoadProfile:
 
     def test_empty_file_returns_none(self, tmp_path):
         """Returns None for an empty profile file (falsy body)."""
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import load_profile
 
@@ -278,12 +278,12 @@ class TestLoadProfile:
         custom_dir.mkdir(parents=True)
         (custom_dir / "empty.md").write_text("", encoding="utf-8")
 
-        get_spellbook_dir = bigfoot.mock("spellbook.core.profiles:get_spellbook_dir")
+        get_spellbook_dir = tripwire.mock("spellbook.core.profiles:get_spellbook_dir")
         get_spellbook_dir.returns(tmp_path / "bundled")
-        get_config_dir = bigfoot.mock("spellbook.core.profiles:get_config_dir")
+        get_config_dir = tripwire.mock("spellbook.core.profiles:get_config_dir")
         get_config_dir.returns(tmp_path / "custom")
 
-        with bigfoot:
+        with tripwire:
             content = load_profile("empty")
 
         get_config_dir.assert_call()
@@ -317,38 +317,38 @@ class TestRichRendererProfileWizard:
         assert result == {}
 
     def test_no_profiles_returns_empty(self):
-        import bigfoot
+        import tripwire
 
         from installer.renderer import RichRenderer
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([])
 
         renderer = RichRenderer(auto_yes=False)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard()
 
         discover.assert_call()
         assert result == {}
 
     def test_already_configured_not_reconfigure_returns_empty(self):
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import ProfileInfo
         from installer.renderer import RichRenderer
         from pathlib import Path
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
             ProfileInfo(slug="test", name="Test", description="Desc", path=Path("/fake"), is_custom=False),
         ])
-        is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
+        is_set = tripwire.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(True)
 
         renderer = RichRenderer(auto_yes=False)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard(reconfigure=False)
 
         discover.assert_call()
@@ -356,24 +356,24 @@ class TestRichRendererProfileWizard:
         assert result == {}
 
     def test_selects_profile_returns_slug(self):
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import ProfileInfo
         from installer.renderer import RichRenderer
         from pathlib import Path
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
             ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
-        is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
+        is_set = tripwire.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
 
         renderer = RichRenderer(auto_yes=False)
-        prompt = bigfoot.mock.object(renderer, "prompt_choice")
+        prompt = tripwire.mock.object(renderer, "prompt_choice")
         prompt.returns(1)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard()
 
         discover.assert_call()
@@ -385,24 +385,24 @@ class TestRichRendererProfileWizard:
         assert result == {"profile.default": "thought-partner"}
 
     def test_selects_none_returns_empty_string(self):
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import ProfileInfo
         from installer.renderer import RichRenderer
         from pathlib import Path
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
             ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
-        is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
+        is_set = tripwire.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
 
         renderer = RichRenderer(auto_yes=False)
-        prompt = bigfoot.mock.object(renderer, "prompt_choice")
+        prompt = tripwire.mock.object(renderer, "prompt_choice")
         prompt.returns(0)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard()
 
         discover.assert_call()
@@ -425,40 +425,40 @@ class TestPlainTextRendererProfileWizard:
         assert result == {}
 
     def test_no_profiles_returns_empty(self):
-        import bigfoot
+        import tripwire
 
         from installer.renderer import PlainTextRenderer
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([])
 
         renderer = PlainTextRenderer(auto_yes=False)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard()
 
         discover.assert_call()
         assert result == {}
 
     def test_selects_profile_returns_slug(self):
-        import bigfoot
+        import tripwire
 
         from spellbook.core.profiles import ProfileInfo
         from installer.renderer import PlainTextRenderer
         from pathlib import Path
 
-        discover = bigfoot.mock("spellbook.core.profiles:discover_profiles")
+        discover = tripwire.mock("spellbook.core.profiles:discover_profiles")
         discover.returns([
             ProfileInfo(slug="thought-partner", name="Thought Partner", description="Thinks alongside you with candor, shared uncertainty, and honest pushback", path=Path("/fake"), is_custom=False),
         ])
-        is_set = bigfoot.mock("spellbook.core.config:config_is_explicitly_set")
+        is_set = tripwire.mock("spellbook.core.config:config_is_explicitly_set")
         is_set.returns(False)
 
         renderer = PlainTextRenderer(auto_yes=False)
-        prompt = bigfoot.mock.object(renderer, "prompt_choice")
+        prompt = tripwire.mock.object(renderer, "prompt_choice")
         prompt.returns(1)
 
-        with bigfoot:
+        with tripwire:
             result = renderer.render_profile_wizard()
 
         discover.assert_call()

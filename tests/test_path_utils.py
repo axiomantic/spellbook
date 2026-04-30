@@ -2,7 +2,7 @@
 
 import subprocess
 
-import bigfoot
+import tripwire
 import pytest
 
 from spellbook.core.path_utils import detect_git_context
@@ -32,93 +32,93 @@ class TestDetectGitContext:
 
     def test_git_not_available(self):
         """FileNotFoundError from subprocess -> graceful fallback."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             raises=FileNotFoundError("git not found"),
         )
 
-        with bigfoot:
+        with tripwire:
             ctx = detect_git_context("/tmp/nope")
         assert ctx.branch is None
         assert ctx.worktree_name is None
         assert ctx.is_worktree is False
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             returncode=0, stdout="", stderr="",
         )
 
     def test_git_timeout(self):
         """TimeoutExpired from subprocess -> graceful fallback."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             raises=subprocess.TimeoutExpired(cmd="git", timeout=5),
         )
 
-        with bigfoot:
+        with tripwire:
             ctx = detect_git_context("/tmp/nope")
         assert ctx.branch is None
         assert ctx.worktree_name is None
         assert ctx.is_worktree is False
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             returncode=0, stdout="", stderr="",
         )
 
     def test_not_a_git_repo(self):
         """Non-zero returncode -> graceful fallback."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             returncode=128,
             stderr="fatal: not a git repository",
         )
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "worktree", "list", "--porcelain"],
             returncode=128,
             stderr="fatal: not a git repository",
         )
 
-        with bigfoot:
+        with tripwire:
             ctx = detect_git_context("/tmp/nope")
         assert ctx.branch is None
         assert ctx.worktree_name is None
         assert ctx.is_worktree is False
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             returncode=128, stdout="", stderr="fatal: not a git repository",
         )
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "worktree", "list", "--porcelain"],
             returncode=128, stdout="", stderr="fatal: not a git repository",
         )
 
     def test_detached_head_returns_short_hash(self):
         """Detached HEAD -> branch is short commit hash, not literal 'HEAD'."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             stdout="HEAD\n",
         )
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "rev-parse", "--short", "HEAD"],
             stdout="abc1234\n",
         )
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["git", "worktree", "list", "--porcelain"],
             stdout="worktree /tmp/nope\nHEAD abc1234567890\nbranch refs/heads/main\n\n",
         )
 
-        with bigfoot:
+        with tripwire:
             ctx = detect_git_context("/tmp/nope")
         assert ctx.branch == "abc1234"
         assert ctx.is_worktree is False
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "rev-parse", "--abbrev-ref", "HEAD"],
             returncode=0, stdout="HEAD\n", stderr="",
         )
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "rev-parse", "--short", "HEAD"],
             returncode=0, stdout="abc1234\n", stderr="",
         )
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["git", "worktree", "list", "--porcelain"],
             returncode=0,
             stdout="worktree /tmp/nope\nHEAD abc1234567890\nbranch refs/heads/main\n\n",

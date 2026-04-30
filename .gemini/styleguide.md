@@ -24,20 +24,15 @@ Flag as **high severity** if the version bump or changelog entry is missing. Fla
 - Silent `except Exception: pass` blocks should log the exception
 - Prefer top-level imports over function-level imports unless there is a circular dependency
 
-## Mocking -- bigfoot is the ONLY acceptable framework
+## Mocking -- tripwire is the ONLY acceptable framework
 
 **This rule is absolute. There are no substitutes. Do not suggest alternatives.**
 
-### Note on the bigfoot / python-tripwire rebrand
+The framework is `python-tripwire`, imported as `tripwire`. The pyproject configuration section is `[tool.tripwire]`. The earlier `bigfoot` package name and any `bigfoot.*_mock` / `tripwire.*_mock` plugin aliases are no longer used in this repo; flag PRs that reintroduce them.
 
-bigfoot 0.21+ is a thin namespace shim that re-exports `python-tripwire`. The framework itself was renamed; the `bigfoot` import name is preserved as a deprecation alias so existing tests keep working. References to "bigfoot" in this guide mean the framework regardless of which package name a contributor types. Two consequences:
+### Tripwire is a different paradigm, not a drop-in patch replacement
 
-1. The canonical pyproject configuration section is `[tool.tripwire]`, NOT `[tool.bigfoot]`. Flag PRs that introduce a `[tool.bigfoot]` section.
-2. python-tripwire 0.20+ dropped the `_mock` suffix on most domain plugin proxies. The current canonical names are `bigfoot.subprocess`, `bigfoot.db`, `bigfoot.log`, etc. (see "Domain plugin proxies" below). The pre-rebrand `_mock`-suffixed aliases (`bigfoot.subprocess_mock`, `bigfoot.db_mock`, `bigfoot.log_mock`, ...) are no longer available and code that uses them will fail at attribute lookup.
-
-### Bigfoot is a different paradigm, not a drop-in patch replacement
-
-Before flagging or recommending, understand the model. bigfoot is NOT "`unittest.mock` with a different import." It is a full-certainty sandbox framework with three guarantees `unittest.mock` does not provide:
+Before flagging or recommending, understand the model. tripwire is NOT "`unittest.mock` with a different import." It is a full-certainty sandbox framework with three guarantees `unittest.mock` does not provide:
 
 1. **Every external call must be pre-authorized** -- unmocked I/O raises `UnmockedInteractionError`
 2. **Every recorded interaction must be explicitly asserted** -- forgotten asserts raise `UnassertedInteractionsError` at teardown
@@ -45,27 +40,27 @@ Before flagging or recommending, understand the model. bigfoot is NOT "`unittest
 
 The project's `pyproject.toml` sets `guard = "error"`, so any unmocked network / subprocess / DB call fails tests immediately.
 
-### The bigfoot flow: register, sandbox, assert
+### The tripwire flow: register, sandbox, assert
 
 ```python
-import bigfoot
+import tripwire
 
 def test_example():
     # 1. REGISTER mocks BEFORE the sandbox
-    bigfoot.http.mock_response("POST", "https://api.example.com/x",
+    tripwire.http.mock_response("POST", "https://api.example.com/x",
                                json={"id": "abc"}, status=200)
 
     # 2. EXECUTE inside the sandbox
-    with bigfoot:
+    with tripwire:
         result = my_function()
 
     # 3. ASSERT interactions AFTER the sandbox (REQUIRED)
-    bigfoot.http.assert_request("POST", "https://api.example.com/x",
+    tripwire.http.assert_request("POST", "https://api.example.com/x",
                                 headers=IsInstance(dict), body=...) \
                 .assert_response(200, IsInstance(dict), ...)
 ```
 
-For async code: `async with bigfoot:` instead of `with bigfoot:`. The API is otherwise identical.
+For async code: `async with tripwire:` instead of `with tripwire:`. The API is otherwise identical.
 
 ### What is forbidden in tests
 
@@ -75,33 +70,33 @@ Flag as **high severity** any use of:
 - `pytest-mock` / the `mocker` fixture
 - `monkeypatch.setattr`, `monkeypatch.setitem`, `monkeypatch.delattr`, `monkeypatch.delitem` -- when used to replace functions, methods, class attributes, or module-level callables (i.e., used as a mocking mechanism)
 - Hand-rolled stub classes, fake objects, or `@pytest.fixture` factories that exist solely to stand in for a real dependency
-- Any library that patches at the Python import-hook level as a substitute for bigfoot
+- Any library that patches at the Python import-hook level as a substitute for tripwire
 
-### The correct bigfoot APIs
+### The correct tripwire APIs
 
 When suggesting a rewrite, use the real API surface. Do NOT invent names.
 
 **General module / attribute mocking:**
 
-- `bigfoot.mock("module.path:attribute")` -- colon-separated import path (NOT dotted). Returns a proxy where you call `.returns(value)`, `.raises(exc)`, or `.calls(fn)`. Must be followed by `.assert_call(args=..., kwargs=..., returned=...)` after the sandbox.
-- `bigfoot.mock.object(obj, "attr_name")` -- patch an attribute on a specific live object.
-- `bigfoot.spy("module.path:attribute")` -- call the real implementation AND record; still requires assertion.
+- `tripwire.mock("module.path:attribute")` -- colon-separated import path (NOT dotted). Returns a proxy where you call `.returns(value)`, `.raises(exc)`, or `.calls(fn)`. Must be followed by `.assert_call(args=..., kwargs=..., returned=...)` after the sandbox.
+- `tripwire.mock.object(obj, "attr_name")` -- patch an attribute on a specific live object.
+- `tripwire.spy("module.path:attribute")` -- call the real implementation AND record; still requires assertion.
 
 **Domain plugin proxies** (use these instead of generic `mock(...)` when applicable):
 
-- `bigfoot.http` -- httpx, requests, urllib, aiohttp. Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
-- `bigfoot.subprocess` -- `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
-- `bigfoot.popen` -- `subprocess.Popen`.
-- `bigfoot.async_subprocess` -- `asyncio.create_subprocess_*`.
-- `bigfoot.db` -- sqlite3 / generic DB. State-machine plugin with step sentinels `bigfoot.db.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `bigfoot.db.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected -> connected -> in_transaction -> connected -> closed`.
-- `bigfoot.socket` -- raw socket operations.
-- `bigfoot.smtp`, `bigfoot.redis`, `bigfoot.mongo`, `bigfoot.boto3`, `bigfoot.pika`, `bigfoot.ssh`, `bigfoot.log`, `bigfoot.jwt`, `bigfoot.crypto`, `bigfoot.file_io`, etc.
+- `tripwire.http` -- httpx, requests, urllib, aiohttp. Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
+- `tripwire.subprocess` -- `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
+- `tripwire.popen` -- `subprocess.Popen`.
+- `tripwire.async_subprocess` -- `asyncio.create_subprocess_*`.
+- `tripwire.db` -- sqlite3 / generic DB. State-machine plugin with step sentinels `tripwire.db.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `tripwire.db.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected -> connected -> in_transaction -> connected -> closed`.
+- `tripwire.socket` -- raw socket operations.
+- `tripwire.smtp`, `tripwire.redis`, `tripwire.mongo`, `tripwire.boto3`, `tripwire.pika`, `tripwire.ssh`, `tripwire.log`, `tripwire.jwt`, `tripwire.crypto`, `tripwire.file_io`, etc.
 
-**Naming after the python-tripwire 0.20+ rebrand:** The `_mock` suffix was dropped on domain plugin proxies. Canonical names are now without the suffix (e.g. `bigfoot.subprocess`, not `bigfoot.subprocess_mock`). The `_mock` aliases are no longer available.
+**Naming after the python-tripwire 0.20+ rebrand:** The `_mock` suffix was dropped on domain plugin proxies. Canonical names are now without the suffix (e.g. `tripwire.subprocess`, not `tripwire.subprocess_mock`). The `_mock` aliases are no longer available.
 
-**Do NOT write** `bigfoot.subprocess_mock`, `bigfoot.db_mock`, `bigfoot.log_mock`, `bigfoot.popen_mock`, `bigfoot.async_subprocess_mock`, `bigfoot.socket_mock`, `bigfoot.smtp_mock`, `bigfoot.redis_mock`, `bigfoot.mongo_mock`, `bigfoot.boto3_mock`, `bigfoot.pika_mock`, `bigfoot.ssh_mock`, `bigfoot.jwt_mock`, `bigfoot.crypto_mock`, `bigfoot.file_io_mock` -- those are pre-rebrand aliases that no longer exist. Use `bigfoot.subprocess`, `bigfoot.db`, `bigfoot.log`, etc.
+**Do NOT write** `tripwire.subprocess_mock`, `tripwire.db_mock`, `tripwire.log_mock`, `tripwire.popen_mock`, `tripwire.async_subprocess_mock`, `tripwire.socket_mock`, `tripwire.smtp_mock`, `tripwire.redis_mock`, `tripwire.mongo_mock`, `tripwire.boto3_mock`, `tripwire.pika_mock`, `tripwire.ssh_mock`, `tripwire.jwt_mock`, `tripwire.crypto_mock`, `tripwire.file_io_mock` -- those are pre-rebrand aliases that no longer exist. Use `tripwire.subprocess`, `tripwire.db`, `tripwire.log`, etc.
 
-**Do NOT write** `bigfoot.database`, `bigfoot.mock_patch`, `bigfoot.MagicMock`, `bigfoot.Mock`, `@bigfoot.patch(...)` -- none of these exist.
+**Do NOT write** `tripwire.database`, `tripwire.mock_patch`, `tripwire.MagicMock`, `tripwire.Mock`, `@tripwire.patch(...)` -- none of these exist.
 
 ### The narrow, explicit allowlist for `monkeypatch`
 
@@ -117,24 +112,24 @@ Anything else is forbidden. `monkeypatch.setattr` used to replace functions / me
 
 The following review phrasings are incorrect and will confuse contributors. Do not emit them:
 
-- ❌ "Please use the bigfoot testing framework or monkeypatch"
-- ❌ "Use bigfoot or a pytest-mock alternative"
+- ❌ "Please use the tripwire testing framework or monkeypatch"
+- ❌ "Use tripwire or a pytest-mock alternative"
 - ❌ "Consider switching to monkeypatch"
 - ❌ "unittest.mock is okay for simple cases"
-- ❌ "Use `bigfoot.patch(...)`" or "Use `@bigfoot.mock` as a decorator" -- these are not real APIs
-- "Replace with `bigfoot.database`" -- real name is `bigfoot.db` (post-rebrand) or the legacy `bigfoot.db_mock` (pre-rebrand, no longer valid)
-- "Replace with `bigfoot.subprocess_mock` / `bigfoot.db_mock` / `bigfoot.log_mock`" -- those `_mock` aliases were dropped in python-tripwire 0.20+; use `bigfoot.subprocess`, `bigfoot.db`, `bigfoot.log`
-- Suggesting bigfoot without the surrounding `with bigfoot:` sandbox and the post-sandbox `.assert_call(...)` / `.assert_request(...)` -- omitting either step makes the rewrite non-functional
+- ❌ "Use `tripwire.patch(...)`" or "Use `@tripwire.mock` as a decorator" -- these are not real APIs
+- "Replace with `tripwire.database`" -- real name is `tripwire.db` (post-rebrand) or the legacy `tripwire.db_mock` (pre-rebrand, no longer valid)
+- "Replace with `tripwire.subprocess_mock` / `tripwire.db_mock` / `tripwire.log_mock`" -- those `_mock` aliases were dropped in python-tripwire 0.20+; use `tripwire.subprocess`, `tripwire.db`, `tripwire.log`
+- Suggesting tripwire without the surrounding `with tripwire:` sandbox and the post-sandbox `.assert_call(...)` / `.assert_request(...)` -- omitting either step makes the rewrite non-functional
 
 ### Correct review language
 
 When flagging a violation, use language that matches the rule and the paradigm:
 
-- ✅ "This uses `unittest.mock.patch`, which is forbidden. Rewrite using bigfoot's three-step flow: register a mock (e.g. `m = bigfoot.mock(\"<module>:<attr>\"); m.returns(<value>)`), execute under `with bigfoot:`, then assert after (`m.assert_call(args=..., kwargs=...)`)."
-- ✅ "`monkeypatch.setattr` used to replace a function -- bigfoot is required for mocking. Convert to `bigfoot.mock(\"<module>:<attr>\").returns(...)` plus `with bigfoot:` sandbox plus `.assert_call(...)`. `monkeypatch` is only allowed for env vars, cwd, and sys.path."
-- ✅ "`MagicMock` is forbidden. For async code, the flow is the same but use `async with bigfoot:` instead of `with bigfoot:`."
-- ✅ "For HTTP calls, prefer the domain plugin: `bigfoot.http.mock_response(method, url, json=..., status=...)` before the sandbox, then `bigfoot.http.assert_request(...).assert_response(...)` after."
+- ✅ "This uses `unittest.mock.patch`, which is forbidden. Rewrite using tripwire's three-step flow: register a mock (e.g. `m = tripwire.mock(\"<module>:<attr>\"); m.returns(<value>)`), execute under `with tripwire:`, then assert after (`m.assert_call(args=..., kwargs=...)`)."
+- ✅ "`monkeypatch.setattr` used to replace a function -- tripwire is required for mocking. Convert to `tripwire.mock(\"<module>:<attr>\").returns(...)` plus `with tripwire:` sandbox plus `.assert_call(...)`. `monkeypatch` is only allowed for env vars, cwd, and sys.path."
+- ✅ "`MagicMock` is forbidden. For async code, the flow is the same but use `async with tripwire:` instead of `with tripwire:`."
+- ✅ "For HTTP calls, prefer the domain plugin: `tripwire.http.mock_response(method, url, json=..., status=...)` before the sandbox, then `tripwire.http.assert_request(...).assert_response(...)` after."
 
 ### Rationale (for your context, not for the review body)
 
-bigfoot's three guarantees (pre-authorization, required assertion, required usage) are the reason this project uses it. Suggesting `monkeypatch`, `unittest.mock`, or hand-rolled stubs as substitutes breaks the guarantees and has already caused CI regressions and false-confidence test passes in this repo. Suggesting bigfoot APIs that don't exist (`bigfoot.patch`, `bigfoot.database`, decorator-style usage) wastes contributor time and erodes trust in automated review.
+tripwire's three guarantees (pre-authorization, required assertion, required usage) are the reason this project uses it. Suggesting `monkeypatch`, `unittest.mock`, or hand-rolled stubs as substitutes breaks the guarantees and has already caused CI regressions and false-confidence test passes in this repo. Suggesting tripwire APIs that don't exist (`tripwire.patch`, `tripwire.database`, decorator-style usage) wastes contributor time and erodes trust in automated review.

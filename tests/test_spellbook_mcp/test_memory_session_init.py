@@ -1,6 +1,6 @@
 """Tests for MEMORY.md regeneration in session_init."""
 
-import bigfoot
+import tripwire
 from dirty_equals import IsInstance
 import pytest
 
@@ -10,29 +10,29 @@ class TestSessionInitMemoryRegeneration:
 
     def test_calls_regenerate_with_project_path(self):
         """session_init invokes _regenerate_memory_md with project_path."""
-        mock_session_state = bigfoot.mock("spellbook.core.config:_get_session_state")
+        mock_session_state = tripwire.mock("spellbook.core.config:_get_session_state")
         mock_session_state.returns({})
 
         # config_get is called three times: "session_mode", "fun_mode", "profile.default"
-        mock_config_get = bigfoot.mock("spellbook.core.config:config_get")
+        mock_config_get = tripwire.mock("spellbook.core.config:config_get")
         mock_config_get.returns("none").returns(None).returns(None)
 
-        mock_update_notif = bigfoot.mock("spellbook.core.config:_add_update_notification")
+        mock_update_notif = tripwire.mock("spellbook.core.config:_add_update_notification")
         mock_update_notif.returns(None)
 
-        mock_regen = bigfoot.mock("spellbook.core.config:_regenerate_memory_md")
+        mock_regen = tripwire.mock("spellbook.core.config:_regenerate_memory_md")
         mock_regen.returns(None)
 
-        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume = tripwire.mock("spellbook.core.config:_get_resume_context")
         mock_resume.returns({"resume_available": False})
 
-        mock_admin_url = bigfoot.mock("spellbook.core.config:_get_admin_url")
+        mock_admin_url = tripwire.mock("spellbook.core.config:_get_admin_url")
         mock_admin_url.returns(None)
 
-        mock_repairs = bigfoot.mock("spellbook.core.config:_get_repairs")
+        mock_repairs = tripwire.mock("spellbook.core.config:_get_repairs")
         mock_repairs.returns([])
 
-        with bigfoot:
+        with tripwire:
             from spellbook.core.config import session_init
             result = session_init(project_path="/Users/alice/project")
 
@@ -56,12 +56,12 @@ class TestSessionInitMemoryRegeneration:
 
     def test_fail_open_on_exception(self):
         """_regenerate_memory_md swallows exceptions (fail-open)."""
-        mock_bootstrap = bigfoot.mock(
+        mock_bootstrap = tripwire.mock(
             "spellbook.memory.bootstrap:regenerate_memory_md_for_project"
         )
         mock_bootstrap.raises(RuntimeError("DB corruption"))
 
-        with bigfoot:
+        with tripwire:
             from spellbook.core.config import _regenerate_memory_md
             # Should not raise
             _regenerate_memory_md("/Users/alice/project")

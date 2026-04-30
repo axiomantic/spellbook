@@ -16,7 +16,7 @@ import subprocess
 import sys
 import textwrap
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 
@@ -97,10 +97,10 @@ class TestGetGitDiff:
             captured_cmds.append(cmd)
             return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
 
-        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run = tripwire.mock.object(scanner_mod.subprocess, "run")
         mock_run.calls(capture_run)
 
-        with bigfoot:
+        with tripwire:
             result = _get_git_diff(staged=True)
 
         mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
@@ -118,10 +118,10 @@ class TestGetGitDiff:
             captured_cmds.append(cmd)
             return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
 
-        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run = tripwire.mock.object(scanner_mod.subprocess, "run")
         mock_run.calls(capture_run)
 
-        with bigfoot:
+        with tripwire:
             result = _get_git_diff(base="main")
 
         mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
@@ -139,10 +139,10 @@ class TestGetGitDiff:
             captured_cmds.append(cmd)
             return subprocess.CompletedProcess(cmd, returncode=0, stdout=CLEAN_DIFF)
 
-        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run = tripwire.mock.object(scanner_mod.subprocess, "run")
         mock_run.calls(capture_run)
 
-        with bigfoot:
+        with tripwire:
             result = _get_git_diff(commit="HEAD~3..HEAD")
 
         mock_run.assert_call(args=(IsInstance(list),), kwargs=IsInstance(dict))
@@ -154,14 +154,14 @@ class TestGetGitDiff:
         import spellbook.gates.scanner as scanner_mod
         from spellbook.gates.scanner import _get_git_diff
 
-        mock_run = bigfoot.mock.object(scanner_mod.subprocess, "run")
+        mock_run = tripwire.mock.object(scanner_mod.subprocess, "run")
         mock_run.returns(
             subprocess.CompletedProcess(
                 [], returncode=128, stderr="fatal: not a git repository"
             )
         )
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 _get_git_diff(staged=True)
 
@@ -190,10 +190,10 @@ class TestCLIStaged:
     """CLI --staged flag runs git diff --cached and scans the result."""
 
     def test_staged_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -201,10 +201,10 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -212,10 +212,10 @@ class TestCLIStaged:
         assert exc_info.value.code == 1
 
     def test_staged_removal_only_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(REMOVAL_ONLY_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -223,10 +223,10 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_empty_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -234,10 +234,10 @@ class TestCLIStaged:
         assert exc_info.value.code == 0
 
     def test_staged_passes_staged_flag_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit):
                 scanner_main(["--staged"])
 
@@ -253,10 +253,10 @@ class TestCLIBase:
     """CLI --base BRANCH flag runs git diff BRANCH...HEAD and scans the result."""
 
     def test_base_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
 
@@ -264,10 +264,10 @@ class TestCLIBase:
         assert exc_info.value.code == 0
 
     def test_base_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
 
@@ -275,10 +275,10 @@ class TestCLIBase:
         assert exc_info.value.code == 1
 
     def test_base_passes_branch_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit):
                 scanner_main(["--base", "develop"])
 
@@ -300,10 +300,10 @@ class TestCLICommit:
     """CLI --commit RANGE flag runs git diff RANGE and scans the result."""
 
     def test_commit_clean_diff_exits_zero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(CLEAN_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
 
@@ -311,10 +311,10 @@ class TestCLICommit:
         assert exc_info.value.code == 0
 
     def test_commit_malicious_diff_exits_one(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MALICIOUS_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
 
@@ -322,10 +322,10 @@ class TestCLICommit:
         assert exc_info.value.code == 1
 
     def test_commit_passes_range_to_get_git_diff(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns("")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit):
                 scanner_main(["--commit", "abc123..def456"])
 
@@ -347,10 +347,10 @@ class TestMultiFileChangeset:
     """Multiple files in a changeset are all scanned."""
 
     def test_staged_multi_file_detects_both(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MULTI_FILE_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -358,10 +358,10 @@ class TestMultiFileChangeset:
         assert exc_info.value.code == 1
 
     def test_base_multi_file_detects_both(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.returns(MULTI_FILE_DIFF)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
 
@@ -378,10 +378,10 @@ class TestGitErrorHandling:
     """Proper error handling when git commands fail."""
 
     def test_staged_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--staged"])
 
@@ -389,10 +389,10 @@ class TestGitErrorHandling:
         assert exc_info.value.code != 0
 
     def test_base_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--base", "main"])
 
@@ -400,10 +400,10 @@ class TestGitErrorHandling:
         assert exc_info.value.code != 0
 
     def test_commit_git_failure_exits_nonzero(self):
-        mock_diff = bigfoot.mock("spellbook.gates.scanner:_get_git_diff")
+        mock_diff = tripwire.mock("spellbook.gates.scanner:_get_git_diff")
         mock_diff.raises(SystemExit(1))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(SystemExit) as exc_info:
                 scanner_main(["--commit", "HEAD~3..HEAD"])
 

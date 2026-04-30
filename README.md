@@ -6,7 +6,7 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  <em>A structured skill system for AI coding assistants -- workflows, quality gates, and guardrails so they work more like experienced engineers.</em><br>
+  <em>A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, OpenCode, Codex, Gemini CLI, and ForgeCode.</em><br>
   Primary platform: Claude Code. Basic support for OpenCode, Codex, Gemini CLI, and ForgeCode.
 </p>
 
@@ -124,7 +124,15 @@ The spellbook installer can set up `claude` and `opencode` shell aliases that po
 
 ## What Spellbook Does
 
-Spellbook is a collection of skills, commands, and agents that shape how AI coding assistants approach development work. Instead of just telling an assistant about your codebase, Spellbook gives it structured workflows for research, design, implementation, testing, and review -- along with guardrails for the specific ways LLMs tend to cut corners.
+Spellbook is a harness-augmentation layer for AI coding assistants. The *harness* is the runtime that hosts the agent loop and executes tools (Claude Code, Codex, OpenCode, Gemini CLI, ForgeCode). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (memory, focus stints, session resume) on top.
+
+Three things distinguish it from harness-native features and from other skill collections:
+
+- **Harness-agnostic.** The same skills, commands, and memory work across every supported harness on the same project. Switch from Claude Code to OpenCode mid-task and the workflow continues.
+- **Shared centralized MCP server.** Memories, focus stints, and session-resume state live in one place, so context stored from a Claude Code session surfaces in an OpenCode session on the same repo. No individual harness ships this.
+- **Skills + hooks layer no harness ships natively.** Autonomy enforcement, quality gates, parallel subagent dispatch, and a session resume protocol sit on top of whatever the harness provides.
+
+Instead of just telling an assistant about your codebase, Spellbook gives the assistant structured workflows for research, design, implementation, testing, and review, along with guardrails for the specific ways LLMs tend to cut corners.
 
 ### The orchestrator pattern
 

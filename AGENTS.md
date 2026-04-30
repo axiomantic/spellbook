@@ -310,9 +310,9 @@ Tests live in `tests/test_cli/test_install_wizard_coverage.py` and must cover ea
 
 Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.
 
-### Sandbox & Security (Bigfoot)
+### Sandbox & Security (Tripwire)
 
-This project uses **bigfoot** to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
+This project uses **python-tripwire** (imported as `tripwire`) to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
 
 **How to permit specific actions:**
 - **Subprocesses**: Use the `@pytest.mark.allow("subprocess")` marker on your test function.
@@ -339,10 +339,10 @@ uv run pytest tests/ -m "not docker" --override-ini="addopts="
 
 **Docker tests** only run in CI via `integration-test.yml` in a dedicated container. Never run locally.
 
-### Testing with Bigfoot
+### Testing with Tripwire
 
 <CRITICAL>
-**Bigfoot is the ONLY acceptable mocking framework in this project.** This rule is absolute.
+**Tripwire is the ONLY acceptable mocking framework in this project.** This rule is absolute.
 
 **Forbidden:**
 - `unittest.mock` in any form — `patch()`, `patch.object()`, `MagicMock`, `AsyncMock`, `Mock`, `mock_open`, `PropertyMock`, `create_autospec`, etc.
@@ -356,14 +356,14 @@ uv run pytest tests/ -m "not docker" --override-ini="addopts="
 - `monkeypatch.chdir()` for working directory
 - `monkeypatch.syspath_prepend()` for sys.path
 
-That's it. Any other mocking need — function replacement, method stubbing, object patching, HTTP mocking, subprocess mocking, database mocking — MUST use bigfoot. No exceptions. If bigfoot can't express what you need, that is a signal to refactor the code under test, not to reach for `unittest.mock`.
+That's it. Any other mocking need — function replacement, method stubbing, object patching, HTTP mocking, subprocess mocking, database mocking — MUST use tripwire. No exceptions. If tripwire can't express what you need, that is a signal to refactor the code under test, not to reach for `unittest.mock`.
 
-PR reviewers (including automated ones) that suggest "use bigfoot OR monkeypatch" are wrong. The correct phrasing is "use bigfoot; monkeypatch is restricted to environment / cwd / sys.path only."
+PR reviewers (including automated ones) that suggest "use tripwire OR monkeypatch" are wrong. The correct phrasing is "use tripwire; monkeypatch is restricted to environment / cwd / sys.path only."
 </CRITICAL>
 
-#### Why Bigfoot Instead of unittest.mock
+#### Why Tripwire Instead of unittest.mock
 
-Bigfoot enforces three guarantees unittest.mock does not:
+Tripwire enforces three guarantees unittest.mock does not:
 1. **Every call must be pre-authorized** - unmocked calls raise `UnmockedInteractionError`
 2. **Every interaction must be asserted** - unasserted calls raise `UnassertedInteractionsError` at teardown
 3. **Every mock must fire** - unused mocks raise `UnusedMocksError`
@@ -371,18 +371,18 @@ Bigfoot enforces three guarantees unittest.mock does not:
 #### Quick Reference
 
 ```python
-import bigfoot
+import tripwire
 
 def test_example():
     # Setup mocks
-    config = bigfoot.mock("myapp.config:get_setting")
+    config = tripwire.mock("myapp.config:get_setting")
     config.returns("value")
 
     # Execute in sandbox
-    with bigfoot:
+    with tripwire:
         result = my_function()
 
-    # Assert interactions (REQUIRED - bigfoot enforces this)
+    # Assert interactions (REQUIRED - tripwire enforces this)
     config.assert_call(args=("key",), kwargs={})
 ```
 
@@ -390,42 +390,50 @@ def test_example():
 
 | Need | Pattern |
 |------|---------|
-| Mock a module attribute | `bigfoot.mock("module.path:attribute")` |
-| Mock an object method | `bigfoot.mock.object(obj, "method")` |
+| Mock a module attribute | `tripwire.mock("module.path:attribute")` |
+| Mock an object method | `tripwire.mock.object(obj, "method")` |
 | Return a value | `.returns(value)` |
 | Raise an exception | `.raises(ExceptionType(...))` |
 | Custom side effect | `.calls(my_function)` |
 | Multiple return values | `.returns(a).returns(b).returns(c)` |
-| Spy (call real + record) | `bigfoot.spy("module:attr")` |
+| Spy (call real + record) | `tripwire.spy("module:attr")` |
 | Assert a call | `.assert_call(args=(...), kwargs={...})` |
-| Order-independent asserts | `with bigfoot.in_any_order(): ...` |
+| Order-independent asserts | `with tripwire.in_any_order(): ...` |
 | Optional mock (may not fire) | `.required(False)` |
-| Async function mock | Same API; use `async with bigfoot:` for sandbox |
+| Async function mock | Same API; use `async with tripwire:` for sandbox |
 | Environment variables | Use `monkeypatch.setenv()` (pytest built-in) |
 
 #### Domain Plugins
 
-Use bigfoot's domain-specific plugins when applicable instead of generic mocks. All plugin proxy names end in `_mock` except `http`:
-- `bigfoot.http` — HTTP requests (httpx, requests, urllib, aiohttp). Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
-- `bigfoot.subprocess_mock` — `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
-- `bigfoot.popen_mock` — `subprocess.Popen`.
-- `bigfoot.async_subprocess_mock` — `asyncio.create_subprocess_*`.
-- `bigfoot.db_mock` — sqlite3 / generic DB. State-machine plugin with step sentinels `bigfoot.db_mock.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `bigfoot.db_mock.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected → connected → in_transaction → connected → closed`.
-- `bigfoot.socket_mock` — raw socket operations.
-- Other plugins: `bigfoot.smtp_mock`, `bigfoot.redis_mock`, `bigfoot.mongo_mock`, `bigfoot.boto3_mock`, `bigfoot.pika_mock`, `bigfoot.ssh_mock`, `bigfoot.log_mock`, `bigfoot.jwt_mock`, `bigfoot.crypto_mock`, `bigfoot.file_io_mock`, `bigfoot.dns_mock`, `bigfoot.memcache_mock`, `bigfoot.celery_mock`, `bigfoot.elasticsearch_mock`, `bigfoot.grpc_mock`, `bigfoot.mcp_mock`, `bigfoot.psycopg2_mock`, `bigfoot.asyncpg_mock`, `bigfoot.sync_websocket_mock`, `bigfoot.async_websocket_mock`, `bigfoot.native_mock`.
+Use tripwire's domain-specific plugins when applicable instead of generic mocks. As of python-tripwire 0.20+, plugin proxy names dropped the `_mock` suffix:
+- `tripwire.http` — HTTP requests (httpx, requests, urllib, aiohttp). Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
+- `tripwire.subprocess` — `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
+- `tripwire.popen` — `subprocess.Popen`.
+- `tripwire.async_subprocess` — `asyncio.create_subprocess_*`.
+- `tripwire.db` — sqlite3 / generic DB. State-machine plugin with step sentinels `tripwire.db.connect`, `.execute`, `.commit`, `.rollback`, `.close`, and matching assertion methods: `tripwire.db.assert_connect(database=...)`, `.assert_execute(sql=..., parameters=...)`, `.assert_commit()`, `.assert_rollback()`, `.assert_close()`. Transitions: `disconnected → connected → in_transaction → connected → closed`.
+- `tripwire.socket` — raw socket operations.
+- Other plugins: `tripwire.smtp`, `tripwire.redis`, `tripwire.mongo`, `tripwire.boto3`, `tripwire.pika`, `tripwire.ssh`, `tripwire.log`, `tripwire.jwt`, `tripwire.crypto`, `tripwire.file_io`, `tripwire.dns`, `tripwire.memcache`, `tripwire.celery`, `tripwire.elasticsearch`, `tripwire.grpc`, `tripwire.mcp`, `tripwire.psycopg2`, `tripwire.asyncpg`, `tripwire.sync_websocket`, `tripwire.async_websocket`, `tripwire.native`.
 
-**Do NOT write** `bigfoot.database`, `bigfoot.socket`, `bigfoot.patch`, `bigfoot.MagicMock`, `@bigfoot.mock(...)` (decorator form) — none of these exist.
+**Do NOT write** `tripwire.database`, `tripwire.patch`, `tripwire.MagicMock`, `@tripwire.mock(...)` (decorator form), or any pre-rebrand `_mock`-suffixed alias (`tripwire.subprocess_mock`, `tripwire.db_mock`, `tripwire.log_mock`, ...) — none of these exist.
 
 #### Guard Mode
 
 Guard mode is configured in `pyproject.toml`:
 ```toml
-[tool.bigfoot]
+[tool.tripwire]
 guard = "error"
-guard_allow = ["socket", "database", "subprocess", "http", "dns"]
+
+[tool.tripwire.firewall]
+allow = ["socket:*", "database:*", "db:*", "subprocess:*", "http:*", "dns:*"]
 ```
 
 This catches any real I/O that escapes the sandbox during tests. Use `@pytest.mark.allow("plugin")` for tests that intentionally make real calls.
+
+### PR Review Bot
+
+- Bot username: `gemini-code-assist[bot]`
+- Re-review comment: `@gemini-code-assist please re-review`
+- Auto-reviews on PR creation: yes
 
 ## Pre-Commit Checklist
 

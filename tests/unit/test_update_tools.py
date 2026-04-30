@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 from types import SimpleNamespace
 
-import bigfoot
+import tripwire
 
 
 class TestClassifyVersionBump:
@@ -187,7 +187,7 @@ def _make_proc(returncode=0, stdout="", stderr=""):
 
 
 def _chain(proxy, fn, n):
-    """Chain .calls(fn) n times on a bigfoot mock proxy."""
+    """Chain .calls(fn) n times on a tripwire mock proxy."""
     for _ in range(n):
         proxy.calls(fn)
     return proxy
@@ -218,16 +218,16 @@ class TestCheckForUpdates:
         state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
         # Call sequence: config_get x2 (remote x2), subprocess.run x4, shutil.which, state x1
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 4)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         _chain(mock_config, config_fn, 2)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(state_fn)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is True
@@ -236,7 +236,7 @@ class TestCheckForUpdates:
         assert result["is_major_bump"] is False
         assert result["error"] is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_config.assert_call(args=("auto_update_remote",))
@@ -272,16 +272,16 @@ class TestCheckForUpdates:
         config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
         state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.calls(config_fn)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(state_fn)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is True
@@ -290,7 +290,7 @@ class TestCheckForUpdates:
         assert result["is_major_bump"] is False
         assert result["error"] is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -321,16 +321,16 @@ class TestCheckForUpdates:
         config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
         state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.calls(config_fn)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(state_fn)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is False
@@ -338,7 +338,7 @@ class TestCheckForUpdates:
         assert result["remote_version"] == "0.9.10"
         assert result["error"] is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -366,21 +366,21 @@ class TestCheckForUpdates:
             _make_proc(1, "", "fatal: could not read from remote"),
         ])
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 2)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is False
         assert result["error"] is not None
         assert "fetch" in result["error"].lower()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -405,22 +405,22 @@ class TestCheckForUpdates:
             _make_proc(0, "1.0.0\n"),
         ])
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is True
         assert result["is_major_bump"] is True
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -451,24 +451,24 @@ class TestCheckForUpdates:
             _make_proc(0, "0.9.10\n"),
         ])
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 5)
         # config_get: remote (twice, once in _get_owner_repo). state: branch.
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         _chain(mock_config, lambda key: None, 2)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is True
         assert result["remote_version"] == "0.9.10"
         assert result["error"] is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_config.assert_call(args=("auto_update_remote",))
@@ -497,7 +497,7 @@ class TestCheckForUpdates:
         spellbook_dir.mkdir()
         # No .version file -- returns early before any config_get/subprocess calls
 
-        with bigfoot:
+        with tripwire:
             result = check_for_updates(spellbook_dir)
 
         assert result["update_available"] is False
@@ -512,12 +512,12 @@ class TestGetOwnerRepo:
         from spellbook.updates.tools import _get_owner_repo
         d = str(tmp_path)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(0, "git@github.com:axiomantic/spellbook.git\n"))
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
         mock_config.assert_call(args=("auto_update_remote",))
@@ -529,12 +529,12 @@ class TestGetOwnerRepo:
         from spellbook.updates.tools import _get_owner_repo
         d = str(tmp_path)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(0, "https://github.com/axiomantic/spellbook.git\n"))
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
         mock_config.assert_call(args=("auto_update_remote",))
@@ -546,12 +546,12 @@ class TestGetOwnerRepo:
         from spellbook.updates.tools import _get_owner_repo
         d = str(tmp_path)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(0, "https://github.com/axiomantic/spellbook\n"))
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_owner_repo(tmp_path) == "axiomantic/spellbook"
 
         mock_config.assert_call(args=("auto_update_remote",))
@@ -563,12 +563,12 @@ class TestGetOwnerRepo:
         from spellbook.updates.tools import _get_owner_repo
         d = str(tmp_path)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(1))
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_owner_repo(tmp_path) is None
 
         mock_config.assert_call(args=("auto_update_remote",))
@@ -589,17 +589,17 @@ class TestGetLatestReleaseVersion:
             _make_proc(0, "v0.25.0\n"),
         ])
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 2)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_latest_release_version(tmp_path) == "0.25.0"
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_which.assert_call(args=("gh",))
             mock_config.assert_call(args=("auto_update_remote",))
             mock_run.assert_call(
@@ -612,10 +612,10 @@ class TestGetLatestReleaseVersion:
     def test_returns_none_when_gh_not_installed(self, tmp_path):
         from spellbook.updates.tools import _get_latest_release_version
 
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_latest_release_version(tmp_path) is None
 
         mock_which.assert_call(args=("gh",))
@@ -629,17 +629,17 @@ class TestGetLatestReleaseVersion:
             _make_proc(1, ""),
         ])
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 2)
-        mock_which = bigfoot.mock("spellbook.updates.tools:shutil.which")
+        mock_which = tripwire.mock("spellbook.updates.tools:shutil.which")
         mock_which.returns("/usr/local/bin/gh")
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             assert _get_latest_release_version(tmp_path) is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_which.assert_call(args=("gh",))
             mock_config.assert_call(args=("auto_update_remote",))
             mock_run.assert_call(
@@ -687,16 +687,16 @@ class TestApplyUpdate:
             config_set_calls.append(a)
 
         # subprocess.run: status, rev-parse, fetch, pull, install = 5 calls
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 5)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.calls(config_fn)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(state_fn)
-        mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
+        mock_config_set = tripwire.mock("spellbook.updates.tools:config_set")
         _chain(mock_config_set, capture_config_set, 3)
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is True
@@ -714,7 +714,7 @@ class TestApplyUpdate:
         assert last_auto["from_version"] == "0.9.9"
         assert "applied_at" in last_auto
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -753,20 +753,20 @@ class TestApplyUpdate:
                 result.stdout = " M some_file.py\n"  # Dirty tree
             return result
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(mock_subprocess_run)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is False
         assert "dirty" in result["error"].lower() or "uncommitted" in result["error"].lower()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -795,23 +795,23 @@ class TestApplyUpdate:
             return _make_proc(0)
 
         # status, rev-parse, fetch, pull = 4 calls
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 4)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
-        mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
+        mock_config_set = tripwire.mock("spellbook.updates.tools:config_set")
         mock_config_set.calls(lambda *a, **kw: None)
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is False
         assert "pull" in result["error"].lower() or "fast-forward" in result["error"].lower()
         assert not lock_path.exists()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_config_set.assert_call(args=("pre_update_sha", "abc123"))
@@ -853,23 +853,23 @@ class TestApplyUpdate:
             return _make_proc(0)
 
         # status, rev-parse, fetch, pull, install, reset = 6 calls
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 6)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.returns(None)
-        mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
+        mock_config_set = tripwire.mock("spellbook.updates.tools:config_set")
         mock_config_set.calls(lambda *a, **kw: None)
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is False
         assert "install" in result["error"].lower()
         assert not lock_path.exists()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update_remote",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_config_set.assert_call(args=("pre_update_sha", "abc123"))
@@ -922,17 +922,17 @@ class TestRollbackUpdate:
         state_state = {"auto_update_branch": "main"}
 
         # branch check, reset, install = 3 calls
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, mock_subprocess_run, 3)
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.calls(lambda key: config_state.get(key))
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(lambda key: state_state.get(key))
         # auto_update_paused, pre_update_sha, last_auto_update, available_update = 4 calls
-        mock_config_set = bigfoot.mock("spellbook.updates.tools:config_set")
+        mock_config_set = tripwire.mock("spellbook.updates.tools:config_set")
         _chain(mock_config_set, lambda *a, **kw: None, 4)
 
-        with bigfoot:
+        with tripwire:
             result = rollback_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is True
@@ -940,7 +940,7 @@ class TestRollbackUpdate:
         assert result["auto_update_paused"] is True
         assert result["error"] is None
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("pre_update_sha",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -966,10 +966,10 @@ class TestRollbackUpdate:
         spellbook_dir.mkdir()
         lock_path = tmp_path / "install.lock"
 
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = rollback_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is False
@@ -990,20 +990,20 @@ class TestRollbackUpdate:
         config_state = {"pre_update_sha": sha}
         state_state = {"auto_update_branch": "main"}
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.returns(_make_proc(0, "feature-branch"))
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         mock_config.calls(lambda key: config_state.get(key))
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(lambda key: state_state.get(key))
 
-        with bigfoot:
+        with tripwire:
             result = rollback_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is False
         assert "branch" in result["error"].lower()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("pre_update_sha",))
             mock_state.assert_call(args=("auto_update_branch",))
             mock_run.assert_call(
@@ -1033,12 +1033,12 @@ class TestGetUpdateStatus:
         }
         state_state = {"update_check_failures": 0}
 
-        mock_config = bigfoot.mock("spellbook.updates.tools:config_get")
+        mock_config = tripwire.mock("spellbook.updates.tools:config_get")
         _chain(mock_config, lambda key: config_state.get(key), 7)
-        mock_state = bigfoot.mock("spellbook.updates.tools:get_state")
+        mock_state = tripwire.mock("spellbook.updates.tools:get_state")
         mock_state.calls(lambda key: state_state.get(key))
 
-        with bigfoot:
+        with tripwire:
             result = get_update_status(spellbook_dir)
 
         assert result["auto_update_enabled"] is True
@@ -1048,7 +1048,7 @@ class TestGetUpdateStatus:
         assert result["pre_update_sha"] == "abc123"
         assert result["check_failures"] == 0
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config.assert_call(args=("auto_update",))
             mock_config.assert_call(args=("auto_update_paused",))
             mock_config.assert_call(args=("available_update",))
@@ -1096,27 +1096,27 @@ class TestInstallerUpdateOnlyFlag:
         # Capture run_installation call args for flexible verification
         run_install_args = []
 
-        mock_find = bigfoot.mock.object(install, "find_spellbook_dir")
+        mock_find = tripwire.mock.object(install, "find_spellbook_dir")
         mock_find.returns(fake_dir)
         # bootstrap should NOT be called; mock with no queue entries
-        bigfoot.mock.object(install, "bootstrap")
-        mock_run_install = bigfoot.mock.object(install, "run_installation")
+        tripwire.mock.object(install, "bootstrap")
+        mock_run_install = tripwire.mock.object(install, "run_installation")
         mock_run_install.calls(lambda *a, **kw: (run_install_args.append((a, kw)) or 0))
-        mock_print_success = bigfoot.mock.object(install, "print_success")
+        mock_print_success = tripwire.mock.object(install, "print_success")
         mock_print_success.calls(lambda *a, **kw: None)
-        mock_print_step = bigfoot.mock.object(install, "print_step")
+        mock_print_step = tripwire.mock.object(install, "print_step")
         mock_print_step.calls(lambda *a, **kw: None)
-        mock_is_interactive = bigfoot.mock.object(install, "is_interactive")
+        mock_is_interactive = tripwire.mock.object(install, "is_interactive")
         mock_is_interactive.returns(False)
 
-        with bigfoot:
+        with tripwire:
             result = install.main()
 
         # Verify run_installation was called with the found dir
         assert len(run_install_args) == 1
         assert run_install_args[0][0][0] == fake_dir
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_find.assert_call(args=(), kwargs={})
             mock_is_interactive.assert_call(args=(), kwargs={})
             mock_print_step.assert_call(

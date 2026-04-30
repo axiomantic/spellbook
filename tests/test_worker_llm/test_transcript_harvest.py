@@ -177,9 +177,9 @@ def test_timeout_propagates(worker_llm_transport, worker_llm_config):
 # ---------------------------------------------------------------------------
 
 
-# The worker_llm_transport fixture owns the bigfoot sandbox for each
+# The worker_llm_transport fixture owns the tripwire sandbox for each
 # test (registering mocks must happen before sandbox entry, which our
-# fixture does up front). Registering ``bigfoot.mock(...).calls(fn)``
+# fixture does up front). Registering ``tripwire.mock(...).calls(fn)``
 # from test bodies after the sandbox is already active fails the
 # sandbox exit gate. These tests therefore still use ``monkeypatch`` to
 # replace the module-scoped ``publish_call`` binding — a carve-out

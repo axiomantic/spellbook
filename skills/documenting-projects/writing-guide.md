@@ -64,7 +64,7 @@ the shape and rhythm of the writing, not the vocabulary.
 5. **The triple structure.** "X, Y, and Z" repeated across bullet points or sentences where each
    list has exactly three items. LLMs are drawn to threes like moths to light.
 
-6. **Bolded phrase followed by colon as a sentence opener.** "**The key insight:** bigfoot forces
+6. **Bolded phrase followed by colon as a sentence opener.** "**The key insight:** tripwire forces
    you to..." Humans write topic sentences; they don't label them.
 
 7. **Uniform paragraph length.** Real writing has short paragraphs and long paragraphs. When every
@@ -98,11 +98,11 @@ like a person.
    Not the short-long-short pattern that reads like copywriting. Real paragraphs don't have rhythm
    sections.
 
-2. **Explaining the long way around when it's natural.** "bigfoot doesn't use fixtures, so you don't
+2. **Explaining the long way around when it's natural.** "tripwire doesn't use fixtures, so you don't
    need to set up any special test infrastructure" is wordier than "No fixtures needed" but it sounds
    like a person talking.
 
-3. **Subordinate clauses.** "Since bigfoot already intercepts calls at the session level, you don't
+3. **Subordinate clauses.** "Since tripwire already intercepts calls at the session level, you don't
    need to do anything special per-test" rather than splitting into two sentences. Humans connect
    ideas within sentences. LLMs love to split them apart.
 
@@ -117,8 +117,8 @@ like a person.
    subtlety here" rather than perfectly structured topic-sentence-first paragraphs. Real writing
    sometimes arrives at the point mid-paragraph.
 
-7. **Specificity over abstraction.** "bigfoot will show you the exact URL, headers, and status code"
-   rather than "bigfoot provides full observability into every interaction." The concrete version is
+7. **Specificity over abstraction.** "tripwire will show you the exact URL, headers, and status code"
+   rather than "tripwire provides full observability into every interaction." The concrete version is
    longer but sounds like someone who actually uses the tool wrote it.
 
 8. **Second person where it fits.** "If you forget to assert a call, you'll see this error" rather
@@ -189,30 +189,30 @@ probably needs another pass.
 ### Example 1: Feature description
 
 **Dead tell version:**
-> No fixture injection required. Install bigfoot, `import bigfoot`, and go.
+> No fixture injection required. Install tripwire, `import tripwire`, and go.
 
 **Human version:**
-> bigfoot doesn't use fixtures. You just import it and use it directly in your test functions.
+> tripwire doesn't use fixtures. You just import it and use it directly in your test functions.
 
 ### Example 2: Selling a feature
 
 **Dead tell version:**
-> **Firewall mode** (enabled by default) goes further: bigfoot installs interceptors at test session
+> **Firewall mode** (enabled by default) goes further: tripwire installs interceptors at test session
 > startup, catching any real I/O call that happens outside a sandbox.
 
 **Human version:**
-> Firewall mode is on by default. When your test session starts, bigfoot installs interceptors that
+> Firewall mode is on by default. When your test session starts, tripwire installs interceptors that
 > catch any real I/O call happening outside a sandbox.
 
 ### Example 3: The mic drop
 
 **Dead tell version:**
-> `unittest.mock` makes it your responsibility to remember what to assert. bigfoot makes it
+> `unittest.mock` makes it your responsibility to remember what to assert. tripwire makes it
 > impossible to forget.
 
 **Human version:**
 > With `unittest.mock`, it's on you to remember to assert every call and verify every argument.
-> bigfoot doesn't give you that option. If you forget to assert something, the test fails.
+> tripwire doesn't give you that option. If you forget to assert something, the test fails.
 
 ### Example 4: Short punchy closer
 

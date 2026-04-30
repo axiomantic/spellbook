@@ -3,7 +3,7 @@
 import json
 import os
 import threading
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 from pathlib import Path
@@ -29,9 +29,9 @@ class TestConfigFileLocking:
         # Spy on CrossPlatformLock.__enter__ to verify it's used as a context manager
         from spellbook.core.compat import CrossPlatformLock
 
-        enter_spy = bigfoot.spy.object(CrossPlatformLock, "__enter__")
+        enter_spy = tripwire.spy.object(CrossPlatformLock, "__enter__")
 
-        with bigfoot:
+        with tripwire:
             config_set("test_key", "test_value")
 
         enter_spy.assert_call(

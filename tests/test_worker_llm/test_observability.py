@@ -8,7 +8,7 @@ We swap that dependency for a real tmp-file SQLite database whose
 real SQLAlchemy ORM insert path (not a mock of a mock) while keeping the
 test hermetic.
 
-Bigfoot has a ``db_mock`` state-machine plugin for sqlite3/DB-API-level
+Tripwire has a ``db`` state-machine plugin for sqlite3/DB-API-level
 assertions, but the production code goes through SQLAlchemy's ORM — the
 DB-API calls are compiled by SQLAlchemy and therefore fragile across
 SQLAlchemy versions. The impl plan (Step 5) explicitly permits the
@@ -17,7 +17,7 @@ fixture that ensures the table exists" alternative; we use a tmp-file DB
 (sqlite in-memory is per-connection, which breaks across sessions).
 
 ``caplog`` is allowed by AGENTS.md for log assertions; this file uses it
-because the bigfoot ``log_mock`` plugin requires every log interaction to
+because the tripwire ``log`` plugin requires every log interaction to
 be asserted and the record_call happy path intentionally emits no logs.
 """
 
@@ -239,14 +239,14 @@ def counting_session(tmp_path, monkeypatch):
     is exposed as ``counting_session.connect_count``; it increments on each
     ``__enter__`` of the context manager.
 
-    Rationale for in-memory-style tmp-file SQLite over bigfoot.db: the
+    Rationale for in-memory-style tmp-file SQLite over tripwire.db: the
     purge loop opens a fresh session per batch and SQLAlchemy ORM statements
     (SELECT + bulk DELETE) compile to multiple DB-API calls per batch, which
-    makes the bigfoot.db state-machine queue tedious to seed
+    makes the tripwire.db state-machine queue tedious to seed
     deterministically. Step 5's existing ``fresh_db`` fixture already
     established the tmp-file SQLite convention for ``observability.py``
     tests; T8 extends it by layering a connect counter on top, which keeps
-    the "fresh session per batch" invariant assertable without bigfoot.
+    the "fresh session per batch" invariant assertable without tripwire.
     """
     db_path = str(tmp_path / "spellbook.db")
 

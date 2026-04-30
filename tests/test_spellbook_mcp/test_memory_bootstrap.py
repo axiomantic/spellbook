@@ -5,7 +5,7 @@ Tests the generate_memory_md function (static template), _resolve_auto_memory_di
 regenerate_memory_md_for_project (orchestrator).
 """
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 from pathlib import Path
@@ -84,10 +84,10 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "-Users-alice-project" / "memory"
         memory_dir.mkdir(parents=True)
 
-        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
         mock_home.__call__.returns(tmp_path)
 
-        with bigfoot:
+        with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
         mock_home.__call__.assert_call(args=(), kwargs={})
@@ -99,10 +99,10 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "Users-alice-project" / "memory"
         memory_dir.mkdir(parents=True)
 
-        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
         mock_home.__call__.returns(tmp_path)
 
-        with bigfoot:
+        with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
         mock_home.__call__.assert_call(args=(), kwargs={})
@@ -111,10 +111,10 @@ class TestResolveAutoMemoryDir:
     def test_dir_missing_returns_none(self, tmp_path):
         from spellbook.memory.bootstrap import _resolve_auto_memory_dir
 
-        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
         mock_home.__call__.returns(tmp_path)
 
-        with bigfoot:
+        with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
         mock_home.__call__.assert_call(args=(), kwargs={})
@@ -127,10 +127,10 @@ class TestResolveAutoMemoryDir:
         memory_dir = tmp_path / ".claude" / "projects" / "-Users-alice-Development-myproject" / "memory"
         memory_dir.mkdir(parents=True)
 
-        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
         mock_home.__call__.returns(tmp_path)
 
-        with bigfoot:
+        with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/Development/myproject")
 
         mock_home.__call__.assert_call(args=(), kwargs={})
@@ -145,10 +145,10 @@ class TestResolveAutoMemoryDir:
         no_dash_dir = tmp_path / ".claude" / "projects" / "Users-alice-project" / "memory"
         no_dash_dir.mkdir(parents=True)
 
-        mock_home = bigfoot.mock("spellbook.memory.bootstrap:Path.home")
+        mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
         mock_home.__call__.returns(tmp_path)
 
-        with bigfoot:
+        with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
         mock_home.__call__.assert_call(args=(), kwargs={})
@@ -161,14 +161,14 @@ class TestRegenerateMemoryMdForProject:
     def test_writes_file_with_template(self, db, auto_memory_dir):
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
         mock_resolve.__call__.returns(auto_memory_dir)
-        mock_db = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db = tripwire.mock("spellbook.memory.bootstrap:get_db_path")
         mock_db.__call__.returns(Path(db))
-        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode = tripwire.mock("spellbook.memory.bootstrap:encode_cwd")
         mock_encode.__call__.returns("tmp-test")
 
-        with bigfoot:
+        with tripwire:
             regenerate_memory_md_for_project("/tmp/test")
 
         mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
@@ -186,10 +186,10 @@ class TestRegenerateMemoryMdForProject:
         """No auto-memory directory means nothing to do."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
         mock_resolve.__call__.returns(None)
 
-        with bigfoot:
+        with tripwire:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
 
@@ -199,10 +199,10 @@ class TestRegenerateMemoryMdForProject:
         """Exception in generation does not propagate (fail-open)."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
         mock_resolve.__call__.raises(RuntimeError("boom"))
 
-        with bigfoot:
+        with tripwire:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
 
@@ -214,14 +214,14 @@ class TestRegenerateMemoryMdForProject:
         """After regeneration, .spellbook-bridge-initialized marker exists."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
         mock_resolve.__call__.returns(auto_memory_dir)
-        mock_db = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db = tripwire.mock("spellbook.memory.bootstrap:get_db_path")
         mock_db.__call__.returns(Path(db))
-        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode = tripwire.mock("spellbook.memory.bootstrap:encode_cwd")
         mock_encode.__call__.returns("tmp-test")
 
-        with bigfoot:
+        with tripwire:
             regenerate_memory_md_for_project("/tmp/test")
 
         mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})

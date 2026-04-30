@@ -6,7 +6,7 @@ audit), and triggers consolidation when the threshold is met.
 """
 
 import pytest
-import bigfoot
+import tripwire
 
 from spellbook.core.db import init_db, close_all_connections
 from spellbook.memory.store import (

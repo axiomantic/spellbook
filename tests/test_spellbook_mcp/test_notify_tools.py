@@ -7,14 +7,14 @@ argument handling, and return contracts.
 
 import json
 
-import bigfoot
+import tripwire
 import pytest
 
 from spellbook import server
 
 
 def _async_return(value):
-    """Create an async function that returns ``value``, suitable for bigfoot .calls()."""
+    """Create an async function that returns ``value``, suitable for tripwire .calls()."""
     async def _fn(*args, **kwargs):
         return value
     return _fn
@@ -25,12 +25,12 @@ class TestNotifySend:
 
     @pytest.mark.asyncio
     async def test_success_returns_ok_json(self):
-        mock_send = bigfoot.mock(
+        mock_send = tripwire.mock(
             "spellbook.notifications.notify:send_notification"
         )
         mock_send.calls(_async_return({"ok": True}))
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_send.fn(body="hello world")
 
         mock_send.assert_call(args=(), kwargs={"title": None, "body": "hello world"})
@@ -39,14 +39,14 @@ class TestNotifySend:
 
     @pytest.mark.asyncio
     async def test_not_available_returns_error_json(self):
-        mock_send = bigfoot.mock(
+        mock_send = tripwire.mock(
             "spellbook.notifications.notify:send_notification"
         )
         mock_send.calls(
             _async_return({"error": "Notifications not available. Missing tools"})
         )
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_send.fn(body="hello")
 
         mock_send.assert_call(args=(), kwargs={"title": None, "body": "hello"})
@@ -56,12 +56,12 @@ class TestNotifySend:
 
     @pytest.mark.asyncio
     async def test_passes_title_and_body(self):
-        mock_send = bigfoot.mock(
+        mock_send = tripwire.mock(
             "spellbook.notifications.notify:send_notification"
         )
         mock_send.calls(_async_return({"ok": True}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.notify_send.fn(body="test body", title="Custom Title")
 
         mock_send.assert_call(
@@ -70,12 +70,12 @@ class TestNotifySend:
 
     @pytest.mark.asyncio
     async def test_title_defaults_to_none(self):
-        mock_send = bigfoot.mock(
+        mock_send = tripwire.mock(
             "spellbook.notifications.notify:send_notification"
         )
         mock_send.calls(_async_return({"ok": True}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.notify_send.fn(body="just body")
 
         mock_send.assert_call(
@@ -95,10 +95,10 @@ class TestNotifyStatus:
             "title": "Spellbook",
             "error": None,
         }
-        mock_get = bigfoot.mock("spellbook.notifications.notify:get_status")
+        mock_get = tripwire.mock("spellbook.notifications.notify:get_status")
         mock_get.returns(mock_status)
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_status.fn()
 
         mock_get.assert_call()
@@ -114,10 +114,10 @@ class TestNotifyStatus:
             "title": "Spellbook",
             "error": "Missing tools",
         }
-        mock_get = bigfoot.mock("spellbook.notifications.notify:get_status")
+        mock_get = tripwire.mock("spellbook.notifications.notify:get_status")
         mock_get.returns(mock_status)
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_status.fn()
 
         mock_get.assert_call()
@@ -185,16 +185,16 @@ class TestNotifyConfigSetTool:
 
         monkeypatch.setattr(config_mod, "CONFIG_LOCK_PATH", tmp_path / "config.lock")
 
-        mock_config_path = bigfoot.mock("spellbook.core.config:get_config_path")
+        mock_config_path = tripwire.mock("spellbook.core.config:get_config_path")
         # config_set_many calls get_config_path once, then config_get calls it twice
         mock_config_path.returns(config_file).returns(config_file).returns(config_file)
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_config_set.fn(
                 enabled=True, title="My Project"
             )
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config_path.assert_call()
             mock_config_path.assert_call()
             mock_config_path.assert_call()
@@ -212,16 +212,16 @@ class TestNotifyConfigSetTool:
 
         monkeypatch.setattr(config_mod, "CONFIG_LOCK_PATH", tmp_path / "config.lock")
 
-        mock_config_path = bigfoot.mock("spellbook.core.config:get_config_path")
+        mock_config_path = tripwire.mock("spellbook.core.config:get_config_path")
         # config_set_many calls get_config_path once, then config_get calls it twice
         mock_config_path.returns(config_file).returns(config_file).returns(config_file)
 
-        async with bigfoot:
+        async with tripwire:
             result_str = await server.notify_config_set.fn(
                 title="New Title"
             )
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_config_path.assert_call()
             mock_config_path.assert_call()
             mock_config_path.assert_call()

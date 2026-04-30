@@ -18,7 +18,7 @@ def _ensure_worker_llm_calls_table():
     ``publish_call`` with ``_in_daemon=True``) hits an
     ``OperationalError: no such table: worker_llm_calls``. ``record_call``
     swallows the error but logs a WARNING on its first-per-process
-    failure, which bigfoot's autouse ``LogPlugin`` captures. Without an
+    failure, which tripwire's autouse ``LogPlugin`` captures. Without an
     assertion on that log, sandbox teardown raises
     ``UnassertedInteractionsError`` and the test fails.
 
@@ -52,7 +52,7 @@ def _ensure_hook_events_table():
     ``spellbook.hooks.observability.record_hook_event`` hits an
     ``OperationalError: no such table: hook_events``. ``record_hook_event``
     swallows the error but logs a WARNING on its first-per-process
-    failure, which bigfoot's autouse ``LogPlugin`` captures.
+    failure, which tripwire's autouse ``LogPlugin`` captures.
 
     ``checkfirst=True`` makes this a no-op when the table already exists.
     """

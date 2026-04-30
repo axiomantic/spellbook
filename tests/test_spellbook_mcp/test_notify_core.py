@@ -9,7 +9,7 @@ import asyncio
 import os
 import subprocess
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 
@@ -35,10 +35,10 @@ class TestDetectPlatform:
         import spellbook.notifications.notify as mod
 
         monkeypatch.setattr(os, "environ", {})
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(True)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -49,10 +49,10 @@ class TestDetectPlatform:
         import spellbook.notifications.notify as mod
 
         monkeypatch.setattr(os, "environ", {"container": "podman"})
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -64,12 +64,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {"SSH_TTY": "/dev/pts/0"})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.__call__.required(False).returns("/usr/bin/notify-send")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -81,12 +81,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {"SSH_TTY": "/dev/pts/0", "DISPLAY": ":0"})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns("/usr/bin/notify-send")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "linux"
@@ -99,12 +99,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "darwin")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns("/usr/bin/osascript")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "macos"
@@ -117,12 +117,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "darwin")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -135,12 +135,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {"DISPLAY": ":0"})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns("/usr/bin/notify-send")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "linux"
@@ -153,12 +153,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {"WAYLAND_DISPLAY": "wayland-0"})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns("/usr/bin/notify-send")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "linux"
@@ -171,12 +171,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {"DISPLAY": ":0"})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns(None)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -189,12 +189,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "linux")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.returns("/usr/bin/notify-send")
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -212,12 +212,12 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "win32")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         mock_which.calls(which_side_effect)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "windows"
@@ -230,9 +230,9 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "win32")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         # Called twice: which("pwsh") returns None, which("powershell") returns path
         mock_which.returns(None).calls(
             lambda name: r"C:\Windows\System32\powershell.exe"
@@ -240,7 +240,7 @@ class TestDetectPlatform:
             else None
         )
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform == "windows"
@@ -254,13 +254,13 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "win32")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = bigfoot.mock("spellbook.notifications.notify:shutil.which")
+        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
         # which is called twice (pwsh, powershell), both return None
         mock_which.returns(None).returns(None)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -274,10 +274,10 @@ class TestDetectPlatform:
 
         monkeypatch.setattr(os, "environ", {})
         monkeypatch.setattr("sys.platform", "freebsd")
-        mock_exists = bigfoot.mock("spellbook.notifications.notify:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
 
-        with bigfoot:
+        with tripwire:
             platform, reason = mod._detect_platform()
 
         assert platform is None
@@ -291,12 +291,12 @@ class TestCheckAvailability:
     def test_returns_available_on_macos(self):
         import spellbook.notifications.notify as mod
 
-        mock_detect = bigfoot.mock.object(mod, "_detect_platform")
+        mock_detect = tripwire.mock.object(mod, "_detect_platform")
         mock_detect.returns(("macos", None))
-        mock_run = bigfoot.mock("spellbook.notifications.notify:subprocess.run")
+        mock_run = tripwire.mock("spellbook.notifications.notify:subprocess.run")
         mock_run.returns(subprocess.CompletedProcess(args=["osascript"], returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = mod.check_availability()
 
         assert result["available"] is True
@@ -318,10 +318,10 @@ class TestCheckAvailability:
     def test_returns_unavailable_when_detection_fails(self):
         import spellbook.notifications.notify as mod
 
-        mock_detect = bigfoot.mock.object(mod, "_detect_platform")
+        mock_detect = tripwire.mock.object(mod, "_detect_platform")
         mock_detect.returns((None, "test reason"))
 
-        with bigfoot:
+        with tripwire:
             result = mod.check_availability()
 
         assert result["available"] is False
@@ -337,10 +337,10 @@ class TestCheckAvailability:
         mod._unavailable_reason = None
 
         # _detect_platform should NOT be called since result is cached.
-        # No expectations configured: if it IS called, bigfoot raises.
-        bigfoot.mock.object(mod, "_detect_platform")
+        # No expectations configured: if it IS called, tripwire raises.
+        tripwire.mock.object(mod, "_detect_platform")
 
-        with bigfoot:
+        with tripwire:
             result = mod.check_availability()
 
         assert result["available"] is True
@@ -349,12 +349,12 @@ class TestCheckAvailability:
     def test_macos_permission_test_failure(self):
         import spellbook.notifications.notify as mod
 
-        mock_detect = bigfoot.mock.object(mod, "_detect_platform")
+        mock_detect = tripwire.mock.object(mod, "_detect_platform")
         mock_detect.returns(("macos", None))
-        mock_run = bigfoot.mock("spellbook.notifications.notify:subprocess.run")
+        mock_run = tripwire.mock("spellbook.notifications.notify:subprocess.run")
         mock_run.raises(subprocess.CalledProcessError(1, "osascript"))
 
-        with bigfoot:
+        with tripwire:
             result = mod.check_availability()
 
         assert result["available"] is False
@@ -373,7 +373,7 @@ class TestCheckAvailability:
             kwargs={"capture_output": True, "timeout": 5, "check": True},
             raised=IsInstance(subprocess.CalledProcessError),
         )
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             "macOS notification test failed: Command 'osascript' returned "
             "non-zero exit status 1.",
@@ -383,13 +383,13 @@ class TestCheckAvailability:
     def test_linux_skips_permission_test(self):
         import spellbook.notifications.notify as mod
 
-        mock_detect = bigfoot.mock.object(mod, "_detect_platform")
+        mock_detect = tripwire.mock.object(mod, "_detect_platform")
         mock_detect.returns(("linux", None))
         # subprocess.run should NOT be called for Linux.
-        # No expectations configured: if it IS called, bigfoot raises.
-        bigfoot.mock("spellbook.notifications.notify:subprocess.run")
+        # No expectations configured: if it IS called, tripwire raises.
+        tripwire.mock("spellbook.notifications.notify:subprocess.run")
 
-        with bigfoot:
+        with tripwire:
             result = mod.check_availability()
 
         assert result["available"] is True
@@ -404,7 +404,7 @@ class TestResolveSetting:
         import spellbook.notifications.notify as mod
 
         # No mocks needed: _resolve_setting returns immediately with explicit_value
-        with bigfoot:
+        with tripwire:
             result = mod._resolve_setting("enabled", explicit_value=True)
 
         assert result is True
@@ -412,16 +412,16 @@ class TestResolveSetting:
     def test_session_override_wins_over_config(self):
         import spellbook.notifications.notify as mod
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {"title": "Session Title"}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.__call__.required(False).returns("Config Title")
 
-        with bigfoot:
+        with tripwire:
             result = mod._resolve_setting("title")
 
         assert result == "Session Title"
@@ -430,16 +430,16 @@ class TestResolveSetting:
     def test_config_wins_over_default(self):
         import spellbook.notifications.notify as mod
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns("Custom Title")
 
-        with bigfoot:
+        with tripwire:
             result = mod._resolve_setting("title")
 
         assert result == "Custom Title"
@@ -449,16 +449,16 @@ class TestResolveSetting:
     def test_falls_back_to_default_enabled(self):
         import spellbook.notifications.notify as mod
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = mod._resolve_setting("enabled")
 
         assert result is True
@@ -468,16 +468,16 @@ class TestResolveSetting:
     def test_falls_back_to_default_title(self):
         import spellbook.notifications.notify as mod
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = mod._resolve_setting("title")
 
         assert result == "Spellbook"
@@ -501,21 +501,21 @@ class TestSendNotification:
 
         monkeypatch.setattr(asyncio, "to_thread", _fake_to_thread)
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         # Called twice: once for "enabled", once for "title"
         mock_session.returns({"notify": {}}).returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         # Called twice: once for "enabled" (returns None -> default True),
         # once for "title" (returns None -> default "Spellbook")
         mock_config.returns(None).returns(None)
-        mock_send = bigfoot.mock.object(mod, "_send_sync")
+        mock_send = tripwire.mock.object(mod, "_send_sync")
         mock_send.returns(None)
 
-        async with bigfoot:
+        async with tripwire:
             result = await mod.send_notification(body="test body")
 
         assert result == {"ok": True}
@@ -534,16 +534,16 @@ class TestSendNotification:
         mod._platform = "macos"
         mod._unavailable_reason = None
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {"enabled": False}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.__call__.required(False).returns(None)
 
-        async with bigfoot:
+        async with tripwire:
             result = await mod.send_notification(body="test")
 
         assert "error" in result
@@ -558,7 +558,7 @@ class TestSendNotification:
         mod._platform = None
         mod._unavailable_reason = "Missing tools"
 
-        async with bigfoot:
+        async with tripwire:
             result = await mod.send_notification(body="test")
 
         assert "error" in result
@@ -577,18 +577,18 @@ class TestSendNotification:
 
         monkeypatch.setattr(asyncio, "to_thread", _fake_to_thread)
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}}).returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None).returns(None)
-        mock_send = bigfoot.mock.object(mod, "_send_sync")
+        mock_send = tripwire.mock.object(mod, "_send_sync")
         mock_send.raises(subprocess.CalledProcessError(1, "osascript"))
 
-        async with bigfoot:
+        async with tripwire:
             result = await mod.send_notification(body="test")
 
         assert "error" in result
@@ -602,7 +602,7 @@ class TestSendNotification:
             kwargs={},
             raised=IsInstance(subprocess.CalledProcessError),
         )
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             "Notification failed: Command 'osascript' returned "
             "non-zero exit status 1.",
@@ -622,20 +622,20 @@ class TestSendNotification:
 
         monkeypatch.setattr(asyncio, "to_thread", _fake_to_thread)
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         # Called once: for "enabled" only (title is explicit)
         mock_session.returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         # Called once: for "enabled" only
         mock_config.returns(None)
-        mock_send = bigfoot.mock.object(mod, "_send_sync")
+        mock_send = tripwire.mock.object(mod, "_send_sync")
         mock_send.returns(None)
 
-        async with bigfoot:
+        async with tripwire:
             result = await mod.send_notification(
                 title="Custom", body="body text"
             )
@@ -656,17 +656,17 @@ class TestGetStatus:
         mod._platform = "macos"
         mod._unavailable_reason = None
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         # Called twice: once for "enabled", once for "title"
         mock_session.returns({"notify": {}}).returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None).returns(None)
 
-        with bigfoot:
+        with tripwire:
             status = mod.get_status()
 
         assert status["available"] is True
@@ -686,16 +686,16 @@ class TestGetStatus:
         mod._platform = None
         mod._unavailable_reason = "Missing tools"
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}}).returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None).returns(None)
 
-        with bigfoot:
+        with tripwire:
             status = mod.get_status()
 
         assert status["available"] is False
@@ -712,16 +712,16 @@ class TestGetStatus:
         mod._platform = "linux"
         mod._unavailable_reason = None
 
-        mock_session = bigfoot.mock(
+        mock_session = tripwire.mock(
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {}}).returns({"notify": {}})
-        mock_config = bigfoot.mock(
+        mock_config = tripwire.mock(
             "spellbook.notifications.notify:config_tools.config_get"
         )
         mock_config.returns(None).returns(None)
 
-        with bigfoot:
+        with tripwire:
             status = mod.get_status()
 
         expected_keys = {"available", "enabled", "platform", "title", "error"}

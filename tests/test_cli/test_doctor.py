@@ -2,7 +2,7 @@
 
 import json
 
-import bigfoot
+import tripwire
 import pytest
 
 from spellbook.cli.commands.doctor import register, run
@@ -79,13 +79,13 @@ class TestDoctorRun:
                 doctor.CheckResult("test", "pass", "ok"),
             ]
 
-        proxy = bigfoot.mock("spellbook.cli.commands.doctor:run_checks")
+        proxy = tripwire.mock("spellbook.cli.commands.doctor:run_checks")
         proxy.calls(fake_checks)
 
         import argparse
 
         args = argparse.Namespace(json=False)
-        with bigfoot:
+        with tripwire:
             run(args)
         # If we get here without SystemExit, exit code is 0
         proxy.assert_call(args=(), kwargs={})

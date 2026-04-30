@@ -14,7 +14,7 @@ import stat
 import sys
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 
 import installer.platforms.forgecode as fc_mod
@@ -27,7 +27,7 @@ DAEMON_URL = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
 TEST_TOKEN = "test-token-xyz"
 TEST_VERSION = "0.1.0"
 
-# Module path used in bigfoot mock targets.
+# Module path used in tripwire mock targets.
 FC_MOD = "installer.platforms.forgecode"
 
 
@@ -61,7 +61,7 @@ def forge_env(monkeypatch, forge_config_dir):
     no ``Path.home()`` lookups are needed for the common-case install tests.
     Tests that intentionally exercise ``Path.home()`` resolution (legacy
     ``~/forge`` preference, FORGE_CONFIG-unset warning) override this with
-    their own bigfoot mock.
+    their own tripwire mock.
     """
     monkeypatch.setenv("FORGE_CONFIG", str(forge_config_dir))
     return forge_config_dir
@@ -87,9 +87,9 @@ class TestForgeCodeInstall:
     def test_fresh_install_creates_mcp_json_with_correct_structure(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -101,9 +101,9 @@ class TestForgeCodeInstall:
     def test_fresh_install_writes_AGENTS_md_with_demarcated_section(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -126,9 +126,9 @@ class TestForgeCodeInstall:
     def test_fresh_install_chmod_0600(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -156,9 +156,9 @@ class TestForgeCodeInstall:
         os.chmod(mcp_path, 0o644)
         assert stat.S_IMODE(os.stat(mcp_path).st_mode) == 0o644
 
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -171,9 +171,9 @@ class TestForgeCodeInstall:
     def test_install_sets_oauth_false(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -183,9 +183,9 @@ class TestForgeCodeInstall:
     def test_install_writes_authorization_bearer_header(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -197,9 +197,9 @@ class TestForgeCodeInstall:
     def test_install_top_level_key_is_mcpServers(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -216,11 +216,11 @@ class TestForgeCodeInstall:
         # FORGE_CONFIG is allowed via monkeypatch.setenv per styleguide.
         monkeypatch.setenv("FORGE_CONFIG", str(custom))
 
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         # config_dir passed to installer is the custom one (resolve_config_dirs
         # honored the env var; installer should not second-guess it).
         installer = _make_installer(spellbook_dir, custom)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -248,7 +248,7 @@ class TestForgeCodeInstall:
         # additional lookup elsewhere in the install path). The interleaving
         # of home() and get_mcp_auth_token() is an implementation detail of
         # the install pipeline, so we assert order-independently using
-        # bigfoot.in_any_order() (the tripwire/bigfoot-blessed escape hatch
+        # tripwire.in_any_order() (the tripwire/tripwire-blessed escape hatch
         # for "interactions occurred but the relative ordering is incidental").
         #
         # We pin EXPECTED_HOME_CALLS rather than draining: if the resolver
@@ -258,16 +258,16 @@ class TestForgeCodeInstall:
         # is no times=N parameter (verified against
         # tripwire/_mock_plugin.py:130-158).
         EXPECTED_HOME_CALLS = 3
-        m_home = bigfoot.mock("pathlib:Path.home")
+        m_home = tripwire.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
             m_home.returns(tmp_path)
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         installer = _make_installer(spellbook_dir, default)
-        with bigfoot:
+        with tripwire:
             installer.install()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             for _ in range(EXPECTED_HOME_CALLS):
                 m_home.assert_call()
             m_token.assert_call()
@@ -289,9 +289,9 @@ class TestForgeCodeInstall:
         mcp_path = forge_config_dir / ".mcp.json"
         mcp_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -310,9 +310,9 @@ class TestForgeCodeInstall:
         user_content = "# user content\n\nMy own rules here.\n"
         agents_md.write_text(user_content, encoding="utf-8")
 
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -353,17 +353,17 @@ class TestForgeCodeInstall:
         # test for the full rationale on pinning the exact count and using
         # in_any_order() instead of draining.
         EXPECTED_HOME_CALLS = 3
-        m_home = bigfoot.mock("pathlib:Path.home")
+        m_home = tripwire.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
             m_home.returns(tmp_path)
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         # Real install (NOT dry_run) so the env_warning gating runs.
         installer = _make_installer(spellbook_dir, forge_config_dir, dry_run=False)
-        with bigfoot:
+        with tripwire:
             results = installer.install()
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             for _ in range(EXPECTED_HOME_CALLS):
                 m_home.assert_call()
             m_token.assert_call()
@@ -410,7 +410,7 @@ class TestForgeCodeInstall:
 
         # uninstall does NOT call get_mcp_auth_token; no mock needed for it.
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.uninstall()
 
         actual = json.loads(mcp_path.read_text(encoding="utf-8"))
@@ -436,9 +436,9 @@ class TestForgeCodeInstall:
         mcp_path = forge_config_dir / ".mcp.json"
         mcp_path.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
 
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
         m_token.assert_call()
 
@@ -455,7 +455,7 @@ class TestForgeCodeInstall:
         # No get_mcp_auth_token mock: install() short-circuits on missing
         # config_dir before reaching the MCP write path.
         installer = _make_installer(spellbook_dir, bogus)
-        with bigfoot:
+        with tripwire:
             results = installer.install()
 
         assert len(results) == 1
@@ -486,7 +486,7 @@ class TestForgeCodeDetect:
         monkeypatch.setenv("FORGE_CONFIG", str(missing))
 
         installer = _make_installer(spellbook_dir, missing)
-        with bigfoot:
+        with tripwire:
             status = installer.detect()
 
         expected = fc_mod.PlatformStatus(
@@ -510,7 +510,7 @@ class TestForgeCodeDetect:
         agents_md.write_text("# user content\n", encoding="utf-8")
 
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             status = installer.detect()
 
         expected = fc_mod.PlatformStatus(
@@ -549,7 +549,7 @@ class TestForgeCodeDetect:
         )
 
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             status = installer.detect()
 
         expected = fc_mod.PlatformStatus(
@@ -569,9 +569,9 @@ class TestForgeCodeDetect:
         self, spellbook_dir, forge_config_dir, forge_env
     ):
         # Run a real install to create both files in canonical form, then detect.
-        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
         installer = _make_installer(spellbook_dir, forge_config_dir)
-        with bigfoot:
+        with tripwire:
             installer.install()
             status = installer.detect()
         m_token.assert_call()
