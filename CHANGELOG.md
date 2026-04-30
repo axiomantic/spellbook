@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-04-30
+
+### Added
+
+- **`sub_orchestrators` execution mode for COMPLEX features.** New
+  `dispatching-sub-orchestrators` skill introduces a CEO/Manager pattern
+  for COMPLEX features (15+ tasks across 2+ tracks). The CEO orchestrator
+  dispatches Manager subagents, each owning a coherent file scope and
+  3-7 tasks; Managers run per-task gates inside their own context and
+  return a single compact structured summary. Prevents context bloat in
+  the develop orchestrator on large COMPLEX features where per-gate
+  dispatching from a single CEO accumulated hundreds of summaries and
+  degraded strategic oversight by mid-execution. The skill contains the
+  canonical Manager Dispatch Template, the CEO loop, and the gotchas
+  surfaced in real-world COMPLEX execution: Task-tool fallback to inline
+  execution, single-worktree Manager serialization, file-ownership
+  grouping vs wave grouping, and end-of-Phase-4 gates as the
+  compensating safety net for inline execution.
+
+### Changed
+
+- **`feature-implement` Phase 3.4.5 selection logic** now picks
+  `sub_orchestrators` when the feature is COMPLEX with 15+ tasks across
+  2+ tracks. The mode slots between `delegated` and `work_items`: still
+  single session, but interposes Manager subagents so the CEO no longer
+  dispatches per-gate per-task directly. Phase 4 routing table lists
+  all four execution modes; new section 4.0 dispatches a single
+  subagent that invokes `dispatching-sub-orchestrators`, after which
+  CEO resumes at 4.6.1 to run end-of-Phase-4 gates at CEO level.
+- **`develop` SKILL.md** workflow overview, Phase 3 transition
+  checklist, and COMPLEX tier routing now describe all four execution
+  modes (`work_items` / `sub_orchestrators` / `delegated` / `direct`)
+  and when each applies. `direct`, `delegated`, and `work_items`
+  behavior is unchanged.
+- **`dispatching-parallel-agents` SKILL.md** gains a Sub-Orchestrator
+  (Manager) Dispatch subsection that points to
+  `dispatching-sub-orchestrators` as the canonical home for the Manager
+  Dispatch Template and CEO loop, without inlining the template.
+
 ## [0.56.0] - 2026-04-30
 
 ### Added
