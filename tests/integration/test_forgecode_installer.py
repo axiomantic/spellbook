@@ -343,7 +343,7 @@ class TestForgeCodeInstall:
         self, spellbook_dir, tmp_path, monkeypatch
     ):
         bogus = tmp_path / "nonexistent" / "path" / "that" / "does" / "not" / "exist"
-        # Note: do NOT mkdir — must remain absent.
+        # Note: do NOT mkdir; must remain absent.
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         import installer.platforms.forgecode as fc_mod
 
