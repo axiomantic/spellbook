@@ -163,7 +163,7 @@ class TestUpdateWatcherBackoff:
 
         mock_check.assert_call()
         mock_sset.assert_call(args=("update_check_failures", 1))
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             "WARNING",
             "Update check failed (1): simulated failure",
             "spellbook.updates.watcher",

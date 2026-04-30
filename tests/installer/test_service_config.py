@@ -286,7 +286,7 @@ class TestServiceManagerIsRunning:
         config = _make_config(health_check_port=None)
         manager = ServiceManager(config)
 
-        bigfoot.subprocess_mock.mock_run(
+        bigfoot.subprocess.mock_run(
             command=["launchctl", "list", "com.test.svc"],
             returncode=1,
         )
@@ -295,7 +295,7 @@ class TestServiceManagerIsRunning:
             result = manager.is_running()
 
         assert result is False
-        bigfoot.subprocess_mock.assert_run(
+        bigfoot.subprocess.assert_run(
             command=["launchctl", "list", "com.test.svc"],
             returncode=1,
             stdout="",
@@ -372,7 +372,7 @@ class TestServiceManagerStop:
         config = _make_config(pid_file=None, service_name="my-svc")
         manager = ServiceManager(config)
 
-        bigfoot.subprocess_mock.mock_run(
+        bigfoot.subprocess.mock_run(
             command=["systemctl", "--user", "stop", "my-svc"],
             returncode=0,
         )
@@ -381,7 +381,7 @@ class TestServiceManagerStop:
             success, msg = manager.stop()
 
         assert success is True
-        bigfoot.subprocess_mock.assert_run(
+        bigfoot.subprocess.assert_run(
             command=["systemctl", "--user", "stop", "my-svc"],
             returncode=0,
             stdout="",

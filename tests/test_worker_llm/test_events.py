@@ -303,7 +303,7 @@ def test_fallback_http_post_swallows_all_exceptions(monkeypatch):
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
     # The first publish failure emits one WARNING via the module logger;
     # bigfoot's log plugin records it and requires explicit assertion.
-    bigfoot.log_mock.assert_log(
+    bigfoot.log.assert_log(
         level="WARNING",
         message=AnyThing,
         logger_name="spellbook.worker_llm.events",
@@ -366,14 +366,14 @@ def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, capl
         for _ in range(5):
             urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
         # First failure: loud warning naming the exception and URL.
-        bigfoot.log_mock.assert_log(
+        bigfoot.log.assert_log(
             level="WARNING",
             message=warning_msg_pattern,
             logger_name="spellbook.worker_llm.events",
         )
         # Failures 2..5: quiet DEBUG so we do not spam operator logs.
         for _ in range(4):
-            bigfoot.log_mock.assert_log(
+            bigfoot.log.assert_log(
                 level="DEBUG",
                 message=debug_msg,
                 logger_name="spellbook.worker_llm.events",
