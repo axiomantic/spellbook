@@ -154,6 +154,7 @@ nav:
       - skills/designing-workflows.md
       - skills/devils-advocate.md
       - skills/dispatching-parallel-agents.md
+      - skills/dispatching-sub-orchestrators.md
       - skills/distilling-prs.md
       - skills/documenting-projects.md
       - skills/documenting-tools.md
