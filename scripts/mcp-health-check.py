@@ -1009,9 +1009,11 @@ def _resolve_forgecode_config_dir(config_dir: Optional[Path] = None) -> Path:
     rules. ``config_dir`` is forwarded as ``default_dir`` (an explicit override
     that bypasses env/legacy lookups when supplied).
     """
-    # Ensure the installer package is importable when the script is run from
-    # a checkout without the package installed. SPELLBOOK_DIR (set in the
-    # spawned environment) or the script's own parent dir is the project root.
+    # Function-level import is INTENTIONAL: this script runs standalone via
+    # `python3 scripts/mcp-health-check.py`, where the spellbook package is
+    # not on sys.path until we insert it below. Hoisting to module scope
+    # would make the script unimportable in that mode. Top-level os/sys/Path
+    # imports satisfy the "prefer top-level" styleguide rule for stdlib.
     spellbook_dir = os.environ.get(
         "SPELLBOOK_DIR",
         str(Path(__file__).resolve().parent.parent),
@@ -1204,7 +1206,9 @@ def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None
     headers = spellbook_entry.get("headers") or {}
     auth_value = headers.get("Authorization") if isinstance(headers, dict) else None
     contract["has_auth"] = auth_value is not None
-    auth_format_ok = bool(auth_value and re.match(r"^Bearer .+", auth_value))
+    auth_format_ok = bool(
+        isinstance(auth_value, str) and re.match(r"^Bearer .+", auth_value)
+    )
     contract["auth_format_ok"] = auth_format_ok
     if not auth_format_ok:
         contract["status"] = "missing_auth"
