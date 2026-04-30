@@ -1,7 +1,7 @@
 [project]
 name = "spellbook"
 dynamic = ["version"]
-description = "Harness-augmentation layer for AI coding assistants: skills, commands, hooks, and a shared MCP server for Claude Code, Codex, OpenCode, and Gemini CLI"
+description = "Harness-augmentation layer for AI coding assistants: skills, commands, hooks, and a shared MCP server"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
