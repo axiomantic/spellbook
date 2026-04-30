@@ -18,6 +18,7 @@ import bigfoot
 import pytest
 
 import installer.platforms.forgecode as fc_mod
+from installer.components.context_files import generate_codex_context
 from installer.components.mcp import DEFAULT_HOST, DEFAULT_PORT
 from installer.demarcation import MARKER_END
 from installer.platforms.forgecode import ForgeCodeInstaller
@@ -108,8 +109,6 @@ class TestForgeCodeInstall:
 
         agents_md = forge_config_dir / "AGENTS.md"
         content = agents_md.read_text(encoding="utf-8")
-
-        from installer.components.context_files import generate_codex_context
 
         expected_spellbook_content = generate_codex_context(spellbook_dir)
         expected_start = f"<!-- SPELLBOOK:START version={TEST_VERSION} -->"
