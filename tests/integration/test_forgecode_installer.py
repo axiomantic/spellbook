@@ -438,6 +438,127 @@ class TestForgeCodeInstall:
         assert not bogus.exists()
 
 
+class TestForgeCodeDetect:
+    """detect() coverage across the four config-dir states.
+
+    All tests pin ``FORGE_CONFIG`` via ``monkeypatch.setenv`` so the resolver
+    short-circuits before any ``Path.home()`` lookup; the temp config dir IS
+    the effective config dir. Assertions construct the full expected
+    ``PlatformStatus`` instance and compare with ``==`` (Level 4-5).
+    """
+
+    def test_detect_clean_environment(
+        self, spellbook_dir, tmp_path, monkeypatch
+    ):
+        # Config dir does NOT exist; resolver returns the unchanged path.
+        missing = tmp_path / "missing-forge"
+        monkeypatch.setenv("FORGE_CONFIG", str(missing))
+
+        installer = _make_installer(spellbook_dir, missing)
+        with bigfoot:
+            status = installer.detect()
+
+        expected = fc_mod.PlatformStatus(
+            platform="forgecode",
+            available=False,
+            installed=False,
+            version=None,
+            details={
+                "config_dir": str(missing),
+                "mcp_registered": False,
+                "mcp_config": str(missing / ".mcp.json"),
+            },
+        )
+        assert status == expected
+
+    def test_detect_with_only_AGENTS_md(
+        self, spellbook_dir, forge_config_dir, forge_env
+    ):
+        # Plain user AGENTS.md (no spellbook demarcation) and no .mcp.json.
+        agents_md = forge_config_dir / "AGENTS.md"
+        agents_md.write_text("# user content\n", encoding="utf-8")
+
+        installer = _make_installer(spellbook_dir, forge_config_dir)
+        with bigfoot:
+            status = installer.detect()
+
+        expected = fc_mod.PlatformStatus(
+            platform="forgecode",
+            available=True,
+            installed=False,
+            version=None,
+            details={
+                "config_dir": str(forge_config_dir),
+                "mcp_registered": False,
+                "mcp_config": str(forge_config_dir / ".mcp.json"),
+            },
+        )
+        assert status == expected
+
+    def test_detect_with_only_mcp_json(
+        self, spellbook_dir, forge_config_dir, forge_env
+    ):
+        # .mcp.json with spellbook entry exists; AGENTS.md does not.
+        mcp_path = forge_config_dir / ".mcp.json"
+        mcp_path.write_text(
+            json.dumps(
+                {
+                    "mcpServers": {
+                        "spellbook": {
+                            "url": DAEMON_URL,
+                            "oauth": False,
+                            "headers": {"Authorization": f"Bearer {TEST_TOKEN}"},
+                        }
+                    }
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        installer = _make_installer(spellbook_dir, forge_config_dir)
+        with bigfoot:
+            status = installer.detect()
+
+        expected = fc_mod.PlatformStatus(
+            platform="forgecode",
+            available=True,
+            installed=True,
+            version=None,
+            details={
+                "config_dir": str(forge_config_dir),
+                "mcp_registered": True,
+                "mcp_config": str(mcp_path),
+            },
+        )
+        assert status == expected
+
+    def test_detect_with_both_files(
+        self, spellbook_dir, forge_config_dir, forge_env
+    ):
+        # Run a real install to create both files in canonical form, then detect.
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        installer = _make_installer(spellbook_dir, forge_config_dir)
+        with bigfoot:
+            installer.install()
+            status = installer.detect()
+        m_token.assert_call()
+
+        expected = fc_mod.PlatformStatus(
+            platform="forgecode",
+            available=True,
+            installed=True,
+            version=TEST_VERSION,
+            details={
+                "config_dir": str(forge_config_dir),
+                "mcp_registered": True,
+                "mcp_config": str(forge_config_dir / ".mcp.json"),
+            },
+        )
+        assert status == expected
+
+
 class TestForgeCodeInCore:
     """Verify ForgeCodeInstaller is registered in the core dispatcher."""
 
