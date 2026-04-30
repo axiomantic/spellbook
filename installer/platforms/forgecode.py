@@ -120,11 +120,13 @@ def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
     try:
         if hasattr(os, "fchmod"):
             os.fchmod(fd, 0o600)
+        # os.fdopen takes ownership of fd; its context manager closes it.
+        f = os.fdopen(fd, "w", encoding="utf-8")
     except BaseException:
         os.close(fd)
         raise
-    # os.fdopen takes ownership of fd; its context manager closes it.
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
+
+    with f:
         f.write(payload)
 
 
