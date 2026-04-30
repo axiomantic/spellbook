@@ -19,6 +19,7 @@ Reference: design doc 2026-04-30-forgecode-support-design.md, Section 3.
 """
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
@@ -36,7 +37,33 @@ if TYPE_CHECKING:
     from ..core import InstallResult
 
 
+logger = logging.getLogger(__name__)
+
 SPELLBOOK_SERVER_KEY: str = "spellbook"
+
+
+def _load_mcp_config_dict(config_path: Path) -> dict:
+    """Read and parse ``config_path`` as JSON, returning ``{}`` on failure.
+
+    Returns an empty dict if the file is missing, contains invalid JSON, or
+    parses to a non-dict (list, scalar, null). Decode failures and shape
+    mismatches are logged at debug level so silent corruption does not hide.
+    """
+    if not config_path.exists():
+        return {}
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        logger.debug("Failed to parse %s: %s", config_path, e)
+        return {}
+    if not isinstance(data, dict):
+        logger.debug(
+            "Existing %s is not a JSON object (got %s); starting fresh",
+            config_path,
+            type(data).__name__,
+        )
+        return {}
+    return data
 
 
 def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
@@ -66,12 +93,7 @@ def _update_forgecode_mcp_config(
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
-    config: dict = {}
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            config = {}
+    config = _load_mcp_config_dict(config_path)
 
     if "mcpServers" not in config or not isinstance(config["mcpServers"], dict):
         config["mcpServers"] = {}
@@ -106,9 +128,9 @@ def _remove_forgecode_mcp_config(
     if dry_run:
         return (True, "would remove MCP server config")
 
-    try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+    config = _load_mcp_config_dict(config_path)
+    if not config:
+        # Either invalid JSON or non-dict shape; nothing for us to remove.
         return (True, "config is not valid JSON")
 
     servers = config.get("mcpServers")
@@ -170,11 +192,10 @@ class ForgeCodeInstaller(PlatformInstaller):
 
         has_mcp = False
         if effective_mcp_config.exists():
-            try:
-                cfg = json.loads(effective_mcp_config.read_text(encoding="utf-8"))
-                has_mcp = SPELLBOOK_SERVER_KEY in cfg.get("mcpServers", {})
-            except json.JSONDecodeError:
-                pass
+            cfg = _load_mcp_config_dict(effective_mcp_config)
+            servers = cfg.get("mcpServers", {})
+            if isinstance(servers, dict):
+                has_mcp = SPELLBOOK_SERVER_KEY in servers
 
         return PlatformStatus(
             platform=self.platform_id,
