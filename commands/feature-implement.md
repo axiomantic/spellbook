@@ -126,27 +126,37 @@ Determine execution strategy from plan structure and context budget.
 1. Parse implementation plan for track markers (`## Track N:` headers)
 2. Count tasks (`- [ ] Task N.M:` lines)
 3. Check for dependency markers (`<!-- depends-on: -->`)
+4. Count distinct file-ownership clusters (files that no other task touches)
 
-**Execution Mode Decision:**
+**Execution Mode Decision (evaluated in order; first match wins):**
 
 ```
 if complexity_tier == "trivial": exit skill (already handled in Phase 0)
 if complexity_tier == "simple": direct (already handled via Simple Path)
-if impl_plan has multiple tracks with dependencies: decompose into work items
-elif num_tasks > 15: decompose into work items (context budget concern)
+if user_explicitly_requested_separate_sessions: work_items
+if complexity_tier == "complex" AND num_tasks >= 15 AND num_distinct_tracks >= 2:
+    sub_orchestrators
+if num_tasks > 15 AND num_distinct_tracks >= 2 (regardless of tier):
+    sub_orchestrators
+if impl_plan has multiple tracks with dependencies AND num_tasks > 25:
+    work_items   (cross-session decomposition for very large features)
+elif num_tasks > 15:
+    work_items   (context budget concern, single track or no clear file ownership)
 else: delegated (single session, subagent execution)
 ```
 
 **Modes:**
 
-- **delegated**: Stay in session, delegate to subagents. Default for STANDARD.
-- **work_items**: Generate prompt files for each work item, present to user. For COMPLEX or large STANDARD.
 - **direct**: Stay in session, minimal delegation. Only for very small STANDARD.
+- **delegated**: Stay in session, delegate to subagents (one subagent per gate per task). Default for STANDARD. Unchanged.
+- **sub_orchestrators**: Stay in session, but interpose Manager subagents (sub-orchestrators) between this CEO and the per-gate subagents. Each Manager owns a coherent file scope and 3-7 tasks; runs all per-task gates inside its own context; returns one compact summary to the CEO. Selected for COMPLEX features (15+ tasks across 2+ tracks) where the CEO context would bloat from per-gate dispatching. See `dispatching-sub-orchestrators` skill for the full pattern.
+- **work_items**: Generate prompt files for each work item, present to user for execution in separate sessions. For very large COMPLEX or when user explicitly requests cross-session decomposition.
 
 **Routing:**
 
 - If `work_items`: Proceed to 3.5 and 3.6
-- If `delegated` or `direct`: Skip to Phase 4
+- If `sub_orchestrators`: Skip to Phase 4 (Phase 4.2 dispatches to `dispatching-sub-orchestrators` skill)
+- If `delegated` or `direct`: Skip to Phase 4 (existing flow)
 </analysis>
 
 ### 3.5 Generate Work Items (if work_items mode)
@@ -341,8 +351,9 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 - [ ] Reviewing-impl-plans subagent DISPATCHED
 - [ ] Approval gate handled per autonomous_mode
 - [ ] All critical/important findings fixed (if any)
-- [ ] Execution mode analyzed (work_items/delegated/direct)
+- [ ] Execution mode analyzed (work_items / sub_orchestrators / delegated / direct)
 - [ ] If work_items: Work item prompt files generated, presentation complete
+- [ ] If sub_orchestrators: Manager assignments planned by file ownership, CEO ready to dispatch via dispatching-sub-orchestrators
 
 If ANY unchecked: Go back to Phase 3. Do NOT proceed.
 
@@ -351,7 +362,7 @@ If ANY unchecked: Go back to Phase 3. Do NOT proceed.
 ## Phase 4: Implementation
 
 <CRITICAL>
-This phase only executes if execution_mode is "delegated" or "direct".
+This phase only executes if execution_mode is "delegated", "direct", or "sub_orchestrators".
 During Phase 4, delegate actual work to subagents. Main context is for ORCHESTRATION ONLY.
 </CRITICAL>
 
@@ -364,6 +375,58 @@ During Phase 4, delegate actual work to subagents. Main context is for ORCHESTRA
 <RULE>
 If you find yourself using Write, Edit, or Bash tools directly in main context during Phase 4, STOP. Delegate to a subagent instead.
 </RULE>
+
+### Phase 4 Routing by Execution Mode
+
+| execution_mode | Phase 4 Path |
+|----------------|---------------|
+| `direct` | Sections 4.1 - 4.7 below, minimal delegation, single CEO context |
+| `delegated` | Sections 4.1 - 4.7 below, one subagent per gate per task, CEO orchestrates |
+| `sub_orchestrators` | Section 4.1 (worktree setup), then dispatch to `dispatching-sub-orchestrators` skill (Phase 4.2 wrapper below). Sections 4.3 - 4.5.1 happen INSIDE Manager subagents. CEO resumes at 4.6.1 (end-of-Phase-4 gates) after all Managers complete. |
+| `work_items` | Already exited at 3.6 (this Phase 4 does not execute) |
+
+### 4.0 Sub-Orchestrator Dispatch (only if execution_mode == "sub_orchestrators")
+
+<CRITICAL>
+When `execution_mode == "sub_orchestrators"`, Phase 4.1 (worktree setup) runs as
+documented below. Then INSTEAD of executing 4.2 - 4.5.1 directly in this CEO
+context, dispatch a single subagent that invokes the `dispatching-sub-orchestrators`
+skill. That skill owns the Manager loop (decompose, dispatch Managers, read
+summaries, escalate).
+
+After the sub-orchestrator dispatch returns (all Managers complete), CEO resumes
+at 4.6.1 (comprehensive audit). End-of-Phase-4 gates 4.6.1 - 4.6.4 ALWAYS run at
+CEO level regardless of how Managers executed (Task-tool sub-subagents OR inline).
+They are the safety net for inline-execution context-isolation loss and the only
+gates that span Manager boundaries.
+</CRITICAL>
+
+```
+Task:
+  description: "CEO/Manager execution"
+  subagent_type: "[CURRENT_AGENT_TYPE or 'general']"
+  prompt: |
+    First, invoke the dispatching-sub-orchestrators skill using the Skill tool.
+    Then follow its complete CEO loop.
+
+    ## Context for the Skill
+
+    Implementation plan: [absolute path]
+    Design document: [absolute path]
+    Feature slug: [feature-slug]
+    Worktree strategy: [single | per_parallel_track]
+    Branch name: [branch]
+    Worktree path: [absolute path; for per-track this is the base, Managers get sub-worktrees]
+    Commit format: [from AGENTS.md, e.g., "PROM-47: <description>"]
+    AGENTS.md path: [absolute path]
+
+    Return the consolidated manager_summaries, commit_log, escalations, and
+    task_outcomes. CEO will run end-of-Phase-4 gates (4.6.1 - 4.6.4) and
+    finishing (4.7) after this dispatch returns.
+```
+
+After this dispatch returns, the CEO orchestrator skips sections 4.2 - 4.5.1
+(those ran inside Managers) and resumes at section 4.6.1 below.
 
 ### 4.1 Setup Worktree(s)
 
@@ -1042,6 +1105,7 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | 3.1                 | writing-plans                  | Create impl plan                                                           |
 | 3.2                 | reviewing-impl-plans           | Review impl plan                                                           |
 | 4.1                 | using-git-worktrees            | Create workspace(s)                                                        |
+| 4.0                 | dispatching-sub-orchestrators  | **If execution_mode == sub_orchestrators**: CEO/Manager loop               |
 | 4.2                 | dispatching-parallel-agents    | Parallel execution                                                         |
 | 4.2                 | assembling-context             | Prepare context for parallel subagents                                     |
 | 4.2.5               | merging-worktrees              | Merge parallel worktrees                                                   |
