@@ -158,6 +158,7 @@ def get_platform_installer(
     from .platforms.codex import CodexInstaller
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
+    from .platforms.forgecode import ForgeCodeInstaller
 
     config_dir = config_dir_override or get_platform_config_dir(platform)
 
@@ -166,6 +167,7 @@ def get_platform_installer(
         "opencode": OpenCodeInstaller,
         "codex": CodexInstaller,
         "gemini": GeminiInstaller,
+        "forgecode": ForgeCodeInstaller,
     }
 
     installer_class = installers.get(platform)
