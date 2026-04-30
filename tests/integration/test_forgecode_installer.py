@@ -137,6 +137,38 @@ class TestForgeCodeInstall:
         actual_mode = stat.S_IMODE(os.stat(mcp_path).st_mode)
         assert actual_mode == 0o600
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="POSIX file modes; Windows chmod is a no-op",
+    )
+    def test_install_tightens_existing_mcp_json_permissions(
+        self, spellbook_dir, forge_config_dir, forge_env
+    ):
+        """An existing .mcp.json with broad mode (0o644) must be tightened to 0o600.
+
+        Regression for cycle-4 review: ``os.open(..., 0o600)`` only applies
+        the mode on creation, so without an explicit ``os.fchmod`` an
+        existing file's permissions survive ``O_TRUNC`` and the bearer
+        token leaks to other local users.
+        """
+        mcp_path = forge_config_dir / ".mcp.json"
+        # Pre-create with broad perms (0o644) and minimal valid content.
+        mcp_path.write_text("{}\n", encoding="utf-8")
+        os.chmod(mcp_path, 0o644)
+        assert stat.S_IMODE(os.stat(mcp_path).st_mode) == 0o644
+
+        m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
+        installer = _make_installer(spellbook_dir, forge_config_dir)
+        with bigfoot:
+            installer.install()
+        m_token.assert_call()
+
+        actual_mode = stat.S_IMODE(os.stat(mcp_path).st_mode)
+        assert actual_mode == 0o600, (
+            f"expected pre-existing 0o644 .mcp.json to be tightened to 0o600, "
+            f"got {oct(actual_mode)}"
+        )
+
     def test_install_sets_oauth_false(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
