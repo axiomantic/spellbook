@@ -3,7 +3,7 @@
 import inspect
 import sys
 from pathlib import Path
-import bigfoot
+import tripwire
 from dirty_equals import IsStr
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
@@ -126,12 +126,12 @@ class TestStintPushBehavioralMode:
             fn = fn.__wrapped__
 
         mock_result = {"success": True, "depth": 1, "stack": []}
-        mock_push = bigfoot.mock("spellbook.coordination.stint:push_stint")
+        mock_push = tripwire.mock("spellbook.coordination.stint:push_stint")
         mock_push.__call__.returns(mock_result)
-        mock_get_session_id = bigfoot.mock("spellbook.mcp.tools.coordination:_get_session_id")
+        mock_get_session_id = tripwire.mock("spellbook.mcp.tools.coordination:_get_session_id")
         mock_get_session_id.__call__.returns("test-session-id")
 
-        with bigfoot:
+        with tripwire:
             result = fn(
                 project_path="/tmp/test",
                 name="test-stint",
@@ -153,7 +153,7 @@ class TestStintPushBehavioralMode:
                 "session_id": "test-session-id",
             },
         )
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             IsStr(regex=r"(No event loop available|Event loop not running) for publish_sync, dropping event"),
             "spellbook.admin.events",

@@ -552,12 +552,12 @@ class TestDoMemoryReviewEvents:
 
     def test_review_events_delegates_to_get_unconsolidated(self, tmp_path, monkeypatch):
         """Verify do_memory_review_events calls the SQLite event store."""
-        import bigfoot
+        import tripwire
 
         from spellbook.memory.tools import do_memory_review_events
 
         # Must mock where the name is looked up: tools module holds its own reference
-        mock_get_uncons = bigfoot.mock("spellbook.memory.tools:get_unconsolidated_events")
+        mock_get_uncons = tripwire.mock("spellbook.memory.tools:get_unconsolidated_events")
         mock_get_uncons.returns([
             {
                 "id": 1,
@@ -572,14 +572,14 @@ class TestDoMemoryReviewEvents:
             },
         ])
 
-        mock_db_path = bigfoot.mock("spellbook.memory.tools:_get_db_path")
+        mock_db_path = tripwire.mock("spellbook.memory.tools:_get_db_path")
         mock_db_path.returns("/tmp/fake.db")
 
         # Mock build_consolidation_prompt since it's called on non-empty events
-        mock_prompt = bigfoot.mock("spellbook.memory.tools:build_consolidation_prompt")
+        mock_prompt = tripwire.mock("spellbook.memory.tools:build_consolidation_prompt")
         mock_prompt.returns("Synthesize these events into memories.")
 
-        with bigfoot:
+        with tripwire:
             result = do_memory_review_events(namespace="test-project", limit=50)
 
         # Assert in execution order: _get_db_path -> get_unconsolidated_events -> build_consolidation_prompt

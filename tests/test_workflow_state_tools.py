@@ -12,7 +12,7 @@ objects. We access the underlying function via the .fn attribute.
 """
 
 import json
-import bigfoot
+import tripwire
 import pytest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,12 +21,12 @@ from spellbook.core.db import init_db, get_connection, close_all_connections
 
 
 def _setup_get_connection_mock(db_path, call_count):
-    """Set up a bigfoot mock for get_connection returning a test DB connection.
+    """Set up a tripwire mock for get_connection returning a test DB connection.
 
-    Returns (mock, conn). After the `with bigfoot:` block, caller must assert
+    Returns (mock, conn). After the `with tripwire:` block, caller must assert
     call_count times via _assert_get_connection_calls().
     """
-    mock = bigfoot.mock("spellbook.core.db:get_connection")
+    mock = tripwire.mock("spellbook.core.db:get_connection")
     conn = get_connection(db_path)
     for _ in range(call_count):
         mock.__call__.required(False).returns(conn)
@@ -35,7 +35,7 @@ def _setup_get_connection_mock(db_path, call_count):
 
 def _assert_get_connection_calls(mock, call_count):
     """Assert that get_connection was called call_count times."""
-    with bigfoot.in_any_order():
+    with tripwire.in_any_order():
         for _ in range(call_count):
             mock.assert_call(args=(), kwargs={})
 
@@ -63,7 +63,7 @@ class TestWorkflowStateSave:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
 
-        with bigfoot:
+        with tripwire:
             result = workflow_state_save.fn(
                 project_path=project_path,
                 state=state,
@@ -96,7 +96,7 @@ class TestWorkflowStateSave:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
-        with bigfoot:
+        with tripwire:
             # First save
             state1 = {"active_skill": "debugging"}
             workflow_state_save.fn(project_path=project_path, state=state1, trigger="manual")
@@ -131,7 +131,7 @@ class TestWorkflowStateSave:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
-        with bigfoot:
+        with tripwire:
             for i, trigger in enumerate(triggers):
                 project_path = f"/test/project-{i}"
                 state = {"workflow_pattern": trigger}
@@ -162,7 +162,7 @@ class TestWorkflowStateSave:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
-        with bigfoot:
+        with tripwire:
             # First save
             workflow_state_save.fn(
                 project_path=project_path,
@@ -224,7 +224,7 @@ class TestWorkflowStateSave:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
 
-        with bigfoot:
+        with tripwire:
             result = workflow_state_save.fn(
                 project_path=project_path, state=state, trigger="checkpoint"
             )
@@ -261,7 +261,7 @@ class TestWorkflowStateLoad:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 1)
 
-        with bigfoot:
+        with tripwire:
             result = workflow_state_load.fn(project_path="/nonexistent/project")
 
         _assert_get_connection_calls(mock_conn, 1)
@@ -280,7 +280,7 @@ class TestWorkflowStateLoad:
 
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
-        with bigfoot:
+        with tripwire:
             # Save state
             workflow_state_save.fn(project_path=project_path, state=state, trigger="manual")
 
@@ -314,10 +314,10 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
         mock_gc.__call__.required(False).returns(conn)
 
-        with bigfoot:
+        with tripwire:
             # Load with default max_age_hours (24)
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
@@ -348,10 +348,10 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
         mock_gc.__call__.required(False).returns(conn)
 
-        with bigfoot:
+        with tripwire:
             # Load with 24 hour max age
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
@@ -380,10 +380,10 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
         mock_gc.__call__.required(False).returns(conn)
 
-        with bigfoot:
+        with tripwire:
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
 
         _assert_get_connection_calls(mock_gc, 1)
@@ -411,11 +411,11 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = bigfoot.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
         mock_gc.__call__.required(False).returns(conn)
         mock_gc.__call__.required(False).returns(conn)
 
-        with bigfoot:
+        with tripwire:
             # With max_age=2 hours, should be stale
             result_stale = workflow_state_load.fn(project_path=project_path, max_age_hours=2.0)
             assert result_stale["found"] is False
@@ -448,7 +448,7 @@ class TestWorkflowStateUpdate:
         # update(1) + load(1) = 2
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
-        with bigfoot:
+        with tripwire:
             result = workflow_state_update.fn(project_path=project_path, updates=updates)
             assert result["success"] is True
 
@@ -469,7 +469,7 @@ class TestWorkflowStateUpdate:
         # save(1) + update(1) + load(1) = 3
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
-        with bigfoot:
+        with tripwire:
             # Initial state with nested dict
             initial_state = {
                 "skill_constraints": {
@@ -510,7 +510,7 @@ class TestWorkflowStateUpdate:
         # save(1) + update(1) + load(1) = 3
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
-        with bigfoot:
+        with tripwire:
             # Initial state with lists
             initial_state = {
                 "recent_files": ["src/main.py"],
@@ -543,7 +543,7 @@ class TestWorkflowStateUpdate:
         # save(1) + update(1) + load(1) = 3
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 3)
 
-        with bigfoot:
+        with tripwire:
             # Initial state with scalars
             initial_state = {
                 "active_skill": "debugging",
@@ -577,7 +577,7 @@ class TestWorkflowStateUpdate:
         # update(1) + load(1) = 2
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
-        with bigfoot:
+        with tripwire:
             workflow_state_update.fn(project_path=project_path, updates={"active_skill": "debugging"})
             result = workflow_state_load.fn(project_path=project_path)
 
@@ -593,7 +593,7 @@ class TestWorkflowStateUpdate:
         # 3 updates(3) + load(1) = 4
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 4)
 
-        with bigfoot:
+        with tripwire:
             # First update
             workflow_state_update.fn(
                 project_path=project_path,
@@ -688,10 +688,10 @@ Follow these requirements.
         """Test getting full skill content without section filter."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(skill_name="test-skill")
 
         mock_dir.assert_call(args=(), kwargs={})
@@ -706,10 +706,10 @@ Follow these requirements.
         """Test extracting specific sections (FORBIDDEN, ROLE)."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["FORBIDDEN", "ROLE"],
@@ -727,10 +727,10 @@ Follow these requirements.
         """Test returns error for non-existent skill."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(skill_name="nonexistent-skill")
 
         mock_dir.assert_call(args=(), kwargs={})
@@ -742,10 +742,10 @@ Follow these requirements.
         """Test extracting <FORBIDDEN>...</FORBIDDEN> style sections."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["CRITICAL"],
@@ -760,10 +760,10 @@ Follow these requirements.
         """Test extracting ## Section Name style sections."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["Required Practices"],
@@ -778,10 +778,10 @@ Follow these requirements.
         """Test that missing sections are simply not included."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["ROLE", "NONEXISTENT_SECTION"],
@@ -796,10 +796,10 @@ Follow these requirements.
         """Test that content field contains combined sections."""
         from spellbook.server import skill_instructions_get
 
-        mock_dir = bigfoot.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
+        mock_dir = tripwire.mock("spellbook.mcp.tools.forged:get_spellbook_dir")
         mock_dir.returns(mock_spellbook_dir)
 
-        with bigfoot:
+        with tripwire:
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
                 sections=["ROLE", "FORBIDDEN"],
@@ -1047,7 +1047,7 @@ class TestWorkflowStateIntegration:
         # save(1) + 3 updates(3) + load(1) = 5
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 5)
 
-        with bigfoot:
+        with tripwire:
             # 1. Initial save (session start)
             initial_state = {
                 "recent_files": [],
@@ -1113,7 +1113,7 @@ class TestWorkflowStateIntegration:
         # 2 saves + 2 loads = 4
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 4)
 
-        with bigfoot:
+        with tripwire:
             # Save state for project A
             workflow_state_save.fn(
                 project_path="/project/a",

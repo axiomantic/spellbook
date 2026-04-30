@@ -13,7 +13,7 @@ import json
 import pytest
 from pathlib import Path
 
-import bigfoot
+import tripwire
 from dirty_equals import IsInstance
 
 from installer.platforms.opencode import OpenCodeInstaller
@@ -171,9 +171,9 @@ class TestInstallerPluginInstallation:
         """install() should create the plugin at the expected path."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             results = installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -184,9 +184,9 @@ class TestInstallerPluginInstallation:
         """install() results should include a security_plugin component."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             results = installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -198,9 +198,9 @@ class TestInstallerPluginInstallation:
         """The installed plugin file should match the source file."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -212,9 +212,9 @@ class TestInstallerPluginInstallation:
         """Running install twice should produce an identical plugin file."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context").returns("# Context")
-        with bigfoot:
+        with tripwire:
             installer.install()
             content_after_first = (config_dir / "plugins" / "spellbook-security.ts").read_text(
                 encoding="utf-8"
@@ -232,9 +232,9 @@ class TestInstallerPluginInstallation:
         """Running install twice should not produce error results for the plugin."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context").returns("# Context")
-        with bigfoot:
+        with tripwire:
             results = installer.install()
             results2 = installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
@@ -248,9 +248,9 @@ class TestInstallerPluginInstallation:
         """In dry_run mode, the plugin file should not be created."""
         installer, config_dir = _make_opencode_installer(tmp_path, dry_run=True)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             results = installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -266,9 +266,9 @@ class TestInstallerPluginInstallation:
             import shutil
             shutil.rmtree(plugins_dir)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -278,9 +278,9 @@ class TestInstallerPluginInstallation:
         """uninstall() should remove the security plugin file."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
@@ -295,9 +295,9 @@ class TestInstallerPluginInstallation:
         """detect() should include security plugin status in details."""
         installer, config_dir = _make_opencode_installer(tmp_path)
 
-        ctx_mock = bigfoot.mock("installer.platforms.opencode:generate_codex_context")
+        ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
-        with bigfoot:
+        with tripwire:
             installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 

@@ -1,7 +1,7 @@
 """Integration tests for the auto-update flow.
 
 Uses monkeypatch to mock subprocess calls instead of creating real git repos,
-avoiding UnmockedInteractionError from bigfoot's guard mode.
+avoiding UnmockedInteractionError from tripwire's guard mode.
 """
 
 import subprocess

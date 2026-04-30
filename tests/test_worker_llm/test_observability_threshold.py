@@ -17,7 +17,7 @@ late-imports the attribute (``from spellbook.notifications.notify import
 send_notification``) so the monkeypatched symbol IS the one the handler
 picks up. This keeps us on the repo's sanctioned pattern for
 module-attribute swaps (not a mocking library — the constraint is
-"bigfoot ONLY for mocks" and this is a function-replacement spy, same as
+"tripwire ONLY for mocks" and this is a function-replacement spy, same as
 ``record_call_spy``).
 
 ``_breach_state`` is a module-global single-writer dict; every test starts

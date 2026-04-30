@@ -21,7 +21,7 @@ import time
 import types
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 
 
@@ -257,10 +257,10 @@ class TestTerminalUtilsE2E:
         """Test that macOS spawn generates proper osascript commands."""
         from spellbook.daemon.terminal import spawn_macos_terminal, _escape_for_applescript
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=12345))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal("iterm2", "/test prompt", "/test/dir")
 
         assert result["status"] == "spawned"
@@ -290,10 +290,10 @@ end tell
         """Test that Linux spawn generates proper commands."""
         from spellbook.daemon.terminal import spawn_linux_terminal
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=67890))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal("gnome-terminal", "/test prompt", "/test/dir")
 
         assert result["status"] == "spawned"
@@ -324,12 +324,12 @@ class TestMCPToolE2E:
         prompt = "/execute-work-packet /path/to/packet.md"
         wd = "/path/to/project"
 
-        mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+        mock_detect = tripwire.mock("spellbook.daemon.terminal:detect_terminal")
         mock_detect.returns("iTerm2")
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=12345))
 
-        with bigfoot:
+        with tripwire:
             # Step 1: Detect terminal (mocked)
             from spellbook.daemon.terminal import detect_terminal
             terminal = detect_terminal()
@@ -370,10 +370,10 @@ end tell
         prompt = "/execute-work-packet test.md"
         wd = "/test/dir"
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_popen.returns(types.SimpleNamespace(pid=67890))
 
-        with bigfoot:
+        with tripwire:
             result = spawn_terminal_window(
                 "iterm2",  # Explicit terminal
                 prompt,

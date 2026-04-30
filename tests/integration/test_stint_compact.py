@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
@@ -288,7 +288,7 @@ class TestBehavioralModeSurvivesCompaction:
             "compaction_flag": True,
         }
 
-        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        mock_mcp = tripwire.mock.object(spellbook_hook, "_mcp_call")
         # 1. workflow_state_load
         mock_mcp.returns({"found": True, "state": saved_state})
         # 2. stint_replace (restore stack)
@@ -301,7 +301,7 @@ class TestBehavioralModeSurvivesCompaction:
 
         data = {"source": "compact", "cwd": "/tmp/test-project"}
 
-        with bigfoot:
+        with tripwire:
             result = spellbook_hook._handle_session_start(data)
 
         mock_mcp.assert_call(args=("workflow_state_load", {
@@ -353,13 +353,13 @@ class TestBehavioralModeSurvivesCompaction:
             },
         ]
 
-        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        mock_mcp = tripwire.mock.object(spellbook_hook, "_mcp_call")
         mock_mcp.returns({"found": True, "state": {"stint_stack": saved_stack}})
         mock_mcp.returns({"success": True})  # stint_replace
 
         data = {"source": "compact", "cwd": "/tmp/test-project"}
 
-        with bigfoot:
+        with tripwire:
             result = spellbook_hook._handle_session_start(data)
 
         mock_mcp.assert_call(args=("workflow_state_load", {
@@ -387,7 +387,7 @@ class TestBehavioralModeSurvivesCompaction:
 
     def test_first_post_tool_use_after_compaction_shows_behavioral_mode(self):
         """After compaction recovery, the first PostToolUse should show behavioral_mode."""
-        mock_mcp = bigfoot.mock.object(spellbook_hook, "_mcp_call")
+        mock_mcp = tripwire.mock.object(spellbook_hook, "_mcp_call")
         mock_mcp.returns({
             "success": True,
             "stack": [
@@ -401,7 +401,7 @@ class TestBehavioralModeSurvivesCompaction:
 
         data = {"tool_name": "Bash", "cwd": "/tmp/test-project"}
 
-        with bigfoot:
+        with tripwire:
             result = spellbook_hook._stint_depth_check(data)
 
         mock_mcp.assert_call(args=("stint_check", {"project_path": "/tmp/test-project"}), kwargs={})

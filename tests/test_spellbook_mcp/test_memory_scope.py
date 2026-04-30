@@ -525,7 +525,7 @@ class TestCLIScopeFlag:
         """CLI search passes --scope through to do_memory_recall."""
         import argparse
 
-        import bigfoot
+        import tripwire
 
         from spellbook.cli.commands import memory as mem_cli
 
@@ -542,10 +542,10 @@ class TestCLIScopeFlag:
             json=True,
         )
 
-        mock_recall = bigfoot.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
         mock_recall.returns({"count": 0, "memories": []})
 
-        with bigfoot:
+        with tripwire:
             mem_cli._run_search(args)
 
         mock_recall.assert_call(
@@ -562,7 +562,7 @@ class TestCLIScopeFlag:
         """CLI search defaults to scope='project' when --scope not provided."""
         import argparse
 
-        import bigfoot
+        import tripwire
 
         from spellbook.cli.commands import memory as mem_cli
 
@@ -579,10 +579,10 @@ class TestCLIScopeFlag:
             json=True,
         )
 
-        mock_recall = bigfoot.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
         mock_recall.returns({"count": 0, "memories": []})
 
-        with bigfoot:
+        with tripwire:
             mem_cli._run_search(args)
 
         mock_recall.assert_call(

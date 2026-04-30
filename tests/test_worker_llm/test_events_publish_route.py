@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 
-import bigfoot
+import tripwire
 import httpx
 import pytest
 from dirty_equals import IsInstance
@@ -100,7 +100,7 @@ async def test_publish_route_routes_to_event_bus(mcp_http_app, record_call_spy):
     async def _capture_publish(evt):
         captured.append(evt)
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_capture_publish)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
@@ -114,7 +114,7 @@ async def test_publish_route_routes_to_event_bus(mcp_http_app, record_call_spy):
         "error": None,
         "override_loaded": False,
     }
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -144,12 +144,12 @@ async def test_publish_route_accepts_every_known_subsystem(mcp_http_app):
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
-    # One .calls() per expected invocation; bigfoot pops from a FIFO queue.
+    publish_mock = tripwire.mock.object(event_bus, "publish")
+    # One .calls() per expected invocation; tripwire pops from a FIFO queue.
     for _ in Subsystem:
         publish_mock.calls(_noop)
 
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -164,7 +164,7 @@ async def test_publish_route_accepts_every_known_subsystem(mcp_http_app):
                 )
                 assert r.status_code == 200, (subsystem, r.text)
 
-    with bigfoot.in_any_order():
+    with tripwire.in_any_order():
         for _ in Subsystem:
             publish_mock.assert_call(args=(IsInstance(Event),), kwargs={})
 
@@ -273,11 +273,11 @@ async def test_fallback_publisher_payload_reaches_mcp_root_route(
     async def _fake_publish(evt):
         captured_events.append(evt)
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_fake_publish)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -347,11 +347,11 @@ async def test_publish_route_call_ok_invokes_record_call(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -415,12 +415,12 @@ async def test_publish_route_rejects_oversize_task(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
     oversize_task = "t" * 129
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -471,12 +471,12 @@ async def test_publish_route_rejects_oversize_model(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
     oversize_model = "m" * 129
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -527,11 +527,11 @@ async def test_publish_route_rejects_invalid_status(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -589,11 +589,11 @@ async def test_publish_route_call_fail_open_invokes_record_call(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:
@@ -668,11 +668,11 @@ async def test_publish_route_non_call_event_types_skip_record_call(
     async def _noop(evt):
         return None
 
-    publish_mock = bigfoot.mock.object(event_bus, "publish")
+    publish_mock = tripwire.mock.object(event_bus, "publish")
     publish_mock.calls(_noop)
 
     transport = httpx.ASGITransport(app=mcp_http_app)
-    async with bigfoot:
+    async with tripwire:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as client:

@@ -1,6 +1,6 @@
 """Tests for auto-memory bridge hook path matching and content capture."""
 
-import bigfoot
+import tripwire
 import pytest
 
 
@@ -69,19 +69,19 @@ class TestMemoryBridge:
     def test_ignores_non_write_tool(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.__call__.required(False).returns(None)
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Read", self._make_data("/some/file.md"))
 
     def test_ignores_non_memory_path(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.__call__.required(False).returns(None)
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", self._make_data("/Users/alice/project/src/main.py"))
 
     def test_ignores_empty_content(self):
@@ -91,10 +91,10 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="",
         )
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.__call__.required(False).returns(None)
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
     def test_ignores_spellbook_managed_content(self):
@@ -105,10 +105,10 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="# Spellbook Memory System\n\nThe contents of this file are managed...",
         )
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.__call__.required(False).returns(None)
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
     def test_dispatches_audit_and_content(self):
@@ -117,12 +117,12 @@ class TestMemoryBridge:
         file_path = "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md"
         data = self._make_data(file_path, content="# Key facts\n- Python 3.10")
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.returns(None).returns(None)
-        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git = tripwire.mock("hooks.spellbook_hook:_resolve_git_context")
         mock_git.returns(("/Users/alice/project", "main"))
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
         mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
@@ -168,12 +168,12 @@ class TestMemoryBridge:
         file_path = "/Users/alice/.claude/projects/-Users-alice-project/memory/debugging.md"
         data = self._make_data(file_path, content="# Debug notes")
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.returns(None).returns(None)
-        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git = tripwire.mock("hooks.spellbook_hook:_resolve_git_context")
         mock_git.returns(("/Users/alice/project", "main"))
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
         mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
@@ -226,17 +226,17 @@ class TestMemoryBridge:
             if "bridge-content" in url:
                 captured_content["length"] = len(payload["content"])
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.calls(capture_post).calls(capture_post)
-        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git = tripwire.mock("hooks.spellbook_hook:_resolve_git_context")
         mock_git.returns(("/Users/alice/project", "main"))
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
         mock_git.assert_call(args=("/Users/alice/project",), kwargs={})
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_post.assert_call(
                 args=(
                     "/api/memory/event",
@@ -275,10 +275,10 @@ class TestMemoryBridge:
         """Handles missing tool_input gracefully (fail-open)."""
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.__call__.required(False).returns(None)
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", {"cwd": "/tmp", "session_id": "s"})
 
     def test_namespace_consistency_with_worktree(self):
@@ -300,12 +300,12 @@ class TestMemoryBridge:
         }
 
         # Simulate _resolve_git_context resolving worktree to main repo
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.returns(None).returns(None)
-        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git = tripwire.mock("hooks.spellbook_hook:_resolve_git_context")
         mock_git.returns(("/Users/alice/project", "feature-branch"))
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
         mock_git.assert_call(

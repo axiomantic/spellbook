@@ -10,7 +10,7 @@ Verifies that:
 
 import pytest
 import asyncio
-import bigfoot
+import tripwire
 
 from spellbook.sdk.unified import AgentOptions, OpencodeAgentClient
 
@@ -45,10 +45,10 @@ async def test_opencode_client_query_uses_options_on_text():
                 )
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         messages = []
         async for msg in client.query("test prompt"):
             messages.append(msg)
@@ -86,10 +86,10 @@ async def test_opencode_client_query_no_on_text():
                 return (b'{"message": {"delta": {"content": {"text": "response text"}}}}', b"")
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         messages = []
         async for msg in client.query("test prompt"):
             messages.append(msg)
@@ -129,10 +129,10 @@ async def test_opencode_client_query_strips_opencode_env():
                 return (b'{"message": {"delta": {"content": {"text": "ok"}}}}', b"")
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         async for msg in client.query("test"):
             pass
 
@@ -161,10 +161,10 @@ async def test_opencode_client_query_custom_model():
                 return (b'{"message": {"delta": {"content": {"text": "result"}}}}', b"")
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         async for msg in client.query("test"):
             pass
 
@@ -193,10 +193,10 @@ async def test_opencode_client_query_nonzero_exit():
                 return (b"", b"Error: something failed")
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         with pytest.raises(RuntimeError, match="OpenCode CLI failed"):
             async for msg in client.query("test"):
                 pass

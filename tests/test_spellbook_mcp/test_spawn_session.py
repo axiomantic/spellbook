@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-import bigfoot
+import tripwire
 import pytest
 
 from spellbook.daemon.terminal import (
@@ -25,14 +25,14 @@ class TestDetectMacOSTerminal:
         """Test detection of running iTerm2 process."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_result = type("Result", (), {"returncode": 0, "stdout": "12345\n"})()
         mock_run.returns(mock_result)
 
-        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.daemon.terminal:os.path.exists")
         mock_exists.__call__.required(False)
 
-        with bigfoot:
+        with tripwire:
             result = detect_macos_terminal()
 
         assert result == "iTerm2"
@@ -45,20 +45,20 @@ class TestDetectMacOSTerminal:
         """Test detection of installed Warp app."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_result_fail = type("Result", (), {"returncode": 1})()
         # 3 pgrep calls: iTerm2, Warp, Terminal -- all fail
         mock_run.returns(mock_result_fail).returns(mock_result_fail).returns(mock_result_fail)
 
-        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.daemon.terminal:os.path.exists")
         # /Applications/iTerm.app -> False, /Applications/Warp.app -> True
         mock_exists.returns(False).returns(True)
 
-        with bigfoot:
+        with tripwire:
             result = detect_macos_terminal()
 
         assert result == "Warp"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(
                 args=(["pgrep", "-x", "iTerm2"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5},
@@ -79,18 +79,18 @@ class TestDetectMacOSTerminal:
         """Test fallback to Terminal.app."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_result_fail = type("Result", (), {"returncode": 1})()
         mock_run.returns(mock_result_fail).returns(mock_result_fail).returns(mock_result_fail)
 
-        mock_exists = bigfoot.mock("spellbook.daemon.terminal:os.path.exists")
+        mock_exists = tripwire.mock("spellbook.daemon.terminal:os.path.exists")
         mock_exists.returns(False).returns(False).returns(False)
 
-        with bigfoot:
+        with tripwire:
             result = detect_macos_terminal()
 
         assert result == "terminal"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(
                 args=(["pgrep", "-x", "iTerm2"],),
                 kwargs={"capture_output": True, "text": True, "timeout": 5},
@@ -116,10 +116,10 @@ class TestDetectLinuxTerminal:
         monkeypatch.setattr("sys.platform", "linux")
         monkeypatch.setattr(os, "environ", {"TERMINAL": "gnome-terminal"})
 
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns("/usr/bin/gnome-terminal")
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "gnome-terminal"
@@ -130,13 +130,13 @@ class TestDetectLinuxTerminal:
         monkeypatch.setattr("sys.platform", "linux")
         monkeypatch.setattr(os, "environ", {})
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_fail = type("Result", (), {"returncode": 1})()
         mock_ok = type("Result", (), {"returncode": 0})()
         # gnome-terminal fails, konsole succeeds
         mock_run.returns(mock_fail).returns(mock_ok)
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "konsole"
@@ -154,7 +154,7 @@ class TestDetectLinuxTerminal:
         monkeypatch.setattr("sys.platform", "linux")
         monkeypatch.setattr(os, "environ", {})
 
-        mock_run = bigfoot.mock("spellbook.daemon.terminal:subprocess.run")
+        mock_run = tripwire.mock("spellbook.daemon.terminal:subprocess.run")
         mock_result_fail = type("Result", (), {"returncode": 1})()
         # 5 common terminals all fail
         (mock_run
@@ -164,11 +164,11 @@ class TestDetectLinuxTerminal:
          .returns(mock_result_fail)
          .returns(mock_result_fail))
 
-        with bigfoot:
+        with tripwire:
             result = detect_linux_terminal()
 
         assert result == "xterm"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(
                 args=(["which", "gnome-terminal"],),
                 kwargs={"capture_output": True, "timeout": 5},
@@ -196,10 +196,10 @@ class TestDetectWindowsTerminal:
 
     def test_windows_terminal_detected(self):
         """Test that Windows Terminal is detected when wt is available."""
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns("/usr/bin/wt")
 
-        with bigfoot:
+        with tripwire:
             result = detect_windows_terminal()
 
         assert result == "windows-terminal"
@@ -207,11 +207,11 @@ class TestDetectWindowsTerminal:
 
     def test_pwsh_fallback(self):
         """Test that PowerShell Core is detected as fallback."""
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         # wt not found, pwsh found
         mock_which.returns(None).returns("/usr/bin/pwsh")
 
-        with bigfoot:
+        with tripwire:
             result = detect_windows_terminal()
 
         assert result == "pwsh"
@@ -220,10 +220,10 @@ class TestDetectWindowsTerminal:
 
     def test_cmd_fallback(self):
         """Test that cmd is the final fallback."""
-        mock_which = bigfoot.mock("shutil:which")
+        mock_which = tripwire.mock("shutil:which")
         mock_which.returns(None).returns(None)
 
-        with bigfoot:
+        with tripwire:
             result = detect_windows_terminal()
 
         assert result == "cmd"
@@ -238,10 +238,10 @@ class TestDetectTerminal:
         """Test delegation to macOS detection."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_macos = bigfoot.mock("spellbook.daemon.terminal:detect_macos_terminal")
+        mock_macos = tripwire.mock("spellbook.daemon.terminal:detect_macos_terminal")
         mock_macos.returns("iTerm2")
 
-        with bigfoot:
+        with tripwire:
             result = detect_terminal()
 
         assert result == "iTerm2"
@@ -251,10 +251,10 @@ class TestDetectTerminal:
         """Test delegation to Linux detection."""
         monkeypatch.setattr("sys.platform", "linux")
 
-        mock_linux = bigfoot.mock("spellbook.daemon.terminal:detect_linux_terminal")
+        mock_linux = tripwire.mock("spellbook.daemon.terminal:detect_linux_terminal")
         mock_linux.returns("gnome-terminal")
 
-        with bigfoot:
+        with tripwire:
             result = detect_terminal()
 
         assert result == "gnome-terminal"
@@ -264,10 +264,10 @@ class TestDetectTerminal:
         """Test delegation to Windows detection."""
         monkeypatch.setattr("sys.platform", "win32")
 
-        mock_windows = bigfoot.mock("spellbook.daemon.terminal:detect_windows_terminal")
+        mock_windows = tripwire.mock("spellbook.daemon.terminal:detect_windows_terminal")
         mock_windows.returns("windows-terminal")
 
-        with bigfoot:
+        with tripwire:
             result = detect_terminal()
 
         assert result == "windows-terminal"
@@ -281,11 +281,11 @@ class TestSpawnMacOSTerminal:
         """Test spawning iTerm2 with AppleScript."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 12345})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal("iTerm2", "test prompt", "/tmp")
 
         assert result["status"] == "spawned"
@@ -310,11 +310,11 @@ class TestSpawnMacOSTerminal:
         """Test spawning Terminal.app with AppleScript."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 54321})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_macos_terminal("terminal", "another prompt", "/home")
 
         assert result["status"] == "spawned"
@@ -340,11 +340,11 @@ class TestSpawnLinuxTerminal:
         """Test spawning gnome-terminal."""
         monkeypatch.setattr("sys.platform", "linux")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 99999})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal("gnome-terminal", "test prompt", "/var")
 
         assert result["status"] == "spawned"
@@ -360,11 +360,11 @@ class TestSpawnLinuxTerminal:
         """Test spawning xterm."""
         monkeypatch.setattr("sys.platform", "linux")
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 11111})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_linux_terminal("xterm", "xterm test", "/root")
 
         assert result["status"] == "spawned"
@@ -383,14 +383,14 @@ class TestSpawnTerminalWindow:
         """Test delegation to macOS spawning."""
         monkeypatch.setattr("sys.platform", "darwin")
 
-        mock_macos_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_macos_terminal")
+        mock_macos_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_macos_terminal")
         mock_macos_spawn.returns({
             "status": "spawned",
             "terminal": "iTerm2",
             "pid": 12345,
         })
 
-        with bigfoot:
+        with tripwire:
             result = spawn_terminal_window("iTerm2", "test", "/tmp")
 
         assert result["status"] == "spawned"
@@ -403,14 +403,14 @@ class TestSpawnTerminalWindow:
         """Test delegation to Linux spawning."""
         monkeypatch.setattr("sys.platform", "linux")
 
-        mock_linux_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_linux_terminal")
+        mock_linux_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_linux_terminal")
         mock_linux_spawn.returns({
             "status": "spawned",
             "terminal": "gnome-terminal",
             "pid": 99999,
         })
 
-        with bigfoot:
+        with tripwire:
             result = spawn_terminal_window("gnome-terminal", "test", "/var")
 
         assert result["status"] == "spawned"
@@ -423,14 +423,14 @@ class TestSpawnTerminalWindow:
         """Test delegation to Windows spawning."""
         monkeypatch.setattr("sys.platform", "win32")
 
-        mock_windows_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_windows_terminal")
+        mock_windows_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_windows_terminal")
         mock_windows_spawn.returns({
             "status": "spawned",
             "terminal": "cmd",
             "pid": 12345,
         })
 
-        with bigfoot:
+        with tripwire:
             result = spawn_terminal_window("cmd", "test", "C:\\")
 
         assert result["status"] == "spawned"
@@ -447,11 +447,11 @@ class TestSpawnWindowsTerminal:
         """Test spawning Windows Terminal (wt)."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 44444})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal("windows-terminal", "test prompt", "C:\\Users\\test")
 
         assert result["status"] == "spawned"
@@ -467,11 +467,11 @@ class TestSpawnWindowsTerminal:
         """Test spawning PowerShell Core."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 55555})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal("pwsh", "test prompt", "C:\\Users\\test")
 
         assert result["status"] == "spawned"
@@ -487,11 +487,11 @@ class TestSpawnWindowsTerminal:
         """Test spawning cmd.exe (default fallback)."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 66666})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal("cmd", "test prompt", "C:\\Users\\test")
 
         assert result["status"] == "spawned"
@@ -508,11 +508,11 @@ class TestSpawnWindowsTerminal:
         """Test spawning with a custom CLI command (e.g., 'codex')."""
         from spellbook.daemon.terminal import spawn_windows_terminal
 
-        mock_popen = bigfoot.mock("spellbook.daemon.terminal:subprocess.Popen")
+        mock_popen = tripwire.mock("spellbook.daemon.terminal:subprocess.Popen")
         mock_process = type("Process", (), {"pid": 77777})()
         mock_popen.returns(mock_process)
 
-        with bigfoot:
+        with tripwire:
             result = spawn_windows_terminal("cmd", "test prompt", "C:\\", cli_command="codex")
 
         assert result["status"] == "spawned"
@@ -531,17 +531,17 @@ class TestSpawnClaudeSessionMCPTool:
         """Test spawning with auto-detected terminal."""
         import spellbook.daemon.terminal as terminal_mod
 
-        mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+        mock_detect = tripwire.mock("spellbook.daemon.terminal:detect_terminal")
         mock_detect.returns("iTerm2")
 
-        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+        mock_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_terminal_window")
         mock_spawn.returns({
             "status": "spawned",
             "terminal": "iTerm2",
             "pid": 12345,
         })
 
-        with bigfoot:
+        with tripwire:
             terminal = terminal_mod.detect_terminal()
             working_directory = "/tmp"
             result = terminal_mod.spawn_terminal_window(terminal, "test prompt", working_directory)
@@ -556,14 +556,14 @@ class TestSpawnClaudeSessionMCPTool:
         """Test spawning with user-specified terminal."""
         import spellbook.daemon.terminal as terminal_mod
 
-        mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+        mock_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_terminal_window")
         mock_spawn.returns({
             "status": "spawned",
             "terminal": "Warp",
             "pid": 54321,
         })
 
-        with bigfoot:
+        with tripwire:
             terminal = "Warp"
             working_directory = "/home/user"
             result = terminal_mod.spawn_terminal_window(terminal, "specific test", working_directory)

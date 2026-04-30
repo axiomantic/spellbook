@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 import pytest
-import bigfoot
+import tripwire
 from pathlib import Path
 
 
@@ -68,10 +68,10 @@ class TestGetPlatform:
     def test_darwin_returns_macos(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
+        mock_system = tripwire.mock("spellbook.core.services:platform.system")
         mock_system.returns("Darwin")
 
-        with bigfoot:
+        with tripwire:
             result = get_platform()
 
         assert result == Platform.MACOS
@@ -80,10 +80,10 @@ class TestGetPlatform:
     def test_linux_returns_linux(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
+        mock_system = tripwire.mock("spellbook.core.services:platform.system")
         mock_system.returns("Linux")
 
-        with bigfoot:
+        with tripwire:
             result = get_platform()
 
         assert result == Platform.LINUX
@@ -92,10 +92,10 @@ class TestGetPlatform:
     def test_windows_returns_windows(self):
         from installer.compat import Platform, get_platform
 
-        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
+        mock_system = tripwire.mock("spellbook.core.services:platform.system")
         mock_system.returns("Windows")
 
-        with bigfoot:
+        with tripwire:
             result = get_platform()
 
         assert result == Platform.WINDOWS
@@ -104,10 +104,10 @@ class TestGetPlatform:
     def test_unsupported_raises_error(self):
         from installer.compat import UnsupportedPlatformError, get_platform
 
-        mock_system = bigfoot.mock("spellbook.core.services:platform.system")
+        mock_system = tripwire.mock("spellbook.core.services:platform.system")
         mock_system.returns("FreeBSD")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(UnsupportedPlatformError, match="(?i)freebsd"):
                 get_platform()
 
@@ -304,24 +304,24 @@ class TestCreateLinkWindowsFallback:
     def test_copy_fallback_for_files(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
-        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction = tripwire.mock("installer.compat:is_junction")
         mock_junction.returns(False)
-        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink = tripwire.mock.object(Path, "symlink_to")
         mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
 
         source = tmp_path / "source.txt"
         source.write_text("content")
         target = tmp_path / "link.txt"
 
-        with bigfoot:
+        with tripwire:
             result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "copy"
         assert target.read_text() == "content"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_junction.assert_call(args=(target,), kwargs={})
             mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
             mock_plat.assert_call(args=(), kwargs={})
@@ -329,13 +329,13 @@ class TestCreateLinkWindowsFallback:
     def test_copy_fallback_for_directories(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
-        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction = tripwire.mock("installer.compat:is_junction")
         mock_junction.returns(False)
-        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink = tripwire.mock.object(Path, "symlink_to")
         mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
-        mock_create_junction = bigfoot.mock("installer.compat:_create_junction")
+        mock_create_junction = tripwire.mock("installer.compat:_create_junction")
         mock_create_junction.returns(False)
 
         source = tmp_path / "source"
@@ -343,13 +343,13 @@ class TestCreateLinkWindowsFallback:
         (source / "file.txt").write_text("hello")
         target = tmp_path / "link"
 
-        with bigfoot:
+        with tripwire:
             result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "copy"
         assert (target / "file.txt").read_text() == "hello"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_junction.assert_call(args=(target,), kwargs={})
             mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
             mock_plat.assert_call(args=(), kwargs={})
@@ -358,25 +358,25 @@ class TestCreateLinkWindowsFallback:
     def test_junction_fallback_for_directories(self, tmp_path):
         from installer.compat import Platform, create_link
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
-        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction = tripwire.mock("installer.compat:is_junction")
         mock_junction.returns(False)
-        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink = tripwire.mock.object(Path, "symlink_to")
         mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
-        mock_create_junction = bigfoot.mock("installer.compat:_create_junction")
+        mock_create_junction = tripwire.mock("installer.compat:_create_junction")
         mock_create_junction.returns(True)
 
         source = tmp_path / "source"
         source.mkdir()
         target = tmp_path / "link"
 
-        with bigfoot:
+        with tripwire:
             result = create_link(source, target)
 
         assert result.success
         assert result.link_mode == "junction"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_junction.assert_call(args=(target,), kwargs={})
             mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
             mock_plat.assert_call(args=(), kwargs={})
@@ -386,22 +386,22 @@ class TestCreateLinkWindowsFallback:
         """On Unix, symlink OSError is re-raised (no fallback chain)."""
         from installer.compat import Platform, create_link
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.LINUX)
-        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink = tripwire.mock.object(Path, "symlink_to")
         mock_symlink.raises(OSError(errno.EIO, "IO error"))
 
         source = tmp_path / "source"
         source.mkdir()
         target = tmp_path / "link"
 
-        with bigfoot:
+        with tripwire:
             result = create_link(source, target)
 
         # On Unix, non-EPERM errors propagate and get caught by outer handler
         assert not result.success
         assert result.action == "failed"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_plat.assert_call(args=(), kwargs={})
             mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
 
@@ -409,22 +409,22 @@ class TestCreateLinkWindowsFallback:
         """Copy mode result message should warn about re-running installer."""
         from installer.compat import Platform, create_link
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
-        mock_junction = bigfoot.mock("installer.compat:is_junction")
+        mock_junction = tripwire.mock("installer.compat:is_junction")
         mock_junction.returns(False)
-        mock_symlink = bigfoot.mock.object(Path, "symlink_to")
+        mock_symlink = tripwire.mock.object(Path, "symlink_to")
         mock_symlink.raises(OSError(errno.EPERM, "Not permitted"))
 
         source = tmp_path / "source.txt"
         source.write_text("content")
         target = tmp_path / "link.txt"
 
-        with bigfoot:
+        with tripwire:
             result = create_link(source, target)
 
         assert "re-running" in result.message.lower() or "re-running" in result.message
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_junction.assert_call(args=(target,), kwargs={})
             mock_symlink.assert_call(args=(target, source), kwargs={}, raised=_IsInstance(OSError))
             mock_plat.assert_call(args=(), kwargs={})
@@ -522,10 +522,10 @@ class TestNormalizePathForComparison:
     def test_windows_casefolds(self, tmp_path):
         from installer.compat import Platform, normalize_path_for_comparison
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
 
-        with bigfoot:
+        with tripwire:
             result = normalize_path_for_comparison(tmp_path)
 
         # On Windows normalization, result should be case-folded
@@ -535,10 +535,10 @@ class TestNormalizePathForComparison:
     def test_windows_uses_forward_slashes(self, tmp_path):
         from installer.compat import Platform, normalize_path_for_comparison
 
-        mock_plat = bigfoot.mock("installer.compat:get_platform")
+        mock_plat = tripwire.mock("installer.compat:get_platform")
         mock_plat.returns(Platform.WINDOWS)
 
-        with bigfoot:
+        with tripwire:
             result = normalize_path_for_comparison(tmp_path)
 
         assert "\\" not in result
@@ -589,10 +589,10 @@ class TestCrossPlatformLock:
         try:
             # Mock acquire to return False, simulating a held lock
             lock2 = CrossPlatformLock(lock_path)
-            mock_acquire = bigfoot.mock.object(lock2, "acquire")
+            mock_acquire = tripwire.mock.object(lock2, "acquire")
             mock_acquire.returns(False)
 
-            with bigfoot:
+            with tripwire:
                 with pytest.raises(LockHeldError):
                     with lock2:
                         pass  # Should not reach here
@@ -707,10 +707,10 @@ class TestCrossPlatformLock:
             flock_calls.append(flag)
             return original_flock(fd, flag)
 
-        mock_flock = bigfoot.mock.object(real_fcntl, "flock")
+        mock_flock = tripwire.mock.object(real_fcntl, "flock")
         mock_flock.calls(tracking_flock)
 
-        with bigfoot:
+        with tripwire:
             lock.acquire()
 
         # Verify flock was called WITHOUT LOCK_NB (blocking mode)
@@ -773,10 +773,10 @@ class TestServiceManager:
         mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_plist = tmp_path / "com.spellbook.mcp.plist"
-        mock_plist = bigfoot.mock.object(mgr, "_launchd_plist_path")
+        mock_plist = tripwire.mock.object(mgr, "_launchd_plist_path")
         mock_plist.returns(fake_plist)
 
-        with bigfoot:
+        with tripwire:
             result = mgr.is_installed()
 
         assert result is False
@@ -790,10 +790,10 @@ class TestServiceManager:
         mgr = ServiceManager(self._make_mcp_config(tmp_path))
 
         fake_service = tmp_path / "spellbook-mcp.service"
-        mock_service = bigfoot.mock.object(mgr, "_systemd_service_path")
+        mock_service = tripwire.mock.object(mgr, "_systemd_service_path")
         mock_service.returns(fake_service)
 
-        with bigfoot:
+        with tripwire:
             result = mgr.is_installed()
 
         assert result is False

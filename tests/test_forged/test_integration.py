@@ -12,7 +12,7 @@ These tests verify the complete workflow integration:
 import json
 from contextlib import asynccontextmanager
 
-import bigfoot
+import tripwire
 
 import pytest
 from pathlib import Path
@@ -339,10 +339,10 @@ class TestRoundtableEndToEnd:
         async def _mock_forged_session():
             yield forged_session
 
-        mock_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_session = tripwire.mock("spellbook.db:get_forged_session")
         mock_session.calls(_mock_forged_session)
 
-        async with bigfoot:
+        async with tripwire:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",

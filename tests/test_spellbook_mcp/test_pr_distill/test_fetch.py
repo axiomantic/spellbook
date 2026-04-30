@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 
@@ -77,10 +77,10 @@ class TestCheckGhVersion:
 
     def test_valid_version_exact_minimum(self):
         """Exact minimum version passes."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("gh version 2.30.0 (2023-05-10)")
 
-        with bigfoot:
+        with tripwire:
             result = check_gh_version()
 
         assert result is True
@@ -88,10 +88,10 @@ class TestCheckGhVersion:
 
     def test_valid_version_higher(self):
         """Version higher than minimum passes."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("gh version 2.40.0 (2024-01-15)")
 
-        with bigfoot:
+        with tripwire:
             result = check_gh_version()
 
         assert result is True
@@ -99,10 +99,10 @@ class TestCheckGhVersion:
 
     def test_version_too_old(self):
         """Version below minimum raises GH_VERSION_TOO_OLD."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("gh version 2.29.0 (2023-04-01)")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
 
@@ -113,10 +113,10 @@ class TestCheckGhVersion:
 
     def test_gh_not_installed(self):
         """gh CLI not installed raises GH_NOT_AUTHENTICATED."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.raises(subprocess.CalledProcessError(1, "gh --version"))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
 
@@ -129,10 +129,10 @@ class TestCheckGhVersion:
 
     def test_unparseable_version_output(self):
         """Unparseable version output raises GH_VERSION_TOO_OLD."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("some weird output")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 check_gh_version()
 
@@ -157,10 +157,10 @@ class TestParsePRIdentifier:
 
     def test_parse_number_with_git_remote(self):
         """Parse PR number using git remote for repo."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("https://github.com/myorg/myrepo.git")
 
-        with bigfoot:
+        with tripwire:
             result = parse_pr_identifier("789")
 
         assert result["pr_number"] == 789
@@ -169,10 +169,10 @@ class TestParsePRIdentifier:
 
     def test_parse_number_with_ssh_remote(self):
         """Parse PR number using SSH git remote."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("git@github.com:org/project.git")
 
-        with bigfoot:
+        with tripwire:
             result = parse_pr_identifier("42")
 
         assert result["pr_number"] == 42
@@ -187,10 +187,10 @@ class TestParsePRIdentifier:
 
     def test_parse_number_no_git_remote(self):
         """PR number with no git remote raises GH_PR_NOT_FOUND."""
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.raises(subprocess.CalledProcessError(1, "git remote"))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 parse_pr_identifier("123")
 
@@ -261,17 +261,17 @@ class TestFetchPR:
                 return "diff --git a/file.py b/file.py\n+new line"
             raise Exception(f"Unexpected command: {cmd}")
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.calls(mock_run_command).calls(mock_run_command).calls(mock_run_command)
 
-        with bigfoot:
+        with tripwire:
             result = fetch_pr(pr_identifier)
 
         assert result["meta"]["number"] == 123
         assert result["meta"]["title"] == "Test PR"
         assert "diff --git" in result["diff"]
         assert result["repo"] == "owner/repo"
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(args=("gh --version",), kwargs={})
             mock_run.assert_call(
                 args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
@@ -294,15 +294,15 @@ class TestFetchPR:
                 )
             raise Exception(f"Unexpected command: {cmd}")
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.calls(mock_run_command).calls(mock_run_command)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr(pr_identifier)
 
         assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(args=("gh --version",), kwargs={})
             mock_run.assert_call(
                 args=(f"gh pr view 99999 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
@@ -343,10 +343,10 @@ class TestRunCommand:
 
     def test_run_command_timeout(self):
         """run_command propagates TimeoutExpired from subprocess."""
-        mock_run = bigfoot.mock("subprocess:run")
+        mock_run = tripwire.mock("subprocess:run")
         mock_run.raises(subprocess.TimeoutExpired(cmd="test", timeout=120))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(subprocess.TimeoutExpired):
                 run_command("test command")
 
@@ -392,13 +392,13 @@ class TestFetchPRErrorPaths:
 
     def test_fetch_pr_invalid_json(self):
         """fetch_pr raises PRDistillError on invalid JSON response."""
-        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check = tripwire.mock("spellbook.pr_distill.fetch:check_gh_version")
         mock_check.returns(True)
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.returns("not valid json at all")
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
@@ -412,7 +412,7 @@ class TestFetchPRErrorPaths:
 
     def test_fetch_pr_diff_fails(self):
         """fetch_pr handles failure when pr view succeeds but pr diff fails."""
-        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check = tripwire.mock("spellbook.pr_distill.fetch:check_gh_version")
         mock_check.returns(True)
 
         def side_effect(cmd):
@@ -424,17 +424,17 @@ class TestFetchPRErrorPaths:
                 )
             raise Exception(f"Unexpected command: {cmd}")
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.calls(side_effect).calls(side_effect)
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
         # Should map to GH_PR_NOT_FOUND since stderr contains "not found"
         assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
         mock_check.assert_call(args=(), kwargs={})
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_run.assert_call(
                 args=(f"gh pr view 123 --repo owner/repo --json {_GH_VIEW_FIELDS}",),
                 kwargs={},
@@ -445,13 +445,13 @@ class TestFetchPRErrorPaths:
 
     def test_fetch_pr_rate_limited(self):
         """fetch_pr handles rate limit errors."""
-        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check = tripwire.mock("spellbook.pr_distill.fetch:check_gh_version")
         mock_check.returns(True)
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.raises(subprocess.CalledProcessError(1, "gh", stderr=b"API rate limit exceeded"))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 
@@ -466,13 +466,13 @@ class TestFetchPRErrorPaths:
 
     def test_fetch_pr_auth_error(self):
         """fetch_pr handles authentication errors."""
-        mock_check = bigfoot.mock("spellbook.pr_distill.fetch:check_gh_version")
+        mock_check = tripwire.mock("spellbook.pr_distill.fetch:check_gh_version")
         mock_check.returns(True)
 
-        mock_run = bigfoot.mock("spellbook.pr_distill.fetch:run_command")
+        mock_run = tripwire.mock("spellbook.pr_distill.fetch:run_command")
         mock_run.raises(subprocess.CalledProcessError(1, "gh", stderr=b"gh auth login"))
 
-        with bigfoot:
+        with tripwire:
             with pytest.raises(PRDistillError) as exc_info:
                 fetch_pr({"pr_number": 123, "repo": "owner/repo"})
 

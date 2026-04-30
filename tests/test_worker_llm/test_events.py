@@ -4,7 +4,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import AnyThing, IsInstance
 from sqlalchemy import create_engine, select
@@ -29,10 +29,10 @@ def _capture_publish_sync(captured: list):
 def test_in_daemon_uses_publish_sync(monkeypatch):
     monkeypatch.setattr(event_bus, "_in_daemon", True)
     captured: list = []
-    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm = tripwire.mock("spellbook.worker_llm.events:publish_sync")
     pm.calls(_capture_publish_sync(captured))
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="t",
             model="m",
@@ -62,10 +62,10 @@ def test_in_daemon_uses_publish_sync(monkeypatch):
 def test_in_daemon_publishes_override_loaded(monkeypatch):
     monkeypatch.setattr(event_bus, "_in_daemon", True)
     captured: list = []
-    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm = tripwire.mock("spellbook.worker_llm.events:publish_sync")
     pm.calls(_capture_publish_sync(captured))
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_override_loaded(task="tool_safety", path="/tmp/x.md")
 
     pm.assert_call(args=(IsInstance(Event),), kwargs={})
@@ -79,10 +79,10 @@ def test_in_daemon_publishes_override_loaded(monkeypatch):
 def test_error_emits_call_failed_event(monkeypatch):
     monkeypatch.setattr(event_bus, "_in_daemon", True)
     captured: list = []
-    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm = tripwire.mock("spellbook.worker_llm.events:publish_sync")
     pm.calls(_capture_publish_sync(captured))
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="t",
             model="m",
@@ -122,10 +122,10 @@ def test_publish_call_fail_open_event_type(monkeypatch):
     """
     monkeypatch.setattr(event_bus, "_in_daemon", True)
     captured: list = []
-    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm = tripwire.mock("spellbook.worker_llm.events:publish_sync")
     pm.calls(_capture_publish_sync(captured))
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="tool_safety",
             model="",
@@ -160,13 +160,13 @@ def test_subprocess_posts_to_daemon(monkeypatch):
     def fake_post(path, payload, timeout=1.0):
         calls.append((path, payload, timeout))
 
-    fallback = bigfoot.mock("spellbook.worker_llm.events:_fallback_http_post")
+    fallback = tripwire.mock("spellbook.worker_llm.events:_fallback_http_post")
     fallback.calls(fake_post)
     # Force the lazy import of hooks.spellbook_hook to fail so the fallback
     # helper is the one invoked.
     monkeypatch.setitem(sys.modules, "hooks.spellbook_hook", None)
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="t",
             model="m",
@@ -204,13 +204,13 @@ def test_subprocess_override_loaded_posts_to_daemon(monkeypatch):
     monkeypatch.setattr(event_bus, "_in_daemon", False)
     calls: list = []
 
-    fallback = bigfoot.mock("spellbook.worker_llm.events:_fallback_http_post")
+    fallback = tripwire.mock("spellbook.worker_llm.events:_fallback_http_post")
     fallback.calls(
         lambda path, payload, timeout=1.0: calls.append((path, payload, timeout))
     )
     monkeypatch.setitem(sys.modules, "hooks.spellbook_hook", None)
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_override_loaded(task="transcript_harvest", path="/u/x.md")
 
     fallback.assert_call(
@@ -247,10 +247,10 @@ def test_fallback_http_post_defaults_to_port_8765(monkeypatch):
         captured.append((req.full_url, timeout))
         return _FakeResponse()
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     urlopen_mock.calls(fake_urlopen)
 
-    with bigfoot:
+    with tripwire:
         wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
 
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
@@ -274,10 +274,10 @@ def test_fallback_http_post_respects_env_overrides(monkeypatch):
         captured.append(req.full_url)
         return _FakeResponse()
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     urlopen_mock.calls(fake_urlopen)
 
-    with bigfoot:
+    with tripwire:
         wl_events._fallback_http_post("/p", {"x": 1}, timeout=1.0)
 
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
@@ -293,17 +293,17 @@ def test_fallback_http_post_swallows_all_exceptions(monkeypatch):
     def raising_urlopen(*a, **kw):
         raise ConnectionRefusedError("nope")
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     urlopen_mock.calls(raising_urlopen)
 
-    with bigfoot:
+    with tripwire:
         # Must not raise.
         wl_events._fallback_http_post("/p", {"x": 1}, timeout=1.0)
 
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
     # The first publish failure emits one WARNING via the module logger;
-    # bigfoot's log plugin records it and requires explicit assertion.
-    bigfoot.log.assert_log(
+    # tripwire's log plugin records it and requires explicit assertion.
+    tripwire.log.assert_log(
         level="WARNING",
         message=AnyThing,
         logger_name="spellbook.worker_llm.events",
@@ -318,12 +318,12 @@ def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, capl
     (never raise, never spam) but make the FIRST failure loud so the next
     such misconfiguration gets caught in operator logs.
 
-    Bigfoot's ``LoggingPlugin`` intercepts every ``logger.log()`` call and
+    Tripwire's ``LoggingPlugin`` intercepts every ``logger.log()`` call and
     requires that each be asserted. We still use ``caplog.at_level(DEBUG)``
     to raise the module logger's effective level above the default WARNING
     so the DEBUG calls actually reach ``Logger._log`` (and therefore the
-    bigfoot interceptor) -- otherwise the DEBUGs get filtered out before
-    bigfoot can see them.
+    tripwire interceptor) -- otherwise the DEBUGs get filtered out before
+    tripwire can see them.
     """
     import logging
 
@@ -333,18 +333,18 @@ def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, capl
     monkeypatch.delenv("SPELLBOOK_MCP_HOST", raising=False)
     # Reset the module-level counter so this test is order-independent.
     # ``_publish_failures`` is an int counter, not a callable; monkeypatch is
-    # appropriate per the bigfoot-callable-only rule.
+    # appropriate per the tripwire-callable-only rule.
     monkeypatch.setattr(wl_events, "_publish_failures", 0)
 
     def raising_urlopen(*a, **kw):
         raise ConnectionRefusedError("no daemon")
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     for _ in range(5):
         urlopen_mock.calls(raising_urlopen)
 
     with caplog.at_level(logging.DEBUG, logger="spellbook.worker_llm.events"):
-        with bigfoot:
+        with tripwire:
             for _ in range(5):
                 wl_events._fallback_http_post(
                     "/api/events/publish", {"x": 1}, timeout=1.0
@@ -352,7 +352,7 @@ def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, capl
 
     # Assertion strategy: the 5 urlopen calls and 5 log emissions are
     # interleaved in wall-clock order. Wrap in ``in_any_order`` so we do
-    # not have to encode the interleaving; bigfoot only requires that
+    # not have to encode the interleaving; tripwire only requires that
     # every interaction be asserted, not that they be asserted in timeline
     # order.
     warning_msg_pattern = IsStr(
@@ -362,18 +362,18 @@ def test_fallback_http_post_warns_exactly_once_across_failures(monkeypatch, capl
         "worker_llm event publish failed (subprocess fallback) to "
         "http://127.0.0.1:8765/api/events/publish"
     )
-    with bigfoot.in_any_order():
+    with tripwire.in_any_order():
         for _ in range(5):
             urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
         # First failure: loud warning naming the exception and URL.
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             level="WARNING",
             message=warning_msg_pattern,
             logger_name="spellbook.worker_llm.events",
         )
         # Failures 2..5: quiet DEBUG so we do not spam operator logs.
         for _ in range(4):
-            bigfoot.log.assert_log(
+            tripwire.log.assert_log(
                 level="DEBUG",
                 message=debug_msg,
                 logger_name="spellbook.worker_llm.events",
@@ -390,7 +390,7 @@ def test_fallback_http_post_attaches_bearer_token_when_present(
     token_file = tmp_path / ".mcp-token"
     token_file.write_text("secret-token-abc")
     # ``_TOKEN_PATH`` is a ``Path`` object, not a callable; monkeypatch is
-    # appropriate per the bigfoot-callable-only rule. Lives in
+    # appropriate per the tripwire-callable-only rule. Lives in
     # ``spellbook.worker_llm.auth`` (shared by events and tool_safety).
     monkeypatch.setattr(wl_auth, "_TOKEN_PATH", token_file)
     monkeypatch.delenv("SPELLBOOK_MCP_PORT", raising=False)
@@ -409,10 +409,10 @@ def test_fallback_http_post_attaches_bearer_token_when_present(
         captured.append(dict(req.headers))
         return _FakeResponse()
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     urlopen_mock.calls(fake_urlopen)
 
-    with bigfoot:
+    with tripwire:
         wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
 
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
@@ -446,10 +446,10 @@ def test_fallback_http_post_no_auth_header_when_token_missing(
         captured.append(dict(req.headers))
         return _FakeResponse()
 
-    urlopen_mock = bigfoot.mock("urllib.request:urlopen")
+    urlopen_mock = tripwire.mock("urllib.request:urlopen")
     urlopen_mock.calls(fake_urlopen)
 
-    with bigfoot:
+    with tripwire:
         wl_events._fallback_http_post("/api/events/publish", {"x": 1}, timeout=1.0)
 
     urlopen_mock.assert_call(args=(AnyThing,), kwargs={"timeout": 1.0})
@@ -470,7 +470,7 @@ def record_call_db(tmp_path: Path, monkeypatch):
 
     Mirrors ``tests/test_worker_llm/test_observability.py::fresh_db`` so the
     real ORM insert path is exercised without touching the user's spellbook.db.
-    We do NOT bigfoot-mock ``record_call`` itself: the orchestrator's T4
+    We do NOT tripwire-mock ``record_call`` itself: the orchestrator's T4
     contract is "publish_call triggers record_call with the same args AND
     produces a row in the DB", so we verify the row contents directly.
     """
@@ -509,7 +509,7 @@ def test_publish_call_daemon_path_records_call(
                 fails. If record_call were invoked with wrong kwargs (e.g. a
                 dropped ``override_loaded``), the full-equality to_dict check
                 catches it. If the event publish were dropped, the
-                publish_sync bigfoot assertion fails.
+                publish_sync tripwire assertion fails.
       ESCAPE:   A no-op wiring that logs-but-doesn't-write is caught by the
                 row-count check. Passing the wrong arg (e.g. error="" instead
                 of None) is caught by the full-equality to_dict check.
@@ -518,10 +518,10 @@ def test_publish_call_daemon_path_records_call(
     """
     monkeypatch.setattr(event_bus, "_in_daemon", True)
     captured: list = []
-    pm = bigfoot.mock("spellbook.worker_llm.events:publish_sync")
+    pm = tripwire.mock("spellbook.worker_llm.events:publish_sync")
     pm.calls(_capture_publish_sync(captured))
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="transcript_harvest",
             model="gpt-test",
@@ -587,7 +587,7 @@ def test_publish_call_subprocess_path_does_not_record_call(
     """
     monkeypatch.setattr(event_bus, "_in_daemon", False)
     calls: list = []
-    fallback = bigfoot.mock("spellbook.worker_llm.events:_fallback_http_post")
+    fallback = tripwire.mock("spellbook.worker_llm.events:_fallback_http_post")
     fallback.calls(
         lambda path, payload, timeout=1.0: calls.append((path, payload, timeout))
     )
@@ -595,7 +595,7 @@ def test_publish_call_subprocess_path_does_not_record_call(
     # helper is the one invoked (matches test_subprocess_posts_to_daemon).
     monkeypatch.setitem(sys.modules, "hooks.spellbook_hook", None)
 
-    with bigfoot:
+    with tripwire:
         wl_events.publish_call(
             task="tool_safety",
             model="m",

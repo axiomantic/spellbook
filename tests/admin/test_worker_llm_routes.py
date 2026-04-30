@@ -10,7 +10,7 @@ dependency so the route queries hit the seeded engine instead of the real
 ``~/.local/spellbook/spellbook.db``.
 
 This is the established DB-route test idiom in this repo (not
-``bigfoot.db``). The plan explicitly permits it: "For DB tests, use the
+``tripwire.db``). The plan explicitly permits it: "For DB tests, use the
 existing pattern (tmp-file SQLite fixture + override
 ``get_spellbook_sync_session``). Look at ``tests/test_worker_llm/
 test_observability.py`` fresh_db fixture for precedent." — the routes here

@@ -17,7 +17,7 @@ The roundtable system uses tarot archetypes to validate stage completion:
 
 import pytest
 import json
-import bigfoot
+import tripwire
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -1194,10 +1194,10 @@ class TestRoundtableGateParameter:
         async def _mock_forged_session():
             yield forged_session
 
-        mock_get_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_get_session = tripwire.mock("spellbook.db:get_forged_session")
         mock_get_session.calls(_mock_forged_session)
 
-        async with bigfoot:
+        async with tripwire:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",
@@ -1226,10 +1226,10 @@ class TestRoundtableGateParameter:
         async def _mock_forged_session():
             yield forged_session
 
-        mock_get_session = bigfoot.mock("spellbook.db:get_forged_session")
+        mock_get_session = tripwire.mock("spellbook.db:get_forged_session")
         mock_get_session.calls(_mock_forged_session)
 
-        async with bigfoot:
+        async with tripwire:
             result = await process_roundtable_response(
                 response=response,
                 stage="IMPLEMENT",

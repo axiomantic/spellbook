@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Generator
 
-import bigfoot
+import tripwire
 import pytest
 
 from installer.compat import CrossPlatformLock
@@ -92,7 +92,7 @@ def _make_installer_interceptor(
         installer_stderr: Stderr text for the faked installer.
 
     Returns:
-        A callable suitable for use as a bigfoot ``.calls()`` handler.
+        A callable suitable for use as a tripwire ``.calls()`` handler.
     """
 
     def _intercept(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -189,10 +189,10 @@ class TestApplyUpdate:
         sha_before = _get_head_sha(committed_repo)
         latest_sha = _get_latest_sha(committed_repo)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(_make_installer_interceptor(installer_returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(committed_repo, lock_path=lock_file)
 
         mock_run.assert_call()
@@ -211,14 +211,14 @@ class TestApplyUpdate:
         """When the installer step fails, git is reset to the pre-update SHA."""
         sha_before = _get_head_sha(committed_repo)
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(
             _make_installer_interceptor(
                 installer_returncode=1, installer_stderr="Installer crashed"
             )
         )
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(committed_repo, lock_path=lock_file)
 
         mock_run.assert_call()
@@ -243,10 +243,10 @@ class TestRollbackUpdate:
         interceptor = _make_installer_interceptor(installer_returncode=0)
 
         # Apply update first (with mocked installer)
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(interceptor)
 
-        with bigfoot:
+        with tripwire:
             apply_result = apply_update(committed_repo, lock_path=lock_file)
 
         mock_run.assert_call()
@@ -256,10 +256,10 @@ class TestRollbackUpdate:
         assert sha_after_update != sha_before
 
         # Now rollback (also with mocked installer)
-        mock_run2 = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run2 = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run2.calls(interceptor)
 
-        with bigfoot:
+        with tripwire:
             rollback_result = rollback_update(committed_repo, lock_path=lock_file)
 
         mock_run2.assert_call()
@@ -417,10 +417,10 @@ class TestUpdateConfigPersistence:
         """After a successful apply_update, update state is persisted in config."""
         from spellbook.core.config import config_get
 
-        mock_run = bigfoot.mock("spellbook.updates.tools:subprocess.run")
+        mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         mock_run.calls(_make_installer_interceptor(installer_returncode=0))
 
-        with bigfoot:
+        with tripwire:
             result = apply_update(committed_repo, lock_path=lock_file)
 
         mock_run.assert_call()

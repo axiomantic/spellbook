@@ -213,14 +213,14 @@ def test_uses_short_tool_safety_timeout(
     # overrides are passed to ``post``. Capture the ``timeout`` kwarg on
     # each post call to assert the tool_safety override is forwarded.
     #
-    # Intentional monkeypatch on a callable: ``bigfoot.spy.object`` on an
+    # Intentional monkeypatch on a callable: ``tripwire.spy.object`` on an
     # async class method (httpx.AsyncClient.post) is not cleanly
     # supported — the spy wraps the bound method lookup path but the
     # interaction is not recorded on the verifier's timeline under the
-    # source_id the spy expects. Until bigfoot exposes a first-class
+    # source_id the spy expects. Until tripwire exposes a first-class
     # "record-only" interceptor for async class methods, this test
     # keeps the narrow post-level monkeypatch. The conftest HTTP
-    # mocking is fully on bigfoot.http; this is the one remaining
+    # mocking is fully on tripwire.http; this is the one remaining
     # call-site patch in the worker_llm suite.
     seen_timeouts: list = []
     orig_post = httpx.AsyncClient.post

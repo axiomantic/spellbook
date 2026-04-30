@@ -1,6 +1,6 @@
 # Quick Start
 
-After installation, Spellbook skills are available immediately. Skills are invoked automatically when your coding assistant detects a matching trigger, or manually with `/<skill-name>`.
+Spellbook augments the AI coding assistant (the *harness*) you already use. After installation, its skills, commands, and MCP server are available inside that harness immediately. Skills invoke automatically when your assistant detects a matching trigger, or manually with `/<skill-name>`.
 
 ## Common Workflows
 

@@ -4,7 +4,7 @@ These tests verify the end-to-end flow from hook capture through
 consolidation to MEMORY.md regeneration.
 """
 
-import bigfoot
+import tripwire
 import pytest
 from pathlib import Path
 
@@ -53,20 +53,20 @@ class TestMemoryBridgeIntegration:
 
         # Capture call args from _http_post
         post_calls = []
-        mock_post = bigfoot.mock("hooks.spellbook_hook:_http_post")
+        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
         mock_post.calls(lambda *a, **kw: post_calls.append((a, kw))).calls(
             lambda *a, **kw: post_calls.append((a, kw))
         )
-        mock_git = bigfoot.mock("hooks.spellbook_hook:_resolve_git_context")
+        mock_git = tripwire.mock("hooks.spellbook_hook:_resolve_git_context")
         mock_git.returns(("/Users/alice/project", "main"))
 
-        with bigfoot:
+        with tripwire:
             _memory_bridge("Write", data)
 
         # Verify two HTTP calls were dispatched
         assert len(post_calls) == 2
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_git.assert_call(
                 args=(data["cwd"],),
                 kwargs={},
@@ -135,14 +135,14 @@ class TestMemoryBridgeIntegration:
         """
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
-        mock_resolve = bigfoot.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
+        mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
         mock_resolve.returns(auto_memory_dir)
-        mock_db_path = bigfoot.mock("spellbook.memory.bootstrap:get_db_path")
+        mock_db_path = tripwire.mock("spellbook.memory.bootstrap:get_db_path")
         mock_db_path.returns(Path(db))
-        mock_encode = bigfoot.mock("spellbook.memory.bootstrap:encode_cwd")
+        mock_encode = tripwire.mock("spellbook.memory.bootstrap:encode_cwd")
         mock_encode.returns("tmp-test")
 
-        with bigfoot:
+        with tripwire:
             regenerate_memory_md_for_project("/tmp/test")
 
         mock_resolve.assert_call(args=("/tmp/test",), kwargs={})

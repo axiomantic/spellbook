@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.57.0] - 2026-04-30
+## [0.58.0] - 2026-04-30
 
 ### Added
 
@@ -45,6 +45,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (Manager) Dispatch subsection that points to
   `dispatching-sub-orchestrators` as the canonical home for the Manager
   Dispatch Template and CEO loop, without inlining the template.
+
+## [0.57.0] - 2026-04-30
+
+### Added
+
+- **PR Review Bot details.** Adds bot username and re-review command instructions to `AGENTS.md`.
+
+### Changed
+
+- **README and docs positioning.** Reframes user-facing documentation to
+  articulate Spellbook as a harness-augmentation layer that runs across
+  coding harnesses (Claude Code, OpenCode, Codex, Gemini CLI, ForgeCode),
+  rather than a peer product. Surfaces three differentiators on the front
+  page: harness-agnostic, shared centralized MCP server for cross-harness
+  state continuity, and a skills+hooks layer no individual harness ships
+  natively. Touches `README.md`, `docs/index.md`,
+  `docs/getting-started/{platforms,quickstart}.md`, `AGENTS.spellbook.md`,
+  and `pyproject.toml`.
+- **`pyproject.toml` description shortened** for package registry
+  compatibility. The harness list was dropped from the description
+  field (registries may truncate around 100-120 chars); the full list
+  remains in the README and `docs/index.md` taglines.
+
+### Removed
+
+- **bigfoot dependency dropped; full migration to tripwire.**
+  tripwire 0.20.0 (formerly bigfoot) deprecated the old name. Main
+  landed a transitional state with both packages dual-listed; this
+  release finishes the migration. Removes the `bigfoot[http]`
+  dependency from `pyproject.toml`, renames all `import bigfoot` /
+  `from bigfoot.*` to `tripwire` across 57 Python files (tests,
+  conftest, one runtime docstring), updates the AGENTS.md
+  mocking-rule section and `[tool.tripwire]` example snippet, and
+  drops the rebrand-transition section from `.gemini/styleguide.md`
+  (one reviewer guardrail mentioning bigfoot is retained so PRs
+  reintroducing the old name are flagged).
 
 ## [0.56.0] - 2026-04-30
 

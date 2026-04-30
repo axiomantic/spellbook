@@ -1,7 +1,7 @@
 [project]
 name = "spellbook"
 dynamic = ["version"]
-description = "Skills, commands, and MCP tools for AI coding assistants"
+description = "Harness-augmentation layer for AI coding assistants: skills, commands, hooks, and a shared MCP server"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -31,7 +31,6 @@ dev = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.2.0",
     "httpx>=0.25.0",
-    "bigfoot[http]>=0.19.1",
     "python-tripwire[http]>=0.20.1",
     "dirty-equals>=0.8.0",
     "fastmcp>=0.4.1",
@@ -85,7 +84,7 @@ guard = "error"
 # asyncio.run-driven loop teardown inside sync task entry points closes
 # its self-pipe socket after the sandbox's active verifier is set, which
 # makes tripwire blow up with UnmockedInteractionError on loop shutdown.
-# No test in this repo uses tripwire.socket_mock; disabling the plugin
+# No test in this repo uses tripwire.socket; disabling the plugin
 # globally lets HttpPlugin-only tests drive asyncio.run() safely.
 disabled_plugins = ["socket"]
 
