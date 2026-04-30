@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.56.0] - 2026-04-29
 
+### Added
+
+- **PR Review Bot details.** Adds bot username and re-review command instructions to `AGENTS.md`.
+
 ### Changed
 
 - **README and docs positioning.** Reframes user-facing documentation to
@@ -19,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   continuity, and a skills+hooks layer no individual harness ships
   natively. Touches `README.md`, `docs/index.md`,
   `docs/getting-started/{platforms,quickstart}.md`, `AGENTS.spellbook.md`,
-  `pyproject.toml`, `AGENTS.md`.
+  and `pyproject.toml`.
 
 ## [0.55.0] - 2026-04-27
 
