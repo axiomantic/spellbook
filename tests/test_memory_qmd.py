@@ -11,7 +11,7 @@ path to test. Tests that invoke the real qmd binary are marked
 import json
 import subprocess
 
-import bigfoot
+import tripwire
 import pytest
 
 
@@ -97,7 +97,7 @@ class TestQmdSearch:
             {"path": "/tmp/mem/project/deploy.md", "score": 0.3, "snippet": "deploy process"},
         ])
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["qmd", "search", "retry backoff", "--limit", "10", "--json"],
             returncode=0,
             stdout=qmd_output,
@@ -105,14 +105,14 @@ class TestQmdSearch:
 
         from spellbook.memory.search_qmd import QmdResult, qmd_search
 
-        with bigfoot:
+        with tripwire:
             results = qmd_search("retry backoff")
 
         assert results == [
             QmdResult(path="/tmp/mem/project/retry.md", score=0.9, snippet="exponential backoff"),
             QmdResult(path="/tmp/mem/project/deploy.md", score=0.3, snippet="deploy process"),
         ]
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["qmd", "search", "retry backoff", "--limit", "10", "--json"],
             returncode=0,
             stdout=qmd_output,
@@ -124,7 +124,7 @@ class TestQmdSearch:
         """Verify collection flags are passed correctly."""
         qmd_output = json.dumps([])
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=[
                 "qmd", "search", "query text",
                 "--limit", "5",
@@ -137,11 +137,11 @@ class TestQmdSearch:
 
         from spellbook.memory.search_qmd import qmd_search
 
-        with bigfoot:
+        with tripwire:
             results = qmd_search("query text", collections=["memories", "global"], limit=5)
 
         assert results == []
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=[
                 "qmd", "search", "query text",
                 "--limit", "5",
@@ -156,7 +156,7 @@ class TestQmdSearch:
     @pytest.mark.allow("subprocess")
     def test_search_raises_on_subprocess_error(self):
         """On subprocess failure, qmd_search raises CalledProcessError."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["qmd", "search", "broken query", "--limit", "10", "--json"],
             raises=subprocess.CalledProcessError(
                 returncode=1,
@@ -167,10 +167,10 @@ class TestQmdSearch:
 
         from spellbook.memory.search_qmd import qmd_search
 
-        with bigfoot, pytest.raises(subprocess.CalledProcessError):
+        with tripwire, pytest.raises(subprocess.CalledProcessError):
             qmd_search("broken query")
 
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["qmd", "search", "broken query", "--limit", "10", "--json"],
             returncode=0,
             stdout="",
@@ -180,17 +180,17 @@ class TestQmdSearch:
     @pytest.mark.allow("subprocess")
     def test_search_raises_on_timeout(self):
         """On timeout, qmd_search raises TimeoutExpired."""
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["qmd", "search", "slow query", "--limit", "10", "--json"],
             raises=subprocess.TimeoutExpired(cmd="qmd", timeout=10),
         )
 
         from spellbook.memory.search_qmd import qmd_search
 
-        with bigfoot, pytest.raises(subprocess.TimeoutExpired):
+        with tripwire, pytest.raises(subprocess.TimeoutExpired):
             qmd_search("slow query")
 
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["qmd", "search", "slow query", "--limit", "10", "--json"],
             returncode=0,
             stdout="",
@@ -218,7 +218,7 @@ class TestQmdQuery:
             {"path": "/tmp/mem/reference/api.md", "score": 0.95, "snippet": "REST endpoint"},
         ])
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=[
                 "qmd", "query",
                 "--searches", expected_searches,
@@ -232,13 +232,13 @@ class TestQmdQuery:
 
         from spellbook.memory.search_qmd import QmdResult, qmd_query
 
-        with bigfoot:
+        with tripwire:
             results = qmd_query("api design")
 
         assert results == [
             QmdResult(path="/tmp/mem/reference/api.md", score=0.95, snippet="REST endpoint"),
         ]
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=[
                 "qmd", "query",
                 "--searches", expected_searches,
@@ -259,7 +259,7 @@ class TestQmdQuery:
             {"type": "vec", "query": "logging"},
         ])
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=[
                 "qmd", "query",
                 "--searches", expected_searches,
@@ -272,11 +272,11 @@ class TestQmdQuery:
 
         from spellbook.memory.search_qmd import qmd_query
 
-        with bigfoot:
+        with tripwire:
             results = qmd_query("logging", rerank=False)
 
         assert results == []
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=[
                 "qmd", "query",
                 "--searches", expected_searches,
@@ -303,7 +303,7 @@ class TestQmdQuery:
             "--limit", "10",
             "--json",
         ]
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=cmd,
             raises=subprocess.CalledProcessError(
                 returncode=2,
@@ -314,10 +314,10 @@ class TestQmdQuery:
 
         from spellbook.memory.search_qmd import qmd_query
 
-        with bigfoot, pytest.raises(subprocess.CalledProcessError):
+        with tripwire, pytest.raises(subprocess.CalledProcessError):
             qmd_query("q")
 
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=cmd,
             returncode=0,
             stdout="",

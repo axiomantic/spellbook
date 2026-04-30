@@ -12,7 +12,7 @@ pooling — but async callers (roundtable, future daemon integrations) do. The
 per-loop cache avoids the classic footgun of binding a client to a loop that
 has since been torn down.
 
-Bigfoot's ``http`` plugin intercepts at the transport layer, so shared-client
+Tripwire's ``http`` plugin intercepts at the transport layer, so shared-client
 lifetime does not affect test mocking.
 """
 

@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import bigfoot
+import tripwire
 import pytest
 
 pytestmark = pytest.mark.slow
@@ -148,19 +148,19 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
     # Create watcher with project path
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check = tripwire.mock("spellbook.sessions.compaction:check_for_compaction")
     mock_check.returns(mock_event)
 
     # _get_current_session_file is called twice: once for soul extraction, once for _analyze_skills
-    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
     mock_get_file.returns(session_file).returns(session_file)
 
-    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract = tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
     mock_extract.returns(mock_soul)
 
     monkeypatch.setattr(injection, "_set_pending_compaction", mock_set_pending)
 
-    with bigfoot:
+    with tripwire:
         # Call _poll_sessions
         watcher._poll_sessions()
 
@@ -168,12 +168,12 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
     mock_check.assert_call(args=(str(project_path),))
 
     # Verify extract_soul was called with session file, and _get_current_session_file called twice
-    with bigfoot.in_any_order():
+    with tripwire.in_any_order():
         mock_get_file.assert_call(args=(str(project_path),))
         mock_get_file.assert_call(args=(str(project_path),))
         mock_extract.assert_call(args=(str(session_file),))
         # _analyze_skills fails parsing the simple test messages
-        bigfoot.log.assert_log(
+        tripwire.log.assert_log(
             "WARNING",
             "Skill analysis failed: 'str' object has no attribute 'get'",
             "spellbook.sessions.watcher",
@@ -228,17 +228,17 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     # Pre-mark this compaction as processed
     watcher._processed_compactions[("test-session", "leaf-123")] = time.time()
 
-    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check = tripwire.mock("spellbook.sessions.compaction:check_for_compaction")
     mock_check.returns(mock_event)
 
-    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract = tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
     mock_extract.__call__.required(False)
 
     # _analyze_skills also calls _get_current_session_file; return None to skip analysis
-    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
     mock_get_file.returns(None)
 
-    with bigfoot:
+    with tripwire:
         watcher._poll_sessions()
 
     # Assert the interactions that did happen
@@ -265,17 +265,17 @@ def test_poll_sessions_no_compaction_event(tmp_path):
 
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-    mock_check = bigfoot.mock("spellbook.sessions.compaction:check_for_compaction")
+    mock_check = tripwire.mock("spellbook.sessions.compaction:check_for_compaction")
     mock_check.returns(None)
 
-    mock_extract = bigfoot.mock("spellbook.sessions.soul_extractor:extract_soul")
+    mock_extract = tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
     mock_extract.__call__.required(False)
 
     # _analyze_skills also calls _get_current_session_file; return None to skip analysis
-    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
     mock_get_file.returns(None)
 
-    with bigfoot:
+    with tripwire:
         watcher._poll_sessions()
 
     # Assert the interactions that did happen
@@ -334,10 +334,10 @@ def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
     # Mock the session file lookup
-    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
     mock_get_file.returns(session_file)
 
-    with bigfoot:
+    with tripwire:
         watcher._analyze_skills()
 
     mock_get_file.assert_call(args=(str(project_path),))
@@ -384,10 +384,10 @@ def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
     # Mock _get_current_session_file for both calls to _analyze_skills
-    mock_get_file = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+    mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
     mock_get_file.returns(session_file).returns(session_file)
 
-    with bigfoot:
+    with tripwire:
         # First call to set up tracking
         watcher._analyze_skills()
 

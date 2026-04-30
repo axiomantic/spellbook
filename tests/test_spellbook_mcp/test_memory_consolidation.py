@@ -1,7 +1,7 @@
 """Tests for memory consolidation pipeline."""
 
 import json
-import bigfoot
+import tripwire
 import pytest
 from dirty_equals import IsInstance
 
@@ -434,10 +434,10 @@ class TestConsolidateBatch:
         _seed_events(db, 15)
 
         # Force an error in the heuristic pipeline by making a strategy raise
-        mock_dedup = bigfoot.mock("spellbook.memory.consolidation:_strategy_content_hash_dedup")
+        mock_dedup = tripwire.mock("spellbook.memory.consolidation:_strategy_content_hash_dedup")
         mock_dedup.raises(RuntimeError("hash computation failed"))
 
-        with bigfoot:
+        with tripwire:
             result = consolidate_batch(
                 db_path=db,
                 namespace="Users-alice-myproject",
@@ -491,10 +491,10 @@ class TestConsolidateBatch:
             )
 
         # Fail jaccard_similarity (second strategy, after content_hash succeeds)
-        mock_jaccard = bigfoot.mock("spellbook.memory.consolidation:_strategy_jaccard_similarity")
+        mock_jaccard = tripwire.mock("spellbook.memory.consolidation:_strategy_jaccard_similarity")
         mock_jaccard.raises(ValueError("jaccard computation exploded"))
 
-        with bigfoot:
+        with tripwire:
             result = consolidate_batch(db_path=db, namespace="ns")
 
         mock_jaccard.assert_call(args=(IsInstance(list),), kwargs={}, raised=IsInstance(ValueError))
@@ -577,10 +577,10 @@ class TestConsolidateBatch:
         """Consolidation calls purge_deleted at the end on success."""
         _seed_duplicate_events(db)
 
-        mock_purge = bigfoot.mock("spellbook.memory.consolidation:purge_deleted")
+        mock_purge = tripwire.mock("spellbook.memory.consolidation:purge_deleted")
         mock_purge.returns(2)
 
-        with bigfoot:
+        with tripwire:
             result = consolidate_batch(
                 db_path=db,
                 namespace="Users-alice-myproject",

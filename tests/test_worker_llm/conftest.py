@@ -1,8 +1,8 @@
 """Shared test fixtures for the worker_llm test suite.
 
 Fixtures:
-- ``worker_llm_transport``: Uses ``bigfoot.http`` to register mock responses for
-  the outbound ``/chat/completions`` calls and activates the bigfoot sandbox
+- ``worker_llm_transport``: Uses ``tripwire.http`` to register mock responses for
+  the outbound ``/chat/completions`` calls and activates the tripwire sandbox
   for the duration of the test. Returns a list-like ``CapturedRequests`` shim
   that exposes the recorded requests with a subset of ``httpx.Request`` API
   (``url``, ``content``, ``read()``) so existing tests can introspect bodies.
@@ -16,7 +16,7 @@ Script item contract (unchanged; binding on every consumer):
         "body": dict | str,                 # dict -> JSON-encoded; str -> raw
         "delay_s": float,                   # accepted but ignored (no test
                                             # in-tree currently uses non-zero)
-        "raise_on_send": Exception | None,  # if set, bigfoot raises this
+        "raise_on_send": Exception | None,  # if set, tripwire raises this
     }
 
 Attribute access is used, so callers can supply a dataclass, ``SimpleNamespace``,
@@ -26,13 +26,13 @@ Implementation note
 -------------------
 The prior implementation used ``monkeypatch.setattr(httpx.AsyncClient.__init__,
 ...)`` to inject an ``httpx.MockTransport`` — a direct callable replacement
-that violated the bigfoot-only mocking rule. This version uses
-``bigfoot.http.mock_response`` / ``bigfoot.http.mock_error`` for registration
-and activates the sandbox via ``bigfoot.sandbox()`` around each test body.
+that violated the tripwire-only mocking rule. This version uses
+``tripwire.http.mock_response`` / ``tripwire.http.mock_error`` for registration
+and activates the sandbox via ``tripwire.sandbox()`` around each test body.
 Recorded interactions are auto-asserted at sandbox exit so existing tests do
-not have to call ``bigfoot.http.assert_request`` manually. The
+not have to call ``tripwire.http.assert_request`` manually. The
 ``worker_llm_config`` fixture still uses ``monkeypatch.setattr`` on
-``config_get`` — migrating that requires a bigfoot mock whose FIFO queue
+``config_get`` — migrating that requires a tripwire mock whose FIFO queue
 length equals the exact number of reads each test performs, which is not
 known upfront at fixture scope. That carve-out is documented at the call
 site and is not part of the conftest HTTP-mock migration.
@@ -43,7 +43,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterator
 
-import bigfoot
+import tripwire
 import httpx
 import pytest
 
@@ -72,7 +72,7 @@ class _RequestContent(bytes):
 
 
 class _CapturedRequest:
-    """Light-weight stand-in for ``httpx.Request`` built from bigfoot timeline.
+    """Light-weight stand-in for ``httpx.Request`` built from tripwire timeline.
 
     Exposes the subset of ``httpx.Request`` API that worker_llm tests read:
     ``url`` (wrapped so ``.path`` works), ``content`` (bytes), ``read()``,
@@ -102,7 +102,7 @@ class _CapturedRequest:
 class _CapturedRequests(list):
     """List subclass so ``len()``, indexing, iteration all work unchanged.
 
-    Populated lazily via ``_refresh`` which reads bigfoot's http timeline.
+    Populated lazily via ``_refresh`` which reads tripwire's http timeline.
     Tests call this fixture's return value as a regular list — by the time
     test assertions run, every HTTP call has already been recorded on the
     timeline, so a just-in-time refresh on ``__getitem__`` / ``__len__`` is
@@ -137,7 +137,7 @@ class _CapturedRequests(list):
 def _extract_http_interactions(verifier: Any) -> list[_CapturedRequest]:
     """Pull http:request interactions off the verifier's timeline.
 
-    Bigfoot stores them in order with ``source_id == 'http:request'`` and
+    Tripwire stores them in order with ``source_id == 'http:request'`` and
     ``details`` carrying the method, url, and decoded request body. The
     timeline is private API; accessing it via ``_timeline._interactions``
     is deliberately scoped to this test fixture, not production code.
@@ -165,13 +165,13 @@ _AUTO_ASSERT_SOURCE_PREFIXES = ("http:", "logging:")
 def _mark_auto_interactions_asserted(verifier: Any) -> None:
     """Mark every unasserted http/log interaction as asserted.
 
-    The bigfoot sandbox exit asserts ``verify_all()``; any unasserted
+    The tripwire sandbox exit asserts ``verify_all()``; any unasserted
     interaction raises ``UnassertedInteractionsError``. This fixture
     auto-asserts incidental HTTP captures (the scripted responses) and
     incidental log captures (stray WARNINGs from production modules
     under test) so tests that do not explicitly assert every log line
     still pass. Individual tests remain free to call
-    ``bigfoot.http.assert_request`` or ``bigfoot.log.assert_log``
+    ``tripwire.http.assert_request`` or ``tripwire.log.assert_log``
     for stricter checks; already-asserted interactions stay asserted.
     """
     for i in list(verifier._timeline._interactions):  # noqa: SLF001
@@ -183,10 +183,10 @@ def _mark_auto_interactions_asserted(verifier: Any) -> None:
 
 @pytest.fixture
 def worker_llm_transport() -> Iterator:
-    """Install bigfoot.http mocks and activate a sandbox for this test.
+    """Install tripwire.http mocks and activate a sandbox for this test.
 
     The returned ``_install`` callable accepts a scripted response list and
-    returns a ``_CapturedRequests`` list-like shim. ``with bigfoot:`` is
+    returns a ``_CapturedRequests`` list-like shim. ``with tripwire:`` is
     NOT needed in test bodies — this fixture wraps the test in a sandbox
     that exits at fixture teardown.
 
@@ -196,7 +196,7 @@ def worker_llm_transport() -> Iterator:
         assert len(seen) == 1
         assert seen[0].url.path == "/v1/chat/completions"
     """
-    # Wildcard URL matching isn't part of the public bigfoot API; instead
+    # Wildcard URL matching isn't part of the public tripwire API; instead
     # we register each scripted mock against the concrete /chat/completions
     # URL(s) the test might hit. The default is the config fixture's
     # ``http://test.local/v1`` but individual tests override base_url. To
@@ -210,19 +210,19 @@ def worker_llm_transport() -> Iterator:
         "http://127.0.0.1:8080/v1/chat/completions",
     ]
 
-    # Enter the bigfoot sandbox so registered mocks are active.
-    with bigfoot.sandbox() as verifier:
+    # Enter the tripwire sandbox so registered mocks are active.
+    with tripwire.sandbox() as verifier:
 
         def _install(script: list) -> _CapturedRequests:
             # ``required=False``: the legacy fixture's script was a queue
             # with no "must be consumed" invariant — tests that register
             # mocks and then don't trigger them were fine. Preserving that
             # lets the fixture stay a drop-in replacement. Strict per-test
-            # bigfoot assertions are still available via
-            # ``bigfoot.http.assert_request`` directly.
+            # tripwire assertions are still available via
+            # ``tripwire.http.assert_request`` directly.
             #
             # For each script item we register the same mock against every
-            # candidate URL. bigfoot's per-URL FIFO queue means the Nth call
+            # candidate URL. tripwire's per-URL FIFO queue means the Nth call
             # to a given URL consumes the Nth script item's variant for that
             # URL; ``required=False`` discards the unused variants at
             # sandbox exit.
@@ -230,7 +230,7 @@ def worker_llm_transport() -> Iterator:
                 raise_on_send = getattr(item, "raise_on_send", None)
                 if raise_on_send is not None:
                     for target_url in candidate_urls:
-                        bigfoot.http.mock_error(
+                        tripwire.http.mock_error(
                             "POST", target_url, raises=raise_on_send,
                             required=False,
                         )
@@ -239,12 +239,12 @@ def worker_llm_transport() -> Iterator:
                 status = getattr(item, "status", 200)
                 for target_url in candidate_urls:
                     if isinstance(body, dict):
-                        bigfoot.http.mock_response(
+                        tripwire.http.mock_response(
                             "POST", target_url, json=body, status=status,
                             required=False,
                         )
                     else:
-                        bigfoot.http.mock_response(
+                        tripwire.http.mock_response(
                             "POST",
                             target_url,
                             body=body if body else "",
@@ -265,7 +265,7 @@ def worker_llm_transport() -> Iterator:
             # Auto-assert any http / log interactions the test did not
             # assert so verify_all() at sandbox exit does not fail. Tests
             # that want stricter assertions may call
-            # bigfoot.http.assert_request / bigfoot.log.assert_log
+            # tripwire.http.assert_request / tripwire.log.assert_log
             # inside the test body; already-asserted interactions stay so.
             _mark_auto_interactions_asserted(verifier)
 

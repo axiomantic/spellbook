@@ -2,7 +2,7 @@
 
 import json
 import pytest
-import bigfoot
+import tripwire
 from datetime import datetime, timedelta
 from dirty_equals import IsStr
 from pathlib import Path
@@ -67,10 +67,10 @@ class TestEndToEndSkillAnalytics:
         # Create watcher and run analysis
         watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
-        mock_get_session = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+        mock_get_session = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
         mock_get_session.returns(session_file)
 
-        with bigfoot:
+        with tripwire:
             watcher._analyze_skills()
 
         mock_get_session.assert_call(args=(IsStr(),), kwargs={})
@@ -211,11 +211,11 @@ class TestSessionInactivityHandling:
         watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
         # Set up mock for both polls (two returns for two calls)
-        mock_get_session = bigfoot.mock("spellbook.sessions.compaction:_get_current_session_file")
+        mock_get_session = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
         mock_get_session.returns(session_file)
         mock_get_session.returns(session_file)
 
-        with bigfoot:
+        with tripwire:
             # First poll: detect skill
             watcher._analyze_skills()
 

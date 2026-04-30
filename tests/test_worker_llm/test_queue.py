@@ -6,13 +6,13 @@ invocation, callback failure isolation, drop-oldest on overflow, and the
 
 Strategy
 --------
-- HTTP mocking uses the existing ``worker_llm_transport`` bigfoot-backed
+- HTTP mocking uses the existing ``worker_llm_transport`` tripwire-backed
   fixture to intercept ``/chat/completions`` calls that the consumer
   dispatches via ``client.call``.
 - Event emission is asserted via ``monkeypatch`` on the module-local
   ``publish_call`` name inside ``queue.py`` (no ``unittest.mock``). The
   carve-out mirrors ``test_transcript_harvest.py``'s file-scope comment:
-  registering bigfoot mocks from inside a test body after the sandbox is
+  registering tripwire mocks from inside a test body after the sandbox is
   already active breaks the sandbox exit gate.
 - No ``unittest.mock`` anywhere.
 """

@@ -1,6 +1,6 @@
 """Tests for update notifications in session_init()."""
 
-import bigfoot
+import tripwire
 import pytest
 
 
@@ -26,10 +26,10 @@ class TestSessionGreetingNotifications:
         config_set("session_mode", "none")
 
         # Mock resume context (register before sandbox)
-        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume = tripwire.mock("spellbook.core.config:_get_resume_context")
         mock_resume.returns({"resume_available": False})
 
-        with bigfoot:
+        with tripwire:
             result = session_init()
 
         mock_resume.assert_call(args=(None, None), kwargs={})
@@ -53,10 +53,10 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume = tripwire.mock("spellbook.core.config:_get_resume_context")
         mock_resume.returns({"resume_available": False})
 
-        with bigfoot:
+        with tripwire:
             result = session_init()
 
         mock_resume.assert_call(args=(None, None), kwargs={})
@@ -82,10 +82,10 @@ class TestSessionGreetingNotifications:
         })
         config_set("session_mode", "none")
 
-        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume = tripwire.mock("spellbook.core.config:_get_resume_context")
         mock_resume.returns({"resume_available": False})
 
-        with bigfoot:
+        with tripwire:
             session_init()
 
         mock_resume.assert_call(args=(None, None), kwargs={})
@@ -105,10 +105,10 @@ class TestSessionGreetingNotifications:
         config_set("auto_update_paused", True)
         config_set("session_mode", "none")
 
-        mock_resume = bigfoot.mock("spellbook.core.config:_get_resume_context")
+        mock_resume = tripwire.mock("spellbook.core.config:_get_resume_context")
         mock_resume.returns({"resume_available": False})
 
-        with bigfoot:
+        with tripwire:
             result = session_init()
 
         mock_resume.assert_call(args=(None, None), kwargs={})

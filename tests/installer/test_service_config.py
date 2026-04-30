@@ -3,7 +3,7 @@
 from pathlib import Path
 from xml.etree import ElementTree
 
-import bigfoot
+import tripwire
 import pytest
 
 from installer.compat import (
@@ -88,17 +88,17 @@ class TestMcpServiceConfig:
         fake_python.parent.mkdir(parents=True)
         fake_python.write_text("#!/usr/bin/env python")
 
-        mock_get_daemon_python = bigfoot.mock(
+        mock_get_daemon_python = tripwire.mock(
             "installer.compat:_get_daemon_python_for_config"
         )
         mock_get_daemon_python.returns(str(fake_python))
-        mock_get_daemon_path = bigfoot.mock(
+        mock_get_daemon_path = tripwire.mock(
             "installer.compat:_get_daemon_path"
         )
         mock_get_daemon_path.returns("/usr/local/bin:/usr/bin")
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path / "config"))
 
-        with bigfoot:
+        with tripwire:
             config = mcp_service_config(
                 spellbook_dir=Path("/opt/spellbook"),
                 port=8765,
@@ -129,24 +129,24 @@ class TestMcpServiceConfig:
             health_check_host="127.0.0.1",
         )
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_get_daemon_python.assert_call(args=(), kwargs={})
             mock_get_daemon_path.assert_call(args=(), kwargs={})
 
     def test_falls_back_to_uv_when_no_daemon_python(self, tmp_path, monkeypatch):
-        mock_get_daemon_python = bigfoot.mock(
+        mock_get_daemon_python = tripwire.mock(
             "installer.compat:_get_daemon_python_for_config"
         )
         mock_get_daemon_python.returns(None)
-        mock_get_daemon_path = bigfoot.mock(
+        mock_get_daemon_path = tripwire.mock(
             "installer.compat:_get_daemon_path"
         )
         mock_get_daemon_path.returns("/usr/bin")
-        mock_which = bigfoot.mock("installer.compat:shutil.which")
+        mock_which = tripwire.mock("installer.compat:shutil.which")
         mock_which.returns("/usr/local/bin/uv")
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(tmp_path / "config"))
 
-        with bigfoot:
+        with tripwire:
             config = mcp_service_config(
                 spellbook_dir=Path("/opt/spellbook"),
                 port=8765,
@@ -156,7 +156,7 @@ class TestMcpServiceConfig:
         assert config.executable == Path("/usr/local/bin/uv")
         assert config.args == ["run", "python", "-m", "spellbook.mcp"]
 
-        with bigfoot.in_any_order():
+        with tripwire.in_any_order():
             mock_get_daemon_python.assert_call(args=(), kwargs={})
             mock_get_daemon_path.assert_call(args=(), kwargs={})
             mock_which.assert_call(args=("uv",), kwargs={})
@@ -219,10 +219,10 @@ class TestServiceManagerAcceptsConfig:
         config = _make_config(launchd_label="com.test.svc")
         manager = ServiceManager(config)
 
-        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
+        mock_plist = tripwire.mock.object(manager, "_launchd_plist_path")
         mock_plist.returns(plist)
 
-        with bigfoot:
+        with tripwire:
             result = manager.is_installed()
 
         assert result is True
@@ -236,10 +236,10 @@ class TestServiceManagerAcceptsConfig:
         config = _make_config()
         manager = ServiceManager(config)
 
-        mock_plist = bigfoot.mock.object(manager, "_launchd_plist_path")
+        mock_plist = tripwire.mock.object(manager, "_launchd_plist_path")
         mock_plist.returns(tmp_path / "nonexistent.plist")
 
-        with bigfoot:
+        with tripwire:
             result = manager.is_installed()
 
         assert result is False
@@ -255,10 +255,10 @@ class TestServiceManagerAcceptsConfig:
         config = _make_config(service_name="test-svc")
         manager = ServiceManager(config)
 
-        mock_svc = bigfoot.mock.object(manager, "_systemd_service_path")
+        mock_svc = tripwire.mock.object(manager, "_systemd_service_path")
         mock_svc.returns(service_file)
 
-        with bigfoot:
+        with tripwire:
             result = manager.is_installed()
 
         assert result is True
@@ -286,16 +286,16 @@ class TestServiceManagerIsRunning:
         config = _make_config(health_check_port=None)
         manager = ServiceManager(config)
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["launchctl", "list", "com.test.svc"],
             returncode=1,
         )
 
-        with bigfoot:
+        with tripwire:
             result = manager.is_running()
 
         assert result is False
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["launchctl", "list", "com.test.svc"],
             returncode=1,
             stdout="",
@@ -348,14 +348,14 @@ class TestServiceManagerStop:
         manager = ServiceManager(config)
 
         # Mock _pid_exists to return True so the PID-based kill path is taken
-        mock_pid_exists = bigfoot.mock("spellbook.core.services:_pid_exists")
+        mock_pid_exists = tripwire.mock("spellbook.core.services:_pid_exists")
         mock_pid_exists.returns(True)
 
         # Mock _kill_process to verify os.kill is attempted with the correct PID
-        mock_kill = bigfoot.mock.object(manager, "_kill_process")
+        mock_kill = tripwire.mock.object(manager, "_kill_process")
         mock_kill.returns(None)
 
-        with bigfoot:
+        with tripwire:
             success, msg = manager.stop()
 
         assert success is True
@@ -372,16 +372,16 @@ class TestServiceManagerStop:
         config = _make_config(pid_file=None, service_name="my-svc")
         manager = ServiceManager(config)
 
-        bigfoot.subprocess.mock_run(
+        tripwire.subprocess.mock_run(
             command=["systemctl", "--user", "stop", "my-svc"],
             returncode=0,
         )
 
-        with bigfoot:
+        with tripwire:
             success, msg = manager.stop()
 
         assert success is True
-        bigfoot.subprocess.assert_run(
+        tripwire.subprocess.assert_run(
             command=["systemctl", "--user", "stop", "my-svc"],
             returncode=0,
             stdout="",

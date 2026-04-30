@@ -1,7 +1,7 @@
 """Integration tests for MCP server tools."""
 
 import pytest
-import bigfoot
+import tripwire
 import json
 import os
 from pathlib import Path
@@ -232,18 +232,18 @@ def test_shutdown_cleanup_stops_watchers_and_closes_connections(monkeypatch):
     monkeypatch.setattr(server, "_watcher", mock_watcher)
     monkeypatch.setattr(server, "_update_watcher", mock_update_watcher)
 
-    mock_watcher_stop = bigfoot.mock.object(mock_watcher, "stop")
+    mock_watcher_stop = tripwire.mock.object(mock_watcher, "stop")
     mock_watcher_stop.returns(None)
-    mock_update_stop = bigfoot.mock.object(mock_update_watcher, "stop")
+    mock_update_stop = tripwire.mock.object(mock_update_watcher, "stop")
     mock_update_stop.returns(None)
-    mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
+    mock_close_db = tripwire.mock("spellbook.core.db:close_all_connections")
     mock_close_db.returns(None)
-    mock_close_forged = bigfoot.mock("spellbook.forged.schema:close_forged_connections")
+    mock_close_forged = tripwire.mock("spellbook.forged.schema:close_forged_connections")
     mock_close_forged.returns(None)
-    mock_close_fractal = bigfoot.mock("spellbook.fractal.schema:close_all_fractal_connections")
+    mock_close_fractal = tripwire.mock("spellbook.fractal.schema:close_all_fractal_connections")
     mock_close_fractal.returns(None)
 
-    with bigfoot:
+    with tripwire:
         server._shutdown_cleanup()
 
     mock_watcher_stop.assert_call()
@@ -260,14 +260,14 @@ def test_shutdown_cleanup_handles_none_watchers(monkeypatch):
     monkeypatch.setattr(server, "_watcher", None)
     monkeypatch.setattr(server, "_update_watcher", None)
 
-    mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
+    mock_close_db = tripwire.mock("spellbook.core.db:close_all_connections")
     mock_close_db.returns(None)
-    mock_close_forged = bigfoot.mock("spellbook.forged.schema:close_forged_connections")
+    mock_close_forged = tripwire.mock("spellbook.forged.schema:close_forged_connections")
     mock_close_forged.returns(None)
-    mock_close_fractal = bigfoot.mock("spellbook.fractal.schema:close_all_fractal_connections")
+    mock_close_fractal = tripwire.mock("spellbook.fractal.schema:close_all_fractal_connections")
     mock_close_fractal.returns(None)
 
-    with bigfoot:
+    with tripwire:
         # Should not raise
         server._shutdown_cleanup()
 
@@ -283,14 +283,14 @@ def test_shutdown_cleanup_resilient_to_close_failures(monkeypatch):
     monkeypatch.setattr(server, "_watcher", None)
     monkeypatch.setattr(server, "_update_watcher", None)
 
-    mock_close_db = bigfoot.mock("spellbook.core.db:close_all_connections")
+    mock_close_db = tripwire.mock("spellbook.core.db:close_all_connections")
     mock_close_db.raises(RuntimeError("db error"))
-    mock_close_forged = bigfoot.mock("spellbook.forged.schema:close_forged_connections")
+    mock_close_forged = tripwire.mock("spellbook.forged.schema:close_forged_connections")
     mock_close_forged.raises(RuntimeError("forged error"))
-    mock_close_fractal = bigfoot.mock("spellbook.fractal.schema:close_all_fractal_connections")
+    mock_close_fractal = tripwire.mock("spellbook.fractal.schema:close_all_fractal_connections")
     mock_close_fractal.raises(RuntimeError("fractal error"))
 
-    with bigfoot:
+    with tripwire:
         # Should not raise despite all close functions failing
         server._shutdown_cleanup()
 
@@ -308,11 +308,11 @@ def test_shutdown_cleanup_watcher_stop_not_guarded(monkeypatch):
     monkeypatch.setattr(server, "_watcher", mock_watcher)
     monkeypatch.setattr(server, "_update_watcher", None)
 
-    mock_watcher_stop = bigfoot.mock.object(mock_watcher, "stop")
+    mock_watcher_stop = tripwire.mock.object(mock_watcher, "stop")
     mock_watcher_stop.raises(RuntimeError("watcher stop error"))
 
     with pytest.raises(RuntimeError, match="watcher stop error"):
-        with bigfoot:
+        with tripwire:
             server._shutdown_cleanup()
 
     mock_watcher_stop.assert_call(args=(), kwargs={}, raised=IsInstance(RuntimeError))

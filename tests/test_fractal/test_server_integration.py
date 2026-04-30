@@ -7,7 +7,7 @@ Tests that:
 4. init_fractal_schema is imported and called during server init
 """
 
-import bigfoot
+import tripwire
 import pytest
 import json
 
@@ -499,12 +499,12 @@ class TestServerToolParameterMapping:
         """fractal_create_graph wrapper should pass metadata as metadata_json."""
         from spellbook import server
 
-        mock_create = bigfoot.mock(
+        mock_create = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_create_graph"
         )
         mock_create.calls(_async_returns({"graph_id": "test", "status": "active"}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_create_graph.fn(
                 seed="test question",
                 intensity="pulse",
@@ -526,12 +526,12 @@ class TestServerToolParameterMapping:
         """fractal_add_node wrapper should pass metadata as metadata_json."""
         from spellbook import server
 
-        mock_add = bigfoot.mock(
+        mock_add = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_add_node"
         )
         mock_add.calls(_async_returns({"node_id": "test", "status": "open"}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_add_node.fn(
                 graph_id="g1",
                 parent_id="p1",
@@ -557,12 +557,12 @@ class TestServerToolParameterMapping:
         """fractal_update_node wrapper should pass metadata as metadata_json."""
         from spellbook import server
 
-        mock_update = bigfoot.mock(
+        mock_update = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_update_node"
         )
         mock_update.calls(_async_returns({"node_id": "n1", "metadata": {}}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_update_node.fn(
                 graph_id="g1",
                 node_id="n1",
@@ -582,12 +582,12 @@ class TestServerToolParameterMapping:
         """fractal_resume_graph wrapper should pass graph_id directly."""
         from spellbook import server
 
-        mock_resume = bigfoot.mock(
+        mock_resume = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_resume_graph"
         )
         mock_resume.calls(_async_returns({"graph_id": "g1", "status": "active"}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_resume_graph.fn(graph_id="g1")
 
         mock_resume.assert_call(
@@ -599,12 +599,12 @@ class TestServerToolParameterMapping:
         """fractal_delete_graph wrapper should pass graph_id directly."""
         from spellbook import server
 
-        mock_delete = bigfoot.mock(
+        mock_delete = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_delete_graph"
         )
         mock_delete.calls(_async_returns({"deleted": True}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_delete_graph.fn(graph_id="g1")
 
         mock_delete.assert_call(
@@ -616,12 +616,12 @@ class TestServerToolParameterMapping:
         """fractal_update_graph_status wrapper should pass all params."""
         from spellbook import server
 
-        mock_status = bigfoot.mock(
+        mock_status = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_update_graph_status"
         )
         mock_status.calls(_async_returns({"status": "completed"}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_update_graph_status.fn(
                 graph_id="g1",
                 status="completed",
@@ -641,12 +641,12 @@ class TestServerToolParameterMapping:
         """fractal_mark_saturated wrapper should pass all params."""
         from spellbook import server
 
-        mock_sat = bigfoot.mock(
+        mock_sat = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_mark_saturated"
         )
         mock_sat.calls(_async_returns({"status": "saturated"}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_mark_saturated.fn(
                 graph_id="g1",
                 node_id="n1",
@@ -666,12 +666,12 @@ class TestServerToolParameterMapping:
         """fractal_get_snapshot wrapper should pass graph_id."""
         from spellbook import server
 
-        mock_snap = bigfoot.mock(
+        mock_snap = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_get_snapshot"
         )
         mock_snap.calls(_async_returns({"graph_id": "g1", "nodes": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_get_snapshot.fn(graph_id="g1")
 
         mock_snap.assert_call(
@@ -683,12 +683,12 @@ class TestServerToolParameterMapping:
         """fractal_get_branch wrapper should pass graph_id and node_id."""
         from spellbook import server
 
-        mock_branch = bigfoot.mock(
+        mock_branch = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_get_branch"
         )
         mock_branch.calls(_async_returns({"graph_id": "g1", "nodes": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_get_branch.fn(graph_id="g1", node_id="n1")
 
         mock_branch.assert_call(
@@ -700,12 +700,12 @@ class TestServerToolParameterMapping:
         """fractal_get_open_questions wrapper should pass graph_id."""
         from spellbook import server
 
-        mock_oq = bigfoot.mock(
+        mock_oq = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_get_open_questions"
         )
         mock_oq.calls(_async_returns({"graph_id": "g1", "open_questions": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_get_open_questions.fn(graph_id="g1")
 
         mock_oq.assert_call(
@@ -717,12 +717,12 @@ class TestServerToolParameterMapping:
         """fractal_query_convergence wrapper should pass graph_id."""
         from spellbook import server
 
-        mock_conv = bigfoot.mock(
+        mock_conv = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_query_convergence"
         )
         mock_conv.calls(_async_returns({"graph_id": "g1", "convergence_points": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_query_convergence.fn(graph_id="g1")
 
         mock_conv.assert_call(
@@ -734,12 +734,12 @@ class TestServerToolParameterMapping:
         """fractal_query_contradictions wrapper should pass graph_id."""
         from spellbook import server
 
-        mock_cont = bigfoot.mock(
+        mock_cont = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_query_contradictions"
         )
         mock_cont.calls(_async_returns({"graph_id": "g1", "contradictions": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_query_contradictions.fn(graph_id="g1")
 
         mock_cont.assert_call(
@@ -751,12 +751,12 @@ class TestServerToolParameterMapping:
         """fractal_get_saturation_status wrapper should pass graph_id."""
         from spellbook import server
 
-        mock_ss = bigfoot.mock(
+        mock_ss = tripwire.mock(
             "spellbook.mcp.tools.fractal:do_fractal_get_saturation_status"
         )
         mock_ss.calls(_async_returns({"graph_id": "g1", "branches": []}))
 
-        async with bigfoot:
+        async with tripwire:
             await server.fractal_get_saturation_status.fn(graph_id="g1")
 
         mock_ss.assert_call(

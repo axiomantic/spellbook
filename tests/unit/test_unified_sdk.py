@@ -1,6 +1,6 @@
 import os
 import asyncio
-import bigfoot
+import tripwire
 import pytest
 from spellbook.sdk.unified import (
     AgentOptions,
@@ -51,14 +51,14 @@ async def test_claude_agent_client_query():
 
     # Use a sentinel so we can assert the exact constructor arg
     sentinel_options = object()
-    mock_make_opts = bigfoot.mock.object(client, "_make_claude_options")
+    mock_make_opts = tripwire.mock.object(client, "_make_claude_options")
     mock_make_opts.returns(sentinel_options)
 
     # Mock the constructor to return our fake client
-    mock_sdk = bigfoot.mock("claude_agent_sdk:ClaudeSDKClient")
+    mock_sdk = tripwire.mock("claude_agent_sdk:ClaudeSDKClient")
     mock_sdk.returns(fake_client)
 
-    async with bigfoot:
+    async with tripwire:
         messages = []
         async for msg in client.query("hi"):
             messages.append(msg)
@@ -80,10 +80,10 @@ async def test_claude_agent_client_run():
     async def fake_query(prompt):
         yield AgentMessage(role="assistant", content="final result")
 
-    mock_query = bigfoot.mock.object(client, "query")
+    mock_query = tripwire.mock.object(client, "query")
     mock_query.calls(fake_query)
 
-    async with bigfoot:
+    async with tripwire:
         result = await client.run("do something")
 
     mock_query.assert_call(args=("do something",), kwargs={})
@@ -117,10 +117,10 @@ async def test_gemini_agent_client_run():
 
         return FakeProcess()
 
-    mock_exec = bigfoot.mock.object(asyncio, "create_subprocess_exec")
+    mock_exec = tripwire.mock.object(asyncio, "create_subprocess_exec")
     mock_exec.calls(fake_create_subprocess_exec)
 
-    async with bigfoot:
+    async with tripwire:
         result = await client.run("hi")
 
     # The expected command line built by GeminiAgentClient.query()
@@ -187,14 +187,14 @@ def test_get_agent_client_factory(monkeypatch):
 def test_gemini_spawn_session():
     client = GeminiAgentClient()
 
-    mock_spawn = bigfoot.mock("spellbook.daemon.terminal:spawn_terminal_window")
+    mock_spawn = tripwire.mock("spellbook.daemon.terminal:spawn_terminal_window")
     mock_spawn.returns({"status": "spawned"})
 
     # spawn_session also calls detect_terminal when terminal=None
-    mock_detect = bigfoot.mock("spellbook.daemon.terminal:detect_terminal")
+    mock_detect = tripwire.mock("spellbook.daemon.terminal:detect_terminal")
     mock_detect.returns("iterm2")
 
-    with bigfoot:
+    with tripwire:
         result = client.spawn_session("start shell")
 
     mock_detect.assert_call()
