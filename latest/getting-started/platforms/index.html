@@ -635,6 +635,84 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#forgecode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ForgeCode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ForgeCode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-time-vs-runtime-divergence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install-time vs runtime divergence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limitations_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provider-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing-platform-support" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8136,6 +8214,84 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#forgecode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ForgeCode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ForgeCode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-time-vs-runtime-divergence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install-time vs runtime divergence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limitations_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provider-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing-platform-support" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8167,7 +8323,7 @@
 
 
 <h1 id="platform-support">Platform Support<a class="headerlink" href="#platform-support" title="Permanent link">&para;</a></h1>
-<p>Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, and Gemini CLI have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.</p>
+<p>Spellbook works across multiple AI coding assistants. Claude Code is the primary supported platform with full support. OpenCode, Codex, Gemini CLI, and ForgeCode have basic support. Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose; these are noted in the relevant documentation. Contributions to extend coverage for other platforms are welcome.</p>
 <h2 id="claude-code">Claude Code<a class="headerlink" href="#claude-code" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Primary platform, full support</p>
 <p>Claude Code receives full support for all Spellbook features.</p>
@@ -8248,8 +8404,54 @@
 <li>No <code>Task</code> tool for subagent orchestration. Skills requiring subagents will inform the user to use Claude Code.</li>
 <li>Native skill discovery is pending upstream support (<a href="https://github.com/google-gemini/gemini-cli/issues/15327">gemini-cli#15327</a>). Until then, skills are loaded via the MCP server.</li>
 </ul>
+<h2 id="forgecode">ForgeCode<a class="headerlink" href="#forgecode" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> Basic support</p>
+<p>ForgeCode integration via AGENTS.md, MCP server, and built-in agent detection. Skills and MCP tools work, but subagent orchestration is unavailable.</p>
+<h3 id="setup_4">Setup<a class="headerlink" href="#setup_4" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Run the installer: <code>python3 install.py</code></li>
+<li>The installer:</li>
+<li>Resolves the ForgeCode config directory using this priority:<ol>
+<li><code>$FORGE_CONFIG</code> environment variable, if set (takes precedence)</li>
+<li>Legacy <code>~/forge</code> directory, if it pre-exists (migration path for older forge installs)</li>
+<li><code>~/.forge</code> (default)</li>
+</ol>
+</li>
+<li>Writes spellbook context to <code>&lt;config-dir&gt;/AGENTS.md</code></li>
+<li>Registers the spellbook MCP server in <code>&lt;config-dir&gt;/.mcp.json</code> (mode 0600), top-level key <code>mcpServers</code></li>
+</ol>
+<h4 id="install-time-vs-runtime-divergence">Install-time vs runtime divergence<a class="headerlink" href="#install-time-vs-runtime-divergence" title="Permanent link">&para;</a></h4>
+<p>If you run the installer in a context where <code>$FORGE_CONFIG</code> is unset (CI, <code>sudo</code>, a fresh terminal that has not yet sourced your shell rc) but your interactive shell sets it via <code>.envrc</code> / direnv / shell-rc, the installer will write to <code>~/.forge</code> while forge itself reads from your custom path at runtime. The result is that the spellbook MCP server is invisible inside forge even though installation reported success.</p>
+<p>To avoid this, ensure <code>$FORGE_CONFIG</code> is set in the shell environment that runs the spellbook installer. The installer emits a warning at install time if <code>$FORGE_CONFIG</code> is unset.</p>
+<p>To recover after a divergent install, re-run the installer with the variable set explicitly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">FORGE_CONFIG</span><span class="o">=</span>&lt;your-path&gt;<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>install.py<span class="w"> </span>--platforms<span class="w"> </span>forgecode
+</code></pre></div>
+<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Context and instructions via spellbook's demarcated section in <code>&lt;config-dir&gt;/AGENTS.md</code></li>
+<li>MCP server registration in <code>&lt;config-dir&gt;/.mcp.json</code> (mode 0600, top-level <code>mcpServers</code> key)</li>
+<li>Bearer-token authentication via mustache-template-supported <code>headers</code> (literal token in v1)</li>
+<li>Platform self-identification via <code>You are Forge|Sage|Muse</code> system prompt opener for the three built-in agents</li>
+</ul>
+<h3 id="limitations_2">Limitations<a class="headerlink" href="#limitations_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>forge</code> binary collision:</strong> ForgeCode's CLI is named <code>forge</code>, which collides with <a href="https://book.getfoundry.sh/">Foundry's <code>forge</code></a> (Solidity toolkit) and <a href="https://forge.laravel.com/">Laravel Forge</a> tooling. If you have either installed, ensure ForgeCode's <code>forge</code> is first on your <code>PATH</code>, or invoke it by absolute path.</li>
+<li><strong>YOLO flag:</strong> ForgeCode does not yet have a documented YOLO-equivalent flag in spellbook's matrix. Adding one is deferred pending research into ForgeCode's <code>permissions.yaml</code> model.</li>
+<li><strong>Sage and Muse personas:</strong> Spellbook detects Sage and Muse as <code>forgecode</code>, but their personas are tuned for non-coding tasks. Skill behavior is unchanged, but persona-driven tone may be unexpected.</li>
+<li><strong>Custom agents fall through:</strong> Agents defined in <code>~/.forge/agents/</code> (custom user agents) are not detected as <code>forgecode</code> by spellbook's <code>session_init</code>. Only the three built-in agents trigger forgecode-mode behavior. Custom agents will receive generic platform handling.</li>
+<li>No subagent support (Task tool unavailable)</li>
+</ul>
+<h2 id="provider-authentication">Provider authentication<a class="headerlink" href="#provider-authentication" title="Permanent link">&para;</a></h2>
+<p>Spellbook is provider-agnostic, but third-party harnesses often have constraints worth knowing before you wire up keys.</p>
+<p>As of this writing (<em>Last reviewed: 2026-04</em>):</p>
+<ul>
+<li><strong>Claude Code:</strong> First-party Anthropic harness; expects an Anthropic API key or Claude subscription.</li>
+<li><strong>OpenCode, Codex, Gemini CLI, ForgeCode:</strong> Third-party harnesses that support multiple providers (OpenAI, Anthropic, Google, local models, etc.) via their own configuration. Spellbook does not impose additional auth requirements; refer to each harness's own documentation for provider setup.</li>
+</ul>
+<p>When using Anthropic models through a third-party harness, the harness routes API calls using its own credentials and configuration; Spellbook does not proxy or intercept these calls. Rate limits, quotas, and feature support (prompt caching, extended thinking, tool use) depend on the harness's implementation, not on Spellbook.</p>
+<p><em>Last reviewed: 2026-04</em></p>
 <h2 id="contributing-platform-support">Contributing Platform Support<a class="headerlink" href="#contributing-platform-support" title="Permanent link">&para;</a></h2>
-<p>If you use OpenCode, Codex, or Gemini CLI and want fuller Spellbook coverage, contributions are welcome. See the <a href="../../contributing/porting-to-your-assistant/">Porting Guide</a> for how to add or extend platform support.</p>
+<p>If you use OpenCode, Codex, Gemini CLI, or ForgeCode and want fuller Spellbook coverage, contributions are welcome. See the <a href="../../contributing/porting-to-your-assistant/">Porting Guide</a> for how to add or extend platform support.</p>
 
 
 
