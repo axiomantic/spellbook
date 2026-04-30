@@ -13,6 +13,7 @@ Identify your platform from your own system prompt or runtime context:
 | OpenCode | Your system prompt mentions OpenCode or YOLO mode | `opencode` | OpenCode |
 | Codex | Your system prompt mentions Codex sandbox | `codex` | Codex |
 | Gemini CLI | Your system prompt mentions Gemini CLI | `gemini` | Gemini |
+| ForgeCode | Your system prompt opens with 'You are Forge', 'You are Sage', or 'You are Muse' (built-in agents only) | `forgecode` | Forge |
 
 If uncertain, omit the `platform` parameter (backward compatible). Use the assistant name in greetings.
 
