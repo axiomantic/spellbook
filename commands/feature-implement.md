@@ -155,7 +155,7 @@ else: delegated (single session, subagent execution)
 **Routing:**
 
 - If `work_items`: Proceed to 3.5 and 3.6
-- If `sub_orchestrators`: Skip to Phase 4 (Phase 4.2 dispatches to `dispatching-sub-orchestrators` skill)
+- If `sub_orchestrators`: Skip to Phase 4 (Phase 4.0 dispatches to `dispatching-sub-orchestrators` skill, then 4.6.1 - 4.7 run at CEO level)
 - If `delegated` or `direct`: Skip to Phase 4 (existing flow)
 </analysis>
 
