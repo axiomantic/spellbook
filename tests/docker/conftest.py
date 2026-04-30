@@ -199,11 +199,11 @@ def platform_env(
     """Factory fixture that returns a context manager for platform-specific env vars.
 
     For platforms whose installer respects a config-dir env var
-    (``claude_code`` via ``CLAUDE_CONFIG_DIR``), the env var is set to
-    point inside the isolated home. For all other platforms
-    (``opencode``, ``codex``, ``gemini``), the directories are created
-    under the isolated HOME so that ``Path.home()``-relative resolution
-    finds them.
+    (``claude_code`` via ``CLAUDE_CONFIG_DIR``, ``forgecode`` via
+    ``FORGE_CONFIG``), the env var is set to point inside the isolated
+    home. For all other platforms (``opencode``, ``codex``, ``gemini``),
+    the directories are created under the isolated HOME so that
+    ``Path.home()``-relative resolution finds them.
 
     The context manager creates the directories and restores env vars
     on exit.
@@ -220,6 +220,7 @@ def platform_env(
         "opencode": (None, ".config/opencode"),
         "codex": (None, ".codex"),
         "gemini": (None, ".gemini"),
+        "forgecode": ("FORGE_CONFIG", ".forge"),
     }
 
     @contextmanager
