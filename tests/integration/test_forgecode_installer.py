@@ -212,33 +212,34 @@ class TestForgeCodeInstall:
 
         monkeypatch.delenv("FORGE_CONFIG", raising=False)
 
-        # Mock Path.home(). The resolver calls home() twice per resolution
-        # (legacy + default), and _resolve_effective_config_dir is invoked
-        # from both install() and _step bookkeeping. Queue enough returns
-        # and assert each interaction.
+        # Mock Path.home(). The install pipeline does 3 home() lookups in
+        # this scenario (the resolver checks legacy + default, plus one
+        # additional lookup elsewhere in the install path). The interleaving
+        # of home() and get_mcp_auth_token() is an implementation detail of
+        # the install pipeline, so we assert order-independently using
+        # bigfoot.in_any_order() (the tripwire/bigfoot-blessed escape hatch
+        # for "interactions occurred but the relative ordering is incidental").
+        #
+        # We pin EXPECTED_HOME_CALLS rather than draining: if the resolver
+        # ever stops calling home() (e.g. caches the result), the test must
+        # fail loudly rather than silently pass with zero asserts. tripwire's
+        # MethodProxy.assert_call() asserts one interaction at a time; there
+        # is no times=N parameter (verified against
+        # tripwire/_mock_plugin.py:130-158).
+        EXPECTED_HOME_CALLS = 3
         m_home = bigfoot.mock("pathlib:Path.home")
-        # Queue 8 optional returns (.required(False)). The resolver calls
-        # home() multiple times; we don't pin the exact count because it's
-        # an implementation detail of the resolver, not the contract under test.
-        for _ in range(8):
-            m_home.__call__.required(False).returns(tmp_path)
+        for _ in range(EXPECTED_HOME_CALLS):
+            m_home.__call__.returns(tmp_path)
         m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         installer = _make_installer(spellbook_dir, default)
         with bigfoot:
             installer.install()
 
-        # Drain however many home() calls actually occurred. We don't pin the
-        # exact count: it is an implementation detail of the resolver, not the
-        # contract under test (which is "legacy ~/forge wins when pre-existing").
-        # tripwire requires every interaction to be asserted, so loop until
-        # the unasserted queue is empty.
-        while True:
-            try:
+        with bigfoot.in_any_order():
+            for _ in range(EXPECTED_HOME_CALLS):
                 m_home.assert_call()
-            except Exception:
-                break
-        m_token.assert_call()
+            m_token.assert_call()
 
         legacy_actual = json.loads((legacy / ".mcp.json").read_text(encoding="utf-8"))
         assert legacy_actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
@@ -315,12 +316,15 @@ class TestForgeCodeInstall:
         # checks legacy ~/forge / default ~/.forge.
         monkeypatch.delenv("FORGE_CONFIG", raising=False)
 
+        # Mock Path.home(). With no pre-existing legacy ~/forge directory
+        # the resolver short-circuits earlier than the legacy-preference
+        # test: 3 home() calls total in this install path. See the legacy
+        # test for the full rationale on pinning the exact count and using
+        # in_any_order() instead of draining.
+        EXPECTED_HOME_CALLS = 3
         m_home = bigfoot.mock("pathlib:Path.home")
-        # Queue 8 optional returns (.required(False)). The resolver calls
-        # home() multiple times; we don't pin the exact count because it's
-        # an implementation detail of the resolver, not the contract under test.
-        for _ in range(8):
-            m_home.__call__.required(False).returns(tmp_path)
+        for _ in range(EXPECTED_HOME_CALLS):
+            m_home.__call__.returns(tmp_path)
         m_token = bigfoot.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
 
         # Real install (NOT dry_run) so the env_warning gating runs.
@@ -328,12 +332,10 @@ class TestForgeCodeInstall:
         with bigfoot:
             results = installer.install()
 
-        while True:
-            try:
+        with bigfoot.in_any_order():
+            for _ in range(EXPECTED_HOME_CALLS):
                 m_home.assert_call()
-            except Exception:
-                break
-        m_token.assert_call()
+            m_token.assert_call()
 
         warnings = [r for r in results if r.component == "env_warning"]
         assert len(warnings) == 1
