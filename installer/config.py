@@ -35,7 +35,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini"]
+SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "forgecode"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -86,6 +86,15 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         # Extension at ~/.gemini/extensions/spellbook/ -> <repo>/extensions/gemini/
         "context_file": None,
         "mcp_supported": True,  # Via extension
+    },
+    "forgecode": {
+        "name": "forgecode",
+        "config_dir_env": "FORGE_CONFIG",
+        "default_config_dir": Path.home() / ".forge",
+        "cli_flag_name": "forge-config-dir",
+        "context_file": "AGENTS.md",
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
     },
 }
 
