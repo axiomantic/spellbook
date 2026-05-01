@@ -16,7 +16,7 @@
         <link rel="prev" href="../devils-advocate/">
       
       
-        <link rel="next" href="../distilling-prs/">
+        <link rel="next" href="../dispatching-sub-orchestrators/">
       
       
         
@@ -3033,6 +3033,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatching-sub-orchestrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-sub-orchestrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -8298,448 +8326,458 @@
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
 <a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gu">## Specialized Subagent Templates</span>
 <a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="gu">### Test Writer Template</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="gu">### Sub-Orchestrator (Manager) Dispatch</span>
 <a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>Mandatory inclusion when dispatching any agent to write test code. Append to the agent&#39;s prompt:
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>For COMPLEX features with 15+ tasks across 2+ tracks, the standard &quot;one subagent per gate per task&quot; dispatch pattern bloats the orchestrator&#39;s context with summaries. The sub-orchestrator pattern interposes Manager subagents (sub-orchestrators) between the CEO orchestrator and the per-gate subagents: the CEO dispatches one Manager per file-ownership cluster, and each Manager runs its own per-task gates internally before returning a single compact structured summary.
 <a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>ASSERTION QUALITY REQUIREMENTS (non-negotiable):
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="k">0.</span> THE FULL ASSERTION PRINCIPLE (most important rule):
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>   ALL assertions must assert exact equality against the COMPLETE expected output.
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>   This applies to ALL output -- static, dynamic, or partially dynamic.
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>   assert result == &quot;the complete expected string&quot;  -- CORRECT
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>   assert result == f&quot;Today is {datetime.date.today()}&quot;  -- CORRECT (dynamic: construct full expected)
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>   assert &quot;substring&quot; in result                     -- BANNED. ALWAYS.
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>   assert dynamic_value in result                   -- BANNED. Dynamic content is no excuse.
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>   assert &quot;foo&quot; in result and &quot;bar&quot; in result       -- STILL BANNED.
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>   This applies to all functions. Multi-line output? Use triple-quoted strings. Length is not an excuse.
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">1.</span> Every assertion must be Level 4+ on the Assertion Strength Ladder:
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>String output: exact match (Level 5) or parsed structural (Level 4)
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Object output: full equality or all-field assertions
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Collection output: full equality or content verification
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Bare substring checks (assert &quot;X&quot; in output) are BANNED
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Length/existence checks (assert len(x) &gt; 0) are BANNED
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Multiple substring checks are STILL BANNED (not an improvement)
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Tautological assertions (assert result == func(same_input)) are BANNED
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>mock.ANY in call assertions is BANNED (construct expected argument)
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">2.</span> IRON LAW: Before writing any assertion, ask:
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>   &quot;If the value was garbage, would this catch it?&quot;
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>   If NO: stop and write a stronger assertion.
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">3.</span> BROKEN IMPLEMENTATION: For each test function, state in your output
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>   which specific production code mutation would cause the test to fail.
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>   If you cannot name one, the test is worthless.
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>This is a different dispatch shape from the templates in this skill, which assume the orchestrator dispatches gates directly. Do NOT inline a Manager dispatch template here. The canonical Manager Dispatch Template, the CEO loop, and the gotchas (Task-tool fallback to inline execution, single-worktree Manager serialization, file-ownership grouping vs wave grouping) live in the <span class="sb">`dispatching-sub-orchestrators`</span> skill.
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>When you need the Manager pattern, invoke <span class="sb">`dispatching-sub-orchestrators`</span> from the orchestrator (or from <span class="sb">`feature-implement`</span> Phase 4.0 when <span class="sb">`execution_mode == &quot;sub_orchestrators&quot;`</span>). When you only need parallel gate dispatch within a single orchestrator&#39;s context, the templates below still apply.
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="gu">### Test Writer Template</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>Mandatory inclusion when dispatching any agent to write test code. Append to the agent&#39;s prompt:
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>ASSERTION QUALITY REQUIREMENTS (non-negotiable):
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">0.</span> THE FULL ASSERTION PRINCIPLE (most important rule):
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>   ALL assertions must assert exact equality against the COMPLETE expected output.
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>   This applies to ALL output -- static, dynamic, or partially dynamic.
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>   assert result == &quot;the complete expected string&quot;  -- CORRECT
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>   assert result == f&quot;Today is {datetime.date.today()}&quot;  -- CORRECT (dynamic: construct full expected)
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>   assert &quot;substring&quot; in result                     -- BANNED. ALWAYS.
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>   assert dynamic_value in result                   -- BANNED. Dynamic content is no excuse.
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>   assert &quot;foo&quot; in result and &quot;bar&quot; in result       -- STILL BANNED.
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>   This applies to all functions. Multi-line output? Use triple-quoted strings. Length is not an excuse.
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">1.</span> Every assertion must be Level 4+ on the Assertion Strength Ladder:
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>String output: exact match (Level 5) or parsed structural (Level 4)
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Object output: full equality or all-field assertions
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Collection output: full equality or content verification
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Bare substring checks (assert &quot;X&quot; in output) are BANNED
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Length/existence checks (assert len(x) &gt; 0) are BANNED
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Multiple substring checks are STILL BANNED (not an improvement)
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Tautological assertions (assert result == func(same_input)) are BANNED
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>mock.ANY in call assertions is BANNED (construct expected argument)
 <a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">4.</span> STRUCTURAL CONTAINMENT: When asserting string content, verify WHERE
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>   it appears, not just THAT it appears. A field in a struct must be
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>   verified to be inside the struct block (by index range or parsing).
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">2.</span> IRON LAW: Before writing any assertion, ask:
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>   &quot;If the value was garbage, would this catch it?&quot;
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>   If NO: stop and write a stronger assertion.
 <a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">5.</span> NO PARTIAL-TO-PARTIAL UPGRADES: Replacing assert len(x) &gt; 0 with
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>   assert &quot;keyword&quot; in result is NOT a fix. Both are BANNED. A real fix
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>   reaches Level 4+ (exact equality or parsed structural validation).
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">3.</span> BROKEN IMPLEMENTATION: For each test function, state in your output
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>   which specific production code mutation would cause the test to fail.
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>   If you cannot name one, the test is worthless.
 <a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">6.</span> MOCK CALL ASSERTIONS: Assert EVERY call made to a mock, with ALL args,
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>   and verify call count. Never use mock.ANY -- construct expected args
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>   dynamically if they are dynamic. Asserting only some calls hides behavior gaps.
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="sb">```</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="gu">### Test Adversary Template</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>For review passes on test code. Dispatch a subagent with this persona to break every assertion:
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>ROLE: Test Adversary. Your job is to BREAK tests, not validate them.
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>Your reputation depends on finding weaknesses others missed.
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">4.</span> STRUCTURAL CONTAINMENT: When asserting string content, verify WHERE
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>   it appears, not just THAT it appears. A field in a struct must be
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>   verified to be inside the struct block (by index range or parsing).
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="k">5.</span> NO PARTIAL-TO-PARTIAL UPGRADES: Replacing assert len(x) &gt; 0 with
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>   assert &quot;keyword&quot; in result is NOT a fix. Both are BANNED. A real fix
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>   reaches Level 4+ (exact equality or parsed structural validation).
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">6.</span> MOCK CALL ASSERTIONS: Assert EVERY call made to a mock, with ALL args,
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>   and verify call count. Never use mock.ANY -- construct expected args
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>   dynamically if they are dynamic. Asserting only some calls hides behavior gaps.
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">```</span>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>Pay special attention to The Full Assertion Principle.
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>IMMEDIATE REJECTION CRITERIA (check these FIRST):
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="k">-</span><span class="w"> </span>Any assert &quot;X&quot; in result on ANY output (static or dynamic): REJECTED (Level 2)
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="k">-</span><span class="w"> </span>Any assert len(x) &gt; 0 or assert x is not None: REJECTED (Level 1)
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="k">-</span><span class="w"> </span>Any fix that replaced one BANNED pattern with another: REJECTED (Pattern 10)
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="k">-</span><span class="w"> </span>Any tautological assertion (assert result == func(same_input)): REJECTED
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>For each assertion in the code under review:
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">1.</span> Read the assertion and the production code it exercises
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">2.</span> Determine if the function is deterministic (same input = same output)
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">3.</span> If deterministic: ONLY Level 5 (exact equality) is acceptable
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">4.</span> Classify the assertion on the Assertion Strength Ladder
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">5.</span> Construct a SPECIFIC, PLAUSIBLE broken production implementation
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>   that would still pass this assertion
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">6.</span> Report your verdict:
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>   SURVIVED: [the broken implementation that passes]
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>   DETERMINISTIC: [Yes/No - is the function under test deterministic?]
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>   FIX: [what the assertion should be instead]
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>   -- or --
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>   KILLED: [why no plausible broken implementation survives]
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>   DETERMINISTIC: [Yes/No]
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>A &quot;plausible&quot; broken implementation is one that could result from a
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>real bug (off-by-one, wrong variable, missing field, swapped arguments,
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>dropped output section) -- not adversarial construction (return the
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>exact expected string).
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>Summary format:
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">-</span><span class="w"> </span>Total assertions reviewed: N
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">-</span><span class="w"> </span>KILLED: N (with ladder levels)
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span>SURVIVED: N (with required fixes)
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="k">-</span><span class="w"> </span>BANNED (Level 1-2): N (immediate rejection)
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="k">-</span><span class="w"> </span>Pattern 10 violations (partial-to-partial): N
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">```</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="gu">### Test Adversary Template</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>For review passes on test code. Dispatch a subagent with this persona to break every assertion:
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>ROLE: Test Adversary. Your job is to BREAK tests, not validate them.
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Your reputation depends on finding weaknesses others missed.
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>Pay special attention to The Full Assertion Principle.
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>IMMEDIATE REJECTION CRITERIA (check these FIRST):
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">-</span><span class="w"> </span>Any assert &quot;X&quot; in result on ANY output (static or dynamic): REJECTED (Level 2)
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">-</span><span class="w"> </span>Any assert len(x) &gt; 0 or assert x is not None: REJECTED (Level 1)
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">-</span><span class="w"> </span>Any fix that replaced one BANNED pattern with another: REJECTED (Pattern 10)
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Any tautological assertion (assert result == func(same_input)): REJECTED
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>For each assertion in the code under review:
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">1.</span> Read the assertion and the production code it exercises
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">2.</span> Determine if the function is deterministic (same input = same output)
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">3.</span> If deterministic: ONLY Level 5 (exact equality) is acceptable
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">4.</span> Classify the assertion on the Assertion Strength Ladder
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">5.</span> Construct a SPECIFIC, PLAUSIBLE broken production implementation
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>   that would still pass this assertion
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">6.</span> Report your verdict:
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>   SURVIVED: [the broken implementation that passes]
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>   DETERMINISTIC: [Yes/No - is the function under test deterministic?]
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>   FIX: [what the assertion should be instead]
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>   -- or --
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>   KILLED: [why no plausible broken implementation survives]
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>   DETERMINISTIC: [Yes/No]
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>A &quot;plausible&quot; broken implementation is one that could result from a
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>real bug (off-by-one, wrong variable, missing field, swapped arguments,
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>dropped output section) -- not adversarial construction (return the
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>exact expected string).
 <a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="gu">### Branch-Scoped Review Template</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>When dispatching a subagent to review a branch&#39;s changes (not a GitHub PR, but a local branch diff), the subagent MUST receive the actual diff, not just file paths.
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="gs">**Why:**</span> A file path points to the entire file. The subagent cannot distinguish code this branch changed from pre-existing code. It will flag pre-existing gaps as branch regressions, producing confidently wrong findings.
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="gs">**Step 1: Compute the diff before dispatch:**</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>Summary format:
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="k">-</span><span class="w"> </span>Total assertions reviewed: N
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="k">-</span><span class="w"> </span>KILLED: N (with ladder levels)
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="k">-</span><span class="w"> </span>SURVIVED: N (with required fixes)
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="k">-</span><span class="w"> </span>BANNED (Level 1-2): N (immediate rejection)
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">-</span><span class="w"> </span>Pattern 10 violations (partial-to-partial): N
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">```</span>
 <a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="nb">cd</span><span class="w"> </span>&lt;worktree-or-repo-path&gt;<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>diff<span class="w"> </span>origin/master...HEAD
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="sb">```</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="gu">### Branch-Scoped Review Template</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>When dispatching a subagent to review a branch&#39;s changes (not a GitHub PR, but a local branch diff), the subagent MUST receive the actual diff, not just file paths.
 <a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="gs">**Step 2: Include in subagent prompt:**</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="gs">**Why:**</span> A file path points to the entire file. The subagent cannot distinguish code this branch changed from pre-existing code. It will flag pre-existing gaps as branch regressions, producing confidently wrong findings.
 <a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="gu">## Branch Review Context (MANDATORY)</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">-</span><span class="w"> </span>Branch: &lt;branch-name&gt;
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;absolute-path&gt;
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">-</span><span class="w"> </span>Merge base: origin/master
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>SCOPE CONSTRAINT: Only analyze code that appears in the diff below. Functions in
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>changed files that were NOT modified by this branch are OUT OF SCOPE. Do not flag
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>pre-existing issues as branch regressions.
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="gs">**Step 1: Compute the diff before dispatch:**</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="nb">cd</span><span class="w"> </span>&lt;worktree-or-repo-path&gt;<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>diff<span class="w"> </span>origin/master...HEAD
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">```</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="gs">**Step 2: Include in subagent prompt:**</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="gu">## Branch Review Context (MANDATORY)</span>
 <a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>VERIFICATION PREAMBLE: Before any other work, run:
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>  cd &lt;working-directory&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>Verify you are in the correct directory on the correct branch. If not, stop and report the mismatch.
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="k">-</span><span class="w"> </span>Branch: &lt;branch-name&gt;
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;absolute-path&gt;
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="k">-</span><span class="w"> </span>Merge base: origin/master
 <a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="gu">## Diff</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>&lt;paste diff output here, or for large diffs, paste the --stat and
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a> provide per-file diffs as separate sections&gt;
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="sb">```</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>If the diff is too large to inline, pre-compute the list of changed functions:
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>git<span class="w"> </span>diff<span class="w"> </span>origin/master...HEAD<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^\+.*def |^\+.*class |^@@&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-50
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="sb">```</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>Pass this as an explicit allow-list: &quot;The following functions were added or modified. Only these are in scope.&quot;
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">### PR Review Subagent Template</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>SCOPE CONSTRAINT: Only analyze code that appears in the diff below. Functions in
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>changed files that were NOT modified by this branch are OUT OF SCOPE. Do not flag
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>pre-existing issues as branch regressions.
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>VERIFICATION PREAMBLE: Before any other work, run:
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>  cd &lt;working-directory&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>Verify you are in the correct directory on the correct branch. If not, stop and report the mismatch.
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="gu">## Diff</span>
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>&lt;paste diff output here, or for large diffs, paste the --stat and
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a> provide per-file diffs as separate sections&gt;
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="sb">```</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>REQUIRED when dispatching any subagent to review a PR (target is a PR number or URL, not a local branch).
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gs">**Step 1 — Resolve review mode before dispatch:**</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="c1"># Get the PR HEAD SHA</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="nv">PR_HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefOid<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefOid&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>If the diff is too large to inline, pre-compute the list of changed functions:
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>git<span class="w"> </span>diff<span class="w"> </span>origin/master...HEAD<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^\+.*def |^\+.*class |^@@&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-50
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="sb">```</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>Pass this as an explicit allow-list: &quot;The following functions were added or modified. Only these are in scope.&quot;
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="gu">### PR Review Subagent Template</span>
 <a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="c1"># Check if a worktree exists for the PR branch</span>
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="nv">PR_BRANCH</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefName<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefName&#39;</span><span class="k">)</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="nv">WORKTREE_PATH</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>worktree<span class="w"> </span>list<span class="w"> </span>--porcelain<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A2<span class="w"> </span><span class="s2">&quot;branch refs/heads/</span><span class="nv">$PR_BRANCH</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;worktree&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="sb">```</span>
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a>
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>| Condition | Review Mode | Agent Working Directory |
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>|-----------|-------------|------------------------|
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>| Worktree exists for PR branch | <span class="sb">`LOCAL_FILES`</span> | <span class="sb">`$WORKTREE_PATH`</span> |
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>| No worktree, local HEAD = PR HEAD SHA | <span class="sb">`LOCAL_FILES`</span> | Current repo root |
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>| No worktree, local HEAD ≠ PR HEAD SHA | <span class="sb">`DIFF_ONLY`</span> | N/A — use diff only |
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="gs">**Step 2 — Inject into subagent prompt:**</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>REQUIRED when dispatching any subagent to review a PR (target is a PR number or URL, not a local branch).
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="gs">**Step 1 — Resolve review mode before dispatch:**</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="c1"># Get the PR HEAD SHA</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="nv">PR_HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefOid<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefOid&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="c1"># Check if a worktree exists for the PR branch</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="nv">PR_BRANCH</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefName<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefName&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="nv">WORKTREE_PATH</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>worktree<span class="w"> </span>list<span class="w"> </span>--porcelain<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A2<span class="w"> </span><span class="s2">&quot;branch refs/heads/</span><span class="nv">$PR_BRANCH</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;worktree&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="sb">```</span>
 <a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="gu">## PR Review Context (MANDATORY — read before touching any file)</span>
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">-</span><span class="w"> </span>PR: #&lt;NUMBER&gt;
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span>PR HEAD SHA: &lt;SHA&gt;
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span>Review mode: LOCAL_FILES | DIFF_ONLY
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;WORKTREE_PATH or &quot;use diff only&quot;&gt;
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>Changed files: &lt;LIST&gt;
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>REVIEW MODE INSTRUCTIONS:
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="k">-</span><span class="w"> </span>LOCAL_FILES: Safe to read files in &lt;working_directory&gt;. DO NOT read files outside this directory.
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="k">-</span><span class="w"> </span>DIFF_ONLY: DO NOT read any local files in the changed file set. The diff is the ONLY
-<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>  authoritative source. Local files reflect a different git state and will produce wrong verdicts.
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>  Any &quot;not present&quot; finding based on a local file read is WRONG in this mode.
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="sb">```</span>
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">-</span><span class="w"> </span>Dispatching a PR review subagent without injecting PR HEAD SHA and review mode
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">-</span><span class="w"> </span>Dispatching in LOCAL_FILES mode without specifying the exact working directory (repo root or worktree path)
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="k">-</span><span class="w"> </span>Dispatching in DIFF_ONLY mode while pointing the agent at the local filesystem for review work
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>---
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>| Condition | Review Mode | Agent Working Directory |
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>|-----------|-------------|------------------------|
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>| Worktree exists for PR branch | <span class="sb">`LOCAL_FILES`</span> | <span class="sb">`$WORKTREE_PATH`</span> |
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>| No worktree, local HEAD = PR HEAD SHA | <span class="sb">`LOCAL_FILES`</span> | Current repo root |
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>| No worktree, local HEAD ≠ PR HEAD SHA | <span class="sb">`DIFF_ONLY`</span> | N/A — use diff only |
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="gs">**Step 2 — Inject into subagent prompt:**</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="gu">## PR Review Context (MANDATORY — read before touching any file)</span>
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="k">-</span><span class="w"> </span>PR: #&lt;NUMBER&gt;
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="k">-</span><span class="w"> </span>PR HEAD SHA: &lt;SHA&gt;
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="k">-</span><span class="w"> </span>Review mode: LOCAL_FILES | DIFF_ONLY
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;WORKTREE_PATH or &quot;use diff only&quot;&gt;
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">-</span><span class="w"> </span>Changed files: &lt;LIST&gt;
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>REVIEW MODE INSTRUCTIONS:
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">-</span><span class="w"> </span>LOCAL_FILES: Safe to read files in &lt;working_directory&gt;. DO NOT read files outside this directory.
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="k">-</span><span class="w"> </span>DIFF_ONLY: DO NOT read any local files in the changed file set. The diff is the ONLY
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>  authoritative source. Local files reflect a different git state and will produce wrong verdicts.
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>  Any &quot;not present&quot; finding based on a local file read is WRONG in this mode.
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="sb">```</span>
 <a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="gu">## Common Mistakes</span>
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>| Anti-pattern        | Problem                     | Fix                                        |
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>| ------------------- | --------------------------- | ------------------------------------------ |
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>| &quot;Fix all the tests&quot; | Agent gets lost             | Specify exact file/tests                   |
-<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>| No error context    | Agent guesses wrong         | Paste actual error messages and test names |
-<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>| No constraints      | Agent refactors everything  | Add &quot;do NOT change X&quot;                      |
-<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>| &quot;Fix it&quot; output     | You don&#39;t know what changed | Require cause+changes summary              |
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a>
-<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>---
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>
-<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a>
-<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="k">-</span><span class="w"> </span>Dispatching tasks that share mutable state
-<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a><span class="k">-</span><span class="w"> </span>Overlapping file ownership between agents
-<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a><span class="k">-</span><span class="w"> </span>Vague prompts (&quot;fix the tests&quot;, &quot;make it work&quot;)
-<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a><span class="k">-</span><span class="w"> </span>Skipping conflict check before merge
-<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="k">-</span><span class="w"> </span>Integrating without running full test suite
-<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="k">-</span><span class="w"> </span>Dispatching exploratory work (unknown scope)
-<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="k">-</span><span class="w"> </span>Parallel dispatch when failures might be related
-<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="k">-</span><span class="w"> </span>Dispatching a branch review subagent with file paths instead of diffs (subagent cannot distinguish branch changes from pre-existing code)
-<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a><span class="k">-</span><span class="w"> </span>Dispatching a worktree subagent without the verification preamble (subagent may operate in the wrong directory)
-<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents to worktrees without the Worktree Dispatch Preamble
-<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`isolation: &quot;worktree&quot;`</span> for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
-<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents without specifying which branch to base worktrees on
-<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="k">-</span><span class="w"> </span>Dispatching open-ended analytical prompts to Explore subagents without a scope isolation preamble (agent will latch onto session metadata instead of performing the task)
-<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a>
-<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a>---
-<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a>
-<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="gu">## Real Example</span>
-<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a>
-<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="gs">**Scenario:**</span> 6 failures across 3 files post-refactor
-<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a>
-<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="gs">**Domain isolation:**</span>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="k">-</span><span class="w"> </span>Dispatching a PR review subagent without injecting PR HEAD SHA and review mode
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="k">-</span><span class="w"> </span>Dispatching in LOCAL_FILES mode without specifying the exact working directory (repo root or worktree path)
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="k">-</span><span class="w"> </span>Dispatching in DIFF_ONLY mode while pointing the agent at the local filesystem for review work
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>---
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="gu">## Common Mistakes</span>
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>| Anti-pattern        | Problem                     | Fix                                        |
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>| ------------------- | --------------------------- | ------------------------------------------ |
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a>| &quot;Fix all the tests&quot; | Agent gets lost             | Specify exact file/tests                   |
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a>| No error context    | Agent guesses wrong         | Paste actual error messages and test names |
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a>| No constraints      | Agent refactors everything  | Add &quot;do NOT change X&quot;                      |
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>| &quot;Fix it&quot; output     | You don&#39;t know what changed | Require cause+changes summary              |
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>---
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a>
+<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a><span class="k">-</span><span class="w"> </span>Dispatching tasks that share mutable state
+<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="k">-</span><span class="w"> </span>Overlapping file ownership between agents
+<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a><span class="k">-</span><span class="w"> </span>Vague prompts (&quot;fix the tests&quot;, &quot;make it work&quot;)
+<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a><span class="k">-</span><span class="w"> </span>Skipping conflict check before merge
+<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="k">-</span><span class="w"> </span>Integrating without running full test suite
+<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a><span class="k">-</span><span class="w"> </span>Dispatching exploratory work (unknown scope)
+<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a><span class="k">-</span><span class="w"> </span>Parallel dispatch when failures might be related
+<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="k">-</span><span class="w"> </span>Dispatching a branch review subagent with file paths instead of diffs (subagent cannot distinguish branch changes from pre-existing code)
+<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="k">-</span><span class="w"> </span>Dispatching a worktree subagent without the verification preamble (subagent may operate in the wrong directory)
+<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents to worktrees without the Worktree Dispatch Preamble
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`isolation: &quot;worktree&quot;`</span> for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
+<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents without specifying which branch to base worktrees on
+<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="k">-</span><span class="w"> </span>Dispatching open-ended analytical prompts to Explore subagents without a scope isolation preamble (agent will latch onto session metadata instead of performing the task)
+<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a>
-<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="k">-</span><span class="w"> </span>agent-tool-abort.test.ts (3 failures): timing issues
-<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a><span class="k">-</span><span class="w"> </span>batch-completion-behavior.test.ts (2 failures): event structure bug
-<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a><span class="k">-</span><span class="w"> </span>tool-approval-race-conditions.test.ts (1 failure): async waiting
+<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a>---
+<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a>
+<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a><span class="gu">## Real Example</span>
 <a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a>
-<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a><span class="gs">**Dispatch:**</span> 3 parallel agents, each scoped to one file
+<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a><span class="gs">**Scenario:**</span> 6 failures across 3 files post-refactor
 <a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a>
-<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="gs">**Results:**</span>
+<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="gs">**Domain isolation:**</span>
 <a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a>
-<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="k">-</span><span class="w"> </span>Agent 1: Replaced timeouts with event-based waiting
-<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="k">-</span><span class="w"> </span>Agent 2: Fixed event structure bug (threadId in wrong place)
-<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="k">-</span><span class="w"> </span>Agent 3: Added wait for async tool execution to complete
+<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="k">-</span><span class="w"> </span>agent-tool-abort.test.ts (3 failures): timing issues
+<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="k">-</span><span class="w"> </span>batch-completion-behavior.test.ts (2 failures): event structure bug
+<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="k">-</span><span class="w"> </span>tool-approval-race-conditions.test.ts (1 failure): async waiting
 <a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a>
-<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="gs">**Integration:**</span> All fixes independent, zero conflicts, full suite green
+<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="gs">**Dispatch:**</span> 3 parallel agents, each scoped to one file
 <a id="__codelineno-0-503" name="__codelineno-0-503" href="#__codelineno-0-503"></a>
-<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a><span class="gs">**Gain:**</span> N parallel problems resolved in time of slowest one (best case: N×)
+<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a><span class="gs">**Results:**</span>
 <a id="__codelineno-0-505" name="__codelineno-0-505" href="#__codelineno-0-505"></a>
-<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a>---
-<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a>
-<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="gu">## Context Minimization Protocol</span>
+<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a><span class="k">-</span><span class="w"> </span>Agent 1: Replaced timeouts with event-based waiting
+<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a><span class="k">-</span><span class="w"> </span>Agent 2: Fixed event structure bug (threadId in wrong place)
+<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="k">-</span><span class="w"> </span>Agent 3: Added wait for async tool execution to complete
 <a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a>
-<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a>When orchestrating multi-step workflows (especially via skills like develop, executing-plans, etc.), you are an ORCHESTRATOR, not an IMPLEMENTER.
-<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a>
-<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>Your job is to COORDINATE subagents, not to DO the work yourself.
-<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a>Every line of code you read or write in main context is WASTED TOKENS.
-<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a>
-<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="gu">### FORBIDDEN in Main Context</span>
-<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>
-<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a>| Action               | Why Forbidden                                    | Correct Approach             |
-<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>| -------------------- | ------------------------------------------------ | ---------------------------- |
-<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>| Reading source files | Bloats main context; triggers cascade reads      | Dispatch explore subagent    |
-<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>| Writing/editing code | Implementation belongs in subagent               | Dispatch TDD subagent        |
-<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a>| Running tests        | Test output bloats context                       | Subagent runs and summarizes |
-<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a>| Analyzing errors     | Debugging is subagent work                       | Dispatch debugging subagent  |
-<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>| Searching codebase   | Research is subagent work                        | Dispatch explore subagent    |
+<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a><span class="gs">**Integration:**</span> All fixes independent, zero conflicts, full suite green
+<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a>
+<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a><span class="gs">**Gain:**</span> N parallel problems resolved in time of slowest one (best case: N×)
+<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a>---
+<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>
+<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="gu">## Context Minimization Protocol</span>
+<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a>
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a>When orchestrating multi-step workflows (especially via skills like develop, executing-plans, etc.), you are an ORCHESTRATOR, not an IMPLEMENTER.
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>Your job is to COORDINATE subagents, not to DO the work yourself.
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>Every line of code you read or write in main context is WASTED TOKENS.
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a>
+<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a><span class="gu">### FORBIDDEN in Main Context</span>
 <a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a>
-<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="gu">### ALLOWED in Main Context</span>
-<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a>
-<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents (Task tool)
-<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="k">-</span><span class="w"> </span>Reading subagent result summaries
-<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="k">-</span><span class="w"> </span>Updating todo list (TodoWrite tool)
-<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="k">-</span><span class="w"> </span>Phase transitions and gate checks
-<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="k">-</span><span class="w"> </span>User communication (questions, status updates)
-<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="k">-</span><span class="w"> </span>Reading/writing plan documents (design docs, impl plans)
-<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a>
-<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="gu">### Self-Check Before Any Action</span>
-<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a>Before EVERY action, ask yourself:
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a>
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="sb">```</span>
-<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="sb">Am I about to read a source file? → STOP. Dispatch subagent.</span>
-<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a><span class="sb">Am I about to edit code? → STOP. Dispatch subagent.</span>
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a><span class="sb">Am I about to run a command? → STOP. Dispatch subagent.</span>
-<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a><span class="sb">Am I about to analyze output? → STOP. Dispatch subagent.</span>
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a><span class="sb">```</span>
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent instead.
-<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>---
-<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>
-<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a><span class="gu">## Subagent Dispatch Template</span>
-<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
-<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>
-<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a><span class="gs">**OpenCode Agent Inheritance:**</span> If <span class="sb">`CURRENT_AGENT_TYPE`</span> is <span class="sb">`yolo`</span> or <span class="sb">`yolo-focused`</span>, use that as <span class="sb">`subagent_type`</span> instead of <span class="sb">`general`</span>. This ensures subagents inherit autonomous permissions.
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a>| Action               | Why Forbidden                                    | Correct Approach             |
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a>| -------------------- | ------------------------------------------------ | ---------------------------- |
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a>| Reading source files | Bloats main context; triggers cascade reads      | Dispatch explore subagent    |
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a>| Writing/editing code | Implementation belongs in subagent               | Dispatch TDD subagent        |
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a>| Running tests        | Test output bloats context                       | Subagent runs and summarizes |
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a>| Analyzing errors     | Debugging is subagent work                       | Dispatch debugging subagent  |
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a>| Searching codebase   | Research is subagent work                        | Dispatch explore subagent    |
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a>
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="gu">### ALLOWED in Main Context</span>
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents (Task tool)
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="k">-</span><span class="w"> </span>Reading subagent result summaries
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="k">-</span><span class="w"> </span>Updating todo list (TodoWrite tool)
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="k">-</span><span class="w"> </span>Phase transitions and gate checks
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="k">-</span><span class="w"> </span>User communication (questions, status updates)
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a><span class="k">-</span><span class="w"> </span>Reading/writing plan documents (design docs, impl plans)
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a><span class="gu">### Self-Check Before Any Action</span>
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>Before EVERY action, ask yourself:
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>
+<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a><span class="sb">```</span>
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a><span class="sb">Am I about to read a source file? → STOP. Dispatch subagent.</span>
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a><span class="sb">Am I about to edit code? → STOP. Dispatch subagent.</span>
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a><span class="sb">Am I about to run a command? → STOP. Dispatch subagent.</span>
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a><span class="sb">Am I about to analyze output? → STOP. Dispatch subagent.</span>
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a><span class="sb">```</span>
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent instead.
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>---
 <a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>
-<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a><span class="sb">```</span>
-<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a><span class="sb">Task(</span>
-<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="sb">  description: &quot;[3-5 word summary]&quot;,</span>
-<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a><span class="sb">  subagent_type: &quot;[CURRENT_AGENT_TYPE or &#39;general&#39;]&quot;,</span>
-<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a><span class="sb">  prompt: &quot;&quot;&quot;</span>
-<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a><span class="sb">First, invoke the [SKILL-NAME] skill using the Skill tool.</span>
-<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a><span class="sb">Then follow its complete workflow.</span>
-<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>
-<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a><span class="sb">If the Skill tool is unavailable in your context, or the named skill does</span>
-<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a><span class="sb">not appear in your skills catalog after your first tool call, STOP and</span>
-<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a><span class="sb">report the exact missing capability verbatim. Do NOT inline-execute the</span>
-<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a><span class="sb">skill&#39;s behavior. Do NOT paraphrase the skill from memory. Do NOT proceed</span>
-<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a><span class="sb">with the work. Silent fallback is a contract violation; the orchestrator</span>
-<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a><span class="sb">will reject any result that does not contain a &quot;Launching skill:&quot; line.</span>
-<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a>
-<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="sb">## Context for the Skill</span>
-<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>
-<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a><span class="sb">[ONLY provide context - file paths, requirements, constraints]</span>
-<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="sb">[DO NOT provide implementation instructions]</span>
-<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="sb">[DO NOT duplicate what the skill already knows]</span>
-<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a><span class="sb">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a><span class="sb">)</span>
-<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a><span class="sb">```</span>
-<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a>
-<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a><span class="gs">**Agent Type Selection:**</span>
-<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a>| Parent Agent | Subagent Type | Notes |
-<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>|--------------|---------------|-------|
-<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>| <span class="sb">`yolo`</span> | <span class="sb">`yolo`</span> | Inherit autonomous permissions |
-<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>| <span class="sb">`yolo-focused`</span> | <span class="sb">`yolo-focused`</span> | Inherit focused autonomous permissions |
-<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>| <span class="sb">`general`</span> or unknown | <span class="sb">`general`</span> | Default behavior |
-<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>| Any (exploration only) | <span class="sb">`explore`</span> | Read-only exploration tasks |
-<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>
-<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="gu">### Skill Availability by Agent Type</span>
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a><span class="gu">## Subagent Dispatch Template</span>
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="k">&gt; </span><span class="ge">**Before invoking this template:** perform the Pre-Dispatch Ritual (Phase Declaration) per the `develop` skill — announce the phase, the work scope, and the exit criteria.</span>
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
+<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a>
+<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a><span class="gs">**OpenCode Agent Inheritance:**</span> If <span class="sb">`CURRENT_AGENT_TYPE`</span> is <span class="sb">`yolo`</span> or <span class="sb">`yolo-focused`</span>, use that as <span class="sb">`subagent_type`</span> instead of <span class="sb">`general`</span>. This ensures subagents inherit autonomous permissions.
+<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>
+<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a><span class="sb">```</span>
+<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a><span class="sb">Task(</span>
+<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a><span class="sb">  description: &quot;[3-5 word summary]&quot;,</span>
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a><span class="sb">  subagent_type: &quot;[CURRENT_AGENT_TYPE or &#39;general&#39;]&quot;,</span>
+<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a><span class="sb">  prompt: &quot;&quot;&quot;</span>
+<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="sb">First, invoke the [SKILL-NAME] skill using the Skill tool.</span>
+<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a><span class="sb">Then follow its complete workflow.</span>
+<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a>
+<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="sb">If the Skill tool is unavailable in your context, or the named skill does</span>
+<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="sb">not appear in your skills catalog after your first tool call, STOP and</span>
+<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a><span class="sb">report the exact missing capability verbatim. Do NOT inline-execute the</span>
+<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a><span class="sb">skill&#39;s behavior. Do NOT paraphrase the skill from memory. Do NOT proceed</span>
+<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a><span class="sb">with the work. Silent fallback is a contract violation; the orchestrator</span>
+<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a><span class="sb">will reject any result that does not contain a &quot;Launching skill:&quot; line.</span>
+<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a>
+<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a><span class="sb">## Context for the Skill</span>
+<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a><span class="sb">[ONLY provide context - file paths, requirements, constraints]</span>
+<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a><span class="sb">[DO NOT provide implementation instructions]</span>
+<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a><span class="sb">[DO NOT duplicate what the skill already knows]</span>
+<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a><span class="sb">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a><span class="sb">)</span>
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="sb">```</span>
 <a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>
-<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>The Skill tool is included for most subagent types but not all. Verify before dispatching skill-dependent work:
-<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>
-<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>| Subagent Type | Has Skill tool | Notes |
-<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a>|---|---|---|
-<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a>| <span class="sb">`general-purpose`</span> (or <span class="sb">`general`</span>) | yes | Full toolset; default for develop dispatches |
-<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a>| <span class="sb">`Explore`</span> (or <span class="sb">`explore`</span>) | yes | Read-only exploration; cannot edit files |
-<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a>| <span class="sb">`Plan`</span> | yes | Read-only planning; cannot edit files |
-<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a>| <span class="sb">`yolo`</span>, <span class="sb">`yolo-focused`</span> (OpenCode) | yes | Inherit autonomous permissions |
-<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a>| <span class="sb">`claude-code-guide`</span> | no | Restricted to Bash, Read, WebFetch, WebSearch |
-<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a>| <span class="sb">`statusline-setup`</span> | no | Restricted to Read, Edit |
-<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>
-<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a>Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no &quot;Launching skill:&quot; line and the orchestrator must reject the result.
-<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a>
-<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a><span class="gs">**Lazy-injection caveat:**</span> The skills catalog system-reminder is injected into a subagent&#39;s context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template&#39;s &quot;First, invoke the [SKILL-NAME] skill&quot; instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
-<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>
-<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a><span class="gu">### Worktree Dispatch</span>
-<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a>
-<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a>When dispatching a subagent to work in a worktree or alternate directory, include a verification preamble at the start of the prompt:
-<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a>
-<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a>VERIFICATION PREAMBLE: Before any other work, run:
-<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>  cd &lt;worktree-path&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current
-<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>Verify you are at <span class="sb">`&lt;worktree-path&gt;`</span> on branch <span class="sb">`&lt;branch-name&gt;`</span>.
-<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a>ALL file reads must use <span class="sb">`&lt;worktree-path&gt;`</span> as the base path.
-<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>ALL git commands must run from <span class="sb">`&lt;worktree-path&gt;`</span>.
-<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a>Do NOT read files from <span class="sb">`&lt;main-repo-path&gt;`</span> -- that is a DIFFERENT branch.
-<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a><span class="sb">```</span>
-<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a>
-<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>This prevents the silent wrong-directory failure where a subagent reads files or runs git commands from the main repo (which is on a different branch) and produces wrong results with high confidence.
-<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a>
-<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a><span class="gu">### Mandatory Worktree Dispatch Preamble</span>
-<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a>
-<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a>When dispatching ANY subagent to work in a worktree, the subagent prompt MUST include this verification preamble. No exceptions.
-<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a>
-<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a>Every subagent prompt targeting a worktree MUST begin with:
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a><span class="gs">**Agent Type Selection:**</span>
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>| Parent Agent | Subagent Type | Notes |
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>|--------------|---------------|-------|
+<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a>| <span class="sb">`yolo`</span> | <span class="sb">`yolo`</span> | Inherit autonomous permissions |
+<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a>| <span class="sb">`yolo-focused`</span> | <span class="sb">`yolo-focused`</span> | Inherit focused autonomous permissions |
+<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a>| <span class="sb">`general`</span> or unknown | <span class="sb">`general`</span> | Default behavior |
+<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a>| Any (exploration only) | <span class="sb">`explore`</span> | Read-only exploration tasks |
+<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a>
+<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a><span class="gu">### Skill Availability by Agent Type</span>
+<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a>
+<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>The Skill tool is included for most subagent types but not all. Verify before dispatching skill-dependent work:
+<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a>
+<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a>| Subagent Type | Has Skill tool | Notes |
+<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a>|---|---|---|
+<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>| <span class="sb">`general-purpose`</span> (or <span class="sb">`general`</span>) | yes | Full toolset; default for develop dispatches |
+<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a>| <span class="sb">`Explore`</span> (or <span class="sb">`explore`</span>) | yes | Read-only exploration; cannot edit files |
+<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a>| <span class="sb">`Plan`</span> | yes | Read-only planning; cannot edit files |
+<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a>| <span class="sb">`yolo`</span>, <span class="sb">`yolo-focused`</span> (OpenCode) | yes | Inherit autonomous permissions |
+<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a>| <span class="sb">`claude-code-guide`</span> | no | Restricted to Bash, Read, WebFetch, WebSearch |
+<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>| <span class="sb">`statusline-setup`</span> | no | Restricted to Read, Edit |
+<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a>
+<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no &quot;Launching skill:&quot; line and the orchestrator must reject the result.
+<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>
+<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a><span class="gs">**Lazy-injection caveat:**</span> The skills catalog system-reminder is injected into a subagent&#39;s context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template&#39;s &quot;First, invoke the [SKILL-NAME] skill&quot; instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
+<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>
+<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a><span class="gu">### Worktree Dispatch</span>
+<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a>
+<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a>When dispatching a subagent to work in a worktree or alternate directory, include a verification preamble at the start of the prompt:
+<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>
+<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a>VERIFICATION PREAMBLE: Before any other work, run:
+<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a>  cd &lt;worktree-path&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current
+<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>Verify you are at <span class="sb">`&lt;worktree-path&gt;`</span> on branch <span class="sb">`&lt;branch-name&gt;`</span>.
+<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a>ALL file reads must use <span class="sb">`&lt;worktree-path&gt;`</span> as the base path.
+<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>ALL git commands must run from <span class="sb">`&lt;worktree-path&gt;`</span>.
+<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a>Do NOT read files from <span class="sb">`&lt;main-repo-path&gt;`</span> -- that is a DIFFERENT branch.
+<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a><span class="sb">```</span>
 <a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a>
-<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="sb">```</span>
-<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a><span class="sb">BEFORE ANY WORK:</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="sb">1. cd &lt;WORKTREE_PATH&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current</span>
-<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a><span class="sb">2. Verify the branch is &lt;EXPECTED_BRANCH&gt;</span>
-<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a><span class="sb">3. ALL file paths must be absolute, rooted at &lt;WORKTREE_PATH&gt;</span>
-<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="sb">4. ALL git commands must run from &lt;WORKTREE_PATH&gt;</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="sb">5. Do NOT create new branches. Work on the existing branch.</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a><span class="sb">```</span>
-<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>
-<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a><span class="gs">**Why this matters:**</span> Without explicit path and branch verification, agents will:
-<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a><span class="k">-</span><span class="w"> </span>Work in the main repo directory instead of the worktree
-<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="k">-</span><span class="w"> </span>Create duplicate infrastructure by branching from main instead of the feature branch
-<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="k">-</span><span class="w"> </span>Run git commands that reflect a different branch&#39;s state
-<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>
-<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="gs">**When using `isolation: &quot;worktree&quot;`:**</span> The worktree branches from the CURRENT branch at dispatch time. If prior work items&#39; commits aren&#39;t on the current branch yet, the isolated worktree won&#39;t have them. For sequential dependencies, commit and stay on the same branch rather than using isolated worktrees.
-<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>
-<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a><span class="gu">### WRONG vs RIGHT Examples</span>
-<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a>
-<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a><span class="gs">**WRONG - Doing work in main context:**</span>
-<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a>
-<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a><span class="sb">```</span>
-<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="sb">Let me read the config file to understand the structure...</span>
-<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a><span class="sb">[reads file]</span>
-<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="sb">Now I&#39;ll update line 45 to add the new field...</span>
-<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="sb">[edits file]</span>
-<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a><span class="sb">```</span>
-<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>
-<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a><span class="gs">**RIGHT - Delegating to subagent:**</span>
-<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a>
-<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="sb">```</span>
-<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="sb">Task(description: &quot;Implement config field&quot;, prompt: &quot;Invoke test-driven-development skill. Context: Add &#39;extends&#39; field to provider config in packages/opencode/src/config/config.ts&quot;)</span>
-<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="sb">[waits for subagent result]</span>
-<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="sb">Subagent completed successfully. Proceeding to next task.</span>
-<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a><span class="sb">```</span>
-<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>
-<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a><span class="gs">**WRONG - Instructions in subagent prompt:**</span>
+<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a>This prevents the silent wrong-directory failure where a subagent reads files or runs git commands from the main repo (which is on a different branch) and produces wrong results with high confidence.
+<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a>
+<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="gu">### Mandatory Worktree Dispatch Preamble</span>
+<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>
+<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a>When dispatching ANY subagent to work in a worktree, the subagent prompt MUST include this verification preamble. No exceptions.
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a>
+<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>Every subagent prompt targeting a worktree MUST begin with:
+<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a>
+<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a><span class="sb">```</span>
+<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="sb">BEFORE ANY WORK:</span>
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="sb">1. cd &lt;WORKTREE_PATH&gt; &amp;&amp; pwd &amp;&amp; git branch --show-current</span>
+<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a><span class="sb">2. Verify the branch is &lt;EXPECTED_BRANCH&gt;</span>
+<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="sb">3. ALL file paths must be absolute, rooted at &lt;WORKTREE_PATH&gt;</span>
+<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a><span class="sb">4. ALL git commands must run from &lt;WORKTREE_PATH&gt;</span>
+<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a><span class="sb">5. Do NOT create new branches. Work on the existing branch.</span>
+<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a><span class="sb">```</span>
+<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a>
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="gs">**Why this matters:**</span> Without explicit path and branch verification, agents will:
+<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a><span class="k">-</span><span class="w"> </span>Work in the main repo directory instead of the worktree
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="k">-</span><span class="w"> </span>Create duplicate infrastructure by branching from main instead of the feature branch
+<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a><span class="k">-</span><span class="w"> </span>Run git commands that reflect a different branch&#39;s state
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a>
+<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="gs">**When using `isolation: &quot;worktree&quot;`:**</span> The worktree branches from the CURRENT branch at dispatch time. If prior work items&#39; commits aren&#39;t on the current branch yet, the isolated worktree won&#39;t have them. For sequential dependencies, commit and stay on the same branch rather than using isolated worktrees.
+<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>
+<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a><span class="gu">### WRONG vs RIGHT Examples</span>
+<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>
+<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="gs">**WRONG - Doing work in main context:**</span>
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a>
+<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="sb">```</span>
+<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="sb">Let me read the config file to understand the structure...</span>
+<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="sb">[reads file]</span>
+<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a><span class="sb">Now I&#39;ll update line 45 to add the new field...</span>
+<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a><span class="sb">[edits file]</span>
+<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a><span class="sb">```</span>
 <a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>
-<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a><span class="sb">```</span>
-<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a><span class="sb">prompt: &quot;Use TDD skill. First write a test that checks the extends field exists. Then implement by adding a z.string().optional() field after line 865. Make sure to update the description...&quot;</span>
+<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a><span class="gs">**RIGHT - Delegating to subagent:**</span>
+<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a>
 <a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a><span class="sb">```</span>
-<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a>
-<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="gs">**RIGHT - Context only in subagent prompt:**</span>
-<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a>
+<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a><span class="sb">Task(description: &quot;Implement config field&quot;, prompt: &quot;Invoke test-driven-development skill. Context: Add &#39;extends&#39; field to provider config in packages/opencode/src/config/config.ts&quot;)</span>
+<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="sb">[waits for subagent result]</span>
+<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a><span class="sb">Subagent completed successfully. Proceeding to next task.</span>
 <a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a><span class="sb">```</span>
-<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a><span class="sb">prompt: &quot;Invoke test-driven-development skill. Context: Add &#39;extends&#39; field to Config.Provider schema. Location: packages/opencode/src/config/config.ts around line 865.&quot;</span>
-<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a><span class="sb">```</span>
+<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a>
+<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a><span class="gs">**WRONG - Instructions in subagent prompt:**</span>
 <a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>
-<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="gu">### Subagent Prompt Length Verification</span>
-<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a>
-<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a>Before dispatching ANY subagent:
+<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="sb">```</span>
+<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a><span class="sb">prompt: &quot;Use TDD skill. First write a test that checks the extends field exists. Then implement by adding a z.string().optional() field after line 865. Make sure to update the description...&quot;</span>
+<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="sb">```</span>
 <a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a>
-<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="k">1.</span> Count lines in subagent prompt
-<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">2.</span> Estimate tokens: <span class="sb">`lines * 7`</span>
-<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="k">3.</span> If &gt; 200 lines and no valid justification: compress before dispatch
-<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="k">4.</span> Most subagent prompts should be OPTIMAL (&lt; 150 lines) since they provide CONTEXT and invoke skills
-<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a>
-<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>---
-<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>
-<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a>
-<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a>Before completing:
-<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a>
-<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="k">- [ ]</span> Independence verified: no shared state, no file overlap
-<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a><span class="k">- [ ]</span> Each agent prompt is self-contained with full context
-<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="k">- [ ]</span> Constraints explicitly state what NOT to change
-<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a><span class="k">- [ ]</span> All agent summaries reviewed before integration
-<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a><span class="k">- [ ]</span> Conflict check performed on returned work
-<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="k">- [ ]</span> Full test suite green after merge
-<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a>
-<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a>If ANY unchecked: STOP and fix. Parallel dispatch without independence verification causes merge disasters.
-<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a>
-<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a>Parallel dispatch is a force multiplier when used correctly, and a merge disaster when used carelessly. The independence gate is non-negotiable. Verify before dispatch, verify before integration. Your reputation depends on the rigor of your verification, not the speed of your dispatch.
-<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="gs">**RIGHT - Context only in subagent prompt:**</span>
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a>
+<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="sb">```</span>
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="sb">prompt: &quot;Invoke test-driven-development skill. Context: Add &#39;extends&#39; field to Config.Provider schema. Location: packages/opencode/src/config/config.ts around line 865.&quot;</span>
+<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="sb">```</span>
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a><span class="gu">### Subagent Prompt Length Verification</span>
+<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a>
+<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a>Before dispatching ANY subagent:
+<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a>
+<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="k">1.</span> Count lines in subagent prompt
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="k">2.</span> Estimate tokens: <span class="sb">`lines * 7`</span>
+<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a><span class="k">3.</span> If &gt; 200 lines and no valid justification: compress before dispatch
+<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="k">4.</span> Most subagent prompts should be OPTIMAL (&lt; 150 lines) since they provide CONTEXT and invoke skills
+<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a>
+<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a>---
+<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a>
+<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a>
+<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a>Before completing:
+<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a>
+<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a><span class="k">- [ ]</span> Independence verified: no shared state, no file overlap
+<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="k">- [ ]</span> Each agent prompt is self-contained with full context
+<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a><span class="k">- [ ]</span> Constraints explicitly state what NOT to change
+<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a><span class="k">- [ ]</span> All agent summaries reviewed before integration
+<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a><span class="k">- [ ]</span> Conflict check performed on returned work
+<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a><span class="k">- [ ]</span> Full test suite green after merge
+<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a>
+<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a>If ANY unchecked: STOP and fix. Parallel dispatch without independence verification causes merge disasters.
+<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a>
+<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a>Parallel dispatch is a force multiplier when used correctly, and a merge disaster when used carelessly. The independence gate is non-negotiable. Verify before dispatch, verify before integration. Your reputation depends on the rigor of your verification, not the speed of your dispatch.
+<a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

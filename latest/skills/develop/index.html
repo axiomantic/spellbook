@@ -3045,6 +3045,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../dispatching-sub-orchestrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-sub-orchestrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../distilling-prs/" class="md-nav__link">
         
   
@@ -8443,7 +8471,7 @@
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">- [ ]</span> Implementation plan exists
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">- [ ]</span> Plan review subagent (reviewing-impl-plans) was dispatched
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> Execution mode determined (work_items/delegated/direct)
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> Execution mode determined (work_items / sub_orchestrators / delegated / direct)
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="gu">### During Phase 4 (for EACH task):</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
@@ -8852,275 +8880,283 @@
 <a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a><span class="sb">  ├─ 3.2: Subagent invokes reviewing-impl-plans</span>
 <a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a><span class="sb">  ├─ 3.3: GATE: User approval per mode</span>
 <a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a><span class="sb">  ├─ 3.4: Subagent invokes executing-plans to fix</span>
-<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a><span class="sb">  ├─ 3.4.5: Execution mode analysis (work_items for large features, delegated for single-session)</span>
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a><span class="sb">  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for 15+ tasks/2+ tracks regardless of tier, work_items for very large or cross-session, delegated for single-session default)</span>
 <a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a><span class="sb">  ├─ 3.5: Generate work item prompts (if work_items)</span>
 <a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a><span class="sb">  └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)</span>
 <a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a><span class="sb">    ↓</span>
-<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a><span class="sb">Phase 4: Implementation (if delegated/direct)</span>
-<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="sb">  ├─ 4.1: Setup worktree(s) per preference</span>
-<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a><span class="sb">  ├─ 4.2: Execute tasks (per worktree strategy)</span>
-<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a><span class="sb">  ├─ 4.2.5: Smart merge (if per_parallel_track worktrees)</span>
-<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a><span class="sb">  ├─ For each task:</span>
-<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a><span class="sb">  │   ├─ 4.3: Subagent invokes test-driven-development</span>
-<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a><span class="sb">  │   ├─ 4.4: Implementation completion verification (inline audit prompt)</span>
-<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a><span class="sb">  │   ├─ 4.5: Subagent invokes requesting-code-review</span>
-<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a><span class="sb">  │   └─ 4.5.1: Subagent invokes fact-checking</span>
-<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a><span class="sb">  ├─ 4.6.1: Comprehensive implementation audit (inline audit prompt)</span>
-<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a><span class="sb">  ├─ 4.6.2: Run test suite (invoke systematic-debugging if failures)</span>
-<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a><span class="sb">  ├─ 4.6.3: Subagent invokes audit-green-mirage</span>
-<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a><span class="sb">  ├─ 4.6.4: Comprehensive fact-checking</span>
-<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a><span class="sb">  ├─ 4.6.5: Pre-PR fact-checking</span>
-<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a><span class="sb">  └─ 4.7: Subagent invokes finishing-a-development-branch</span>
-<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a>
-<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a><span class="sb">Simple Path (SIMPLE tier only):</span>
-<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a><span class="sb">  ├─ S1: Lightweight Research (explore subagent, &lt;=5 files, 1-paragraph summary)</span>
-<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a><span class="sb">  ├─ S2: Inline Plan (&lt;=5 numbered steps in conversation, user confirms)</span>
-<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a><span class="sb">  └─ S3: Implementation (feature-implement with TDD + code review + green mirage, no fact-check)</span>
-<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a><span class="sb">```</span>
-<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a>
-<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>---
-<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a>
-<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a><span class="gu">## Session State Data Structures</span>
-<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>
-<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a><span class="gs">**Mandatory state structures. Subagents receive these as context. All fields required.**</span>
-<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>
-<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">SessionPreferences</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a><span class="w">  </span><span class="nx">autonomous_mode</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;autonomous&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;interactive&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;mostly_autonomous&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a><span class="w">  </span><span class="nx">parallelization</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;maximize&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;conservative&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;ask&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a><span class="w">  </span><span class="nx">worktree</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;single&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;per_parallel_track&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a><span class="w">  </span><span class="nx">worktree_paths</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w"> </span><span class="c1">// Filled during Phase 4.1 if per_parallel_track</span>
-<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a><span class="w">  </span><span class="nx">post_impl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;offer_options&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;auto_pr&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;stop&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a><span class="w">  </span><span class="nx">dialectic_mode</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;roundtable&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;none&quot;</span>
-<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a><span class="w">  </span><span class="nx">dialectic_level</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;planning_only&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;planning_and_gates&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;full&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;planning_and_gates&quot;</span>
-<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a><span class="w">  </span><span class="nx">token_enforcement</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;work_item&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;gate_level&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;every_step&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;gate_level&quot;</span>
-<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a><span class="w">  </span><span class="nx">escape_hatch</span><span class="o">:</span><span class="w"> </span><span class="kt">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a><span class="w">    </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;design_doc&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;impl_plan&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a><span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="w">    </span><span class="nx">handling</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;review_first&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;treat_as_ready&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="w">  </span><span class="nx">execution_mode</span><span class="o">?:</span><span class="w"> </span><span class="s2">&quot;work_items&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;delegated&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;direct&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a><span class="w">  </span><span class="nx">estimated_tokens?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a><span class="w">  </span><span class="nx">feature_stats</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="w">    </span><span class="nx">num_tasks</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="w">    </span><span class="nx">num_files</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a><span class="w">    </span><span class="nx">num_parallel_tracks</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a><span class="w">  </span><span class="nx">refactoring_mode?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
-<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a><span class="w">  </span><span class="nx">complexity_tier</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;trivial&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;simple&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;standard&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;complex&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="w">  </span><span class="nx">complexity_heuristics</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="w">    </span><span class="nx">file_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a><span class="w">    </span><span class="nx">behavioral_change</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
-<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="w">    </span><span class="nx">test_impact</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">       </span><span class="c1">// count of test files affected</span>
-<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a><span class="w">    </span><span class="nx">structural_change</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
-<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a><span class="w">    </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a><span class="p">}</span>
-<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a>
-<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">SessionContext</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="w">  </span><span class="nx">motivation</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a><span class="w">    </span><span class="nx">driving_reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="w">    </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// user_pain | performance | tech_debt | business | security | dx</span>
-<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="w">    </span><span class="nx">success_criteria</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a><span class="w">  </span><span class="nx">feature_essence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// 1-2 sentence description</span>
-<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a><span class="w">  </span><span class="nx">research_findings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="w">    </span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">ResearchFinding</span><span class="p">[];</span>
-<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="w">    </span><span class="nx">patterns_discovered</span><span class="o">:</span><span class="w"> </span><span class="kt">Pattern</span><span class="p">[];</span>
-<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="w">    </span><span class="nx">unknowns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="w">  </span><span class="nx">design_context</span><span class="o">:</span><span class="w"> </span><span class="kt">DesignContext</span><span class="p">;</span><span class="w"> </span><span class="c1">// THE KEY CONTEXT FOR SUBAGENTS</span>
-<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a><span class="p">}</span>
-<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>
-<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DesignContext</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a><span class="w">  </span><span class="nx">feature_essence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a><span class="w">  </span><span class="nx">research_findings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a><span class="w">    </span><span class="nx">patterns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a><span class="w">    </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a><span class="w">    </span><span class="nx">constraints</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="w">    </span><span class="nx">precedents</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a><span class="w">  </span><span class="nx">disambiguation_results</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a><span class="w">    </span><span class="p">[</span><span class="nx">ambiguity</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a><span class="w">      </span><span class="nx">clarification</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a><span class="w">      </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="w">      </span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="w">  </span><span class="nx">discovery_answers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="w">    </span><span class="nx">architecture</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="w">      </span><span class="nx">chosen_approach</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="w">      </span><span class="nx">rationale</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="w">      </span><span class="nx">alternatives</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="w">      </span><span class="nx">validated_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a><span class="w">    </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a><span class="w">      </span><span class="nx">in_scope</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a><span class="w">      </span><span class="nx">out_of_scope</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a><span class="w">      </span><span class="nx">mvp_definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="w">      </span><span class="nx">boundary_conditions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a><span class="w">    </span><span class="nx">integration</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="w">      </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">validated</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a><span class="w">      </span><span class="nx">dependencies</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a><span class="w">      </span><span class="nx">interfaces</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="w">    </span><span class="nx">failure_modes</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a><span class="w">      </span><span class="nx">edge_cases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="w">      </span><span class="nx">failure_scenarios</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a><span class="w">    </span><span class="nx">success_criteria</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="w">      </span><span class="nx">metrics</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a><span class="w">      </span><span class="nx">observability</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a><span class="w">    </span><span class="nx">vocabulary</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a><span class="w">    </span><span class="nx">assumptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a><span class="w">      </span><span class="nx">validated</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">assumption</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a><span class="w">  </span><span class="nx">glossary</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a><span class="w">    </span><span class="p">[</span><span class="nx">term</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a><span class="w">      </span><span class="nx">definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a><span class="w">      </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;research&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;codebase&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a><span class="w">      </span><span class="nx">context</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;feature-specific&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;project-wide&quot;</span><span class="p">;</span>
-<a id="__codelineno-0-717" name="__codelineno-0-717" href="#__codelineno-0-717"></a><span class="w">      </span><span class="nx">aliases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-718" name="__codelineno-0-718" href="#__codelineno-0-718"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-719" name="__codelineno-0-719" href="#__codelineno-0-719"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a><span class="w">  </span><span class="nx">validated_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-721" name="__codelineno-0-721" href="#__codelineno-0-721"></a><span class="w">  </span><span class="nx">explicit_exclusions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-722" name="__codelineno-0-722" href="#__codelineno-0-722"></a><span class="w">  </span><span class="nx">mvp_definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-723" name="__codelineno-0-723" href="#__codelineno-0-723"></a><span class="w">  </span><span class="nx">success_metrics</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-724" name="__codelineno-0-724" href="#__codelineno-0-724"></a><span class="w">  </span><span class="nx">quality_scores</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-725" name="__codelineno-0-725" href="#__codelineno-0-725"></a><span class="w">    </span><span class="nx">research_quality</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-726" name="__codelineno-0-726" href="#__codelineno-0-726"></a><span class="w">    </span><span class="nx">completeness</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-727" name="__codelineno-0-727" href="#__codelineno-0-727"></a><span class="w">    </span><span class="nx">overall_confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-729" name="__codelineno-0-729" href="#__codelineno-0-729"></a><span class="w">  </span><span class="nx">devils_advocate_critique</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-730" name="__codelineno-0-730" href="#__codelineno-0-730"></a><span class="w">    </span><span class="nx">missing_edge_cases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-731" name="__codelineno-0-731" href="#__codelineno-0-731"></a><span class="w">    </span><span class="nx">implicit_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-732" name="__codelineno-0-732" href="#__codelineno-0-732"></a><span class="w">    </span><span class="nx">integration_risks</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-733" name="__codelineno-0-733" href="#__codelineno-0-733"></a><span class="w">    </span><span class="nx">scope_gaps</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-734" name="__codelineno-0-734" href="#__codelineno-0-734"></a><span class="w">    </span><span class="nx">oversimplifications</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
-<a id="__codelineno-0-735" name="__codelineno-0-735" href="#__codelineno-0-735"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-736" name="__codelineno-0-736" href="#__codelineno-0-736"></a><span class="p">}</span>
-<a id="__codelineno-0-737" name="__codelineno-0-737" href="#__codelineno-0-737"></a><span class="sb">```</span>
-<a id="__codelineno-0-738" name="__codelineno-0-738" href="#__codelineno-0-738"></a>
-<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a>---
-<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a>
-<a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a><span class="gu">## Quality Gate Thresholds</span>
-<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a>
-<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a>| Gate                      | Threshold          | Bypass       |
-<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>| ------------------------- | ------------------ | ------------ |
-<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>| Research Quality          | 100%               | User consent |
-<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Completeness              | 100% (12/12)       | User consent |
-<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>| Implementation Completion | All items COMPLETE | Never        |
-<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Tests                     | All passing        | Never        |
-<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Green Mirage Audit        | Clean              | Never        |
-<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Claim Validation          | No false claims    | Never        |
-<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>
-<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>---
-<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>
-<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a><span class="gu">## Workflow Execution</span>
-<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a>
-<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>This skill orchestrates feature implementation through 5 sequential commands.
-<a id="__codelineno-0-757" name="__codelineno-0-757" href="#__codelineno-0-757"></a>Each command handles a specific phase and stores state for the next.
-<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>
-<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a><span class="gu">### Command Sequence</span>
-<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a>
-<a id="__codelineno-0-761" name="__codelineno-0-761" href="#__codelineno-0-761"></a>| Order | Command | Phase | Purpose | Tier |
-<a id="__codelineno-0-762" name="__codelineno-0-762" href="#__codelineno-0-762"></a>|-------|---------|-------|---------|------|
-<a id="__codelineno-0-763" name="__codelineno-0-763" href="#__codelineno-0-763"></a>| 1 | <span class="sb">`/feature-config`</span> | 0 | Configuration wizard, escape hatches, preferences, <span class="gs">**complexity classification**</span> | ALL |
-<a id="__codelineno-0-764" name="__codelineno-0-764" href="#__codelineno-0-764"></a>| 2 | <span class="sb">`/feature-research`</span> | 1 | Research strategy, codebase exploration, quality scoring | STANDARD, COMPLEX |
-<a id="__codelineno-0-765" name="__codelineno-0-765" href="#__codelineno-0-765"></a>| 3 | <span class="sb">`/feature-discover`</span> | 1.5 | Informed discovery, disambiguation, understanding document | STANDARD, COMPLEX |
-<a id="__codelineno-0-766" name="__codelineno-0-766" href="#__codelineno-0-766"></a>| 4 | <span class="sb">`/feature-design`</span> | 2 | Design document creation and review | STANDARD, COMPLEX |
-<a id="__codelineno-0-767" name="__codelineno-0-767" href="#__codelineno-0-767"></a>| 5 | <span class="sb">`/feature-implement`</span> | 3-4 | Implementation planning and execution | ALL (Simple skips Phase 3) |
-<a id="__codelineno-0-768" name="__codelineno-0-768" href="#__codelineno-0-768"></a>
-<a id="__codelineno-0-769" name="__codelineno-0-769" href="#__codelineno-0-769"></a><span class="gu">### Execution Protocol</span>
-<a id="__codelineno-0-770" name="__codelineno-0-770" href="#__codelineno-0-770"></a>
-<a id="__codelineno-0-771" name="__codelineno-0-771" href="#__codelineno-0-771"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-772" name="__codelineno-0-772" href="#__codelineno-0-772"></a>Run commands IN ORDER. Each command depends on state from the previous.
-<a id="__codelineno-0-773" name="__codelineno-0-773" href="#__codelineno-0-773"></a>Do NOT skip commands unless escape hatches allow it.
-<a id="__codelineno-0-774" name="__codelineno-0-774" href="#__codelineno-0-774"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-775" name="__codelineno-0-775" href="#__codelineno-0-775"></a>
-<a id="__codelineno-0-776" name="__codelineno-0-776" href="#__codelineno-0-776"></a><span class="k">1.</span> <span class="gs">**Start:**</span> Run <span class="sb">`/feature-config`</span> to initialize session
-<a id="__codelineno-0-777" name="__codelineno-0-777" href="#__codelineno-0-777"></a><span class="k">2.</span> <span class="gs">**Research:**</span> Run <span class="sb">`/feature-research`</span> after config complete
-<a id="__codelineno-0-778" name="__codelineno-0-778" href="#__codelineno-0-778"></a><span class="k">3.</span> <span class="gs">**Discover:**</span> Run <span class="sb">`/feature-discover`</span> after research complete
-<a id="__codelineno-0-779" name="__codelineno-0-779" href="#__codelineno-0-779"></a><span class="k">4.</span> <span class="gs">**Design:**</span> Run <span class="sb">`/feature-design`</span> after discovery complete (unless escape hatch)
-<a id="__codelineno-0-780" name="__codelineno-0-780" href="#__codelineno-0-780"></a><span class="k">5.</span> <span class="gs">**Implement:**</span> Run <span class="sb">`/feature-implement`</span> after design complete (unless escape hatch)
-<a id="__codelineno-0-781" name="__codelineno-0-781" href="#__codelineno-0-781"></a>
-<a id="__codelineno-0-782" name="__codelineno-0-782" href="#__codelineno-0-782"></a><span class="gu">### Tier-Based Routing</span>
-<a id="__codelineno-0-783" name="__codelineno-0-783" href="#__codelineno-0-783"></a>
-<a id="__codelineno-0-784" name="__codelineno-0-784" href="#__codelineno-0-784"></a>After <span class="sb">`/feature-config`</span> completes (including Phase 0.7):
-<a id="__codelineno-0-785" name="__codelineno-0-785" href="#__codelineno-0-785"></a>
-<a id="__codelineno-0-786" name="__codelineno-0-786" href="#__codelineno-0-786"></a><span class="gs">**TRIVIAL tier:**</span>
-<a id="__codelineno-0-787" name="__codelineno-0-787" href="#__codelineno-0-787"></a><span class="k">-</span><span class="w"> </span>Exit the skill entirely
-<a id="__codelineno-0-788" name="__codelineno-0-788" href="#__codelineno-0-788"></a><span class="k">-</span><span class="w"> </span>Log: &quot;Task classified as TRIVIAL. No workflow needed. Proceed with direct implementation.&quot;
-<a id="__codelineno-0-789" name="__codelineno-0-789" href="#__codelineno-0-789"></a>
-<a id="__codelineno-0-790" name="__codelineno-0-790" href="#__codelineno-0-790"></a><span class="gs">**SIMPLE tier:**</span>
-<a id="__codelineno-0-791" name="__codelineno-0-791" href="#__codelineno-0-791"></a><span class="k">-</span><span class="w"> </span>Skip <span class="sb">`/feature-research`</span>, <span class="sb">`/feature-discover`</span>, <span class="sb">`/feature-design`</span>
-<a id="__codelineno-0-792" name="__codelineno-0-792" href="#__codelineno-0-792"></a><span class="k">-</span><span class="w"> </span>Run lightweight research inline (explore subagent, &lt;=5 files, 1-paragraph summary)
-<a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a><span class="k">-</span><span class="w"> </span>Create inline plan (&lt;=5 numbered steps in conversation)
-<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a><span class="k">-</span><span class="w"> </span>Get user confirmation on plan
-<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a><span class="k">-</span><span class="w"> </span>Run <span class="sb">`/feature-implement`</span> (skips Phase 3, enters at Phase 4)
-<a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a><span class="k">-</span><span class="w"> </span>TDD and code review subagents still required
-<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a><span class="k">-</span><span class="w"> </span>Fact-checking SKIPPED
-<a id="__codelineno-0-798" name="__codelineno-0-798" href="#__codelineno-0-798"></a><span class="k">-</span><span class="w"> </span>Green mirage audit REQUIRED (assertion quality enforcement applies to all tiers)
-<a id="__codelineno-0-799" name="__codelineno-0-799" href="#__codelineno-0-799"></a>
-<a id="__codelineno-0-800" name="__codelineno-0-800" href="#__codelineno-0-800"></a><span class="gs">**STANDARD tier:**</span> Run all commands in order.
-<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a>
-<a id="__codelineno-0-802" name="__codelineno-0-802" href="#__codelineno-0-802"></a><span class="gs">**COMPLEX tier:**</span> Run all commands in order. Execution mode analysis in Phase 3.4.5 determines work item decomposition. Large features are split into work items with prompt files, not work packets.
-<a id="__codelineno-0-803" name="__codelineno-0-803" href="#__codelineno-0-803"></a>
-<a id="__codelineno-0-804" name="__codelineno-0-804" href="#__codelineno-0-804"></a><span class="gu">### Simple Path Guardrails</span>
-<a id="__codelineno-0-805" name="__codelineno-0-805" href="#__codelineno-0-805"></a>
-<a id="__codelineno-0-806" name="__codelineno-0-806" href="#__codelineno-0-806"></a>| Guardrail | Limit | Exceeded Action |
-<a id="__codelineno-0-807" name="__codelineno-0-807" href="#__codelineno-0-807"></a>|-----------|-------|-----------------|
-<a id="__codelineno-0-808" name="__codelineno-0-808" href="#__codelineno-0-808"></a>| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
-<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a>| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
-<a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a>| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
-<a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a>| Implementation files | 5 | Pause, re-classify, restart if upgraded |
-<a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a>| Test files | 3 | Pause, re-classify, restart if upgraded |
+<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a><span class="sb">Phase 4: Implementation (if delegated / direct / sub_orchestrators)</span>
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="sb">  └─ If sub_orchestrators: 4.0 dispatches dispatching-sub-orchestrators (CEO/Manager loop), then resumes at 4.6.1 for end-of-Phase-4 gates</span>
+<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a><span class="sb">  ├─ 4.1: Setup worktree(s) per preference</span>
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a><span class="sb">  ├─ 4.2: Execute tasks (per worktree strategy)</span>
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a><span class="sb">  ├─ 4.2.5: Smart merge (if per_parallel_track worktrees)</span>
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a><span class="sb">  ├─ For each task:</span>
+<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a><span class="sb">  │   ├─ 4.3: Subagent invokes test-driven-development</span>
+<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a><span class="sb">  │   ├─ 4.4: Implementation completion verification (inline audit prompt)</span>
+<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a><span class="sb">  │   ├─ 4.5: Subagent invokes requesting-code-review</span>
+<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a><span class="sb">  │   └─ 4.5.1: Subagent invokes fact-checking</span>
+<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a><span class="sb">  ├─ 4.6.1: Comprehensive implementation audit (inline audit prompt)</span>
+<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a><span class="sb">  ├─ 4.6.2: Run test suite (invoke systematic-debugging if failures)</span>
+<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a><span class="sb">  ├─ 4.6.3: Subagent invokes audit-green-mirage</span>
+<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a><span class="sb">  ├─ 4.6.4: Comprehensive fact-checking</span>
+<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a><span class="sb">  ├─ 4.6.5: Pre-PR fact-checking</span>
+<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a><span class="sb">  └─ 4.7: Subagent invokes finishing-a-development-branch</span>
+<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a>
+<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a><span class="sb">Simple Path (SIMPLE tier only):</span>
+<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a><span class="sb">  ├─ S1: Lightweight Research (explore subagent, &lt;=5 files, 1-paragraph summary)</span>
+<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a><span class="sb">  ├─ S2: Inline Plan (&lt;=5 numbered steps in conversation, user confirms)</span>
+<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a><span class="sb">  └─ S3: Implementation (feature-implement with TDD + code review + green mirage, no fact-check)</span>
+<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a><span class="sb">```</span>
+<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>
+<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a>---
+<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>
+<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a><span class="gu">## Session State Data Structures</span>
+<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a>
+<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a><span class="gs">**Mandatory state structures. Subagents receive these as context. All fields required.**</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a>
+<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">SessionPreferences</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a><span class="w">  </span><span class="nx">autonomous_mode</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;autonomous&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;interactive&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;mostly_autonomous&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a><span class="w">  </span><span class="nx">parallelization</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;maximize&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;conservative&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;ask&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a><span class="w">  </span><span class="nx">worktree</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;single&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;per_parallel_track&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a><span class="w">  </span><span class="nx">worktree_paths</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w"> </span><span class="c1">// Filled during Phase 4.1 if per_parallel_track</span>
+<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a><span class="w">  </span><span class="nx">post_impl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;offer_options&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;auto_pr&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;stop&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a><span class="w">  </span><span class="nx">dialectic_mode</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;roundtable&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;none&quot;</span>
+<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a><span class="w">  </span><span class="nx">dialectic_level</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;planning_only&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;planning_and_gates&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;full&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;planning_and_gates&quot;</span>
+<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a><span class="w">  </span><span class="nx">token_enforcement</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;work_item&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;gate_level&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;every_step&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// default: &quot;gate_level&quot;</span>
+<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a><span class="w">  </span><span class="nx">escape_hatch</span><span class="o">:</span><span class="w"> </span><span class="kt">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a><span class="w">    </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;design_doc&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;impl_plan&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a><span class="w">    </span><span class="nx">handling</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;review_first&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;treat_as_ready&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a><span class="w">  </span><span class="nx">execution_mode</span><span class="o">?:</span><span class="w"> </span><span class="s2">&quot;work_items&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;sub_orchestrators&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;delegated&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;direct&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a><span class="w">  </span><span class="nx">estimated_tokens?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="w">  </span><span class="nx">feature_stats</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="w">    </span><span class="nx">num_tasks</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a><span class="w">    </span><span class="nx">num_files</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a><span class="w">    </span><span class="nx">num_parallel_tracks</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a><span class="w">  </span><span class="nx">refactoring_mode?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="w">  </span><span class="nx">complexity_tier</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;trivial&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;simple&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;standard&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;complex&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="w">  </span><span class="nx">complexity_heuristics</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a><span class="w">    </span><span class="nx">file_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="w">    </span><span class="nx">behavioral_change</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a><span class="w">    </span><span class="nx">test_impact</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">       </span><span class="c1">// count of test files affected</span>
+<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a><span class="w">    </span><span class="nx">structural_change</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a><span class="w">    </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="p">}</span>
+<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a>
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">SessionContext</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a><span class="w">  </span><span class="nx">motivation</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="w">    </span><span class="nx">driving_reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="w">    </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// user_pain | performance | tech_debt | business | security | dx</span>
+<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a><span class="w">    </span><span class="nx">success_criteria</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a><span class="w">  </span><span class="nx">feature_essence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// 1-2 sentence description</span>
+<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="w">  </span><span class="nx">research_findings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="w">    </span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">ResearchFinding</span><span class="p">[];</span>
+<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="w">    </span><span class="nx">patterns_discovered</span><span class="o">:</span><span class="w"> </span><span class="kt">Pattern</span><span class="p">[];</span>
+<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="w">    </span><span class="nx">unknowns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a><span class="w">  </span><span class="nx">design_context</span><span class="o">:</span><span class="w"> </span><span class="kt">DesignContext</span><span class="p">;</span><span class="w"> </span><span class="c1">// THE KEY CONTEXT FOR SUBAGENTS</span>
+<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a><span class="p">}</span>
+<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a>
+<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DesignContext</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a><span class="w">  </span><span class="nx">feature_essence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a><span class="w">  </span><span class="nx">research_findings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a><span class="w">    </span><span class="nx">patterns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a><span class="w">    </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="w">    </span><span class="nx">constraints</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a><span class="w">    </span><span class="nx">precedents</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a><span class="w">  </span><span class="nx">disambiguation_results</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a><span class="w">    </span><span class="p">[</span><span class="nx">ambiguity</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a><span class="w">      </span><span class="nx">clarification</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="w">      </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a><span class="w">      </span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="w">  </span><span class="nx">discovery_answers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="w">    </span><span class="nx">architecture</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="w">      </span><span class="nx">chosen_approach</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="w">      </span><span class="nx">rationale</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="w">      </span><span class="nx">alternatives</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a><span class="w">      </span><span class="nx">validated_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a><span class="w">    </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a><span class="w">      </span><span class="nx">in_scope</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a><span class="w">      </span><span class="nx">out_of_scope</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="w">      </span><span class="nx">mvp_definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="w">      </span><span class="nx">boundary_conditions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="w">    </span><span class="nx">integration</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a><span class="w">      </span><span class="nx">integration_points</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">validated</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a><span class="w">      </span><span class="nx">dependencies</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="w">      </span><span class="nx">interfaces</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a><span class="w">    </span><span class="nx">failure_modes</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="w">      </span><span class="nx">edge_cases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a><span class="w">      </span><span class="nx">failure_scenarios</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="w">    </span><span class="nx">success_criteria</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a><span class="w">      </span><span class="nx">metrics</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a><span class="w">      </span><span class="nx">observability</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a><span class="w">    </span><span class="nx">vocabulary</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a><span class="w">    </span><span class="nx">assumptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="w">      </span><span class="nx">validated</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">assumption</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a><span class="w">  </span><span class="nx">glossary</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a><span class="w">    </span><span class="p">[</span><span class="nx">term</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a><span class="w">      </span><span class="nx">definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a><span class="w">      </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;research&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;codebase&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-717" name="__codelineno-0-717" href="#__codelineno-0-717"></a><span class="w">      </span><span class="nx">context</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;feature-specific&quot;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;project-wide&quot;</span><span class="p">;</span>
+<a id="__codelineno-0-718" name="__codelineno-0-718" href="#__codelineno-0-718"></a><span class="w">      </span><span class="nx">aliases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-719" name="__codelineno-0-719" href="#__codelineno-0-719"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-721" name="__codelineno-0-721" href="#__codelineno-0-721"></a><span class="w">  </span><span class="nx">validated_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-722" name="__codelineno-0-722" href="#__codelineno-0-722"></a><span class="w">  </span><span class="nx">explicit_exclusions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-723" name="__codelineno-0-723" href="#__codelineno-0-723"></a><span class="w">  </span><span class="nx">mvp_definition</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-724" name="__codelineno-0-724" href="#__codelineno-0-724"></a><span class="w">  </span><span class="nx">success_metrics</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-725" name="__codelineno-0-725" href="#__codelineno-0-725"></a><span class="w">  </span><span class="nx">quality_scores</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-726" name="__codelineno-0-726" href="#__codelineno-0-726"></a><span class="w">    </span><span class="nx">research_quality</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-727" name="__codelineno-0-727" href="#__codelineno-0-727"></a><span class="w">    </span><span class="nx">completeness</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a><span class="w">    </span><span class="nx">overall_confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-729" name="__codelineno-0-729" href="#__codelineno-0-729"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-730" name="__codelineno-0-730" href="#__codelineno-0-730"></a><span class="w">  </span><span class="nx">devils_advocate_critique</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-731" name="__codelineno-0-731" href="#__codelineno-0-731"></a><span class="w">    </span><span class="nx">missing_edge_cases</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-732" name="__codelineno-0-732" href="#__codelineno-0-732"></a><span class="w">    </span><span class="nx">implicit_assumptions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-733" name="__codelineno-0-733" href="#__codelineno-0-733"></a><span class="w">    </span><span class="nx">integration_risks</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-734" name="__codelineno-0-734" href="#__codelineno-0-734"></a><span class="w">    </span><span class="nx">scope_gaps</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-735" name="__codelineno-0-735" href="#__codelineno-0-735"></a><span class="w">    </span><span class="nx">oversimplifications</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<a id="__codelineno-0-736" name="__codelineno-0-736" href="#__codelineno-0-736"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-0-737" name="__codelineno-0-737" href="#__codelineno-0-737"></a><span class="p">}</span>
+<a id="__codelineno-0-738" name="__codelineno-0-738" href="#__codelineno-0-738"></a><span class="sb">```</span>
+<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a>
+<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a>---
+<a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a>
+<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a><span class="gu">## Quality Gate Thresholds</span>
+<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a>
+<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>| Gate                      | Threshold          | Bypass       |
+<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>| ------------------------- | ------------------ | ------------ |
+<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Research Quality          | 100%               | User consent |
+<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>| Completeness              | 100% (12/12)       | User consent |
+<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Implementation Completion | All items COMPLETE | Never        |
+<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Tests                     | All passing        | Never        |
+<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Green Mirage Audit        | Clean              | Never        |
+<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>| Claim Validation          | No false claims    | Never        |
+<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>
+<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>---
+<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a>
+<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a><span class="gu">## Workflow Execution</span>
+<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>
+<a id="__codelineno-0-757" name="__codelineno-0-757" href="#__codelineno-0-757"></a>This skill orchestrates feature implementation through 5 sequential commands.
+<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>Each command handles a specific phase and stores state for the next.
+<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a>
+<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a><span class="gu">### Command Sequence</span>
+<a id="__codelineno-0-761" name="__codelineno-0-761" href="#__codelineno-0-761"></a>
+<a id="__codelineno-0-762" name="__codelineno-0-762" href="#__codelineno-0-762"></a>| Order | Command | Phase | Purpose | Tier |
+<a id="__codelineno-0-763" name="__codelineno-0-763" href="#__codelineno-0-763"></a>|-------|---------|-------|---------|------|
+<a id="__codelineno-0-764" name="__codelineno-0-764" href="#__codelineno-0-764"></a>| 1 | <span class="sb">`/feature-config`</span> | 0 | Configuration wizard, escape hatches, preferences, <span class="gs">**complexity classification**</span> | ALL |
+<a id="__codelineno-0-765" name="__codelineno-0-765" href="#__codelineno-0-765"></a>| 2 | <span class="sb">`/feature-research`</span> | 1 | Research strategy, codebase exploration, quality scoring | STANDARD, COMPLEX |
+<a id="__codelineno-0-766" name="__codelineno-0-766" href="#__codelineno-0-766"></a>| 3 | <span class="sb">`/feature-discover`</span> | 1.5 | Informed discovery, disambiguation, understanding document | STANDARD, COMPLEX |
+<a id="__codelineno-0-767" name="__codelineno-0-767" href="#__codelineno-0-767"></a>| 4 | <span class="sb">`/feature-design`</span> | 2 | Design document creation and review | STANDARD, COMPLEX |
+<a id="__codelineno-0-768" name="__codelineno-0-768" href="#__codelineno-0-768"></a>| 5 | <span class="sb">`/feature-implement`</span> | 3-4 | Implementation planning and execution | ALL (Simple skips Phase 3) |
+<a id="__codelineno-0-769" name="__codelineno-0-769" href="#__codelineno-0-769"></a>
+<a id="__codelineno-0-770" name="__codelineno-0-770" href="#__codelineno-0-770"></a><span class="gu">### Execution Protocol</span>
+<a id="__codelineno-0-771" name="__codelineno-0-771" href="#__codelineno-0-771"></a>
+<a id="__codelineno-0-772" name="__codelineno-0-772" href="#__codelineno-0-772"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-773" name="__codelineno-0-773" href="#__codelineno-0-773"></a>Run commands IN ORDER. Each command depends on state from the previous.
+<a id="__codelineno-0-774" name="__codelineno-0-774" href="#__codelineno-0-774"></a>Do NOT skip commands unless escape hatches allow it.
+<a id="__codelineno-0-775" name="__codelineno-0-775" href="#__codelineno-0-775"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-776" name="__codelineno-0-776" href="#__codelineno-0-776"></a>
+<a id="__codelineno-0-777" name="__codelineno-0-777" href="#__codelineno-0-777"></a><span class="k">1.</span> <span class="gs">**Start:**</span> Run <span class="sb">`/feature-config`</span> to initialize session
+<a id="__codelineno-0-778" name="__codelineno-0-778" href="#__codelineno-0-778"></a><span class="k">2.</span> <span class="gs">**Research:**</span> Run <span class="sb">`/feature-research`</span> after config complete
+<a id="__codelineno-0-779" name="__codelineno-0-779" href="#__codelineno-0-779"></a><span class="k">3.</span> <span class="gs">**Discover:**</span> Run <span class="sb">`/feature-discover`</span> after research complete
+<a id="__codelineno-0-780" name="__codelineno-0-780" href="#__codelineno-0-780"></a><span class="k">4.</span> <span class="gs">**Design:**</span> Run <span class="sb">`/feature-design`</span> after discovery complete (unless escape hatch)
+<a id="__codelineno-0-781" name="__codelineno-0-781" href="#__codelineno-0-781"></a><span class="k">5.</span> <span class="gs">**Implement:**</span> Run <span class="sb">`/feature-implement`</span> after design complete (unless escape hatch)
+<a id="__codelineno-0-782" name="__codelineno-0-782" href="#__codelineno-0-782"></a>
+<a id="__codelineno-0-783" name="__codelineno-0-783" href="#__codelineno-0-783"></a><span class="gu">### Tier-Based Routing</span>
+<a id="__codelineno-0-784" name="__codelineno-0-784" href="#__codelineno-0-784"></a>
+<a id="__codelineno-0-785" name="__codelineno-0-785" href="#__codelineno-0-785"></a>After <span class="sb">`/feature-config`</span> completes (including Phase 0.7):
+<a id="__codelineno-0-786" name="__codelineno-0-786" href="#__codelineno-0-786"></a>
+<a id="__codelineno-0-787" name="__codelineno-0-787" href="#__codelineno-0-787"></a><span class="gs">**TRIVIAL tier:**</span>
+<a id="__codelineno-0-788" name="__codelineno-0-788" href="#__codelineno-0-788"></a><span class="k">-</span><span class="w"> </span>Exit the skill entirely
+<a id="__codelineno-0-789" name="__codelineno-0-789" href="#__codelineno-0-789"></a><span class="k">-</span><span class="w"> </span>Log: &quot;Task classified as TRIVIAL. No workflow needed. Proceed with direct implementation.&quot;
+<a id="__codelineno-0-790" name="__codelineno-0-790" href="#__codelineno-0-790"></a>
+<a id="__codelineno-0-791" name="__codelineno-0-791" href="#__codelineno-0-791"></a><span class="gs">**SIMPLE tier:**</span>
+<a id="__codelineno-0-792" name="__codelineno-0-792" href="#__codelineno-0-792"></a><span class="k">-</span><span class="w"> </span>Skip <span class="sb">`/feature-research`</span>, <span class="sb">`/feature-discover`</span>, <span class="sb">`/feature-design`</span>
+<a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a><span class="k">-</span><span class="w"> </span>Run lightweight research inline (explore subagent, &lt;=5 files, 1-paragraph summary)
+<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a><span class="k">-</span><span class="w"> </span>Create inline plan (&lt;=5 numbered steps in conversation)
+<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a><span class="k">-</span><span class="w"> </span>Get user confirmation on plan
+<a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a><span class="k">-</span><span class="w"> </span>Run <span class="sb">`/feature-implement`</span> (skips Phase 3, enters at Phase 4)
+<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a><span class="k">-</span><span class="w"> </span>TDD and code review subagents still required
+<a id="__codelineno-0-798" name="__codelineno-0-798" href="#__codelineno-0-798"></a><span class="k">-</span><span class="w"> </span>Fact-checking SKIPPED
+<a id="__codelineno-0-799" name="__codelineno-0-799" href="#__codelineno-0-799"></a><span class="k">-</span><span class="w"> </span>Green mirage audit REQUIRED (assertion quality enforcement applies to all tiers)
+<a id="__codelineno-0-800" name="__codelineno-0-800" href="#__codelineno-0-800"></a>
+<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a><span class="gs">**STANDARD tier:**</span> Run all commands in order.
+<a id="__codelineno-0-802" name="__codelineno-0-802" href="#__codelineno-0-802"></a>
+<a id="__codelineno-0-803" name="__codelineno-0-803" href="#__codelineno-0-803"></a><span class="gs">**COMPLEX tier:**</span> Run all commands in order.
+<a id="__codelineno-0-804" name="__codelineno-0-804" href="#__codelineno-0-804"></a>
+<a id="__codelineno-0-805" name="__codelineno-0-805" href="#__codelineno-0-805"></a><span class="gs">**Note on tier vs execution mode.**</span> The complexity tier (TRIVIAL / SIMPLE / STANDARD / COMPLEX) gates which <span class="ge">*phases*</span> run — SIMPLE skips gathering-requirements, design, and devils-advocate; STANDARD and COMPLEX run the full workflow. The execution_mode (direct / delegated / sub_orchestrators / work_items) is decided separately in Phase 3.4.5 from task count, track count, and explicit user intent. These two axes are orthogonal: a STANDARD feature with 20 tasks across 3 tracks routes to sub_orchestrators just like a COMPLEX one would.
+<a id="__codelineno-0-806" name="__codelineno-0-806" href="#__codelineno-0-806"></a>
+<a id="__codelineno-0-807" name="__codelineno-0-807" href="#__codelineno-0-807"></a>Execution mode analysis in Phase 3.4.5 determines decomposition strategy (applies to STANDARD and COMPLEX alike):
+<a id="__codelineno-0-808" name="__codelineno-0-808" href="#__codelineno-0-808"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Features with 15+ tasks across 2+ tracks (regardless of tier)**</span>: <span class="sb">`sub_orchestrators`</span> mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See <span class="sb">`dispatching-sub-orchestrators`</span> skill.
+<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Very large features (25+ tasks) or user-requested cross-session split**</span>: <span class="sb">`work_items`</span> mode. Generates prompt files for separate-session execution.
+<a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Smaller features (under 15 tasks or single track)**</span>: <span class="sb">`delegated`</span> mode.
+<a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a>
+<a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a><span class="gu">### Simple Path Guardrails</span>
 <a id="__codelineno-0-813" name="__codelineno-0-813" href="#__codelineno-0-813"></a>
-<a id="__codelineno-0-814" name="__codelineno-0-814" href="#__codelineno-0-814"></a>If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
-<a id="__codelineno-0-815" name="__codelineno-0-815" href="#__codelineno-0-815"></a>
-<a id="__codelineno-0-816" name="__codelineno-0-816" href="#__codelineno-0-816"></a><span class="gu">### Escape Hatch Routing</span>
-<a id="__codelineno-0-817" name="__codelineno-0-817" href="#__codelineno-0-817"></a>
-<a id="__codelineno-0-818" name="__codelineno-0-818" href="#__codelineno-0-818"></a>| Escape Hatch                     | Skip Commands                                                    |
-<a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a>| -------------------------------- | ---------------------------------------------------------------- |
-<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a>| Design doc with &quot;treat as ready&quot; | Skip <span class="sb">`/feature-design`</span>                                           |
-<a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a>| Design doc with &quot;review first&quot;   | Run <span class="sb">`/feature-design`</span> starting at 2.2                            |
-<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a>| Impl plan with &quot;treat as ready&quot;  | Skip <span class="sb">`/feature-design`</span> AND <span class="sb">`/feature-implement`</span> Phase 3          |
-<a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a>| Impl plan with &quot;review first&quot;    | Skip <span class="sb">`/feature-design`</span>, run <span class="sb">`/feature-implement`</span> starting at 3.2 |
-<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a>
-<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a><span class="gu">### State Persistence</span>
-<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a>
-<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a>Commands share state via these session variables:
-<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a>
-<a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_PREFERENCES`</span> - User workflow preferences (from Phase 0)
-<a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_CONTEXT`</span> - Research findings, design context (built across phases)
-<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a>
-<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a><span class="gu">### STOP AND VERIFY Markers</span>
-<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a>
-<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
-<a id="__codelineno-0-835" name="__codelineno-0-835" href="#__codelineno-0-835"></a>Do NOT proceed to the next command until ALL items are checked.
+<a id="__codelineno-0-814" name="__codelineno-0-814" href="#__codelineno-0-814"></a>| Guardrail | Limit | Exceeded Action |
+<a id="__codelineno-0-815" name="__codelineno-0-815" href="#__codelineno-0-815"></a>|-----------|-------|-----------------|
+<a id="__codelineno-0-816" name="__codelineno-0-816" href="#__codelineno-0-816"></a>| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
+<a id="__codelineno-0-817" name="__codelineno-0-817" href="#__codelineno-0-817"></a>| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
+<a id="__codelineno-0-818" name="__codelineno-0-818" href="#__codelineno-0-818"></a>| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
+<a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a>| Implementation files | 5 | Pause, re-classify, restart if upgraded |
+<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a>| Test files | 3 | Pause, re-classify, restart if upgraded |
+<a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a>
+<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a>If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
+<a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a>
+<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a><span class="gu">### Escape Hatch Routing</span>
+<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a>
+<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a>| Escape Hatch                     | Skip Commands                                                    |
+<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a>| -------------------------------- | ---------------------------------------------------------------- |
+<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a>| Design doc with &quot;treat as ready&quot; | Skip <span class="sb">`/feature-design`</span>                                           |
+<a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a>| Design doc with &quot;review first&quot;   | Run <span class="sb">`/feature-design`</span> starting at 2.2                            |
+<a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a>| Impl plan with &quot;treat as ready&quot;  | Skip <span class="sb">`/feature-design`</span> AND <span class="sb">`/feature-implement`</span> Phase 3          |
+<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a>| Impl plan with &quot;review first&quot;    | Skip <span class="sb">`/feature-design`</span>, run <span class="sb">`/feature-implement`</span> starting at 3.2 |
+<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a>
+<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a><span class="gu">### State Persistence</span>
+<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a>
+<a id="__codelineno-0-835" name="__codelineno-0-835" href="#__codelineno-0-835"></a>Commands share state via these session variables:
 <a id="__codelineno-0-836" name="__codelineno-0-836" href="#__codelineno-0-836"></a>
-<a id="__codelineno-0-837" name="__codelineno-0-837" href="#__codelineno-0-837"></a>---
-<a id="__codelineno-0-838" name="__codelineno-0-838" href="#__codelineno-0-838"></a>
-<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a>You are a Principal Software Architect orchestrating complex feature implementations.
+<a id="__codelineno-0-837" name="__codelineno-0-837" href="#__codelineno-0-837"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_PREFERENCES`</span> - User workflow preferences (from Phase 0)
+<a id="__codelineno-0-838" name="__codelineno-0-838" href="#__codelineno-0-838"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_CONTEXT`</span> - Research findings, design context (built across phases)
+<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a>
+<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a><span class="gu">### STOP AND VERIFY Markers</span>
 <a id="__codelineno-0-841" name="__codelineno-0-841" href="#__codelineno-0-841"></a>
-<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a>Your reputation depends on:
-<a id="__codelineno-0-843" name="__codelineno-0-843" href="#__codelineno-0-843"></a>
-<a id="__codelineno-0-844" name="__codelineno-0-844" href="#__codelineno-0-844"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
-<a id="__codelineno-0-845" name="__codelineno-0-845" href="#__codelineno-0-845"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
-<a id="__codelineno-0-846" name="__codelineno-0-846" href="#__codelineno-0-846"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
-<a id="__codelineno-0-847" name="__codelineno-0-847" href="#__codelineno-0-847"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
-<a id="__codelineno-0-848" name="__codelineno-0-848" href="#__codelineno-0-848"></a>
-<a id="__codelineno-0-849" name="__codelineno-0-849" href="#__codelineno-0-849"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
-<a id="__codelineno-0-850" name="__codelineno-0-850" href="#__codelineno-0-850"></a>
-<a id="__codelineno-0-851" name="__codelineno-0-851" href="#__codelineno-0-851"></a>Believe in your abilities. Stay determined. Strive for excellence.
-<a id="__codelineno-0-852" name="__codelineno-0-852" href="#__codelineno-0-852"></a>
-<a id="__codelineno-0-853" name="__codelineno-0-853" href="#__codelineno-0-853"></a>This is very important to my career. You&#39;d better be sure.
-<a id="__codelineno-0-854" name="__codelineno-0-854" href="#__codelineno-0-854"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
+<a id="__codelineno-0-843" name="__codelineno-0-843" href="#__codelineno-0-843"></a>Do NOT proceed to the next command until ALL items are checked.
+<a id="__codelineno-0-844" name="__codelineno-0-844" href="#__codelineno-0-844"></a>
+<a id="__codelineno-0-845" name="__codelineno-0-845" href="#__codelineno-0-845"></a>---
+<a id="__codelineno-0-846" name="__codelineno-0-846" href="#__codelineno-0-846"></a>
+<a id="__codelineno-0-847" name="__codelineno-0-847" href="#__codelineno-0-847"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-848" name="__codelineno-0-848" href="#__codelineno-0-848"></a>You are a Principal Software Architect orchestrating complex feature implementations.
+<a id="__codelineno-0-849" name="__codelineno-0-849" href="#__codelineno-0-849"></a>
+<a id="__codelineno-0-850" name="__codelineno-0-850" href="#__codelineno-0-850"></a>Your reputation depends on:
+<a id="__codelineno-0-851" name="__codelineno-0-851" href="#__codelineno-0-851"></a>
+<a id="__codelineno-0-852" name="__codelineno-0-852" href="#__codelineno-0-852"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
+<a id="__codelineno-0-853" name="__codelineno-0-853" href="#__codelineno-0-853"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
+<a id="__codelineno-0-854" name="__codelineno-0-854" href="#__codelineno-0-854"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
+<a id="__codelineno-0-855" name="__codelineno-0-855" href="#__codelineno-0-855"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
+<a id="__codelineno-0-856" name="__codelineno-0-856" href="#__codelineno-0-856"></a>
+<a id="__codelineno-0-857" name="__codelineno-0-857" href="#__codelineno-0-857"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
+<a id="__codelineno-0-858" name="__codelineno-0-858" href="#__codelineno-0-858"></a>
+<a id="__codelineno-0-859" name="__codelineno-0-859" href="#__codelineno-0-859"></a>Believe in your abilities. Stay determined. Strive for excellence.
+<a id="__codelineno-0-860" name="__codelineno-0-860" href="#__codelineno-0-860"></a>
+<a id="__codelineno-0-861" name="__codelineno-0-861" href="#__codelineno-0-861"></a>This is very important to my career. You&#39;d better be sure.
+<a id="__codelineno-0-862" name="__codelineno-0-862" href="#__codelineno-0-862"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
