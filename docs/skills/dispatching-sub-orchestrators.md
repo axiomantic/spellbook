@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when a COMPLEX feature has 15+ tasks across 2+ tracks and the develop orchestrator's context would bloat from per-gate dispatching. Triggers: 'manager pattern', 'sub-orchestrator', 'CEO/Manager dispatch', 'too many per-task gates', 'orchestrator context bloat on COMPLEX feature', 'split implementation across managers', 'sub_orchestrators execution mode'. Invoked by feature-implement Phase 4 when execution_mode is sub_orchestrators. NOT for: STANDARD tier (use delegated mode), small COMPLEX (<15 tasks, use delegated), or work_items mode (separate-session decomposition).
+> Use when a feature has 15+ tasks across 2+ tracks and the develop orchestrator's context would bloat from per-gate dispatching. Triggers: 'manager pattern', 'sub-orchestrator', 'CEO/Manager dispatch', 'too many per-task gates', 'orchestrator context bloat', 'split implementation across managers', 'sub_orchestrators execution mode'. Invoked by feature-implement Phase 4 when execution_mode is sub_orchestrators. Selection is independent of complexity tier (STANDARD and COMPLEX both qualify when thresholds are met). NOT for: features below the task/track thresholds (use delegated mode) or work_items mode (separate-session decomposition).
 ## Skill Content
 
 ``````````markdown
@@ -33,11 +33,10 @@ This skill is invoked by `commands/feature-implement.md` Phase 4 when the upstre
 
 ```
 sub_orchestrators selected when:
-  complexity_tier == "complex"
-  OR (num_tasks > 15 AND num_distinct_tracks >= 2)
+  num_tasks >= 15 AND num_distinct_tracks >= 2
 ```
 
-For SIMPLE, STANDARD, and small COMPLEX features, the existing `direct` / `delegated` / `work_items` modes are unchanged. Do NOT use this skill for work that fits in those modes; the Manager tier is overhead when one CEO can hold the whole gate sequence in context cleanly.
+Selection is driven solely by task count and track count, not by complexity tier. A STANDARD feature with 20 tasks across 3 tracks routes here just as a COMPLEX one would; tier gates which workflow phases run, not which execution mode dispatches them. For features below this threshold, the existing `direct` / `delegated` / `work_items` modes are unchanged. Do NOT use this skill for work that fits in those modes; the Manager tier is overhead when one CEO can hold the whole gate sequence in context cleanly.
 
 This skill is NOT a replacement for `work_items` (which decomposes across separate user sessions). It runs inside a single develop session, with Managers as subagents under the same session.
 
@@ -409,7 +408,7 @@ The threshold: "Could a reasonable senior implementer make this choice and have 
 - Manager that batches gates across tasks (each task runs all 4 gates before next task starts)
 - Manager that silently falls back to inline execution without setting `task_tool_available: false`
 - CEO that skips end-of-Phase-4 gates because "all Managers reported clean"
-- CEO that uses sub-orchestrator mode for STANDARD tier or small COMPLEX (Manager overhead exceeds savings)
+- CEO that uses sub-orchestrator mode for features below the task/track thresholds (Manager overhead exceeds savings)
 - Manager that touches files outside its scope without escalating
 - Manager that writes its own design-doc gap entries to AGENTS.md or the design doc directly (gaps go in the summary; CEO decides what to persist)
 - AI-attribution footers (Co-Authored-By, "Generated with Claude") in any commit

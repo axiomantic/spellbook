@@ -45,6 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (Manager) Dispatch subsection that points to
   `dispatching-sub-orchestrators` as the canonical home for the Manager
   Dispatch Template and CEO loop, without inlining the template.
+- **Execution mode routing decoupled from complexity tier.** Phase 3.4.5
+  selection of `sub_orchestrators` and `work_items` now keys solely off
+  `num_tasks` and `num_distinct_tracks`, not `complexity_tier`. The
+  complexity tier continues to gate which workflow phases run (SIMPLE
+  skips gathering-requirements / design / devils-advocate); execution
+  mode is independent. Resolves an inconsistency where
+  `feature-implement` Phase 3.4.5 allowed `sub_orchestrators` for any
+  feature exceeding task thresholds while several skill/doc files
+  described it as COMPLEX-only.
 
 ## [0.57.0] - 2026-04-30
 

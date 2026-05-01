@@ -591,7 +591,7 @@ Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escap
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for COMPLEX 15+ tasks/2+ tracks, work_items for very large or cross-session, delegated for STANDARD single-session)
+  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for 15+ tasks/2+ tracks regardless of tier, work_items for very large or cross-session, delegated for single-session default)
   ├─ 3.5: Generate work item prompts (if work_items)
   └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)
     ↓
@@ -808,10 +808,14 @@ After `/feature-config` completes (including Phase 0.7):
 
 **STANDARD tier:** Run all commands in order.
 
-**COMPLEX tier:** Run all commands in order. Execution mode analysis in Phase 3.4.5 determines decomposition strategy:
-- **15+ tasks across 2+ tracks (typical COMPLEX)**: `sub_orchestrators` mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See `dispatching-sub-orchestrators` skill.
-- **Very large COMPLEX (25+ tasks) or user-requested cross-session split**: `work_items` mode. Generates prompt files for separate-session execution.
-- **Smaller COMPLEX (under 15 tasks or single track)**: `delegated` mode (same as STANDARD).
+**COMPLEX tier:** Run all commands in order.
+
+**Note on tier vs execution mode.** The complexity tier (TRIVIAL / SIMPLE / STANDARD / COMPLEX) gates which *phases* run — SIMPLE skips gathering-requirements, design, and devils-advocate; STANDARD and COMPLEX run the full workflow. The execution_mode (direct / delegated / sub_orchestrators / work_items) is decided separately in Phase 3.4.5 from task count, track count, and explicit user intent. These two axes are orthogonal: a STANDARD feature with 20 tasks across 3 tracks routes to sub_orchestrators just like a COMPLEX one would.
+
+Execution mode analysis in Phase 3.4.5 determines decomposition strategy (applies to STANDARD and COMPLEX alike):
+- **Features with 15+ tasks across 2+ tracks (regardless of tier)**: `sub_orchestrators` mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See `dispatching-sub-orchestrators` skill.
+- **Very large features (25+ tasks) or user-requested cross-session split**: `work_items` mode. Generates prompt files for separate-session execution.
+- **Smaller features (under 15 tasks or single track)**: `delegated` mode.
 
 ### Simple Path Guardrails
 
