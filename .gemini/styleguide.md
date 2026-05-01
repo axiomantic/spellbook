@@ -28,7 +28,7 @@ Flag as **high severity** if the version bump or changelog entry is missing. Fla
 
 **This rule is absolute. There are no substitutes. Do not suggest alternatives.**
 
-The framework is `python-tripwire`, imported as `tripwire`. The pyproject configuration section is `[tool.tripwire]`. The earlier `bigfoot` package name and any `bigfoot.*_mock` / `tripwire.*_mock` plugin aliases are no longer used in this repo; flag PRs that reintroduce them.
+The framework is `pytest-tripwire` (formerly `python-tripwire`), imported as `tripwire`. The pyproject configuration section is `[tool.tripwire]`. The earlier `bigfoot` package name and any `bigfoot.*_mock` / `tripwire.*_mock` plugin aliases are no longer used in this repo; flag PRs that reintroduce them.
 
 ### Tripwire is a different paradigm, not a drop-in patch replacement
 
@@ -92,7 +92,7 @@ When suggesting a rewrite, use the real API surface. Do NOT invent names.
 - `tripwire.socket` -- raw socket operations.
 - `tripwire.smtp`, `tripwire.redis`, `tripwire.mongo`, `tripwire.boto3`, `tripwire.pika`, `tripwire.ssh`, `tripwire.log`, `tripwire.jwt`, `tripwire.crypto`, `tripwire.file_io`, etc.
 
-**Naming after the python-tripwire 0.20+ rebrand:** The `_mock` suffix was dropped on domain plugin proxies. Canonical names are now without the suffix (e.g. `tripwire.subprocess`, not `tripwire.subprocess_mock`). The `_mock` aliases are no longer available.
+**Naming after the python-tripwire 0.20 / pytest-tripwire 0.21 rebrand:** The `_mock` suffix was dropped on domain plugin proxies. Canonical names are now without the suffix (e.g. `tripwire.subprocess`, not `tripwire.subprocess_mock`). The `_mock` aliases are no longer available.
 
 **Do NOT write** `tripwire.subprocess_mock`, `tripwire.db_mock`, `tripwire.log_mock`, `tripwire.popen_mock`, `tripwire.async_subprocess_mock`, `tripwire.socket_mock`, `tripwire.smtp_mock`, `tripwire.redis_mock`, `tripwire.mongo_mock`, `tripwire.boto3_mock`, `tripwire.pika_mock`, `tripwire.ssh_mock`, `tripwire.jwt_mock`, `tripwire.crypto_mock`, `tripwire.file_io_mock` -- those are pre-rebrand aliases that no longer exist. Use `tripwire.subprocess`, `tripwire.db`, `tripwire.log`, etc.
 
@@ -118,7 +118,7 @@ The following review phrasings are incorrect and will confuse contributors. Do n
 - ❌ "unittest.mock is okay for simple cases"
 - ❌ "Use `tripwire.patch(...)`" or "Use `@tripwire.mock` as a decorator" -- these are not real APIs
 - "Replace with `tripwire.database`" -- real name is `tripwire.db` (post-rebrand) or the legacy `tripwire.db_mock` (pre-rebrand, no longer valid)
-- "Replace with `tripwire.subprocess_mock` / `tripwire.db_mock` / `tripwire.log_mock`" -- those `_mock` aliases were dropped in python-tripwire 0.20+; use `tripwire.subprocess`, `tripwire.db`, `tripwire.log`
+- "Replace with `tripwire.subprocess_mock` / `tripwire.db_mock` / `tripwire.log_mock`" -- those `_mock` aliases were dropped in python-tripwire 0.20 (now pytest-tripwire 0.21+); use `tripwire.subprocess`, `tripwire.db`, `tripwire.log`
 - Suggesting tripwire without the surrounding `with tripwire:` sandbox and the post-sandbox `.assert_call(...)` / `.assert_request(...)` -- omitting either step makes the rewrite non-functional
 
 ### Correct review language
