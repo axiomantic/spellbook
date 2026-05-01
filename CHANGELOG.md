@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   1.14.29; major-version jumps `eslint` 9->10 and `typescript` 5->6
   (in `spellbook/admin/frontend`).
 
+### Fixed
+
+- **Test dependency renamed: `python-tripwire[http]` -> `pytest-tripwire[http]`.**
+  Upstream renamed the PyPI distribution; `python-tripwire>=0.21` is now a
+  deprecation shim with no `[http]` extra, so resolving `python-tripwire[http]`
+  silently lost the HTTP-plugin dependencies and `tripwire.http.mock_response`
+  raised `ImportError: pytest-tripwire[http] is required to use tripwire.http`
+  in CI. The import path stays `import tripwire`; only the distribution name
+  changed.
+
 ## [0.58.0] - 2026-04-30
 
 ### Added
