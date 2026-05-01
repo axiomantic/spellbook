@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.0] - 2026-05-01
+
+### Changed
+
+- **Batched dependabot bumps (23 PRs).** Single chore branch landing
+  9 pip and 14 npm dependency updates that had accumulated as open
+  dependabot PRs. Conflicts between sibling bumps (multiple PRs touching
+  the same `pyproject.toml` / `package.json` / lockfile) were
+  auto-resolved by taking the target package's incoming version and
+  regenerating affected `package-lock.json` files via `npm install
+  --package-lock-only`. Notable bumps: `sqlalchemy` >=2.0.49, `rich`
+  >=15.0.0, `websockets` >=16.0, `fastapi` >=0.136.1, `uvicorn` >=0.46.0,
+  `mkdocs-material` >=9.7.6, `mike` >=2.2.0, `dirty-equals` >=0.11,
+  `pytest-timeout` >=2.4.0; frontend `vite` 8.0.10, `cytoscape` 3.33.2,
+  `vitest` 4.1.5, `@types/node` 25.6.0, `@opencode-ai/{plugin,sdk}`
+  1.14.29; major-version jumps `eslint` 9->10 and `typescript` 5->6
+  (in `spellbook/admin/frontend`).
+
 ## [0.58.1] - 2026-05-01
 
 ### Changed
