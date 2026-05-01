@@ -134,10 +134,10 @@ Determine execution strategy from plan structure and context budget.
 if complexity_tier == "trivial": exit skill (already handled in Phase 0)
 if complexity_tier == "simple": direct (already handled via Simple Path)
 if user_explicitly_requested_separate_sessions: work_items
-if num_tasks >= 15 AND num_distinct_tracks >= 2:
-    sub_orchestrators
 if impl_plan has multiple tracks with dependencies AND num_tasks > 25:
     work_items   (cross-session decomposition for very large features)
+if num_tasks >= 15 AND num_distinct_tracks >= 2:
+    sub_orchestrators
 elif num_tasks > 15:
     work_items   (context budget concern, single track or no clear file ownership)
 else: delegated (single session, subagent execution)

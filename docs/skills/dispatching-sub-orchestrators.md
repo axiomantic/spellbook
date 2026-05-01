@@ -116,6 +116,8 @@ Before dispatching Managers, dispatch a setup subagent to invoke `using-git-work
 
 For each dispatch, use the **Manager Dispatch Template** below verbatim. Fill in placeholders, do NOT abbreviate sections.
 
+Each `Task()` dispatch MUST be preceded by the Pre-Dispatch Ritual (Phase Declaration) defined in `develop`. The Manager template below assumes you have already announced the phase, scope, and exit criteria.
+
 ### Phase D: Read Manager Summaries
 
 After each Manager returns, parse its summary. The CEO MUST verify:

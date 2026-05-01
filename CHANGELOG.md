@@ -62,6 +62,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mocking guidance no longer references the retired `bigfoot` package; it
   now defers to AGENTS.md and points at python-tripwire as the canonical
   example.
+- **Phase 3.4.5 routing order corrected.** The `work_items` predicate for
+  very large features with dependent tracks (`num_tasks > 25`) now
+  precedes the `sub_orchestrators` predicate, so cross-session
+  decomposition wins for the largest cases instead of being shadowed by
+  the single-session sub_orchestrators path.
+- **Pre-Dispatch Ritual cross-references added.** The CEO loop in
+  `dispatching-sub-orchestrators` and the Subagent Dispatch Template in
+  `dispatching-parallel-agents` now explicitly remind the dispatcher to
+  perform the Phase Declaration ritual defined in `develop` before each
+  `Task()` invocation.
 
 ## [0.57.0] - 2026-04-30
 

@@ -563,6 +563,8 @@ If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent i
 
 ## Subagent Dispatch Template
 
+> **Before invoking this template:** perform the Pre-Dispatch Ritual (Phase Declaration) per the `develop` skill — announce the phase, the work scope, and the exit criteria.
+
 <CRITICAL>
 When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
 
