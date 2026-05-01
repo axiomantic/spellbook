@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AGENTS.md`, `.gemini/styleguide.md`, and the `dispatching-sub-orchestrators`
   skill were updated to match the new dist name.
 
-## [0.59.0] - 2026-05-01
+## [0.58.2] - 2026-05-01
 
 ### Changed
 
