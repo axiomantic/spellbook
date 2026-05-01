@@ -21,7 +21,7 @@
   "author": "Spellbook",
   "license": "MIT",
   "peerDependencies": {
-    "@opencode-ai/plugin": "^1.14.29"
+    "@opencode-ai/plugin": ">=1.0.0"
   },
   "dependencies": {
     "@anthropic-ai/tokenizer": "^0.0.4",
