@@ -208,7 +208,7 @@ Reusable workflows for structured development:
 |----------|--------|
 | **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
-| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
+| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context] |
@@ -252,6 +252,7 @@ Reusable workflows for structured development:
 [sharpening-prompts]: https://axiomantic.github.io/spellbook/latest/skills/sharpening-prompts/
 [optimizing-instructions]: https://axiomantic.github.io/spellbook/latest/skills/optimizing-instructions/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
+[dispatching-sub-orchestrators]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-sub-orchestrators/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [polish-repo]: https://axiomantic.github.io/spellbook/latest/skills/polish-repo/

@@ -267,6 +267,14 @@ Return: Summary of what you found and what you fixed.
 
 ## Specialized Subagent Templates
 
+### Sub-Orchestrator (Manager) Dispatch
+
+For COMPLEX features with 15+ tasks across 2+ tracks, the standard "one subagent per gate per task" dispatch pattern bloats the orchestrator's context with summaries. The sub-orchestrator pattern interposes Manager subagents (sub-orchestrators) between the CEO orchestrator and the per-gate subagents: the CEO dispatches one Manager per file-ownership cluster, and each Manager runs its own per-task gates internally before returning a single compact structured summary.
+
+This is a different dispatch shape from the templates in this skill, which assume the orchestrator dispatches gates directly. Do NOT inline a Manager dispatch template here. The canonical Manager Dispatch Template, the CEO loop, and the gotchas (Task-tool fallback to inline execution, single-worktree Manager serialization, file-ownership grouping vs wave grouping) live in the `dispatching-sub-orchestrators` skill.
+
+When you need the Manager pattern, invoke `dispatching-sub-orchestrators` from the orchestrator (or from `feature-implement` Phase 4.0 when `execution_mode == "sub_orchestrators"`). When you only need parallel gate dispatch within a single orchestrator's context, the templates below still apply.
+
 ### Test Writer Template
 
 Mandatory inclusion when dispatching any agent to write test code. Append to the agent's prompt:
@@ -554,6 +562,8 @@ If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent i
 ---
 
 ## Subagent Dispatch Template
+
+> **Before invoking this template:** perform the Pre-Dispatch Ritual (Phase Declaration) per the `develop` skill — announce the phase, the work scope, and the exit criteria.
 
 <CRITICAL>
 When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
