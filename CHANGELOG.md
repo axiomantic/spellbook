@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.1] - 2026-05-01
+
+### Changed
+
+- **Tripwire dependency renamed on PyPI.** The dist name on PyPI changed from
+  `python-tripwire` to `pytest-tripwire` as of upstream release 0.21.0.
+  `pyproject.toml` dev deps now require `pytest-tripwire[http]>=0.21.0`. The
+  Python import name remains `tripwire`; no test or source code change is
+  needed beyond the dependency declaration. Documentation references in
+  `AGENTS.md`, `.gemini/styleguide.md`, and the `dispatching-sub-orchestrators`
+  skill were updated to match the new dist name.
+
 ## [0.59.0] - 2026-05-01
 
 ### Changed
@@ -24,16 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `vitest` 4.1.5, `@types/node` 25.6.0, `@opencode-ai/{plugin,sdk}`
   1.14.29; major-version jumps `eslint` 9->10 and `typescript` 5->6
   (in `spellbook/admin/frontend`).
-
-### Fixed
-
-- **Test dependency renamed: `python-tripwire[http]` -> `pytest-tripwire[http]`.**
-  Upstream renamed the PyPI distribution; `python-tripwire>=0.21` is now a
-  deprecation shim with no `[http]` extra, so resolving `python-tripwire[http]`
-  silently lost the HTTP-plugin dependencies and `tripwire.http.mock_response`
-  raised `ImportError: pytest-tripwire[http] is required to use tripwire.http`
-  in CI. The import path stays `import tripwire`; only the distribution name
-  changed.
 
 ## [0.58.0] - 2026-04-30
 

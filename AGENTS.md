@@ -312,7 +312,7 @@ Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by de
 
 ### Sandbox & Security (Tripwire)
 
-This project uses **python-tripwire** (imported as `tripwire`) to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
+This project uses **pytest-tripwire** (imported as `tripwire`) to strictly enforce a testing sandbox. By default, any attempt to spawn a subprocess or access the network will result in an error (`guard = "error"` in `pyproject.toml`).
 
 **How to permit specific actions:**
 - **Subprocesses**: Use the `@pytest.mark.allow("subprocess")` marker on your test function.
@@ -405,7 +405,7 @@ def test_example():
 
 #### Domain Plugins
 
-Use tripwire's domain-specific plugins when applicable instead of generic mocks. As of python-tripwire 0.20+, plugin proxy names dropped the `_mock` suffix:
+Use tripwire's domain-specific plugins when applicable instead of generic mocks. As of pytest-tripwire 0.21+ (formerly python-tripwire 0.20), plugin proxy names dropped the `_mock` suffix:
 - `tripwire.http` — HTTP requests (httpx, requests, urllib, aiohttp). Methods: `mock_response(method, url, json=..., status=...)`, `mock_error(...)`, `assert_request(...).assert_response(...)`.
 - `tripwire.subprocess` — `subprocess.run`, `shutil.which`. Methods: `mock_run(cmd, returncode=..., stdout=...)`, `assert_run(cmd, ...)`.
 - `tripwire.popen` — `subprocess.Popen`.
