@@ -407,7 +407,7 @@ skill. That skill owns the Manager loop (decompose, dispatch Managers, read
 summaries, escalate).
 
 After the sub-orchestrator dispatch returns (all Managers complete), CEO resumes
-at 4.6.1 (comprehensive audit). End-of-Phase-4 gates 4.6.1 - 4.6.4 ALWAYS run at
+at 4.6.1 (comprehensive audit). End-of-Phase-4 gates 4.6.1 - 4.6.5 ALWAYS run at
 CEO level regardless of how Managers executed (Task-tool sub-subagents OR inline).
 They are the safety net for inline-execution context-isolation loss and the only
 gates that span Manager boundaries.
@@ -433,7 +433,7 @@ Task:
     AGENTS.md path: [absolute path]
 
     Return the consolidated manager_summaries, commit_log, escalations, and
-    task_outcomes. CEO will run end-of-Phase-4 gates (4.6.1 - 4.6.4) and
+    task_outcomes. CEO will run end-of-Phase-4 gates (4.6.1 - 4.6.5) and
     finishing (4.7) after this dispatch returns.
 ```
 

@@ -48,7 +48,7 @@ This skill is NOT a replacement for `work_items` (which decomposes across separa
 
 3. **Per-task gates run inside the Manager.** TDD, completion verification, code review, and fact-check happen within the Manager's context (whether dispatched as sub-subagents or executed inline). The CEO does not see per-task gate output.
 
-4. **End-of-Phase-4 gates run at CEO level.** The 4.6.1 comprehensive audit, 4.6.2 full test suite, 4.6.3 green mirage audit, and 4.6.4 comprehensive fact-check span all Manager work and MUST run after Managers report. They are the safety net for inline execution losing per-gate context isolation.
+4. **End-of-Phase-4 gates run at CEO level.** The 4.6.1 comprehensive audit, 4.6.2 full test suite, 4.6.3 green mirage audit, 4.6.4 comprehensive fact-check, and 4.6.5 pre-PR claim validation span all Manager work and MUST run after Managers report. They are the safety net for inline execution losing per-gate context isolation.
 
 5. **Compact return schema is mandatory.** Manager returns are structured, scannable, and short enough that the CEO can read every Manager's full report and still have headroom for end-of-Phase-4 gates. A Manager that returns prose paragraphs instead of the structured schema has violated the pattern.
 
@@ -146,6 +146,7 @@ Run the existing `feature-implement` Phase 4.6.x sequence:
 - **4.6.2** Full test suite
 - **4.6.3** Green mirage audit (subagent invokes `auditing-green-mirage`)
 - **4.6.4** Comprehensive fact-check (subagent invokes `fact-checking`)
+- **4.6.5** Pre-PR claim validation (subagent invokes `fact-checking` against branch diff)
 
 Then proceed to **4.7** finishing (`finishing-a-development-branch`).
 
@@ -280,10 +281,9 @@ auditing-green-mirage gate that runs at CEO level after you return.
   assert len(result) > 0                          -- BANNED.
   mock_fn.assert_called_with(mock.ANY, ...)       -- BANNED.
 
-Use the project's mocking framework as documented in AGENTS.md.
-For Python projects with bigfoot: use bigfoot. For Python projects with
-python-tripwire (or equivalent SDK mocks): use those. Never reach for
-unittest.mock unless AGENTS.md explicitly permits it.
+Use the project's mocking framework as documented in AGENTS.md. For Python
+projects with python-tripwire (or equivalent SDK mocks): use those. Never
+reach for unittest.mock unless AGENTS.md explicitly permits it.
 
 ## Blocker Handling
 
@@ -428,7 +428,7 @@ Before declaring sub-orchestrator execution complete, the CEO verifies:
 - [ ] All `escalated_issues` were resolved or explicitly deferred with user consent
 - [ ] All `design_doc_gaps_discovered` were captured for post-implementation design-doc update
 - [ ] CEO context contains ONLY: dispatch calls, Manager summaries, todo updates, end-of-Phase-4 gate dispatches (no source file reads, no test output, no inline edits)
-- [ ] End-of-Phase-4 gates 4.6.1, 4.6.2, 4.6.3, 4.6.4 dispatched (NOT skipped, regardless of Manager reports)
+- [ ] End-of-Phase-4 gates 4.6.1, 4.6.2, 4.6.3, 4.6.4, 4.6.5 dispatched (NOT skipped, regardless of Manager reports)
 - [ ] If `worktree_strategy == "per_parallel_track"`: `merging-worktrees` skill invoked before end-of-Phase-4 gates
 - [ ] Phase 4.7 finishing dispatched after all gates pass
 

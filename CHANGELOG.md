@@ -54,6 +54,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `feature-implement` Phase 3.4.5 allowed `sub_orchestrators` for any
   feature exceeding task thresholds while several skill/doc files
   described it as COMPLEX-only.
+- **Gates list expanded.** The end-of-Phase-4 gate range cited in the
+  sub_orchestrators skill and feature-implement Phase 4 routing now reads
+  `4.6.1 - 4.6.5` (was `4.6.1 - 4.6.4`), correctly including the Pre-PR
+  Claim Validation gate.
+- **Mocking framework example updated.** The sub_orchestrators skill's
+  mocking guidance no longer references the retired `bigfoot` package; it
+  now defers to AGENTS.md and points at python-tripwire as the canonical
+  example.
 
 ## [0.57.0] - 2026-04-30
 
