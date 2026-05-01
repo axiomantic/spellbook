@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Tripwire dependency renamed on PyPI.** The dist name on PyPI changed from
+  `python-tripwire` to `pytest-tripwire` as of upstream release 0.21.0.
+  `pyproject.toml` dev deps now require `pytest-tripwire[http]>=0.21.0`. The
+  Python import name remains `tripwire`; no test or source code change is
+  needed beyond the dependency declaration. Documentation references in
+  `AGENTS.md`, `.gemini/styleguide.md`, and the `dispatching-sub-orchestrators`
+  skill were updated to match the new dist name.
+
 ## [0.58.0] - 2026-04-30
 
 ### Added

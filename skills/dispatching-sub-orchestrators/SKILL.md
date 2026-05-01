@@ -280,7 +280,7 @@ auditing-green-mirage gate that runs at CEO level after you return.
   assert len(result) > 0                          -- BANNED.
   mock_fn.assert_called_with(mock.ANY, ...)       -- BANNED.
 
-Use python-tripwire for mocking, per `AGENTS.md` (Testing with Tripwire).
+Use pytest-tripwire for mocking, per `AGENTS.md` (Testing with Tripwire).
 Never reach for `unittest.mock`.
 
 ## Blocker Handling
