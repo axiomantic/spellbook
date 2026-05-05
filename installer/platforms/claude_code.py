@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
+from ..components.default_mode import install_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
+from ..components.permissions import install_permissions
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -354,6 +356,45 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 success=hook_result.success,
                 action=hook_result.action,
                 message=hook_result.message,
+            )
+        )
+
+        # WI-0: install spellbook-managed defaultMode and permissions entries.
+        # Phase 1 hard-codes mode="acceptEdits". Permissions arrays start empty;
+        # Phase 2 (allow) and Phase 6b (deny via tier projection) populate them.
+        self._step("Installing default mode")
+        default_mode_result = install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=self.spellbook_dir,
+            dry_run=self.dry_run,
+        )
+        results.append(
+            InstallResult(
+                component=default_mode_result.component,
+                platform=self.platform_id,
+                success=default_mode_result.success,
+                action=default_mode_result.action,
+                message=default_mode_result.message,
+            )
+        )
+
+        self._step("Installing permissions")
+        permissions_result = install_permissions(
+            settings_path=settings_path,
+            allow=None,
+            deny=None,
+            ask=None,
+            spellbook_dir=self.spellbook_dir,
+            dry_run=self.dry_run,
+        )
+        results.append(
+            InstallResult(
+                component=permissions_result.component,
+                platform=self.platform_id,
+                success=permissions_result.success,
+                action=permissions_result.action,
+                message=permissions_result.message,
             )
         )
 
