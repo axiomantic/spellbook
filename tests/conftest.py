@@ -154,6 +154,10 @@ def pytest_collection_modifyitems(config, items):
     skip_docker = pytest.mark.skip(reason="docker tests only run in CI (use --run-docker)")
     run_docker = config.getoption("--run-docker")
 
+    is_windows = sys.platform == "win32"
+    skip_windows_only = pytest.mark.skip(reason="windows_only test: skipped on POSIX")
+    skip_posix_only = pytest.mark.skip(reason="posix_only test: skipped on Windows")
+
     skipped_memory_count = 0
     for item in items:
         if not memory_tools_ok and "requires_memory_tools" in item.keywords:
@@ -161,6 +165,10 @@ def pytest_collection_modifyitems(config, items):
             skipped_memory_count += 1
         if not run_docker and "docker" in item.keywords:
             item.add_marker(skip_docker)
+        if "windows_only" in item.keywords and not is_windows:
+            item.add_marker(skip_windows_only)
+        if "posix_only" in item.keywords and is_windows:
+            item.add_marker(skip_posix_only)
 
     if skipped_memory_count > 0:
         # Loud warning so the skip is impossible to miss in the terminal

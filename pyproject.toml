@@ -76,6 +76,8 @@ markers = [
     # exceptions") for install instructions and the rationale for the
     # exception.
     "requires_memory_tools: test requires QMD and Serena to be installed",
+    "windows_only: test runs only on Windows (skipped on POSIX systems)",
+    "posix_only: test runs only on POSIX systems (skipped on Windows)",
 ]
 
 [tool.tripwire]
