@@ -28,6 +28,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from spellbook.core.command_utils import atomic_write_json
+
 from .. import config as _config
 from . import source_link as _source_link
 
@@ -589,12 +591,9 @@ def install_hooks(
             settings["hooks"][phase], hook_defs, spellbook_dir
         )
 
-    # Write back
+    # Write back atomically (Windows transient-error retry on os.replace).
     settings_path.parent.mkdir(parents=True, exist_ok=True)
-    settings_path.write_text(
-        json.dumps(settings, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    atomic_write_json(str(settings_path), settings)
 
     return HookResult(
         component="hooks",
@@ -683,11 +682,8 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
 
     settings["hooks"] = hooks_section
 
-    # Write back
-    settings_path.write_text(
-        json.dumps(settings, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # Write back atomically (Windows transient-error retry on os.replace).
+    atomic_write_json(str(settings_path), settings)
 
     return HookResult(
         component="hooks",
