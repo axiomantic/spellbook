@@ -409,7 +409,11 @@ def derive_l2_deny_list(tiers_path: Path) -> list[str]:
         Deduplicated list of deny strings, in source order.
     """
     if not tiers_path.exists():
-        logger.warning(
+        # Debug, not warning: in normal operation tiers.toml ships in-tree, so a
+        # missing file is either a test fixture or a partial install and the
+        # caller usually does not care. Operators looking for this case can
+        # raise the log level.
+        logger.debug(
             "tiers: %s does not exist; L2 deny derivation produced 0 patterns.",
             tiers_path,
         )

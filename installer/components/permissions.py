@@ -36,6 +36,33 @@ from .hooks import HookResult
 logger = logging.getLogger(__name__)
 
 
+def derive_managed_deny(spellbook_dir: Path) -> List[str]:
+    """Derive the L2 ``permissions.deny`` list from ``spellbook/gates/tiers.toml``.
+
+    Reads the seed tier records, projects every T3 record through
+    :func:`spellbook.gates.tiers.tier_record_to_deny_pattern`, and returns
+    the flat (deduplicated) list of deny strings the installer feeds into
+    :func:`install_permissions` via ``deny=...``.
+
+    Errors are intentionally narrow: missing ``tiers.toml`` returns ``[]``
+    (the install proceeds with an empty derived deny set), but malformed
+    TOML or schema violations propagate so the operator notices.
+
+    Args:
+        spellbook_dir: The spellbook source root (the directory containing
+            ``spellbook/gates/tiers.toml``).
+
+    Returns:
+        Deduplicated list of ``settings.json``-shaped deny patterns.
+    """
+    # Local import to avoid pulling the gates runtime (and its bashlex
+    # dependency for sibling modules) into the installer hot path.
+    from spellbook.gates.tiers import derive_l2_deny_list
+
+    tiers_path = spellbook_dir / "spellbook" / "gates" / "tiers.toml"
+    return derive_l2_deny_list(tiers_path)
+
+
 def install_permissions(
     settings_path: Path,
     spellbook_dir: Path,
