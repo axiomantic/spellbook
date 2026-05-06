@@ -924,8 +924,18 @@ def _classify_redirect(node: object) -> list[dict]:
     # while the deny prefixes are POSIX-style (``/etc/``, ``/proc/``). Fold
     # each candidate to forward slashes so the prefix match works on both
     # platforms — the gate's threat model is shell redirection, which is a
-    # POSIX construct regardless of host OS.
-    candidates.extend([c.replace("\\", "/") for c in tuple(candidates)])
+    # POSIX construct regardless of host OS. Also strip any drive letter
+    # (``C:``) so a tilde-traversal target like ``~/../../etc/shadow``
+    # which expanduser turns into ``C:\Users\...\..\..\etc\shadow`` and
+    # normpath collapses to ``C:\etc\shadow`` still matches ``/etc/``.
+    expanded_candidates: list[str] = []
+    for c in tuple(candidates):
+        slashed = c.replace("\\", "/")
+        expanded_candidates.append(slashed)
+        _, no_drive = os.path.splitdrive(slashed)
+        if no_drive != slashed:
+            expanded_candidates.append(no_drive)
+    candidates.extend(expanded_candidates)
 
     for candidate in candidates:
         if any(candidate.startswith(p) for p in _REDIRECT_DENY_PREFIXES):
