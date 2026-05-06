@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.0] - 2026-05-06
+
+### Added
+
+- **YOLO transcript analyzer** (`scripts/analyze_yolo_transcripts.py`).
+  Scans Claude Code session JSONLs under `~/.claude-work/projects/` and
+  `~/.claude/projects/` (both by default; `--config-dir PATH` repeatable
+  to override) for successful Bash invocations, buckets them by
+  `(first-token, sorted -flag tokens)`, and proposes a
+  `permissions.allow` array of gitignore-style patterns
+  (`Bash(git status:*)`, etc.) grouped into five safety categories:
+  read-only, search/inspect, build/test idempotent, local file/cache,
+  and local git mutation. Mutating commands (`git push`, `gh pr merge`,
+  `gh pr close`, `acli jira workitem transition`, `acli jira workitem
+  edit`) are explicitly rejected and surfaced in a separate
+  `rejected_mutating` section so reviewers can see what was filtered.
+  Output is written to `~/.local/spellbook/state/proposed_allow_list.json`
+  with deterministic key ordering, plus a human-readable summary on
+  stdout. The script never writes `settings.json` directly — the
+  proposal is intended for review before being fed into
+  `install_permissions(allow=...)` from Phase 0. Subagent transcripts
+  under `<session>/subagents/agent-*.jsonl` are walked alongside main
+  sessions; failed Bash invocations (paired `tool_result.is_error`) are
+  filtered out before bucketing.
+
 ## [0.60.0] - 2026-05-05
 
 ### Added

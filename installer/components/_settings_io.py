@@ -15,10 +15,16 @@ def read_settings(settings_path: Path) -> dict:
 
     Raises ``json.JSONDecodeError`` on malformed JSON and ``OSError``
     on read failures; callers handle those to emit failed HookResults.
+
+    A file containing the literal JSON value ``null`` (or any non-object
+    top-level JSON like an array or scalar) is treated as "no settings"
+    and returned as an empty dict, since downstream callers assume a
+    mapping.
     """
     if not settings_path.exists():
         return {}
     text = settings_path.read_text(encoding="utf-8")
     if not text.strip():
         return {}
-    return json.loads(text)
+    obj = json.loads(text)
+    return obj if isinstance(obj, dict) else {}

@@ -19,16 +19,11 @@ than via this hooks-level integration test.
 """
 
 import json
-import os
 import sys
 from pathlib import Path
 
 import tripwire
 from dirty_equals import AnyThing
-
-# Capture the real os.replace at import time so flaky-replace stubs can fall
-# through to the genuine rename even after tripwire patches os.replace.
-_REAL_OS_REPLACE = os.replace
 
 # On Windows, install_hooks / uninstall_hooks call shutil.which("powershell")
 # before reaching atomic_write_json. Tripwire's SubprocessPlugin always
@@ -53,21 +48,31 @@ def _write_baseline(settings_path: Path) -> None:
     settings_path.write_text(json.dumps({"existing": "value"}), encoding="utf-8")
 
 
-class _FlakyReplace:
-    """Records the call count so .calls() registrations stay symmetric.
+def _register_flaky_replace() -> "tripwire._mock_plugin._BaseMock":
+    """Register an os.replace mock that fails once, then renames for real.
 
-    First call raises ``PermissionError`` to mimic Windows ``WinError 5``;
-    second call performs the real rename so the post-write assertions pass.
+    Mimics the Windows ``WinError 5`` (file-in-use) behaviour: the first
+    invocation raises ``PermissionError`` and the second invocation performs
+    the real rename so the post-write assertions can read the file. Uses
+    tripwire's sequential FIFO of side effects (``.raises(...)`` then
+    ``.calls(real_os_replace)``) instead of a hand-rolled stub class.
+
+    The real ``os.replace`` is captured *inside* this helper so we read it
+    after tripwire's monkey-patches have unwound; reading at module-import
+    time would still work, but we avoid any module-global state for clarity
+    and to keep the helper self-contained.
     """
+    import os as _os
 
-    def __init__(self) -> None:
-        self.count = 0
-
-    def __call__(self, src, dst):
-        self.count += 1
-        if self.count == 1:
-            raise PermissionError("simulated WinError 5: file in use")
-        _REAL_OS_REPLACE(src, dst)
+    real_os_replace = _os.replace
+    mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
+    # First call: raise. Second call: real rename. FIFO order matches
+    # atomic_replace's retry contract.
+    mock_replace.__call__.raises(
+        PermissionError("simulated WinError 5: file in use")
+    )
+    mock_replace.__call__.calls(lambda src, dst: real_os_replace(src, dst))
+    return mock_replace
 
 
 def _register_windows_branch(call_budget: int):
@@ -112,11 +117,8 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
 
     # First os.replace raises PermissionError; second performs the real
     # rename. atomic_replace's retry loop is what makes the second attempt
-    # happen.
-    flaky = _FlakyReplace()
-    mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
-    mock_replace.calls(flaky)
-    mock_replace.calls(flaky)
+    # happen. Sequential side effects come from tripwire's FIFO queue.
+    mock_replace = _register_flaky_replace()
 
     _register_powershell_which_mock()
 
@@ -129,18 +131,25 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
 
     assert result.success is True
     assert result.component == "hooks"
-    # Two os.replace attempts: first fails, second succeeds. This is the
-    # core regression contract.
-    assert flaky.count == 2
 
     _assert_powershell_which_if_windows()
 
     # Tripwire requires every recorded interaction to be asserted
-    # (UnassertedInteractionsError otherwise); platform.system() is
-    # called 5x by install_hooks + atomic_replace combined.
+    # (UnassertedInteractionsError otherwise). Two os.replace attempts:
+    # the first raises PermissionError, the second succeeds. The retry
+    # contract is now expressed in the assertion order itself: a raised
+    # PermissionError followed by a successful return.
     with tripwire.in_any_order():
-        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
-        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_replace.assert_call(
+            args=(AnyThing, AnyThing),
+            kwargs={},
+            raised=AnyThing,
+        )
+        mock_replace.assert_call(
+            args=(AnyThing, AnyThing),
+            kwargs={},
+            returned=AnyThing,
+        )
         mock_sleep.assert_call(args=(AnyThing,), kwargs={})
         for _ in range(5):
             mock_system.assert_call(args=(), kwargs={})
@@ -195,10 +204,7 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
     mock_sleep = tripwire.mock("spellbook.core.command_utils:time.sleep")
     mock_sleep.calls(lambda _: None)
 
-    flaky = _FlakyReplace()
-    mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
-    mock_replace.calls(flaky)
-    mock_replace.calls(flaky)
+    mock_replace = _register_flaky_replace()
 
     with tripwire:
         result = hooks.uninstall_hooks(
@@ -208,12 +214,19 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
         )
 
     assert result.success is True
-    assert flaky.count == 2
 
     # uninstall path: 1 platform.system() call from atomic_replace.
     with tripwire.in_any_order():
-        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
-        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_replace.assert_call(
+            args=(AnyThing, AnyThing),
+            kwargs={},
+            raised=AnyThing,
+        )
+        mock_replace.assert_call(
+            args=(AnyThing, AnyThing),
+            kwargs={},
+            returned=AnyThing,
+        )
         mock_sleep.assert_call(args=(AnyThing,), kwargs={})
         mock_system.assert_call(args=(), kwargs={})
 

@@ -102,7 +102,13 @@ def install_permissions(
             message=f"permissions: failed to read state file: {e}",
         )
 
-    perms_section: Dict[str, List[str]] = dict(existing_settings.get("permissions", {}))
+    # ``or {}`` guards against settings files that contain ``"permissions": null``
+    # (or any non-dict value) -- ``dict(None)`` raises TypeError. Treat those as
+    # "no permissions section" so a malformed-but-recoverable settings file does
+    # not crash the installer.
+    perms_section: Dict[str, List[str]] = dict(
+        existing_settings.get("permissions") or {}
+    )
 
     # Snapshot the pre-modification bucket contents BEFORE we mutate anything.
     # Used after the write to distinguish entries spellbook actually added
@@ -110,8 +116,9 @@ def install_permissions(
     # by hand and that happened to overlap our desired set. Recording the
     # latter as "managed" would silently transfer ownership and let a future
     # uninstall delete the user's entry. See GEM-M3 / design §14.
+    # ``or []`` guards against bucket values that are explicitly ``null``.
     pre_existing: Dict[str, set] = {
-        bucket: set(perms_section.get(bucket, []))
+        bucket: set(perms_section.get(bucket) or [])
         for bucket in ("allow", "deny", "ask")
     }
 
@@ -125,7 +132,8 @@ def install_permissions(
         ("deny", desired_deny),
         ("ask", desired_ask),
     ):
-        current_list: List[str] = list(perms_section.get(bucket, []))
+        # ``or []`` guards against bucket values that are explicitly ``null``.
+        current_list: List[str] = list(perms_section.get(bucket) or [])
         prior_set = set(prior_managed.get(bucket, []))
         desired_set = set(desired)
         to_remove = prior_set - desired_set
@@ -335,11 +343,14 @@ def uninstall_permissions(
             message=f"permissions: failed to read {settings_path.name}: {e}",
         )
 
-    perms_section: Dict[str, List[str]] = dict(existing_settings.get("permissions", {}))
+    # ``or {}`` / ``or []`` guard against ``null`` values in settings.json.
+    perms_section: Dict[str, List[str]] = dict(
+        existing_settings.get("permissions") or {}
+    )
     removed_total = 0
     new_perms: Dict[str, List[str]] = {}
     for bucket in ("allow", "deny", "ask"):
-        current_list = list(perms_section.get(bucket, []))
+        current_list = list(perms_section.get(bucket) or [])
         managed_set = set(prior_managed.get(bucket, []))
         kept = [e for e in current_list if e not in managed_set]
         removed_total += len(current_list) - len(kept)
