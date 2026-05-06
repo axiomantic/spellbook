@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 
 POLICY_FILENAME = "spellbook-security.toml"
-POLICY_SOURCE = "hooks/gemini-policy.toml"
+POLICY_SOURCE = "hooks/bash-policy.toml"
+# Pre-rename source filename. Old installs may have a stale copy generated
+# from this path; we leave the function-name unchanged but migrate any
+# leftover artifact at the install destination (see install_gemini_policy).
+LEGACY_POLICY_SOURCE_BASENAME = "gemini-policy.toml"
 
 
 def install_gemini_policy(
@@ -29,8 +33,13 @@ def install_gemini_policy(
 ) -> "InstallResult":
     """Install the spellbook security policy file for Gemini CLI.
 
-    Copies hooks/gemini-policy.toml to ~/.gemini/policies/spellbook-security.toml.
+    Copies hooks/bash-policy.toml to ~/.gemini/policies/spellbook-security.toml.
     Idempotent: overwrites existing policy file on each run.
+
+    Migration: removes any stale ``gemini-policy.toml`` artifact left in the
+    install destination from prior versions of this installer. The destination
+    filename has always been ``spellbook-security.toml``, but a stray copy of
+    the source file may exist if the install path was customized in the past.
 
     Args:
         spellbook_dir: Root of the spellbook repository.
@@ -66,6 +75,14 @@ def install_gemini_policy(
 
     try:
         dest_dir.mkdir(parents=True, exist_ok=True)
+        # Migrate: drop any stale gemini-policy.toml artifact next to the
+        # canonical destination. Best-effort; ignore failures.
+        legacy_artifact = dest_dir / LEGACY_POLICY_SOURCE_BASENAME
+        if legacy_artifact.exists():
+            try:
+                legacy_artifact.unlink()
+            except OSError:
+                pass
         shutil.copy2(source, dest)
         return InstallResult(
             component="security_policy",

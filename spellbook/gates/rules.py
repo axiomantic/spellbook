@@ -18,6 +18,12 @@ import math
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+
+try:
+    import tomllib
+except ImportError:  # Python <3.11
+    import tomli as tomllib  # type: ignore[no-redef]
 
 
 # =============================================================================
@@ -320,6 +326,103 @@ _DANGEROUS_BASH_EXTRA: list[tuple[str, Severity, str, str]] = [
 DANGEROUS_BASH_PATTERNS: list[tuple[str, Severity, str, str]] = (
     ESCALATION_RULES + _DANGEROUS_BASH_EXTRA
 )
+
+
+# =============================================================================
+# Supplemental Bash Policy Loader (hooks/bash-policy.toml)
+# =============================================================================
+
+# Rule IDs in bash-policy.toml that semantically belong to the exfiltration
+# category. All other SB-BASH-* rules are routed to DANGEROUS_BASH_PATTERNS.
+_EXFIL_RULE_IDS: frozenset[str] = frozenset(
+    {
+        "SB-BASH-002",   # curl/wget --data upload
+        "SB-BASH-002a",  # echo | curl/wget/nc
+        "SB-BASH-007",   # ssh/scp/rsync remote transfer
+        "SB-BASH-008",   # base64 encoding for exfil
+        "SB-BASH-009",   # DNS-based exfil
+    }
+)
+
+
+def _toml_priority_to_severity(priority: int, decision: str) -> "Severity":
+    """Map a TOML rule's (priority, decision) to a Severity level.
+
+    deny + priority >= 95 -> CRITICAL
+    deny + priority >= 85 -> HIGH
+    deny + priority <  85 -> MEDIUM
+    ask_user             -> MEDIUM (warn but not auto-block in standard mode)
+    """
+    if decision == "ask_user":
+        return Severity.MEDIUM
+    if priority >= 95:
+        return Severity.CRITICAL
+    if priority >= 85:
+        return Severity.HIGH
+    return Severity.MEDIUM
+
+
+def _load_supplemental_bash_policy() -> tuple[
+    list[tuple[str, "Severity", str, str]],
+    list[tuple[str, "Severity", str, str]],
+]:
+    """Load hooks/bash-policy.toml and return (extra_dangerous, extra_exfil).
+
+    The TOML schema is the Gemini CLI policy format ([[rules]] tables with
+    id / toolName / commandRegex / decision / priority / deny_message). Each
+    Bash-targeted rule is converted to the (pattern, severity, rule_id, message)
+    tuple shape used by the in-memory pattern lists. Rule IDs in
+    `_EXFIL_RULE_IDS` are routed to EXFILTRATION_RULES; the rest go into
+    DANGEROUS_BASH_PATTERNS.
+
+    Returns empty lists if the policy file is missing or malformed (a
+    warning is printed in the malformed case). Python rules in this module
+    remain authoritative either way.
+
+    Path resolution: <repo>/spellbook/spellbook/gates/rules.py ->
+    <repo>/hooks/bash-policy.toml. For pip-installed deployments where the
+    sibling hooks/ directory is absent, the loader returns empty lists.
+    """
+    policy_path = Path(__file__).parent.parent.parent / "hooks" / "bash-policy.toml"
+    if not policy_path.exists():
+        return [], []
+    try:
+        data = tomllib.loads(policy_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        import sys
+
+        print(
+            f"[spellbook-gates] WARN: failed to load bash-policy.toml: {e}",
+            file=sys.stderr,
+        )
+        return [], []
+
+    extra_dangerous: list[tuple[str, Severity, str, str]] = []
+    extra_exfil: list[tuple[str, Severity, str, str]] = []
+
+    for rule in data.get("rules", []):
+        if rule.get("toolName") != "Bash":
+            continue
+        pattern = rule.get("commandRegex")
+        rule_id = rule.get("id")
+        if not pattern or not rule_id:
+            continue
+        decision = rule.get("decision", "deny")
+        priority = int(rule.get("priority", 0))
+        message = rule.get("deny_message") or f"Bash policy rule {rule_id}"
+        severity = _toml_priority_to_severity(priority, decision)
+        entry = (pattern, severity, rule_id, message)
+        if rule_id in _EXFIL_RULE_IDS:
+            extra_exfil.append(entry)
+        else:
+            extra_dangerous.append(entry)
+
+    return extra_dangerous, extra_exfil
+
+
+_extra_dangerous, _extra_exfil = _load_supplemental_bash_policy()
+DANGEROUS_BASH_PATTERNS.extend(_extra_dangerous)
+EXFILTRATION_RULES.extend(_extra_exfil)
 
 # MCP tool-specific rules for scanning Python source code of MCP servers/tools.
 # Each rule is a tuple: (pattern, severity, rule_id, message)

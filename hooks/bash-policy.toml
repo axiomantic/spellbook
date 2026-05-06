@@ -1,7 +1,9 @@
-# Spellbook Security Policy for Gemini CLI
-# Install location: ~/.gemini/policies/spellbook-security.toml
+# Spellbook Bash Security Policy (Claude + Gemini)
+# Install location (Gemini): ~/.gemini/policies/spellbook-security.toml
+# Loaded directly (Claude): merged into spellbook.gates.rules at import time.
 #
-# This policy file defines security rules for the Gemini CLI policy engine.
+# This policy file defines bash command security rules shared across both
+# the Gemini CLI policy engine and Claude's hook-based gate (gates/rules.py).
 # Rules use TOML [[rules]] arrays with fields:
 #   id            - unique rule identifier (SB-BASH-NNN)
 #   toolName      - tool to match (e.g., "Bash")
