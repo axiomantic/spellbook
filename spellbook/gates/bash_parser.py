@@ -534,12 +534,23 @@ def _classify_compound(node: object) -> list[dict]:
     # operator is "background this command" — semantically a single command,
     # not a chain. Don't emit COMPOUND for that; let the walker still recurse
     # into the command itself.
+    #
+    # SECURITY: ``ls & pwd`` parses as a ListNode with parts
+    # [command, operator(&), command] — i.e., operators == ["&"] but TWO
+    # command parts. Treating that as "single bg command" lets the second
+    # command slip past the compound check. Require exactly one command part
+    # before short-circuiting.
     operators = [
         getattr(p, "op", None)
         for p in parts
         if getattr(p, "kind", None) == "operator"
     ]
-    if getattr(node, "kind", None) == "list" and operators == ["&"]:
+    command_parts = [p for p in parts if getattr(p, "kind", None) == "command"]
+    if (
+        getattr(node, "kind", None) == "list"
+        and operators == ["&"]
+        and len(command_parts) == 1
+    ):
         # Single-command background — not actually a compound chain.
         return []
 
@@ -878,24 +889,56 @@ def _classify_redirect(node: object) -> list[dict]:
     target = getattr(output, "word", "") if output is not None else ""
     if not target:
         return []
-    if any(target.startswith(p) for p in _REDIRECT_DENY_PREFIXES):
-        return [
-            _finding(
-                "BASH-PARSER-REDIRECT",
-                "CRITICAL",
-                f"Redirect to forbidden path `{target}` is not allowed.",
-                target,
-            )
-        ]
-    if any(s in target for s in _REDIRECT_DENY_SUBSTRINGS):
-        return [
-            _finding(
-                "BASH-PARSER-REDIRECT",
-                "CRITICAL",
-                f"Redirect to forbidden path `{target}` is not allowed.",
-                target,
-            )
-        ]
+
+    # SECURITY: an attacker can defeat a naïve ``startswith`` check with
+    # path traversal (``> /tmp/../etc/passwd``) or tilde-traversal
+    # (``> ~/../../etc/shadow``). Build a set of candidate strings so the
+    # deny list matches all of:
+    #
+    #   - the raw target verbatim — matters for logical paths like
+    #     ``/dev/tcp/...`` and ``/proc/...`` that don't survive ``resolve()``,
+    #   - the lexically-normalized target (``os.path.normpath`` after
+    #     ``expanduser``) — collapses ``..`` segments WITHOUT following
+    #     symlinks, so the deny list still matches the canonical form on
+    #     systems where the prefix itself is a symlink (e.g. macOS
+    #     ``/etc`` → ``/private/etc``, where ``Path.resolve()`` would
+    #     rewrite the prefix and bypass our string match),
+    #   - the fully resolved target (``Path.resolve(strict=False)``) — a
+    #     belt-and-suspenders catch for cases where the lexical form
+    #     differs from the resolved form in the attacker's favor.
+    candidates: list[str] = [target]
+
+    expanded = os.path.expanduser(target)
+    candidates.append(os.path.normpath(expanded))
+
+    try:
+        resolved = str(Path(target).expanduser().resolve(strict=False))
+    except (OSError, RuntimeError, ValueError):
+        # Pathological input (e.g., NUL byte). The raw + normpath candidates
+        # are still in play.
+        resolved = ""
+    if resolved:
+        candidates.append(resolved)
+
+    for candidate in candidates:
+        if any(candidate.startswith(p) for p in _REDIRECT_DENY_PREFIXES):
+            return [
+                _finding(
+                    "BASH-PARSER-REDIRECT",
+                    "CRITICAL",
+                    f"Redirect to forbidden path `{target}` is not allowed.",
+                    target,
+                )
+            ]
+        if any(s in candidate for s in _REDIRECT_DENY_SUBSTRINGS):
+            return [
+                _finding(
+                    "BASH-PARSER-REDIRECT",
+                    "CRITICAL",
+                    f"Redirect to forbidden path `{target}` is not allowed.",
+                    target,
+                )
+            ]
     return []
 
 

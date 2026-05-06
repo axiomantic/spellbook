@@ -197,6 +197,16 @@ def load_tiers(path: Path) -> list[TierRecord]:
             missing required field, wrong type).
         FileNotFoundError: ``path`` does not exist.
         tomllib.TOMLDecodeError: ``path`` is not valid TOML.
+
+    Warning policy:
+        Records whose Bash ``pattern`` contains regex constructs that
+        :func:`_expand_alternations` cannot project to a literal prefix
+        (character classes, quantifiers, escapes) are dropped at load
+        time with a warning. A regex-only pattern would silently fail
+        to match at hook-time AND at L2 derivation, so we surface the
+        misconfiguration loudly and skip the record entirely. This
+        mirrors the existing "not projectable" warning path used by
+        :func:`tier_record_to_deny_pattern`.
     """
     text = path.read_text(encoding="utf-8")
     data = tomllib.loads(text)
@@ -208,7 +218,35 @@ def load_tiers(path: Path) -> list[TierRecord]:
             f"{type(rows).__name__}"
         )
 
-    return [_parse_record(row, i, path) for i, row in enumerate(rows)]
+    out: list[TierRecord] = []
+    for i, row in enumerate(rows):
+        rec = _parse_record(row, i, path)
+        if rec.tool == "Bash" and not _is_projectable_bash_pattern(rec.pattern):
+            logger.warning(
+                "tiers: %s:[[tiers]]#%d: Bash pattern %r is not projectable "
+                "(contains regex constructs not supported by the literal-"
+                "prefix matcher: character classes, quantifiers, or escapes). "
+                "The record would silently fail to match at hook-time AND "
+                "fail to project to an L2 deny string; skipping it. Rewrite "
+                "the pattern as a literal prefix or simple ``(a|b|c)`` "
+                "alternation, or split it into multiple records.",
+                path,
+                i,
+                rec.pattern,
+            )
+            continue
+        out.append(rec)
+    return out
+
+
+def _is_projectable_bash_pattern(pattern: str) -> bool:
+    """Return True if ``pattern`` can be safely projected to literal prefixes.
+
+    Mirrors the gate used inside :func:`_expand_alternations`. Kept as a
+    standalone helper so the loader can fail-loud on unprojectable Bash
+    patterns BEFORE they reach classification or L2 derivation.
+    """
+    return _expand_alternations(pattern) != []
 
 
 # ---------------------------------------------------------------------------
