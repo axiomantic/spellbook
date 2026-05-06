@@ -412,3 +412,9 @@ def test_claude_code_installer_uses_derived_deny(tmp_path):
     with tripwire.in_any_order():
         for _ in range(expected_ctx_calls):
             ctx_mock.assert_call(args=(sbdir,))
+    # On Windows, ``hooks.install_hooks`` probes for PowerShell via
+    # ``shutil.which``; tripwire intercepts that call and requires it to be
+    # asserted explicitly. On other platforms, no such call is made.
+    import sys as _sys
+    if _sys.platform == "win32":
+        tripwire.subprocess.assert_which(name="powershell", returns=None)
