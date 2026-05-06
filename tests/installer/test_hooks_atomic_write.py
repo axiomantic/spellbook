@@ -4,17 +4,66 @@ Windows transient-error PermissionError on os.replace.
 Drive-by part of WI-0. Without this, install_hooks/uninstall_hooks would lose
 data on Windows when an antivirus / Claude Code / another process holds an
 open handle on settings.json at the moment of write.
+
+This test verifies that hooks.py's settings writes route through
+``command_utils.atomic_replace`` (rather than ``Path.write_text``), and that
+``atomic_replace`` tolerates a transient PermissionError on the first
+``os.replace`` attempt and retries successfully. The retry semantics inside
+``atomic_replace`` are also exercised here end-to-end via the real
+``os.replace`` (only the platform-detection branch and the backoff sleep are
+stubbed).
+
+The retry loop's pure unit semantics (max attempts, backoff) are intended to
+be covered by direct unit tests of ``spellbook.core.command_utils`` rather
+than via this hooks-level integration test.
 """
 
 import json
+import os
 from pathlib import Path
-from unittest.mock import patch
 
+import tripwire
+from dirty_equals import AnyThing
+
+# Capture the real os.replace at import time so flaky-replace stubs can fall
+# through to the genuine rename even after tripwire patches os.replace.
+_REAL_OS_REPLACE = os.replace
 
 
 def _write_baseline(settings_path: Path) -> None:
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text(json.dumps({"existing": "value"}), encoding="utf-8")
+
+
+class _FlakyReplace:
+    """Records the call count so .calls() registrations stay symmetric.
+
+    First call raises ``PermissionError`` to mimic Windows ``WinError 5``;
+    second call performs the real rename so the post-write assertions pass.
+    """
+
+    def __init__(self) -> None:
+        self.count = 0
+
+    def __call__(self, src, dst):
+        self.count += 1
+        if self.count == 1:
+            raise PermissionError("simulated WinError 5: file in use")
+        _REAL_OS_REPLACE(src, dst)
+
+
+def _register_windows_branch(call_budget: int):
+    """Force ``atomic_replace`` to enter the Windows retry path.
+
+    ``platform.system()`` is queried inside ``atomic_replace`` and may also
+    be queried by other ``hooks`` code paths; we hand back ``"Windows"`` for
+    every call within the recorded budget. ``required(False)`` keeps the
+    teardown happy if some calls aren't consumed.
+    """
+    mock_system = tripwire.mock("spellbook.core.command_utils:platform.system")
+    for _ in range(call_budget):
+        mock_system.__call__.required(False).returns("Windows")
+    return mock_system
 
 
 def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
@@ -27,26 +76,31 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     show no retry happened and the write would have lost data.
     """
     from installer.components import hooks
-    from spellbook.core import command_utils
 
     config_dir = tmp_path / ".claude"
     settings_path = config_dir / "settings.json"
     _write_baseline(settings_path)
 
-    real_replace = command_utils.os.replace
-    call_count = {"n": 0}
+    # Force the Windows code path inside atomic_replace. install_hooks itself
+    # also calls platform.system() at hook-path-resolution time, so we need
+    # a healthy budget; non-required entries don't error if unused.
+    mock_system = _register_windows_branch(call_budget=8)
 
-    def flaky_replace(src, dst):
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            raise PermissionError("simulated WinError 5: file in use")
-        real_replace(src, dst)
+    # Skip the real backoff sleep inside atomic_replace's retry loop. There
+    # should be exactly one between the failed attempt and the successful
+    # retry; mark it required for clarity.
+    mock_sleep = tripwire.mock("spellbook.core.command_utils:time.sleep")
+    mock_sleep.calls(lambda _: None)
 
-    # Force the Windows code path inside atomic_replace, then patch os.replace
-    # to simulate a transient PermissionError on the first attempt.
-    with patch.object(command_utils.platform, "system", return_value="Windows"), \
-         patch.object(command_utils.os, "replace", side_effect=flaky_replace), \
-         patch.object(command_utils.time, "sleep", return_value=None):
+    # First os.replace raises PermissionError; second performs the real
+    # rename. atomic_replace's retry loop is what makes the second attempt
+    # happen.
+    flaky = _FlakyReplace()
+    mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
+    mock_replace.calls(flaky)
+    mock_replace.calls(flaky)
+
+    with tripwire:
         result = hooks.install_hooks(
             settings_path=settings_path,
             spellbook_dir=tmp_path / "spellbook_dir",
@@ -55,8 +109,20 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
 
     assert result.success is True
     assert result.component == "hooks"
-    # Two calls: first fails, second succeeds.
-    assert call_count["n"] == 2
+    # Two os.replace attempts: first fails, second succeeds. This is the
+    # core regression contract.
+    assert flaky.count == 2
+
+    # Tripwire requires every recorded interaction to be asserted
+    # (UnassertedInteractionsError otherwise); platform.system() is
+    # called 5x by install_hooks + atomic_replace combined.
+    with tripwire.in_any_order():
+        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_sleep.assert_call(args=(AnyThing,), kwargs={})
+        for _ in range(5):
+            mock_system.assert_call(args=(), kwargs={})
+
     # The hooks section ended up registered (with at least one PreToolUse
     # entry pointing at the spellbook hook), and the prior "existing" key
     # survived. We deliberately scope this test to the retry+atomic-write
@@ -71,10 +137,10 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     )
 
 
+
 def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
     """uninstall_hooks must also use the atomic-write retry path."""
     from installer.components import hooks
-    from spellbook.core import command_utils
 
     config_dir = tmp_path / ".claude"
     settings_path = config_dir / "settings.json"
@@ -102,18 +168,17 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
         encoding="utf-8",
     )
 
-    real_replace = command_utils.os.replace
-    call_count = {"n": 0}
+    mock_system = _register_windows_branch(call_budget=8)
 
-    def flaky_replace(src, dst):
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            raise PermissionError("simulated WinError 5: file in use")
-        real_replace(src, dst)
+    mock_sleep = tripwire.mock("spellbook.core.command_utils:time.sleep")
+    mock_sleep.calls(lambda _: None)
 
-    with patch.object(command_utils.platform, "system", return_value="Windows"), \
-         patch.object(command_utils.os, "replace", side_effect=flaky_replace), \
-         patch.object(command_utils.time, "sleep", return_value=None):
+    flaky = _FlakyReplace()
+    mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
+    mock_replace.calls(flaky)
+    mock_replace.calls(flaky)
+
+    with tripwire:
         result = hooks.uninstall_hooks(
             settings_path=settings_path,
             spellbook_dir=tmp_path / "spellbook_dir",
@@ -121,6 +186,14 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
         )
 
     assert result.success is True
-    assert call_count["n"] == 2
+    assert flaky.count == 2
+
+    # uninstall path: 1 platform.system() call from atomic_replace.
+    with tripwire.in_any_order():
+        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_replace.assert_call(args=(AnyThing, AnyThing), kwargs={})
+        mock_sleep.assert_call(args=(AnyThing,), kwargs={})
+        mock_system.assert_call(args=(), kwargs={})
+
     written = json.loads(settings_path.read_text(encoding="utf-8"))
     assert written.get("existing") == "value"
