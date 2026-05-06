@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.default_mode import install_default_mode
+from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
-from ..components.permissions import install_permissions
+from ..components.permissions import install_permissions, uninstall_permissions
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -543,6 +543,40 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 success=hook_result.success,
                 action=hook_result.action,
                 message=hook_result.message,
+            )
+        )
+
+        # Uninstall managed permissions entries from settings.json. Order
+        # matters: remove entries before clearing default_mode so a partial
+        # failure leaves the most-restrictive (deny) entries intact.
+        perms_result = uninstall_permissions(
+            settings_path,
+            spellbook_dir=self.spellbook_dir,
+            dry_run=self.dry_run,
+        )
+        results.append(
+            InstallResult(
+                component=perms_result.component,
+                platform=self.platform_id,
+                success=perms_result.success,
+                action=perms_result.action,
+                message=perms_result.message,
+            )
+        )
+
+        # Uninstall managed defaultMode from settings.json.
+        dm_result = uninstall_default_mode(
+            settings_path,
+            spellbook_dir=self.spellbook_dir,
+            dry_run=self.dry_run,
+        )
+        results.append(
+            InstallResult(
+                component=dm_result.component,
+                platform=self.platform_id,
+                success=dm_result.success,
+                action=dm_result.action,
+                message=dm_result.message,
             )
         )
 

@@ -346,3 +346,37 @@ def test_update_managed_set_acquires_lock(tmp_path, monkeypatch):
         ("enter",),
         ("exit",),
     ]
+
+
+def test_update_managed_set_preserves_default_mode_field(tmp_path, monkeypatch):
+    """update_managed_set must not clobber the default_mode field that
+    set_managed_default_mode writes into the same per-config-dir entry.
+
+    Regression: a previous version did ``config_dirs[key] = desired`` which
+    silently dropped any sibling fields. The wired install path calls
+    set_managed_default_mode first then update_managed_set, so a clobber here
+    causes the uninstall path to lose track of the managed defaultMode.
+    """
+    import json
+
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    mps.set_managed_default_mode(config_dir, "acceptEdits")
+    mps.update_managed_set(
+        config_dir=config_dir,
+        allow=["Bash(git status:*)"],
+        deny=[],
+        ask=[],
+    )
+
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert state["config_dirs"][str(config_dir)] == {
+        "allow": ["Bash(git status:*)"],
+        "deny": [],
+        "ask": [],
+        "default_mode": "acceptEdits",
+    }

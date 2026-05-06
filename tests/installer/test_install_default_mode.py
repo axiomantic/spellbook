@@ -431,3 +431,173 @@ def test_install_default_mode_accepts_all_documented_modes(
     assert result.action == "installed"
     written = json.loads(settings_path.read_text(encoding="utf-8"))
     assert written == {"defaultMode": good_mode}
+
+
+# ---------------------------------------------------------------------------
+# Uninstall (I3)
+# ---------------------------------------------------------------------------
+
+
+def test_uninstall_default_mode_removes_managed_value(tmp_path, monkeypatch):
+    """install then uninstall on a previously-empty settings.json yields a
+    file containing only an empty dict (or no defaultMode key)."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    dm.install_default_mode(
+        settings_path=settings_path,
+        mode="acceptEdits",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    assert json.loads(settings_path.read_text(encoding="utf-8")) == {
+        "defaultMode": "acceptEdits"
+    }
+
+    result = dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.component == "default_mode"
+    assert result.success is True
+    assert result.action == "removed"
+
+    # File contains only {} -- no managed defaultMode left behind.
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {}
+
+    # State file no longer claims ownership of the defaultMode.
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert "default_mode" not in state["config_dirs"][str(config_dir)]
+
+
+def test_uninstall_default_mode_preserves_other_settings_keys(tmp_path, monkeypatch):
+    """Other top-level keys (e.g. 'model', 'hooks') survive uninstall."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps({"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}),
+        encoding="utf-8",
+    )
+
+    dm.install_default_mode(
+        settings_path=settings_path,
+        mode="acceptEdits",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}
+
+
+def test_uninstall_default_mode_skips_user_changed_value(tmp_path, monkeypatch):
+    """If the user changed defaultMode after install, uninstall leaves it alone
+    but still clears the state-file claim."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    dm.install_default_mode(
+        settings_path=settings_path,
+        mode="acceptEdits",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    # User then changes mode by hand.
+    settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
+
+    result = dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.action == "skipped"
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {"defaultMode": "plan"}
+
+    # State file no longer claims ownership.
+    assert mps.get_managed_default_mode(config_dir) is None
+
+
+def test_uninstall_default_mode_unchanged_when_no_managed_value(tmp_path, monkeypatch):
+    """Uninstall on a fresh (never-installed) state is a no-op."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    result = dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.success is True
+    assert result.action == "unchanged"
+    assert settings_path.exists() is False
+
+
+def test_uninstall_default_mode_dry_run_makes_no_changes(tmp_path, monkeypatch):
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+    dm.install_default_mode(
+        settings_path=settings_path,
+        mode="acceptEdits",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    before_settings = settings_path.read_text(encoding="utf-8")
+    before_state = state_path.read_text(encoding="utf-8")
+
+    result = dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=True,
+    )
+
+    assert result.success is True
+    assert result.action == "removed"
+    assert settings_path.read_text(encoding="utf-8") == before_settings
+    assert state_path.read_text(encoding="utf-8") == before_state

@@ -210,6 +210,151 @@ def install_permissions(
     )
 
 
+def uninstall_permissions(
+    settings_path: Path,
+    spellbook_dir: Path,
+    dry_run: bool,
+) -> HookResult:
+    """Remove spellbook-managed permission entries from a settings file.
+
+    Reads the per-config-dir state file to find the entries spellbook owns,
+    removes ONLY those entries from ``settings.json`` (preserving user-added
+    entries), and clears the managed sets in the state file.
+
+    Args:
+        settings_path: Path to the Claude Code settings file.
+        spellbook_dir: Reserved for future use (parity with ``install_hooks``).
+        dry_run: If True, no files are written; returns success without I/O.
+
+    Returns:
+        ``HookResult`` with ``component="permissions"``.
+    """
+    if dry_run:
+        return HookResult(
+            component="permissions",
+            success=True,
+            action="removed",
+            message=(
+                f"permissions: would uninstall managed entries from "
+                f"{settings_path.name} (dry run)"
+            ),
+        )
+
+    config_dir = settings_path.parent
+
+    try:
+        prior_managed = _mps.reconcile(config_dir)
+    except (ValueError, OSError) as e:
+        return HookResult(
+            component="permissions",
+            success=False,
+            action="failed",
+            message=f"permissions: failed to read state file: {e}",
+        )
+
+    has_managed = any(prior_managed.get(b) for b in ("allow", "deny", "ask"))
+
+    if not settings_path.exists():
+        # No settings file but state may carry stale entries; clear state.
+        if has_managed:
+            try:
+                _mps.update_managed_set(
+                    config_dir=config_dir, allow=[], deny=[], ask=[]
+                )
+            except (ValueError, OSError) as e:
+                logger.warning(
+                    "permissions: failed to clear state file: %s", e
+                )
+        return HookResult(
+            component="permissions",
+            success=True,
+            action="unchanged",
+            message=(
+                f"permissions: {settings_path.name} not present; "
+                f"cleared managed state"
+            ),
+        )
+
+    if not has_managed:
+        return HookResult(
+            component="permissions",
+            success=True,
+            action="unchanged",
+            message="permissions: no managed entries recorded; nothing to uninstall",
+        )
+
+    try:
+        existing_settings = _read_settings(settings_path)
+    except json.JSONDecodeError as e:
+        return HookResult(
+            component="permissions",
+            success=False,
+            action="failed",
+            message=(
+                f"permissions: failed to parse {settings_path.name} - "
+                f"JSON decode error: {e}"
+            ),
+        )
+    except OSError as e:
+        return HookResult(
+            component="permissions",
+            success=False,
+            action="failed",
+            message=f"permissions: failed to read {settings_path.name}: {e}",
+        )
+
+    perms_section: Dict[str, List[str]] = dict(existing_settings.get("permissions", {}))
+    removed_total = 0
+    new_perms: Dict[str, List[str]] = {}
+    for bucket in ("allow", "deny", "ask"):
+        current_list = list(perms_section.get(bucket, []))
+        managed_set = set(prior_managed.get(bucket, []))
+        kept = [e for e in current_list if e not in managed_set]
+        removed_total += len(current_list) - len(kept)
+        new_perms[bucket] = kept
+
+    new_settings = dict(existing_settings)
+
+    # If the resulting permissions section is fully empty AND the original
+    # settings did NOT have a permissions key (we created it during install
+    # with empty/managed lists), remove the key entirely so uninstall is a
+    # true revert. Otherwise keep the (now-trimmed) section.
+    all_empty = all(len(new_perms[b]) == 0 for b in ("allow", "deny", "ask"))
+    if all_empty:
+        new_settings.pop("permissions", None)
+    else:
+        new_settings["permissions"] = new_perms
+
+    try:
+        atomic_write_json(str(settings_path), new_settings)
+    except (ValueError, OSError) as e:
+        return HookResult(
+            component="permissions",
+            success=False,
+            action="failed",
+            message=f"permissions: write to {settings_path.name} failed: {e}",
+        )
+
+    try:
+        _mps.update_managed_set(
+            config_dir=config_dir, allow=[], deny=[], ask=[]
+        )
+    except (ValueError, OSError) as e:
+        logger.warning(
+            "permissions: settings.json updated but state-file clear failed: %s", e
+        )
+
+    return HookResult(
+        component="permissions",
+        success=True,
+        action="removed",
+        message=(
+            f"permissions: removed {removed_total} managed entr"
+            f"{'y' if removed_total == 1 else 'ies'} from {settings_path.name}"
+        ),
+    )
+
+
 def _find_conflict_bucket(
     entry: str,
     target_bucket: str,

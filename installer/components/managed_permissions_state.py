@@ -123,7 +123,14 @@ def update_managed_set(
                 e for e in prior.get(bucket, []) if e not in desired_set
             ]
 
-        config_dirs[key] = desired
+        # Preserve any sibling fields (currently just ``default_mode``) that
+        # ``set_managed_default_mode`` may have written. update_managed_set
+        # only owns the allow/deny/ask buckets, never the default_mode.
+        new_entry = dict(prior)
+        new_entry["allow"] = desired["allow"]
+        new_entry["deny"] = desired["deny"]
+        new_entry["ask"] = desired["ask"]
+        config_dirs[key] = new_entry
         state["version"] = _SCHEMA_VERSION
         atomic_write_json(str(_STATE_FILE_PATH), state)
 

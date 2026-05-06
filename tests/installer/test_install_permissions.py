@@ -564,3 +564,212 @@ def test_install_permissions_does_not_warn_when_we_own_the_other_bucket_entry(
         "ask": [],
     }
     assert "skipped" not in result.message
+
+
+# ---------------------------------------------------------------------------
+# Uninstall (I3)
+# ---------------------------------------------------------------------------
+
+
+def test_uninstall_permissions_removes_only_managed_entries(tmp_path, monkeypatch):
+    """install then uninstall removes the managed entries but preserves
+    user-added ones in the same buckets."""
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {
+                "permissions": {
+                    "allow": ["Bash(my-custom:*)"],
+                    "deny": ["Bash(user-blocked:*)"],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(git status:*)"],
+        deny=["Bash(rm -rf:*)"],
+        ask=["Bash(curl:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    result = perms.uninstall_permissions(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.component == "permissions"
+    assert result.success is True
+    assert result.action == "removed"
+
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    # Only user entries remain. The 'ask' bucket had no user entries so it
+    # ends up empty; we keep the permissions key because the user's other
+    # buckets still hold entries.
+    assert written == {
+        "permissions": {
+            "allow": ["Bash(my-custom:*)"],
+            "deny": ["Bash(user-blocked:*)"],
+            "ask": [],
+        }
+    }
+
+    # State file: managed sets cleared.
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert state["config_dirs"][str(config_dir)] == {
+        "allow": [],
+        "deny": [],
+        "ask": [],
+    }
+
+
+def test_uninstall_permissions_drops_permissions_key_when_fully_empty(
+    tmp_path, monkeypatch
+):
+    """install on a previously-empty file then uninstall yields a settings.json
+    that no longer carries an empty permissions stub."""
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(git status:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    perms.uninstall_permissions(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    # No permissions key at all -- a true revert to the pre-install shape.
+    assert written == {}
+
+
+def test_uninstall_permissions_unchanged_when_no_managed_entries(
+    tmp_path, monkeypatch
+):
+    """Uninstall on a fresh state is a no-op."""
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    result = perms.uninstall_permissions(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.success is True
+    assert result.action == "unchanged"
+    assert settings_path.exists() is False
+
+
+def test_uninstall_permissions_dry_run_makes_no_changes(tmp_path, monkeypatch):
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(git status:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    before_settings = settings_path.read_text(encoding="utf-8")
+    before_state = state_path.read_text(encoding="utf-8")
+
+    result = perms.uninstall_permissions(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=True,
+    )
+
+    assert result.success is True
+    assert result.action == "removed"
+    assert settings_path.read_text(encoding="utf-8") == before_settings
+    assert state_path.read_text(encoding="utf-8") == before_state
+
+
+def test_install_then_uninstall_round_trips_to_pre_install_byte_state(
+    tmp_path, monkeypatch
+):
+    """End-to-end: install + uninstall on a settings.json that started empty
+    leaves the file with no managed defaultMode and no permissions entries."""
+    from installer.components import default_mode as dm
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    # No file -> empty.
+    dm.install_default_mode(
+        settings_path=settings_path,
+        mode="acceptEdits",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(git status:*)"],
+        deny=["Bash(rm -rf:*)"],
+        ask=["Bash(curl:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    perms.uninstall_permissions(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+    dm.uninstall_default_mode(
+        settings_path=settings_path,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    # Pre-install was "no file"; post-uninstall is "{}". That is the closest
+    # we can get to byte-equality without deleting the file (which we don't,
+    # since other components may share it). All managed surface area is gone.
+    assert written == {}

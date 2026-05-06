@@ -162,6 +162,134 @@ def install_default_mode(
     )
 
 
+def uninstall_default_mode(
+    settings_path: Path,
+    spellbook_dir: Path,
+    dry_run: bool,
+) -> HookResult:
+    """Remove the spellbook-managed ``defaultMode`` from a settings file.
+
+    Uses the per-config-dir state file to identify the value we last set.
+    If ``settings.json["defaultMode"]`` still equals our managed value, it
+    is removed; otherwise (the user changed it after our install) we leave
+    it alone. Either way, the managed value is cleared from the state file
+    so a future re-install would treat the field as user-owned.
+
+    Args:
+        settings_path: Path to the Claude Code settings file.
+        spellbook_dir: Reserved for future use (parity with ``install_hooks``).
+        dry_run: If True, no files are written; returns success without I/O.
+
+    Returns:
+        ``HookResult`` with ``component="default_mode"``. ``action`` is one of:
+            - ``"removed"``: managed defaultMode key was removed from settings
+            - ``"unchanged"``: nothing to remove (no managed value recorded)
+            - ``"skipped"``: user changed the value since install; not removed
+            - ``"failed"``: an error occurred while reading or writing
+    """
+    if dry_run:
+        return HookResult(
+            component="default_mode",
+            success=True,
+            action="removed",
+            message=f"default_mode: would uninstall defaultMode from "
+            f"{settings_path.name} (dry run)",
+        )
+
+    config_dir = settings_path.parent
+    managed_mode = _mps.get_managed_default_mode(config_dir)
+
+    if managed_mode is None:
+        return HookResult(
+            component="default_mode",
+            success=True,
+            action="unchanged",
+            message="default_mode: no managed defaultMode recorded; nothing to uninstall",
+        )
+
+    if not settings_path.exists():
+        # State file remembered something but settings.json is gone; clear state.
+        try:
+            _mps.set_managed_default_mode(config_dir, None)
+        except (ValueError, OSError) as e:
+            logger.warning("default_mode: failed to clear state file: %s", e)
+        return HookResult(
+            component="default_mode",
+            success=True,
+            action="unchanged",
+            message=(
+                f"default_mode: {settings_path.name} not present; "
+                f"cleared managed state"
+            ),
+        )
+
+    try:
+        existing_settings = _read_settings(settings_path)
+    except json.JSONDecodeError as e:
+        return HookResult(
+            component="default_mode",
+            success=False,
+            action="failed",
+            message=(
+                f"default_mode: failed to parse {settings_path.name} - "
+                f"JSON decode error: {e}"
+            ),
+        )
+    except OSError as e:
+        return HookResult(
+            component="default_mode",
+            success=False,
+            action="failed",
+            message=f"default_mode: failed to read {settings_path.name}: {e}",
+        )
+
+    current_mode = existing_settings.get("defaultMode")
+
+    if current_mode != managed_mode:
+        # User changed the value (or nothing is set). Don't touch settings.json,
+        # but do clear the state-file entry so we no longer claim ownership.
+        try:
+            _mps.set_managed_default_mode(config_dir, None)
+        except (ValueError, OSError) as e:
+            logger.warning("default_mode: failed to clear state file: %s", e)
+        return HookResult(
+            component="default_mode",
+            success=True,
+            action="skipped",
+            message=(
+                f"default_mode: defaultMode={current_mode!r} differs from managed "
+                f"{managed_mode!r}; not removing"
+            ),
+        )
+
+    new_settings = dict(existing_settings)
+    new_settings.pop("defaultMode", None)
+
+    try:
+        atomic_write_json(str(settings_path), new_settings)
+    except (ValueError, OSError) as e:
+        return HookResult(
+            component="default_mode",
+            success=False,
+            action="failed",
+            message=f"default_mode: write to {settings_path.name} failed: {e}",
+        )
+
+    try:
+        _mps.set_managed_default_mode(config_dir, None)
+    except (ValueError, OSError) as e:
+        logger.warning(
+            "default_mode: settings.json updated but state-file clear failed: %s", e
+        )
+
+    return HookResult(
+        component="default_mode",
+        success=True,
+        action="removed",
+        message=f"default_mode: removed managed defaultMode from {settings_path.name}",
+    )
+
+
 def _read_settings(settings_path: Path) -> dict:
     """Read settings.json; return {} when file is absent."""
     if not settings_path.exists():
