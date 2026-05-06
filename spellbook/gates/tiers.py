@@ -39,10 +39,14 @@ from __future__ import annotations
 import itertools
 import logging
 import re
-import tomllib
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Iterable
+
+try:
+    import tomllib
+except ImportError:  # Python <3.11
+    import tomli as tomllib  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
@@ -116,11 +120,10 @@ class TierRecord:
 
 
 _ALLOWED_KEYS: frozenset[str] = frozenset(f.name for f in fields(TierRecord))
-_REQUIRED_KEYS: frozenset[str] = frozenset(
-    f.name for f in fields(TierRecord) if f.default is f.default_factory  # type: ignore[misc]
-)
-# fields() default-vs-required detection above is brittle; spell it out:
-_REQUIRED_KEYS = frozenset({"tool", "pattern", "tier", "description"})
+# Required keys are spelled out instead of derived from ``fields()`` because
+# the dataclass default-vs-required heuristic (``f.default is f.default_factory``)
+# is brittle across Python versions.
+_REQUIRED_KEYS: frozenset[str] = frozenset({"tool", "pattern", "tier", "description"})
 
 
 def _parse_record(raw: dict, source_idx: int, source: Path | None) -> TierRecord:

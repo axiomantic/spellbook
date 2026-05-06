@@ -245,8 +245,6 @@ def _check_read_path(tool_input: dict) -> list[dict]:
     if rule_id is None:
         return []
 
-    from pathlib import Path
-
     try:
         resolved = str(Path(file_path).expanduser().resolve(strict=False))
     except (OSError, RuntimeError):
