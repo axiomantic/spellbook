@@ -67,6 +67,46 @@ REJECT_CASES = [
     # so the wrapped dangerous command is detected.
     ("wrapper_timeout_hours_rm", "timeout 1h rm -rf /", "BASH-PARSER-WRAPPER"),
     ("wrapper_timeout_days_rm", "timeout 2d rm -rf /", "BASH-PARSER-WRAPPER"),
+    # ----- cycle-5 hardening (H1): expanded env-prefix denylist -----
+    # Shell-startup-sourced env vars + language-library-path env vars.
+    ("env_bash_env", "BASH_ENV=/tmp/evil bash script.sh", "BASH-PARSER-ENVPREFIX"),
+    ("env_env", "ENV=/tmp/evil sh script.sh", "BASH-PARSER-ENVPREFIX"),
+    ("env_pythonpath", "PYTHONPATH=/tmp/evil python -c 'pass'", "BASH-PARSER-ENVPREFIX"),
+    ("env_perl5lib", "PERL5LIB=/tmp/evil perl script.pl", "BASH-PARSER-ENVPREFIX"),
+    ("env_rubylib", "RUBYLIB=/tmp/evil ruby script.rb", "BASH-PARSER-ENVPREFIX"),
+    # ----- cycle-5 hardening (H2): walker recursion gaps -----
+    # CMDSUB inside a redirect target, an assignment value, and a generic
+    # word position must all be flagged. Compound `until` and `case`
+    # constructs are control-flow and must produce COMPOUND.
+    ("cmdsub_in_redirect", "ls > $(whoami).txt", "BASH-PARSER-CMDSUB"),
+    ("cmdsub_in_assign", "VAR=$(whoami) ls", "BASH-PARSER-CMDSUB"),
+    ("cmdsub_in_word", "echo prefix$(whoami)suffix", "BASH-PARSER-CMDSUB"),
+    ("compound_until", "until false; do rm -rf /; done", "BASH-PARSER-COMPOUND"),
+    # NOTE: ``case ... esac`` is not implemented by bashlex (it raises
+    # NotImplementedError on the pattern token), so it surfaces as
+    # BASH-PARSER-PARSE-ERROR. That is still a fail-closed deny — the
+    # gate blocks the call. The PARSE-ERROR row is exercised by
+    # ``test_parse_error_fails_closed`` below.
+    # ----- cycle-5 hardening (H3): git -c key case-insensitivity -----
+    ("shellout_git_pager_upper", "git -c Core.Pager=/tmp/evil log", "BASH-PARSER-SHELLOUT"),
+    ("shellout_git_alias_upper", "git -c Alias.X=!sh status", "BASH-PARSER-SHELLOUT"),
+    ("shellout_git_pager_mixed", "git -c CoRe.PaGeR=/tmp/evil log", "BASH-PARSER-SHELLOUT"),
+    # ----- cycle-5 hardening (M1): redirect denylist additions -----
+    ("redirect_proc", "echo 1 > /proc/sys/kernel/something", "BASH-PARSER-REDIRECT"),
+    ("redirect_cron", "echo job > /var/spool/cron/root", "BASH-PARSER-REDIRECT"),
+    # ----- cycle-5 hardening (M2): chgrp / setfacl as dangerous bare -----
+    ("wrapper_timeout_chgrp", "timeout 5 chgrp staff /etc", "BASH-PARSER-WRAPPER"),
+    ("wrapper_timeout_setfacl", "timeout 5 setfacl -m u:bad:rwx /etc/passwd", "BASH-PARSER-WRAPPER"),
+    # ----- cycle-5 hardening (M3): tcsh / csh direct shell -----
+    ("direct_tcsh_c", 'tcsh -c "rm -rf /"', "BASH-PARSER-DIRECT-SHELL"),
+    ("direct_csh_c", 'csh -c "rm -rf /"', "BASH-PARSER-DIRECT-SHELL"),
+    # ----- cycle-5 hardening (M5): find -ok / -okdir interactive shellout -----
+    ("shellout_find_ok", "find . -ok rm {} \\;", "BASH-PARSER-SHELLOUT"),
+    ("shellout_find_okdir", "find . -okdir rm {} \\;", "BASH-PARSER-SHELLOUT"),
+    # ----- cycle-5 hardening (M6): vim/vi +!sh and --cmd shellout -----
+    ("shellout_vim_plus_bang", "vim '+!sh'", "BASH-PARSER-SHELLOUT"),
+    ("shellout_vim_dashc_bang", 'vim --cmd "!sh"', "BASH-PARSER-SHELLOUT"),
+    ("shellout_vi_plus_bang", "vi '+!rm -rf /'", "BASH-PARSER-SHELLOUT"),
 ]
 
 
@@ -247,3 +287,35 @@ def test_wrapper_timeout_duration_suffixes_pass_for_safe_inner(command):
 
     findings = parse_and_check(command, security_mode="paranoid")
     assert findings == [], f"unexpected findings for {command!r}: {findings!r}"
+
+
+# ---------------------------------------------------------------------------
+# Cycle-5 M4: ``until`` and ``case`` are known node kinds — must NOT trigger
+# BASH-PARSER-UNKNOWN-NODE. They produce COMPOUND (until parses) or
+# PARSE-ERROR (case is not implemented by bashlex). Both are fail-closed
+# denies, but the rule_id MUST not be UNKNOWN-NODE — that would imply a
+# bug in our parser rather than a deliberate policy decision.
+# ---------------------------------------------------------------------------
+
+
+def test_until_and_case_are_known_node_kinds():
+    from spellbook.gates.bash_parser import _KNOWN_NODE_KINDS
+
+    assert "until" in _KNOWN_NODE_KINDS
+    assert "case" in _KNOWN_NODE_KINDS
+
+
+def test_until_with_safe_body_is_compound_not_unknown():
+    """A benign ``until`` block must produce BASH-PARSER-COMPOUND, never
+    BASH-PARSER-UNKNOWN-NODE — the latter would indicate the parser
+    silently failed to classify a known control-flow construct."""
+    from spellbook.gates.bash_parser import parse_and_check
+
+    findings = parse_and_check(
+        "until [ -f /tmp/done ]; do echo waiting; done",
+        security_mode="paranoid",
+    )
+    assert findings, "until block must produce at least one finding"
+    rule_ids = {f["rule_id"] for f in findings}
+    assert "BASH-PARSER-COMPOUND" in rule_ids
+    assert "BASH-PARSER-UNKNOWN-NODE" not in rule_ids

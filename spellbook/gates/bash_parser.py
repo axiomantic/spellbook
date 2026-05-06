@@ -142,6 +142,12 @@ def _finding(
 # Env-var names whose use as a command prefix can hijack a tool's helper hook
 # (pagers, diff drivers, editors). Match against the ``NAME`` half of an
 # AssignmentNode word like ``GIT_PAGER=evil``.
+#
+# Includes shell-startup-sourced env vars (``BASH_ENV`` for non-interactive
+# bash, ``ENV`` for sh/dash/ksh) and language-library-path env vars
+# (``PYTHONPATH``, ``PERL5LIB``, ``RUBYLIB``) that allow module-injection
+# style hijacks where a script-language process loads attacker-controlled
+# code from a directory the attacker prepends.
 _ENV_PREFIX_DENY: frozenset[str] = frozenset(
     {
         "GIT_EXTERNAL_DIFF",
@@ -156,12 +162,24 @@ _ENV_PREFIX_DENY: frozenset[str] = frozenset(
         "LD_PRELOAD",
         "LD_LIBRARY_PATH",
         "DYLD_INSERT_LIBRARIES",
+        # Shell-startup-sourced env vars
+        "BASH_ENV",
+        "ENV",
+        # Language-library-path env vars (module injection)
+        "PYTHONPATH",
+        "PERL5LIB",
+        "RUBYLIB",
     }
 )
 
 
 # Path prefixes (or full paths) that must never appear as a redirect target.
 # Compared as substring/prefix against the redirect's destination word.
+#
+# Includes ``/proc/`` (writes to ``/proc/sys/...`` reconfigure the running
+# kernel) and ``/var/spool/cron/`` (writes here install cron jobs that run
+# as the file's owner — root-equivalent escape for an unprivileged process
+# with write perms via group misconfig).
 _REDIRECT_DENY_PREFIXES: tuple[str, ...] = (
     "/dev/tcp/",
     "/dev/udp/",
@@ -169,6 +187,8 @@ _REDIRECT_DENY_PREFIXES: tuple[str, ...] = (
     "/usr/",
     "/boot/",
     "/sys/",
+    "/proc/",
+    "/var/spool/cron/",
 )
 _REDIRECT_DENY_SUBSTRINGS: tuple[str, ...] = (
     "/.ssh/",
@@ -234,6 +254,8 @@ _DANGEROUS_BARE_COMMANDS: frozenset[str] = frozenset(
         "rsync",
         "chmod",
         "chown",
+        "chgrp",
+        "setfacl",
     }
 )
 
@@ -253,6 +275,8 @@ _DIRECT_SHELL_COMMANDS: frozenset[str] = frozenset(
         "ksh",
         "dash",
         "fish",
+        "tcsh",
+        "csh",
     }
 )
 
@@ -260,7 +284,7 @@ _DIRECT_SHELL_COMMANDS: frozenset[str] = frozenset(
 # Subset that requires the ``-c`` flag to qualify as direct-shell. ``sh`` /
 # ``bash`` alone (interactive) is fine; ``sh -c "rm -rf /"`` is not.
 _SHELL_BINS_NEED_DASH_C: frozenset[str] = frozenset(
-    {"sh", "bash", "zsh", "ksh", "dash", "fish"}
+    {"sh", "bash", "zsh", "ksh", "dash", "fish", "tcsh", "csh"}
 )
 
 
@@ -291,6 +315,8 @@ _KNOWN_NODE_KINDS: frozenset[str] = frozenset(
         "if",
         "for",
         "while",
+        "until",
+        "case",
         "function",
     }
 )
@@ -367,12 +393,20 @@ def _walk(node: object, command: str) -> list[dict]:
     # parent findings or miss nested substitutions.
     kind = getattr(node, "kind", None)
 
-    if kind in {"list", "pipeline", "compound"}:
+    if kind in {"list", "pipeline"}:
         for child in getattr(node, "parts", ()) or ():
             child_kind = getattr(child, "kind", None)
             # Operators and pipes are leaves; nothing to recurse into.
             if child_kind in {"operator", "pipe", "reservedword"}:
                 continue
+            findings.extend(_walk(child, command))
+    elif kind == "compound":
+        # CompoundNode wraps control-flow constructs (if/for/while/until/case
+        # and function bodies). The wrapped construct(s) live under ``.list``,
+        # NOT ``.parts`` — without recursing into ``.list`` the walker would
+        # silently skip every nested command, providing a clean bypass for
+        # ``while true; do rm -rf /; done`` and similar.
+        for child in getattr(node, "list", ()) or ():
             findings.extend(_walk(child, command))
     elif kind == "command":
         # Command parts contain Words (with possibly nested commandsub /
@@ -387,18 +421,40 @@ def _walk(node: object, command: str) -> list[dict]:
                 # processsubstitution under .parts.
                 for sub in getattr(part, "parts", ()) or ():
                     findings.extend(_walk(sub, command))
-            elif part_kind in {"assignment", "redirect"}:
-                # Classify the leaf directly; no nested children to recurse.
+            elif part_kind == "redirect":
+                # Classify the redirect itself (deny-list path check), THEN
+                # recurse into its output target — a WordNode whose ``.parts``
+                # may contain a CommandsubstitutionNode (``ls > $(whoami).txt``).
                 findings.extend(_classify_node(part))
+                output = getattr(part, "output", None)
+                if output is not None:
+                    for sub in getattr(output, "parts", ()) or ():
+                        findings.extend(_walk(sub, command))
+            elif part_kind == "assignment":
+                # Classify the env-prefix itself, THEN recurse into the
+                # assignment's parts so a CMDSUB inside the value
+                # (``VAR=$(whoami) ls``) is detected.
+                findings.extend(_classify_node(part))
+                for sub in getattr(part, "parts", ()) or ():
+                    findings.extend(_walk(sub, command))
             else:
                 findings.extend(_walk(part, command))
     elif kind in {"commandsubstitution", "processsubstitution"}:
         inner = getattr(node, "command", None)
         if inner is not None:
             findings.extend(_walk(inner, command))
-    elif kind in {"if", "for", "while", "function"}:
+    elif kind in {"if", "for", "while", "until", "case", "function"}:
         for child in getattr(node, "parts", ()) or ():
+            child_kind = getattr(child, "kind", None)
+            if child_kind in {"operator", "pipe", "reservedword"}:
+                continue
             findings.extend(_walk(child, command))
+    elif kind == "word":
+        # Top-level / orphaned WordNode: walk its parts so a command-sub
+        # inside (``echo prefix$(whoami)suffix``) is still detected when
+        # the parent walker forwarded the word directly.
+        for sub in getattr(node, "parts", ()) or ():
+            findings.extend(_walk(sub, command))
 
     return findings
 
@@ -418,6 +474,21 @@ def _classify_node(node: object) -> list[dict]:
 
     if kind in {"list", "pipeline"}:
         return _classify_compound(node)
+    if kind in {"if", "for", "while", "until", "case"}:
+        # Control-flow constructs are inherently compound (a body, not a
+        # single command). Emit BASH-PARSER-COMPOUND so the operator must
+        # split into separate Bash invocations or opt in via the env
+        # escape hatch. The walker still recurses into the construct's
+        # body so any nested CMDSUB / dangerous redirect is also surfaced.
+        return [
+            _finding(
+                "BASH-PARSER-COMPOUND",
+                "CRITICAL",
+                f"Compound control-flow construct (`{kind}`) is not allowed; "
+                "split into separate Bash invocations.",
+                _node_text(node),
+            )
+        ]
     if kind == "command":
         return _classify_command(node)
     if kind == "commandsubstitution":
@@ -665,6 +736,23 @@ def _detect_shellout(head: str, rest: list[str]) -> dict | None:
             "`find -execdir` runs an arbitrary command per match; not allowed.",
             f"{head} {' '.join(rest)}",
         )
+    if head == "find" and "-ok" in rest:
+        # ``-ok`` is the interactive variant of ``-exec`` — it prompts y/n
+        # before each invocation. Autonomous agents auto-confirm, so this
+        # is exactly as dangerous as ``-exec`` in our threat model.
+        return _finding(
+            "BASH-PARSER-SHELLOUT",
+            "CRITICAL",
+            "`find -ok` runs an arbitrary command per match (auto-confirmed); not allowed.",
+            f"{head} {' '.join(rest)}",
+        )
+    if head == "find" and "-okdir" in rest:
+        return _finding(
+            "BASH-PARSER-SHELLOUT",
+            "CRITICAL",
+            "`find -okdir` runs an arbitrary command per match (auto-confirmed); not allowed.",
+            f"{head} {' '.join(rest)}",
+        )
     if head == "xargs":
         # xargs with sh/bash-c is the classic shell-out. Normalize each
         # token via basename so ``xargs /bin/sh -c ...`` is caught the
@@ -693,30 +781,42 @@ def _detect_shellout(head: str, rest: list[str]) -> dict | None:
                 )
     if head == "git":
         # ``git -c core.pager=...`` and ``git -c alias.X=!...`` hijack hooks.
+        # Git config keys are CASE-INSENSITIVE (``Core.Pager`` and ``CoRe.PaGeR``
+        # both reach the same setting), so attackers can bypass a case-sensitive
+        # check with mixed-case spellings. Lowercase only the KEY half — the
+        # VALUE may legitimately be case-sensitive (paths, commands).
         for i, tok in enumerate(rest):
             if tok == "-c" and i + 1 < len(rest):
                 cfg = rest[i + 1]
-                if cfg.startswith("core.pager=") or cfg.startswith("pager."):
+                if "=" in cfg:
+                    key, value = cfg.split("=", 1)
+                else:
+                    key, value = cfg, ""
+                key_lower = key.lower()
+                cfg_normalized = (
+                    f"{key_lower}={value}" if "=" in cfg else key_lower
+                )
+                if cfg_normalized.startswith("core.pager=") or cfg_normalized.startswith("pager."):
                     return _finding(
                         "BASH-PARSER-SHELLOUT",
                         "CRITICAL",
                         "`git -c core.pager=...` is not allowed (hook hijack).",
                         f"{head} {' '.join(rest)}",
                     )
-                if cfg.startswith("alias.") and "=!" in cfg:
+                if cfg_normalized.startswith("alias.") and "=!" in cfg_normalized:
                     return _finding(
                         "BASH-PARSER-SHELLOUT",
                         "CRITICAL",
                         "`git -c alias.X=!...` is not allowed (alias bang hijack).",
                         f"{head} {' '.join(rest)}",
                     )
-                if cfg.startswith("core.editor=") or cfg.startswith(
+                if cfg_normalized.startswith("core.editor=") or cfg_normalized.startswith(
                     "core.sshcommand="
                 ):
                     return _finding(
                         "BASH-PARSER-SHELLOUT",
                         "CRITICAL",
-                        f"`git -c {cfg.split('=')[0]}=...` is not allowed.",
+                        f"`git -c {key_lower}=...` is not allowed.",
                         f"{head} {' '.join(rest)}",
                     )
     if head in {"less", "more"}:
@@ -730,11 +830,32 @@ def _detect_shellout(head: str, rest: list[str]) -> dict | None:
                 )
     if head == "vim" or head == "vi":
         for i, tok in enumerate(rest):
+            # ``vim -c '!cmd'`` — startup ex-command shell-out.
             if tok == "-c" and i + 1 < len(rest) and "!" in rest[i + 1]:
                 return _finding(
                     "BASH-PARSER-SHELLOUT",
                     "CRITICAL",
                     f"`{head} -c '!...'` is not allowed.",
+                    f"{head} {' '.join(rest)}",
+                )
+            # ``vim --cmd '!cmd'`` — pre-init ex-command shell-out, runs
+            # before vimrc loads.
+            if tok == "--cmd" and i + 1 < len(rest) and "!" in rest[i + 1]:
+                return _finding(
+                    "BASH-PARSER-SHELLOUT",
+                    "CRITICAL",
+                    f"`{head} --cmd '!...'` is not allowed.",
+                    f"{head} {' '.join(rest)}",
+                )
+            # ``vim '+!cmd'`` / ``vim +!sh`` — the ``+`` startup-command
+            # form is functionally equivalent to ``-c``; a leading ``+``
+            # followed by a body containing ``!`` runs a shell command at
+            # startup.
+            if tok.startswith("+") and "!" in tok:
+                return _finding(
+                    "BASH-PARSER-SHELLOUT",
+                    "CRITICAL",
+                    f"`{head} '+!...'` is not allowed.",
                     f"{head} {' '.join(rest)}",
                 )
     if head == "parallel":
