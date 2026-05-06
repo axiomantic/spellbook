@@ -71,17 +71,15 @@ def test_install_permissions_with_none_args_is_inert(tmp_path, monkeypatch):
         dry_run=False,
     )
 
-    # When there's nothing to install AND no prior managed state, the file
-    # need not be written at all -- but a permissions key with empty arrays
-    # is also acceptable. Assert the contract: no managed entries present.
-    if settings_path.exists():
-        written = json.loads(settings_path.read_text(encoding="utf-8"))
-        perms_section = written.get("permissions", {})
-        assert perms_section.get("allow", []) == []
-        assert perms_section.get("deny", []) == []
-        assert perms_section.get("ask", []) == []
+    # Contract: with all-None args, install_permissions writes a normalised
+    # permissions section with three empty arrays. The file MUST exist and
+    # the result MUST be a successful 'installed' (not 'failed').
     assert result.component == "permissions"
     assert result.success is True
+    assert result.action == "installed"
+    assert settings_path.exists()
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {"permissions": {"allow": [], "deny": [], "ask": []}}
 
 
 def test_install_permissions_preserves_user_added_entries(tmp_path, monkeypatch):
@@ -305,12 +303,26 @@ def test_install_permissions_uses_safe_default_for_missing_args(tmp_path, monkey
         dry_run=False,
     )
 
-    written_b = json.loads((config_dir_b / "settings.json").read_text(encoding="utf-8")) \
-        if (config_dir_b / "settings.json").exists() else {}
-    perms_b = written_b.get("permissions", {})
-    # If config B inherited mutable defaults from config A, "Bash(only-a:*)"
-    # would leak in; assert it does NOT.
-    assert "Bash(only-a:*)" not in perms_b.get("allow", [])
+    settings_b_path = config_dir_b / "settings.json"
+    assert settings_b_path.exists(), (
+        "second call must write settings.json deterministically"
+    )
+    written_b = json.loads(settings_b_path.read_text(encoding="utf-8"))
+    # Full-state assertion (Full Assertion Principle): config B was given no
+    # allow/deny/ask args, so the result MUST be a normalised permissions
+    # section with three empty buckets. Any mutable-default leak from any
+    # previous test or call (not just "Bash(only-a:*)") would break this.
+    assert written_b == {"permissions": {"allow": [], "deny": [], "ask": []}}
+
+    # And config A must still hold its own entry (no leak the other direction).
+    written_a = json.loads((config_dir_a / "settings.json").read_text(encoding="utf-8"))
+    assert written_a == {
+        "permissions": {
+            "allow": ["Bash(only-a:*)"],
+            "deny": [],
+            "ask": [],
+        }
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -342,7 +354,7 @@ def test_install_permissions_dry_run_makes_no_changes(tmp_path, monkeypatch):
     assert result.component == "permissions"
     assert result.success is True
     assert result.action == "installed"
-    assert "dry run" in result.message
+    assert result.message == "permissions: would be installed (dry run)"
 
 
 # ---------------------------------------------------------------------------
@@ -373,7 +385,9 @@ def test_install_permissions_returns_failed_on_corrupt_settings(tmp_path, monkey
     assert result.component == "permissions"
     assert result.success is False
     assert result.action == "failed"
-    assert "JSON" in result.message or "decode" in result.message.lower()
+    assert result.message.startswith(
+        f"permissions: failed to parse {settings_path.name} - JSON decode error:"
+    )
 
 
 def test_install_permissions_returns_failed_on_oserror(tmp_path, monkeypatch):
@@ -403,4 +417,150 @@ def test_install_permissions_returns_failed_on_oserror(tmp_path, monkeypatch):
     assert result.component == "permissions"
     assert result.success is False
     assert result.action == "failed"
-    assert "disk full simulation" in result.message
+    assert result.message == (
+        f"permissions: write to {settings_path.name} failed: disk full simulation"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Cross-bucket conflict warn-and-skip (I2 / design §14)
+# ---------------------------------------------------------------------------
+
+
+def test_install_permissions_warns_and_skips_cross_bucket_conflict_with_user_entry(
+    tmp_path, monkeypatch, caplog
+):
+    """User has Bash(rm:*) in allow; spellbook wants it in deny -> warn + skip.
+
+    The §14 contract: never duplicate a permission string into two buckets.
+    If the user-added entry already lives in another bucket and we did not
+    place it there (state file does not list it), the spellbook addition is
+    refused. The user-added entry is preserved verbatim, the spellbook copy
+    is NOT added to the target bucket, and the entry is NOT recorded in the
+    managed-permissions state file (we do not own it).
+    """
+    import logging
+
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+    # User pre-added Bash(rm:*) to allow (intentional or accidental, but
+    # state file does not record it -> we do not own it).
+    settings_path.write_text(
+        json.dumps({"permissions": {"allow": ["Bash(rm:*)"]}}),
+        encoding="utf-8",
+    )
+
+    with caplog.at_level(logging.WARNING, logger="installer.components.permissions"):
+        result = perms.install_permissions(
+            settings_path=settings_path,
+            allow=[],
+            deny=["Bash(rm:*)"],  # conflicts with user's allow entry
+            ask=[],
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+
+    # 1. settings.json: user entry preserved, deny bucket NOT mutated.
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {
+        "permissions": {
+            "allow": ["Bash(rm:*)"],
+            "deny": [],
+            "ask": [],
+        }
+    }
+
+    # 2. State file does not record Bash(rm:*) in deny -- we never claimed it.
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert state["config_dirs"][str(config_dir)] == {
+        "allow": [],
+        "deny": [],
+        "ask": [],
+    }
+
+    # 3. HookResult surfaces the skip in its message.
+    assert result.component == "permissions"
+    assert result.success is True
+    assert result.action == "installed"
+    assert "skipped 1 cross-bucket conflict" in result.message
+    assert "'Bash(rm:*)' (allow -> deny)" in result.message
+
+    # 4. Warning logged.
+    warnings = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING
+        and "cross-bucket conflict" in r.getMessage()
+    ]
+    assert len(warnings) == 1
+    assert "'Bash(rm:*)'" in warnings[0].getMessage()
+
+
+def test_install_permissions_does_not_warn_when_we_own_the_other_bucket_entry(
+    tmp_path, monkeypatch
+):
+    """If state says we previously placed Bash(rm:*) in allow, moving it to
+    deny is a normal reconcile -- not a §14 user conflict. No skip, no warning.
+    """
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    state_path.parent.mkdir(parents=True)
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    state_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "config_dirs": {
+                    str(config_dir): {
+                        "allow": ["Bash(rm:*)"],
+                        "deny": [],
+                        "ask": [],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps({"permissions": {"allow": ["Bash(rm:*)"]}}),
+        encoding="utf-8",
+    )
+
+    result = perms.install_permissions(
+        settings_path=settings_path,
+        allow=[],
+        deny=["Bash(rm:*)"],
+        ask=[],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    # Pass 1 removes Bash(rm:*) from allow (we previously managed it there);
+    # pass 2 adds it to deny (no conflict because we own it).
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {
+        "permissions": {
+            "allow": [],
+            "deny": ["Bash(rm:*)"],
+            "ask": [],
+        }
+    }
+    new_state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert new_state["config_dirs"][str(config_dir)] == {
+        "allow": [],
+        "deny": ["Bash(rm:*)"],
+        "ask": [],
+    }
+    assert "skipped" not in result.message

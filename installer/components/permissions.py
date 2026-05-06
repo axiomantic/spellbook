@@ -102,6 +102,12 @@ def install_permissions(
         )
 
     perms_section: Dict[str, List[str]] = dict(existing_settings.get("permissions", {}))
+
+    # Pass 1: remove entries we previously managed but no longer want. We only
+    # remove entries that match the prior managed set; entries the user added
+    # (not in prior_managed) are preserved even if they happen to match a
+    # desired entry's text.
+    bucket_state: Dict[str, List[str]] = {}
     for bucket, desired in (
         ("allow", desired_allow),
         ("deny", desired_deny),
@@ -110,22 +116,48 @@ def install_permissions(
         current_list: List[str] = list(perms_section.get(bucket, []))
         prior_set = set(prior_managed.get(bucket, []))
         desired_set = set(desired)
-
-        # Remove entries we previously managed but no longer want. We only
-        # remove entries that match the prior managed set; entries the user
-        # added (not in prior_managed) are preserved even if they happen to
-        # match a desired entry's text.
         to_remove = prior_set - desired_set
-        new_list = [e for e in current_list if e not in to_remove]
+        bucket_state[bucket] = [e for e in current_list if e not in to_remove]
 
-        # Add desired entries that are missing.
-        existing_after_remove = set(new_list)
+    # Pass 2: add desired-but-missing entries, with §14 conflict warn-and-skip.
+    # If a desired entry already exists in a DIFFERENT bucket as a user-added
+    # (non-managed) entry, we warn and refuse to add the spellbook copy --
+    # leaving the same string in two buckets would give Claude Code an
+    # undefined-precedence settings file.
+    skipped_conflicts: List[str] = []
+    for bucket, desired in (
+        ("allow", desired_allow),
+        ("deny", desired_deny),
+        ("ask", desired_ask),
+    ):
+        existing_after_remove = set(bucket_state[bucket])
         for entry in desired:
-            if entry not in existing_after_remove:
-                new_list.append(entry)
-                existing_after_remove.add(entry)
+            if entry in existing_after_remove:
+                continue
 
-        perms_section[bucket] = new_list
+            # Look for a conflicting non-managed entry in the OTHER buckets.
+            conflict_bucket = _find_conflict_bucket(
+                entry, bucket, bucket_state, prior_managed
+            )
+            if conflict_bucket is not None:
+                logger.warning(
+                    "permissions: %r exists in %r as a user-added entry; "
+                    "skipping spellbook addition to %r to avoid cross-bucket "
+                    "conflict (per design §14)",
+                    entry,
+                    conflict_bucket,
+                    bucket,
+                )
+                skipped_conflicts.append(
+                    f"{entry!r} ({conflict_bucket} -> {bucket})"
+                )
+                continue
+
+            bucket_state[bucket].append(entry)
+            existing_after_remove.add(entry)
+
+    for bucket in ("allow", "deny", "ask"):
+        perms_section[bucket] = bucket_state[bucket]
 
     new_settings = dict(existing_settings)
     new_settings["permissions"] = perms_section
@@ -141,12 +173,19 @@ def install_permissions(
             message=f"permissions: write to {settings_path.name} failed: {e}",
         )
 
+    # Record only the entries we actually wrote, NOT the originally-desired
+    # set. If we skipped some due to cross-bucket conflicts (§14), they are
+    # not under our management; the user owns them in the other bucket.
+    managed_allow = [e for e in desired_allow if e in bucket_state["allow"]]
+    managed_deny = [e for e in desired_deny if e in bucket_state["deny"]]
+    managed_ask = [e for e in desired_ask if e in bucket_state["ask"]]
+
     try:
         _mps.update_managed_set(
             config_dir=config_dir,
-            allow=desired_allow,
-            deny=desired_deny,
-            ask=desired_ask,
+            allow=managed_allow,
+            deny=managed_deny,
+            ask=managed_ask,
         )
     except (ValueError, OSError) as e:
         logger.warning(
@@ -154,12 +193,51 @@ def install_permissions(
             e,
         )
 
+    if skipped_conflicts:
+        message = (
+            f"permissions: managed entries reconciled in {settings_path.name}; "
+            f"skipped {len(skipped_conflicts)} cross-bucket conflict(s): "
+            f"{', '.join(skipped_conflicts)}"
+        )
+    else:
+        message = f"permissions: managed entries reconciled in {settings_path.name}"
+
     return HookResult(
         component="permissions",
         success=True,
         action="installed",
-        message=f"permissions: managed entries reconciled in {settings_path.name}",
+        message=message,
     )
+
+
+def _find_conflict_bucket(
+    entry: str,
+    target_bucket: str,
+    bucket_state: Dict[str, List[str]],
+    prior_managed: Dict[str, List[str]],
+) -> Optional[str]:
+    """Return the name of an OTHER bucket that already holds ``entry`` as a
+    user-added (non-spellbook-managed) value, or None if no conflict.
+
+    A conflict exists when the same permission string sits in a different
+    bucket *and* spellbook does not own it there (i.e. it was not in the
+    prior-managed snapshot for that bucket). User-added entries that happen
+    to overlap a desired managed value MUST NOT be silently displaced or
+    duplicated; per design §14 the spellbook addition is skipped with a
+    warning.
+    """
+    for other_bucket in ("allow", "deny", "ask"):
+        if other_bucket == target_bucket:
+            continue
+        if entry not in bucket_state.get(other_bucket, []):
+            continue
+        if entry in prior_managed.get(other_bucket, []):
+            # We previously managed this in the other bucket; it will be
+            # removed there in a future reconcile (or already was, in pass 1).
+            # Either way, it's our entry, not the user's -- not a conflict.
+            continue
+        return other_bucket
+    return None
 
 
 def _read_settings(settings_path: Path) -> dict:
