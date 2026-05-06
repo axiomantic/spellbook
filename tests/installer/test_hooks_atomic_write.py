@@ -20,6 +20,7 @@ than via this hooks-level integration test.
 
 import json
 import os
+import sys
 from pathlib import Path
 
 import tripwire
@@ -28,6 +29,23 @@ from dirty_equals import AnyThing
 # Capture the real os.replace at import time so flaky-replace stubs can fall
 # through to the genuine rename even after tripwire patches os.replace.
 _REAL_OS_REPLACE = os.replace
+
+# On Windows, install_hooks / uninstall_hooks call shutil.which("powershell")
+# before reaching atomic_write_json. Tripwire's SubprocessPlugin always
+# intercepts shutil.which; without a registered mock it returns None and the
+# SUT short-circuits ("PowerShell not found"). On non-Windows the SUT does
+# not enter that branch, so the mock sits unused (mock_which is required=False
+# by default).
+_FAKE_POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+
+
+def _register_powershell_which_mock() -> None:
+    tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
+
+
+def _assert_powershell_which_if_windows() -> None:
+    if sys.platform == "win32":
+        tripwire.subprocess.assert_which("powershell", returns=_FAKE_POWERSHELL)
 
 
 def _write_baseline(settings_path: Path) -> None:
@@ -100,6 +118,8 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     mock_replace.calls(flaky)
     mock_replace.calls(flaky)
 
+    _register_powershell_which_mock()
+
     with tripwire:
         result = hooks.install_hooks(
             settings_path=settings_path,
@@ -112,6 +132,8 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     # Two os.replace attempts: first fails, second succeeds. This is the
     # core regression contract.
     assert flaky.count == 2
+
+    _assert_powershell_which_if_windows()
 
     # Tripwire requires every recorded interaction to be asserted
     # (UnassertedInteractionsError otherwise); platform.system() is

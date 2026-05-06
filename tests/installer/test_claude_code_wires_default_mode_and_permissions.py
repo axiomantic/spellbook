@@ -2,9 +2,30 @@
 and install_permissions and surfaces the results as InstallResult entries.
 """
 
+import sys
+
 import pytest
 import tripwire
 from dirty_equals import AnyThing
+
+# install_hooks calls shutil.which("powershell") on Windows. Tripwire's
+# SubprocessPlugin always intercepts shutil.which; without a registered
+# mock it returns None and the SUT short-circuits before writing settings.
+# On non-Windows the SUT does not enter that branch, so the mock sits
+# unused (mock_which is required=False by default).
+_FAKE_POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+
+
+def _register_powershell_which_mock() -> None:
+    tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
+
+
+def _assert_powershell_which_if_windows(times: int = 1) -> None:
+    if sys.platform == "win32":
+        for _ in range(times):
+            tripwire.subprocess.assert_which(
+                "powershell", returns=_FAKE_POWERSHELL
+            )
 
 
 @pytest.fixture
@@ -162,6 +183,7 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, mo
 
     _redirect_state_file(monkeypatch, tmp_path)
     mocks = _register_install_mocks(home_dir)
+    _register_powershell_which_mock()
 
     config_dir = home_dir / ".claude"
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
@@ -170,6 +192,7 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, mo
         results = installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_powershell_which_if_windows()
 
     dm_results = [r for r in results if r.component == "default_mode"]
     assert len(dm_results) == 1
@@ -184,6 +207,7 @@ def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path, mon
 
     _redirect_state_file(monkeypatch, tmp_path)
     mocks = _register_install_mocks(home_dir)
+    _register_powershell_which_mock()
 
     config_dir = home_dir / ".claude"
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
@@ -192,6 +216,7 @@ def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path, mon
         results = installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_powershell_which_if_windows()
 
     p_results = [r for r in results if r.component == "permissions"]
     assert len(p_results) == 1
@@ -208,6 +233,7 @@ def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_pa
 
     _redirect_state_file(monkeypatch, tmp_path)
     mocks = _register_install_mocks(home_dir)
+    _register_powershell_which_mock()
 
     config_dir = home_dir / ".claude"
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
@@ -216,6 +242,7 @@ def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_pa
         installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_powershell_which_if_windows()
 
     settings_path = config_dir / "settings.json"
     assert settings_path.exists()
@@ -239,12 +266,16 @@ def test_uninstall_emits_default_mode_and_permissions_results(
     # the combined call budget. Tripwire allows each target to be mocked
     # exactly once per sandbox, so registrations must be combined.
     mocks = _register_install_and_uninstall_mocks(home_dir)
+    _register_powershell_which_mock()
 
     with tripwire:
         installer.install()
         results = installer.uninstall()
 
     _assert_install_and_uninstall_mocks(*mocks)
+    # install_hooks calls shutil.which("powershell") once on Windows;
+    # uninstall_hooks does not.
+    _assert_powershell_which_if_windows()
 
     dm_results = [r for r in results if r.component == "default_mode"]
     p_results = [r for r in results if r.component == "permissions"]
@@ -276,6 +307,7 @@ def test_uninstall_clears_managed_default_mode_from_settings(
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
 
     mocks = _register_install_and_uninstall_mocks(home_dir)
+    _register_powershell_which_mock()
 
     with tripwire:
         installer.install()
@@ -286,6 +318,7 @@ def test_uninstall_clears_managed_default_mode_from_settings(
         installer.uninstall()
 
     _assert_install_and_uninstall_mocks(*mocks)
+    _assert_powershell_which_if_windows()
 
     written = _json.loads(settings_path.read_text(encoding="utf-8"))
     assert "defaultMode" not in written
