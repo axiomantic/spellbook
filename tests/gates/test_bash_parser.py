@@ -9,9 +9,6 @@ node types fail-closed with an audit-log entry.
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
 import tripwire
 
@@ -107,6 +104,18 @@ REJECT_CASES = [
     ("shellout_vim_plus_bang", "vim '+!sh'", "BASH-PARSER-SHELLOUT"),
     ("shellout_vim_dashc_bang", 'vim --cmd "!sh"', "BASH-PARSER-SHELLOUT"),
     ("shellout_vi_plus_bang", "vi '+!rm -rf /'", "BASH-PARSER-SHELLOUT"),
+    # ----- cycle-6 hardening (F1): backgrounded-command bypass -----
+    # ``ls & pwd`` parses as a ListNode whose operators == ["&"] but contains
+    # TWO command parts — the original "single bg command" short-circuit was
+    # too lenient and let the second command slip through.
+    ("compound_bg_then_cmd", "ls & pwd", "BASH-PARSER-COMPOUND"),
+    ("compound_bg_two_cmds", "rm -rf / & pwd", "BASH-PARSER-COMPOUND"),
+    # ----- cycle-6 hardening (F2): redirect-target path traversal -----
+    # ``startswith`` against the deny list is bypassable with ``..``;
+    # the redirect target must be path-resolved before the prefix check.
+    ("redirect_etc_traversal", "echo bad > /tmp/../etc/shadow", "BASH-PARSER-REDIRECT"),
+    ("redirect_etc_tilde_traversal", "echo bad > ~/../../etc/shadow", "BASH-PARSER-REDIRECT"),
+    ("redirect_proc_traversal", "echo bad > /home/../proc/sys/kernel/x", "BASH-PARSER-REDIRECT"),
 ]
 
 
@@ -163,49 +172,61 @@ def test_allowed_commands_pass(command):
 # ---------------------------------------------------------------------------
 
 
-def test_unknown_node_kind_denies_and_writes_audit_log(tmp_path):
+def _real_bashlex_node_with_kind(kind: str) -> object:
+    """Return a real bashlex node with its ``.kind`` mutated to ``kind``.
+
+    Style-guide rules forbid hand-rolled stub classes and ``unittest.mock``;
+    we therefore exercise the unknown-kind path against a *real* bashlex
+    node whose ``.kind`` attribute has been mutated. bashlex nodes are
+    plain Python objects (no ``__slots__``), so the mutation is supported.
+    The node retains its real ``parts`` / ``pos`` attributes, so the
+    parser sees a structurally-valid node and the only deviation under
+    test is the unknown ``kind`` value.
+    """
+    import bashlex
+
+    trees = bashlex.parse("echo hello")
+    node = trees[0]
+    node.kind = kind
+    return node
+
+
+def test_unknown_node_kind_denies_and_writes_audit_log():
     """If the parser encounters a bashlex node kind it does not classify, the
     finding must be CRITICAL with rule_id BASH-PARSER-UNKNOWN-NODE and an
     audit-log entry must be appended.
+
+    To avoid file I/O inside the tripwire sandbox (which would not be
+    pre-authorized), we mock ``_append_audit`` itself and capture the
+    record dict it would have written. The behavior under test is the
+    fail-closed deny + audit-record emission; whether that record reaches
+    a file on disk is a property of ``_append_audit`` (covered separately).
     """
     from spellbook.gates import bash_parser
 
-    audit_path = tmp_path / "logs" / "audit.jsonl"
-    m = tripwire.mock("spellbook.gates.bash_parser:_audit_log_path")
-    m.returns(audit_path)
+    captured: list[dict] = []
 
-    # Force the classifier to see an unknown kind by routing through the
-    # internal walker with a synthetic node.
+    m = tripwire.mock("spellbook.gates.bash_parser:_append_audit")
+    m.calls(lambda record: captured.append(record))
+
+    node = _real_bashlex_node_with_kind("spellbook-test-unknown-kind")
+
     with tripwire:
-        findings = bash_parser._classify_node(_SyntheticUnknownNode())
+        findings = bash_parser._classify_node(node)
 
-    assert findings, "synthetic unknown node should produce a finding"
+    assert findings, "unknown-kind node should produce a finding"
     assert findings[0]["rule_id"] == "BASH-PARSER-UNKNOWN-NODE"
     assert findings[0]["severity"] == "CRITICAL"
-    m.assert_call()
+    m.assert_call(args=(captured[-1],), kwargs={})
 
-    # Audit log must contain at least one entry for the unknown node.
-    assert audit_path.exists(), "audit log should have been created"
-    lines = [
-        json.loads(line)
-        for line in audit_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    # The captured audit record must describe the deny verdict and L4 layer.
     assert any(
         rec.get("reason") == "unknown_ast_node_type"
         and rec.get("layer") == "L4-bashlex"
-        for rec in lines
-    ), f"missing unknown-node audit entry in {lines!r}"
-
-
-class _SyntheticUnknownNode:
-    """Stand-in for a bashlex node with an unknown ``kind``. The parser must
-    treat any kind it does not explicitly enumerate as a fail-closed deny.
-    """
-
-    kind = "spellbook-test-unknown-kind"
-    parts = ()
-    pos = (0, 0)
+        and rec.get("verdict") == "deny"
+        and rec.get("node_type") == "spellbook-test-unknown-kind"
+        for rec in captured
+    ), f"missing unknown-node audit entry in {captured!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -213,32 +234,31 @@ class _SyntheticUnknownNode:
 # ---------------------------------------------------------------------------
 
 
-def test_unknown_node_allowed_via_env_escape_hatch(tmp_path, monkeypatch):
+def test_unknown_node_allowed_via_env_escape_hatch(monkeypatch):
     from spellbook.gates import bash_parser
 
-    audit_path = tmp_path / "logs" / "audit.jsonl"
     monkeypatch.setenv(
         "SPELLBOOK_BASH_PARSER_ALLOW", "spellbook-test-unknown-kind"
     )
-    m = tripwire.mock("spellbook.gates.bash_parser:_audit_log_path")
-    m.returns(audit_path)
+
+    captured: list[dict] = []
+    m = tripwire.mock("spellbook.gates.bash_parser:_append_audit")
+    m.calls(lambda record: captured.append(record))
+
+    node = _real_bashlex_node_with_kind("spellbook-test-unknown-kind")
 
     with tripwire:
-        findings = bash_parser._classify_node(_SyntheticUnknownNode())
+        findings = bash_parser._classify_node(node)
     assert findings == []  # opted in: pass-through
-    m.assert_call()
+    m.assert_call(args=(captured[-1],), kwargs={})
 
-    # Audit log must STILL record the override usage.
-    assert audit_path.exists()
-    lines = [
-        json.loads(line)
-        for line in audit_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    # The override must STILL be recorded for audit visibility.
     assert any(
         rec.get("reason") == "unknown_ast_node_allowed_via_env"
-        for rec in lines
-    ), f"missing override audit entry in {lines!r}"
+        and rec.get("verdict") == "allow"
+        and rec.get("node_type") == "spellbook-test-unknown-kind"
+        for rec in captured
+    ), f"missing override audit entry in {captured!r}"
 
 
 # ---------------------------------------------------------------------------

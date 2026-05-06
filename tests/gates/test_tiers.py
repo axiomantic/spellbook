@@ -410,3 +410,89 @@ def test_derive_l2_deny_list_handles_missing_file(tmp_path):
     out = derive_l2_deny_list(tmp_path / "nope.toml")
     # Missing file should not crash the installer; return [].
     assert out == []
+
+
+# ---------------------------------------------------------------------------
+# Cycle-6 hardening (F5): unprojectable Bash regex patterns are dropped at
+# load time with a warning. A regex-only pattern would silently fail BOTH
+# at hook-time classification AND at L2 deny derivation; the loader must
+# surface the misconfiguration loudly and skip the record entirely.
+# ---------------------------------------------------------------------------
+
+
+def test_load_tiers_drops_unprojectable_bash_regex_pattern_with_warning(
+    tmp_path, caplog
+):
+    """A T3 record with an unsupported regex (e.g. ``rm [^a-z]+``) must be
+    dropped at parse time with a warning. The classifier must NOT match
+    commands using that pattern, so a deny-by-classifier path silently
+    powered by a half-broken regex pattern can't sneak through."""
+    import logging
+
+    from spellbook.gates.tiers import classify_tool_call, load_tiers, T_UNCLASSIFIED
+
+    p = _write_tiers(
+        tmp_path,
+        """
+        [[tiers]]
+        tool = "Bash"
+        pattern = "rm [^a-z]+"
+        tier = "T3"
+        description = "regex-only deny — must be dropped"
+
+        [[tiers]]
+        tool = "Bash"
+        pattern = "git push --force"
+        tier = "T3"
+        description = "force-push"
+        """,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        records = load_tiers(p)
+
+    # The unprojectable record must be dropped — only the literal record
+    # survives.
+    patterns = [r.pattern for r in records]
+    assert patterns == ["git push --force"]
+
+    # Loader must have warned about the dropped record.
+    assert any(
+        "rm [^a-z]+" in m and ("regex" in m.lower() or "not projectable" in m.lower() or "drop" in m.lower())
+        for m in caplog.messages
+    ), f"expected drop-with-warning message, got {caplog.messages!r}"
+
+    # Crucially, the classifier must NOT match a command using the dropped
+    # pattern — silent matching would defeat the whole point of dropping it.
+    tier = classify_tool_call("Bash", {"command": "rm FOO"}, records)
+    assert tier == T_UNCLASSIFIED
+
+
+def test_derive_l2_deny_list_skips_unprojectable_records(tmp_path, caplog):
+    """``derive_l2_deny_list`` must not surface deny strings derived from a
+    record that was already dropped at load time."""
+    import logging
+
+    from spellbook.gates.tiers import derive_l2_deny_list
+
+    p = _write_tiers(
+        tmp_path,
+        """
+        [[tiers]]
+        tool = "Bash"
+        pattern = "rm [^a-z]+"
+        tier = "T3"
+        description = "regex-only deny"
+
+        [[tiers]]
+        tool = "Bash"
+        pattern = "git push --force"
+        tier = "T3"
+        description = "force-push"
+        """,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        deny = derive_l2_deny_list(p)
+
+    assert deny == ["Bash(git push --force:*)"]
