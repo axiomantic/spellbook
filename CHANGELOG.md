@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.0] - 2026-05-05
+
+### Added
+
+- **Installer manages `defaultMode` and `permissions` blocks.** The
+  Claude Code installer now writes a `defaultMode` entry and an
+  installer-managed `permissions` block into `~/.claude/settings.json`
+  and `~/.claude-work/settings.json`. Three new component modules drive
+  this: `installer/components/default_mode.py`,
+  `installer/components/permissions.py`, and
+  `installer/components/managed_permissions_state.py` (a per-config-dir
+  state file that records which entries the installer owns so unmanaged
+  user-set values are preserved). `defaultMode` is set to `acceptEdits`
+  for spellbook-managed config dirs; `defaultMode` values are validated
+  against the Claude Code 2.1.x allowlist (`default`, `acceptEdits`,
+  `plan`, `bypassPermissions`) at install time. `install_permissions` is
+  wired but inert in this release (no managed entries yet); future
+  phases populate the allow list (transcript-analyzer-derived) and the
+  deny list (tier-projection-derived). Uninstall is symmetric: only
+  installer-owned `defaultMode` and `permissions` entries are removed.
+  Cross-bucket conflicts in user-supplied permission sets are
+  warn-and-skip rather than fatal.
+- **`windows_only` and `posix_only` pytest markers.** Lets installer
+  and core tests gate themselves to the platform whose code path they
+  exercise. Skipped tests now emit a clear reason rather than failing
+  with platform-specific assertions.
+
+### Changed
+
+- **`installer/components/hooks.py` settings writes go through
+  `atomic_write_json`.** Earlier writes used `Path.write_text`, which on
+  Windows can lose data when an antivirus / Claude Code / another
+  process holds an open handle on `settings.json` at rename time.
+  `atomic_write_json` (and its underlying `atomic_replace`) carry a
+  Windows transient-error retry budget that recovers from those
+  `PermissionError` (WinError 5) and `FileNotFoundError` cases.
+
 ## [0.59.0] - 2026-05-01
 
 ### Changed
