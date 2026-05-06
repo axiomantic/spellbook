@@ -23,6 +23,7 @@ from spellbook.gates.rules import (
     INJECTION_RULES,
     check_patterns,
 )
+from spellbook.gates.secret_paths import check_secret_path
 
 
 def check_tool_input(
@@ -67,6 +68,8 @@ def check_tool_input(
         findings.extend(
             check_patterns(prompt, ESCALATION_RULES, security_mode)
         )
+    elif tool_name == "Read":
+        findings.extend(_check_read_path(tool_input))
     elif tool_name == "workflow_state_save":
         for text in _extract_strings(tool_input):
             findings.extend(
@@ -83,6 +86,45 @@ def check_tool_input(
         "findings": findings,
         "tool_name": tool_name,
     }
+
+
+def _check_read_path(tool_input: dict) -> list[dict]:
+    """Check a Read-tool invocation against the secret-path denylist.
+
+    Resolves the ``file_path`` argument (expanding ``~`` and following
+    symlinks) and returns a list with a single CRITICAL finding when the
+    resolved path matches any rule in
+    ``spellbook.gates.secret_paths.SECRET_PATH_RULES``.
+
+    Args:
+        tool_input: The Read tool's input dict. Expected key: ``file_path``.
+
+    Returns:
+        A list with one finding dict on a denylist match, else empty.
+    """
+    file_path = tool_input.get("file_path", "")
+    if not isinstance(file_path, str) or not file_path:
+        return []
+
+    rule_id = check_secret_path(file_path)
+    if rule_id is None:
+        return []
+
+    from pathlib import Path
+
+    try:
+        resolved = str(Path(file_path).expanduser().resolve(strict=False))
+    except (OSError, RuntimeError):
+        resolved = file_path
+
+    return [
+        {
+            "rule_id": rule_id,
+            "severity": "CRITICAL",
+            "message": f"Read of secret-path denylist match: {resolved}",
+            "matched_text": resolved,
+        }
+    ]
 
 
 def _extract_strings(obj: object) -> list[str]:
