@@ -28,11 +28,14 @@ leave the file corrupt; corrupt files are treated as empty (recovery path).
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from spellbook.core.command_utils import atomic_write_json, read_json_safe
 from spellbook.core.compat import CrossPlatformLock
+
+logger = logging.getLogger(__name__)
 
 # Resolved at import time. Tests monkeypatch this attribute to redirect to a
 # pytest tmp_path. See ``tests/installer/test_managed_permissions_state.py``.
@@ -61,9 +64,23 @@ def read_state() -> Dict:
         return _empty_schema()
     try:
         data = read_json_safe(str(path))
-    except (ValueError, OSError):
+    except (ValueError, OSError) as e:
+        logger.warning(
+            "managed_permissions_state: could not read %s (%s); using empty "
+            "schema. This is recoverable; the next install will rebuild the "
+            "state file.",
+            path,
+            e,
+        )
         return _empty_schema()
     if not isinstance(data, dict) or "config_dirs" not in data:
+        logger.warning(
+            "managed_permissions_state: %s did not contain the expected "
+            "schema (missing 'config_dirs' or wrong shape); using empty "
+            "schema. This is recoverable; the next install will rebuild "
+            "the state file.",
+            path,
+        )
         return _empty_schema()
     return data
 

@@ -55,8 +55,14 @@ def test_read_state_loads_existing_file(tmp_path, monkeypatch):
     assert result == payload
 
 
-def test_read_state_returns_empty_schema_on_corrupt_json(tmp_path, monkeypatch):
-    """A corrupt state file is treated as empty (recovery path)."""
+def test_read_state_returns_empty_schema_on_corrupt_json(tmp_path, monkeypatch, caplog):
+    """A corrupt state file is treated as empty (recovery path).
+
+    Also asserts that a warning is logged so corrupt state files are visible
+    in install logs without blocking installation.
+    """
+    import logging
+
     from installer.components import managed_permissions_state as mps
 
     state_dir = tmp_path / "state"
@@ -65,9 +71,51 @@ def test_read_state_returns_empty_schema_on_corrupt_json(tmp_path, monkeypatch):
     state_path.write_text("{not valid json", encoding="utf-8")
     monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
 
-    result = mps.read_state()
+    with caplog.at_level(logging.WARNING, logger="installer.components.managed_permissions_state"):
+        result = mps.read_state()
 
     assert result == {"version": 1, "config_dirs": {}}
+
+    warnings = [
+        r for r in caplog.records
+        if r.name == "installer.components.managed_permissions_state"
+        and r.levelno == logging.WARNING
+    ]
+    assert len(warnings) == 1, (
+        f"Expected exactly one warning when state file is corrupt; got {len(warnings)}"
+    )
+    msg = warnings[0].getMessage()
+    assert "could not read" in msg
+    assert str(state_path) in msg
+    assert "empty schema" in msg
+
+
+def test_read_state_returns_empty_schema_on_wrong_shape(tmp_path, monkeypatch, caplog):
+    """A state file whose top-level JSON is not a dict with config_dirs is
+    treated as empty, and a warning is logged for visibility."""
+    import logging
+
+    from installer.components import managed_permissions_state as mps
+
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    state_path = state_dir / "managed_permissions.json"
+    # Valid JSON, but not the schema we expect (missing config_dirs).
+    state_path.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    with caplog.at_level(logging.WARNING, logger="installer.components.managed_permissions_state"):
+        result = mps.read_state()
+
+    assert result == {"version": 1, "config_dirs": {}}
+
+    warnings = [
+        r for r in caplog.records
+        if r.name == "installer.components.managed_permissions_state"
+        and r.levelno == logging.WARNING
+    ]
+    assert len(warnings) == 1
+    assert "expected schema" in warnings[0].getMessage()
 
 
 # ---------------------------------------------------------------------------
