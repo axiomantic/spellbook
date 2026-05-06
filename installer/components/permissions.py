@@ -30,6 +30,7 @@ from typing import Dict, List, Optional
 from spellbook.core.command_utils import atomic_write_json
 
 from . import managed_permissions_state as _mps
+from ._settings_io import read_settings as _read_settings
 from .hooks import HookResult
 
 logger = logging.getLogger(__name__)
@@ -416,11 +417,3 @@ def _find_conflict_bucket(
     return None
 
 
-def _read_settings(settings_path: Path) -> dict:
-    """Read settings.json; return {} when file is absent or empty."""
-    if not settings_path.exists():
-        return {}
-    text = settings_path.read_text(encoding="utf-8")
-    if not text.strip():
-        return {}
-    return json.loads(text)

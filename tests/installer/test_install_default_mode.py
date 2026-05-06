@@ -188,6 +188,70 @@ def test_install_default_mode_preserves_user_set_mode_not_in_state(tmp_path, mon
     )
 
 
+def test_install_default_mode_does_not_steal_ownership_when_user_value_matches_desired(
+    tmp_path, monkeypatch
+):
+    """Regression for BOT-A1: ownership theft when user-set value coincidentally
+    matches the desired managed mode.
+
+    Setup: managed_mode='acceptEdits' (we set it), user manually changes
+    settings.json to 'plan', a future install_default_mode call also wants
+    'plan'. The previous condition (current != managed AND current != mode)
+    skipped only when current differed from BOTH; with current=mode the skip
+    fired False and we silently took ownership of the user's value. The fixed
+    condition skips whenever current != managed, regardless of mode."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    state_path.parent.mkdir(parents=True)
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    # Prior state: we managed 'acceptEdits'.
+    state_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "config_dirs": {
+                    str(config_dir): {
+                        "allow": [],
+                        "deny": [],
+                        "ask": [],
+                        "default_mode": "acceptEdits",
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    # User has changed settings.json to 'plan' (no longer matches managed).
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
+
+    # New install request happens to want the same value the user picked.
+    result = dm.install_default_mode(
+        settings_path=settings_path,
+        mode="plan",
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    # settings.json untouched: we did not claim ownership.
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {"defaultMode": "plan"}
+
+    # State file: managed value remains 'acceptEdits' (NOT updated to 'plan').
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert (
+        state["config_dirs"][str(config_dir)]["default_mode"] == "acceptEdits"
+    )
+
+    assert result.action == "skipped"
+    assert result.success is True
+
+
 def test_install_default_mode_overwrites_managed_value(tmp_path, monkeypatch):
     """If state file says we own the current mode, install overwrites it."""
     from installer.components import default_mode as dm

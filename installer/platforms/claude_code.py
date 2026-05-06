@@ -546,9 +546,13 @@ class ClaudeCodeInstaller(PlatformInstaller):
             )
         )
 
-        # Uninstall managed permissions entries from settings.json. Order
-        # matters: remove entries before clearing default_mode so a partial
-        # failure leaves the most-restrictive (deny) entries intact.
+        # Uninstall managed permissions entries from settings.json. Both
+        # uninstall_permissions and uninstall_default_mode run unconditionally
+        # below (we don't bail on perms_result.success == False), so the
+        # ordering here is purely a convention -- not a partial-failure
+        # safety guarantee. If a strict "leave deny rules intact on perms
+        # failure" guarantee is ever needed, gate the default_mode call on
+        # perms_result.success.
         perms_result = uninstall_permissions(
             settings_path,
             spellbook_dir=self.spellbook_dir,

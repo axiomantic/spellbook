@@ -25,6 +25,7 @@ from pathlib import Path
 from spellbook.core.command_utils import atomic_write_json
 
 from . import managed_permissions_state as _mps
+from ._settings_io import read_settings as _read_settings
 from .hooks import HookResult
 
 logger = logging.getLogger(__name__)
@@ -102,8 +103,13 @@ def install_default_mode(
     current_mode = existing_settings.get("defaultMode")
     managed_mode = _mps.get_managed_default_mode(config_dir)
 
-    if current_mode is not None and current_mode != managed_mode and current_mode != mode:
-        # User manually set defaultMode and we don't own that value. Leave alone.
+    # Ownership rule: only overwrite when the current value matches what the
+    # state file says we last wrote. If current_mode != managed_mode, the user
+    # has changed it (or set it before we ever managed it) and we don't own
+    # that value -- leave alone, regardless of whether their value happens to
+    # match the desired ``mode``. Comparing against ``mode`` here would let us
+    # silently take ownership of a user-set value that coincidentally matches.
+    if current_mode is not None and current_mode != managed_mode:
         logger.warning(
             "default_mode: user-set defaultMode=%r in %s; not overwriting "
             "with managed value %r",
@@ -290,11 +296,3 @@ def uninstall_default_mode(
     )
 
 
-def _read_settings(settings_path: Path) -> dict:
-    """Read settings.json; return {} when file is absent."""
-    if not settings_path.exists():
-        return {}
-    text = settings_path.read_text(encoding="utf-8")
-    if not text.strip():
-        return {}
-    return json.loads(text)
