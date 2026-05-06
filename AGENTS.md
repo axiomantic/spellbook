@@ -431,8 +431,8 @@ This catches any real I/O that escapes the sandbox during tests. Use `@pytest.ma
 
 ### PR Review Bot
 
-- Bot username: `gemini-code-assist[bot]`
-- Re-review comment: `@gemini-code-assist please re-review`
+- Bot username: `axiomantic-momus[bot]`
+- Re-review comment: `/ai-review`
 - Auto-reviews on PR creation: yes
 
 ## Pre-Commit Checklist
