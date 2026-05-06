@@ -57,11 +57,18 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     assert result.component == "hooks"
     # Two calls: first fails, second succeeds.
     assert call_count["n"] == 2
-    # The hooks section ended up registered; the prior "existing" key survived.
+    # The hooks section ended up registered (with at least one PreToolUse
+    # entry pointing at the spellbook hook), and the prior "existing" key
+    # survived. We deliberately scope this test to the retry+atomic-write
+    # contract; full hook-content correctness is covered in
+    # tests/installer/test_hooks.py against unmocked atomic_replace.
     written = json.loads(settings_path.read_text(encoding="utf-8"))
     assert written["existing"] == "value"
-    assert "hooks" in written
-    assert "PreToolUse" in written["hooks"]
+    pretool_entries = written.get("hooks", {}).get("PreToolUse", [])
+    assert isinstance(pretool_entries, list)
+    assert len(pretool_entries) >= 1, (
+        "PreToolUse must contain at least the spellbook hook entry after install"
+    )
 
 
 def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
