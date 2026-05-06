@@ -2,7 +2,9 @@
 
 Provides the shared pattern rule sets and runtime checks used by
 the surviving security gates (Bash, spawn, workflow state) plus
-the pre-commit scanner.
+the pre-commit scanner. Also exposes the YOLO transcript analyzer
+library used by ``scripts/analyze_yolo_transcripts.py`` and the
+``permissions-from-transcripts`` skill.
 """
 
 from spellbook.gates.rules import (
@@ -20,9 +22,23 @@ from spellbook.gates.rules import (
     check_patterns,
     shannon_entropy,
 )
+from spellbook.gates.transcript_analyzer import (
+    BashRecord,
+    BucketEntry,
+    Categorized,
+    bucket_and_classify,
+    bucket_key,
+    classify,
+    extract_bash_commands,
+    render_proposed_list,
+    write_proposed_list,
+)
 
 __all__ = [
+    "BashRecord",
+    "BucketEntry",
     "Category",
+    "Categorized",
     "DANGEROUS_BASH_PATTERNS",
     "ESCALATION_RULES",
     "EXFILTRATION_RULES",
@@ -33,6 +49,12 @@ __all__ = [
     "OBFUSCATION_RULES",
     "ScanResult",
     "Severity",
+    "bucket_and_classify",
+    "bucket_key",
     "check_patterns",
+    "classify",
+    "extract_bash_commands",
+    "render_proposed_list",
     "shannon_entropy",
+    "write_proposed_list",
 ]
