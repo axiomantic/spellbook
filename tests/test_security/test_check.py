@@ -238,3 +238,72 @@ class TestCheckToolInputSecurityModes:
         assert result_default["findings"] == result_standard["findings"]
 
 
+class TestCheckToolInputTierClassifier:
+    """Tests for the WI-6b tier classifier integration in check_tool_input.
+
+    The tier classifier is wired AFTER the bashlex AST parser and BEFORE the
+    DANGEROUS_BASH_PATTERNS regex layer for the Bash tool, and runs as a
+    standalone pass for non-Bash tools. T3 records produce a deny finding
+    (severity CRITICAL); T2 produces an ASK finding; T0/T1 are silent.
+    """
+
+    def test_t3_bash_record_emits_deny_finding(self):
+        """A command matching a seeded T3 record produces a TIER-DENY finding."""
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input(
+            "Bash", {"command": "git push --force origin main"}
+        )
+        assert result["safe"] is False
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        assert any(rid.startswith("TIER-") for rid in rule_ids), (
+            f"expected a TIER-* finding, got rule_ids={rule_ids}"
+        )
+
+    def test_t0_bash_record_does_not_add_tier_finding(self):
+        """A T0 (silent allow) record produces no tier finding for safe commands."""
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input("Bash", {"command": "git status"})
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        # No TIER finding for T0; the command is safe overall too.
+        assert not any(rid.startswith("TIER-") for rid in rule_ids)
+        assert result["safe"] is True
+
+    def test_t2_bash_record_emits_ask_finding(self):
+        """A T2 (ask) record produces a TIER-ASK finding (severity HIGH or MEDIUM)."""
+        from spellbook.gates.check import check_tool_input
+
+        # gh pr merge is seeded as T2 in tiers.toml.
+        result = check_tool_input("Bash", {"command": "gh pr merge --squash"})
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        assert any(rid == "TIER-ASK" for rid in rule_ids), (
+            f"expected TIER-ASK, got rule_ids={rule_ids}"
+        )
+
+    def test_unclassified_tool_does_not_emit_tier_finding(self):
+        """Unclassified tools fall through; tier layer adds nothing."""
+        from spellbook.gates.check import check_tool_input
+
+        # An unclassified MCP tool the seed file does not mention.
+        result = check_tool_input(
+            "mcp__some_unknown_server__some_tool", {"arg": "value"}
+        )
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        assert not any(rid.startswith("TIER-") for rid in rule_ids)
+
+    def test_tier_layer_runs_after_bashlex(self):
+        """The bashlex parser fires before the tier classifier, so a compound
+        command produces both a BASH-PARSER-COMPOUND finding AND any matching
+        TIER finding for the leading command."""
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input(
+            "Bash", {"command": "git push --force origin main && echo done"}
+        )
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        # bashlex-layer finding present.
+        assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+
+
+

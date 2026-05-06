@@ -1,0 +1,160 @@
+# Reversibility-tier seed records (WI-6b).
+#
+# Schema (one row per [[tiers]] table):
+#   tool          = string   # "Bash" | "Edit" | "Write" | "WebFetch" | "Read"
+#                            #   | "mcp__server__tool" | "mcp__server__prefix_*"
+#   pattern       = string   # Bash: literal or simple alternation. MCP/cap: "*".
+#   tier          = string   # one of "T0" | "T1" | "T2" | "T3"
+#   description   = string   # human-readable; written into audit logs.
+#   mcp_qualifier = string?  # optional MCP server name hint.
+#
+# Tier semantics (design §7 Phase 6b):
+#   T0 reversible         — silent allow, audit
+#   T1 reversible-with-effort — loud allow, audit
+#   T2 irreversible external — ask
+#   T3 forbidden          — deny (also projected into settings.json deny)
+#
+# Default for unmatched tools: ask.
+#
+# Editing this file: changes take effect at the next `install.py` run for the
+# T3-derived L2 deny list, and immediately for in-process hook classification.
+
+# ---------------------------------------------------------------------------
+# T3 — forbidden. These records ALSO project into settings.json deny.
+# ---------------------------------------------------------------------------
+
+[[tiers]]
+tool = "Bash"
+pattern = "git push --force origin (master|main)"
+tier = "T3"
+description = "force-push to a protected branch is unrecoverable; T3 deny"
+
+[[tiers]]
+tool = "Bash"
+pattern = "git push -f origin (master|main)"
+tier = "T3"
+description = "short-flag force-push to a protected branch; T3 deny"
+
+[[tiers]]
+tool = "Bash"
+pattern = "rm -rf /"
+tier = "T3"
+description = "delete the filesystem root; T3 deny"
+
+[[tiers]]
+tool = "Bash"
+pattern = "DROP TABLE"
+tier = "T3"
+description = "destructive SQL; T3 deny (rare in practice but cheap to block)"
+
+[[tiers]]
+tool = "mcp__atlassian__delete_*"
+pattern = "*"
+tier = "T3"
+description = "any atlassian delete operation; T3 deny"
+mcp_qualifier = "atlassian"
+
+[[tiers]]
+tool = "mcp__github__delete_*"
+pattern = "*"
+tier = "T3"
+description = "any github delete operation (repos, branches, releases); T3 deny"
+mcp_qualifier = "github"
+
+# ---------------------------------------------------------------------------
+# T2 — ask. External / irreversible-but-recoverable side effects.
+# ---------------------------------------------------------------------------
+
+[[tiers]]
+tool = "Bash"
+pattern = "git push"
+tier = "T2"
+description = "any git push; ask before pushing"
+
+[[tiers]]
+tool = "Bash"
+pattern = "gh pr merge"
+tier = "T2"
+description = "merging a PR is externally visible; ask"
+
+[[tiers]]
+tool = "mcp__atlassian__transition_issue"
+pattern = "*"
+tier = "T2"
+description = "JIRA workflow transition; ask"
+mcp_qualifier = "atlassian"
+
+[[tiers]]
+tool = "mcp__atlassian__edit_issue"
+pattern = "*"
+tier = "T2"
+description = "JIRA edit; ask (description / title visible to humans)"
+mcp_qualifier = "atlassian"
+
+# ---------------------------------------------------------------------------
+# T1 — loud allow. Reversible with operator effort.
+# ---------------------------------------------------------------------------
+
+[[tiers]]
+tool = "Bash"
+pattern = "git checkout -b"
+tier = "T1"
+description = "branch creation; reversible (delete the branch)"
+
+[[tiers]]
+tool = "Bash"
+pattern = "gh pr edit"
+tier = "T1"
+description = "PR description / labels edit; reversible"
+
+# ---------------------------------------------------------------------------
+# T0 — silent allow. Cheap, fully reversible reads + edits.
+# ---------------------------------------------------------------------------
+
+[[tiers]]
+tool = "Bash"
+pattern = "git status"
+tier = "T0"
+description = "read-only repo status"
+
+[[tiers]]
+tool = "Bash"
+pattern = "git diff"
+tier = "T0"
+description = "read-only diff"
+
+[[tiers]]
+tool = "Bash"
+pattern = "git log"
+tier = "T0"
+description = "read-only history"
+
+[[tiers]]
+tool = "Bash"
+pattern = "ls"
+tier = "T0"
+description = "directory listing"
+
+[[tiers]]
+tool = "Bash"
+pattern = "pwd"
+tier = "T0"
+description = "print working directory"
+
+[[tiers]]
+tool = "Read"
+pattern = "*"
+tier = "T0"
+description = "read any file the agent already has access to"
+
+[[tiers]]
+tool = "Edit"
+pattern = "*"
+tier = "T0"
+description = "edits inside the workspace are reversible (git restore)"
+
+[[tiers]]
+tool = "Write"
+pattern = "*"
+tier = "T0"
+description = "writes inside the workspace are reversible (git restore / rm)"
