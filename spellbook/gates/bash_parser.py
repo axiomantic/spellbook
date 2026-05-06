@@ -920,6 +920,13 @@ def _classify_redirect(node: object) -> list[dict]:
     if resolved:
         candidates.append(resolved)
 
+    # On Windows, ``os.path.normpath`` and ``Path.resolve`` emit backslashes
+    # while the deny prefixes are POSIX-style (``/etc/``, ``/proc/``). Fold
+    # each candidate to forward slashes so the prefix match works on both
+    # platforms — the gate's threat model is shell redirection, which is a
+    # POSIX construct regardless of host OS.
+    candidates.extend([c.replace("\\", "/") for c in tuple(candidates)])
+
     for candidate in candidates:
         if any(candidate.startswith(p) for p in _REDIRECT_DENY_PREFIXES):
             return [
