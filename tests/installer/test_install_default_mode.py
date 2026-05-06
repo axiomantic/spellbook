@@ -12,6 +12,8 @@ Covers WI-0 default mode installation:
 
 import json
 
+import pytest
+
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +182,10 @@ def test_install_default_mode_preserves_user_set_mode_not_in_state(tmp_path, mon
     assert result.component == "default_mode"
     assert result.success is True
     assert result.action == "skipped"
-    assert "user-set defaultMode" in result.message
+    assert result.message == (
+        f"default_mode: user-set defaultMode='default' in "
+        f"{settings_path.name}; not overwriting with managed value 'acceptEdits'"
+    )
 
 
 def test_install_default_mode_overwrites_managed_value(tmp_path, monkeypatch):
@@ -255,7 +260,7 @@ def test_install_default_mode_dry_run_makes_no_changes(tmp_path, monkeypatch):
     assert result.component == "default_mode"
     assert result.success is True
     assert result.action == "installed"
-    assert "dry run" in result.message
+    assert result.message == "default_mode: would install defaultMode='acceptEdits' (dry run)"
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +291,10 @@ def test_install_default_mode_returns_failed_result_on_corrupt_settings(tmp_path
     assert result.component == "default_mode"
     assert result.success is False
     assert result.action == "failed"
-    assert "JSON" in result.message or "decode" in result.message.lower()
+    # Suffix is the json.JSONDecodeError str() (line/col details); prefix is exact.
+    assert result.message.startswith(
+        f"default_mode: failed to parse {settings_path.name} - JSON decode error:"
+    )
 
 
 def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeypatch):
@@ -316,4 +324,110 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeyp
     assert result.component == "default_mode"
     assert result.success is False
     assert result.action == "failed"
-    assert "disk full simulation" in result.message
+    assert result.message == (
+        f"default_mode: write to {settings_path.name} failed: disk full simulation"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Mode allowlist validation (I1 / spec design §6.1)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "bad_mode",
+    [
+        "",
+        "invalid",
+        "acceptedits",  # common typo: lowercase 'e'
+        None,
+        42,
+    ],
+)
+def test_install_default_mode_rejects_invalid_mode(tmp_path, monkeypatch, bad_mode):
+    """install_default_mode raises ValueError for any non-allowlist mode value.
+
+    The Claude Code 2.1.x defaultMode allowlist is
+    {"default", "acceptEdits", "plan", "bypassPermissions"}; anything else
+    (typos, empty string, None, non-strings) must fail loudly at install time.
+    """
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    with pytest.raises(ValueError, match="invalid mode"):
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode=bad_mode,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+
+    # Validation must run BEFORE any file I/O, including in dry_run.
+    assert settings_path.exists() is False
+    assert state_path.exists() is False
+
+
+@pytest.mark.parametrize(
+    "bad_mode",
+    ["", "invalid", "acceptedits", None, 42],
+)
+def test_install_default_mode_rejects_invalid_mode_in_dry_run(
+    tmp_path, monkeypatch, bad_mode
+):
+    """Validation fires even in dry_run -- callers should never see silent
+    success for a typo'd mode value."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    with pytest.raises(ValueError, match="invalid mode"):
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode=bad_mode,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "good_mode",
+    ["default", "acceptEdits", "plan", "bypassPermissions"],
+)
+def test_install_default_mode_accepts_all_documented_modes(
+    tmp_path, monkeypatch, good_mode
+):
+    """All four Claude Code 2.1.x defaultMode values must round-trip cleanly."""
+    from installer.components import default_mode as dm
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+
+    result = dm.install_default_mode(
+        settings_path=settings_path,
+        mode=good_mode,
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.success is True
+    assert result.action == "installed"
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written == {"defaultMode": good_mode}

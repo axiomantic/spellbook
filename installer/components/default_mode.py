@@ -29,6 +29,12 @@ from .hooks import HookResult
 
 logger = logging.getLogger(__name__)
 
+# Claude Code 2.1.x recognised values for ``settings.defaultMode``. Values
+# outside this set are rejected by Claude Code at runtime, so we validate
+# here to surface footgun typos (e.g. ``"acceptedits"``) at install time
+# rather than silently writing garbage that breaks the user's setup.
+VALID_MODES = frozenset({"default", "acceptEdits", "plan", "bypassPermissions"})
+
 
 def install_default_mode(
     settings_path: Path,
@@ -41,7 +47,9 @@ def install_default_mode(
     Args:
         settings_path: Path to the Claude Code settings file (e.g.
             ``~/.claude/settings.json``).
-        mode: Desired ``defaultMode`` value (e.g. ``"acceptEdits"``).
+        mode: Desired ``defaultMode`` value. Must be one of ``"default"``,
+            ``"acceptEdits"``, ``"plan"``, or ``"bypassPermissions"`` (the
+            Claude Code 2.1.x allowlist).
         spellbook_dir: Reserved for future use (parity with ``install_hooks``).
         dry_run: If True, no files are written; returns success without I/O.
 
@@ -51,7 +59,17 @@ def install_default_mode(
             - ``"unchanged"``: file already had the desired mode (idempotent no-op)
             - ``"skipped"``: settings.json had a user-set value not managed by us
             - ``"failed"``: an error occurred while reading or writing
+
+    Raises:
+        ValueError: if ``mode`` is not one of the recognised Claude Code
+            ``defaultMode`` values listed above.
     """
+    if mode not in VALID_MODES:
+        raise ValueError(
+            f"default_mode: invalid mode {mode!r}; expected one of "
+            f"{sorted(VALID_MODES)}"
+        )
+
     if dry_run:
         return HookResult(
             component="default_mode",
