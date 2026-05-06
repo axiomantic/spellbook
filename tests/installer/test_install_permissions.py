@@ -124,6 +124,116 @@ def test_install_permissions_preserves_user_added_entries(tmp_path, monkeypatch)
     }
 
 
+def test_install_permissions_does_not_steal_ownership_of_user_added_entry(
+    tmp_path, monkeypatch
+):
+    """User-added entries that overlap our desired set are NOT recorded as managed.
+
+    Regression for ownership theft (GEM-M3): if the user has ``Bash(rm:*)`` in
+    ``allow`` (NOT recorded in the spellbook state file as managed), and a
+    spellbook install runs with ``allow=["Bash(rm:*)"]``, the entry must:
+
+      1. Remain in ``settings.json`` (we don't disturb a user-added entry).
+      2. NOT be recorded as managed in the state file (the user owns it).
+
+    Recording it as managed would mean the next ``uninstall`` deletes the
+    user's entry -- silent ownership transfer is forbidden.
+    """
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+    settings_path = config_dir / "settings.json"
+    # User has Bash(rm:*) in allow already, before we ever run install.
+    settings_path.write_text(
+        json.dumps({"permissions": {"allow": ["Bash(rm:*)"]}}),
+        encoding="utf-8",
+    )
+
+    # Spellbook also wants Bash(rm:*) in allow. Pre-fix, this would have
+    # silently transferred ownership to spellbook.
+    result = perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(rm:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    assert result.success is True
+
+    # settings.json keeps the entry exactly once.
+    written = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert written["permissions"]["allow"] == ["Bash(rm:*)"]
+
+    # The state file MUST NOT list Bash(rm:*) as managed -- it is the user's
+    # entry, not spellbook's.
+    state = mps.read_state()
+    managed_allow = (
+        state.get("config_dirs", {}).get(str(config_dir), {}).get("allow", [])
+    )
+    assert "Bash(rm:*)" not in managed_allow, (
+        f"Ownership theft regression: spellbook recorded user-owned "
+        f"Bash(rm:*) as managed. State allow={managed_allow!r}."
+    )
+
+
+def test_install_permissions_keeps_managing_entries_already_owned(tmp_path, monkeypatch):
+    """Entries spellbook already managed must STAY managed across re-install.
+
+    The corollary to the ownership-theft fix: if we recorded ``Bash(git:*)``
+    as managed in a prior install, and the user has not removed it, the next
+    install with the same desired set must continue to track it as managed
+    (it's still ours, even though it's already in the bucket from a prior run).
+    """
+    from installer.components import permissions as perms
+    from installer.components import managed_permissions_state as mps
+
+    state_path = tmp_path / "state" / "managed_permissions.json"
+    state_path.parent.mkdir(parents=True)
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir()
+
+    # Prior managed state: spellbook already owns Bash(git:*) in allow.
+    state_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "config_dirs": {
+                    str(config_dir): {
+                        "allow": ["Bash(git:*)"],
+                        "deny": [],
+                        "ask": [],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+
+    # Settings file already has Bash(git:*) (left over from prior install).
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps({"permissions": {"allow": ["Bash(git:*)"]}}),
+        encoding="utf-8",
+    )
+
+    perms.install_permissions(
+        settings_path=settings_path,
+        allow=["Bash(git:*)"],
+        spellbook_dir=tmp_path / "spellbook",
+        dry_run=False,
+    )
+
+    # We must still be tracking it.
+    state = mps.read_state()
+    assert state["config_dirs"][str(config_dir)]["allow"] == ["Bash(git:*)"]
+
+
 # ---------------------------------------------------------------------------
 # Reconciliation: stale managed entries removed
 # ---------------------------------------------------------------------------

@@ -103,6 +103,17 @@ def install_permissions(
 
     perms_section: Dict[str, List[str]] = dict(existing_settings.get("permissions", {}))
 
+    # Snapshot the pre-modification bucket contents BEFORE we mutate anything.
+    # Used after the write to distinguish entries spellbook actually added
+    # (absent before, present after) from entries the user had already added
+    # by hand and that happened to overlap our desired set. Recording the
+    # latter as "managed" would silently transfer ownership and let a future
+    # uninstall delete the user's entry. See GEM-M3 / design §14.
+    pre_existing: Dict[str, set] = {
+        bucket: set(perms_section.get(bucket, []))
+        for bucket in ("allow", "deny", "ask")
+    }
+
     # Pass 1: remove entries we previously managed but no longer want. We only
     # remove entries that match the prior managed set; entries the user added
     # (not in prior_managed) are preserved even if they happen to match a
@@ -173,12 +184,32 @@ def install_permissions(
             message=f"permissions: write to {settings_path.name} failed: {e}",
         )
 
-    # Record only the entries we actually wrote, NOT the originally-desired
-    # set. If we skipped some due to cross-bucket conflicts (§14), they are
-    # not under our management; the user owns them in the other bucket.
-    managed_allow = [e for e in desired_allow if e in bucket_state["allow"]]
-    managed_deny = [e for e in desired_deny if e in bucket_state["deny"]]
-    managed_ask = [e for e in desired_ask if e in bucket_state["ask"]]
+    # Record only the entries we ACTUALLY OWN, NOT the originally-desired
+    # set. An entry is ours iff it ended up in the final bucket AND either:
+    #   (a) we added it now (it was NOT in the bucket before this install), OR
+    #   (b) we already managed it in the prior state (still ours from a
+    #       previous install).
+    # Entries the user had added by hand (in `pre_existing` but not in
+    # `prior_managed`) are NEVER recorded as managed even when they overlap
+    # the desired set -- otherwise a future uninstall would delete the
+    # user's entry. See GEM-M3 / design §14.
+    def _own(bucket: str, desired: List[str]) -> List[str]:
+        prior_managed_set = set(prior_managed.get(bucket, []))
+        pre_set = pre_existing[bucket]
+        result: List[str] = []
+        for entry in desired:
+            if entry not in bucket_state[bucket]:
+                # Skipped (e.g. cross-bucket conflict); not in final bucket.
+                continue
+            we_added_it = entry not in pre_set
+            we_already_managed_it = entry in prior_managed_set
+            if we_added_it or we_already_managed_it:
+                result.append(entry)
+        return result
+
+    managed_allow = _own("allow", desired_allow)
+    managed_deny = _own("deny", desired_deny)
+    managed_ask = _own("ask", desired_ask)
 
     try:
         _mps.update_managed_set(
