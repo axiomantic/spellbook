@@ -16,6 +16,7 @@ security cleanup.
 import json
 import sys
 
+from spellbook.gates.bash_parser import parse_and_check as _bashlex_parse_and_check
 from spellbook.gates.rules import (
     DANGEROUS_BASH_PATTERNS,
     ESCALATION_RULES,
@@ -53,6 +54,12 @@ def check_tool_input(
 
     if tool_name == "Bash":
         command = tool_input.get("command", "")
+        # L4 bashlex AST parser runs first — it is the strongest layer and
+        # short-circuits the gate on compound commands, command substitution,
+        # dangerous redirects, env-prefix escapes, shell-out flags, direct
+        # shell invocation, and wrapper-stripping bypasses. Existing regex
+        # checks below stay in place for defense-in-depth.
+        findings.extend(_bashlex_parse_and_check(command, security_mode))
         findings.extend(
             check_patterns(command, DANGEROUS_BASH_PATTERNS, security_mode)
         )
