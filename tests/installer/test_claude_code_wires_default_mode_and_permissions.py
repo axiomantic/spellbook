@@ -44,16 +44,47 @@ def spellbook_dir(tmp_path):
     return sb
 
 
-def _redirect_state_file(monkeypatch, tmp_path):
+def _redirect_state_file(tmp_path, *, budget: int):
     """Redirect the managed-permissions state file to tmp_path so the test
     does not mutate the real one under ~/.local/spellbook.
 
-    NOTE: ``_STATE_FILE_PATH`` is a Path *constant* (not a callable), so
-    monkeypatch.setattr is the right tool here. The styleguide prohibition
-    on monkeypatch.setattr is specific to callables / methods / classes."""
+    Uses tripwire to mock the ``_state_file_path()`` function exposed by
+    ``managed_permissions_state``. This replaces the prior monkeypatch of
+    the ``_STATE_FILE_PATH`` constant; per repo style, monkeypatch is only
+    permitted for env vars, cwd, and sys.path. The SUT calls the function
+    multiple times per install/uninstall (read_state, the coord lock path
+    accessor, and atomic_write_json each pull the path); ``budget`` covers
+    the empirical call count for the test's sandbox shape. Returns the mock
+    handle so the caller can verify it after the sandbox closes.
+    """
     state_path = tmp_path / "managed_permissions.json"
-    from installer.components import managed_permissions_state as mps
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    mock_state_path = tripwire.mock(
+        "installer.components.managed_permissions_state:_state_file_path"
+    )
+    for _ in range(budget):
+        mock_state_path.__call__.required(False).returns(state_path)
+    return mock_state_path
+
+
+def _assert_state_file_mock(mock_state_path, *, budget: int) -> None:
+    """Verify every state-file-path call intercepted by tripwire.
+
+    Tripwire requires every intercepted call be matched by an ``assert_*``
+    after the sandbox closes; we don't care about strict ordering relative
+    to other mocks, just the per-mock count.
+    """
+    with tripwire.in_any_order():
+        for _ in range(budget):
+            mock_state_path.assert_call(
+                args=(), kwargs={}, returned=AnyThing
+            )
+
+
+# Empirical _state_file_path() call counts; probed against the live SUT.
+# Kept alongside the install/uninstall budgets above so a regression that
+# changes the number of state-file accesses fails loudly here.
+_STATE_PATH_CALLS_PER_INSTALL = 9
+_STATE_PATH_CALLS_PER_UNINSTALL = 6
 
 
 # Empirical call counts inside the tripwire sandbox per install() / uninstall()
@@ -173,7 +204,7 @@ def _assert_install_and_uninstall_mocks(
             )
 
 
-def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, monkeypatch):
+def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path):
     """install() emits exactly one InstallResult for component='default_mode'.
 
     Counted-and-extracted (not "in components") so a regression that wires
@@ -181,7 +212,8 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, mo
     """
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
-    _redirect_state_file(monkeypatch, tmp_path)
+    state_budget = _STATE_PATH_CALLS_PER_INSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
     mocks = _register_install_mocks(home_dir)
     _register_powershell_which_mock()
 
@@ -192,6 +224,7 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, mo
         results = installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
 
     dm_results = [r for r in results if r.component == "default_mode"]
@@ -201,11 +234,12 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path, mo
     assert dm_result.platform == "claude_code"
 
 
-def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path, monkeypatch):
+def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path):
     """install() emits exactly one InstallResult for component='permissions'."""
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
-    _redirect_state_file(monkeypatch, tmp_path)
+    state_budget = _STATE_PATH_CALLS_PER_INSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
     mocks = _register_install_mocks(home_dir)
     _register_powershell_which_mock()
 
@@ -216,6 +250,7 @@ def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path, mon
         results = installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
 
     p_results = [r for r in results if r.component == "permissions"]
@@ -225,13 +260,14 @@ def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path, mon
     assert p_result.platform == "claude_code"
 
 
-def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_path, monkeypatch):
+def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_path):
     """The wired-in mode for Phase 1 is 'acceptEdits'; settings.json reflects it."""
     import json
 
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
-    _redirect_state_file(monkeypatch, tmp_path)
+    state_budget = _STATE_PATH_CALLS_PER_INSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
     mocks = _register_install_mocks(home_dir)
     _register_powershell_which_mock()
 
@@ -242,6 +278,7 @@ def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_pa
         installer.install()
 
     _assert_install_mocks(*mocks)
+    _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
 
     settings_path = config_dir / "settings.json"
@@ -251,13 +288,14 @@ def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_pa
 
 
 def test_uninstall_emits_default_mode_and_permissions_results(
-    home_dir, spellbook_dir, tmp_path, monkeypatch
+    home_dir, spellbook_dir, tmp_path
 ):
     """uninstall() must emit exactly one default_mode and one permissions
     InstallResult, alongside the existing hooks result."""
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
-    _redirect_state_file(monkeypatch, tmp_path)
+    state_budget = _STATE_PATH_CALLS_PER_INSTALL + _STATE_PATH_CALLS_PER_UNINSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
 
     config_dir = home_dir / ".claude"
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
@@ -273,6 +311,7 @@ def test_uninstall_emits_default_mode_and_permissions_results(
         results = installer.uninstall()
 
     _assert_install_and_uninstall_mocks(*mocks)
+    _assert_state_file_mock(state_mock, budget=state_budget)
     # install_hooks calls shutil.which("powershell") once on Windows;
     # uninstall_hooks does not.
     _assert_powershell_which_if_windows()
@@ -294,14 +333,15 @@ def test_uninstall_emits_default_mode_and_permissions_results(
 
 
 def test_uninstall_clears_managed_default_mode_from_settings(
-    home_dir, spellbook_dir, tmp_path, monkeypatch
+    home_dir, spellbook_dir, tmp_path
 ):
     """install -> uninstall removes the managed defaultMode from settings.json."""
     import json as _json
 
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
-    _redirect_state_file(monkeypatch, tmp_path)
+    state_budget = _STATE_PATH_CALLS_PER_INSTALL + _STATE_PATH_CALLS_PER_UNINSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
 
     config_dir = home_dir / ".claude"
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
@@ -318,6 +358,7 @@ def test_uninstall_clears_managed_default_mode_from_settings(
         installer.uninstall()
 
     _assert_install_and_uninstall_mocks(*mocks)
+    _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
 
     written = _json.loads(settings_path.read_text(encoding="utf-8"))

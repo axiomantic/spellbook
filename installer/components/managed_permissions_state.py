@@ -37,9 +37,22 @@ from spellbook.core.compat import CrossPlatformLock
 
 logger = logging.getLogger(__name__)
 
-# Resolved at import time. Tests monkeypatch this attribute to redirect to a
-# pytest tmp_path. See ``tests/installer/test_managed_permissions_state.py``.
+# Resolved at import time. Legacy tests monkeypatch this attribute to redirect
+# to a pytest tmp_path; new tests should mock ``_state_file_path`` via tripwire
+# instead. See ``tests/installer/test_managed_permissions_state.py``.
 _STATE_FILE_PATH: Path = Path.home() / ".local" / "spellbook" / "state" / "managed_permissions.json"
+
+
+def _state_file_path() -> Path:
+    """Return the on-disk path of the managed-permissions state file.
+
+    Internal callers use this indirection so tests can mock the path via
+    ``tripwire.mock("installer.components.managed_permissions_state:_state_file_path")``
+    instead of monkey-patching the module-level constant. Reads
+    ``_STATE_FILE_PATH`` dynamically so existing monkeypatch-based tests
+    continue to work without modification.
+    """
+    return _STATE_FILE_PATH
 
 _SCHEMA_VERSION = 1
 
@@ -59,7 +72,7 @@ def read_state() -> Dict:
     recovery path. Callers do not need to handle ``FileNotFoundError`` or
     ``json.JSONDecodeError`` themselves.
     """
-    path = _STATE_FILE_PATH
+    path = _state_file_path()
     if not path.exists():
         return _empty_schema()
     try:
@@ -149,7 +162,7 @@ def update_managed_set(
         new_entry["ask"] = desired["ask"]
         config_dirs[key] = new_entry
         state["version"] = _SCHEMA_VERSION
-        atomic_write_json(str(_STATE_FILE_PATH), state)
+        atomic_write_json(str(_state_file_path()), state)
 
     return diff
 
@@ -184,7 +197,7 @@ def set_managed_default_mode(config_dir: Path, mode: Optional[str]) -> None:
         else:
             per_dir["default_mode"] = mode
         state["version"] = _SCHEMA_VERSION
-        atomic_write_json(str(_STATE_FILE_PATH), state)
+        atomic_write_json(str(_state_file_path()), state)
 
 
 def reconcile(config_dir: Path) -> Dict[str, List[str]]:
@@ -211,4 +224,5 @@ def _state_lock_path() -> Path:
     Distinct suffix from ``atomic_write_json``'s internal ``.lock`` sibling so
     the two locks do not collide on the same name during a write.
     """
-    return _STATE_FILE_PATH.with_suffix(_STATE_FILE_PATH.suffix + ".coordlock")
+    state_path = _state_file_path()
+    return state_path.with_suffix(state_path.suffix + ".coordlock")
