@@ -8,13 +8,32 @@ Provides a single runtime gate function used by:
 - ``spellbook/mcp/tools/security.py`` (MCP fallback when hooks
   cannot reach the embedded patterns)
 
+Layer order for the Bash branch (defense in depth, cheapest first):
+
+  1. L4 bashlex AST parser — catches compound commands, command sub,
+     dangerous redirects, env-prefix escapes, shell-out flags, direct
+     shell invocation, and wrapper-stripping bypasses.
+  2. L3 tier classifier (WI-6b) — maps the call to a reversibility tier
+     and emits a TIER-DENY/TIER-ASK finding. The same tier projection
+     also produces the L2 deny list installed into ``settings.json``;
+     the in-process layer is the runtime mirror of that policy.
+  3. L2 DANGEROUS_BASH_PATTERNS regex — legacy regex set kept for
+     defence in depth.
+  4. EXFILTRATION_RULES — separate rule set for data-exfil patterns.
+
+Other tools (Edit/Write/MCP/...) run the tier classifier first; the
+catch-all INJECTION_RULES check still applies to non-Bash inputs.
+
 Everything else that used to live here (audit logging, security
 modes, canary output scanning) was removed in the nuclear
 security cleanup.
 """
 
 import json
+import logging
 import sys
+from functools import lru_cache
+from pathlib import Path
 
 from spellbook.gates.bash_parser import parse_and_check as _bashlex_parse_and_check
 from spellbook.gates.rules import (
@@ -24,6 +43,105 @@ from spellbook.gates.rules import (
     INJECTION_RULES,
     check_patterns,
 )
+from spellbook.gates.tiers import (
+    classify_tool_call,
+    load_tiers,
+    tier_to_verdict,
+)
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Tier classifier integration
+# ---------------------------------------------------------------------------
+
+
+def _tiers_toml_path() -> Path:
+    """Return the bundled tiers.toml path. Override in tests via this function."""
+    return Path(__file__).resolve().parent / "tiers.toml"
+
+
+@lru_cache(maxsize=1)
+def _cached_tiers() -> tuple:
+    """Load and memoize the seed tier records.
+
+    Returned as a tuple so the lru_cache decorator can hash it. The cache
+    is process-local; the hook runs in a long-lived daemon, so re-reading
+    tiers.toml on every Bash call is wasteful. Tests that need a fresh
+    load should call ``_cached_tiers.cache_clear()``.
+    """
+    path = _tiers_toml_path()
+    try:
+        return tuple(load_tiers(path))
+    except FileNotFoundError:
+        logger.debug("tiers: %s missing; classifier will return ask for all calls", path)
+        return ()
+    except Exception as exc:  # noqa: BLE001 — never crash the gate on malformed seed
+        logger.error("tiers: failed to load %s: %s", path, exc)
+        return ()
+
+
+def _tier_findings(tool_name: str, tool_input: dict) -> list[dict]:
+    """Run the tier classifier and translate the result to gate findings.
+
+    A T3 match produces a CRITICAL TIER-DENY finding (the gate blocks).
+    A T2 / unclassified match produces a HIGH TIER-ASK finding (caller
+    surfaces an `ask` verdict). T0 / T1 produce no findings (silent /
+    loud allow; loud-allow auditing is the caller's responsibility).
+    """
+    records = _cached_tiers()
+    if not records:
+        return []
+
+    tier = classify_tool_call(tool_name, tool_input or {}, records)
+    verdict = tier_to_verdict(tier)
+
+    if verdict == "deny":
+        return [
+            {
+                "rule_id": "TIER-DENY",
+                "severity": "CRITICAL",
+                "message": (
+                    f"Tier classifier denied {tool_name} call (tier={tier}). "
+                    "This combination is forbidden; see spellbook/gates/tiers.toml."
+                ),
+                "matched_text": _summarize_input(tool_name, tool_input),
+            }
+        ]
+    if verdict == "ask":
+        # Only emit TIER-ASK when there's an actual matching record. A pure
+        # T_UNCLASSIFIED fall-through is the default policy ("ask"), but
+        # leaving it here would clamour every routine call. Keep TIER-ASK
+        # narrow: only when a record positively assigns T2.
+        if tier == "T2":
+            return [
+                {
+                    "rule_id": "TIER-ASK",
+                    "severity": "HIGH",
+                    "message": (
+                        f"Tier classifier marked {tool_name} call as T2 (ask). "
+                        "Operator confirmation required."
+                    ),
+                    "matched_text": _summarize_input(tool_name, tool_input),
+                }
+            ]
+        # T_UNCLASSIFIED — silent. The hook surface decides whether to fall
+        # through to the regex layers (Bash) or to a default-ask policy.
+        return []
+    # "allow" — silent for T0; T1 callers may choose to log via a separate
+    # auditor, but this layer does not emit a finding.
+    return []
+
+
+def _summarize_input(tool_name: str, tool_input: dict) -> str:
+    """Return a short, log-safe summary of the tool call for findings."""
+    if not isinstance(tool_input, dict):
+        return f"{tool_name}(<non-dict input>)"
+    if tool_name == "Bash":
+        return (tool_input.get("command", "") or "")[:200]
+    # Fall back to keys list — values may contain secrets / large blobs.
+    return f"{tool_name}(keys={sorted(tool_input.keys())})"
 
 
 def check_tool_input(
@@ -57,9 +175,14 @@ def check_tool_input(
         # L4 bashlex AST parser runs first — it is the strongest layer and
         # short-circuits the gate on compound commands, command substitution,
         # dangerous redirects, env-prefix escapes, shell-out flags, direct
-        # shell invocation, and wrapper-stripping bypasses. Existing regex
-        # checks below stay in place for defense-in-depth.
+        # shell invocation, and wrapper-stripping bypasses.
         findings.extend(_bashlex_parse_and_check(command, security_mode))
+        # L3 tier classifier (WI-6b): map the call to a reversibility tier
+        # and emit TIER-DENY (T3) / TIER-ASK (T2) findings. T0 / T1 produce
+        # no findings; T_UNCLASSIFIED falls through to the regex layers.
+        findings.extend(_tier_findings(tool_name, tool_input))
+        # L2 DANGEROUS_BASH_PATTERNS — legacy regex set kept for defense in
+        # depth even when the tier classifier already accepted the call.
         findings.extend(
             check_patterns(command, DANGEROUS_BASH_PATTERNS, security_mode)
         )
@@ -80,6 +203,11 @@ def check_tool_input(
                 check_patterns(text, INJECTION_RULES, security_mode)
             )
     else:
+        # L3 tier classifier for capability tools (Edit/Write/...) and MCP
+        # tools (mcp__server__tool). The classifier emits TIER-DENY for T3
+        # records (e.g. mcp__github__delete_*) and TIER-ASK for T2 records
+        # (e.g. mcp__atlassian__transition_issue).
+        findings.extend(_tier_findings(tool_name, tool_input))
         for text in _extract_strings(tool_input):
             findings.extend(
                 check_patterns(text, INJECTION_RULES, security_mode)
