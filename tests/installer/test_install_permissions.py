@@ -502,6 +502,9 @@ def test_install_permissions_returns_failed_on_corrupt_settings(tmp_path, monkey
 
 def test_install_permissions_returns_failed_on_oserror(tmp_path, monkeypatch):
     """OSError from atomic_write_json -> HookResult(success=False)."""
+    import tripwire
+    from dirty_equals import AnyThing, IsInstance
+
     from installer.components import permissions as perms
     from installer.components import managed_permissions_state as mps
 
@@ -512,16 +515,23 @@ def test_install_permissions_returns_failed_on_oserror(tmp_path, monkeypatch):
     config_dir.mkdir()
     settings_path = config_dir / "settings.json"
 
-    def boom(*args, **kwargs):
-        raise OSError("disk full simulation")
+    # Force atomic_write_json to fail with OSError on the only invocation
+    # install_permissions performs against this settings file.
+    mock_write = tripwire.mock("installer.components.permissions:atomic_write_json")
+    mock_write.raises(OSError("disk full simulation"))
 
-    monkeypatch.setattr(perms, "atomic_write_json", boom)
+    with tripwire:
+        result = perms.install_permissions(
+            settings_path=settings_path,
+            allow=["Bash(ls:*)"],
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    result = perms.install_permissions(
-        settings_path=settings_path,
-        allow=["Bash(ls:*)"],
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
+    mock_write.assert_call(
+        args=(AnyThing, AnyThing),
+        kwargs={},
+        raised=IsInstance(OSError),
     )
 
     assert result.component == "permissions"

@@ -308,44 +308,44 @@ def test_update_managed_set_isolates_per_config_dir(tmp_path, monkeypatch):
 
 def test_update_managed_set_uses_atomic_write(tmp_path, monkeypatch):
     """update_managed_set writes via atomic_write_json (no partial writes)."""
+    import tripwire
+
     from installer.components import managed_permissions_state as mps
 
     state_dir = tmp_path / "state"
     state_path = state_dir / "managed_permissions.json"
     monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
 
-    captured: list[tuple] = []
-    real_atomic = mps.atomic_write_json
-
-    def spy(path, data, **kw):
-        captured.append((path, data))
-        real_atomic(path, data, **kw)
-
-    monkeypatch.setattr(mps, "atomic_write_json", spy)
-
-    config_dir = tmp_path / "claude"
-    mps.update_managed_set(
-        config_dir=config_dir,
-        allow=["Bash(ls:*)"],
-        deny=[],
-        ask=[],
+    # tripwire.spy calls the real implementation AND records the call so we
+    # can assert on it after the sandbox.
+    mock_write = tripwire.spy(
+        "installer.components.managed_permissions_state:atomic_write_json"
     )
 
-    assert captured == [
-        (
-            str(state_path),
-            {
-                "version": 1,
-                "config_dirs": {
-                    str(config_dir): {
-                        "allow": ["Bash(ls:*)"],
-                        "deny": [],
-                        "ask": [],
-                    }
-                },
-            },
+    config_dir = tmp_path / "claude"
+    with tripwire:
+        mps.update_managed_set(
+            config_dir=config_dir,
+            allow=["Bash(ls:*)"],
+            deny=[],
+            ask=[],
         )
-    ]
+
+    expected_payload = {
+        "version": 1,
+        "config_dirs": {
+            str(config_dir): {
+                "allow": ["Bash(ls:*)"],
+                "deny": [],
+                "ask": [],
+            }
+        },
+    }
+    mock_write.assert_call(
+        args=(str(state_path), expected_payload),
+        kwargs={},
+        returned=None,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -355,45 +355,67 @@ def test_update_managed_set_uses_atomic_write(tmp_path, monkeypatch):
 
 def test_update_managed_set_acquires_lock(tmp_path, monkeypatch):
     """update_managed_set wraps the read-modify-write in CrossPlatformLock."""
+    import tripwire
+    from dirty_equals import AnyThing
+
     from installer.components import managed_permissions_state as mps
 
     state_dir = tmp_path / "state"
     state_path = state_dir / "managed_permissions.json"
     monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
 
-    lock_calls: list[tuple] = []
+    enter_exit_calls: list[str] = []
 
-    class TrackingLock:
-        def __init__(self, lock_path, **kwargs):
-            lock_calls.append(("init", lock_path, kwargs))
-            # Mirror CrossPlatformLock's directory creation so atomic_write_json
-            # can write its sibling .lock file inside the same directory.
-            lock_path.parent.mkdir(parents=True, exist_ok=True)
+    class _TrackingCM:
+        """Context-manager body the mocked CrossPlatformLock factory returns.
+
+        We can't observe ``__enter__`` / ``__exit__`` through tripwire because
+        those happen on the *instance* the constructor returns, not the
+        CrossPlatformLock symbol itself. So the constructor mock returns this
+        CM, and the CM records its own enter/exit timestamps for assertion.
+        """
 
         def __enter__(self):
-            lock_calls.append(("enter",))
+            enter_exit_calls.append("enter")
             return self
 
         def __exit__(self, *exc):
-            lock_calls.append(("exit",))
+            enter_exit_calls.append("exit")
             return False
 
-    monkeypatch.setattr(mps, "CrossPlatformLock", TrackingLock)
+    def _factory(lock_path, **kwargs):
+        # Mirror CrossPlatformLock's directory creation so atomic_write_json
+        # can write its sibling .lock file inside the same directory.
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        return _TrackingCM()
+
+    mock_lock = tripwire.mock(
+        "installer.components.managed_permissions_state:CrossPlatformLock"
+    )
+    mock_lock.calls(_factory)
 
     config_dir = tmp_path / "claude"
-    mps.update_managed_set(
-        config_dir=config_dir,
-        allow=["Bash(ls:*)"],
-        deny=[],
-        ask=[],
-    )
+    with tripwire:
+        mps.update_managed_set(
+            config_dir=config_dir,
+            allow=["Bash(ls:*)"],
+            deny=[],
+            ask=[],
+        )
 
     expected_lock_path = state_path.with_suffix(state_path.suffix + ".coordlock")
-    assert lock_calls == [
-        ("init", expected_lock_path, {"blocking": True}),
-        ("enter",),
-        ("exit",),
-    ]
+    # ``returned`` is required by tripwire's three-guarantee model. Use
+    # ``AnyThing`` because the return value (a fresh _TrackingCM) is an
+    # implementation detail of our factory and not the focus of the assertion;
+    # what matters is that CrossPlatformLock was constructed with the right
+    # path + kwargs and that the resulting context manager was entered/exited.
+    mock_lock.assert_call(
+        args=(expected_lock_path,),
+        kwargs={"blocking": True},
+        returned=AnyThing,
+    )
+    # The CM was entered and exited exactly once, in order.
+    assert enter_exit_calls == ["enter", "exit"]
 
 
 def test_update_managed_set_preserves_default_mode_field(tmp_path, monkeypatch):
