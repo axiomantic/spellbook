@@ -194,7 +194,24 @@ LOCAL_FILE_CACHE: frozenset[str] = frozenset(
 LOCAL_GIT_MUTATION: frozenset[str] = frozenset(
     {
         "git add", "git commit", "git checkout",
-        "git stash", "git restore", "git worktree add",
+        "git stash", "git restore",
+        # ``git worktree`` mutating subcommands. The first-token resolver
+        # (``_resolve_first_token``) produces a 3-word key like
+        # ``git worktree add`` for these so they bypass the bare
+        # ``git worktree`` READ_ONLY_SAFE entry.
+        "git worktree add",
+        "git worktree remove",
+        "git worktree move",
+        "git worktree prune",
+        "git worktree repair",
+        "git worktree unlock",
+        "git worktree lock",
+        # ``git branch`` mutating forms. The first-token resolver collapses
+        # any of ``-d``/``-D``/``-m``/``-M``/``-c``/``-C`` (and any
+        # non-flag positional, which would *create* a branch) to the
+        # canonical key ``git branch -d`` — we keep one mutating key per
+        # runner rather than enumerating every flag spelling.
+        "git branch -d",
     }
 )
 
@@ -497,6 +514,53 @@ def _resolve_first_token(tokens: list[str]) -> str:
         # it into the first-token; the runner is being used "raw" (e.g.
         # ``git --version``).
         if not second.startswith("-"):
+            # ``git worktree`` and ``git branch`` are flag/subcommand-blind
+            # without further inspection: ``git worktree list`` is read-only
+            # but ``git worktree add /tmp/x`` is mutating. Same for
+            # ``git branch`` (read-only) vs ``git branch -d feature``
+            # (mutating). Resolve a more specific first-token here so
+            # ``classify`` sees the mutating intent.
+            if first == "git" and second == "worktree" and len(tokens) >= 3:
+                third = tokens[2]
+                if third in {
+                    "add", "remove", "move", "prune", "repair",
+                    "unlock", "lock",
+                }:
+                    return f"git worktree {third}"
+                # ``git worktree list`` and any ``--list``/``--porcelain``
+                # form remain bucketed as the safe parent.
+                return f"{first} {second}"
+            if first == "git" and second == "branch":
+                rest = tokens[2:]
+                # No further args: ``git branch`` (lists local branches).
+                if not rest:
+                    return "git branch"
+                # Mutating short flags. ``-d``/``-D`` delete,
+                # ``-m``/``-M`` rename, ``-c``/``-C`` copy.
+                _MUTATING_BRANCH_FLAGS = {
+                    "-d", "-D", "-m", "-M", "-c", "-C",
+                    "--delete", "--move", "--copy",
+                }
+                for tok in rest:
+                    if tok in _MUTATING_BRANCH_FLAGS:
+                        return "git branch -d"
+                # Read-only flags: ``--list``, ``--all``, ``-a``,
+                # ``--remotes``, ``-r``, ``-v``, ``--show-current``,
+                # ``--contains``, ``--no-contains``, ``--merged``,
+                # ``--no-merged``. If every non-flag-prefixed positional
+                # is absent, treat as the safe form.
+                _READ_ONLY_BRANCH_FLAGS_PREFIXES = ("-",)
+                has_positional = any(
+                    not t.startswith(_READ_ONLY_BRANCH_FLAGS_PREFIXES)
+                    for t in rest
+                )
+                if has_positional:
+                    # Non-flag positional under ``git branch`` either
+                    # creates a branch (``git branch newname``) or filters
+                    # by branch name; the former mutates and we cannot
+                    # safely distinguish without more context.
+                    return "git branch -d"
+                return "git branch"
             return f"{first} {second}"
 
     # ``mkdir -p`` etc. - runners with mandatory flags. Detect by table:

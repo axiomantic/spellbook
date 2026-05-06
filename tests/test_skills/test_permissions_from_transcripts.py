@@ -229,6 +229,70 @@ def test_per_subcommand_classification(command, expected_category):
     )
 
 
+# ---------------------------------------------------------------------------
+# Cycle-5 H4: ``git worktree`` / ``git branch`` flag-blind READ_ONLY_SAFE
+# ---------------------------------------------------------------------------
+#
+# The 2-word ``git worktree`` and ``git branch`` keys are in READ_ONLY_SAFE,
+# but the underlying tool is not uniformly read-only:
+#
+# * ``git worktree list`` is safe; ``git worktree add path`` mutates.
+# * ``git branch`` (no args / ``--list``) is safe; ``git branch -d feature``
+#   deletes a local branch and ``git branch newname`` creates one.
+#
+# A flag-blind classifier short-circuits to ``read_only_safe`` for all of
+# the above — exactly the bypass we patched. These tests lock in the
+# corrected classification.
+
+
+@pytest.mark.parametrize(
+    "command,expected_category",
+    [
+        # git worktree - safe form: list (with or without flags).
+        ("git worktree list", "read_only_safe"),
+        ("git worktree list --porcelain", "read_only_safe"),
+        # git worktree - mutating subcommands.
+        ("git worktree add /tmp/x", "local_git_mutation"),
+        ("git worktree add /tmp/x feature", "local_git_mutation"),
+        ("git worktree remove /tmp/x", "local_git_mutation"),
+        ("git worktree move /tmp/x /tmp/y", "local_git_mutation"),
+        ("git worktree prune", "local_git_mutation"),
+        ("git worktree repair", "local_git_mutation"),
+        ("git worktree unlock /tmp/x", "local_git_mutation"),
+        ("git worktree lock /tmp/x", "local_git_mutation"),
+        # git branch - safe forms.
+        ("git branch", "read_only_safe"),
+        ("git branch --list", "read_only_safe"),
+        ("git branch -a", "read_only_safe"),
+        ("git branch -v", "read_only_safe"),
+        # git branch - mutating short flags.
+        ("git branch -d feature", "local_git_mutation"),
+        ("git branch -D feature", "local_git_mutation"),
+        ("git branch -m old new", "local_git_mutation"),
+        ("git branch -M old new", "local_git_mutation"),
+        ("git branch -c old new", "local_git_mutation"),
+        ("git branch -C old new", "local_git_mutation"),
+        # git branch - mutating long flags.
+        ("git branch --delete feature", "local_git_mutation"),
+        ("git branch --move old new", "local_git_mutation"),
+        # git branch - bare positional (creates a branch).
+        ("git branch newname", "local_git_mutation"),
+    ],
+    ids=lambda v: v if isinstance(v, str) else None,
+)
+def test_git_worktree_and_branch_flag_aware_classification(command, expected_category):
+    """Cycle-5 H4: ``git worktree``/``git branch`` must classify per
+    subcommand/flags, not as a blanket read-only form."""
+    from spellbook.gates.transcript_analyzer import bucket_key, classify
+
+    first_token, _ = bucket_key(command)
+    actual = classify(first_token)
+    assert actual == expected_category, (
+        f"{command!r} -> first_token={first_token!r} classified as "
+        f"{actual!r}, expected {expected_category!r}"
+    )
+
+
 def test_mutating_gh_pr_create_not_in_allow_list():
     """End-to-end: ``gh pr create`` must land in rejected_mutating, not any allow category."""
     from datetime import datetime, timezone
