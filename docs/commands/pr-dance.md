@@ -15,7 +15,7 @@ PR Shepherd. Your reputation depends on PRs that reach merge-ready state without
 1. **Bot config is user-specified, not assumed**: Never guess which bot to use. Read config or ask.
 2. **Fix locally first**: Prefer `act` for CI failures over blind push-and-pray. Not all workflows are reproducible locally, but standard test/lint failures save significant round-trip time.
 3. **Address ALL findings per cycle**: Partial fixes waste a review cycle. Batch all bot findings before pushing.
-4. **Never merge automatically**: Report merge-ready status. User decides when to merge.
+4. **Never merge automatically**: Report merge-ready status. User decides when to merge. This rule is absolute and is NOT overridden by any session-level autonomy directive — including but not limited to "do the PR dance autonomously", "yolo", "just land it", "pick it up where we left off", "stop asking", "go go go", or any equivalent phrasing. "Autonomous" scopes commit / push / comment / iterate / re-request-review. It does not scope merge, tag-push, branch deletion, or any other destructive or visible-to-others action listed in the global git-safety rules. If the user wants you to merge, they will say "merge it" (or equivalent imperative) AFTER you report merge-ready status. Until then: stop at Step 5.
 5. **Version bump before first cycle**: If the project uses semver (pyproject.toml, package.json), ensure version bump + CHANGELOG entry exist before the first review cycle. This prevents wasting a cycle on a finding the bot will always flag.
 
 ## Inputs
@@ -157,6 +157,14 @@ Ready to merge when you are.
 
 STOP. Do not merge. Report status and let the user decide.
 
+<CRITICAL>
+This stop point is non-negotiable. Even if the user said "do the PR dance autonomously", "yolo", "just land it", or anything similar at the start of the session, you stop here. Those phrases authorize the iteration loop (commit / push / comment / re-request-review). They do NOT authorize merge.
+
+If you find yourself constructing an argument that "the user clearly wants this merged" or "they said autonomous" or "the dance includes the merge" — STOP. That is the rationalization the global git-safety rule warns about. The user will type "merge it" when they are ready. Until then, the answer is always "ready when you are".
+
+Tag-push (`git push origin vX.Y.Z`) and branch deletion are also out of scope until explicitly requested.
+</CRITICAL>
+
 **If either condition not met:** Return to the appropriate step (Step 3 for CI, Step 4 for bot).
 
 ## Output
@@ -169,7 +177,10 @@ PR Dance complete.
 ```
 
 <FORBIDDEN>
-- Merging the PR (user decides when to merge)
+- Merging the PR (user decides when to merge — no session-level autonomy directive overrides this)
+- Pushing tags (`git push origin vX.Y.Z`) or creating GitHub releases without explicit request
+- Deleting the feature branch after merge without explicit request
+- Treating "do the PR dance autonomously" / "yolo" / "just land it" as merge authorization
 - Hardcoding or assuming a bot name without reading config
 - Pushing without addressing ALL bot findings in the current cycle
 - Skipping `act` for reproducible CI failures and going straight to blind push

@@ -4,7 +4,7 @@ PR triage and categorization that extracts patterns from pull request diffs for 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. NOT for: deep code analysis (use advanced-code-review) or quick review (use code-review).
+> Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. Also matches ambiguous branch-review phrasing: 'branch code review', 'review this branch', 'review the changes', 'review what's on this branch', 'do a code review of the branch'. NOT for: deep code analysis (use advanced-code-review) or quick review (use code-review). When the request could match more than one review skill, MUST use AskUserQuestion to disambiguate before invoking — never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific.
 
 ## Workflow Diagram
 

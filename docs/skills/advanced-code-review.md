@@ -4,7 +4,7 @@ Multi-phase deep code review with historical context analysis, fact-checked find
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when performing thorough code review with historical context tracking. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. More heavyweight than code-review; for quick review, use code-review instead.
+> Use when performing thorough code review with historical context tracking. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report', 'branch code review', 'review this branch', 'review the changes', 'review what's on this branch', 'do a code review of the branch'. More heavyweight than code-review; for quick review, use code-review instead. When the request could match more than one review skill, MUST use AskUserQuestion to disambiguate before invoking — never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific.
 
 ## Workflow Diagram
 
