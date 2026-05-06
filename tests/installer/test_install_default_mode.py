@@ -299,6 +299,9 @@ def test_install_default_mode_returns_failed_result_on_corrupt_settings(tmp_path
 
 def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeypatch):
     """An OSError during the write -> HookResult(success=False)."""
+    import tripwire
+    from dirty_equals import AnyThing, IsInstance
+
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
@@ -309,16 +312,25 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeyp
     config_dir.mkdir()
     settings_path = config_dir / "settings.json"
 
-    def boom(*args, **kwargs):
-        raise OSError("disk full simulation")
+    # Force atomic_write_json to fail with OSError on the only invocation
+    # default_mode.install_default_mode performs against this settings file.
+    mock_write = tripwire.mock(
+        "installer.components.default_mode:atomic_write_json"
+    )
+    mock_write.raises(OSError("disk full simulation"))
 
-    monkeypatch.setattr(dm, "atomic_write_json", boom)
+    with tripwire:
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
+    mock_write.assert_call(
+        args=(AnyThing, AnyThing),
+        kwargs={},
+        raised=IsInstance(OSError),
     )
 
     assert result.component == "default_mode"
