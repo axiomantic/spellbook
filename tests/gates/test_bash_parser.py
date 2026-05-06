@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 import pytest
+import tripwire
 
 
 pytestmark = pytest.mark.integration
@@ -122,7 +123,7 @@ def test_allowed_commands_pass(command):
 # ---------------------------------------------------------------------------
 
 
-def test_unknown_node_kind_denies_and_writes_audit_log(tmp_path, monkeypatch):
+def test_unknown_node_kind_denies_and_writes_audit_log(tmp_path):
     """If the parser encounters a bashlex node kind it does not classify, the
     finding must be CRITICAL with rule_id BASH-PARSER-UNKNOWN-NODE and an
     audit-log entry must be appended.
@@ -130,14 +131,18 @@ def test_unknown_node_kind_denies_and_writes_audit_log(tmp_path, monkeypatch):
     from spellbook.gates import bash_parser
 
     audit_path = tmp_path / "logs" / "audit.jsonl"
-    monkeypatch.setattr(bash_parser, "_AUDIT_LOG_PATH", audit_path)
+    m = tripwire.mock("spellbook.gates.bash_parser:_audit_log_path")
+    m.returns(audit_path)
 
     # Force the classifier to see an unknown kind by routing through the
     # internal walker with a synthetic node.
-    findings = bash_parser._classify_node(_SyntheticUnknownNode())
+    with tripwire:
+        findings = bash_parser._classify_node(_SyntheticUnknownNode())
+
     assert findings, "synthetic unknown node should produce a finding"
     assert findings[0]["rule_id"] == "BASH-PARSER-UNKNOWN-NODE"
     assert findings[0]["severity"] == "CRITICAL"
+    m.assert_call()
 
     # Audit log must contain at least one entry for the unknown node.
     assert audit_path.exists(), "audit log should have been created"
@@ -172,13 +177,16 @@ def test_unknown_node_allowed_via_env_escape_hatch(tmp_path, monkeypatch):
     from spellbook.gates import bash_parser
 
     audit_path = tmp_path / "logs" / "audit.jsonl"
-    monkeypatch.setattr(bash_parser, "_AUDIT_LOG_PATH", audit_path)
     monkeypatch.setenv(
         "SPELLBOOK_BASH_PARSER_ALLOW", "spellbook-test-unknown-kind"
     )
+    m = tripwire.mock("spellbook.gates.bash_parser:_audit_log_path")
+    m.returns(audit_path)
 
-    findings = bash_parser._classify_node(_SyntheticUnknownNode())
+    with tripwire:
+        findings = bash_parser._classify_node(_SyntheticUnknownNode())
     assert findings == []  # opted in: pass-through
+    m.assert_call()
 
     # Audit log must STILL record the override usage.
     assert audit_path.exists()

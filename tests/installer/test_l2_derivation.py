@@ -24,7 +24,40 @@ import json
 import textwrap
 from pathlib import Path
 
-import pytest
+import tripwire
+
+
+_STATE_PATH_CALLS_PER_INSTALL = 5
+"""Number of ``_state_file_path`` invocations per ``install_permissions`` call.
+
+``install_permissions`` calls ``_state_file_path`` via reconcile (read_state +
+lock-path) and via update_managed_set (read_state + lock-path + atomic-write).
+The exact count is part of the contract this test file pins down: changes to
+that internal call pattern should make these tests trip and force a deliberate
+update."""
+
+
+def _mock_state_path(state_path: Path, expected_calls: int):
+    """Return a tripwire mock for ``_state_file_path`` configured for
+    ``expected_calls`` returns.
+
+    Tests that exercise N installs queue ``N * _STATE_PATH_CALLS_PER_INSTALL``
+    returns and must call :func:`_assert_state_path_calls` after the sandbox
+    closes to satisfy tripwire's per-call assertion contract.
+    """
+    mock = tripwire.mock(
+        "installer.components.managed_permissions_state:_state_file_path"
+    )
+    for _ in range(expected_calls):
+        mock.returns(state_path)
+    return mock
+
+
+def _assert_state_path_calls(mock, expected_calls: int) -> None:
+    """Verify each recorded ``_state_file_path`` interaction in any order."""
+    with tripwire.in_any_order():
+        for _ in range(expected_calls):
+            mock.assert_call()
 
 
 def _write_toml(path: Path, body: str) -> Path:
@@ -99,14 +132,12 @@ def test_derive_managed_deny_missing_toml_returns_empty(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_install_permissions_with_derived_deny_writes_to_settings_json(
-    tmp_path, monkeypatch
-):
+def test_install_permissions_with_derived_deny_writes_to_settings_json(tmp_path):
     from installer.components import permissions as perms
-    from installer.components import managed_permissions_state as mps
 
+    expected_state_calls = _STATE_PATH_CALLS_PER_INSTALL  # one install
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_path_mock = _mock_state_path(state_path, expected_state_calls)
 
     sbdir = _make_spellbook_dir(
         tmp_path,
@@ -134,15 +165,16 @@ def test_install_permissions_with_derived_deny_writes_to_settings_json(
     config_dir.mkdir()
     settings_path = config_dir / "settings.json"
 
-    deny_list = perms.derive_managed_deny(sbdir)
-    result = perms.install_permissions(
-        settings_path=settings_path,
-        allow=None,
-        deny=deny_list,
-        ask=None,
-        spellbook_dir=sbdir,
-        dry_run=False,
-    )
+    with tripwire:
+        deny_list = perms.derive_managed_deny(sbdir)
+        result = perms.install_permissions(
+            settings_path=settings_path,
+            allow=None,
+            deny=deny_list,
+            ask=None,
+            spellbook_dir=sbdir,
+            dry_run=False,
+        )
 
     assert result.success is True
     written = json.loads(settings_path.read_text(encoding="utf-8"))
@@ -152,15 +184,16 @@ def test_install_permissions_with_derived_deny_writes_to_settings_json(
         "mcp__github__delete_*",
         "Edit",
     }.issubset(deny_written)
+    _assert_state_path_calls(state_path_mock, expected_state_calls)
 
 
-def test_l2_derivation_is_idempotent(tmp_path, monkeypatch):
+def test_l2_derivation_is_idempotent(tmp_path):
     """Re-running install with the same tiers.toml does not duplicate entries."""
     from installer.components import permissions as perms
-    from installer.components import managed_permissions_state as mps
 
+    expected_state_calls = _STATE_PATH_CALLS_PER_INSTALL * 3  # three installs
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_path_mock = _mock_state_path(state_path, expected_state_calls)
 
     sbdir = _make_spellbook_dir(
         tmp_path,
@@ -176,28 +209,30 @@ def test_l2_derivation_is_idempotent(tmp_path, monkeypatch):
     config_dir.mkdir()
     settings_path = config_dir / "settings.json"
 
-    for _ in range(3):
-        perms.install_permissions(
-            settings_path=settings_path,
-            allow=None,
-            deny=perms.derive_managed_deny(sbdir),
-            ask=None,
-            spellbook_dir=sbdir,
-            dry_run=False,
-        )
+    with tripwire:
+        for _ in range(3):
+            perms.install_permissions(
+                settings_path=settings_path,
+                allow=None,
+                deny=perms.derive_managed_deny(sbdir),
+                ask=None,
+                spellbook_dir=sbdir,
+                dry_run=False,
+            )
 
     written = json.loads(settings_path.read_text(encoding="utf-8"))
     deny = written["permissions"]["deny"]
     assert deny.count("Bash(git push --force:*)") == 1, deny
+    _assert_state_path_calls(state_path_mock, expected_state_calls)
 
 
-def test_l2_derivation_removes_dropped_records(tmp_path, monkeypatch):
+def test_l2_derivation_removes_dropped_records(tmp_path):
     """Dropping a T3 record from tiers.toml removes it from settings.json on re-install."""
     from installer.components import permissions as perms
-    from installer.components import managed_permissions_state as mps
 
+    expected_state_calls = _STATE_PATH_CALLS_PER_INSTALL * 2  # two installs
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_path_mock = _mock_state_path(state_path, expected_state_calls)
 
     sbdir = _make_spellbook_dir(
         tmp_path,
@@ -219,14 +254,15 @@ def test_l2_derivation_removes_dropped_records(tmp_path, monkeypatch):
     config_dir.mkdir()
     settings_path = config_dir / "settings.json"
 
-    perms.install_permissions(
-        settings_path=settings_path,
-        allow=None,
-        deny=perms.derive_managed_deny(sbdir),
-        ask=None,
-        spellbook_dir=sbdir,
-        dry_run=False,
-    )
+    with tripwire:
+        perms.install_permissions(
+            settings_path=settings_path,
+            allow=None,
+            deny=perms.derive_managed_deny(sbdir),
+            ask=None,
+            spellbook_dir=sbdir,
+            dry_run=False,
+        )
 
     after_first = set(
         json.loads(settings_path.read_text(encoding="utf-8"))["permissions"]["deny"]
@@ -246,14 +282,15 @@ def test_l2_derivation_removes_dropped_records(tmp_path, monkeypatch):
         """,
     )
 
-    perms.install_permissions(
-        settings_path=settings_path,
-        allow=None,
-        deny=perms.derive_managed_deny(sbdir),
-        ask=None,
-        spellbook_dir=sbdir,
-        dry_run=False,
-    )
+    with tripwire:
+        perms.install_permissions(
+            settings_path=settings_path,
+            allow=None,
+            deny=perms.derive_managed_deny(sbdir),
+            ask=None,
+            spellbook_dir=sbdir,
+            dry_run=False,
+        )
 
     after_drop = set(
         json.loads(settings_path.read_text(encoding="utf-8"))["permissions"]["deny"]
@@ -262,16 +299,16 @@ def test_l2_derivation_removes_dropped_records(tmp_path, monkeypatch):
         "dropped T3 record was not removed from settings.json deny list"
     )
     assert "Bash(git push --force:*)" in after_drop
+    _assert_state_path_calls(state_path_mock, expected_state_calls)
 
 
-def test_unprojectable_record_warns_does_not_fail(tmp_path, monkeypatch, caplog):
+def test_unprojectable_record_warns_does_not_fail(tmp_path, caplog):
     import logging
 
     from installer.components import permissions as perms
-    from installer.components import managed_permissions_state as mps
 
-    state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    # ``derive_managed_deny`` only reads ``tiers.toml``; it never touches
+    # the managed-permissions state file, so no state-path mock is needed.
 
     # Bash record with regex-class -> unprojectable.
     sbdir = _make_spellbook_dir(
@@ -305,17 +342,23 @@ def test_unprojectable_record_warns_does_not_fail(tmp_path, monkeypatch, caplog)
 # ---------------------------------------------------------------------------
 
 
-def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
+def test_claude_code_installer_uses_derived_deny(tmp_path):
     """End-to-end: ClaudeCodeInstaller.install() writes T3 deny patterns to
     settings.json by calling install_permissions with derive_managed_deny output.
 
     Uses a fixture spellbook_dir that contains a minimal tiers.toml.
     """
-    from installer.components import managed_permissions_state as mps
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
+    # ``ClaudeCodeInstaller.install(skip_global_steps=True)`` calls
+    # ``_state_file_path`` 9 times and ``generate_claude_context`` once
+    # (one CLAUDE.md write); ``check_claude_cli_available`` is bypassed
+    # entirely under skip_global_steps. These counts are intentional and
+    # part of the contract pinned by this test.
+    expected_state_calls = 9
+    expected_ctx_calls = 1
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_path_mock = _mock_state_path(state_path, expected_state_calls)
 
     sbdir = _make_spellbook_dir(
         tmp_path,
@@ -345,15 +388,17 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
         dry_run=False,
         version="test",
     )
-    # Skip global MCP/daemon and CLAUDE.md side-effects we don't care about here.
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available", lambda: False
+    # Stub out the CLAUDE.md generation side-effect; we only assert deny
+    # patterns reach settings.json here. ``check_claude_cli_available`` is
+    # bypassed by ``skip_global_steps=True`` so it does not need a mock.
+    ctx_mock = tripwire.mock(
+        "installer.platforms.claude_code:generate_claude_context"
     )
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.generate_claude_context", lambda *_: ""
-    )
+    for _ in range(expected_ctx_calls):
+        ctx_mock.returns("")
 
-    inst.install(skip_global_steps=True)
+    with tripwire:
+        inst.install(skip_global_steps=True)
 
     settings_path = config_dir / "settings.json"
     assert settings_path.exists()
@@ -361,3 +406,9 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
     deny = set(written.get("permissions", {}).get("deny", []))
     assert "Bash(git push --force:*)" in deny
     assert "mcp__atlassian__delete_*" in deny
+    _assert_state_path_calls(state_path_mock, expected_state_calls)
+    # ``generate_claude_context`` is called with the spellbook_dir Path; we
+    # assert the recorded call was against ``sbdir`` exactly.
+    with tripwire.in_any_order():
+        for _ in range(expected_ctx_calls):
+            ctx_mock.assert_call(args=(sbdir,))

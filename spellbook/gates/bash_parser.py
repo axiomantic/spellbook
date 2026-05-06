@@ -46,11 +46,23 @@ from spellbook.core.compat import CrossPlatformLock, LockHeldError
 _AUDIT_LOG_PATH: Path = Path.home() / ".local" / "spellbook" / "logs" / "audit.jsonl"
 
 
+def _audit_log_path() -> Path:
+    """Return the on-disk path of the audit log.
+
+    Internal callers use this indirection so tests can mock the path via
+    ``tripwire.mock("spellbook.gates.bash_parser:_audit_log_path")`` instead
+    of monkey-patching the module-level constant. Reads ``_AUDIT_LOG_PATH``
+    dynamically so a runtime override (e.g., a future env-var hook) can mutate
+    the constant in-place and have callers pick up the change without restart.
+    """
+    return _AUDIT_LOG_PATH
+
+
 def _append_audit(record: dict) -> None:
     """Append one JSON line to the audit log without blocking the gate.
 
     The log lives at ``~/.local/spellbook/logs/audit.jsonl`` by default. Tests
-    monkeypatch ``_AUDIT_LOG_PATH`` to redirect writes to a tmp path.
+    mock ``_audit_log_path`` (via tripwire) to redirect writes to a tmp path.
 
     The audit log runs on every Bash tool invocation. A blocking lock here
     would let any stalled lock-holder hang the security gate, which would
@@ -60,7 +72,7 @@ def _append_audit(record: dict) -> None:
     independent of audit-log success**: rare audit-log loss is acceptable;
     delaying the gate is not.
     """
-    path = _AUDIT_LOG_PATH
+    path = _audit_log_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = path.with_suffix(path.suffix + ".lock")
     line = json.dumps(record, separators=(",", ":")) + "\n"
