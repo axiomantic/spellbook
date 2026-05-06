@@ -29,13 +29,17 @@ had no objection (later layers in ``check.py`` still run).
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import time
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 
 from spellbook.core.compat import CrossPlatformLock, LockHeldError
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -97,8 +101,16 @@ def _append_audit(record: dict) -> None:
                     "spellbook.bash_parser: audit log busy; dropping one "
                     f"audit entry (verdict unaffected). path={path}\n"
                 )
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as stderr_exc:  # noqa: BLE001
+                # stderr write itself failed (closed/redirected fd). Observe
+                # via logger so the failure is at least recorded somewhere,
+                # but never propagate — gate verdict must not depend on
+                # audit-log diagnostics.
+                _log.warning(
+                    "audit-log busy stderr-write failed: %s: %s",
+                    type(stderr_exc).__name__,
+                    stderr_exc,
+                )
             return
 
 
@@ -610,11 +622,14 @@ def _strip_wrapper_args(wrapper: str, argv: list[str]) -> list[str]:
     ``argv``. It is best-effort, not exhaustive — false positives are
     acceptable because the worst case is a redundant deny finding.
     """
-    out = list(argv)
+    # Consume option-like tokens from the front of ``argv``. Using a deque
+    # makes ``popleft()`` O(1); ``list.pop(0)`` is O(n) and would degrade on
+    # long wrapper invocations (e.g. ``env A=1 B=2 C=3 ... cmd``).
+    out: deque[str] = deque(argv)
     while out:
         head = out[0]
         if head.startswith("-"):
-            out.pop(0)
+            out.popleft()
             continue
         # ``timeout 5 cmd`` / ``timeout 1h cmd`` / ``timeout 2d cmd`` —
         # drop a leading bare numeric or duration. ``timeout`` accepts the
@@ -622,7 +637,7 @@ def _strip_wrapper_args(wrapper: str, argv: list[str]) -> list[str]:
         # (hours), and ``d`` (days). Strip any trailing duration suffix,
         # then check the remainder is numeric (with optional decimal).
         if head.rstrip("smhd").replace(".", "", 1).isdigit():
-            out.pop(0)
+            out.popleft()
             continue
         # ``nice -n 5 cmd`` already handled by the dash-skip above; the ``5``
         # falls into the numeric-skip above.
@@ -630,8 +645,8 @@ def _strip_wrapper_args(wrapper: str, argv: list[str]) -> list[str]:
     # ``env`` may carry KEY=VALUE pairs before the wrapped command.
     if wrapper == "env":
         while out and "=" in out[0] and not out[0].startswith("/"):
-            out.pop(0)
-    return out
+            out.popleft()
+    return list(out)
 
 
 def _detect_shellout(head: str, rest: list[str]) -> dict | None:
@@ -808,9 +823,16 @@ def _handle_unknown_kind(node: object, kind: object) -> list[dict]:
         }
         try:
             _append_audit(record)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             # Audit-log failure must NOT crash the gate; we still return [].
-            pass
+            # Observe via logger so an operator chasing missing audit lines
+            # has a breadcrumb; verdict (allow) is unchanged.
+            _log.warning(
+                "audit-log append failed for allow-via-env unknown-kind %r: %s: %s",
+                kind,
+                type(exc).__name__,
+                exc,
+            )
         return []
 
     record = {
@@ -820,8 +842,15 @@ def _handle_unknown_kind(node: object, kind: object) -> list[dict]:
     }
     try:
         _append_audit(record)
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        # Audit-log failure must NOT crash the gate; the deny finding is
+        # still returned below. Observe so the silent loss is traceable.
+        _log.warning(
+            "audit-log append failed for deny unknown-kind %r: %s: %s",
+            kind,
+            type(exc).__name__,
+            exc,
+        )
     return [
         _finding(
             "BASH-PARSER-UNKNOWN-NODE",
