@@ -305,6 +305,17 @@ def _bash_pattern_matches(pattern: str, command: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+# Match a single, non-nested ``(a|b|c)`` alternation group.
+#
+# LIMITATION: this regex deliberately does NOT support nested alternation
+# groups such as ``(a|(b|c))`` or ``((x|y)|z)`` — the inner ``[^()|]+``
+# class rejects ``(`` and ``)`` inside a choice, so any pattern containing
+# nesting is left unexpanded by ``_expand_alternations`` and falls through
+# to the regex-class / quantifier short-circuit (returning an empty list,
+# which the Bash projection logs and skips). The current ``tiers.toml``
+# seed only uses simple flat alternations like ``(master|main)``; if a
+# future rule legitimately needs nesting, replace this regex with a
+# recursive expander (or reject the seed at load time with a clear error).
 _ALTERNATION_RE = re.compile(r"\(([^()|]+(?:\|[^()|]+)+)\)")
 _REGEX_CLASS_RE = re.compile(r"\[[^\]]+\]")
 _REGEX_QUANTIFIER_RE = re.compile(r"[+*?]\s*$|\.\*|\\[a-zA-Z]")

@@ -30,10 +30,12 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from spellbook.core.compat import CrossPlatformLock
+from spellbook.core.compat import CrossPlatformLock, LockHeldError
 
 
 # ---------------------------------------------------------------------------
@@ -45,20 +47,47 @@ _AUDIT_LOG_PATH: Path = Path.home() / ".local" / "spellbook" / "logs" / "audit.j
 
 
 def _append_audit(record: dict) -> None:
-    """Append one JSON line to the audit log under a cross-platform lock.
+    """Append one JSON line to the audit log without blocking the gate.
 
     The log lives at ``~/.local/spellbook/logs/audit.jsonl`` by default. Tests
     monkeypatch ``_AUDIT_LOG_PATH`` to redirect writes to a tmp path.
+
+    The audit log runs on every Bash tool invocation. A blocking lock here
+    would let any stalled lock-holder hang the security gate, which would
+    delay the verdict — unacceptable. We acquire the lock non-blocking; on
+    contention we retry once after a short sleep, and on second failure we
+    drop the audit entry with a stderr warning. **The security verdict is
+    independent of audit-log success**: rare audit-log loss is acceptable;
+    delaying the gate is not.
     """
     path = _AUDIT_LOG_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = path.with_suffix(path.suffix + ".lock")
     line = json.dumps(record, separators=(",", ":")) + "\n"
-    with CrossPlatformLock(lock_path, shared=False, blocking=True):
-        with open(path, "a", encoding="utf-8") as fh:
-            fh.write(line)
-            fh.flush()
-            os.fsync(fh.fileno())
+
+    for attempt in (0, 1):
+        try:
+            with CrossPlatformLock(lock_path, shared=False, blocking=False):
+                with open(path, "a", encoding="utf-8") as fh:
+                    fh.write(line)
+                    fh.flush()
+                    os.fsync(fh.fileno())
+            return
+        except LockHeldError:
+            if attempt == 0:
+                # Brief backoff, then one retry. Total worst-case latency
+                # added to the gate is well under 50ms.
+                time.sleep(0.01)
+                continue
+            # Second failure: drop the audit entry but keep the gate moving.
+            try:
+                sys.stderr.write(
+                    "spellbook.bash_parser: audit log busy; dropping one "
+                    f"audit entry (verdict unaffected). path={path}\n"
+                )
+            except Exception:  # noqa: BLE001
+                pass
+            return
 
 
 # ---------------------------------------------------------------------------
@@ -451,28 +480,34 @@ def _classify_command(node: object) -> list[dict]:
 
     head = word_strs[0]
     rest = word_strs[1:]
+    # Normalize the command head via basename so absolute paths like
+    # ``/bin/sh`` and ``/usr/bin/env`` are matched against our inventories
+    # the same way as bare ``sh`` / ``env``. Without this, an attacker can
+    # bypass DIRECT-SHELL / SHELLOUT / WRAPPER checks by spelling the
+    # binary with a path prefix.
+    head_base = os.path.basename(head)
 
     # --- Direct shell invocation ---------------------------------------
-    if head in _DIRECT_SHELL_COMMANDS:
-        if head in _SHELL_BINS_NEED_DASH_C:
+    if head_base in _DIRECT_SHELL_COMMANDS:
+        if head_base in _SHELL_BINS_NEED_DASH_C:
             if "-c" in rest:
                 findings.append(
                     _finding(
                         "BASH-PARSER-DIRECT-SHELL",
                         "CRITICAL",
-                        f"Direct shell invocation ({head} -c ...) is not allowed.",
+                        f"Direct shell invocation ({head_base} -c ...) is not allowed.",
                         _node_text(node),
                     )
                 )
                 return findings
-        elif head in {"source", "."}:
+        elif head_base in {"source", "."}:
             target = rest[0] if rest else ""
             if not _source_target_allowed(target):
                 findings.append(
                     _finding(
                         "BASH-PARSER-DIRECT-SHELL",
                         "CRITICAL",
-                        f"`{head}` of non-allowlisted file is not allowed.",
+                        f"`{head_base}` of non-allowlisted file is not allowed.",
                         _node_text(node),
                     )
                 )
@@ -483,14 +518,14 @@ def _classify_command(node: object) -> list[dict]:
                 _finding(
                     "BASH-PARSER-DIRECT-SHELL",
                     "CRITICAL",
-                    f"Direct shell invocation ({head}) is not allowed.",
+                    f"Direct shell invocation ({head_base}) is not allowed.",
                     _node_text(node),
                 )
             )
             return findings
 
     # --- Shell-out flags -----------------------------------------------
-    shellout = _detect_shellout(head, rest)
+    shellout = _detect_shellout(head_base, rest)
     if shellout is not None:
         findings.append(shellout)
         # Don't return; a shellout may also be wrapped, but one finding is
@@ -498,28 +533,31 @@ def _classify_command(node: object) -> list[dict]:
         return findings
 
     # --- Wrapper-stripping bypass --------------------------------------
-    if head in _WRAPPER_ALWAYS_FLAG:
+    if head_base in _WRAPPER_ALWAYS_FLAG:
         findings.append(
             _finding(
                 "BASH-PARSER-WRAPPER",
                 "CRITICAL",
-                f"Wrapper `{head}` runs untrusted code; not allowed without "
+                f"Wrapper `{head_base}` runs untrusted code; not allowed without "
                 "explicit per-target allowlist.",
                 _node_text(node),
             )
         )
         return findings
 
-    if head in _WRAPPER_COMMANDS:
-        wrapped = _strip_wrapper_args(head, rest)
+    if head_base in _WRAPPER_COMMANDS:
+        wrapped = _strip_wrapper_args(head_base, rest)
         if wrapped:
-            wrapped_head = wrapped[0]
+            # Normalize wrapped head too so ``timeout 5 /bin/sh -c ...``
+            # cannot bypass the wrapped-direct-shell check.
+            wrapped_head_raw = wrapped[0]
+            wrapped_head = os.path.basename(wrapped_head_raw)
             if wrapped_head in _DANGEROUS_BARE_COMMANDS:
                 findings.append(
                     _finding(
                         "BASH-PARSER-WRAPPER",
                         "CRITICAL",
-                        f"Wrapper `{head}` conceals dangerous command "
+                        f"Wrapper `{head_base}` conceals dangerous command "
                         f"`{wrapped_head}`; not allowed.",
                         _node_text(node),
                     )
@@ -530,7 +568,7 @@ def _classify_command(node: object) -> list[dict]:
                     _finding(
                         "BASH-PARSER-WRAPPER",
                         "CRITICAL",
-                        f"Wrapper `{head}` conceals shell invocation "
+                        f"Wrapper `{head_base}` conceals shell invocation "
                         f"`{wrapped_head}`; not allowed.",
                         _node_text(node),
                     )
@@ -541,7 +579,7 @@ def _classify_command(node: object) -> list[dict]:
                     _finding(
                         "BASH-PARSER-WRAPPER",
                         "CRITICAL",
-                        f"Wrapper `{head}` conceals untrusted-runner "
+                        f"Wrapper `{head_base}` conceals untrusted-runner "
                         f"`{wrapped_head}`; not allowed.",
                         _node_text(node),
                     )
@@ -566,9 +604,12 @@ def _strip_wrapper_args(wrapper: str, argv: list[str]) -> list[str]:
         if head.startswith("-"):
             out.pop(0)
             continue
-        # ``timeout 5 cmd`` — drop a leading bare numeric.
-        if head.replace(".", "").replace("s", "").replace("m", "").isdigit():
-            # Match plain numbers and durations like ``5s``, ``2m``.
+        # ``timeout 5 cmd`` / ``timeout 1h cmd`` / ``timeout 2d cmd`` —
+        # drop a leading bare numeric or duration. ``timeout`` accepts the
+        # full set of suffixes ``s`` (seconds), ``m`` (minutes), ``h``
+        # (hours), and ``d`` (days). Strip any trailing duration suffix,
+        # then check the remainder is numeric (with optional decimal).
+        if head.rstrip("smhd").replace(".", "", 1).isdigit():
             out.pop(0)
             continue
         # ``nice -n 5 cmd`` already handled by the dash-skip above; the ``5``
@@ -598,9 +639,11 @@ def _detect_shellout(head: str, rest: list[str]) -> dict | None:
             f"{head} {' '.join(rest)}",
         )
     if head == "xargs":
-        # xargs with sh/bash-c is the classic shell-out
+        # xargs with sh/bash-c is the classic shell-out. Normalize each
+        # token via basename so ``xargs /bin/sh -c ...`` is caught the
+        # same as ``xargs sh -c ...``.
         for i, tok in enumerate(rest):
-            if tok in _SHELL_BINS_NEED_DASH_C:
+            if os.path.basename(tok) in _SHELL_BINS_NEED_DASH_C:
                 return _finding(
                     "BASH-PARSER-SHELLOUT",
                     "CRITICAL",
