@@ -236,42 +236,36 @@ class TestCheckModuleBehavior:
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "rm -rf /"})
-        assert result == {
-            "safe": False,
-            "findings": [
-                {
-                    "rule_id": "BASH-001",
-                    "severity": "CRITICAL",
-                    "message": "Recursive forced deletion from root",
-                    "matched_text": "rm -rf /",
-                }
-            ],
-            "tool_name": "Bash",
-        }
+        assert result["safe"] is False
+        assert result["tool_name"] == "Bash"
+        # Original regex rule must still fire.
+        assert any(
+            f["rule_id"] == "BASH-001"
+            and f["severity"] == "CRITICAL"
+            and f["message"] == "Recursive forced deletion from root"
+            for f in result["findings"]
+        )
 
     def test_sudo_is_blocked(self):
         """sudo commands should be flagged."""
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "sudo rm -rf /tmp"})
-        assert result == {
-            "safe": False,
-            "findings": [
-                {
-                    "rule_id": "ESC-003",
-                    "severity": "HIGH",
-                    "message": "Superuser escalation",
-                    "matched_text": "sudo ",
-                },
-                {
-                    "rule_id": "BASH-001",
-                    "severity": "CRITICAL",
-                    "message": "Recursive forced deletion from root",
-                    "matched_text": "rm -rf /",
-                },
-            ],
-            "tool_name": "Bash",
-        }
+        assert result["safe"] is False
+        assert result["tool_name"] == "Bash"
+        # Both layers must surface their own findings.
+        assert any(
+            f["rule_id"] == "ESC-003"
+            and f["severity"] == "HIGH"
+            and f["message"] == "Superuser escalation"
+            for f in result["findings"]
+        )
+        assert any(
+            f["rule_id"] == "BASH-001"
+            and f["severity"] == "CRITICAL"
+            and f["message"] == "Recursive forced deletion from root"
+            for f in result["findings"]
+        )
 
     def test_curl_exfiltration_is_blocked(self):
         """curl with suspicious payload should be flagged."""
@@ -421,9 +415,10 @@ class TestCheckModuleCLI:
         })
         assert proc.returncode == 2
         error_data = json.loads(proc.stdout.strip())
-        assert error_data == {
-            "error": "Security check failed: Recursive forced deletion from root"
-        }
+        # Multiple defense layers may surface findings; CLI joins messages.
+        assert set(error_data.keys()) == {"error"}
+        assert error_data["error"].startswith("Security check failed: ")
+        assert "Recursive forced deletion from root" in error_data["error"]
 
     def test_anti_reflection_no_command_in_error(self):
         """Error output must not contain the blocked command text."""
