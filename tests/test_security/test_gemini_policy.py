@@ -1,7 +1,7 @@
 """Tests for Gemini CLI security policy file and installer integration.
 
 Validates:
-- hooks/gemini-policy.toml is valid TOML with expected rules
+- hooks/bash-policy.toml is valid TOML with expected rules
 - All deny rules have deny_message fields
 - Expected rule IDs cover key security patterns
 - Installer creates policy file to correct location
@@ -21,7 +21,7 @@ from dirty_equals import IsInstance
 # ---------------------------------------------------------------------------
 
 POLICY_FILE = (
-    Path(__file__).resolve().parents[2] / "hooks" / "gemini-policy.toml"
+    Path(__file__).resolve().parents[2] / "hooks" / "bash-policy.toml"
 )
 
 

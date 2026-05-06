@@ -215,7 +215,24 @@ class TestExfiltrationRules:
 
     def test_exfiltration_rules_exist(self):
         from spellbook.gates.rules import EXFILTRATION_RULES
-        assert len(EXFILTRATION_RULES) == 9
+        # 9 base Python rules + supplemental rules merged from
+        # hooks/bash-policy.toml at module import time. The supplemental
+        # loader contributes the SB-BASH-* rule IDs flagged as exfiltration.
+        assert len(EXFILTRATION_RULES) >= 9
+        rule_ids = {rid for _, _, rid, _ in EXFILTRATION_RULES}
+        # All 9 base IDs must still be present.
+        for base_id in (
+            "EXF-001",
+            "EXF-002",
+            "EXF-003",
+            "EXF-004",
+            "EXF-005",
+            "EXF-006",
+            "EXF-007",
+            "EXF-008",
+            "EXF-009",
+        ):
+            assert base_id in rule_ids, f"Lost base exfil rule {base_id}"
 
     def test_all_patterns_compile(self):
         from spellbook.gates.rules import EXFILTRATION_RULES
@@ -225,9 +242,11 @@ class TestExfiltrationRules:
 
     def test_rule_ids_sequential(self):
         from spellbook.gates.rules import EXFILTRATION_RULES
-        expected_ids = [f"EXF-{i:03d}" for i in range(1, 10)]
+        # Base Python rules are EXF-001..EXF-009 in order; supplemental
+        # SB-BASH-* rules from hooks/bash-policy.toml are appended after.
+        expected_base_ids = [f"EXF-{i:03d}" for i in range(1, 10)]
         actual_ids = [rule_id for _, _, rule_id, _ in EXFILTRATION_RULES]
-        assert actual_ids == expected_ids
+        assert actual_ids[: len(expected_base_ids)] == expected_base_ids
 
     def test_exf_001_curl_exfiltration(self):
         from spellbook.gates.rules import EXFILTRATION_RULES

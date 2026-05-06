@@ -100,8 +100,8 @@ def _make_spellbook_dir(base: Path) -> Path:
     hooks_dir.mkdir()
     (hooks_dir / "opencode-plugin.ts").write_text("// security plugin\n")
 
-    # Gemini policy
-    (hooks_dir / "gemini-policy.toml").write_text("[policy]\nenabled = true\n")
+    # Bash policy (loaded by both Claude and Gemini)
+    (hooks_dir / "bash-policy.toml").write_text("[policy]\nenabled = true\n")
 
     # Patterns directory (Claude Code symlinks this)
     patterns_dir = spellbook / "patterns"
