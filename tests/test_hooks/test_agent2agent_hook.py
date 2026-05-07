@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -143,8 +144,7 @@ class TestAgent2AgentHook:
         sid = "session-stale"
         _bind(bus, sid, "ghost")
         # Simulate another session having unlisten'd 'ghost' meanwhile.
-        import shutil as _sh
-        _sh.rmtree(bus / "ghost")
+        shutil.rmtree(bus / "ghost")
         binding_path = bus / ".bindings" / sid
         assert binding_path.exists(), "precondition: binding file must still exist"
 

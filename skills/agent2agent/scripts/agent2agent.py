@@ -405,10 +405,13 @@ def cmd_send(args: argparse.Namespace) -> int:
     sent_path = sent_dir(args.from_) / f"{msg_id}.json"
     try:
         _atomic_write_text(sent_path, serialized)
-    except OSError:
+    except OSError as exc:
         # Sent-log failure is non-fatal: the message has already been
         # delivered to the recipient inbox.
-        pass
+        print(
+            f"agent2agent: warning: failed to write sent-log: {exc}",
+            file=sys.stderr,
+        )
 
     print(f"agent2agent: sent {msg_id} to {args.to}")
     return 0

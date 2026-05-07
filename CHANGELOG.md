@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.0] - 2026-05-07
+
+### Added
+
+- **`agent2agent` skill: filesystem-based message bus for inter-Claude-session
+  communication.** Each registered name owns an inbox at
+  `$AGENT2AGENT_DIR/<name>/{inbox,processed,sent}/` (default
+  `~/.local/share/agent2agent`). Messages are JSON files written atomically
+  (tempfile + rename) with timestamped, lexicographically-sortable filenames.
+  Sessions opt in by running the helper's `listen <name>` subcommand once,
+  which both creates the inbox tree and records a per-session binding at
+  `<bus>/.bindings/<session-id>` keyed by `$CLAUDE_CODE_SESSION_ID`.
+- **Hook integration via session-id binding.** `spellbook_hook.py`'s
+  `UserPromptSubmit` handler now invokes the helper's `notify` subcommand
+  for any session with a recorded binding and prepends a one- or two-line
+  `[agent2agent]` notice to the turn's context when mail is waiting. Notices
+  surface only metadata (count + sender names) — message bodies are NEVER
+  auto-injected. Reading a body requires the agent to deliberately invoke
+  the helper's `read` / `peek` / `check` subcommands, which the SKILL.md
+  documents must treat as untrusted input. Stale bindings (binding present
+  but inbox dir gone) clean themselves up silently inside `notify`. The hook
+  fails open: missing helper, subprocess timeout, or any unexpected
+  exception leaves the session uninterrupted.
+- **`tests/test_hooks/test_agent2agent_hook.py`**: subprocess-driven
+  integration tests covering empty-inbox silence, multi-message metadata
+  surfacing (with body-leak assertion), unbound-session silence, stale
+  binding cleanup, and helper-script-missing tolerance.
+
 ## [0.62.0] - 2026-05-06
 
 ### Added
@@ -264,32 +292,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   drops the rebrand-transition section from `.gemini/styleguide.md`
   (one reviewer guardrail mentioning bigfoot is retained so PRs
   reintroducing the old name are flagged).
-
-### Added
-
-- **`agent2agent` skill: filesystem-based message bus for inter-Claude-session
-  communication.** Each registered name owns an inbox at
-  `$AGENT2AGENT_DIR/<name>/{inbox,processed,sent}/` (default
-  `~/.local/share/agent2agent`). Messages are JSON files written atomically
-  (tempfile + rename) with timestamped, lexicographically-sortable filenames.
-  Sessions opt in by running the helper's `listen <name>` subcommand once,
-  which both creates the inbox tree and records a per-session binding at
-  `<bus>/.bindings/<session-id>` keyed by `$CLAUDE_CODE_SESSION_ID`.
-- **Hook integration via session-id binding.** `spellbook_hook.py`'s
-  `UserPromptSubmit` handler now invokes the helper's `notify` subcommand
-  for any session with a recorded binding and prepends a one- or two-line
-  `[agent2agent]` notice to the turn's context when mail is waiting. Notices
-  surface only metadata (count + sender names) — message bodies are NEVER
-  auto-injected. Reading a body requires the agent to deliberately invoke
-  the helper's `read` / `peek` / `check` subcommands, which the SKILL.md
-  documents must treat as untrusted input. Stale bindings (binding present
-  but inbox dir gone) clean themselves up silently inside `notify`. The hook
-  fails open: missing helper, subprocess timeout, or any unexpected
-  exception leaves the session uninterrupted.
-- **`tests/test_hooks/test_agent2agent_hook.py`**: subprocess-driven
-  integration tests covering empty-inbox silence, multi-message metadata
-  surfacing (with body-leak assertion), unbound-session silence, stale
-  binding cleanup, and helper-script-missing tolerance.
 
 ## [0.56.0] - 2026-04-30
 

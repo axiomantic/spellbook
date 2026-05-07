@@ -1,5 +1,11 @@
 ---
-description: Operator-invoked rule bookkeeping for canonical `## Rules` sections produced by /crystallize. Use when accumulated rules need consolidation (overlap merge, redundancy collapse, deprecated-tool retirement). Triggers: '/crystallize-consolidate <file>', 'consolidate the rules section', 'merge overlapping rules in this file'. NOT for: rule detection (use /crystallize) or general compression (use /crystallize, /optimizing-instructions, /sharpen-improve depending on content).
+description: |
+  Operator-invoked rule bookkeeping for canonical `## Rules` sections produced by /crystallize.
+  Use when accumulated rules need consolidation (overlap merge, redundancy collapse,
+  deprecated-tool retirement). Triggers: '/crystallize-consolidate <file>', 'consolidate
+  the rules section', 'merge overlapping rules in this file'. NOT for: rule detection
+  (use /crystallize) or general compression (use /crystallize, /optimizing-instructions,
+  /sharpen-improve depending on content).
 ---
 
 # Crystallize-Consolidate
