@@ -14,11 +14,14 @@ Also provides:
 - check_patterns() for matching text against rule sets
 """
 
+import logging
 import math
 import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 try:
     import tomllib
@@ -388,13 +391,8 @@ def _load_supplemental_bash_policy() -> tuple[
         return [], []
     try:
         data = tomllib.loads(policy_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        import sys
-
-        print(
-            f"[spellbook-gates] WARN: failed to load bash-policy.toml: {e}",
-            file=sys.stderr,
-        )
+    except Exception as e:  # noqa: BLE001 — never crash the gate on malformed seed
+        logger.warning("failed to load bash-policy.toml at %s: %s", policy_path, e)
         return [], []
 
     extra_dangerous: list[tuple[str, Severity, str, str]] = []

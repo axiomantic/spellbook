@@ -39,6 +39,11 @@ from pathlib import Path
 
 from spellbook.core.compat import CrossPlatformLock, LockHeldError
 
+try:
+    import bashlex
+except ImportError:  # bashlex is a required dep; fail-closed if unavailable.
+    bashlex = None  # type: ignore[assignment]
+
 _log = logging.getLogger(__name__)
 
 
@@ -370,11 +375,9 @@ def parse_and_check(command: str, security_mode: str = "paranoid") -> list[dict]
     if not command or not command.strip():
         return []
 
-    try:
-        import bashlex
-    except ImportError:
-        # If bashlex is missing we cannot parse safely. Fail closed so the
-        # gate denies every Bash call until the operator restores the dep.
+    if bashlex is None:
+        # bashlex import failed at module load. Fail closed so the gate denies
+        # every Bash call until the operator restores the dep.
         return [
             _finding(
                 "BASH-PARSER-UNAVAILABLE",

@@ -245,8 +245,17 @@ def _is_projectable_bash_pattern(pattern: str) -> bool:
     Mirrors the gate used inside :func:`_expand_alternations`. Kept as a
     standalone helper so the loader can fail-loud on unprojectable Bash
     patterns BEFORE they reach classification or L2 derivation.
+
+    ``_expand_alternations`` returns the original pattern verbatim when it
+    can't recognize the alternation shape (nested groups, single-choice
+    ``(a)``, regex constructs); those expansions still contain ``(`` / ``)``
+    and are not valid literal prefixes for the L2 deny matcher. Reject them
+    here so the loader treats them as unprojectable.
     """
-    return _expand_alternations(pattern) != []
+    expansions = _expand_alternations(pattern)
+    if not expansions:
+        return False
+    return not any("(" in e or ")" in e for e in expansions)
 
 
 # ---------------------------------------------------------------------------
