@@ -568,6 +568,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (one reviewer guardrail mentioning bigfoot is retained so PRs
   reintroducing the old name are flagged).
 
+### Added
+
+- **Narrowing-role subagents (security architecture Phase 5).** Nine
+  new agents in `agents/` define narrowed tool surfaces for common
+  development verbs: `implementer` for worktree edits, `web-researcher`
+  (requires Phase 8 devcontainer to be safe in production),
+  `git-committer` and `git-pusher` for split local/remote git, separate
+  `pr-creator`/`pr-merger` for `gh pr` operations, `jira-reader`/
+  `jira-mutator` for Atlassian MCP read vs. write, and `test-runner`
+  for scoped test invocations. Each agent's `tools:` frontmatter is a
+  *narrowing* list — `(parent_tools ∩ frontmatter_tools)` — and never
+  grants capabilities the parent does not already hold. Agents are
+  discovered via `$CLAUDE_CONFIG_DIR/agents/`; spellbook's installer
+  now creates per-config-dir symlinks back to `$SPELLBOOK_DIR/agents/`,
+  with idempotent install/uninstall that preserves user-authored agent
+  files. Schema-validation tests guard the canonical 5-section body
+  contract (`Purpose` / `Tools` / `Output Schema` / `Guardrails` /
+  `Constraints`) and SHA-256-snapshot the existing 7 agents to catch
+  unintended modification.
+
 ## [0.56.0] - 2026-04-30
 
 ### Added
