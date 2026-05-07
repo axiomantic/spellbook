@@ -305,6 +305,52 @@ def _write_transcript(path: Path, assistant_text: str) -> None:
 
 
 class TestStopHookHarvest:
+    @pytest.fixture(autouse=True)
+    def _isolate_stop_hook_state(self, tmp_path, monkeypatch):
+        """Isolate every Stop-hook test from real on-disk + worker-LLM state.
+
+        Two distinct sources of cross-run pollution previously made these
+        tests order-dependent:
+
+        1. ``STOP_HARVEST_CACHE_PATH`` resolves to
+           ``~/.local/spellbook/cache/last-stop-harvest.json`` at import time.
+           ``_handle_stop`` short-circuits when the transcript's text-sha
+           matches a cached entry. Tests that did not stub this path either
+           (a) wrote real entries into the user's cache or (b) had their
+           POST silently skipped if a prior run had cached the same
+           ``tmp_path/session.jsonl`` -> sha pair. Symptom: the test
+           assertion ``mock_http.calls == []`` succeeds when it should not.
+
+        2. ``feature_enabled("transcript_harvest")`` reads the user's real
+           ``spellbook.json`` via ``spellbook.worker_llm.config``. If a
+           future test (or a global env override) flips that flag on, the
+           hook takes the worker-LLM branch and never POSTs to
+           ``/api/memory/unconsolidated``.
+
+        Both stubs are applied autouse so every method on
+        ``TestStopHookHarvest`` is hermetic regardless of the order pytest
+        runs them in or what state earlier suites left behind.
+        """
+        # (1) Per-test cache file, never the real ~/.local path.
+        per_test_cache = tmp_path / "_stop_harvest_cache.json"
+        monkeypatch.setattr(
+            spellbook_hook, "STOP_HARVEST_CACHE_PATH", per_test_cache,
+        )
+        # (2) Force the worker-LLM gate to off so the regex path is taken,
+        #     regardless of the user's spellbook.json or any leaked
+        #     monkeypatch from another test module.
+        try:
+            from spellbook.worker_llm import config as _wl_config
+
+            monkeypatch.setattr(
+                _wl_config, "feature_enabled", lambda _name: False,
+            )
+        except Exception:
+            # If the worker-llm package is not importable in this
+            # environment, the hook's own try/except already degrades to
+            # the regex path; nothing more to stub.
+            pass
+
     def test_stop_hook_harvests_single_candidate(
         self, tmp_path, mock_http, mock_git_context, config_enabled,
     ):
