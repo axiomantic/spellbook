@@ -166,6 +166,12 @@ def check_tool_input(
     Returns:
         Dict with keys:
             safe: bool - True if no findings above LOW severity
+            verdict: str - "allow" | "ask" | "deny". "ask" iff every
+                non-LOW finding is a TIER-ASK; "deny" if any non-LOW
+                finding is not a TIER-ASK; "allow" if no non-LOW
+                findings. Callers that want the harness ``ask`` UX
+                (Claude Code's permission prompt) should branch on
+                this field; legacy callers can keep using ``safe``.
             findings: list[dict] - matched patterns
             tool_name: str - the tool name checked
     """
@@ -216,11 +222,35 @@ def check_tool_input(
                 check_patterns(text, INJECTION_RULES, security_mode)
             )
 
+    safe = all(f.get("severity") == "LOW" for f in findings)
     return {
-        "safe": all(f.get("severity") == "LOW" for f in findings),
+        "safe": safe,
+        "verdict": _compute_verdict(findings, safe=safe),
         "findings": findings,
         "tool_name": tool_name,
     }
+
+
+def _compute_verdict(findings: list[dict], *, safe: bool) -> str:
+    """Project ``findings`` to one of ``allow`` / ``ask`` / ``deny``.
+
+    - ``allow``: no non-LOW findings (the ``safe`` codepath).
+    - ``ask``: at least one non-LOW finding, AND every non-LOW finding
+      is a TIER-ASK (``rule_id`` starts with ``"TIER-ASK"``). This is
+      the harness ``permissionDecision: "ask"`` codepath — operator
+      can approve in-session.
+    - ``deny``: at least one non-LOW finding that is not a TIER-ASK
+      (TIER-DENY, CRITICAL bashlex/exfil/injection/secret-path, etc.).
+      Mixed TIER-ASK + non-ask findings resolve to ``deny`` — deny wins.
+    """
+    if safe:
+        return "allow"
+    non_low = [f for f in findings if f.get("severity") != "LOW"]
+    if non_low and all(
+        str(f.get("rule_id", "")).startswith("TIER-ASK") for f in non_low
+    ):
+        return "ask"
+    return "deny"
 
 
 def _check_read_path(tool_input: dict) -> list[dict]:
