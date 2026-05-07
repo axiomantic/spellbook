@@ -51,8 +51,8 @@ def _install_claude_code_aliases(spellbook_dir: Path, dry_run: bool = False) -> 
       ``scripts/spellbook-sandbox``).
     * :attr:`Platform.MACOS` -> documented noop. ``cco``'s ``sandbox-exec``
       profile is judged insufficient for L5 isolation per the Sec 9.3 audit
-      (see ``docs/security/audits/sec_9_3_result.md`` and the rationale
-      block in ``scripts/spellbook-sandbox``). macOS sessions rely on L4
+      (see the rationale block in ``scripts/spellbook-sandbox``, which
+      cites the canonical audit document). macOS sessions rely on L4
       (PreToolUse hooks, shipped) and L6 (devcontainer, WI-8 planned)
       instead. Logging announces the deferral; no filesystem writes.
     * :attr:`Platform.WINDOWS` -> :func:`install_aliases_windows` (Q-O stub

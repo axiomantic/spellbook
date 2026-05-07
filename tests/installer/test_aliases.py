@@ -688,6 +688,10 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
         "hooks install step did not run after aliases failure; "
         "the security-critical install path was skipped"
     )
+    assert "mcp_server" in components, (
+        "MCP server registration step did not run after aliases failure; "
+        "install() may have aborted early before the global MCP step"
+    )
     # The hooks result itself must reflect that hooks were actually
     # installed, not failed-by-association with the aliases failure.
     hook_results = [r for r in results if r.component == "hooks"]
