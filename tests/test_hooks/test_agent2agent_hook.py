@@ -28,9 +28,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
+import tripwire
 
 # Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
@@ -198,11 +198,17 @@ class TestAgent2AgentHook:
 # fast-feedback coverage.
 
 
-def _make_completed(stdout: str = "", returncode: int = 0):
-    """Build a fake CompletedProcess for subprocess.run mocks."""
-    return subprocess.CompletedProcess(
-        args=[], returncode=returncode, stdout=stdout, stderr="",
-    )
+def _stub_helper_tree(tmp_path: Path) -> Path:
+    """Create a fake helper script under tmp_path so the hook reaches subprocess."""
+    helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+    helper.parent.mkdir(parents=True)
+    helper.write_text("# stub\n", encoding="utf-8")
+    return helper
+
+
+def _expected_helper_argv(helper: Path, bound_name: str) -> list[str]:
+    """Mirror of the argv the hook constructs for the helper subprocess."""
+    return [sys.executable, str(helper), "notify", bound_name]
 
 
 class TestAgent2AgentHookFast:
@@ -249,71 +255,81 @@ class TestAgent2AgentHookFast:
     def test_subprocess_timeout_returns_none(self, tmp_path, monkeypatch):
         """Helper hang -> timeout caught, hook returns None silently."""
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        # Helper must exist for control flow to reach subprocess.run.
-        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
-        helper.parent.mkdir(parents=True)
-        helper.write_text("# stub\n", encoding="utf-8")
+        helper = _stub_helper_tree(tmp_path)
         monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
         bindings = tmp_path / ".bindings"
         bindings.mkdir()
         (bindings / "session-timeout").write_text("alice", encoding="utf-8")
 
-        def _raise_timeout(*_args, **_kwargs):
-            raise subprocess.TimeoutExpired(cmd="helper", timeout=3.0)
+        argv = _expected_helper_argv(helper, "alice")
+        tripwire.subprocess.mock_run(
+            command=argv,
+            raises=subprocess.TimeoutExpired(cmd=argv, timeout=3.0),
+        )
 
-        with patch.object(spellbook_hook.subprocess, "run", side_effect=_raise_timeout):
+        with tripwire:
             result = spellbook_hook._agent2agent_notify_for_prompt(
                 {"session_id": "session-timeout"}
             )
         assert result is None
+        tripwire.subprocess.assert_run(
+            command=argv, returncode=0, stdout="", stderr="",
+        )
 
     def test_helper_stdout_is_returned_verbatim(self, tmp_path, monkeypatch):
         """Helper succeeds with stdout -> stripped stdout is returned."""
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
-        helper.parent.mkdir(parents=True)
-        helper.write_text("# stub\n", encoding="utf-8")
+        helper = _stub_helper_tree(tmp_path)
         monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
         bindings = tmp_path / ".bindings"
         bindings.mkdir()
         (bindings / "session-ok").write_text("alice", encoding="utf-8")
 
+        argv = _expected_helper_argv(helper, "alice")
         fake_stdout = "[agent2agent] alice has 1 pending\n"
-        with patch.object(
-            spellbook_hook.subprocess,
-            "run",
-            return_value=_make_completed(stdout=fake_stdout),
-        ) as mock_run:
+        tripwire.subprocess.mock_run(
+            command=argv,
+            returncode=0,
+            stdout=fake_stdout,
+        )
+
+        with tripwire:
             result = spellbook_hook._agent2agent_notify_for_prompt(
                 {"session_id": "session-ok"}
             )
 
         assert result == "[agent2agent] alice has 1 pending"
-        # Must invoke the helper with `notify` (NEVER read/peek/check).
-        called_argv = mock_run.call_args.args[0]
-        assert called_argv[2] == "notify"
-        assert called_argv[3] == "alice"
+        # Drift guard: argv MUST invoke `notify` (never read/peek/check).
+        assert argv[2] == "notify"
+        assert argv[3] == "alice"
+        tripwire.subprocess.assert_run(
+            command=argv, returncode=0, stdout=fake_stdout, stderr="",
+        )
 
     def test_helper_empty_stdout_returns_none(self, tmp_path, monkeypatch):
         """Helper exits 0 but prints nothing -> hook returns None (silent)."""
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
-        helper.parent.mkdir(parents=True)
-        helper.write_text("# stub\n", encoding="utf-8")
+        helper = _stub_helper_tree(tmp_path)
         monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
         bindings = tmp_path / ".bindings"
         bindings.mkdir()
         (bindings / "session-silent").write_text("alice", encoding="utf-8")
 
-        with patch.object(
-            spellbook_hook.subprocess,
-            "run",
-            return_value=_make_completed(stdout="   \n"),
-        ):
+        argv = _expected_helper_argv(helper, "alice")
+        tripwire.subprocess.mock_run(
+            command=argv,
+            returncode=0,
+            stdout="   \n",
+        )
+
+        with tripwire:
             result = spellbook_hook._agent2agent_notify_for_prompt(
                 {"session_id": "session-silent"}
             )
         assert result is None
+        tripwire.subprocess.assert_run(
+            command=argv, returncode=0, stdout="   \n", stderr="",
+        )
 
 
 # ---------------------------------------------------------------------------
