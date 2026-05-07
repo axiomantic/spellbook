@@ -22,7 +22,7 @@
 #
 # macOS (sandbox-exec backend) -- INSUFFICIENT for L5 intent:
 #   L5 macOS is intentionally absent. macOS sessions rely on L4 (PreToolUse
-#   hooks + bashlex AST + secret-path denylist, shipped in WI-6d) and L6
+#   hooks + bashlex AST + secret-path denylist, shipped in WI-6a + WI-6d) and L6
 #   (devcontainer for untrusted-content sessions, planned in WI-8) instead
 #   of cco-based isolation. cco's macOS sandbox-exec profile audited
 #   2026-05-06 ((allow default) baseline, no (deny process-fork), no
