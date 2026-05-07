@@ -289,6 +289,12 @@ def test_dispatch_linux_calls_install_aliases(tmp_path, monkeypatch):
     monkeypatch.setattr(
         platform_mod, "install_aliases_windows", windows_recorder
     )
+    # Stub shutil.which so the cco-availability gate (F2) treats cco as
+    # present regardless of the test machine's PATH. Without this stub the
+    # test would skip install_aliases on machines lacking cco.
+    monkeypatch.setattr(
+        platform_mod.shutil, "which", lambda name: "/fake/path/to/cco"
+    )
 
     result = platform_mod._install_claude_code_aliases(
         spellbook_dir, dry_run=True
@@ -296,6 +302,64 @@ def test_dispatch_linux_calls_install_aliases(tmp_path, monkeypatch):
 
     assert calls == [(spellbook_dir, True)]
     assert result == expected_return
+
+
+@pytest.mark.posix_only
+def test_dispatch_linux_skips_install_aliases_when_cco_missing(
+    tmp_path, monkeypatch, caplog
+):
+    """LINUX without cco on PATH: dispatch helper noops and does NOT call install_aliases.
+
+    Without cco the rc-file alias would be broken (every ``claude`` invocation
+    would hit the SHA-pin error), so the dispatch helper must skip the install
+    and return a documented noop dict. install_aliases must not be called.
+    """
+    import logging
+
+    from installer.platforms import claude_code as platform_mod
+    from spellbook.core.compat import Platform
+
+    spellbook_dir = tmp_path / "spellbook"
+
+    def must_not_call(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases must not be called when cco is missing on LINUX; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    def must_not_call_windows(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases_windows must not be called on LINUX; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.LINUX)
+    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
+    monkeypatch.setattr(
+        platform_mod, "install_aliases_windows", must_not_call_windows
+    )
+    # Simulate cco absent.
+    monkeypatch.setattr(platform_mod.shutil, "which", lambda name: None)
+
+    with caplog.at_level(logging.INFO, logger=platform_mod.__name__):
+        result = platform_mod._install_claude_code_aliases(
+            spellbook_dir, dry_run=False
+        )
+
+    assert result == {
+        "installed": False,
+        "rc_path": None,
+        "aliases": [],
+        "skipped_reason": (
+            "cco not installed; install cco then re-run install.py"
+        ),
+    }
+    # Operator-facing log message names cco as the gating cause.
+    linux_records = [
+        r for r in caplog.records if r.name == platform_mod.__name__
+    ]
+    assert len(linux_records) == 1
+    assert "cco is not on PATH" in linux_records[0].getMessage()
 
 
 @pytest.mark.posix_only
@@ -412,9 +476,17 @@ def test_dispatch_windows_calls_install_aliases_windows(tmp_path, monkeypatch):
 def test_dispatch_unknown_platform_raises(tmp_path, monkeypatch):
     """Unknown platform: dispatch helper raises NotImplementedError.
 
-    A defensive guard for future Platform enum additions. Constructs a
-    sentinel object whose repr is stable and asserts the exception
-    message contains that repr.
+    Exercises the defensive ``else: raise`` fallback at the end of
+    ``_install_claude_code_aliases``. We pass a sentinel object whose
+    ``repr()`` is stable so the exception message is asserted exactly.
+
+    Limitation: this test asserts the current control-flow shape (``is``
+    checks against each known Platform enum followed by an explicit raise).
+    A future refactor that replaces the chain with ``match``/``case`` and a
+    ``case _:`` arm would still make the test pass even if the catchall's
+    error semantics changed in subtle ways. Treat the test as a contract on
+    "an unknown platform must raise NotImplementedError with this repr in
+    the message," not as a structural test of the dispatch implementation.
     """
     from installer.platforms import claude_code as platform_mod
 
@@ -446,3 +518,178 @@ def test_dispatch_unknown_platform_raises(tmp_path, monkeypatch):
     assert str(exc_info.value) == (
         "No alias install handler for platform: <FakePlatform.BSD>"
     )
+
+
+# ---------------------------------------------------------------------------
+# End-to-end wiring tests for ClaudeCodeInstaller.install()
+#
+# These tests pin the contract that ``install()`` actually invokes the
+# dispatch helper and that an exception inside the helper does NOT abort
+# the install -- specifically, hooks (security-critical) must still run.
+# Both tests construct a minimal mock spellbook dir and stub the dispatch
+# helper to keep the test isolated from the production rc-file write path.
+# ---------------------------------------------------------------------------
+
+
+def _make_minimal_spellbook_dir(tmp_path):
+    """Build a minimal spellbook directory tree the full installer can walk.
+
+    Mirrors ``tests/test_security/test_installer_hooks.py::_make_installer_spellbook_dir``
+    but inlined here so this test file remains self-contained.
+    """
+    spellbook = tmp_path / "spellbook"
+    spellbook.mkdir()
+    (spellbook / ".version").write_text("1.0.0")
+    mcp_dir = spellbook / "spellbook"
+    mcp_dir.mkdir()
+    (mcp_dir / "server.py").write_text("# stub")
+    (spellbook / "AGENTS.spellbook.md").write_text(
+        "# Spellbook Context\n\nTest content.\n"
+    )
+    (spellbook / "skills").mkdir()
+    (spellbook / "commands").mkdir()
+    hooks_dir = spellbook / "hooks"
+    hooks_dir.mkdir()
+    for name in (
+        "bash-gate.sh",
+        "spawn-guard.sh",
+        "state-sanitize.sh",
+        "audit-log.sh",
+        "canary-check.sh",
+    ):
+        (hooks_dir / name).write_text("#!/usr/bin/env bash\nexit 0\n")
+    return spellbook
+
+
+@pytest.mark.posix_only
+def test_install_invokes_dispatch_and_records_aliases_result(
+    tmp_path, monkeypatch
+):
+    """ClaudeCodeInstaller.install() actually calls _install_claude_code_aliases.
+
+    Behavioral wiring test: monkeypatch the dispatch helper to a recorder,
+    run ``install()``, and assert (a) the recorder was called exactly once
+    with the installer's ``spellbook_dir`` and ``dry_run`` values, and (b)
+    the returned ``results`` list contains an ``InstallResult`` with
+    ``component="aliases"`` and ``action="installed"``.
+
+    Without this test, a refactor that drops the dispatch call from
+    ``install()`` would still pass every existing dispatch-helper test in
+    isolation because the helper itself is unchanged.
+    """
+    from installer.platforms import claude_code as platform_mod
+    from installer.platforms.claude_code import ClaudeCodeInstaller
+
+    spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir(parents=True)
+
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(
+        "installer.platforms.claude_code.check_claude_cli_available",
+        lambda *a, **kw: False,
+    )
+    monkeypatch.setattr(
+        "installer.components.mcp.check_claude_cli_available",
+        lambda *a, **kw: False,
+    )
+
+    calls: list[tuple] = []
+
+    def recorder(sb_dir, dry_run=False):
+        calls.append((sb_dir, dry_run))
+        return {
+            "installed": True,
+            "rc_path": "/fake/.zshrc",
+            "aliases": ["claude"],
+            "skipped_reason": None,
+        }
+
+    monkeypatch.setattr(
+        platform_mod, "_install_claude_code_aliases", recorder
+    )
+
+    installer = ClaudeCodeInstaller(
+        spellbook_dir, config_dir, "1.0.0", dry_run=True
+    )
+    results = installer.install()
+
+    # The recorder must be called exactly once with forwarded args.
+    assert calls == [(spellbook_dir, True)], (
+        f"expected dispatch helper called once with ({spellbook_dir!r}, True); "
+        f"got calls={calls!r}"
+    )
+
+    # Exactly one aliases InstallResult must be present in the returned list.
+    alias_results = [r for r in results if r.component == "aliases"]
+    assert len(alias_results) == 1, (
+        f"expected exactly one aliases InstallResult; got {alias_results!r}"
+    )
+    assert alias_results[0].action == "installed"
+    assert alias_results[0].success is True
+    assert "/fake/.zshrc" in alias_results[0].message
+
+
+@pytest.mark.posix_only
+def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
+    """A dispatch-helper exception records a failed aliases result and continues.
+
+    Pins the F1 contract: an OSError (e.g. unwritable rc file) inside the
+    dispatch helper must NOT propagate to ``core.py`` and abort the install.
+    install() must (a) record an ``InstallResult`` with ``component="aliases"``,
+    ``success=False``, and the original error text in the message, and
+    (b) continue executing subsequent components -- specifically the
+    security-critical hooks install -- so they still produce results.
+    """
+    from installer.platforms import claude_code as platform_mod
+    from installer.platforms.claude_code import ClaudeCodeInstaller
+
+    spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
+    config_dir = tmp_path / ".claude"
+    config_dir.mkdir(parents=True)
+
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(
+        "installer.platforms.claude_code.check_claude_cli_available",
+        lambda *a, **kw: False,
+    )
+    monkeypatch.setattr(
+        "installer.components.mcp.check_claude_cli_available",
+        lambda *a, **kw: False,
+    )
+
+    def boom(sb_dir, dry_run=False):
+        raise OSError("Permission denied")
+
+    monkeypatch.setattr(
+        platform_mod, "_install_claude_code_aliases", boom
+    )
+
+    installer = ClaudeCodeInstaller(
+        spellbook_dir, config_dir, "1.0.0", dry_run=False
+    )
+    # install() must NOT raise; the exception must be caught and recorded.
+    results = installer.install()
+
+    # (a) failed aliases result is recorded with the original error text.
+    alias_results = [r for r in results if r.component == "aliases"]
+    assert len(alias_results) == 1
+    assert alias_results[0].success is False
+    assert alias_results[0].action == "failed"
+    assert "Permission denied" in alias_results[0].message
+
+    # (b) install did NOT abort early: subsequent components still ran.
+    components = {r.component for r in results}
+    assert "CLAUDE.md" in components, (
+        "CLAUDE.md update step did not run after aliases failure; "
+        "install() may have aborted early"
+    )
+    assert "hooks" in components, (
+        "hooks install step did not run after aliases failure; "
+        "the security-critical install path was skipped"
+    )
+    # The hooks result itself must reflect that hooks were actually
+    # installed, not failed-by-association with the aliases failure.
+    hook_results = [r for r in results if r.component == "hooks"]
+    assert len(hook_results) == 1
+    assert hook_results[0].success is True

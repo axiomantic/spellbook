@@ -3,6 +3,7 @@ Claude Code platform installer.
 """
 
 import logging
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
@@ -73,6 +74,29 @@ def _install_claude_code_aliases(spellbook_dir: Path, dry_run: bool = False) -> 
     """
     plat = get_platform()
     if plat is Platform.LINUX:
+        # Gate on cco availability: the LINUX rc-file shim points the
+        # ``claude`` alias at ``scripts/spellbook-sandbox``, which in turn
+        # invokes ``cco`` under the audited SHA pin. Writing the alias
+        # without cco on PATH produces a broken alias that aborts every
+        # ``claude`` invocation. Mirror the legacy ``install.py`` interactive
+        # path which only offers aliases when ``shutil.which("cco")`` is
+        # truthy.
+        if shutil.which("cco") is None:
+            logger.info(
+                "Claude Code L5 sandbox alias install (dry_run=%s) is "
+                "skipped: cco is not on PATH. Install cco from "
+                "https://github.com/nikvdp/cco and re-run install.py to "
+                "enable the sandbox shim.",
+                dry_run,
+            )
+            return {
+                "installed": False,
+                "rc_path": None,
+                "aliases": [],
+                "skipped_reason": (
+                    "cco not installed; install cco then re-run install.py"
+                ),
+            }
         return install_aliases(spellbook_dir, dry_run=dry_run)
     if plat is Platform.MACOS:
         logger.info(
@@ -429,32 +453,55 @@ class ClaudeCodeInstaller(PlatformInstaller):
         # in install.py is a separate opt-in path; this is the
         # platform-install-time path that runs unconditionally.
         self._step("Installing aliases")
-        alias_result = _install_claude_code_aliases(
-            self.spellbook_dir, dry_run=self.dry_run
-        )
-        if alias_result["installed"]:
+        # Wrap the dispatch in try/except so a failure inside install_aliases
+        # (e.g. OSError from a non-writable rc file) records a failed
+        # InstallResult and lets the rest of install() proceed. Without
+        # this, the unhandled exception propagates to core.py:~407, which
+        # records ONE platform-level failed result and aborts the
+        # remaining components -- including the security-critical hooks
+        # install. Modeled after install.py:1153-1154.
+        try:
+            alias_result = _install_claude_code_aliases(
+                self.spellbook_dir, dry_run=self.dry_run
+            )
+        except Exception as e:
             results.append(
                 InstallResult(
                     component="aliases",
                     platform=self.platform_id,
-                    success=True,
-                    action="installed",
-                    message=(
-                        f"aliases: {', '.join(alias_result['aliases'])} "
-                        f"-> {alias_result['rc_path']}"
-                    ),
+                    success=False,
+                    action="failed",
+                    message=f"aliases: {e}",
                 )
             )
         else:
-            results.append(
-                InstallResult(
-                    component="aliases",
-                    platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message=f"aliases: {alias_result['skipped_reason']}",
+            # All installed=False outcomes (Sec 9.3 macOS, Q-O Windows,
+            # missing cco, unknown shell from install_aliases) are reported
+            # as success=True, action="skipped". The message string
+            # distinguishes the cause for operators reading install logs.
+            if alias_result["installed"]:
+                results.append(
+                    InstallResult(
+                        component="aliases",
+                        platform=self.platform_id,
+                        success=True,
+                        action="installed",
+                        message=(
+                            f"aliases: {', '.join(alias_result['aliases'])} "
+                            f"-> {alias_result['rc_path']}"
+                        ),
+                    )
                 )
-            )
+            else:
+                results.append(
+                    InstallResult(
+                        component="aliases",
+                        platform=self.platform_id,
+                        success=True,
+                        action="skipped",
+                        message=f"aliases: {alias_result['skipped_reason']}",
+                    )
+                )
 
         # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")
