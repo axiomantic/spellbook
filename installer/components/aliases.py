@@ -6,8 +6,11 @@ launcher into the user's shell rc file. Uses demarcated sections for
 idempotent install/uninstall.
 """
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Demarcation markers for shell rc files (# comment style, matching
 # the pattern used by installer/platforms/codex.py for TOML files).
@@ -144,6 +147,49 @@ def install_aliases(
         "rc_path": str(rc_path),
         "aliases": ["claude", "opencode"],
         "skipped_reason": None,
+    }
+
+
+def install_aliases_windows(
+    spellbook_dir: Path, dry_run: bool = False
+) -> dict:
+    """Install Windows shell aliases for spellbook tools.
+
+    Stub for WI-7: Windows alias install + sandbox path is deferred to a
+    later work item (Q-O in the security architecture plan). cco does not
+    have a documented Windows backend and the spellbook-sandbox script is
+    POSIX-only, so there is no production-ready alias target for Windows.
+
+    Returns a noop result matching ``install_aliases()``'s return shape so
+    callers can dispatch on ``get_platform()`` without special-casing the
+    return type. Does not raise. Performs no filesystem writes regardless
+    of ``dry_run``.
+
+    Returns::
+
+        {
+            "installed": False,
+            "rc_path": None,
+            "aliases": [],
+            "skipped_reason": "windows_alias_install_pending",
+        }
+    """
+    # ``spellbook_dir`` and ``dry_run`` are accepted to mirror
+    # ``install_aliases()``'s signature so callers can dispatch on
+    # ``get_platform()`` without per-platform argument plumbing. They are
+    # intentionally unused while the Windows path is deferred to Q-O.
+    del spellbook_dir, dry_run
+
+    logger.info(
+        "Windows alias install is deferred to a later WI (Q-O); "
+        "see install README for status."
+    )
+
+    return {
+        "installed": False,
+        "rc_path": None,
+        "aliases": [],
+        "skipped_reason": "windows_alias_install_pending",
     }
 
 
