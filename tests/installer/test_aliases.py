@@ -2,8 +2,11 @@
 
 This file lives under ``tests/installer/`` because the sandbox script is
 the launch wrapper installed alongside the per-platform alias shims. The
-spellbook-sandbox script is POSIX-only (sh/bash); the marks below skip
-the entire module on Windows.
+spellbook-sandbox script is POSIX-only (sh/bash); tests that invoke the
+script as a subprocess or check POSIX file modes carry per-test
+``posix_only`` marks. The static-content parsing tests (SHA pin, audit
+citation, macOS rationale) read the script as text and run on all
+platforms.
 
 Acceptance criteria covered:
 
@@ -13,18 +16,20 @@ Acceptance criteria covered:
 * macOS L5 rationale: documented either in the script header or in a sibling
   ``scripts/spellbook-sandbox.md`` markdown file.
 * Help-flag smoke test: ``spellbook-sandbox --help`` (or its passthrough to
-  ``cco --help``) exits cleanly when invoked. Skipped if no help mode is
-  exposed without launching the sandbox itself, since this test is run in
-  unprivileged test environments without ``cco`` on PATH.
+  ``cco --help``) exits cleanly when invoked. The test branches on the
+  three documented exit conditions (success when cco is installed at the
+  pinned SHA, ``cco not found`` when cco is absent, ``cco SHA pin
+  mismatch`` when cco is installed at a non-pinned SHA).
+* Fail-closed gate: a fake ``cco`` shim that emits bad/empty/mismatched
+  ``--version`` output causes the SHA-pin gate to abort with exit 1.
 """
 
+import os
 import re
 import subprocess
 from pathlib import Path
 
 import pytest
-
-pytestmark = pytest.mark.posix_only
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SANDBOX_SCRIPT = REPO_ROOT / "scripts" / "spellbook-sandbox"
@@ -101,6 +106,7 @@ def test_spellbook_sandbox_macos_rationale_documented():
     )
 
 
+@pytest.mark.posix_only
 def test_spellbook_sandbox_is_executable():
     """File mode must preserve the executable bit; the script is invoked
     directly by users via PATH lookups installed by the alias shims.
@@ -113,14 +119,24 @@ def test_spellbook_sandbox_is_executable():
     assert bool(mode & stat.S_IXOTH) is True
 
 
+@pytest.mark.posix_only
 def test_spellbook_sandbox_help_runs_cleanly():
-    """``spellbook-sandbox --help`` exits cleanly OR is documented as not exposed.
+    """``spellbook-sandbox --help`` exits in one of three documented states.
 
     The script does not implement its own ``--help`` flag (it would forward
-    to ``cco --help``, which requires cco on PATH). In test environments
-    without cco installed, the script exits with the documented "cco not
-    found" error. Both outcomes are acceptable; we assert one of them
-    deterministically.
+    to ``cco --help``). Three exit paths are documented:
+
+    1. ``returncode == 0``: cco is installed at the pinned SHA and ``--help``
+       was forwarded successfully.
+    2. ``returncode == 1`` with ``"cco not found"`` in stderr: cco is absent
+       on PATH, the script aborts before the SHA gate.
+    3. ``returncode == 1`` with ``"cco SHA pin mismatch"`` in stderr: cco is
+       installed but at a non-pinned SHA (common on developer machines
+       running a different cco build); the script's audit gate aborts.
+
+    Any other exit state is a regression. Substring presence is the
+    legitimate assertion shape here: the substring IS the ground truth
+    that names the documented exit branch.
     """
     if not SANDBOX_SCRIPT.exists():
         pytest.skip(f"{SANDBOX_SCRIPT} missing")
@@ -132,15 +148,89 @@ def test_spellbook_sandbox_help_runs_cleanly():
         timeout=5,
     )
 
-    # The script either:
-    #   (a) finds cco and forwards --help, exiting 0, OR
-    #   (b) prints the documented "cco not found" message to stderr and
-    #       exits 1 (the explicit exit code in the script).
-    # Both are acceptable; assert exit code is in the documented set AND
-    # if it is 1, the stderr matches the script's documented message.
-    assert proc.returncode in {0, 1}
+    if proc.returncode == 0:
+        # Case 1: cco installed at pinned SHA, --help forwarded.
+        return
     if proc.returncode == 1:
-        assert proc.stderr == (
-            "spellbook-sandbox: cco not found on PATH. "
-            "Install from https://github.com/nikvdp/cco\n"
+        # Case 2 or 3: one of the two documented exit-1 conditions.
+        cco_absent = "cco not found" in proc.stderr
+        sha_mismatch = "cco SHA pin mismatch" in proc.stderr
+        assert cco_absent or sha_mismatch, (
+            "spellbook-sandbox exited 1 but stderr matched neither "
+            "documented condition (cco-absent or SHA-mismatch). "
+            f"stderr={proc.stderr!r}"
         )
+        return
+    pytest.fail(
+        f"spellbook-sandbox exited with undocumented returncode "
+        f"{proc.returncode}; expected 0 (success), 1 (cco-absent), or "
+        f"1 (SHA-mismatch). stderr={proc.stderr!r}"
+    )
+
+
+@pytest.mark.posix_only
+@pytest.mark.parametrize(
+    "shim_body, case_id",
+    [
+        ('#!/bin/sh\necho "garbage line"\n', "garbage_output"),
+        ("#!/bin/sh\nexit 0\n", "empty_output"),
+        ('#!/bin/sh\necho "cco abcdefg (homebrew)"\n', "wrong_sha"),
+    ],
+    ids=["garbage_output", "empty_output", "wrong_sha"],
+)
+def test_spellbook_sandbox_fail_closed_on_bad_cco_version(
+    tmp_path, shim_body, case_id
+):
+    """The SHA-pin gate fails closed when ``cco --version`` is bad/empty/wrong.
+
+    Drops a fake ``cco`` shim into a tmp dir, invokes spellbook-sandbox with
+    a clean PATH that points to that shim, and asserts the script aborts
+    with exit 1 and the documented SHA-mismatch message. The clean env
+    avoids inheriting the operator's PATH or SPELLBOOK_SANDBOX_SKIP_CCO_PIN
+    and isolates HOME to ``tmp_path``.
+
+    All three shim variants drive the gate to the same outcome:
+    ``cco_actual_sha != CCO_PINNED_SHA`` (either empty or "abcdefg"), so
+    the script must print "cco SHA pin mismatch" and exit 1.
+    """
+    if not SANDBOX_SCRIPT.exists():
+        pytest.skip(f"{SANDBOX_SCRIPT} missing")
+
+    shim = tmp_path / "cco"
+    shim.write_text(shim_body)
+    shim.chmod(0o755)
+
+    # Clean env: only the minimum needed to invoke a POSIX shell script.
+    # HOME points at tmp_path so the script does not touch the operator's
+    # ~/.local/spellbook or ~/.config/spellbook. No
+    # SPELLBOOK_SANDBOX_SKIP_CCO_PIN is set, so the gate is active.
+    env = {
+        "PATH": f"{tmp_path}:/usr/bin:/bin",
+        "HOME": str(tmp_path),
+        # Provide SPELLBOOK_DIR explicitly so the auto-detect block does not
+        # walk up from the script location and hit the real repo's
+        # pyproject.toml (which would still work, but we want to keep the
+        # script's environment fully under test control).
+        "SPELLBOOK_DIR": str(REPO_ROOT),
+    }
+    # Preserve TERM if present for shells that need it; this is purely
+    # cosmetic and does not affect the gate.
+    if "TERM" in os.environ:
+        env["TERM"] = os.environ["TERM"]
+
+    proc = subprocess.run(
+        [str(SANDBOX_SCRIPT), "--help"],
+        capture_output=True,
+        text=True,
+        timeout=5,
+        env=env,
+    )
+
+    assert proc.returncode == 1, (
+        f"[{case_id}] expected exit 1 from fail-closed gate, got "
+        f"{proc.returncode}. stderr={proc.stderr!r}"
+    )
+    assert "cco SHA pin mismatch" in proc.stderr, (
+        f"[{case_id}] expected 'cco SHA pin mismatch' in stderr; "
+        f"got stderr={proc.stderr!r}"
+    )

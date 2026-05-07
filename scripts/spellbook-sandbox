@@ -37,6 +37,8 @@
 # so a SHA mismatch is a deterministic signal that the user has updated
 # cco out from under the audit. Operators who wish to override the gate
 # can set SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1 (audited downgrade only).
+# Legitimate use: testing a candidate cco upgrade AFTER re-running the
+# Sec 9.3 audit. Not for routine override.
 #
 # Audit details:
 #   ~/.local/spellbook/docs/Users-eek-Development-spellbook/verifications/sec_9_3_result.md
@@ -63,6 +65,9 @@
 #   SPELLBOOK_SANDBOX_SKIP_CCO_PIN
 #                        If set to 1, skip the SHA pin verification. Use
 #                        only for audited downgrades; defeats the pin.
+#                        Legitimate use: testing a candidate cco upgrade
+#                        AFTER re-running the Sec 9.3 audit. Not for
+#                        routine override.
 #
 # See docs/security.md for details.
 
@@ -105,6 +110,7 @@ if [ "${SPELLBOOK_SANDBOX_SKIP_CCO_PIN:-0}" != "1" ]; then
         echo "  actual:   ${_cco_actual_sha:-<unknown>}" >&2
         echo "  Reinstall cco at the pinned SHA, or set" >&2
         echo "  SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1 to override (audited downgrade only)." >&2
+        echo "  See https://github.com/nikvdp/cco for install instructions." >&2
         exit 1
     fi
     unset _cco_version_line _cco_actual_sha
