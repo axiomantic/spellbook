@@ -1,6 +1,49 @@
 #!/bin/sh
-# spellbook-sandbox: launch Claude Code / OpenCode / Codex under nikvdp/cco
-# with $HOME reads hidden and only spellbook paths allowlisted.
+# ============================================================================
+# cco sandbox pin: SHA 9744b9f (commit date 2026-04-30)
+# ----------------------------------------------------------------------------
+# This script invokes Anthropic-targeted CLI tools (claude, opencode, codex,
+# forge) under nikvdp/cco at the pinned commit above. The pin was selected
+# after security review (Sec 9.3 audit, audit date 2026-05-06).
+#
+# Rationale: 9744b9f was the most recent nikvdp/cco master commit at the
+# time of the audit. The Linux bwrap profile shipped at this commit was
+# judged sufficient for the spellbook L5 sandbox tier under the protections
+# enumerated below. Pinning here freezes the audit surface; bumping this
+# pin requires a fresh audit and operator sign-off.
+#
+# Linux (bwrap backend) -- PASS:
+#   * --proc /proc kernel-managed in unshared PID namespace
+#     (/proc/self/root resolves to namespace root, NOT host root)
+#   * --cap-drop ALL (blocks CAP_SYS_ADMIN, CAP_DAC_OVERRIDE, CAP_SYS_CHROOT)
+#   * --die-with-parent (lifecycle bound to parent process)
+#   * seccomp BPF filter for TIOCSTI / TIOCLINUX (terminal injection)
+#   * --ro-bind / / with narrow write exceptions
+#
+# macOS (sandbox-exec backend) -- INSUFFICIENT for L5 intent:
+#   L5 macOS is intentionally absent. macOS sessions rely on L4 (PreToolUse
+#   hooks + bashlex AST + secret-path denylist, shipped in WI-6d) and L6
+#   (devcontainer for untrusted-content sessions, planned in WI-8) instead
+#   of cco-based isolation. cco's macOS sandbox-exec profile audited
+#   2026-05-06 ((allow default) baseline, no (deny process-fork), no
+#   (deny process-exec), no DYLD env var scrubbing, reads from
+#   user-writable dylib paths unrestricted) was judged insufficient for
+#   L5 architectural intent.
+#
+# Pinning mechanism: a constant CCO_PINNED_SHA is defined below and the
+# script aborts at startup if the cco found on PATH does not report a
+# matching short SHA via `cco --version`. cco upstream resolves --version
+# from `git rev-parse --short HEAD` of its install dir (~/.local/share/cco),
+# so a SHA mismatch is a deterministic signal that the user has updated
+# cco out from under the audit. Operators who wish to override the gate
+# can set SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1 (audited downgrade only).
+#
+# Audit details:
+#   ~/.local/spellbook/docs/Users-eek-Development-spellbook/verifications/sec_9_3_result.md
+# ============================================================================
+#
+# spellbook-sandbox: launch Claude Code / OpenCode / Codex / Forge under
+# nikvdp/cco with $HOME reads hidden and only spellbook paths allowlisted.
 #
 # Hook filesystem writes (error logs) are routed through the spellbook daemon
 # HTTP API, so the sandbox only needs read access to $SPELLBOOK_DIR and the
@@ -17,10 +60,17 @@
 #   SPELLBOOK_CONFIG_DIR Additional config directory to mount (optional).
 #                        ~/.local/spellbook and ~/.config/spellbook are
 #                        always mounted if they exist.
+#   SPELLBOOK_SANDBOX_SKIP_CCO_PIN
+#                        If set to 1, skip the SHA pin verification. Use
+#                        only for audited downgrades; defeats the pin.
 #
 # See docs/security.md for details.
 
 set -eu
+
+# Pinned cco short SHA (Sec 9.3 audit, 2026-05-06). Do NOT bump without
+# re-running the audit; the literal string is the audit anchor.
+CCO_PINNED_SHA="9744b9f"
 
 # --- Resolve SPELLBOOK_DIR ---
 if [ -z "${SPELLBOOK_DIR:-}" ]; then
@@ -38,6 +88,26 @@ fi
 if ! command -v cco >/dev/null 2>&1; then
     echo "spellbook-sandbox: cco not found on PATH. Install from https://github.com/nikvdp/cco" >&2
     exit 1
+fi
+
+# --- Verify cco SHA pin (Sec 9.3 audit gate) ---
+# cco --version emits a line like "cco <short-sha> (<install_type>)" where
+# <short-sha> comes from `git rev-parse --short HEAD` in cco's install dir.
+# We extract the second whitespace-separated token from the first output
+# line and compare to CCO_PINNED_SHA. A mismatch aborts the launch unless
+# the operator explicitly opts out via SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1.
+if [ "${SPELLBOOK_SANDBOX_SKIP_CCO_PIN:-0}" != "1" ]; then
+    _cco_version_line="$(cco --version 2>/dev/null | head -n 1 || true)"
+    _cco_actual_sha="$(printf '%s\n' "$_cco_version_line" | awk '{print $2}')"
+    if [ -z "$_cco_actual_sha" ] || [ "$_cco_actual_sha" != "$CCO_PINNED_SHA" ]; then
+        echo "spellbook-sandbox: cco SHA pin mismatch." >&2
+        echo "  expected: $CCO_PINNED_SHA (Sec 9.3 audit, 2026-05-06)" >&2
+        echo "  actual:   ${_cco_actual_sha:-<unknown>}" >&2
+        echo "  Reinstall cco at the pinned SHA, or set" >&2
+        echo "  SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1 to override (audited downgrade only)." >&2
+        exit 1
+    fi
+    unset _cco_version_line _cco_actual_sha
 fi
 
 # --safe: hide $HOME reads (only $PWD + allowlisted paths visible)
