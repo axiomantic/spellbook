@@ -5,7 +5,14 @@ name bound to the current Claude session id. It MUST NOT read or expose
 message bodies — wiring the helper's read/peek/check subcommands here
 would create a prompt-injection vector.
 
-Cases:
+This file has two test classes:
+
+* ``TestAgent2AgentHookFast`` — fast unit tests that import the hook
+  function directly and stub the helper subprocess. Run by default.
+* ``TestAgent2AgentHook`` — integration tests that spawn the real hook
+  + real helper as subprocesses. Marked ``integration``.
+
+Integration cases:
     1. Session bound, no pending messages       -> no [agent2agent] line
     2. Session bound, two pending messages      -> count=2 + senders, body absent
     3. Session not bound                        -> silent
@@ -16,14 +23,21 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
-pytestmark = pytest.mark.integration
+# Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
+HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
+if str(HOOKS_DIR) not in sys.path:
+    sys.path.insert(0, str(HOOKS_DIR))
+
+import spellbook_hook  # noqa: E402
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 UNIFIED_HOOK = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.py")
@@ -101,6 +115,7 @@ def _send(bus_dir: Path, sender: str, recipient: str, body: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 class TestAgent2AgentHook:
     def test_bound_no_messages_silent(self, tmp_path):
         """Session bound to alice, no pending messages -> no [agent2agent] line."""
@@ -171,3 +186,161 @@ class TestAgent2AgentHook:
         proc = _run_user_prompt_submit(bus, sid, spellbook_dir=str(empty))
         assert proc.returncode == 0
         assert "[agent2agent]" not in proc.stdout
+
+
+# ---------------------------------------------------------------------------
+# Fast unit tests for _agent2agent_notify_for_prompt
+# ---------------------------------------------------------------------------
+#
+# These tests import the hook function directly and stub the helper
+# subprocess via unittest.mock. They run in the default test suite
+# (no integration marker) so the hook's UserPromptSubmit path has
+# fast-feedback coverage.
+
+
+def _make_completed(stdout: str = "", returncode: int = 0):
+    """Build a fake CompletedProcess for subprocess.run mocks."""
+    return subprocess.CompletedProcess(
+        args=[], returncode=returncode, stdout=stdout, stderr="",
+    )
+
+
+class TestAgent2AgentHookFast:
+    def test_invalid_session_id_returns_none(self, tmp_path, monkeypatch):
+        """Empty / malformed session_id short-circuits before any IO."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        for sid in ("", "with space", "x" * 200):
+            assert spellbook_hook._agent2agent_notify_for_prompt({"session_id": sid}) is None
+
+    def test_no_binding_returns_none(self, tmp_path, monkeypatch):
+        """Valid session id but no binding file -> silent."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        result = spellbook_hook._agent2agent_notify_for_prompt(
+            {"session_id": "session-no-binding"}
+        )
+        assert result is None
+
+    def test_invalid_bound_name_returns_none(self, tmp_path, monkeypatch):
+        """Binding file present but content fails name regex -> silent."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        bindings = tmp_path / ".bindings"
+        bindings.mkdir()
+        (bindings / "session-bad-bound").write_text("../escape", encoding="utf-8")
+        result = spellbook_hook._agent2agent_notify_for_prompt(
+            {"session_id": "session-bad-bound"}
+        )
+        assert result is None
+
+    def test_helper_missing_returns_none(self, tmp_path, monkeypatch):
+        """SPELLBOOK_DIR points at an empty tree -> helper not found, silent."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        empty_repo = tmp_path / "empty-spellbook"
+        empty_repo.mkdir()
+        monkeypatch.setenv("SPELLBOOK_DIR", str(empty_repo))
+        bindings = tmp_path / ".bindings"
+        bindings.mkdir()
+        (bindings / "session-helper-missing").write_text("alice", encoding="utf-8")
+
+        result = spellbook_hook._agent2agent_notify_for_prompt(
+            {"session_id": "session-helper-missing"}
+        )
+        assert result is None
+
+    def test_subprocess_timeout_returns_none(self, tmp_path, monkeypatch):
+        """Helper hang -> timeout caught, hook returns None silently."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        # Helper must exist for control flow to reach subprocess.run.
+        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+        helper.parent.mkdir(parents=True)
+        helper.write_text("# stub\n", encoding="utf-8")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
+        bindings = tmp_path / ".bindings"
+        bindings.mkdir()
+        (bindings / "session-timeout").write_text("alice", encoding="utf-8")
+
+        def _raise_timeout(*_args, **_kwargs):
+            raise subprocess.TimeoutExpired(cmd="helper", timeout=3.0)
+
+        with patch.object(spellbook_hook.subprocess, "run", side_effect=_raise_timeout):
+            result = spellbook_hook._agent2agent_notify_for_prompt(
+                {"session_id": "session-timeout"}
+            )
+        assert result is None
+
+    def test_helper_stdout_is_returned_verbatim(self, tmp_path, monkeypatch):
+        """Helper succeeds with stdout -> stripped stdout is returned."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+        helper.parent.mkdir(parents=True)
+        helper.write_text("# stub\n", encoding="utf-8")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
+        bindings = tmp_path / ".bindings"
+        bindings.mkdir()
+        (bindings / "session-ok").write_text("alice", encoding="utf-8")
+
+        fake_stdout = "[agent2agent] alice has 1 pending\n"
+        with patch.object(
+            spellbook_hook.subprocess,
+            "run",
+            return_value=_make_completed(stdout=fake_stdout),
+        ) as mock_run:
+            result = spellbook_hook._agent2agent_notify_for_prompt(
+                {"session_id": "session-ok"}
+            )
+
+        assert result == "[agent2agent] alice has 1 pending"
+        # Must invoke the helper with `notify` (NEVER read/peek/check).
+        called_argv = mock_run.call_args.args[0]
+        assert called_argv[2] == "notify"
+        assert called_argv[3] == "alice"
+
+    def test_helper_empty_stdout_returns_none(self, tmp_path, monkeypatch):
+        """Helper exits 0 but prints nothing -> hook returns None (silent)."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        helper = tmp_path / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+        helper.parent.mkdir(parents=True)
+        helper.write_text("# stub\n", encoding="utf-8")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(tmp_path))
+        bindings = tmp_path / ".bindings"
+        bindings.mkdir()
+        (bindings / "session-silent").write_text("alice", encoding="utf-8")
+
+        with patch.object(
+            spellbook_hook.subprocess,
+            "run",
+            return_value=_make_completed(stdout="   \n"),
+        ):
+            result = spellbook_hook._agent2agent_notify_for_prompt(
+                {"session_id": "session-silent"}
+            )
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Drift guard: hook constants must mirror helper constants
+# ---------------------------------------------------------------------------
+
+
+def _load_helper_module():
+    """Import the helper script as a module without executing main()."""
+    import importlib.util
+    helper_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+    )
+    spec = importlib.util.spec_from_file_location("_a2a_helper", helper_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_hook_helper_constants_in_sync():
+    """The hook's name regex / session-id regex / default bus dir must
+    exactly mirror the helper's. If one side drifts, the hook silently
+    rejects names the helper accepts (or vice versa).
+    """
+    helper = _load_helper_module()
+    assert spellbook_hook._A2A_NAME_RE.pattern == helper._NAME_RE.pattern
+    assert spellbook_hook._A2A_SESSION_ID_RE.pattern == helper._SESSION_ID_RE.pattern
+    assert spellbook_hook._A2A_DEFAULT_BUS_DIR == helper.DEFAULT_BUS_DIR
