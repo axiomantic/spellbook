@@ -306,7 +306,6 @@ Load `enforcing-code-quality` skill for full standards and checklist.
 - Be direct and professional in documentation, README, and comments
 - Make every word count
 - No chummy or silly tone
-- Never use em-dashes in copy, comments, or messages
 
 ## Testing
 

@@ -69,5 +69,5 @@ When `spellbook_session_init` returns a `repairs` array, display each repair acc
 > Welcome to spellbook-enhanced Claude.
 >
 > Repairs needed:
-> - (currently none; list retained for future repair items)
+> - (warnings surfaced by `spellbook_session_init`; suggest each entry's `fix_command`)
 ``````````

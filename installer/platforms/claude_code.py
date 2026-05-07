@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING, List
 from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
-from ..components.permissions import install_permissions, uninstall_permissions
+from ..components.permissions import (
+    derive_managed_deny,
+    install_permissions,
+    uninstall_permissions,
+)
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -380,10 +384,15 @@ class ClaudeCodeInstaller(PlatformInstaller):
         )
 
         self._step("Installing permissions")
+        # WI-6b: derive L2 permissions.deny entries from tiers.toml T3 records.
+        # Each T3 record is projected through tier_record_to_deny_pattern;
+        # unprojectable records (regex classes, unknown tools) are warned and
+        # skipped without failing the install.
+        derived_deny = derive_managed_deny(self.spellbook_dir)
         permissions_result = install_permissions(
             settings_path=settings_path,
             allow=None,
-            deny=None,
+            deny=derived_deny,
             ask=None,
             spellbook_dir=self.spellbook_dir,
             dry_run=self.dry_run,

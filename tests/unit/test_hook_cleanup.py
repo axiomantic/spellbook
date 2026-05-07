@@ -36,8 +36,8 @@ class TestUnifiedHookExists:
     def test_spellbook_hook_ps1_exists(self):
         assert (HOOKS_DIR / "spellbook_hook.ps1").exists()
 
-    def test_gemini_policy_preserved(self):
-        assert (HOOKS_DIR / "gemini-policy.toml").exists()
+    def test_bash_policy_preserved(self):
+        assert (HOOKS_DIR / "bash-policy.toml").exists()
 
     def test_opencode_plugin_preserved(self):
         assert (HOOKS_DIR / "opencode-plugin.ts").exists()

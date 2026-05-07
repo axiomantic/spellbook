@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.62.0] - 2026-05-06
+
+### Added
+
+- **`permissions-from-transcripts` skill** (`skills/permissions-from-transcripts/SKILL.md`).
+  Re-runnable workflow that wraps the WI-2 YOLO transcript analyzer.
+  Backed by a shared library at `spellbook/gates/transcript_analyzer.py`
+  so the skill, the script, and any future caller share one classification
+  pipeline. The script `scripts/analyze_yolo_transcripts.py` is now a
+  thin CLI wrapper.
+- **bashlex AST parser** (`spellbook/gates/bash_parser.py`). Walks a
+  bashlex parse tree and emits deny findings for compound commands,
+  command substitution, dangerous redirects (e.g. `> /dev/tcp/...`,
+  `>> /etc/...`, `> /root/.ssh/authorized_keys`), env-prefix escapes
+  (`GIT_PAGER=...`, `GIT_EXTERNAL_DIFF=...`, `PAGER=...`), shell-out
+  flags (`find -exec`, `xargs sh -c`, `git -c core.pager=`,
+  `git -c alias.X=!`), direct shell invocation (`eval`, `sh -c`,
+  `bash -c`), and wrapper-stripping bypasses (`timeout`, `nohup`,
+  `npx`, `mise`, `docker run`). Unknown AST node types fail closed
+  with audit-log entries under `~/.local/spellbook/logs/audit.jsonl`.
+  Wired into the PreToolUse hook before the legacy regex layers.
+  Adds a `bashlex>=0.18` runtime dependency.
+- **Reversibility tier classifier and L2 permissions derivation**
+  (`spellbook/gates/tiers.py`, `spellbook/gates/tiers.toml`).
+  Maps each tool call to a reversibility tier (T0 silent / T1 loud /
+  T2 ask / T3 deny / T_UNCLASSIFIED) using a TOML-seeded record table.
+  The same tier projection produces an L2 deny list installed into
+  `settings.json` by the installer; the in-process gate is the runtime
+  mirror of that policy. Emits TIER-DENY (CRITICAL) and TIER-ASK
+  (HIGH) findings; T_UNCLASSIFIED falls through to the regex layer.
+  Initial seed covers 20 records spanning bash literals, alternation
+  expansions, MCP tool patterns, and capability tools.
+- **Read-tool secret-path denylist** (`spellbook/gates/secret_paths.py`).
+  Blocks reads of `~/.ssh/*`, `~/.aws/*`, `~/.config/op/*`, `~/.netrc`,
+  macOS browser credential stores, Windows %APPDATA%/1Password and
+  Chrome user data, plus basename globs `.env`, `.env.*`, `*.pem`,
+  `*.key`, `id_rsa[.*]`, `id_ed25519[.*]`. Resolves the file_path
+  through symlinks before matching so a symlink at a "safe" path that
+  points into `~/.ssh` is still denied.
+
+### Changed
+
+- **Bash policy unified across Claude and Gemini paths.** Renamed
+  `hooks/gemini-policy.toml` to `hooks/bash-policy.toml`. Added a TOML
+  loader to `spellbook/gates/rules.py` so the Claude path picks up the
+  supplemental SB-BASH-* rules previously only consumed by the Gemini
+  installer. Old filename is preserved as a migration alias for one
+  release. SB-BASH-001..009 ship as additional defense-in-depth findings
+  on top of the existing BASH-* / EXF-* regex set.
+- **PR dance command** (`commands/pr-dance.md`) now explicitly refuses
+  to merge under any session-level autonomy directive ("yolo", "do the
+  PR dance autonomously", "just land it", "go go go"). Autonomy scopes
+  commit / push / comment / re-request-review only. Tag-push and
+  branch deletion are also out of scope until explicitly requested.
+- **`crystallize-consolidate` documentation page** added under
+  `docs/commands/` (`scripts/generate_docs.py` output that had not been
+  committed). Stale skill and command doc pages regenerated in the
+  same pass.
+
+### Removed
+
+- **No-em-dashes prohibition rule.** Removed from `AGENTS.spellbook.md`
+  (and from the global `~/.claude/CLAUDE.md` outside the repo).
+  Descriptive references to em-dashes in writing guides and AI-tone
+  detection notes are preserved.
+
 ## [0.61.0] - 2026-05-06
 
 ### Added
