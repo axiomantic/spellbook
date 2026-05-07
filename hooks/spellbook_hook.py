@@ -2026,6 +2026,91 @@ def _wl_tool_safety_sniff(
         _log_hook_error("worker_llm_tool_safety", tool_name, e)
 
 
+# ---------------------------------------------------------------------------
+# agent2agent: surface inbox metadata for sessions bound via `listen <name>`
+# ---------------------------------------------------------------------------
+
+# Mirror of the helper's bus-dir resolution. Kept in sync with
+# skills/agent2agent/scripts/agent2agent.py.
+_A2A_DEFAULT_BUS_DIR = Path.home() / ".local" / "share" / "agent2agent"
+_A2A_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_A2A_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
+_A2A_NOTIFY_TIMEOUT_S = 3.0
+
+
+def _a2a_bus_dir() -> Path:
+    env = os.environ.get("AGENT2AGENT_DIR")
+    return Path(env) if env else _A2A_DEFAULT_BUS_DIR
+
+
+def _a2a_helper_path() -> Path:
+    """Resolve the agent2agent helper script.
+
+    Honors $SPELLBOOK_DIR (set in tests and most installs); otherwise falls
+    back to the source location relative to this hook file.
+    """
+    env = os.environ.get("SPELLBOOK_DIR")
+    if env:
+        return Path(env) / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+    # spellbook_hook.py lives at <repo>/hooks/spellbook_hook.py
+    return Path(__file__).resolve().parent.parent / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
+
+
+def _agent2agent_notify_for_prompt(data: dict) -> str | None:
+    """UserPromptSubmit handler: surface inbox metadata for the bound name.
+
+    SECURITY: this MUST only invoke the helper's ``notify`` subcommand,
+    which produces metadata-only output (count + sender names). Wiring
+    ``read``/``peek``/``check`` here would inject untrusted message bodies
+    into the session context — a prompt-injection vector.
+
+    Returns the helper's stdout (a one- or two-line ``[agent2agent] ...``
+    notice) when the bound name has pending mail, else None.
+    """
+    session_id = data.get("session_id", "") or ""
+    if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    bus = _a2a_bus_dir()
+    binding_path = bus / ".bindings" / session_id
+    try:
+        bound_name = binding_path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return None
+    except OSError:
+        return None
+    if not bound_name or not _A2A_NAME_RE.match(bound_name):
+        return None
+
+    helper = _a2a_helper_path()
+    if not helper.exists():
+        return None
+
+    helper_env = os.environ.copy()
+    # Pass the active session id so the helper can perform stale-binding
+    # cleanup (it falls back to $CLAUDE_CODE_SESSION_ID, which may not be
+    # propagated into the hook subprocess by every harness).
+    helper_env["CLAUDE_CODE_SESSION_ID"] = session_id
+    helper_env["AGENT2AGENT_DIR"] = str(bus)
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(helper), "notify", bound_name],
+            capture_output=True,
+            text=True,
+            timeout=_A2A_NOTIFY_TIMEOUT_S,
+            env=helper_env,
+        )
+    except subprocess.TimeoutExpired:
+        logger.debug("agent2agent notify timed out")
+        return None
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.debug("agent2agent notify failed: %s", e)
+        return None
+
+    out = (proc.stdout or "").strip()
+    return out if out else None
+
+
 def _handle_user_prompt_submit(data: dict) -> list[str]:
     """UserPromptSubmit handler: auto-inject memory context for prompts."""
     outputs: list[str] = []
@@ -2036,6 +2121,15 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
             outputs.append(out)
     except Exception as e:
         _log_hook_error("memory_recall_for_prompt", "UserPromptSubmit", e)
+
+    # agent2agent inbox metadata (only for sessions bound via `listen <name>`).
+    # Metadata-only by design: NEVER call read/peek/check from here.
+    try:
+        out = _agent2agent_notify_for_prompt(data)
+        if out:
+            outputs.append(out)
+    except Exception as e:
+        _log_hook_error("agent2agent_notify_for_prompt", "UserPromptSubmit", e)
 
     # Pattern-based self-capture (Gap 4). Non-blocking, fail-open.
     try:
