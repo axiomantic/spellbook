@@ -11,20 +11,18 @@ These tests verify the complete workflow integration:
 
 import json
 from contextlib import asynccontextmanager
-
-import tripwire
-
-import pytest
 from pathlib import Path
 
-pytestmark = pytest.mark.asyncio
-
+import pytest
+import tripwire
 from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from spellbook.db.base import ForgedBase
 import spellbook.db.forged_models  # noqa: F401 - ensure all models register with ForgedBase
+from spellbook.db.base import ForgedBase
+
+pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture

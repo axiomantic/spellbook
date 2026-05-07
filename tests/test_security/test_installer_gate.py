@@ -5,8 +5,6 @@ screens skills for security issues before installation, using shared rules
 from spellbook.gates.rules.
 """
 
-import pytest
-from pathlib import Path
 
 
 # ---------------------------------------------------------------------------

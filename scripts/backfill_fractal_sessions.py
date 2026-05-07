@@ -11,7 +11,6 @@ Usage:
 """
 
 import json
-import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -420,7 +419,7 @@ def main():
     nodes_with_synthesized = sum(1 for r in merged.values() if r["synthesized_at"])
     unmatched = len(target_node_ids) - len(merged)
 
-    print(f"\nBackfill summary:")
+    print("\nBackfill summary:")
     print(f"  session_id:     {nodes_with_session} nodes")
     print(f"  claimed_at:     {nodes_with_claimed} nodes")
     print(f"  answered_at:    {nodes_with_answered} nodes")
@@ -432,7 +431,7 @@ def main():
         for node_id in target_node_ids - set(merged.keys()):
             gid = nodes[node_id]["graph_id"]
             unmatched_by_graph.setdefault(gid, []).append(node_id)
-        print(f"\n  Unmatched by graph:")
+        print("\n  Unmatched by graph:")
         for gid, nids in sorted(unmatched_by_graph.items()):
             print(f"    {gid}: {len(nids)} nodes")
 

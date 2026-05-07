@@ -349,7 +349,7 @@ class TestClaudeCode:
         # at the real home. Instead, test using the installer directly.
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
-        cc_installer = ClaudeCodeInstaller(
+        ClaudeCodeInstaller(
             spellbook_dir=spellbook_dir,
             config_dir=config_dir,
             version="1.0.0",
@@ -404,7 +404,7 @@ class TestClaudeCode:
 
         installer = get_platform_installer("claude_code", spellbook_dir, "1.0.0")
         installer.config_dir = config_dir
-        results = installer.install()
+        installer.install()
 
         # Skills
         skills_dir = config_dir / "skills"
@@ -441,7 +441,7 @@ class TestOpenCode:
 
         installer = get_platform_installer("opencode", spellbook_dir, "1.0.0")
         installer.config_dir = config_dir
-        results = installer.install()
+        installer.install()
 
         # AGENTS.md should be created
         agents_md = config_dir / "AGENTS.md"
@@ -458,7 +458,7 @@ class TestOpenCode:
 
         installer = get_platform_installer("opencode", spellbook_dir, "1.0.0")
         installer.config_dir = config_dir
-        results = installer.install()
+        installer.install()
 
         opencode_json = config_dir / "opencode.json"
         assert opencode_json.exists(), "opencode.json should be created"
@@ -493,7 +493,7 @@ class TestCodex:
 
         installer = get_platform_installer("codex", spellbook_dir, "1.0.0")
         installer.config_dir = config_dir
-        results = installer.install()
+        installer.install()
 
         agents_md = config_dir / "AGENTS.md"
         assert agents_md.exists(), "AGENTS.md should be created for Codex"

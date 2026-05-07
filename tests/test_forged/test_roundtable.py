@@ -19,7 +19,6 @@ import pytest
 import json
 import tripwire
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine

@@ -8,13 +8,11 @@ Re-exported by installer.compat for backward compatibility.
 """
 
 import getpass
-import json
 import logging
 import os
 import platform
 import re
 import shlex
-import shutil
 import signal
 import subprocess
 import sys
@@ -25,7 +23,6 @@ from pathlib import Path
 from typing import Optional
 from xml.sax.saxutils import escape as xml_escape
 
-from spellbook.core.paths import get_config_dir, get_data_dir, get_log_dir
 
 logger = logging.getLogger(__name__)
 

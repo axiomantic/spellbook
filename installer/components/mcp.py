@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from installer.compat import Platform, get_platform, get_python_executable
+from installer.compat import Platform, get_platform
 from installer.components.source_link import get_source_link_path
 from installer.config import get_spellbook_config_dir
 

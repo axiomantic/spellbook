@@ -20,7 +20,6 @@ from spellbook.db.spellbook_models import (
     MemoryAuditLog,
     MemoryBranch,
     MemoryCitation,
-    MemoryLink,
     RawEvent,
 )
 from spellbook.memory.secrets import scan_for_secrets

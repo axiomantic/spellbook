@@ -3,7 +3,6 @@
 import io
 import json
 
-import pytest
 
 from spellbook.cli.formatting import output
 

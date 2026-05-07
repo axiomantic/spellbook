@@ -2,7 +2,6 @@
 
 from contextlib import asynccontextmanager
 
-import pytest
 
 
 class _MockResult:

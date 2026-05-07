@@ -367,19 +367,19 @@ class TestAllSkillsMinimumCompliance:
         # Property 1: YAML frontmatter (required for all skills)
         if not facts.has_yaml_frontmatter:
             failures.append(
-                f"has_yaml_frontmatter=False: Missing YAML frontmatter block (--- ... ---)"
+                "has_yaml_frontmatter=False: Missing YAML frontmatter block (--- ... ---)"
             )
 
         # Property 2: ROLE tag (required for all skills)
         if not facts.has_role_tag:
             failures.append(
-                f"has_role_tag=False: Missing <ROLE> tag for agent persona"
+                "has_role_tag=False: Missing <ROLE> tag for agent persona"
             )
 
         # Property 3: FORBIDDEN section (required for quality skills)
         if not facts.has_forbidden_section:
             failures.append(
-                f"has_forbidden_section=False: Missing <FORBIDDEN> tag or Anti-Patterns section"
+                "has_forbidden_section=False: Missing <FORBIDDEN> tag or Anti-Patterns section"
             )
 
         # Property 4: Invariant principles count (>= 3 for quality skills)
@@ -392,58 +392,58 @@ class TestAllSkillsMinimumCompliance:
         # Property 5: Description follows "Use when" pattern
         if not facts.description_follows_use_when_pattern:
             failures.append(
-                f"description_follows_use_when_pattern=False: "
-                f"Description should start with 'Use when' or similar trigger phrase"
+                "description_follows_use_when_pattern=False: "
+                "Description should start with 'Use when' or similar trigger phrase"
             )
 
         # Property 6: Analysis tag (recommended for structured thinking)
         if not facts.has_analysis_tag:
             warnings.append(
-                f"has_analysis_tag=False: Consider adding <analysis> tag for structured reasoning"
+                "has_analysis_tag=False: Consider adding <analysis> tag for structured reasoning"
             )
 
         # Property 7: Reflection tag (recommended for self-correction)
         if not facts.has_reflection_tag:
             warnings.append(
-                f"has_reflection_tag=False: Consider adding <reflection> tag for self-correction"
+                "has_reflection_tag=False: Consider adding <reflection> tag for self-correction"
             )
 
         # Property 8: Self-Check section (recommended for quality verification)
         if not facts.has_self_check_section:
             warnings.append(
-                f"has_self_check_section=False: Consider adding Self-Check section for verification"
+                "has_self_check_section=False: Consider adding Self-Check section for verification"
             )
 
         # Property 9: Inputs section (optional but recommended for complex skills)
         if not facts.has_inputs_section:
             warnings.append(
-                f"has_inputs_section=False: Consider adding Inputs section for clarity"
+                "has_inputs_section=False: Consider adding Inputs section for clarity"
             )
 
         # Property 10: Outputs section (optional but recommended for complex skills)
         if not facts.has_outputs_section:
             warnings.append(
-                f"has_outputs_section=False: Consider adding Outputs section for clarity"
+                "has_outputs_section=False: Consider adding Outputs section for clarity"
             )
 
         # Property 11: Positive emotional stimulus (recommended per EmotionPrompt research)
         if not facts.has_positive_emotional_stimulus:
             warnings.append(
-                f"has_positive_emotional_stimulus=False: Consider adding positive emotional framing "
-                f"(e.g., 'important to my career', 'ensure impeccable reasoning') per EmotionPrompt research"
+                "has_positive_emotional_stimulus=False: Consider adding positive emotional framing "
+                "(e.g., 'important to my career', 'ensure impeccable reasoning') per EmotionPrompt research"
             )
 
         # Property 12: Negative emotional stimulus (recommended per EmotionPrompt research)
         if not facts.has_negative_emotional_stimulus:
             warnings.append(
-                f"has_negative_emotional_stimulus=False: Consider adding consequence framing "
-                f"(e.g., 'errors will cause', 'negative impact') per EmotionPrompt research"
+                "has_negative_emotional_stimulus=False: Consider adding consequence framing "
+                "(e.g., 'errors will cause', 'negative impact') per EmotionPrompt research"
             )
 
         # Property 13: Example section (recommended for clarity)
         if not facts.has_example_section:
             warnings.append(
-                f"has_example_section=False: Consider adding <example> section for concrete guidance"
+                "has_example_section=False: Consider adding <example> section for concrete guidance"
             )
 
         # Property 14-15: Token budget with tolerance for LLM estimation variance.

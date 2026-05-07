@@ -10,16 +10,12 @@ Tests the actual Python code:
 """
 
 import json
-import os
-import platform
 import shlex
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import types
-from pathlib import Path
 
 import tripwire
 import pytest
@@ -30,7 +26,6 @@ class TestWorkPacketE2E:
 
     def test_full_work_packet_lifecycle(self, tmp_path):
         """Test creating, reading, and updating work packet artifacts."""
-        from spellbook.core.models import Manifest, Track, Checkpoint, CompletionMarker
         from spellbook.core.command_utils import atomic_write_json, read_json_safe
 
         # Step 1: Create manifest
@@ -409,7 +404,7 @@ class TestPreferencesE2E:
 
     def test_preferences_persistence(self, tmp_path, monkeypatch):
         """Test that preferences persist across calls."""
-        from spellbook.core.preferences import load_preferences, save_preference, get_preferences_path
+        from spellbook.core.preferences import load_preferences, save_preference
 
         # Monkeypatch the preferences path to use tmp_path
         prefs_path = tmp_path / "preferences.json"
@@ -429,7 +424,7 @@ class TestPreferencesE2E:
 
     def test_preferences_default_values(self, tmp_path, monkeypatch):
         """Test that missing preferences return defaults."""
-        from spellbook.core.preferences import load_preferences, get_preferences_path
+        from spellbook.core.preferences import load_preferences
 
         # Monkeypatch the preferences path to use non-existent file
         prefs_path = tmp_path / "nonexistent.json"
@@ -447,7 +442,7 @@ class TestMetricsE2E:
 
     def test_metrics_logging(self, tmp_path, monkeypatch):
         """Test that metrics are logged correctly."""
-        from spellbook.health.metrics import log_feature_metrics, get_project_encoded
+        from spellbook.health.metrics import log_feature_metrics
 
         # Monkeypatch Path.home() to use tmp_path
         monkeypatch.setattr('pathlib.Path.home', lambda: tmp_path)

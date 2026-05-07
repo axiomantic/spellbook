@@ -2,7 +2,6 @@
 
 import json
 
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +23,6 @@ def _write_config(path, data):
 class TestConfigIsExplicitlySet:
     def test_key_present(self, tmp_path, monkeypatch):
         """Returns True when the key exists in the flat JSON file."""
-        from spellbook.core.compat import get_config_dir
 
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()

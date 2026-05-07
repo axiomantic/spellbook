@@ -7,7 +7,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pytest
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 HOOK_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.py")
@@ -314,7 +313,7 @@ class TestPostToolUseMemoryInject:
         )
 
         try:
-            outputs = spellbook_hook._handle_post_tool_use("Read", {
+            spellbook_hook._handle_post_tool_use("Read", {
                 "tool_input": {"file_path": "/some/file.py"},
                 "tool_result": "file contents here",
                 "cwd": "/tmp/test-project",

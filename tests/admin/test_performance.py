@@ -9,7 +9,6 @@ These tests verify response time budgets from the design doc:
 Marked with @pytest.mark.slow so they can be skipped during rapid iteration.
 """
 
-import asyncio
 import time
 from types import SimpleNamespace
 

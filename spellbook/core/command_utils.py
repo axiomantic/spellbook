@@ -4,9 +4,8 @@ import os
 import json
 import platform
 import time
-import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import List
 
 # Windows-transient-error retry budget for ``os.replace``.
 #
@@ -124,7 +123,7 @@ def read_json_safe(path: str) -> dict:
             time.sleep(0.1)
     raise ValueError(f"Could not read valid JSON from {path}")
 
-from spellbook.sdk.unified import get_agent_client, AgentOptions
+from spellbook.sdk.unified import AgentOptions, get_agent_client  # noqa: E402  (avoid circular import at top)
 
 def invoke_skill(skill_name: str, context: dict = None) -> dict:
     """
@@ -161,7 +160,6 @@ def invoke_skill(skill_name: str, context: dict = None) -> dict:
 def parse_packet_file(packet_file: Path) -> dict:
     """Parse packet markdown file with YAML frontmatter."""
     import yaml
-    import re
 
     content = packet_file.read_text(encoding="utf-8")
 

@@ -6,7 +6,6 @@ Verifies that all public exports from spellbook.core.db exist in spellbook.core.
 import inspect
 import sqlite3
 
-import pytest
 
 
 class TestCoreDbImports:

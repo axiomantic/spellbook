@@ -1,11 +1,9 @@
 """Tests for sessions API routes."""
 
 import json
-import os
 import tempfile
 from pathlib import Path
 
-import pytest
 
 
 def _write_session_file(project_dir: Path, session_id: str, messages: list[dict]) -> Path:
@@ -134,7 +132,7 @@ class TestSessionList:
 
     def test_list_sessions_empty_when_no_projects(self, client, monkeypatch):
         with tempfile.TemporaryDirectory() as tmpdir:
-            claude_projects = _setup_projects_dir(tmpdir)
+            _setup_projects_dir(tmpdir)
 
             monkeypatch.setattr(
                 "spellbook.admin.routes.sessions.Path.home",

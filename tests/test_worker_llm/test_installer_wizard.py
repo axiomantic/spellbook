@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
-import httpx
 import pytest
 
 
@@ -65,7 +64,6 @@ def stub_probe(monkeypatch):
     Returns a callable ``install(endpoints: list[DetectedEndpoint]) -> None``
     so each test scopes its own probe result.
     """
-    import asyncio
 
     from spellbook.worker_llm import probe as _probe_mod
 

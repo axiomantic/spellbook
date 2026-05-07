@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Platform detection (canonical source: spellbook.core.services)
 # ---------------------------------------------------------------------------
 
-from spellbook.core.services import (
+from spellbook.core.services import (  # noqa: E402,F401  (re-exports after logger setup)
     LockHeldError,
     Platform,
     UnsupportedPlatformError,
@@ -457,7 +457,7 @@ class CrossPlatformLock:
 
 # Re-export ServiceConfig and ServiceManager from spellbook.core.services so
 # existing installer.compat consumers keep working.
-from spellbook.core.services import ServiceConfig, ServiceManager  # noqa: E402,F811
+from spellbook.core.services import ServiceConfig, ServiceManager  # noqa: E402,F401,F811
 
 
 def _get_daemon_python_for_config() -> Optional[str]:
@@ -553,6 +553,6 @@ def get_python_executable() -> str:
 # Re-export path helpers from spellbook.core.paths (canonical source).
 # installer.compat consumers (including installer/ modules) can continue
 # importing get_data_dir, get_log_dir, get_config_dir from here.
-from spellbook.core.paths import get_config_dir, get_data_dir, get_log_dir
+from spellbook.core.paths import get_config_dir, get_data_dir, get_log_dir  # noqa: E402,F401
 
 

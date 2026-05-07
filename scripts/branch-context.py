@@ -5,11 +5,9 @@ Cross-platform implementation of branch-context.sh.
 """
 
 import json
-import os
 import subprocess
 import sys
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List
 
 
 def run_git(args: List[str]) -> str:

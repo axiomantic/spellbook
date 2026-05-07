@@ -4,7 +4,6 @@ Verifies that register_all_tools() results in the expected number of
 registered tools (targeting 101 from the original monolith).
 """
 
-import pytest
 
 
 def _get_tool_names(mcp_instance):

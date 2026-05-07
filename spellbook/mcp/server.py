@@ -4,7 +4,6 @@ Creates the FastMCP instance, registers tools, manages lifecycle (startup/shutdo
 and builds HTTP transport configuration. Replaces the 3,945-line monolith.
 """
 
-import asyncio
 import atexit
 import functools
 import logging

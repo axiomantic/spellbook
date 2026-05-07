@@ -1,6 +1,5 @@
 """Tests for workflow pattern detection."""
 
-import pytest
 
 
 def test_extract_workflow_default_sequential():

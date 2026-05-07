@@ -63,7 +63,7 @@ class TestSearchRun:
 
     def test_search_no_db_returns_empty(self, tmp_path, monkeypatch, capsys):
         """Search with nonexistent DB returns empty gracefully."""
-        fake_db = str(tmp_path / "nonexistent.db")
+        str(tmp_path / "nonexistent.db")
         monkeypatch.setattr(
             "spellbook.cli.commands.memory.get_db_path",
             lambda: tmp_path / "nonexistent.db",

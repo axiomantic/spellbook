@@ -8,7 +8,7 @@ owns the diff-to-symbol mapping using regex-based heuristics.
 import os
 import re
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

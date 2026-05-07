@@ -1,6 +1,5 @@
 """Tests for todo extraction from session transcript."""
 
-import pytest
 
 
 def test_extract_todos_from_tool_calls():

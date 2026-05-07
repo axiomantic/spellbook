@@ -1,7 +1,6 @@
 """Integration tests for Codex installer with skill symlinks."""
 
 import pytest
-from pathlib import Path
 
 
 @pytest.fixture

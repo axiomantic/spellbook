@@ -21,14 +21,8 @@ from __future__ import annotations
 import datetime
 import os
 
-import httpx
 import pytest
 
-from spellbook.memory.models import (
-    MemoryFile,
-    MemoryFrontmatter,
-    MemoryResult,
-)
 
 
 def _fake_qmd_hit(path: str, score: float, snippet: str = ""):

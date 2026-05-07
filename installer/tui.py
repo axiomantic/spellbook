@@ -17,10 +17,10 @@ except ImportError:
     tty = None  # type: ignore[assignment]
     termios = None  # type: ignore[assignment]
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, platform_exists
-from .ui import Colors, color, supports_color
+from .ui import Colors, color
 
 
 # ---------------------------------------------------------------------------
@@ -316,7 +316,6 @@ def render_completion_summary(
         elapsed_seconds: Total elapsed time in seconds.
     """
     from rich.panel import Panel
-    from rich.text import Text
 
     if platforms_failed is None:
         platforms_failed = []

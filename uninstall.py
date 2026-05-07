@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from installer.config import PLATFORM_CONFIG
 from installer.core import Uninstaller
-from installer.ui import print_header, print_warning, print_uninstall_report
+from installer.ui import print_warning, print_uninstall_report
 
 
 def main() -> int:

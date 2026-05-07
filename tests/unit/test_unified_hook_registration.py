@@ -3,13 +3,12 @@
 import sys
 from pathlib import Path
 
-import pytest
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from installer.components.hooks import HOOK_DEFINITIONS
+from installer.components.hooks import HOOK_DEFINITIONS  # noqa: E402  (sys.path mangling above)
 
 
 def _extract_commands_from_phase(phase_name: str) -> list[str]:

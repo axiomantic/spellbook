@@ -7,24 +7,22 @@ and monitoring tools that need HTTP access without full MCP protocol.
 import asyncio
 import logging
 import time
-
-logger = logging.getLogger(__name__)
-
 from pathlib import Path
+
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from spellbook.mcp import state as _state
-from spellbook.mcp.server import mcp
-from spellbook.core.db import get_db_path
-from spellbook.memory.tools import (
-    do_log_event,
-    _get_memory_dir,
-)
-from spellbook.memory.filestore import recall_memories as _filestore_recall
-from spellbook.memory.store import log_raw_event, mark_events_consolidated
-from spellbook.memory.consolidation import should_consolidate, consolidate_batch
-from spellbook.core.path_utils import get_spellbook_config_dir
+logger = logging.getLogger(__name__)
+
+# Project imports must follow logger setup so they pick up the configured logger.
+from spellbook.core.db import get_db_path  # noqa: E402
+from spellbook.core.path_utils import get_spellbook_config_dir  # noqa: E402
+from spellbook.mcp import state as _state  # noqa: E402
+from spellbook.mcp.server import mcp  # noqa: E402
+from spellbook.memory.consolidation import consolidate_batch, should_consolidate  # noqa: E402
+from spellbook.memory.filestore import recall_memories as _filestore_recall  # noqa: E402
+from spellbook.memory.store import log_raw_event, mark_events_consolidated  # noqa: E402
+from spellbook.memory.tools import _get_memory_dir, do_log_event  # noqa: E402
 
 
 def _get_version() -> str:
@@ -207,7 +205,7 @@ async def api_memory_bridge_content(request: Request) -> JSONResponse:
     file_path = str(body.get("file_path", ""))
     filename = str(body.get("filename", ""))
     content = str(body["content"])
-    is_primary = bool(body.get("is_primary", False))
+    bool(body.get("is_primary", False))
     branch = str(body.get("branch", ""))[:200]
 
     db_path = str(get_db_path())

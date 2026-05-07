@@ -235,7 +235,6 @@ class GeminiInstaller(PlatformInstaller):
 
         Returns: (created_count, error_count)
         """
-        import os
 
         extension_skills = self.extension_dir / "skills"
         source_skills = self.spellbook_dir / "skills"

@@ -3,7 +3,6 @@
 import sqlite3
 import subprocess
 
-import pytest
 
 
 class TestHealthStatusEnum:
@@ -508,8 +507,6 @@ class TestWatcherCheck:
 
         # Mock _get_heartbeat_age to succeed but make details construction fail
         # We need an exception in the second try block (after heartbeat_age is fetched)
-        call_count = [0]
-        original_get = health_module._get_heartbeat_age
 
         def mock_get_heartbeat_age(db_path):
             return 5.0  # Return a valid age
@@ -1032,7 +1029,7 @@ class TestRunHealthCheck:
 
     def test_run_health_check_full_mode(self, tmp_path, monkeypatch):
         """Full mode checks all 6 domains."""
-        from spellbook.health.checker import run_health_check, HealthStatus
+        from spellbook.health.checker import run_health_check
         from spellbook.core.db import init_db
         import subprocess
 

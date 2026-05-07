@@ -26,7 +26,6 @@ def fake_paths(tmp_path, monkeypatch):
 
     # Point installer.config + source_link at the sandbox.
     import installer.config as config_mod
-    import installer.components.source_link as source_link_mod
     monkeypatch.setattr(config_mod, "get_spellbook_config_dir", lambda: cfg)
     # source_link now resolves via installer.config at call time, patched above
 

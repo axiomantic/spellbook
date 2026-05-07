@@ -7,11 +7,11 @@ spellbook.core.db as part of the three-layer architecture reorganization.
 import logging
 import os
 import sqlite3
-import time
 import threading
+import time
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
-from pathlib import Path
 
 
 

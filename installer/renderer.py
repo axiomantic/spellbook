@@ -543,7 +543,7 @@ class RichRenderer(InstallerRenderer):
         try:
             from rich.panel import Panel
             console = self._get_console()
-            heading = f"[bold red]Error[/bold red]"
+            heading = "[bold red]Error[/bold red]"
             if context:
                 heading = f"[bold red]Error during {context}[/bold red]"
             body = f"{heading}\n{error}"

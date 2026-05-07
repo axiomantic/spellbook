@@ -12,7 +12,6 @@ import tomllib
 from pathlib import Path
 
 import tripwire
-import pytest
 from dirty_equals import IsInstance
 
 
@@ -272,7 +271,7 @@ class TestGeminiInstallerIntegration:
         config_dir.mkdir(parents=True)
 
         # Create the extension dir so the installer doesn't bail early
-        ext_dir = spellbook_dir / "extensions" / "gemini"
+        spellbook_dir / "extensions" / "gemini"
 
         cli_mock = tripwire.mock("installer.platforms.gemini:check_gemini_cli_available")
         cli_mock.returns(True)

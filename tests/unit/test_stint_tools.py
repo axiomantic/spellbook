@@ -1,9 +1,7 @@
 """Unit tests for Zeigarnik stint stack MCP tools."""
 
 import json
-import os
 import sqlite3
-import tempfile
 from datetime import datetime, timezone
 
 import pytest
@@ -16,7 +14,7 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from spellbook.core.db import init_db, get_connection, close_all_connections
+from spellbook.core.db import close_all_connections, get_connection, init_db  # noqa: E402  (sys.path mangling above)
 
 
 @pytest.fixture(autouse=True)
@@ -115,14 +113,14 @@ class TestStintDatabaseSchema:
             assert cursor.fetchone() is not None, f"{index_name} index not created"
 
 
-from spellbook.coordination.stint import (
-    push_stint,
-    pop_stint,
-    check_stint,
-    replace_stint,
-    classify_correction,
+from spellbook.coordination.stint import (  # noqa: E402  (deferred until after schema tests)
     _is_ordered_subsequence,
     _validate_stint_entry,
+    check_stint,
+    classify_correction,
+    pop_stint,
+    push_stint,
+    replace_stint,
 )
 
 
@@ -1033,7 +1031,7 @@ class TestValidateStintEntry:
         assert len(entry["purpose"]) == 500
 
 
-import threading
+import threading  # noqa: E402  (kept here as a marker for the concurrency test block below)
 
 
 class TestConcurrentStintOperations:

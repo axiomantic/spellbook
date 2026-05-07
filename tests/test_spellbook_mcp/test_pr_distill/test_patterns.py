@@ -1,6 +1,5 @@
 """Tests for pr_distill pattern definitions."""
 
-import re
 from spellbook.pr_distill.patterns import (
     BUILTIN_PATTERNS,
     ALWAYS_REVIEW_PATTERNS,
@@ -8,7 +7,6 @@ from spellbook.pr_distill.patterns import (
     MEDIUM_CONFIDENCE_PATTERNS,
     get_pattern_by_id,
     get_all_pattern_ids,
-    Pattern,
 )
 
 

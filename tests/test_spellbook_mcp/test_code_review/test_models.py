@@ -1,7 +1,5 @@
 """Tests for code_review data models."""
 
-import pytest
-from enum import Enum
 
 from spellbook.code_review.models import (
     Severity,

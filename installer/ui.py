@@ -3,7 +3,6 @@ Terminal output formatting for spellbook installer.
 """
 
 import itertools
-import os
 import sys
 import threading
 import time
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
 
 from .config import (
     PLATFORM_CONFIG,
-    SPELLBOOK_DEFAULT_CONFIG_DIR,
     get_spellbook_config_dir,
 )
 
@@ -284,7 +282,7 @@ def print_report(session: "InstallSession", show_details: bool = True, timer: "I
     if elapsed:
         print(f"\n  Done in {elapsed}")
     else:
-        print(f"\n  Done.")
+        print("\n  Done.")
     print()
 
 

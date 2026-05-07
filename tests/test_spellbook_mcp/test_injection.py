@@ -1,6 +1,5 @@
 """Tests for MCP tool injection decorator."""
 
-import pytest
 import json
 
 

@@ -184,7 +184,7 @@ class TestInstallHooks:
 
     def test_creates_settings_file_if_missing(self, tmp_path):
         """When settings.local.json does not exist, it should be created."""
-        spellbook_dir = _make_spellbook_dir(tmp_path)
+        _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -847,7 +847,7 @@ class TestClaudeCodeInstallerHookIntegration:
         )
 
         installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-        results = installer.install()
+        installer.install()
 
         settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
@@ -883,7 +883,7 @@ class TestClaudeCodeInstallerHookIntegration:
 
         installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
         installer.install()
-        results = installer.uninstall()
+        installer.uninstall()
 
         # Hooks should be removed from both phases
         settings_path = config_dir / "settings.json"

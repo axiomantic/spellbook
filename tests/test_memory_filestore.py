@@ -11,14 +11,10 @@ TDD RED phase: all tests written before implementation.
 import datetime
 import hashlib
 import json
-import math
 import os
 from pathlib import Path
-import threading
-import time
 
 import pytest
-import yaml
 
 from tests._memory_marker import requires_memory_tools
 
@@ -297,7 +293,7 @@ User prefers single PRs.
         # Write initial content
         write_memory_file(str(p), fm, "initial content")
         assert p.exists()
-        initial = p.read_text()
+        p.read_text()
 
         # Overwrite -- if atomic, either old or new content, never partial
         write_memory_file(str(p), fm, "updated content")
@@ -1354,13 +1350,7 @@ class TestRecallOverfetchWithScope:
     def test_recall_overfetches_when_tags_filter_active(self, tmp_path, monkeypatch):
         """`search_qmd.search_memories` post-filters on tags, so
         recall_memories must over-fetch when a caller passes tags too."""
-        import datetime as _dt
         import spellbook.memory.filestore as _fs
-        from spellbook.memory.models import (
-            MemoryFile,
-            MemoryFrontmatter,
-            MemoryResult,
-        )
 
         captured_limits: list[int] = []
 

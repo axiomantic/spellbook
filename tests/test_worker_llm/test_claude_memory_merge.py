@@ -13,16 +13,10 @@ post-rerank without double-counting.
 from __future__ import annotations
 
 import datetime
-import os
 from pathlib import Path
 
 import pytest
 
-from spellbook.memory.models import (
-    MemoryFile,
-    MemoryFrontmatter,
-    MemoryResult,
-)
 
 
 def _fake_qmd_hit(path: str, score: float, snippet: str = ""):

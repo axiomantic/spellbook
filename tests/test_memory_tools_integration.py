@@ -8,10 +8,8 @@ TDD RED phase: all tests written before implementation.
 
 import datetime
 import hashlib
-import json
 import os
 
-import pytest
 import yaml
 
 from tests._memory_marker import requires_memory_tools
@@ -90,7 +88,7 @@ class TestDoMemoryStore:
     """Test do_memory_store creates markdown files via filestore."""
 
     def test_store_creates_file(self, tmp_path, monkeypatch):
-        from spellbook.memory.tools import do_memory_store, _get_memory_dir
+        from spellbook.memory.tools import do_memory_store
 
         memory_dir = str(tmp_path / "memories")
         monkeypatch.setattr(

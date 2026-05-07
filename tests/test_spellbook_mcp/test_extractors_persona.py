@@ -1,6 +1,5 @@
 """Tests for persona extraction."""
 
-import pytest
 
 
 def test_extract_persona_fun_mode():

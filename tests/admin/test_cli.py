@@ -1,5 +1,6 @@
 """CLI command tests for spellbook admin open."""
 
+import re
 import urllib.error
 
 import tripwire

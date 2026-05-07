@@ -4,7 +4,6 @@ Tests token generation, file management, and ASGI middleware for
 authenticating HTTP requests to the MCP server.
 """
 
-import os
 import stat
 import sys
 import pytest

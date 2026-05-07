@@ -11,8 +11,6 @@ import datetime
 import hashlib
 import os
 
-import pytest
-import yaml
 
 from spellbook.memory.diff_symbols import SymbolChange
 from spellbook.memory.frontmatter import write_memory_file

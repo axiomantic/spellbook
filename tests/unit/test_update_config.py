@@ -6,7 +6,6 @@ import threading
 import tripwire
 import pytest
 from dirty_equals import IsInstance
-from pathlib import Path
 
 try:
     import fcntl
@@ -19,7 +18,7 @@ class TestConfigFileLocking:
 
     def test_config_set_creates_lock_file(self, tmp_path, monkeypatch):
         """config_set should use CrossPlatformLock during writes."""
-        from spellbook.core.config import config_set, get_config_path
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -46,7 +45,7 @@ class TestConfigFileLocking:
 
     def test_concurrent_config_writes_no_data_loss(self, tmp_path, monkeypatch):
         """Concurrent writes should not lose data due to locking."""
-        from spellbook.core.config import config_set, config_get, get_config_path
+        from spellbook.core.config import config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -85,7 +84,7 @@ class TestConfigFileLocking:
 
     def test_config_get_reads_with_shared_lock(self, tmp_path, monkeypatch):
         """config_get should work correctly with locking."""
-        from spellbook.core.config import config_get, config_set, get_config_path
+        from spellbook.core.config import config_get, config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -149,7 +148,6 @@ class TestConfigFileLocking:
         config_path.write_text(original_content)
 
         # Make os.write fail to simulate interrupted write
-        original_write = os.write
 
         def failing_write(fd, data):
             os.close(fd)  # Close fd so cleanup doesn't double-close

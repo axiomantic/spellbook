@@ -9,9 +9,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from installer.compat import ServiceManager, mcp_service_config
-from spellbook.core.config import config_set as _config_set
 
-from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
+from .config import SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
 from .platforms.base import PlatformInstaller
 from .ui import shorten_home
 from .version import check_upgrade_needed, read_version

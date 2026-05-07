@@ -28,9 +28,9 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
-from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
+from spellbook.sdk.unified import get_agent_client, AgentOptions
 
 from diagram_config import (
     AGENTS_DIR,
@@ -1119,13 +1119,13 @@ async def main_async() -> int:
                         answer = input("  [S]tamp (enter) / [g]enerate / [q]uit: ").strip().lower()
                         if answer in ("s", "stamp", ""):
                             stamped.append((item, current_hash))
-                            print(f"  -> Stamped as fresh (non-structural change)")
+                            print("  -> Stamped as fresh (non-structural change)")
                             break
                         if answer in ("g", "generate"):
                             to_generate.append((item, current_hash))
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 's', 'g', or 'q'.")
                 elif classification == "PATCH":
@@ -1139,7 +1139,7 @@ async def main_async() -> int:
                             to_generate.append((item, current_hash))
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 'p', 'g', or 'q'.")
                 else:  # REGENERATE
@@ -1150,10 +1150,10 @@ async def main_async() -> int:
                             break
                         if answer in ("s", "skip"):
                             skipped.append((item, current_hash))
-                            print(f"  -> Will skip (stamp on completion)")
+                            print("  -> Will skip (stamp on completion)")
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 'g', 's', or 'q'.")
             else:
@@ -1165,10 +1165,10 @@ async def main_async() -> int:
                         break
                     if answer in ("s", "skip"):
                         skipped.append((item, current_hash))
-                        print(f"  -> Will skip (stamp on completion)")
+                        print("  -> Will skip (stamp on completion)")
                         break
                     if answer in ("q", "quit"):
-                        print(f"\nAborted. No changes made.")
+                        print("\nAborted. No changes made.")
                         return 0
                     print("  Please enter 'y', 's', or 'q'.")
 
@@ -1231,7 +1231,7 @@ async def main_async() -> int:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                     item.diagram_path.write_text(output_content, encoding="utf-8")
                     generated_count += 1
-                    print(f" done (regenerated)")
+                    print(" done (regenerated)")
                 else:
                     failed_count += 1
                     print(f" FAILED: {result.message}")
@@ -1252,7 +1252,7 @@ async def main_async() -> int:
                 print(f" done ({result.message})")
             elif result.status == "failed":
                 failed_count += 1
-                print(f" FAILED")
+                print(" FAILED")
                 print(f"         Error: {result.message}")
             else:
                 print(f" {result.status}: {result.message}")
@@ -1349,7 +1349,7 @@ async def main_async() -> int:
             print(f" done ({result.message})")
         elif result.status == "failed":
             failed_count += 1
-            print(f" FAILED")
+            print(" FAILED")
             print(f"         Error: {result.message}")
         else:
             print(f" {result.status}: {result.message}")

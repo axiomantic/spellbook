@@ -8,7 +8,6 @@ Verifies that the slim server orchestrator exists with expected exports:
 - build_http_run_kwargs: callable
 """
 
-import pytest
 
 
 class TestMcpServerImports:

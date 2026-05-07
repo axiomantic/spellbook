@@ -18,12 +18,9 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from spellbook.daemon._paths import (
-    DEFAULT_HOST,
-    DEFAULT_PORT,
+from spellbook.daemon._paths import (  # noqa: E402  (logger setup above)
     LAUNCHD_LABEL,
     SERVICE_NAME,
-    get_config_dir,
     get_daemon_python,
     get_err_log_file,
     get_host,
@@ -587,7 +584,7 @@ def install_service() -> None:
         else:
             print("(may still be starting)")
 
-        print(f"\nTo configure Claude Code to use the HTTP server:")
+        print("\nTo configure Claude Code to use the HTTP server:")
         print(f"  claude mcp add --transport http spellbook {get_server_url()}")
     else:
         print(f"\nError: {msg}", file=sys.stderr)

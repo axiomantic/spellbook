@@ -1,6 +1,5 @@
 """Tests for installer.demarcation.remove_demarcated_section()."""
 
-import pytest
 from pathlib import Path
 
 

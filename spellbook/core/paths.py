@@ -9,7 +9,6 @@ No external dependencies beyond the Python standard library.
 
 import os
 import platform
-import sys
 from pathlib import Path
 
 

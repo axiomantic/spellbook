@@ -4,7 +4,6 @@ Provides store, recall, forget, verify, read, and list operations
 for markdown memory files with YAML frontmatter.
 """
 
-import hashlib
 import logging
 import os
 import shutil
@@ -29,7 +28,6 @@ from spellbook.memory.models import (
     MemoryResult,
     VerifyContext,
 )
-from spellbook.memory.scoring import compute_score
 from spellbook.memory.search_qmd import search_memories as _qmd_search_memories
 from spellbook.memory.secret_scanner import scan_for_secrets
 from spellbook.memory.utils import content_hash as _content_hash

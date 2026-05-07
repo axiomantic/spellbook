@@ -146,7 +146,7 @@ def run(args: argparse.Namespace) -> None:
             print(f"Current version: {current}")
             print(f"Latest version:  {latest}")
             if update_available:
-                print(f"\nUpdate available! Run 'spellbook update' to update.")
+                print("\nUpdate available! Run 'spellbook update' to update.")
             else:
                 print("\nAlready up to date.")
         return

@@ -13,7 +13,6 @@ __all__ = [
 ]
 
 import re
-from pathlib import Path
 
 from spellbook.mcp.server import mcp
 from spellbook.core.config import get_spellbook_dir

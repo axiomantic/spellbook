@@ -2,10 +2,8 @@
 
 import os
 import subprocess
-import sys
 
 import tripwire
-import pytest
 
 from spellbook.daemon.terminal import (
     detect_terminal,

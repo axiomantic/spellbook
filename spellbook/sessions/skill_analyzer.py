@@ -80,7 +80,6 @@ CORRECTION_PATTERNS = [
 ]
 
 
-from datetime import datetime as dt
 
 
 @dataclass
@@ -416,7 +415,7 @@ def analyze_sessions(
 
             all_invocations.extend(invocations)
             sessions_analyzed += 1
-        except Exception as e:
+        except Exception:
             continue  # Skip malformed sessions
 
     # Aggregate metrics

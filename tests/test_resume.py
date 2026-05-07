@@ -2,7 +2,6 @@
 
 import json
 import pytest
-from typing import Optional
 
 
 class TestContinuationIntent:
@@ -618,7 +617,6 @@ class TestSessionInitResume:
         """Test session_init includes resume fields in response."""
         from spellbook.core.db import init_db, get_connection
         from datetime import datetime
-        import json
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))

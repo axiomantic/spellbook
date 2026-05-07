@@ -10,7 +10,7 @@ RED phase: these tests will fail until the migration is complete.
 import json
 
 import pytest
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from spellbook.db.spellbook_models import CuratorEvent
 

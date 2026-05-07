@@ -4,7 +4,6 @@ Updated for ORM migration: tests now use async fixtures with
 in-memory SQLAlchemy sessions instead of mocked sqlite3 connections.
 """
 
-import json
 import pytest
 
 from sqlalchemy import event as sa_event

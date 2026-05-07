@@ -5,7 +5,6 @@ Following TDD: these tests are written BEFORE implementation.
 
 import json
 import pytest
-from pathlib import Path
 
 
 # =============================================================================

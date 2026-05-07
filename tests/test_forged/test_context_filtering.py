@@ -4,7 +4,6 @@ These tests verify the context filtering functions that select and prioritize
 content for inclusion in constrained context windows.
 """
 
-import pytest
 
 from spellbook.forged.models import Feedback, IterationState
 
@@ -204,7 +203,7 @@ class TestSelectRelevantKnowledge:
         if "learnings" in result and result["learnings"]:
             # At least one auth-related learning should be included
             auth_related = [
-                l for l in result["learnings"] if "auth" in l.lower()
+                learning for learning in result["learnings"] if "auth" in learning.lower()
             ]
             assert len(auth_related) > 0
 

@@ -21,13 +21,9 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-from spellbook.forged.artifacts import read_artifact
-from spellbook.forged.models import VALID_STAGES, Feedback
-from spellbook.forged.verdict_parsing import (
-    VALID_ROUNDTABLE_VERDICTS,
-    ParsedVerdict,
-    parse_roundtable_response,
-)
+from spellbook.forged.artifacts import read_artifact  # noqa: E402  (logger setup above)
+from spellbook.forged.models import VALID_STAGES, Feedback  # noqa: E402
+from spellbook.forged.verdict_parsing import parse_roundtable_response  # noqa: E402
 
 
 # =============================================================================

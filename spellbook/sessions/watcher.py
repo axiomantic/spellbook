@@ -1,15 +1,15 @@
 """Background watcher for session compaction events."""
 
+import asyncio
 import json
+import logging
 import os
 import threading
 import time
-import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Callable, Dict, Optional, Set
+from typing import Callable, Dict, Set
 
 
 logger = logging.getLogger(__name__)
@@ -198,7 +198,6 @@ class SessionWatcher(threading.Thread):
 
     def _cleanup_stale_data(self):
         """Prune old rows from high-volume database tables."""
-        import sqlite3
         from datetime import timedelta
         from sqlalchemy import delete
         from spellbook.db.engines import get_sync_session

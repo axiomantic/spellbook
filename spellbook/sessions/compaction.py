@@ -11,7 +11,6 @@ import time
 from pathlib import Path
 from typing import Optional, Dict, Any
 from dataclasses import dataclass, asdict
-from datetime import datetime
 
 
 @dataclass
@@ -248,7 +247,7 @@ def get_recovery_reminder(mode_info: Dict[str, Any] = None) -> str:
         mode_type = mode_info.get('type', 'none')
         if mode_type == 'fun':
             persona = mode_info.get('persona', {})
-            lines.append(f"- SESSION MODE: Fun mode active")
+            lines.append("- SESSION MODE: Fun mode active")
             if persona.get('name'):
                 lines.append(f"- PERSONA: {persona['name']}")
             if persona.get('context'):

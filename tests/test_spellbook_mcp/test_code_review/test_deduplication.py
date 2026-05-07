@@ -1,6 +1,5 @@
 """Tests for code-review deduplication module."""
 
-import pytest
 
 from spellbook.code_review.deduplication import deduplicate_findings
 from spellbook.code_review.models import Finding, Severity

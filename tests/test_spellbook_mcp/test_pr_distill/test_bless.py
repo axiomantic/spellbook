@@ -2,7 +2,6 @@
 
 import json
 
-import pytest
 
 from spellbook.pr_distill.bless import (
     validate_pattern_id,

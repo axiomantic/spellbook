@@ -5,20 +5,18 @@ and integration into the main processing loop.
 """
 
 import asyncio
-import hashlib
 import json
 import subprocess
 import sys
 from pathlib import Path
 from unittest import mock
 
-import pytest
 
 # Add project root so we can import generate_diagrams as a module
 WORKTREE_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(WORKTREE_ROOT / "scripts"))
 
-import generate_diagrams
+import generate_diagrams  # noqa: E402  (imported after sys.path mangling)
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +267,7 @@ class TestClassifyChange:
 
         with (
             mock.patch("generate_diagrams.get_source_diff", return_value=the_diff),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client) as mock_get_client,
+            mock.patch("generate_diagrams.get_agent_client", return_value=client),
         ):
             asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
@@ -489,7 +487,7 @@ class TestProcessingLoopIntegration:
     def test_patch_classification_calls_patch_diagram(self, tmp_path: Path) -> None:
         """When classify_change returns PATCH, patch_diagram is called."""
         item = make_source_item(tmp_path)
-        current_hash = generate_diagrams.compute_hash(item.source_path)
+        generate_diagrams.compute_hash(item.source_path)
         write_diagram_with_meta(item, "oldhash")
 
         patched_content = "```mermaid\ngraph TD\n  A --> C\n```"
@@ -603,7 +601,7 @@ class TestInteractiveSmartClassification:
 
         with (
             mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="STAMP")),
-            mock.patch("generate_diagrams.stamp_as_fresh") as mock_stamp,
+            mock.patch("generate_diagrams.stamp_as_fresh"),
             mock.patch("generate_diagrams.show_source_changes"),
             mock.patch("generate_diagrams.discover_skills", return_value=[item]),
             mock.patch("generate_diagrams.discover_commands", return_value=[]),

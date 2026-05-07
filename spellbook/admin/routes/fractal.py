@@ -70,7 +70,7 @@ async def list_graphs(
         count_query = count_query.where(f)
     count_result = await session.execute(count_query)
     total = count_result.scalar_one()
-    pages = max(1, math.ceil(total / per_page))
+    max(1, math.ceil(total / per_page))
     offset = (page - 1) * per_page
 
     # Data query with LEFT JOIN for node count

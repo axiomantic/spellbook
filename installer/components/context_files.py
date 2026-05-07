@@ -5,7 +5,6 @@ Context file generation for spellbook installation.
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 # Add parent directories to path for imports
 _installer_dir = Path(__file__).parent.parent

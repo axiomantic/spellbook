@@ -351,7 +351,7 @@ def check_claude_mcp(verbose: bool = False) -> HealthCheckResult:
             message="Spellbook MCP not found in Claude Code configuration",
             details={
                 "suggestion": "Run the spellbook installer or manually add the MCP server",
-                "mcp_servers_found": [l.split(":")[0] for l in lines if ":" in l],
+                "mcp_servers_found": [line.split(":")[0] for line in lines if ":" in line],
             },
         ))
         return result
@@ -697,7 +697,7 @@ def check_codex_mcp(verbose: bool = False) -> HealthCheckResult:
     config_toml = config_dir / "config.toml"
 
     # Get spellbook directory from env or script location
-    spellbook_dir = Path(os.environ.get(
+    Path(os.environ.get(
         "SPELLBOOK_DIR",
         str(Path(__file__).parent.parent)
     ))
@@ -847,7 +847,7 @@ def check_opencode_mcp(verbose: bool = False) -> HealthCheckResult:
     config_json = config_dir / "opencode.json"
 
     # Get spellbook directory from env or script location
-    spellbook_dir = Path(os.environ.get(
+    Path(os.environ.get(
         "SPELLBOOK_DIR",
         str(Path(__file__).parent.parent)
     ))

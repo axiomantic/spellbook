@@ -705,7 +705,7 @@ def bootstrap(args: argparse.Namespace) -> Path:
     else:
         # Need to clone
         install_dir = Path(args.install_dir) if args.install_dir else DEFAULT_INSTALL_DIR
-        print_info(f"Spellbook repository not found.")
+        print_info("Spellbook repository not found.")
 
         if not clone_repository(install_dir, auto_yes):
             sys.exit(1)
@@ -807,13 +807,13 @@ def show_admin_info(admin_enabled: bool) -> None:
     if admin_enabled:
         print(f"  {color('Admin Web Interface', Colors.BOLD)}")
         print(f"    Status: {color('enabled', Colors.GREEN)}")
-        print(f"    URL:    http://localhost:8765/admin")
-        print(f"    Open:   spellbook admin open")
-        print(f"    Disable: set admin_enabled=false in spellbook.json or reinstall with --no-admin")
+        print("    URL:    http://localhost:8765/admin")
+        print("    Open:   spellbook admin open")
+        print("    Disable: set admin_enabled=false in spellbook.json or reinstall with --no-admin")
     else:
         print(f"  {color('Admin Web Interface', Colors.BOLD)}")
         print(f"    Status: {color('disabled', Colors.YELLOW)}")
-        print(f"    Enable: set admin_enabled=true in spellbook.json or reinstall without --no-admin")
+        print("    Enable: set admin_enabled=true in spellbook.json or reinstall without --no-admin")
     print()
 
 
@@ -832,18 +832,13 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         from installer.core import Installer
         from installer.ui import (
             InstallTimer,
-            Spinner,
-            color as installer_color,
-            Colors as InstallerColors,
             print_directory_config,
             print_header as print_installer_header,
             print_info as installer_print_info,
             print_platform_section,
             print_report,
             print_result,
-            print_step,
             print_warning as installer_print_warning,
-            print_success as installer_print_success,
         )
     except ImportError as e:
         print_error(f"Failed to import installer components: {e}")
@@ -926,7 +921,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         if cli_dirs:
             config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
-    from installer.wizard import WizardContext, WizardResults
+    from installer.wizard import WizardContext
 
     # Import config module early; may fail in bootstrap scenarios
     try:

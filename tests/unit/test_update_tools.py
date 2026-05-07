@@ -212,10 +212,8 @@ class TestCheckForUpdates:
             _make_proc(0, "git@github.com:axiomantic/spellbook.git\n"),  # git remote get-url
             _make_proc(0, "v0.9.10\n"),                             # gh api
         ])
-        config_fn = lambda key: {
-            "auto_update_remote": "origin",
-        }.get(key)
-        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
+        config_fn = {"auto_update_remote": "origin"}.get
+        state_fn = {"auto_update_branch": "main"}.get
 
         # Call sequence: config_get x2 (remote x2), subprocess.run x4, shutil.which, state x1
         mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
@@ -269,8 +267,8 @@ class TestCheckForUpdates:
             _make_proc(0),                # git fetch
             _make_proc(0, "0.9.10\n"),    # git show (fallback)
         ])
-        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
-        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
+        config_fn = {"auto_update_remote": "origin"}.get
+        state_fn = {"auto_update_branch": "main"}.get
 
         mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
@@ -318,8 +316,8 @@ class TestCheckForUpdates:
             _make_proc(0),
             _make_proc(0, "0.9.10\n"),
         ])
-        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
-        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
+        config_fn = {"auto_update_remote": "origin"}.get
+        state_fn = {"auto_update_branch": "main"}.get
 
         mock_run = tripwire.mock("spellbook.updates.tools:subprocess.run")
         _chain(mock_run, lambda *a, **kw: next(call_seq), 3)
@@ -677,8 +675,8 @@ class TestApplyUpdate:
                 (spellbook_dir / ".version").write_text("0.9.10\n")
             return result
 
-        config_fn = lambda key: {"auto_update_remote": "origin"}.get(key)
-        state_fn = lambda key: {"auto_update_branch": "main"}.get(key)
+        config_fn = {"auto_update_remote": "origin"}.get
+        state_fn = {"auto_update_branch": "main"}.get
 
         # Capture config_set calls for assertion (last_auto_update has dynamic timestamp)
         config_set_calls = []
@@ -1110,7 +1108,7 @@ class TestInstallerUpdateOnlyFlag:
         mock_is_interactive.returns(False)
 
         with tripwire:
-            result = install.main()
+            install.main()
 
         # Verify run_installation was called with the found dir
         assert len(run_install_args) == 1

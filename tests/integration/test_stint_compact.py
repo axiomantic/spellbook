@@ -1,7 +1,5 @@
 """Integration tests for stint stack compaction survival."""
 
-import json
-import os
 import sys
 from pathlib import Path
 
