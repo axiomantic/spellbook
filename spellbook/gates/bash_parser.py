@@ -169,6 +169,22 @@ _ENV_PREFIX_DENY: frozenset[str] = frozenset(
         "PYTHONPATH",
         "PERL5LIB",
         "RUBYLIB",
+        # Cycle-7 F5: additional language-runtime env vars that load
+        # attacker-controlled code at process start.
+        # * ``NODE_PATH``: prepends a directory to Node's module resolution.
+        # * ``PYTHONINSPECT=1``: drops Python into an interactive shell after
+        #   the script body runs (post-execution hijack of any Python call).
+        # * ``PYTHONBREAKPOINT=mod:fn``: redirects ``breakpoint()`` to call
+        #   an attacker module's function.
+        # * ``JAVA_TOOL_OPTIONS``: silently injects JVM flags
+        #   (``-javaagent:/tmp/evil.jar``) into every java invocation.
+        # * ``NODE_OPTIONS``: silently injects Node flags
+        #   (``--require=/tmp/evil.js``) into every node invocation.
+        "NODE_PATH",
+        "PYTHONINSPECT",
+        "PYTHONBREAKPOINT",
+        "JAVA_TOOL_OPTIONS",
+        "NODE_OPTIONS",
     }
 )
 
@@ -695,40 +711,151 @@ def _classify_command(node: object) -> list[dict]:
     return findings
 
 
+# Per-wrapper flag tables. Cycle-7 F1/F2: a flag-blind "skip everything that
+# starts with ``-``" loop misses bypasses where a flag takes a SEPARATE arg —
+# ``timeout -s KILL 5 rm -rf /`` would treat ``KILL`` as the wrapped head and
+# miss ``rm -rf /``. The tables below explicitly enumerate which flags consume
+# the next argv slot vs which are standalone, so we can advance argv correctly.
+#
+# Long-form ``--flag=VALUE`` always consumes only one slot (the equals form
+# embeds the value), so they appear in the standalone set.
+
+# ``timeout(1)`` flags. Source: GNU coreutils manpage.
+_TIMEOUT_FLAGS_WITH_ARG: frozenset[str] = frozenset(
+    {"-s", "--signal", "-k", "--kill-after"}
+)
+_TIMEOUT_FLAGS_NO_ARG: frozenset[str] = frozenset(
+    {"-v", "--verbose", "--preserve-status", "--foreground"}
+)
+
+# ``env(1)`` flags. Source: GNU coreutils manpage.
+_ENV_FLAGS_WITH_ARG: frozenset[str] = frozenset(
+    {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}
+)
+_ENV_FLAGS_NO_ARG: frozenset[str] = frozenset(
+    {"-i", "--ignore-environment", "-0", "--null"}
+)
+
+
 def _strip_wrapper_args(wrapper: str, argv: list[str]) -> list[str]:
     """Skip wrapper-specific option args to reach the wrapped argv.
 
-    Most wrappers in :data:`_WRAPPER_COMMANDS` take an optional duration or
-    flag before the wrapped command. This helper drops obvious option-like
-    tokens (anything starting with ``-`` or numeric-only) from the front of
-    ``argv``. It is best-effort, not exhaustive — false positives are
-    acceptable because the worst case is a redundant deny finding.
+    Each wrapper has its own option grammar. A flag-blind loop (drop every
+    leading ``-``-prefixed token) is unsafe: flags that take a SEPARATE
+    argument let the attacker push the dangerous head past our scan. For
+    ``timeout`` and ``env`` we use explicit per-flag tables (see
+    ``_TIMEOUT_FLAGS_WITH_ARG`` and ``_ENV_FLAGS_WITH_ARG``). For every other
+    wrapper we keep the conservative best-effort dash/numeric skip.
     """
-    # Consume option-like tokens from the front of ``argv``. Using a deque
-    # makes ``popleft()`` O(1); ``list.pop(0)`` is O(n) and would degrade on
-    # long wrapper invocations (e.g. ``env A=1 B=2 C=3 ... cmd``).
     out: deque[str] = deque(argv)
+
+    if wrapper == "timeout":
+        _strip_timeout_args(out)
+    elif wrapper == "env":
+        _strip_env_args(out)
+    else:
+        # Conservative legacy path for the other wrappers (``nice``, ``nohup``,
+        # ``setsid``, ``ionice``, ``stdbuf``, ``unbuffer``, ``command``, ``exec``).
+        # Drop leading dash-flags and a leading numeric/duration, then stop.
+        while out:
+            head = out[0]
+            if head.startswith("-"):
+                out.popleft()
+                continue
+            if head.rstrip("smhd").replace(".", "", 1).isdigit():
+                out.popleft()
+                continue
+            break
+
+    return list(out)
+
+
+def _strip_timeout_args(out: deque[str]) -> None:
+    """Consume ``timeout``'s flag/positional grammar in place.
+
+    Grammar: ``timeout [OPTION]... DURATION COMMAND [ARG]...``
+
+    Options handled:
+      * ``-s SIGNAL`` / ``--signal SIGNAL`` (separate-arg)
+      * ``-k DURATION`` / ``--kill-after DURATION`` (separate-arg)
+      * ``-v`` / ``--verbose`` / ``--preserve-status`` / ``--foreground`` (no-arg)
+      * ``--signal=SIG`` / ``--kill-after=10`` (equals form, single slot)
+
+    After flags, exactly one DURATION positional is consumed (numeric with
+    optional ``s``/``m``/``h``/``d`` suffix).
+    """
     while out:
         head = out[0]
-        if head.startswith("-"):
+        if head in _TIMEOUT_FLAGS_WITH_ARG:
+            # Two-slot consume: flag + arg. If the arg is missing (malformed
+            # input) just stop — we cannot guess where the wrapped argv begins.
+            out.popleft()
+            if out:
+                out.popleft()
+            continue
+        if head in _TIMEOUT_FLAGS_NO_ARG:
             out.popleft()
             continue
-        # ``timeout 5 cmd`` / ``timeout 1h cmd`` / ``timeout 2d cmd`` —
-        # drop a leading bare numeric or duration. ``timeout`` accepts the
-        # full set of suffixes ``s`` (seconds), ``m`` (minutes), ``h``
-        # (hours), and ``d`` (days). Strip any trailing duration suffix,
-        # then check the remainder is numeric (with optional decimal).
+        if head.startswith("--") and "=" in head:
+            # ``--signal=KILL`` etc. — single-slot, value embedded.
+            out.popleft()
+            continue
+        if head.startswith("-") and len(head) > 1 and not head[1:].isdigit():
+            # Unknown short/long flag — best-effort drop. Avoids treating a
+            # bare numeric like ``-5`` as a flag.
+            out.popleft()
+            continue
+        break
+
+    # DURATION positional (e.g. ``5``, ``1h``, ``2d``, ``1.5m``).
+    if out:
+        head = out[0]
         if head.rstrip("smhd").replace(".", "", 1).isdigit():
             out.popleft()
-            continue
-        # ``nice -n 5 cmd`` already handled by the dash-skip above; the ``5``
-        # falls into the numeric-skip above.
-        break
-    # ``env`` may carry KEY=VALUE pairs before the wrapped command.
-    if wrapper == "env":
-        while out and "=" in out[0] and not out[0].startswith("/"):
+
+
+def _strip_env_args(out: deque[str]) -> None:
+    """Consume ``env``'s flag and KEY=VALUE prefix grammar in place.
+
+    Grammar: ``env [OPTION]... [-] [NAME=VALUE]... [COMMAND [ARG]...]``
+
+    Options handled:
+      * ``-u VAR`` / ``--unset VAR`` (separate-arg)
+      * ``-C DIR`` / ``--chdir DIR`` (separate-arg)
+      * ``-S STR`` / ``--split-string STR`` (separate-arg)
+      * ``-i`` / ``--ignore-environment`` / ``-0`` / ``--null`` (no-arg)
+      * ``--unset=VAR`` / ``--chdir=DIR`` / ``--split-string=STR`` (equals form)
+
+    After flags, ``KEY=VALUE`` env-prefix pairs are consumed (env's purpose
+    is setting vars). The remaining argv is the wrapped command.
+    """
+    while out:
+        head = out[0]
+        if head in _ENV_FLAGS_WITH_ARG:
             out.popleft()
-    return list(out)
+            if out:
+                out.popleft()
+            continue
+        if head in _ENV_FLAGS_NO_ARG:
+            out.popleft()
+            continue
+        if head.startswith("--") and "=" in head:
+            # ``--unset=VAR``, ``--chdir=DIR``, ``--split-string=...``.
+            out.popleft()
+            continue
+        if head == "-":
+            # POSIX ``env -`` separator: same effect as ``-i``.
+            out.popleft()
+            continue
+        if head.startswith("-") and len(head) > 1 and not head[1:].isdigit():
+            # Unknown flag — best-effort drop.
+            out.popleft()
+            continue
+        break
+
+    # KEY=VALUE env-prefix pairs. ``env FOO=bar BAZ=qux cmd``.
+    while out and "=" in out[0] and not out[0].startswith("/"):
+        out.popleft()
 
 
 def _detect_shellout(head: str, rest: list[str]) -> dict | None:
@@ -938,7 +1065,16 @@ def _classify_redirect(node: object) -> list[dict]:
     candidates.extend(expanded_candidates)
 
     for candidate in candidates:
-        if any(candidate.startswith(p) for p in _REDIRECT_DENY_PREFIXES):
+        # Cycle-7 F3: each entry in ``_REDIRECT_DENY_PREFIXES`` ends with a
+        # trailing ``/`` so a child path (``/etc/passwd``) matches. But that
+        # leaves the bare directory itself (``/etc``) — i.e., redirecting
+        # *onto* the directory — uncovered. Match either the prefix verbatim
+        # OR the prefix with its trailing slash stripped, so both ``> /etc``
+        # and ``> /etc/foo`` deny.
+        if any(
+            candidate.startswith(p) or candidate == p.rstrip("/")
+            for p in _REDIRECT_DENY_PREFIXES
+        ):
             return [
                 _finding(
                     "BASH-PARSER-REDIRECT",

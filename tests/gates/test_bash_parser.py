@@ -116,6 +116,41 @@ REJECT_CASES = [
     ("redirect_etc_traversal", "echo bad > /tmp/../etc/shadow", "BASH-PARSER-REDIRECT"),
     ("redirect_etc_tilde_traversal", "echo bad > ~/../../etc/shadow", "BASH-PARSER-REDIRECT"),
     ("redirect_proc_traversal", "echo bad > /home/../proc/sys/kernel/x", "BASH-PARSER-REDIRECT"),
+    # ----- cycle-7 hardening (F1): timeout flag-with-arg bypass -----
+    # ``timeout`` accepts flags whose argument is a SEPARATE argv slot
+    # (``-s SIGNAL``, ``-k DURATION``). The pre-fix wrapper-strip skipped
+    # only leading dash-tokens and one numeric, so ``timeout -s KILL 5 cmd``
+    # left ``KILL`` as the apparent wrapped head and missed the dangerous
+    # body. The fix uses a per-flag table; these rows lock in the behavior.
+    ("wrapper_timeout_signal_rm", "timeout -s KILL 5 rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_timeout_killafter_rm", "timeout --kill-after=10 5 rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_timeout_killafter_separate_rm", "timeout -k 10 5 rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_timeout_verbose_rm", "timeout -v 5 rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_timeout_long_signal_rm", "timeout --signal=TERM 5 rm -rf /", "BASH-PARSER-WRAPPER"),
+    # ----- cycle-7 hardening (F2): env flag-with-arg bypass -----
+    # Same pattern for ``env``: ``-u VAR``, ``-C DIR``, ``-S STR`` take a
+    # separate arg, ``-i``/``--ignore-environment`` is no-arg, KEY=VALUE
+    # pairs are env-prefix (and not flags) — the wrapped command head
+    # follows after all of these.
+    ("wrapper_env_unset_rm", "env -u PATH rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_env_chdir_rm", "env -C /tmp rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_env_ignore_rm", "env -i rm -rf /", "BASH-PARSER-WRAPPER"),
+    ("wrapper_env_kv_rm", "env FOO=bar rm -rf /", "BASH-PARSER-WRAPPER"),
+    # ----- cycle-7 hardening (F3): redirect denylist trailing-slash gap -----
+    # ``_REDIRECT_DENY_PREFIXES`` entries end with ``/``, so ``> /etc``
+    # (writing to the directory itself) slipped past the prefix match.
+    # The fix matches both ``startswith(p)`` and ``== p.rstrip("/")``.
+    ("redirect_etc_bare", "echo bad > /etc", "BASH-PARSER-REDIRECT"),
+    ("redirect_proc_bare", "echo bad > /proc", "BASH-PARSER-REDIRECT"),
+    # ----- cycle-7 hardening (F5): expanded language-runtime env-prefix denylist -----
+    # Each of these env vars causes a language runtime to load attacker-
+    # controlled code at process start (or post-execution, for
+    # ``PYTHONINSPECT``). They must deny just like ``PYTHONPATH``.
+    ("env_node_path", "NODE_PATH=/tmp/evil node script.js", "BASH-PARSER-ENVPREFIX"),
+    ("env_pythoninspect", "PYTHONINSPECT=1 python -c 'pass'", "BASH-PARSER-ENVPREFIX"),
+    ("env_pythonbreakpoint", "PYTHONBREAKPOINT=evil:run python -c 'pass'", "BASH-PARSER-ENVPREFIX"),
+    ("env_java_tool_options", "JAVA_TOOL_OPTIONS=-javaagent:/tmp/evil.jar java App", "BASH-PARSER-ENVPREFIX"),
+    ("env_node_options", "NODE_OPTIONS=--require=/tmp/evil.js node app.js", "BASH-PARSER-ENVPREFIX"),
 ]
 
 
@@ -154,6 +189,15 @@ ALLOWED_CASES = [
     "echo hello",
     "cat README.md",
     "pwd",
+    # Cycle-7 F1/F2: legitimate wrapper use with flag-with-arg options must
+    # still pass — the per-flag tables consume the flag pair correctly so
+    # the wrapped head (``git status``) is identified as safe.
+    "timeout -s KILL 5 git status",
+    "timeout --kill-after=10 5 git status",
+    "timeout -k 10 5 git status",
+    "env -u PATH git status",
+    "env FOO=bar git status",
+    "env -i git status",
 ]
 
 
