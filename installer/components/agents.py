@@ -57,7 +57,7 @@ def install_agents(
 
     1. Target is a symlink whose ``resolve()`` == source -> ``action="unchanged"``
     2. Target is a broken symlink (or symlink to a stale spellbook source path)
-       -> ``action="replaced"``
+       -> ``action="upgraded"``
     3. Target is a symlink pointing into a non-spellbook path -> ``action="skipped"``
     4. Target is a regular file (user-authored) -> ``action="skipped"``
     5. Target does not exist -> ``action="installed"``
@@ -164,13 +164,16 @@ def _do_install(
     """Delegate to ``create_symlink`` and translate its action label.
 
     ``create_symlink`` (via ``create_link``) reports ``"created"`` or
-    ``"updated"``; this component reports ``"installed"`` or ``"replaced"``.
+    ``"updated"``; this component reports ``"installed"`` or ``"upgraded"``.
+    The label ``"upgraded"`` aligns with ``installer/ui.py``'s recognized
+    action vocabulary (installed/upgraded/created/skipped/failed/unchanged);
+    using ``"replaced"`` would fall through to the generic default arrow icon.
     """
     raw = create_symlink(source, target, dry_run=dry_run)
     name = source.name
     if not raw.success:
         return raw  # propagate failure as-is
-    action = "replaced" if replacing else "installed"
+    action = "upgraded" if replacing else "installed"
     return SymlinkResult(
         source=raw.source,
         target=raw.target,
@@ -219,8 +222,12 @@ def uninstall_agents(
         try:
             resolved = entry.resolve(strict=True)
         except (OSError, RuntimeError):
-            # Broken symlink: only remove if its raw target lies inside the
-            # spellbook agents dir; otherwise it's not ours.
+            # Broken symlink: only remove if the raw target's *parent dir*
+            # resolves into the spellbook agents dir; otherwise it's not
+            # ours. Restricting to the parent (rather than any ancestor)
+            # prevents accidentally removing a user-authored broken symlink
+            # whose target merely passes through ``$SPELLBOOK_DIR/agents/``
+            # on its way to a deeper subdir.
             try:
                 raw_target = Path(entry.readlink())
             except OSError:

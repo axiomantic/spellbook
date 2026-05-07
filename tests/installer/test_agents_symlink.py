@@ -199,8 +199,8 @@ class TestInstallAgents:
                 source=new_source,
                 target=target,
                 success=True,
-                action="replaced",
-                message="replaced symlink: alpha.md",
+                action="upgraded",
+                message="upgraded symlink: alpha.md",
             )
         ]
         assert target.is_symlink()
@@ -222,8 +222,8 @@ class TestInstallAgents:
                 source=source,
                 target=target,
                 success=True,
-                action="replaced",
-                message="replaced symlink: alpha.md",
+                action="upgraded",
+                message="upgraded symlink: alpha.md",
             )
         ]
         assert target.is_symlink()
@@ -354,7 +354,16 @@ class TestInstallAgents:
         assert (config_dir / "agents" / "c.md").read_text(encoding="utf-8") == "user-c"
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_non_md_files_in_source_ignored(self, spellbook_dir, config_dir):
+    def test_top_level_md_files_only_installed(self, spellbook_dir, config_dir):
+        """Only top-level ``.md`` files are installed as agents.
+
+        Verifies three behaviors at once:
+        (a) any top-level ``.md`` file is installed (including ``README.md``,
+            which is intentionally treated as an agent — matches the
+            ``create_skill_symlinks``/``create_command_symlinks`` glob);
+        (b) non-``.md`` files (e.g. ``.txt``) at the top level are ignored;
+        (c) ``.md`` files in subdirectories are ignored (no recursion).
+        """
         # Top-level .md is symlinked.
         agent = _write_agent(spellbook_dir, "agent.md", body="A")
         # README.md is also top-level .md -> WILL be symlinked (matches
