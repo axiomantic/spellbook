@@ -128,14 +128,14 @@ Windows native sandboxing and alias installation are deferred to a later work it
 
 Current behavior on Windows:
 
-- The installer's `install_aliases_windows()` is a documented noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
+- The installer's `install_aliases_windows()` is an intentional noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
 - `cco` itself is unverified on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
 - `cmd.exe` is a known limitation: `doskey` macros do not persist across cmd sessions without an `AutoRun` registry edit, so cmd users are explicitly not served by the alias installer.
 
 Windows users have two options until the Windows path lands:
 
-- Invoke `spellbook-sandbox` directly (only meaningful if `cco` is reachable, e.g. installed under WSL).
-- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option.
+- Invoke `spellbook-sandbox` directly, only meaningful if `cco` is already on `PATH`.
+- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option. Install `cco` inside the WSL Linux distro (see [the cco install link above](#sandboxed-usage)) before running `install.py` there, otherwise the alias installer will skip with `cco not installed; install cco then re-run install.py`.
 
 ## What Spellbook Does
 
