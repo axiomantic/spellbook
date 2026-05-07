@@ -6,7 +6,10 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
+from spellbook.core.compat import Platform, get_platform
+
 from ..components.agents import install_agents, uninstall_agents
+from ..components.aliases import install_aliases, install_aliases_windows
 from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
@@ -35,6 +38,64 @@ if TYPE_CHECKING:
     from ..core import InstallResult
 
 logger = logging.getLogger(__name__)
+
+
+def _install_claude_code_aliases(spellbook_dir: Path, dry_run: bool = False) -> dict:
+    """Dispatch alias install for Claude Code based on the current platform.
+
+    Routing:
+
+    * :attr:`Platform.LINUX` -> :func:`install_aliases` (POSIX rc-file shim
+      pointing the ``claude`` / ``opencode`` aliases at
+      ``scripts/spellbook-sandbox``).
+    * :attr:`Platform.MACOS` -> documented noop. ``cco``'s ``sandbox-exec``
+      profile is judged insufficient for L5 isolation per the Sec 9.3 audit
+      (see ``docs/security/audits/sec_9_3_result.md`` and the rationale
+      block in ``scripts/spellbook-sandbox``). macOS sessions rely on L4
+      (PreToolUse hooks, shipped) and L6 (devcontainer, WI-8 planned)
+      instead. Logging announces the deferral; no filesystem writes.
+    * :attr:`Platform.WINDOWS` -> :func:`install_aliases_windows` (Q-O stub
+      from Task 3 of WI-7; returns a noop dict until the Windows path is
+      implemented).
+
+    Any other platform value raises :class:`NotImplementedError` so future
+    additions to the :class:`Platform` enum surface as a hard failure
+    rather than a silent skip.
+
+    Returns the same dict shape as :func:`install_aliases`::
+
+        {
+            "installed": bool,
+            "rc_path": str | None,
+            "aliases": list[str],
+            "skipped_reason": str | None,
+        }
+    """
+    plat = get_platform()
+    if plat is Platform.LINUX:
+        return install_aliases(spellbook_dir, dry_run=dry_run)
+    if plat is Platform.MACOS:
+        logger.info(
+            "Claude Code L5 sandbox alias install (dry_run=%s) is "
+            "intentionally absent on macOS; cco's sandbox-exec profile is "
+            "insufficient per Sec 9.3 audit. macOS sessions rely on L4 "
+            "(PreToolUse hooks, shipped) and L6 (devcontainer, WI-8 "
+            "planned). See scripts/spellbook-sandbox.",
+            dry_run,
+        )
+        return {
+            "installed": False,
+            "rc_path": None,
+            "aliases": [],
+            "skipped_reason": "L5 macOS is intentionally absent (Sec 9.3 audit)",
+        }
+    if plat is Platform.WINDOWS:
+        return install_aliases_windows(spellbook_dir, dry_run=dry_run)
+    # Defensive fallback for any future Platform enum addition. Surfaces
+    # the missing handler explicitly instead of silently skipping.
+    raise NotImplementedError(
+        f"No alias install handler for platform: {plat!r}"
+    )
 
 
 class ClaudeCodeInstaller(PlatformInstaller):
@@ -359,6 +420,41 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 message="agents: " + ", ".join(message_parts),
             )
         )
+
+        # Install platform-specific shell aliases (claude/opencode wrappers
+        # pointing at scripts/spellbook-sandbox). Dispatches by platform:
+        # LINUX -> install_aliases; MACOS -> documented noop (Sec 9.3
+        # audit: sandbox-exec is insufficient for L5 on macOS); WINDOWS ->
+        # install_aliases_windows (Q-O stub). The legacy interactive offer
+        # in install.py is a separate opt-in path; this is the
+        # platform-install-time path that runs unconditionally.
+        self._step("Installing aliases")
+        alias_result = _install_claude_code_aliases(
+            self.spellbook_dir, dry_run=self.dry_run
+        )
+        if alias_result["installed"]:
+            results.append(
+                InstallResult(
+                    component="aliases",
+                    platform=self.platform_id,
+                    success=True,
+                    action="installed",
+                    message=(
+                        f"aliases: {', '.join(alias_result['aliases'])} "
+                        f"-> {alias_result['rc_path']}"
+                    ),
+                )
+            )
+        else:
+            results.append(
+                InstallResult(
+                    component="aliases",
+                    platform=self.platform_id,
+                    success=True,
+                    action="skipped",
+                    message=f"aliases: {alias_result['skipped_reason']}",
+                )
+            )
 
         # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")

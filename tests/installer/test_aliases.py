@@ -234,3 +234,215 @@ def test_spellbook_sandbox_fail_closed_on_bad_cco_version(
         f"[{case_id}] expected 'cco SHA pin mismatch' in stderr; "
         f"got stderr={proc.stderr!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Platform dispatch tests (Task 4/5 of WI-7)
+#
+# These tests cover the dispatch helper in
+# ``installer/platforms/claude_code.py`` that routes alias install based on
+# ``get_platform()``:
+#
+#   * Platform.LINUX   -> install_aliases()           (POSIX rc-file shim)
+#   * Platform.MACOS   -> documented noop+log         (Sec 9.3 audit)
+#   * Platform.WINDOWS -> install_aliases_windows()   (Q-O stub)
+#
+# All four tests are ``posix_only`` because they monkeypatch ``get_platform``
+# to return non-Windows values; the existing ``windows_only``/``posix_only``
+# convention in ``tests/conftest.py`` skips them on Windows runners (where
+# the production dispatch would actually call install_aliases_windows; that
+# case is exercised by the dedicated install_aliases_windows tests).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.posix_only
+def test_dispatch_linux_calls_install_aliases(tmp_path, monkeypatch):
+    """LINUX: dispatch helper calls install_aliases with forwarded args.
+
+    Records the call args via a recorder list and asserts exact equality on
+    the full call list and the helper's return value.
+    """
+    from installer.platforms import claude_code as platform_mod
+    from spellbook.core.compat import Platform
+
+    spellbook_dir = tmp_path / "spellbook"
+    expected_return = {
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude", "opencode"],
+        "skipped_reason": None,
+    }
+    calls: list[tuple] = []
+
+    def recorder(sb_dir, dry_run=False):
+        calls.append((sb_dir, dry_run))
+        return expected_return
+
+    def windows_recorder(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases_windows must not be called on LINUX; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.LINUX)
+    monkeypatch.setattr(platform_mod, "install_aliases", recorder)
+    monkeypatch.setattr(
+        platform_mod, "install_aliases_windows", windows_recorder
+    )
+
+    result = platform_mod._install_claude_code_aliases(
+        spellbook_dir, dry_run=True
+    )
+
+    assert calls == [(spellbook_dir, True)]
+    assert result == expected_return
+
+
+@pytest.mark.posix_only
+def test_dispatch_macos_returns_noop_without_calling_install_aliases(
+    tmp_path, monkeypatch, caplog
+):
+    """MACOS: dispatch helper returns the documented noop dict and logs.
+
+    install_aliases must NOT be called on macOS per the Sec 9.3 audit
+    decision; the recorder fails the test if invoked. The log message is
+    asserted via caplog with exact-equality on getMessage().
+    """
+    import logging
+
+    from installer.platforms import claude_code as platform_mod
+    from spellbook.core.compat import Platform
+
+    spellbook_dir = tmp_path / "spellbook"
+
+    def must_not_call(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases must not be called on macOS; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    def must_not_call_windows(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases_windows must not be called on macOS; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.MACOS)
+    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
+    monkeypatch.setattr(
+        platform_mod, "install_aliases_windows", must_not_call_windows
+    )
+
+    expected_log_message = (
+        "Claude Code L5 sandbox alias install (dry_run=False) is "
+        "intentionally absent on macOS; cco's sandbox-exec profile is "
+        "insufficient per Sec 9.3 audit. macOS sessions rely on L4 "
+        "(PreToolUse hooks, shipped) and L6 (devcontainer, WI-8 planned). "
+        "See scripts/spellbook-sandbox."
+    )
+
+    with caplog.at_level(logging.INFO, logger=platform_mod.__name__):
+        result = platform_mod._install_claude_code_aliases(
+            spellbook_dir, dry_run=False
+        )
+
+    assert result == {
+        "installed": False,
+        "rc_path": None,
+        "aliases": [],
+        "skipped_reason": "L5 macOS is intentionally absent (Sec 9.3 audit)",
+    }
+
+    # Exact-equality on the rendered log message catches silent edits to
+    # the macOS rationale wording.
+    macos_records = [
+        r for r in caplog.records if r.name == platform_mod.__name__
+    ]
+    assert len(macos_records) == 1
+    assert macos_records[0].getMessage() == expected_log_message
+    assert macos_records[0].levelno == logging.INFO
+
+
+@pytest.mark.posix_only
+def test_dispatch_windows_calls_install_aliases_windows(tmp_path, monkeypatch):
+    """WINDOWS: dispatch helper calls install_aliases_windows, not install_aliases.
+
+    Records the windows call args; install_aliases recorder fails the test
+    if invoked. Asserts exact equality on the call list and return value.
+    """
+    from installer.platforms import claude_code as platform_mod
+    from spellbook.core.compat import Platform
+
+    spellbook_dir = tmp_path / "spellbook"
+    expected_return = {
+        "installed": False,
+        "rc_path": None,
+        "aliases": [],
+        "skipped_reason": (
+            "Windows alias install is deferred to a later work item (Q-O)"
+        ),
+    }
+    windows_calls: list[tuple] = []
+
+    def must_not_call(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases must not be called on WINDOWS; "
+            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
+        )
+
+    def windows_recorder(sb_dir, dry_run=False):
+        windows_calls.append((sb_dir, dry_run))
+        return expected_return
+
+    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.WINDOWS)
+    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
+    monkeypatch.setattr(
+        platform_mod, "install_aliases_windows", windows_recorder
+    )
+
+    result = platform_mod._install_claude_code_aliases(
+        spellbook_dir, dry_run=False
+    )
+
+    assert windows_calls == [(spellbook_dir, False)]
+    assert result == expected_return
+
+
+@pytest.mark.posix_only
+def test_dispatch_unknown_platform_raises(tmp_path, monkeypatch):
+    """Unknown platform: dispatch helper raises NotImplementedError.
+
+    A defensive guard for future Platform enum additions. Constructs a
+    sentinel object whose repr is stable and asserts the exception
+    message contains that repr.
+    """
+    from installer.platforms import claude_code as platform_mod
+
+    class _FakePlatform:
+        def __repr__(self) -> str:
+            return "<FakePlatform.BSD>"
+
+    fake = _FakePlatform()
+    spellbook_dir = tmp_path / "spellbook"
+
+    def must_not_call(sb_dir, dry_run=False):
+        pytest.fail("install_aliases must not be called for unknown platform")
+
+    def must_not_call_windows(sb_dir, dry_run=False):
+        pytest.fail(
+            "install_aliases_windows must not be called for unknown platform"
+        )
+
+    monkeypatch.setattr(platform_mod, "get_platform", lambda: fake)
+    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
+    monkeypatch.setattr(
+        platform_mod, "install_aliases_windows", must_not_call_windows
+    )
+
+    with pytest.raises(NotImplementedError) as exc_info:
+        platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
+
+    # Exact equality on the rendered exception message.
+    assert str(exc_info.value) == (
+        "No alias install handler for platform: <FakePlatform.BSD>"
+    )
