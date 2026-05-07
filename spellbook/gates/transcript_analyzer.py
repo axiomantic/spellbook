@@ -544,6 +544,13 @@ def _resolve_first_token(tokens: list[str]) -> str:
                 for tok in rest:
                     if tok in _MUTATING_BRANCH_FLAGS:
                         return "git branch -d"
+                # Cycle-7 F4: ``git branch --list 'pattern'`` and
+                # ``git branch -l 'pattern'`` are read-only — the positional
+                # is a glob filter, NOT a new branch name. Without this
+                # special-case the positional-arg check below would
+                # misclassify the filtered listing as branch creation.
+                if "--list" in rest or "-l" in rest:
+                    return "git branch"
                 # Read-only flags: ``--list``, ``--all``, ``-a``,
                 # ``--remotes``, ``-r``, ``-v``, ``--show-current``,
                 # ``--contains``, ``--no-contains``, ``--merged``,
@@ -555,10 +562,10 @@ def _resolve_first_token(tokens: list[str]) -> str:
                     for t in rest
                 )
                 if has_positional:
-                    # Non-flag positional under ``git branch`` either
-                    # creates a branch (``git branch newname``) or filters
-                    # by branch name; the former mutates and we cannot
-                    # safely distinguish without more context.
+                    # Non-flag positional under ``git branch`` (without
+                    # ``--list``/``-l``) either creates a branch
+                    # (``git branch newname``) or starts a branch from a
+                    # ref; both mutate.
                     return "git branch -d"
                 return "git branch"
             return f"{first} {second}"

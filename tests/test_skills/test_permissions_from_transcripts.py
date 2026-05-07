@@ -277,6 +277,11 @@ def test_per_subcommand_classification(command, expected_category):
         ("git branch --move old new", "local_git_mutation"),
         # git branch - bare positional (creates a branch).
         ("git branch newname", "local_git_mutation"),
+        # Cycle-7 F4: ``--list``/``-l`` makes positional args a glob filter,
+        # NOT a new branch name. Must classify as read-only.
+        ("git branch --list 'feat/*'", "read_only_safe"),
+        ("git branch -l 'feat/*'", "read_only_safe"),
+        ("git branch --list feat/foo", "read_only_safe"),
     ],
     ids=lambda v: v if isinstance(v, str) else None,
 )
