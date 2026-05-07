@@ -5,6 +5,10 @@ applying ``pytest.mark.skip`` to items decorated with ``posix_only`` when
 running on Windows, and to items decorated with ``windows_only`` when
 running on POSIX. These tests verify both the hook logic and that the
 marks are properly registered with pytest.
+
+This file lives under ``tests/installer/`` because the marks are scaffolding
+for WI-7 platform-dispatched installer tests, even though the marks
+themselves (and the conftest hook that consumes them) are repo-global.
 """
 
 import sys
@@ -47,7 +51,10 @@ class _FakeConfig:
     """
 
     def __init__(self):
-        self.pluginmanager = self  # quack: ``get_plugin`` lives here
+        # pytest calls ``config.pluginmanager.get_plugin(...)``; the fake
+        # collapses both onto one object so a single class implements both
+        # the config and pluginmanager surface used by the hook.
+        self.pluginmanager = self
 
     def getoption(self, name):
         assert name == "--run-docker"
@@ -59,11 +66,8 @@ class _FakeConfig:
 
 
 def _patch_platform(monkeypatch, value):
-    """Patch ``sys.platform`` and bypass the memory-tools shutil probe.
-
-    ``shutil.which`` on macOS calls into ``_winapi`` when ``sys.platform``
-    is ``win32``, which fails because ``_winapi`` is unavailable. The
-    memory-tools probe is orthogonal to mark routing, so stub it.
+    """Stub the memory-tools probe; it's orthogonal to mark routing and
+    would otherwise call ``shutil.which`` under a fake ``sys.platform``.
     """
     import tests.conftest as _conftest
 
@@ -173,7 +177,7 @@ def test_posix_only_mark_is_registered():
     markers = data["tool"]["pytest"]["ini_options"]["markers"]
     matches = [m for m in markers if m.startswith("posix_only:")]
 
-    assert matches == ["posix_only: skip on Windows (sys.platform.startswith('win'))"]
+    assert matches == ["posix_only: skip on Windows"]
 
 
 def test_windows_only_mark_is_registered():
@@ -189,6 +193,4 @@ def test_windows_only_mark_is_registered():
     markers = data["tool"]["pytest"]["ini_options"]["markers"]
     matches = [m for m in markers if m.startswith("windows_only:")]
 
-    assert matches == [
-        "windows_only: skip on POSIX (not sys.platform.startswith('win'))"
-    ]
+    assert matches == ["windows_only: skip on non-Windows platforms"]
