@@ -760,22 +760,25 @@ class TestClaudeCodeInstallerWiring:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
     def test_install_cleanup_purges_stale_agent_symlink(self, tmp_path):
-        """Install-time cleanup must include ``agents``.
+        """Install-time cleanup purges stale symlinks into THIS spellbook.
 
         When a source agent is renamed/removed, the prior symlink at
-        ``$CLAUDE_CONFIG_DIR/agents/<old>.md`` would otherwise dangle. The
-        ``cleanup_spellbook_symlinks`` pass (now extended to include
-        ``"agents"``) must purge it before install_agents runs.
+        ``$CLAUDE_CONFIG_DIR/agents/<old>.md`` points into this install's
+        ``agents/`` dir but its target is gone. The narrowed inline
+        pre-pass must purge it (parent-dir equality with this install's
+        ``agents/`` source) before install_agents runs. (Foreign-spellbook
+        broken links are NOT in scope for this cleanup -- see
+        ``test_install_cleanup_preserves_other_spellbook_broken_symlinks``.)
         """
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
         config_dir = tmp_path / "claude-config"
         config_dir.mkdir()
-        # Pre-create a stale symlink pointing into a "spellbook"-named path
-        # whose source file no longer exists.
-        stale_source = tmp_path / "spellbook-old" / "agents" / "obsolete.md"
-        stale_source.parent.mkdir(parents=True)
+        # Pre-create a stale symlink pointing into THIS spellbook's agents
+        # dir, whose source file once existed but has since been removed
+        # (the rename/removal scenario the cleanup is meant to cover).
+        stale_source = spellbook_dir / "agents" / "obsolete.md"
         stale_source.write_text("obsolete", encoding="utf-8")
         (config_dir / "agents").mkdir(parents=True, exist_ok=True)
         stale_target = config_dir / "agents" / "obsolete.md"
@@ -799,3 +802,58 @@ class TestClaudeCodeInstallerWiring:
         fresh_target = config_dir / "agents" / "fresh.md"
         assert fresh_target.is_symlink()
         assert fresh_target.resolve() == fresh_source.resolve()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_cleanup_preserves_other_spellbook_broken_symlinks(
+        self, tmp_path
+    ):
+        """Broken-symlink heuristic must not remove links into a *different*
+        spellbook installation.
+
+        The pre-pass that removes stale agent symlinks falls back to a
+        path-based heuristic when a symlink target is broken. Earlier the
+        heuristic relied on a ``"spellbook"`` substring match, which would
+        false-positive remove broken symlinks pointing at any installation
+        whose path happened to contain "spellbook" -- not just OUR install.
+        The tightened heuristic compares the broken symlink's parent dir
+        against THIS install's ``agents/`` dir via exact resolved-path
+        equality. A broken symlink whose path contains "spellbook" but
+        points into a different installation must be preserved.
+        """
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+
+        # Pre-create a broken symlink that points at a *different* spellbook
+        # checkout's agents/ dir. The directory is created (so the parent
+        # resolves) but the leaf file is missing, making the symlink broken.
+        foreign_root = tmp_path / "other-spellbook"
+        foreign_agents = foreign_root / "agents"
+        foreign_agents.mkdir(parents=True)
+        foreign_target_path = foreign_agents / "foreign.md"
+        # Do NOT create foreign_target_path -- we want a broken symlink.
+        (config_dir / "agents").mkdir(parents=True, exist_ok=True)
+        foreign_link = config_dir / "agents" / "foreign.md"
+        foreign_link.symlink_to(foreign_target_path)
+        # Sanity: link is broken, points at a path containing "spellbook".
+        assert foreign_link.is_symlink()
+        assert not foreign_link.exists()
+        assert "spellbook" in str(foreign_link.readlink()).lower()
+
+        # Add a fresh source agent so install proceeds normally.
+        _write_agent(spellbook_dir, "fresh.md", body="fresh body")
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        installer.install(skip_global_steps=True)
+
+        # The foreign broken symlink must be preserved -- it points at a
+        # different spellbook installation, not ours.
+        assert foreign_link.is_symlink()
+        assert foreign_link.readlink() == foreign_target_path

@@ -244,8 +244,18 @@ class ClaudeCodeInstaller(PlatformInstaller):
         self._step("Cleaning up stale agent symlinks")
         agents_source_dir = self.spellbook_dir / "agents"
         agents_target_dir = self.config_dir / "agents"
-        current_source_names = (
-            {p.name for p in agents_source_dir.glob("*.md") if p.is_file()}
+        # Build the set of CURRENT source targets (resolved paths), not
+        # basenames. A symlink in the target dir is "stale" only when its
+        # resolved target is no longer one of the current spellbook agent
+        # files. Using the resolved-path set (rather than basenames)
+        # preserves user-authored aliases that point at valid spellbook
+        # agents under non-canonical names: a symlink at
+        # ``$CLAUDE_CONFIG_DIR/agents/myalias.md`` whose resolved target is
+        # ``$SPELLBOOK_DIR/agents/alpha.md`` IS valid and must not be
+        # unlinked just because its basename does not appear in the source
+        # set.
+        current_source_targets = (
+            {p.resolve() for p in agents_source_dir.glob("*.md") if p.is_file()}
             if agents_source_dir.exists()
             else set()
         )
@@ -253,28 +263,28 @@ class ClaudeCodeInstaller(PlatformInstaller):
             for entry in sorted(agents_target_dir.glob("*.md")):
                 if not entry.is_symlink():
                     continue
-                # Determine if this symlink resolves into the spellbook agents
-                # dir; if so, and its basename has no current source, it is
-                # stale and must be removed. Broken links whose raw target
-                # parent points into the spellbook agents dir are also stale.
+                # Determine if this symlink should be treated as stale:
+                # - Resolves cleanly: stale iff its resolved target is NOT
+                #   in the current source-target set (covers both renamed
+                #   and removed source files, and aliases pointing at a
+                #   no-longer-current source).
+                # - Broken (resolve fails): stale iff the raw target's
+                #   parent resolves to this spellbook's agents/ dir
+                #   exactly, OR the raw target's parent (string-resolved)
+                #   equals our source agents dir even when the leaf is
+                #   missing (worktree-switch stale).
                 stale = False
                 try:
                     resolved = entry.resolve(strict=True)
-                    try:
-                        resolved.relative_to(agents_source_dir.resolve())
-                        # Resolves into spellbook agents/. Stale iff its
-                        # basename is not a current source.
-                        stale = entry.name not in current_source_names
-                    except ValueError:
-                        pass
+                    stale = resolved not in current_source_targets
                 except (OSError, RuntimeError):
                     # Broken symlink. Two stale-cleanup paths:
                     # (a) raw target's parent (resolved) is the current
                     #     spellbook agents dir -- same-worktree stale.
-                    # (b) raw target string contains "spellbook" and ends in
-                    #     /agents/<basename>.md -- worktree-switch stale,
-                    #     where the prior worktree dir no longer exists so
-                    #     parent.resolve() also fails.
+                    # (b) raw target's parent, resolved with strict=False
+                    #     (which tolerates missing leaves), equals this
+                    #     spellbook's agents dir -- worktree-switch stale
+                    #     where the prior worktree dir no longer exists.
                     try:
                         raw_target = Path(entry.readlink())
                     except OSError:
@@ -288,14 +298,23 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         except (ValueError, OSError):
                             pass
                         if not stale:
-                            raw_str = str(raw_target).lower()
-                            # Heuristic: looks like a prior install pointing
-                            # into some "spellbook"-named worktree's agents/.
-                            if (
-                                "spellbook" in raw_str
-                                and raw_target.parent.name == "agents"
-                            ):
-                                stale = True
+                            # Tightened heuristic: exact-equality of the
+                            # broken link's parent dir against THIS
+                            # spellbook's agents/ dir (string-resolved with
+                            # strict=False so missing leaves don't error).
+                            # This avoids false positives where the broken
+                            # symlink points into a DIFFERENT spellbook
+                            # installation -- substring matching on
+                            # "spellbook" used to remove those, which is
+                            # not our cleanup's responsibility.
+                            try:
+                                raw_parent_resolved = raw_target.parent.resolve(
+                                    strict=False
+                                )
+                                if raw_parent_resolved == agents_source_dir.resolve():
+                                    stale = True
+                            except OSError:
+                                pass
                 if stale and not self.dry_run:
                     try:
                         entry.unlink()
@@ -312,23 +331,32 @@ class ClaudeCodeInstaller(PlatformInstaller):
         upgraded = sum(1 for r in agent_results if r.action == "upgraded")
         unchanged = sum(1 for r in agent_results if r.action == "unchanged")
         skipped = sum(1 for r in agent_results if r.action == "skipped")
-        agent_failed = any(not r.success for r in agent_results)
+        failed = sum(1 for r in agent_results if not r.success)
+        agent_failed = failed > 0
         if installed or upgraded:
             agents_action = "installed"
         elif unchanged:
             agents_action = "unchanged"
         else:
             agents_action = "skipped"
+        message_parts = [
+            f"{installed} installed",
+            f"{upgraded} upgraded",
+            f"{unchanged} unchanged",
+            f"{skipped} skipped",
+        ]
+        if failed:
+            # Surface the failed count when nonzero so a partial-failure
+            # InstallResult (success=False) carries an actionable breakdown
+            # instead of "0 installed, 0 upgraded, 0 unchanged, 0 skipped".
+            message_parts.append(f"{failed} failed")
         results.append(
             InstallResult(
                 component="agents",
                 platform=self.platform_id,
                 success=not agent_failed,
                 action=agents_action,
-                message=(
-                    f"agents: {installed} installed, {upgraded} upgraded, "
-                    f"{unchanged} unchanged, {skipped} skipped"
-                ),
+                message="agents: " + ", ".join(message_parts),
             )
         )
 
@@ -572,12 +600,16 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         # Source-narrowed agent symlink removal: only unlink targets whose
         # resolved path lies within $SPELLBOOK_DIR/agents/. The broader
-        # cleanup_spellbook_symlinks pass above already handled the common
-        # case (substring match on "spellbook" or broken links); this pass
-        # exists for the case where a user has $CLAUDE_CONFIG_DIR set under
-        # a directory name that doesn't contain "spellbook" -- the substring
-        # match would miss, but resolve()-into-spellbook still narrows
-        # correctly.
+        # cleanup_spellbook_symlinks pass above already removed any broken
+        # symlink in this dir (regardless of where it pointed) and any
+        # symlink whose resolved-target STRING contains "spellbook". This
+        # narrowed pass exists for the case where $CLAUDE_CONFIG_DIR sits
+        # under a directory whose path does NOT contain "spellbook" -- the
+        # substring heuristic in cleanup_spellbook_symlinks would miss
+        # valid symlinks pointing at *our* spellbook source via a path
+        # without that substring. uninstall_agents checks resolved-target
+        # identity (parent dir == this spellbook's agents/), not substring,
+        # so it catches those.
         agent_uninstall_results = uninstall_agents(
             config_dir=self.config_dir,
             spellbook_dir=self.spellbook_dir,
