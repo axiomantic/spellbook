@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -76,6 +77,17 @@ REQUIRED_BODY_SECTIONS: tuple[str, ...] = (
     "## Constraints",
 )
 
+# Matches a fenced code block (```...```), including the opening info-string
+# line and the closing fence. DOTALL lets the pattern span multiple lines.
+_FENCED_RE = re.compile(r"```.*?```", re.DOTALL)
+
+
+def _strip_fenced_blocks(body: str) -> str:
+    """Remove fenced ``` ... ``` blocks from `body` so that headings literal-
+    embedded inside example code do not false-match the section-ordering scan.
+    """
+    return _FENCED_RE.sub("", body)
+
 
 def _split_frontmatter(text: str) -> tuple[dict, str]:
     """Return (frontmatter_dict, body). Empty dict if no frontmatter."""
@@ -110,11 +122,19 @@ def _tokenize_tools(value: str) -> set[str]:
 # ---------------------------------------------------------------------------
 
 
-def test_canonical_implementer_exists():
-    """Task B canonical seed: implementer.md MUST exist before Task C
-    fans out the remaining 8 agents."""
-    assert (AGENTS_DIR / "implementer.md").exists(), (
-        "agents/implementer.md missing; Task B canonical seed not yet authored"
+def test_all_expected_new_agents_exist():
+    """Every key in EXPECTED_NEW_AGENTS MUST have a corresponding file in
+    agents/. Guards against silent parametrize-shrinkage when an agent file
+    is accidentally deleted: without this check, ``_existing_new_agents()``
+    would simply produce a smaller parametrize input set and the per-agent
+    schema tests would still pass."""
+    expected = set(EXPECTED_NEW_AGENTS.keys())
+    on_disk = {p.stem for p in AGENTS_DIR.glob("*.md") if p.stem in expected}
+    missing = expected - on_disk
+    assert not missing, (
+        f"Expected new-agent files missing from agents/: {sorted(missing)}. "
+        "If an agent was intentionally removed, also remove it from "
+        "EXPECTED_NEW_AGENTS."
     )
 
 
@@ -135,11 +155,13 @@ def test_new_agent_has_canonical_tools_frontmatter(agent_name: str):
 def test_new_agent_has_required_body_sections_in_order(agent_name: str):
     path = AGENTS_DIR / f"{agent_name}.md"
     _, body = _split_frontmatter(path.read_text(encoding="utf-8"))
-    # Match each heading as a full line (flanked by newlines) so that a
-    # literal "## Purpose" appearing inside a fenced code block cannot
-    # false-match the section-ordering check. Prepending "\n" lets the
-    # very first heading match even when it sits at the top of the body.
-    search_body = "\n" + body
+    # Strip fenced ``` ... ``` blocks before scanning so that a literal
+    # heading like "## Purpose" embedded in an example code block cannot
+    # false-match the section-ordering check. After stripping, match each
+    # heading as a full line (flanked by newlines). Prepending "\n" lets
+    # the very first heading match even when it sits at the top of the body.
+    stripped = _strip_fenced_blocks(body)
+    search_body = "\n" + stripped
     missing = [
         h for h in REQUIRED_BODY_SECTIONS if f"\n{h}\n" not in search_body
     ]

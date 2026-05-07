@@ -547,6 +547,69 @@ class TestUninstallAgents:
         assert (config_dir / "agents").exists()
         assert list((config_dir / "agents").iterdir()) == []
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_uninstall_removes_broken_symlink_into_spellbook(self, tmp_path):
+        """Broken symlink whose dangling target is INSIDE
+        ``$SPELLBOOK_DIR/agents/`` is removed by ``uninstall_agents``.
+
+        Matches the spellbook-points-to contract: the link is ours; the
+        target file simply no longer exists. Exercises the broken-symlink
+        branch in ``uninstall_agents`` (parent-dir resolves into the
+        spellbook agents dir even though ``resolve(strict=True)`` raises).
+        """
+        spellbook_dir = tmp_path / "spellbook"
+        spellbook_dir.mkdir()
+        (spellbook_dir / "agents").mkdir()
+        config_dir = tmp_path / "config"
+        (config_dir / "agents").mkdir(parents=True)
+        # Broken symlink whose dangling target is inside the spellbook
+        # agents dir (target file never existed).
+        target = config_dir / "agents" / "ghost.md"
+        target.symlink_to(spellbook_dir / "agents" / "ghost.md")
+        assert target.is_symlink()
+        assert not target.exists()  # broken
+
+        results = uninstall_agents(
+            config_dir=config_dir, spellbook_dir=spellbook_dir
+        )
+
+        assert all(r.action == "removed" for r in results), results
+        assert not target.exists() and not target.is_symlink()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_uninstall_preserves_broken_symlink_pointing_elsewhere(
+        self, tmp_path
+    ):
+        """Broken symlink whose dangling target is OUTSIDE
+        ``$SPELLBOOK_DIR/agents/`` is preserved by ``uninstall_agents``.
+
+        It's not ours to clean up. Exercises the negative branch of the
+        broken-symlink heuristic: the parent dir does NOT resolve into the
+        spellbook agents dir, so the link is left untouched.
+        """
+        spellbook_dir = tmp_path / "spellbook"
+        spellbook_dir.mkdir()
+        (spellbook_dir / "agents").mkdir()
+        config_dir = tmp_path / "config"
+        (config_dir / "agents").mkdir(parents=True)
+        # Broken symlink pointing OUTSIDE spellbook.
+        other = tmp_path / "elsewhere" / "nope.md"
+        target = config_dir / "agents" / "user-link.md"
+        target.symlink_to(other)
+        assert target.is_symlink()
+        assert not target.exists()  # broken
+
+        results = uninstall_agents(
+            config_dir=config_dir, spellbook_dir=spellbook_dir
+        )
+
+        # Either no result for this file, or a non-"removed" result -- but
+        # the link MUST remain.
+        assert all(r.action != "removed" for r in results), results
+        assert target.is_symlink()
+        # Target unchanged.
+        assert target.readlink() == other
+
 
 # ---------------------------------------------------------------------------
 # ClaudeCodeInstaller wiring tests (Task A2 integration)
