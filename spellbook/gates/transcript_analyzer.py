@@ -551,21 +551,40 @@ def _resolve_first_token(tokens: list[str]) -> str:
                 # misclassify the filtered listing as branch creation.
                 if "--list" in rest or "-l" in rest:
                     return "git branch"
-                # Read-only flags: ``--list``, ``--all``, ``-a``,
-                # ``--remotes``, ``-r``, ``-v``, ``--show-current``,
-                # ``--contains``, ``--no-contains``, ``--merged``,
-                # ``--no-merged``. If every non-flag-prefixed positional
-                # is absent, treat as the safe form.
-                _READ_ONLY_BRANCH_FLAGS_PREFIXES = ("-",)
-                has_positional = any(
-                    not t.startswith(_READ_ONLY_BRANCH_FLAGS_PREFIXES)
-                    for t in rest
-                )
-                if has_positional:
+                # Cycle-8 F2: read-only flags that take a SEPARATE-arg
+                # value. ``git branch --contains HEAD~1`` is read-only,
+                # but the bare positional check below would treat
+                # ``HEAD~1`` as a new-branch name and misclassify it as
+                # mutating. Consume the flag's argument up front so the
+                # subsequent positional check only sees true positionals.
+                # ``--key=value`` form does not consume a separate slot
+                # and is naturally handled by the dash-prefix filter.
+                _GIT_BRANCH_READONLY_ARG_FLAGS = {
+                    "--contains", "--no-contains",
+                    "--merged", "--no-merged",
+                    "--points-at",
+                    "--sort",
+                    "--format",
+                    "--column", "--no-column",
+                }
+                # Walk ``rest`` and build a positional list, skipping the
+                # arg slot following any read-only-arg-taking flag.
+                positional: list[str] = []
+                skip_next = False
+                for tok in rest:
+                    if skip_next:
+                        skip_next = False
+                        continue
+                    if tok in _GIT_BRANCH_READONLY_ARG_FLAGS:
+                        skip_next = True
+                        continue
+                    if not tok.startswith("-"):
+                        positional.append(tok)
+                if positional:
                     # Non-flag positional under ``git branch`` (without
-                    # ``--list``/``-l``) either creates a branch
-                    # (``git branch newname``) or starts a branch from a
-                    # ref; both mutate.
+                    # ``--list``/``-l`` or a read-only arg-taking flag)
+                    # either creates a branch (``git branch newname``)
+                    # or starts a branch from a ref; both mutate.
                     return "git branch -d"
                 return "git branch"
             return f"{first} {second}"

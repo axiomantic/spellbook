@@ -151,6 +151,12 @@ REJECT_CASES = [
     ("env_pythonbreakpoint", "PYTHONBREAKPOINT=evil:run python -c 'pass'", "BASH-PARSER-ENVPREFIX"),
     ("env_java_tool_options", "JAVA_TOOL_OPTIONS=-javaagent:/tmp/evil.jar java App", "BASH-PARSER-ENVPREFIX"),
     ("env_node_options", "NODE_OPTIONS=--require=/tmp/evil.js node app.js", "BASH-PARSER-ENVPREFIX"),
+    # ----- cycle-8 hardening (F1): /usr/ deny narrowed to specific subdirs -----
+    # The blanket ``/usr/`` deny blocked legitimate ``/usr/local/`` writes.
+    # Specific system-managed subdirectories must still deny.
+    ("redirect_usr_bin", "echo bad > /usr/bin/evil", "BASH-PARSER-REDIRECT"),
+    ("redirect_usr_sbin", "echo bad > /usr/sbin/evil", "BASH-PARSER-REDIRECT"),
+    ("redirect_usr_lib", "echo bad > /usr/lib/evil.so", "BASH-PARSER-REDIRECT"),
 ]
 
 
@@ -198,6 +204,9 @@ ALLOWED_CASES = [
     "env -u PATH git status",
     "env FOO=bar git status",
     "env -i git status",
+    # Cycle-8 F1: ``/usr/local/`` is NOT system-managed; legitimate writes
+    # under it (e.g. Homebrew, manual ``make install``) must pass.
+    "echo hello > /usr/local/bin/foo",
 ]
 
 

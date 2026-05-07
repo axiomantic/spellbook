@@ -282,6 +282,21 @@ def test_per_subcommand_classification(command, expected_category):
         ("git branch --list 'feat/*'", "read_only_safe"),
         ("git branch -l 'feat/*'", "read_only_safe"),
         ("git branch --list feat/foo", "read_only_safe"),
+        # Cycle-8 F2: read-only flags that take a SEPARATE-arg value
+        # (``--contains <ref>``, ``--merged <ref>``, ``--points-at <ref>``,
+        # ``--sort <key>``) must not cause the trailing arg to be
+        # misclassified as a new-branch positional.
+        ("git branch --contains HEAD", "read_only_safe"),
+        ("git branch --contains HEAD~1", "read_only_safe"),
+        ("git branch --no-contains HEAD~1", "read_only_safe"),
+        ("git branch --merged main", "read_only_safe"),
+        ("git branch --no-merged main", "read_only_safe"),
+        ("git branch --points-at v1.0", "read_only_safe"),
+        # ``--key=value`` form is naturally handled by the dash-prefix
+        # filter (no separate slot is consumed).
+        ("git branch --sort=-committerdate", "read_only_safe"),
+        # ``-d`` still wins even with a read-only-arg-taking flag present.
+        ("git branch -d feat", "local_git_mutation"),
     ],
     ids=lambda v: v if isinstance(v, str) else None,
 )

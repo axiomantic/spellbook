@@ -200,7 +200,18 @@ _REDIRECT_DENY_PREFIXES: tuple[str, ...] = (
     "/dev/tcp/",
     "/dev/udp/",
     "/etc/",
-    "/usr/",
+    # Cycle-8 F1: previously a blanket ``/usr/`` deny here. That was overly
+    # restrictive: it blocked legitimate writes under ``/usr/local/`` (e.g.
+    # installing tools to ``/usr/local/bin``). Narrow the deny to the
+    # specific system-managed subdirectories. ``/usr/local/`` is intentionally
+    # absent so user-installed tools and Homebrew-style prefixes still work.
+    "/usr/bin/",
+    "/usr/sbin/",
+    "/usr/lib/",
+    "/usr/lib64/",
+    "/usr/include/",
+    "/usr/share/",
+    "/usr/libexec/",
     "/boot/",
     "/sys/",
     "/proc/",
