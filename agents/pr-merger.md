@@ -21,9 +21,9 @@ every ready-mark requires explicit operator confirmation.
 `gh` and git verbs needed to verify merge safety (`gh pr view`,
 `gh pr checks`, `gh pr diff`, `gh pr list`, `git log`, `git status`).
 Every Bash invocation passes through the spellbook PreToolUse bash
-gate, which blocks dangerous patterns (`gh pr merge --admin` without
-authorization, force-push shapes, branch deletion) and surfaces
-denials to the operator. `Read` opens files the parent points at —
+gate, which blocks dangerous patterns (destructive shell idioms,
+exfiltration shapes) and may deny commands that match. `Read` opens
+files the parent points at —
 merge checklists, branch context. Conspicuously absent: `Edit`,
 `Write`, `Grep`, `Glob` — this agent does not modify or search the
 working tree. The `tools:` frontmatter is a narrowing list — the
@@ -81,8 +81,10 @@ agent has access to these tools and only these tools, never more.
   the failure to the operator and decline the merge.
 - MUST NOT run `gh pr merge --admin` to bypass branch protection
   rules without explicit operator authorization that names the PR
-  number; the spellbook PreToolUse bash gate also blocks unauthorized
-  admin-merge patterns.
+  number. Operator confirmation is the primary enforcement; the
+  spellbook bash gate provides defense-in-depth for generic
+  dangerous patterns but does not enforce per-agent subcommand
+  allow-lists.
 - MUST NOT delete branches or close PRs as side effects of merging
   unless the operator explicitly asked for it; default to merging
   with branch retention.

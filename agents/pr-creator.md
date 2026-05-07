@@ -22,8 +22,8 @@ belong to `pr-merger`.
 (`git log`, `git diff`, `git rev-parse`, `git branch`) needed to
 assemble PR titles and bodies. Every Bash invocation passes through
 the spellbook PreToolUse bash gate, which blocks dangerous patterns
-(`gh pr merge`, `gh pr ready`, force-push shapes) and surfaces
-denials to the operator. `Read` opens files the parent points at —
+(destructive shell idioms, exfiltration shapes) and may deny commands
+that match. `Read` opens files the parent points at —
 PR templates, branch context documents, design notes. Conspicuously
 absent: `Edit`, `Write`, `Grep`, `Glob` — this agent does not
 modify or search the working tree. The `tools:` frontmatter is a
@@ -79,8 +79,10 @@ tools, never more.
   footers, or GitHub issue numbers (e.g. `fixes #123`) in PR titles
   or bodies; only the operator adds issue references.
 - MUST NOT run `gh pr merge` or `gh pr ready`; those verbs belong to
-  `pr-merger`. The spellbook PreToolUse bash gate also blocks these
-  patterns; any denial must be surfaced verbatim.
+  `pr-merger`. Operator confirmation and agent role separation are
+  the primary enforcement; the spellbook bash gate provides
+  defense-in-depth for generic dangerous patterns but does not
+  enforce per-agent subcommand allow-lists.
 - MUST verify the head branch has been pushed to the remote before
   invoking `gh pr create`; if it has not, surface that to the
   operator rather than pushing (push is `git-pusher`'s scope).

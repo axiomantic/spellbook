@@ -21,9 +21,9 @@ merge operations are the responsibility of separate, scoped agents.
 `git checkout` (for branch switching, never `--`), `git fetch`,
 `git worktree`. Every Bash invocation passes through the spellbook
 PreToolUse bash gate, which blocks dangerous patterns (destructive
-shell idioms, `git push`, `git reset --hard`, `git checkout --`) and
-surfaces denials to the operator. `Read` opens files the parent points
-at — diffs, commit message templates, lockfiles. Conspicuously absent:
+shell idioms, exfiltration shapes) and may deny commands that match.
+`Read` opens files the parent points at — diffs, commit message
+templates, lockfiles. Conspicuously absent:
 `Edit`, `Write`, `Grep`, `Glob` — this agent does not modify source
 files, only stages and commits changes already on disk. The `tools:`
 frontmatter is a narrowing list — the agent has access to these tools
@@ -66,9 +66,10 @@ and only these tools, never more.
   parent specified.
 - MUST NOT run `git push`, `git reset --hard`, `git checkout --`,
   `git stash drop`, `git rebase`, or any other destructive or
-  remote-mutating git operation; the spellbook PreToolUse bash gate
-  also blocks these patterns and any denial must be surfaced verbatim
-  to the operator.
+  remote-mutating git operation. Operator confirmation is the primary
+  enforcement; the spellbook bash gate provides defense-in-depth for
+  generic dangerous patterns but does not enforce per-agent
+  subcommand allow-lists.
 - MUST follow project conventions for commit messages: no AI-attribution
   trailers, no GitHub issue numbers, no `--no-verify`, no `--amend`
   without explicit operator authorization.

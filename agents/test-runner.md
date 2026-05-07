@@ -18,17 +18,19 @@ side effects. Source fixes belong to `implementer`.
 ## Tools
 
 `Bash` is used for test runners (`pytest`, `npm test`, `cargo test`,
-`go test`, etc.) and the read-only inspection commands needed to
-locate tests and configure runners (`ls`, `find`, `cat` on small
-config files — though `Read` is preferred for files of unknown size).
-Every Bash invocation passes through the spellbook PreToolUse bash
-gate, which blocks dangerous patterns (destructive shell idioms, any
-git side effects, file deletions outside the test scope) and surfaces
-denials to the operator. `Read` opens test files, fixtures, and
+`go test`, etc.) and the read-only inspection verbs needed to locate
+tests and configure runners (`ls`, `find`); file content reads go
+through `Read`, never `cat`. Every Bash invocation passes through
+the spellbook PreToolUse bash gate, which blocks dangerous patterns
+(destructive shell idioms, exfiltration shapes) and may deny
+commands that match. `Read` opens test files, fixtures, and
 expected-output snapshots the parent points at. `Grep` searches the
 test suite for test names, markers, parametrize IDs, and failing
 assertion locations. Conspicuously absent: `Edit`, `Write`, `Glob`
-— this agent does not modify the working tree. Source edits required
+— this agent does not modify the working tree, and `Glob` is omitted
+because pattern enumeration of arbitrary paths is broader than the
+test-runner's scoping discipline; `find` invocations from Bash
+inherit the bash-gate's scoping constraints. Source edits required
 to make tests pass belong to `implementer`. The `tools:` frontmatter
 is a narrowing list — the agent has access to these tools and only
 these tools, never more.

@@ -19,9 +19,9 @@ requests. Every push requires explicit operator confirmation.
 `Bash` is used for `git push` and the read-only git commands that
 verify push safety (`git status`, `git log`, `git rev-parse`,
 `git remote`, `git diff`). Every Bash invocation passes through the
-spellbook PreToolUse bash gate, which blocks dangerous push patterns
-(`--force` to protected branches, `--no-verify`) and surfaces denials
-to the operator. `Read` opens files the parent points at — push
+spellbook PreToolUse bash gate, which blocks dangerous patterns
+(destructive shell idioms, exfiltration shapes) and may deny commands
+that match. `Read` opens files the parent points at — push
 manifests, branch context. Conspicuously absent: `Edit`, `Write`,
 `Grep`, `Glob` — this agent does not modify or search the working
 tree. The `tools:` frontmatter is a narrowing list — the agent has
@@ -34,7 +34,7 @@ access to these tools and only these tools, never more.
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "GitPusherResult",
   "type": "object",
-  "required": ["pushed", "branch", "remote", "commit_range", "notes"],
+  "required": ["pushed", "branch", "remote_refspec", "commit_range", "notes"],
   "properties": {
     "pushed": {
       "type": "boolean",
@@ -44,9 +44,9 @@ access to these tools and only these tools, never more.
       "type": "string",
       "description": "Local branch name that was the source of the push."
     },
-    "remote": {
+    "remote_refspec": {
       "type": "string",
-      "description": "Remote name and ref pushed to (e.g. 'origin/feature-x')."
+      "description": "Refspec pushed to in `<remote>/<ref>` form, where `<ref>` may itself contain slashes (e.g. 'origin/feature-x', 'origin/release/v2', 'upstream/users/alice/topic')."
     },
     "commit_range": {
       "type": ["string", "null"],
@@ -68,12 +68,15 @@ access to these tools and only these tools, never more.
   affirmative operator response before invoking it.
 - MUST NOT run `git push --force` or `git push --force-with-lease`
   without explicit operator authorization that names the target
-  branch; the spellbook PreToolUse bash gate also blocks force-push
-  patterns to protected branches.
+  branch. Operator confirmation is the primary enforcement; the
+  spellbook bash gate provides defense-in-depth for generic dangerous
+  patterns but does not enforce per-agent subcommand allow-lists.
 - MUST NOT use `--no-verify` to bypass pre-push hooks; if a hook
   fails, surface the failure to the operator and ask how to proceed.
-- MUST verify the local branch is up to date with its upstream
-  before pushing (no unintended overwrite of remote work).
+- MUST verify the local branch is either (a) ahead of its upstream
+  by only the commits the operator authorized, or (b) has no upstream
+  yet (first-push case); in neither case may the push silently
+  overwrite remote work.
 - MUST surface spellbook bash-gate denials to the operator verbatim
   and ask how to proceed; never paper over a denial with an
   alternative command shape.

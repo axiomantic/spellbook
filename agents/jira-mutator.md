@@ -1,6 +1,6 @@
 ---
 name: jira-mutator
-description: Use for Atlassian/Jira write operations via scoped Atlassian MCP write tools — create issue, transition status, add comment, edit fields. Operator confirmation expected for state transitions. Returns structured JSON.
+description: Use for Atlassian/Jira write operations via scoped Atlassian MCP write tools — create issue, transition status, add comment, edit fields. Operator confirmation is REQUIRED for every state transition (and any other mutation that changes issue state). Jira access uses runtime-discovered Atlassian MCP write tools; the `tools:` frontmatter narrows declarable tools to `Read`. Returns structured JSON.
 tools: Read
 model: inherit
 ---
