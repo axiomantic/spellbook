@@ -247,7 +247,17 @@ def _check_read_path(tool_input: dict) -> list[dict]:
 
     try:
         resolved = str(Path(file_path).expanduser().resolve(strict=False))
-    except (OSError, RuntimeError):
+    except (OSError, RuntimeError) as e:
+        # Path resolution can fail on weird inputs (cyclic symlinks,
+        # unreadable parents, recursion limits). Log and proceed with
+        # the un-resolved path — the rule already matched, so we still
+        # surface the finding; we just lose the canonicalized display.
+        logger.warning(
+            "secret-path resolve failed for %r (%s): %s",
+            file_path,
+            type(e).__name__,
+            e,
+        )
         resolved = file_path
 
     return [

@@ -36,9 +36,13 @@ there). No additional case folding is needed.
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path, PurePath
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -131,10 +135,17 @@ def check_secret_path(file_path: str) -> str | None:
 
     try:
         resolved = _resolve(file_path)
-    except (OSError, RuntimeError):
+    except (OSError, RuntimeError) as e:
         # Path resolution can fail on weird inputs; fail-open is fine
         # because the bash/exfil rules would still catch a real attack
-        # via the Bash tool.
+        # via the Bash tool. Log so an operator can investigate
+        # unexpected resolution failures.
+        logger.warning(
+            "secret-path resolution failed for %r (%s): %s",
+            file_path,
+            type(e).__name__,
+            e,
+        )
         return None
 
     home = Path.home().resolve()

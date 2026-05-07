@@ -7,6 +7,7 @@ The extension provides:
 - Context via GEMINI.md in the extension directory
 """
 
+import logging
 import shutil
 import subprocess
 from pathlib import Path
@@ -16,6 +17,9 @@ from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
+
+
+logger = logging.getLogger(__name__)
 
 
 POLICY_FILENAME = "spellbook-security.toml"
@@ -81,8 +85,15 @@ def install_gemini_policy(
         if legacy_artifact.exists():
             try:
                 legacy_artifact.unlink()
-            except OSError:
-                pass
+            except OSError as e:
+                # Best-effort migration. Log so an operator can spot a
+                # permission/filesystem issue, but do not fail the install
+                # over a stale artifact we could not remove.
+                logger.warning(
+                    "failed to remove legacy policy artifact %s: %s",
+                    legacy_artifact,
+                    e,
+                )
         shutil.copy2(source, dest)
         return InstallResult(
             component="security_policy",
