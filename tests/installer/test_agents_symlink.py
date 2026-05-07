@@ -546,3 +546,256 @@ class TestUninstallAgents:
         assert [r for r in second if r.action == "removed"] == []
         assert (config_dir / "agents").exists()
         assert list((config_dir / "agents").iterdir()) == []
+
+
+# ---------------------------------------------------------------------------
+# ClaudeCodeInstaller wiring tests (Task A2 integration)
+# ---------------------------------------------------------------------------
+
+
+def _scaffold_spellbook(spellbook_root: Path) -> Path:
+    """Create the minimum scaffolding ``ClaudeCodeInstaller.install()`` expects.
+
+    The installer enumerates skills/, commands/, scripts/, patterns/, docs/,
+    profiles/, and agents/ subdirs. We pre-create empty placeholders for
+    every directory the installer touches so that the install path runs to
+    completion. Callers populate ``agents/`` with the test's source files.
+    """
+    for sub in (
+        "skills",
+        "commands",
+        "scripts",
+        "patterns",
+        "docs",
+        "profiles",
+        "agents",
+    ):
+        (spellbook_root / sub).mkdir(parents=True, exist_ok=True)
+    return spellbook_root
+
+
+class TestClaudeCodeInstallerWiring:
+    """Verify install_agents/uninstall_agents are wired into ClaudeCodeInstaller.
+
+    The unit tests above exercise the component in isolation. These tests
+    verify it is invoked by the platform installer, that its results land in
+    ``installer.results`` as a properly shaped ``InstallResult``, that the
+    install-time symlink cleanup includes ``agents`` (so renamed/removed
+    source files don't leave stale symlinks), and that the symmetric
+    uninstall step preserves user-authored files.
+    """
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_creates_agent_symlinks_in_config_dir(self, tmp_path):
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+
+        agent_names = ("alpha.md", "beta.md", "gamma.md")
+        sources = {
+            name: _write_agent(spellbook_dir, name, body=f"body-{name}")
+            for name in agent_names
+        }
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        installer.install(skip_global_steps=True)
+
+        for name, source in sources.items():
+            target = config_dir / "agents" / name
+            assert target.is_symlink()
+            assert target.resolve() == source.resolve()
+            assert target.read_text(encoding="utf-8") == f"body-{name}"
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_returns_install_result_for_agents_step(self, tmp_path):
+        from installer.core import InstallResult
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+        for name in ("alpha.md", "beta.md", "gamma.md"):
+            _write_agent(spellbook_dir, name)
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        results = installer.install(skip_global_steps=True)
+
+        agent_results = [r for r in results if r.component == "agents"]
+        assert agent_results == [
+            InstallResult(
+                component="agents",
+                platform="claude_code",
+                success=True,
+                action="installed",
+                message="agents: 3 installed, 0 upgraded, 0 unchanged, 0 skipped",
+            )
+        ]
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_dry_run_creates_no_files(self, tmp_path):
+        from installer.core import InstallResult
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+        for name in ("alpha.md", "beta.md"):
+            _write_agent(spellbook_dir, name)
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=True,
+        )
+        results = installer.install(skip_global_steps=True)
+
+        # No filesystem writes under config_dir/agents.
+        agents_target = config_dir / "agents"
+        if agents_target.exists():
+            assert list(agents_target.iterdir()) == []
+
+        # Agents step still reports its intended action.
+        agent_results = [r for r in results if r.component == "agents"]
+        assert agent_results == [
+            InstallResult(
+                component="agents",
+                platform="claude_code",
+                success=True,
+                action="installed",
+                message="agents: 2 installed, 0 upgraded, 0 unchanged, 0 skipped",
+            )
+        ]
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_uninstall_removes_agent_symlinks_only_spellbook_pointing(
+        self, tmp_path
+    ):
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+        spellbook_names = ("alpha.md", "beta.md")
+        sources = [_write_agent(spellbook_dir, n) for n in spellbook_names]
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        installer.install(skip_global_steps=True)
+
+        # Pre-create a user-authored regular file alongside spellbook symlinks.
+        user_file = config_dir / "agents" / "my-user-agent.md"
+        user_file.write_text("user content", encoding="utf-8")
+
+        installer.uninstall(skip_global_steps=True)
+
+        # All spellbook-pointing symlinks gone.
+        for src in sources:
+            assert not (config_dir / "agents" / src.name).exists()
+        # User file preserved verbatim.
+        assert user_file.exists()
+        assert not user_file.is_symlink()
+        assert user_file.read_text(encoding="utf-8") == "user content"
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_idempotent_re_run_no_duplicates(self, tmp_path):
+        from installer.core import InstallResult
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+        names = ("alpha.md", "beta.md")
+        for n in names:
+            _write_agent(spellbook_dir, n)
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        installer.install(skip_global_steps=True)
+
+        targets = [config_dir / "agents" / n for n in names]
+        before = [(t.resolve(), t.lstat().st_ino) for t in targets]
+
+        # Second install on a fresh installer instance to simulate re-running.
+        installer2 = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        results = installer2.install(skip_global_steps=True)
+
+        agent_results = [r for r in results if r.component == "agents"]
+        assert agent_results == [
+            InstallResult(
+                component="agents",
+                platform="claude_code",
+                success=True,
+                action="unchanged",
+                message="agents: 0 installed, 0 upgraded, 2 unchanged, 0 skipped",
+            )
+        ]
+        after = [(t.resolve(), t.lstat().st_ino) for t in targets]
+        assert before == after
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
+    def test_install_cleanup_purges_stale_agent_symlink(self, tmp_path):
+        """Install-time cleanup must include ``agents``.
+
+        When a source agent is renamed/removed, the prior symlink at
+        ``$CLAUDE_CONFIG_DIR/agents/<old>.md`` would otherwise dangle. The
+        ``cleanup_spellbook_symlinks`` pass (now extended to include
+        ``"agents"``) must purge it before install_agents runs.
+        """
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
+        config_dir = tmp_path / "claude-config"
+        config_dir.mkdir()
+        # Pre-create a stale symlink pointing into a "spellbook"-named path
+        # whose source file no longer exists.
+        stale_source = tmp_path / "spellbook-old" / "agents" / "obsolete.md"
+        stale_source.parent.mkdir(parents=True)
+        stale_source.write_text("obsolete", encoding="utf-8")
+        (config_dir / "agents").mkdir(parents=True, exist_ok=True)
+        stale_target = config_dir / "agents" / "obsolete.md"
+        stale_target.symlink_to(stale_source)
+        stale_source.unlink()  # break the link
+        # Add a fresh source agent.
+        fresh_source = _write_agent(spellbook_dir, "fresh.md", body="fresh body")
+
+        installer = ClaudeCodeInstaller(
+            spellbook_dir=spellbook_dir,
+            config_dir=config_dir,
+            version="0.0.0-test",
+            dry_run=False,
+        )
+        installer.install(skip_global_steps=True)
+
+        # Stale symlink purged.
+        assert not stale_target.exists()
+        assert not stale_target.is_symlink()
+        # Fresh symlink present.
+        fresh_target = config_dir / "agents" / "fresh.md"
+        assert fresh_target.is_symlink()
+        assert fresh_target.resolve() == fresh_source.resolve()

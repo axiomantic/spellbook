@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
+from ..components.agents import install_agents, uninstall_agents
 from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
@@ -91,6 +92,13 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         # Clean up existing installation before installing new one
         self._step("Cleaning up old symlinks")
+        # NOTE: agents/ is intentionally absent from this broad cleanup. The
+        # cleanup_spellbook_symlinks pass clobbers any symlink resolving into a
+        # path containing "spellbook" -- that is fine for skills/commands/
+        # scripts (which are recreated unconditionally on every install) but
+        # would defeat install_agents's "unchanged" idempotency path. Stale
+        # agent symlinks (renamed/removed source files) are purged below by a
+        # narrowed inline pass that preserves currently-valid entries.
         cleanup_dirs = ["skills", "commands", "scripts"]
         total_cleaned = 0
         for subdir in cleanup_dirs:
@@ -223,6 +231,106 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=f"scripts: {script_count} installed",
                     )
                 )
+
+        # Install agents (claude_code only - other platforms don't yet support
+        # this discovery pattern). Sub-agents must live in $CLAUDE_CONFIG_DIR/
+        # agents/ to be discovered by Claude Code 2.1.x; we symlink each
+        # $SPELLBOOK_DIR/agents/*.md target into place.
+        #
+        # Pre-cleanup: purge stale agent symlinks (point into the spellbook
+        # agents dir but have no matching current source file). This handles
+        # renamed/removed source agents without clobbering currently-valid
+        # symlinks (which install_agents will report as "unchanged").
+        self._step("Cleaning up stale agent symlinks")
+        agents_source_dir = self.spellbook_dir / "agents"
+        agents_target_dir = self.config_dir / "agents"
+        current_source_names = (
+            {p.name for p in agents_source_dir.glob("*.md") if p.is_file()}
+            if agents_source_dir.exists()
+            else set()
+        )
+        if agents_target_dir.exists():
+            for entry in sorted(agents_target_dir.glob("*.md")):
+                if not entry.is_symlink():
+                    continue
+                # Determine if this symlink resolves into the spellbook agents
+                # dir; if so, and its basename has no current source, it is
+                # stale and must be removed. Broken links whose raw target
+                # parent points into the spellbook agents dir are also stale.
+                stale = False
+                try:
+                    resolved = entry.resolve(strict=True)
+                    try:
+                        resolved.relative_to(agents_source_dir.resolve())
+                        # Resolves into spellbook agents/. Stale iff its
+                        # basename is not a current source.
+                        stale = entry.name not in current_source_names
+                    except ValueError:
+                        pass
+                except (OSError, RuntimeError):
+                    # Broken symlink. Two stale-cleanup paths:
+                    # (a) raw target's parent (resolved) is the current
+                    #     spellbook agents dir -- same-worktree stale.
+                    # (b) raw target string contains "spellbook" and ends in
+                    #     /agents/<basename>.md -- worktree-switch stale,
+                    #     where the prior worktree dir no longer exists so
+                    #     parent.resolve() also fails.
+                    try:
+                        raw_target = Path(entry.readlink())
+                    except OSError:
+                        raw_target = None
+                    if raw_target is not None and raw_target.is_absolute():
+                        try:
+                            raw_target.parent.resolve().relative_to(
+                                agents_source_dir.resolve()
+                            )
+                            stale = True
+                        except (ValueError, OSError):
+                            pass
+                        if not stale:
+                            raw_str = str(raw_target).lower()
+                            # Heuristic: looks like a prior install pointing
+                            # into some "spellbook"-named worktree's agents/.
+                            if (
+                                "spellbook" in raw_str
+                                and raw_target.parent.name == "agents"
+                            ):
+                                stale = True
+                if stale and not self.dry_run:
+                    try:
+                        entry.unlink()
+                    except OSError:
+                        pass
+
+        self._step("Installing agents")
+        agent_results = install_agents(
+            spellbook_dir=self.spellbook_dir,
+            config_dir=self.config_dir,
+            dry_run=self.dry_run,
+        )
+        installed = sum(1 for r in agent_results if r.action == "installed")
+        upgraded = sum(1 for r in agent_results if r.action == "upgraded")
+        unchanged = sum(1 for r in agent_results if r.action == "unchanged")
+        skipped = sum(1 for r in agent_results if r.action == "skipped")
+        agent_failed = any(not r.success for r in agent_results)
+        if installed or upgraded:
+            agents_action = "installed"
+        elif unchanged:
+            agents_action = "unchanged"
+        else:
+            agents_action = "skipped"
+        results.append(
+            InstallResult(
+                component="agents",
+                platform=self.platform_id,
+                success=not agent_failed,
+                action=agents_action,
+                message=(
+                    f"agents: {installed} installed, {upgraded} upgraded, "
+                    f"{unchanged} unchanged, {skipped} skipped"
+                ),
+            )
+        )
 
         # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")
@@ -446,6 +554,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
             ("skills", self.config_dir / "skills"),
             ("commands", self.config_dir / "commands"),
             ("scripts", self.config_dir / "scripts"),
+            ("agents", self.config_dir / "agents"),
         ]
         for component_name, dir_path in cleanup_dirs:
             symlink_results = cleanup_spellbook_symlinks(dir_path, dry_run=self.dry_run)
@@ -460,6 +569,33 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=f"{component_name}: {removed_count} removed",
                     )
                 )
+
+        # Source-narrowed agent symlink removal: only unlink targets whose
+        # resolved path lies within $SPELLBOOK_DIR/agents/. The broader
+        # cleanup_spellbook_symlinks pass above already handled the common
+        # case (substring match on "spellbook" or broken links); this pass
+        # exists for the case where a user has $CLAUDE_CONFIG_DIR set under
+        # a directory name that doesn't contain "spellbook" -- the substring
+        # match would miss, but resolve()-into-spellbook still narrows
+        # correctly.
+        agent_uninstall_results = uninstall_agents(
+            config_dir=self.config_dir,
+            spellbook_dir=self.spellbook_dir,
+            dry_run=self.dry_run,
+        )
+        agent_removed = sum(
+            1 for r in agent_uninstall_results if r.action == "removed"
+        )
+        if agent_removed > 0:
+            results.append(
+                InstallResult(
+                    component="agents",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message=f"agents: {agent_removed} removed",
+                )
+            )
 
         # Remove patterns and docs symlinks
         for component_name in ["patterns", "docs", "profiles"]:
