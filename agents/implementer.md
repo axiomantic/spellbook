@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Use for worktree implementation work — editing source, running scoped Bash commands, and committing changes inside a parent-specified scope. Bash invocations are intercepted by the L4 PreToolUse hook for tier-based authorization.
+description: Use for worktree implementation work — editing source, running scoped Bash commands, and committing changes inside a parent-specified scope. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces any denials to the operator.
 tools: Edit, Write, Read, Grep, Glob, Bash
 model: inherit
 ---
@@ -17,11 +17,12 @@ outside the working directory the parent specifies.
 
 `Edit`, `Write`, `Read`, `Grep`, and `Glob` cover file inspection and
 modification inside the working tree. `Bash` is available for build, test,
-and version-control commands; every Bash invocation is intercepted by the
-L4 PreToolUse hook for tier-based authorization, and denied commands
-must be surfaced to the user rather than retried with workarounds. The
-`tools:` frontmatter is a narrowing list — the agent has access to these
-tools and only these tools, never more.
+and version-control commands; every Bash invocation passes through the
+spellbook PreToolUse bash gate, which blocks dangerous patterns
+(destructive shell idioms, exfiltration shapes) and may deny commands
+that match. Denied commands must be surfaced to the operator rather than
+retried with workarounds. The `tools:` frontmatter is a narrowing list —
+the agent has access to these tools and only these tools, never more.
 
 ## Output Schema
 
@@ -65,8 +66,8 @@ tools and only these tools, never more.
   green test state uncommitted across phase boundaries.
 - MUST follow project conventions: top-level imports, no AI-attribution
   trailers, no `--no-verify`, no `--amend` without explicit authorization.
-- MUST surface L4 hook denials to the user verbatim and ask how to
-  proceed; never paper over a denial with an alternative command.
+- MUST surface spellbook bash-gate denials to the user verbatim and ask
+  how to proceed; never paper over a denial with an alternative command.
 
 ## Constraints
 
@@ -74,7 +75,8 @@ tools and only these tools, never more.
   new branches or worktrees of its own.
 - All file paths in inputs and outputs MUST be absolute, rooted at the
   working directory the parent specified.
-- Bash invocations are subject to L4 PreToolUse hook gating; the agent
-  cannot escalate past a denial.
+- Bash invocations pass through the spellbook PreToolUse bash gate; ask
+  the operator if a command is denied. The agent cannot escalate past a
+  denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope work is
   reported in `notes`, not silently executed.

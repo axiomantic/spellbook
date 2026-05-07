@@ -7,9 +7,11 @@ Validates three distinct contracts:
      5 required headings in canonical order.
   2. EXISTING 7 agents: byte-identical SHA-256 snapshot. Guards against
      accidental modification of the existing 7 during WI-5 work.
-  3. EXEMPT existing agents (`code-reviewer`, `justice-resolver`):
-     legitimately omit `tools:` per fact-check F3. The byte-snapshot
-     test still applies; the tools-presence check does not.
+  3. EXEMPT existing agents (`code-reviewer`, `justice-resolver`): these
+     two were authored before the `tools:` frontmatter convention was
+     established, and bringing them into compliance is tracked as a
+     separate cleanup task. The byte-snapshot test still applies; the
+     tools-presence check does not.
 
 Snapshot regeneration (only after intentional edits to the existing 7):
     AGENT_SNAPSHOT_REGEN=1 uv run pytest \
@@ -56,9 +58,11 @@ EXISTING_AGENTS: frozenset[str] = frozenset({
     "queen-affective",
 })
 
-# Existing agents that legitimately omit `tools:` frontmatter (out-of-scope
-# cleanup per fact-check F3). Body-snapshot still applies; only the
-# tools-presence test exempts these.
+# Existing agents that legitimately omit `tools:` frontmatter:
+# code-reviewer.md and justice-resolver.md were authored before the
+# `tools:` frontmatter convention was established, and bringing them
+# into compliance is tracked as a separate cleanup task. The body
+# byte-snapshot still applies; only the tools-presence test exempts these.
 TOOLS_EXEMPT_EXISTING: frozenset[str] = frozenset({
     "code-reviewer",
     "justice-resolver",
@@ -131,9 +135,16 @@ def test_new_agent_has_canonical_tools_frontmatter(agent_name: str):
 def test_new_agent_has_required_body_sections_in_order(agent_name: str):
     path = AGENTS_DIR / f"{agent_name}.md"
     _, body = _split_frontmatter(path.read_text(encoding="utf-8"))
-    missing = [h for h in REQUIRED_BODY_SECTIONS if h not in body]
+    # Match each heading as a full line (flanked by newlines) so that a
+    # literal "## Purpose" appearing inside a fenced code block cannot
+    # false-match the section-ordering check. Prepending "\n" lets the
+    # very first heading match even when it sits at the top of the body.
+    search_body = "\n" + body
+    missing = [
+        h for h in REQUIRED_BODY_SECTIONS if f"\n{h}\n" not in search_body
+    ]
     assert not missing, f"{agent_name}: missing headings {missing}"
-    indices = [body.index(h) for h in REQUIRED_BODY_SECTIONS]
+    indices = [search_body.index(f"\n{h}\n") for h in REQUIRED_BODY_SECTIONS]
     assert indices == sorted(indices), (
         f"{agent_name}: section order wrong. expected order "
         f"{list(REQUIRED_BODY_SECTIONS)}, indices {indices}"
@@ -242,10 +253,20 @@ def test_regenerate_snapshots_when_requested():
 
 
 def test_tools_exempt_existing_agents_lack_tools_frontmatter():
-    """Document the F3 exemption: code-reviewer and justice-resolver
-    legitimately omit `tools:`. If this test fails because they now
-    have `tools:`, that's good news -- remove the exemption from
-    TOOLS_EXEMPT_EXISTING and delete this test."""
+    """Document the exemption: code-reviewer and justice-resolver
+    legitimately omit `tools:` because they predate the convention.
+
+    If this test fails because the two exempt agents now have `tools:`,
+    the cleanup is:
+
+      1. Regenerate `agent_snapshots.json` (those two files have changed
+         bytes, so the byte-snapshot test will also fail):
+
+             AGENT_SNAPSHOT_REGEN=1 uv run pytest \\
+                 tests/test_security/test_agent_frontmatter.py::test_regenerate_snapshots_when_requested
+
+      2. Remove the agent name(s) from TOOLS_EXEMPT_EXISTING.
+      3. Delete this test."""
     for agent_name in sorted(TOOLS_EXEMPT_EXISTING):
         fm, _ = _split_frontmatter(
             (AGENTS_DIR / f"{agent_name}.md").read_text(encoding="utf-8")
