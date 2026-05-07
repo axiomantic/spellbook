@@ -122,6 +122,21 @@ spellbook-sandbox codex              # Codex
 
 The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-cco-macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
 
+### Windows: alias install + sandbox path TBD
+
+Windows native sandboxing and alias installation are deferred to a later work item (open question Q-O). They are not in scope for the current security architecture phase.
+
+Current behavior on Windows:
+
+- The installer's `install_aliases_windows()` is a documented noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
+- `cco` itself is unverified on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
+- `cmd.exe` is a known limitation: `doskey` macros do not persist across cmd sessions without an `AutoRun` registry edit, so cmd users are explicitly not served by the alias installer.
+
+Windows users have two options until the Windows path lands:
+
+- Invoke `spellbook-sandbox` directly (only meaningful if `cco` is reachable, e.g. installed under WSL).
+- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option.
+
 ## What Spellbook Does
 
 Spellbook is a harness-augmentation layer for AI coding assistants. The *harness* is the runtime that hosts the agent loop and executes tools (Claude Code, Codex, OpenCode, Gemini CLI, ForgeCode). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (memory, focus stints, session resume) on top.
