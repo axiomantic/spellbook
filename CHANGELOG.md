@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.64.0] - 2026-05-08
+
+### Added
+
+- **Agent2Agent watch-chain — near-real-time idle delivery with zero idle
+  tokens.** The previous hook-based receive path only fired on
+  `UserPromptSubmit`, so an idle session never saw incoming messages.
+  This release adds an OS-level file-watching architecture that lets
+  idle sessions be reached without polling.
+  - New helper subcommands in
+    `skills/agent2agent/scripts/agent2agent.py`: `open <name>` (replaces
+    the old `listen`), `close <name>` (replaces `unlisten`),
+    `watch <name>` (blocking fswatch + 500ms polling backstop, exits
+    with one of `PENDING_BATCH <id> count=<N>`,
+    `WATCH_RECYCLE elapsed=540s`, `WATCH_INBOX_GONE`, or
+    `WATCH_LOCKED <pid>`), `drain <name> <batch-id>` (atomic move from
+    `pending/` to `processed/`), and an internal
+    `_open_state <session-id> {read,write,clear}` for bookkeeping.
+  - New `/a2a` slash command at `commands/a2a.md` orchestrates the
+    self-respawning bg-watch chain via the Task tool: each watch agent
+    blocks for up to 540s, exits with a marker, and the main session
+    re-dispatches on completion. Idle windows burn zero LLM tokens —
+    the bg agent waits in a single `Bash` invocation.
+  - `hooks/spellbook_hook.py` adds `_bg_agent_alive` (90s mtime
+    liveness window, FAIL-SAFE-DEAD) and
+    `_agent2agent_check_orphaned_chain`. `SessionStart` and
+    `UserPromptSubmit` surface a re-arm hint when the watch chain is
+    detected as dropped (compaction, process death).
+  - Lockfile mutex via `fcntl.flock(LOCK_EX|LOCK_NB)` with kernel-fd
+    cleanup; the lockfile path persists so SIGKILL'd watchers
+    automatically release the lock without leaving stale files.
+  - End-to-end manual validation confirmed the zero-idle-tokens ship
+    gate: a 5-minute idle window produced zero new transcript activity,
+    ~38× more efficient than the prior 72k-token / 7-minute polling
+    implementation.
+
+### Fixed
+
+- **`_handle_session_start` orphan-hint fallback paths consolidated.**
+  The duplicate `_fallback_directive() + orphan_hint` blocks (one for
+  missing `cwd`, one for unavailable workflow state) were collapsed
+  into a single guard. Pure refactor; no behavior change.
+- **`tests/unit/test_stint_hooks.py::TestPreToolUseBashGate::test_bash_gate_blocks_dangerous_command`
+  now reads gate-error JSON from `proc.stderr`.** Commit `324cab5b`
+  routed gate block messages to `sys.stderr` per Claude Code hook
+  protocol but only updated tests under `tests/test_security/`; this
+  parallel test in `tests/unit/` was missed and had been failing on
+  every CI run since.
+
+### Changed
+
+- **Helper test mocks converted from `monkeypatch.setattr` to
+  `tripwire`.** Per repository style guide,
+  `tests/test_hooks/test_agent2agent_hook.py` and
+  `tests/test_skills/test_agent2agent_helper.py` now use
+  `tripwire.mock(...)` with the standard register / sandbox / assert
+  flow.
+
 ## [0.63.2] - 2026-05-08
 
 ### Fixed

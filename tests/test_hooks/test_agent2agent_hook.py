@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 import tripwire
+from dirty_equals import IsInstance, IsStr
 
 # Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
@@ -636,18 +637,21 @@ class TestSessionStartOrphanWiring:
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
         # Force MCP failure so we hit the _fallback_directive branch.
         # _mcp_call returns None when MCP is unreachable.
-        monkeypatch.setattr(spellbook_hook, "_mcp_call", lambda *a, **k: None)
+        m_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        m_mcp.returns(None)
 
         missing_transcript = tmp_path / "dead.output"
         _seed_open_state(
             tmp_path, "sess-orphan-compact", name="alice",
             agent_id="agent-x", output_file=missing_transcript,
         )
-        result = spellbook_hook._handle_session_start({
-            "session_id": "sess-orphan-compact",
-            "source": "compact",
-            "cwd": str(tmp_path),
-        })
+        with tripwire:
+            result = spellbook_hook._handle_session_start({
+                "session_id": "sess-orphan-compact",
+                "source": "compact",
+                "cwd": str(tmp_path),
+            })
+        m_mcp.assert_call(args=("workflow_state_load", IsInstance(dict)), kwargs={})
         expected_hint = (
             "[agent2agent] watch chain dropped (likely session compaction or "
             "process death). Run `/a2a open alice` to re-arm the inbox watcher."
@@ -669,13 +673,16 @@ class TestSessionStartOrphanWiring:
         verbatim, no orphan hint appended.
         """
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        monkeypatch.setattr(spellbook_hook, "_mcp_call", lambda *a, **k: None)
+        m_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        m_mcp.returns(None)
 
-        result = spellbook_hook._handle_session_start({
-            "session_id": "sess-noorphan-compact",
-            "source": "compact",
-            "cwd": str(tmp_path),
-        })
+        with tripwire:
+            result = spellbook_hook._handle_session_start({
+                "session_id": "sess-noorphan-compact",
+                "source": "compact",
+                "cwd": str(tmp_path),
+            })
+        m_mcp.assert_call(args=("workflow_state_load", IsInstance(dict)), kwargs={})
         fallback_text = (
             "Session resumed after compaction. Workflow state could not "
             "be loaded. Re-read any planning documents, check your todo "
@@ -704,21 +711,22 @@ class TestUserPromptSubmitOrphanWiring:
         )
         # Stub out memory + notify + autostore so they don't contribute
         # extra lines to outputs.
-        monkeypatch.setattr(
-            spellbook_hook, "_memory_recall_for_prompt", lambda *a, **k: None
-        )
-        monkeypatch.setattr(
-            spellbook_hook, "_agent2agent_notify_for_prompt", lambda *a, **k: None
-        )
-        monkeypatch.setattr(
-            spellbook_hook, "_memory_autostore_for_prompt", lambda *a, **k: None
-        )
+        m_recall = tripwire.mock("spellbook_hook:_memory_recall_for_prompt")
+        m_recall.returns(None)
+        m_notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
+        m_notify.returns(None)
+        m_autostore = tripwire.mock("spellbook_hook:_memory_autostore_for_prompt")
+        m_autostore.returns(None)
 
-        outputs = spellbook_hook._handle_user_prompt_submit({
-            "session_id": "sess-ups-orphan",
-            "prompt": "hello",
-            "cwd": str(tmp_path),
-        })
+        with tripwire:
+            outputs = spellbook_hook._handle_user_prompt_submit({
+                "session_id": "sess-ups-orphan",
+                "prompt": "hello",
+                "cwd": str(tmp_path),
+            })
+        m_recall.assert_call(args=(IsStr(), IsStr()), kwargs={})
+        m_notify.assert_call(args=(IsInstance(dict),), kwargs={})
+        m_autostore.assert_call(args=(IsStr(), IsStr()), kwargs={})
         expected_hint = (
             "[agent2agent] watch chain dropped (likely session compaction or "
             "process death). Run `/a2a open alice` to re-arm the inbox watcher."
@@ -728,19 +736,20 @@ class TestUserPromptSubmitOrphanWiring:
     def test_no_orphan_no_hint_in_outputs(self, tmp_path, monkeypatch):
         """No `.open/<sid>` -> no orphan line in outputs."""
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        monkeypatch.setattr(
-            spellbook_hook, "_memory_recall_for_prompt", lambda *a, **k: None
-        )
-        monkeypatch.setattr(
-            spellbook_hook, "_agent2agent_notify_for_prompt", lambda *a, **k: None
-        )
-        monkeypatch.setattr(
-            spellbook_hook, "_memory_autostore_for_prompt", lambda *a, **k: None
-        )
+        m_recall = tripwire.mock("spellbook_hook:_memory_recall_for_prompt")
+        m_recall.returns(None)
+        m_notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
+        m_notify.returns(None)
+        m_autostore = tripwire.mock("spellbook_hook:_memory_autostore_for_prompt")
+        m_autostore.returns(None)
 
-        outputs = spellbook_hook._handle_user_prompt_submit({
-            "session_id": "sess-ups-clean",
-            "prompt": "hello",
-            "cwd": str(tmp_path),
-        })
+        with tripwire:
+            outputs = spellbook_hook._handle_user_prompt_submit({
+                "session_id": "sess-ups-clean",
+                "prompt": "hello",
+                "cwd": str(tmp_path),
+            })
+        m_recall.assert_call(args=(IsStr(), IsStr()), kwargs={})
+        m_notify.assert_call(args=(IsInstance(dict),), kwargs={})
+        m_autostore.assert_call(args=(IsStr(), IsStr()), kwargs={})
         assert outputs == []

@@ -18,6 +18,20 @@ Coverage:
 """
 from __future__ import annotations
 
+import sys
+
+import pytest
+
+# The agent2agent helper uses fcntl.flock for watch-lockfile mutex. fcntl is
+# POSIX-only, so the helper module fails to import on Windows. Skip the entire
+# test module rather than collecting it. allow_module_level=True is required
+# because pytest evaluates module skip marks AFTER imports run.
+if sys.platform == "win32":
+    pytest.skip(
+        "agent2agent helper requires fcntl (POSIX-only)",
+        allow_module_level=True,
+    )
+
 import fcntl
 import importlib.util
 import io
@@ -26,14 +40,13 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
+import tripwire
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timedelta, timezone
+from dirty_equals import IsInstance
 from pathlib import Path
-
-import pytest
 
 
 HELPER_PATH = (
@@ -539,7 +552,7 @@ def test_drain_missing_batch_returns_count_zero(a2a):
     assert json.loads(stdout) == {"messages": [], "count": 0}
 
 
-def test_drain_atomic_on_partial_failure(a2a, monkeypatch):
+def test_drain_atomic_on_partial_failure(a2a):
     _run(a2a, "open", "alice")
     bus = a2a.bus_dir()
     _seed_pending(
@@ -549,19 +562,32 @@ def test_drain_atomic_on_partial_failure(a2a, monkeypatch):
          {"id": "m3", "from": "bob", "body": "three"}],
     )
 
-    real_replace = a2a.os.replace
     state = {"calls": 0}
 
     def flaky_replace(src, dst):
         state["calls"] += 1
         if state["calls"] == 2:
             raise OSError(13, "EACCES (simulated)")
-        return real_replace(src, dst)
+        # Use os.rename (a distinct function from os.replace) to avoid
+        # recursing back through the tripwire proxy. On POSIX these are
+        # equivalent for our purposes; this test is POSIX-only via the
+        # module-level skip on win32.
+        os.rename(src, dst)
 
-    monkeypatch.setattr(a2a.os, "replace", flaky_replace)
+    # Patch os.replace via tripwire. The helper imports `os` and calls
+    # os.replace; mocking on the os module intercepts that call. Each
+    # .calls() pushes one entry onto the FIFO queue, so register twice:
+    # once for m1 (success) and once for m2 (raises). m3 is never reached.
+    m_replace = tripwire.mock("os:replace")
+    m_replace.calls(flaky_replace).calls(flaky_replace)
 
-    with pytest.raises(OSError):
-        _run(a2a, "drain", "alice", "batch-x")
+    with tripwire:
+        with pytest.raises(OSError):
+            _run(a2a, "drain", "alice", "batch-x")
+    # flaky_replace was invoked twice: m1 (succeeded via os.rename), m2
+    # (raised). Each recorded interaction must be asserted.
+    m_replace.assert_call(args=(IsInstance(Path), IsInstance(Path)), kwargs={})
+    m_replace.assert_call(args=(IsInstance(Path), IsInstance(Path)), kwargs={})
 
     pending_dir_x = bus / "alice" / "pending" / "batch-x"
     processed = bus / "alice" / "processed"
@@ -576,8 +602,8 @@ def test_drain_atomic_on_partial_failure(a2a, monkeypatch):
     # Invariant: every message is in EXACTLY ONE place.
     assert pending_files.isdisjoint(processed_files)
 
-    # Restore real os.replace and re-run; remaining messages must drain cleanly.
-    monkeypatch.setattr(a2a.os, "replace", real_replace)
+    # tripwire restored os.replace automatically after the sandbox; re-run
+    # drain — remaining messages must drain cleanly.
     rc, stdout, _ = _run(a2a, "drain", "alice", "batch-x")
     assert rc == 0
     payload = json.loads(stdout)
