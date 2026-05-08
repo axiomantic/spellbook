@@ -205,10 +205,10 @@ EXFILTRATION_RULES: list[tuple[str, Severity, str, str]] = [
         "Netcat reverse shell/listener",
     ),
     (
-        r"(?i)echo\s+.*\|\s*(curl|wget|nc)",
+        r"(?i)\|\s*(curl|wget|nc)\s+\S+",
         Severity.CRITICAL,
         "EXF-007",
-        "Piped exfiltration",
+        "Piped exfiltration into network tool",
     ),
     (
         r"(?i)\$\(.*\)\s*>>\s*/",

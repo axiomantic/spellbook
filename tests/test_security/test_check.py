@@ -292,18 +292,21 @@ class TestCheckToolInputTierClassifier:
         rule_ids = [f["rule_id"] for f in result["findings"]]
         assert not any(rid.startswith("TIER-") for rid in rule_ids)
 
-    def test_tier_layer_runs_after_bashlex(self):
-        """The bashlex parser fires before the tier classifier, so a compound
-        command produces both a BASH-PARSER-COMPOUND finding AND any matching
-        TIER finding for the leading command."""
+    def test_tier_layer_runs_for_compound_leading_command(self):
+        """The L4 bashlex parser allows benign compound structure but recurses
+        into each segment; the L3 tier classifier still sees the leading
+        command and emits TIER-* findings for tiered operations like
+        ``git push --force origin main``."""
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "Bash", {"command": "git push --force origin main && echo done"}
         )
         rule_ids = [f["rule_id"] for f in result["findings"]]
-        # bashlex-layer finding present.
-        assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+        # Tier classifier finding present for the leading dangerous command.
+        assert any(rid.startswith("TIER-") for rid in rule_ids), (
+            f"expected TIER-* finding in {rule_ids!r}"
+        )
 
 
 
