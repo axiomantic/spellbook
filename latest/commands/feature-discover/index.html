@@ -8997,66 +8997,87 @@
 <a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="sb">    [Insert full Understanding Document from Phase 1.5.6]</span>
 <a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a><span class="sb">```</span>
 <a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a>
-<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>Present critique to user with options:
-<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a>
-<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="gu">## Devil&#39;s Advocate Critique</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a>
-<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>[Full critique output from skill]
-<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a>
-<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>---
-<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a>
-<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a>Please review and choose next steps:
-<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>A) Address critical issues (return to discovery for specific gaps)
-<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a>B) Document as known limitations (add to Understanding Document)
-<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>C) Revise scope to avoid risky areas
-<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a>D) Proceed to design (accept identified risks)
-<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a>
-<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a>Your choice: ___
-<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="sb">```</span>
-<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a>
-<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="gu">### Post-1.6 Scope Drift Recheck</span>
-<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a>
-<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a>After devil&#39;s advocate review, re-run the Scope Drift Check. The devil&#39;s advocate may have surfaced scope expansions not visible during initial discovery.
-<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a>
-<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>Run <span class="sb">`evaluate_scope_drift()`</span>. If it returns false, follow the &quot;When drift detected&quot; protocol.
+<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>Present critique to user, then run <span class="gs">**per-finding disposition**</span> before
+<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a>any meta-action choice. For each finding in the critique:
+<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a>
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="k">1.</span> Present the finding (title, category, finding text, recommendation)
+<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a><span class="k">2.</span> Ask via AskUserQuestion: disposition = <span class="sb">`address`</span>, <span class="sb">`note_only`</span>, or
+<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>   <span class="sb">`out_of_scope`</span>?
+<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a><span class="k">3.</span> Record disposition in <span class="sb">`SESSION_CONTEXT.devils_advocate_dispositions`</span>
+<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>
+<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="gs">**Default disposition is `note_only`.**</span> <span class="sb">`address`</span> is never the default.
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a>
+<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>In autonomous mode, the operator is not present, so the orchestrator
+<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a>MUST make an explicit triage decision per finding using the same three
+<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>values. Triaging silently as <span class="sb">`address`</span> is forbidden. A finding that
+<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a>expands scope (introduces capabilities, infrastructure, or external
+<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a>integrations not in the operator&#39;s initial request) MUST be triaged
+<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a><span class="sb">`note_only`</span> or <span class="sb">`out_of_scope`</span>, never <span class="sb">`address`</span>, without operator
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a>confirmation. See <span class="sb">`~/.claude/CLAUDE.md`</span> &quot;Autonomous Mode and Scope
+<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a>Discipline&quot;.
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a>
+<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a>After dispositions are assigned, present the meta-action choice:
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a>
+<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a><span class="gu">## Devil&#39;s Advocate Critique</span>
 <a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>
-<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="k">-</span><span class="w"> </span>Asking questions that Phase 1 research already answered
-<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="k">-</span><span class="w"> </span>Proceeding to design with completeness_score &lt; 100% without explicit user bypass
-<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="k">-</span><span class="w"> </span>Blocking on glossary persistence when user chose session-only (A)
-<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="k">-</span><span class="w"> </span>Running devil&#39;s advocate review in main context instead of dispatching subagent
-<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="k">-</span><span class="w"> </span>Treating DesignContext structure as defined here — always reference develop skill for field definitions
-<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a><span class="k">-</span><span class="w"> </span>Continuing Phase 1.5 if prerequisite check fails
-<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a>
-<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>---
-<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a>
-<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a><span class="gu">## Phase 1.5 Complete</span>
-<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a>
-<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="c1"># Verify understanding document exists</span>
-<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a>ls<span class="w"> </span>~/.local/spellbook/docs/&lt;project-encoded&gt;/understanding/
-<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a><span class="sb">```</span>
-<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a>
-<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a>Before proceeding to Phase 2, verify:
-<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>
-<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="k">- [ ]</span> All ambiguities resolved (disambiguation session complete)
-<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a><span class="k">- [ ]</span> 7-category discovery questions generated and answered
-<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="k">- [ ]</span> Glossary built
-<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="k">- [ ]</span> design_context synthesized (no null values, no TBD)
-<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="k">- [ ]</span> Completeness Score = 100% (12/12 validation functions)
-<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">- [ ]</span> Understanding Document created and saved
-<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="k">- [ ]</span> Devil&#39;s advocate subagent DISPATCHED (not done in main context)
-<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="k">- [ ]</span> User approved Understanding Document
-<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a>
-<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>If ANY unchecked: Complete Phase 1.5. Do NOT proceed.
-<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>
-<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a><span class="gs">**Next:**</span> Run <span class="sb">`/feature-design`</span> to begin Phase 2.
-<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a>
-<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a>Discovery quality determines design quality. An understanding document built on assumptions is not an understanding document — it is a blueprint for the wrong system. Every unanswered question here becomes a rework cycle later. Do not proceed to design until discovery is complete.
-<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>[Full critique output from skill, with dispositions filled in]
+<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a>
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a>---
+<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a>
+<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a>Please review and choose next steps:
+<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a>A) Address only <span class="sb">`address`</span>-disposition findings (return to discovery
+<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a>   for those specific gaps)
+<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>B) Document <span class="sb">`note_only`</span> findings as known limitations (add to
+<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a>   Understanding Document)
+<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>C) Revise scope per <span class="sb">`out_of_scope`</span> findings
+<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a>D) Proceed to design (only <span class="sb">`address`</span> findings will shape Phase 2)
+<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a>
+<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a>Your choice: ___
+<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a><span class="sb">```</span>
+<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a>
+<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a><span class="gu">### Post-1.6 Scope Drift Recheck</span>
+<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a>
+<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a>After devil&#39;s advocate review, re-run the Scope Drift Check. The devil&#39;s advocate may have surfaced scope expansions not visible during initial discovery.
+<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a>
+<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>Run <span class="sb">`evaluate_scope_drift()`</span>. If it returns false, follow the &quot;When drift detected&quot; protocol.
+<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a>
+<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="k">-</span><span class="w"> </span>Asking questions that Phase 1 research already answered
+<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="k">-</span><span class="w"> </span>Proceeding to design with completeness_score &lt; 100% without explicit user bypass
+<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="k">-</span><span class="w"> </span>Blocking on glossary persistence when user chose session-only (A)
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">-</span><span class="w"> </span>Running devil&#39;s advocate review in main context instead of dispatching subagent
+<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="k">-</span><span class="w"> </span>Treating DesignContext structure as defined here — always reference develop skill for field definitions
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="k">-</span><span class="w"> </span>Continuing Phase 1.5 if prerequisite check fails
+<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>---
+<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a>
+<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a><span class="gu">## Phase 1.5 Complete</span>
+<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a>
+<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="c1"># Verify understanding document exists</span>
+<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a>ls<span class="w"> </span>~/.local/spellbook/docs/&lt;project-encoded&gt;/understanding/
+<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="sb">```</span>
+<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a>
+<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a>Before proceeding to Phase 2, verify:
+<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a>
+<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="k">- [ ]</span> All ambiguities resolved (disambiguation session complete)
+<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a><span class="k">- [ ]</span> 7-category discovery questions generated and answered
+<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="k">- [ ]</span> Glossary built
+<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a><span class="k">- [ ]</span> design_context synthesized (no null values, no TBD)
+<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a><span class="k">- [ ]</span> Completeness Score = 100% (12/12 validation functions)
+<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="k">- [ ]</span> Understanding Document created and saved
+<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a><span class="k">- [ ]</span> Devil&#39;s advocate subagent DISPATCHED (not done in main context)
+<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a><span class="k">- [ ]</span> User approved Understanding Document
+<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a>
+<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a>If ANY unchecked: Complete Phase 1.5. Do NOT proceed.
+<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a>
+<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="gs">**Next:**</span> Run <span class="sb">`/feature-design`</span> to begin Phase 2.
+<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a>
+<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a>Discovery quality determines design quality. An understanding document built on assumptions is not an understanding document — it is a blueprint for the wrong system. Every unanswered question here becomes a rework cycle later. Do not proceed to design until discovery is complete.
+<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
