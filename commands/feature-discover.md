@@ -635,20 +635,41 @@ Task:
     [Insert full Understanding Document from Phase 1.5.6]
 ```
 
-Present critique to user with options:
+Present critique to user, then run **per-finding disposition** before
+any meta-action choice. For each finding in the critique:
+
+1. Present the finding (title, category, finding text, recommendation)
+2. Ask via AskUserQuestion: disposition = `address`, `note_only`, or
+   `out_of_scope`?
+3. Record disposition in `SESSION_CONTEXT.devils_advocate_dispositions`
+
+**Default disposition is `note_only`.** `address` is never the default.
+
+In autonomous mode, the operator is not present, so the orchestrator
+MUST make an explicit triage decision per finding using the same three
+values. Triaging silently as `address` is forbidden. A finding that
+expands scope (introduces capabilities, infrastructure, or external
+integrations not in the operator's initial request) MUST be triaged
+`note_only` or `out_of_scope`, never `address`, without operator
+confirmation. See `~/.claude/CLAUDE.md` "Autonomous Mode and Scope
+Discipline".
+
+After dispositions are assigned, present the meta-action choice:
 
 ```markdown
 ## Devil's Advocate Critique
 
-[Full critique output from skill]
+[Full critique output from skill, with dispositions filled in]
 
 ---
 
 Please review and choose next steps:
-A) Address critical issues (return to discovery for specific gaps)
-B) Document as known limitations (add to Understanding Document)
-C) Revise scope to avoid risky areas
-D) Proceed to design (accept identified risks)
+A) Address only `address`-disposition findings (return to discovery
+   for those specific gaps)
+B) Document `note_only` findings as known limitations (add to
+   Understanding Document)
+C) Revise scope per `out_of_scope` findings
+D) Proceed to design (only `address` findings will shape Phase 2)
 
 Your choice: ___
 ```

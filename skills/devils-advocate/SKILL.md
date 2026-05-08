@@ -126,14 +126,15 @@ After each category: zero issues per category = look harder. Apply adversarial m
 - **Evidence:** [doc sections, codebase refs]
 - **Impact:** [what breaks]
 - **Recommendation:** [specific action]
+- **Disposition:** [empty — to be filled by consumer; see "Finding Disposition" below]
 
 ## Major Risks (Proceed with Caution)
 
 ### Risk N: [Title]
-[Same format + Mitigation]
+[Same format + Mitigation + Disposition]
 
 ## Minor Issues
-- [Issue]: [Finding] -> [Recommendation]
+- [Issue]: [Finding] -> [Recommendation] (Disposition: [empty])
 
 ## Validation Summary
 
@@ -150,6 +151,29 @@ After each category: zero issues per category = look harder. Apply adversarial m
 **Confidence:** HIGH | MEDIUM | LOW
 **Blocking Issues:** [N]
 ```
+
+### Finding Disposition
+
+Every finding (critical, major, minor) MUST carry a `disposition` field
+with one of three values:
+
+| Value | Meaning |
+|-------|---------|
+| `address` | Finding will shape design changes. Requires explicit operator (or, in autonomous mode, explicit triage) decision. |
+| `note_only` | Finding recorded as a known limitation, not designed against. Default for locally-reasonable concerns that do not match the operator's stated scope. |
+| `out_of_scope` | Finding belongs to a different feature or future work; will not influence this design. |
+
+**The default disposition is `note_only`, NOT `address`.** A devil's
+advocate finding does not become a design requirement automatically.
+The consuming skill (typically `feature-discover` Phase 1.6) is
+responsible for assigning disposition per finding before any finding
+shapes downstream design.
+
+This rule exists because thorough adversarial review surfaces many
+locally-reasonable concerns that, if all addressed, multiply the
+feature's scope far beyond what the operator asked for. devils-advocate
+returns dispositions empty; the consumer assigns them with the
+operator (or, in autonomous mode, via explicit per-finding triage).
 
 ### Recommendation Validation
 

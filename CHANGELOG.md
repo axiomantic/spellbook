@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.1] - 2026-05-07
+
+### Added
+
+- **Scope-explosion guardrails for the `develop` skill family.** Five surgical,
+  additive guardrails to prevent the failure mode where a "minor change"
+  balloons into an over-engineered design with parallel chunk sessions
+  fanning out before the operator can catch the divergence:
+  - `commands/feature-design.md` Phase 2.0 — Primary Source Re-Anchor:
+    operator must explicitly name the canonical source (URL/file/JIRA/
+    Confluence) before design synthesis; the design subagent prompt
+    re-fetches it so design doesn't drift onto upstream derivatives.
+  - `skills/devils-advocate/SKILL.md` + `commands/feature-discover.md`
+    Phase 1.6 — Finding Disposition Framework: every devils-advocate
+    finding now carries a `disposition` field
+    (`address` / `note_only` / `out_of_scope`) with `note_only` as the
+    default. Phase 1.6 assigns dispositions per-finding before any
+    meta-action; `address` is never assigned silently in autonomous
+    mode for findings that expand scope.
+  - `AGENTS.spellbook.md` "Autonomous Mode and Scope Discipline"
+    (cross-referenced from `skills/develop/SKILL.md`): autonomous mode
+    scopes confirmations, not scope. New capabilities/infra/integrations
+    not in the operator's initial request require pause regardless of
+    autonomous mode.
+  - `commands/feature-design.md` Phase 2.5 — Scope Coherence Check:
+    a narrow subagent fed only the original Phase 0 request and the
+    design TOC + section openers answers "could this be 5 bullets
+    matching the original ask?"; `No`/`Unsure` halts Phase 2.
+  - `commands/feature-implement.md` Phase 3.4.7 — One-Pager Approval
+    Gate: no chunk-prompt generation, `forge_project_init`,
+    sub-orchestrator dispatch, or parallel session spawn until the
+    operator explicitly approves a 200-line-or-shorter plain-English
+    one-pager. Not waived by autonomous mode.
+
 ## [0.63.0] - 2026-05-07
 
 ### Added

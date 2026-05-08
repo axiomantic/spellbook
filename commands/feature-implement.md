@@ -157,6 +157,53 @@ else: delegated (single session, subagent execution)
 - If `delegated` or `direct`: Skip to Phase 4 (existing flow)
 </analysis>
 
+### 3.4.7 One-Pager Approval Gate (mandatory for work_items and sub_orchestrators)
+
+<CRITICAL>
+No chunk-prompt generation, no `forge_project_init`, no parallel
+session spawn, no sub-orchestrator dispatch UNTIL the operator has
+explicitly approved a one-pager describing the planned implementation.
+
+This gate applies in BOTH execution modes that fan out work
+(`work_items`, `sub_orchestrators`). It is NOT waived by autonomous
+mode. See `~/.claude/CLAUDE.md` "Autonomous Mode and Scope Discipline".
+</CRITICAL>
+
+**One-pager spec:**
+
+- ≤ 200 lines
+- Plain English, no architecture jargon
+- Sections: (1) what we are building in 1-2 sentences, (2) the work
+  items by name and one-line purpose, (3) what is explicitly NOT in
+  scope, (4) anything the operator should push back on before fan-out
+- Saved to `~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-one-pager.md`
+
+**Approval mechanics:**
+
+1. Generate the one-pager (dispatch a subagent — do not write inline)
+2. Present to operator
+3. Wait for explicit `approved` / `go` / `proceed` / equivalent
+4. Silence does NOT count. A generic `ok` issued in response to a
+   different question does NOT count. Only an explicit, scoped
+   approval of THIS one-pager counts.
+5. In autonomous mode: the orchestrator MUST still pause here. Surface
+   the one-pager and request approval. Autonomous mode does not waive
+   approval; it only waives trivial confirmations.
+
+If the operator pushes back, return to Phase 2 (design) or Phase 3.1
+(planning) as appropriate. Do NOT iterate the chunk prompts to address
+the pushback — fix the root design or plan first, then regenerate the
+one-pager.
+
+<FORBIDDEN>
+- Generating chunk prompts before one-pager approval
+- Calling `forge_project_init` before one-pager approval
+- Spawning parallel sessions before one-pager approval
+- Dispatching sub-orchestrators before one-pager approval
+- Treating autonomous mode as approval
+- Treating an unrelated `ok` from the operator as approval of the one-pager
+</FORBIDDEN>
+
 ### 3.5 Generate Work Items (if work_items mode)
 
 <CRITICAL>Only runs when execution_mode is "work_items".</CRITICAL>

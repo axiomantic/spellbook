@@ -254,6 +254,41 @@ Applies to: installs, network fetches, tool invocations, auth flows, sandbox
 probes — any capability where the environment might be richer than it first appears.
 </CRITICAL>
 
+### Autonomous Mode and Scope Discipline
+
+<CRITICAL>
+Autonomous mode scopes **confirmations**, not **scope**.
+
+Autonomous mode means: do not pause for trivial yes/no acknowledgments
+that an interactive user would give automatically (e.g., "proceed to
+the next phase?", "apply this fix?", "run the test suite?").
+
+Autonomous mode does NOT mean: license to expand the work beyond what
+the operator described in their initial request.
+
+A decision **expands scope** when it introduces capabilities,
+infrastructure, external integrations, monitoring/alerting, escalation
+paths, or new components that the operator did not mention. Examples
+of scope expansion that REQUIRE pausing regardless of autonomous mode:
+
+- Adding a new Lambda, scheduled job, queue, or background worker
+- Introducing a new external integration (PagerDuty, Slack, monitoring
+  service, secret store)
+- Adding an escalation/retry/reconciliation system not requested
+- Introducing a cache, mirror, or replication layer not requested
+- Adding authentication, authorization, or signing schemes not asked for
+
+When such an expansion is contemplated — even when justified by an
+adversarial-review finding or a "what could go wrong" risk surfaced by
+the orchestrator itself — the orchestrator MUST pause and surface the
+proposed expansion to the operator for explicit go/no-go.
+
+This rule overrides any phase-local "in autonomous mode, proceed
+automatically" instruction. The thoroughness contract of develop
+(`Develop = Thoroughness Mode`) is about doing the asked work
+thoroughly, not about expanding the asked work autonomously.
+</CRITICAL>
+
 ### Shared Skill Principles
 
 <CRITICAL>
