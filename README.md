@@ -108,19 +108,23 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 
 ## Sandboxed Usage
 
-Spellbook recommends running AI coding assistants inside [nikvdp/cco](https://github.com/nikvdp/cco)'s sandbox. The `spellbook-sandbox` launcher wraps `cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden.
+Spellbook recommends running AI coding assistants inside a `cco` sandbox. `install.py` writes `~/.local/bin/spellbook-cco` automatically — a wrapper around the audit-pinned [elijahr/cco](https://github.com/elijahr/cco) hardened fork (SHA `d7044ef`). The `spellbook-sandbox` launcher invokes `spellbook-cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden. You do not need to install upstream `cco` yourself.
+
+The `spellbook-cco` wrapper is the only spellbook-supported entry point. Vanilla `cco` exists solely for the post-deploy rollback path described below.
 
 ```bash
-# Install cco first: https://github.com/nikvdp/cco#quick-start
-
-# Launch sandboxed
+# install.py already wrote ~/.local/bin/spellbook-cco; just launch:
 spellbook-sandbox                    # Claude Code (default)
 spellbook-sandbox opencode           # OpenCode CLI
 spellbook-sandbox opencode serve     # OpenCode server (for desktop/web app)
 spellbook-sandbox codex              # Codex
 ```
 
-The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-cco-macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
+The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-spellbook-cco-linux--macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
+
+### Rolling back to vanilla cco
+
+If the hardened fork misbehaves on your machine, set `SPELLBOOK_USE_VANILLA_CCO=1` in your shell rc and re-run `install.py`. The installer skips the `spellbook-cco` wrapper, the alias installer gates on `which cco` instead, and `spellbook-sandbox` routes through vanilla [nikvdp/cco](https://github.com/nikvdp/cco) at its legacy pin. Unset the variable and re-run `install.py` to return to the supported path.
 
 ### Windows: alias install + sandbox path TBD
 
@@ -129,13 +133,13 @@ Windows native sandboxing and alias installation are deferred to a later work it
 Current behavior on Windows:
 
 - The installer's `install_aliases_windows()` is an intentional noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
-- `cco` itself is unverified on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
+- `spellbook-cco` is not written on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
 - `cmd.exe` is a known limitation: `doskey` macros do not persist across cmd sessions without an `AutoRun` registry edit, so cmd users are explicitly not served by the alias installer.
 
 Windows users have two options until the Windows path lands:
 
-- Invoke `spellbook-sandbox` directly, only meaningful if `cco` is already on `PATH`.
-- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option. Install `cco` inside the WSL Linux distro (see [the cco install link above](#sandboxed-usage)) before running `install.py` there, otherwise the alias installer will skip with `cco not installed; install cco then re-run install.py`.
+- Invoke `spellbook-sandbox` directly, only meaningful if `spellbook-cco` (or vanilla `cco` under `SPELLBOOK_USE_VANILLA_CCO=1`) is already on `PATH`.
+- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option. Run `install.py` inside the WSL Linux distro and the installer will write `spellbook-cco` there automatically.
 
 ## What Spellbook Does
 
