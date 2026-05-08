@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import atexit
 import errno
-import fcntl
 import json
 import os
 import re
@@ -34,6 +33,15 @@ import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+# fcntl is POSIX-only. The watch subcommand requires it for the lockfile
+# mutex; other subcommands (open/close/send/read/etc.) do not. Guard the
+# import so the helper module loads on Windows even though watch will
+# refuse to run there.
+try:
+    import fcntl  # type: ignore[import-not-found]
+except ImportError:
+    fcntl = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -564,6 +572,12 @@ def cmd_watch(args: argparse.Namespace) -> int:
         deliberately avoided to prevent a flock+unlink race in which two
         watchers end up holding flock on disjoint inodes for the same path.
     """
+    if fcntl is None:
+        # POSIX-only: the watch subcommand depends on fcntl.flock for the
+        # cross-process lockfile mutex. Windows lacks fcntl entirely.
+        print("watch: not supported on this platform (POSIX-only)", file=sys.stderr)
+        return 1
+
     name = args.name
     _validate_name(name)
     inbox = inbox_dir(name)
