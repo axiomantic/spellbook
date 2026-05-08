@@ -118,6 +118,10 @@ def _send(bus_dir: Path, sender: str, recipient: str, body: str) -> None:
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="agent2agent helper requires fcntl (POSIX-only); subprocess spawn fails on Windows",
+)
 class TestAgent2AgentHook:
     def test_bound_no_messages_silent(self, tmp_path):
         """Session bound to alice, no pending messages -> no [agent2agent] line."""
@@ -353,6 +357,10 @@ def _load_helper_module():
     return module
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="loads the agent2agent helper module which requires fcntl (POSIX-only)",
+)
 def test_hook_helper_constants_in_sync():
     """The hook's name regex / session-id regex / default bus dir must
     exactly mirror the helper's. If one side drifts, the hook silently
