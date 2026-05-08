@@ -41,6 +41,11 @@ HELPER_PATH = (
     / "skills" / "agent2agent" / "scripts" / "agent2agent.py"
 )
 
+SKILL_MD_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "skills" / "agent2agent" / "SKILL.md"
+)
+
 
 @pytest.fixture
 def a2a(tmp_path, monkeypatch):
@@ -1434,3 +1439,57 @@ def test_open_state_alive_missing_transcript_returns_1(a2a, tmp_path):
     rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
     assert rc == 1
     assert stdout == ""
+
+
+# ---------------------------------------------------------------------------
+# Documentation-vs-implementation pin test
+# ---------------------------------------------------------------------------
+#
+# Guards against drift between SKILL.md prose and the actual fswatch argv in
+# cmd_watch. A prior T8 review caught SKILL.md saying ``fswatch -1 inbox/``
+# (one-shot mode) when the helper actually invokes ``fswatch -0 -l 0.1`` (a
+# long-running NUL-delimited stream with 100ms event coalescing). The two
+# operating modes are not interchangeable, and the smoke tests only assert
+# the substring "fswatch", which is why the drift slipped through.
+#
+# This test pins both the source and the docs to the same flag triple so any
+# future change to either side without updating the other fails the suite.
+# ---------------------------------------------------------------------------
+
+
+def test_helper_invokes_fswatch_with_documented_flags():
+    """SKILL.md prose and cmd_watch source must agree on the fswatch argv.
+
+    The canonical invocation is ``fswatch -0 -l 0.1 <inbox>``:
+        -0     NUL-delimited output (so paths with newlines parse cleanly)
+        -l 0.1 100ms event-coalescing latency
+    Anything else (notably the one-shot ``-1`` mode) is a bug.
+    """
+    helper_src = HELPER_PATH.read_text(encoding="utf-8")
+    skill_md = SKILL_MD_PATH.read_text(encoding="utf-8")
+
+    # (a) Source must contain the exact argv literal in cmd_watch's Popen.
+    #     Matches the line: [fswatch_path, "-0", "-l", "0.1", str(inbox)]
+    expected_argv_literal = '[fswatch_path, "-0", "-l", "0.1", str(inbox)]'
+    assert expected_argv_literal in helper_src, (
+        f"cmd_watch fswatch invocation drifted from documented argv. "
+        f"Expected literal {expected_argv_literal!r} in helper source."
+    )
+
+    # (b) SKILL.md must document the same flags. We assert each flag token is
+    #     present in the prose so a reader debugging the watcher sees the
+    #     real invocation, not a one-shot ``-1`` placeholder.
+    for token in ("-0", "-l", "0.1"):
+        assert token in skill_md, (
+            f"SKILL.md is missing fswatch flag {token!r}; prose has drifted "
+            f"from cmd_watch source. Update SKILL.md to match "
+            f"{expected_argv_literal!r}."
+        )
+
+    # (c) SKILL.md must NOT describe the watcher with the one-shot ``-1`` flag,
+    #     which would imply exit-after-first-event semantics — the opposite
+    #     of the actual long-running stream.
+    assert "fswatch -1 " not in skill_md, (
+        "SKILL.md still describes fswatch with the one-shot ``-1`` flag. "
+        "The actual invocation is a long-running stream: ``fswatch -0 -l 0.1``."
+    )

@@ -70,7 +70,7 @@ python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py <subcommand> [a
 | `help` | Usage text. |
 | `watch <name>` | **Protocol-internal — invoked by `/a2a open` watch chain. Users should not run this directly.** Blocks until a message arrives or the 540s recycle budget expires; atomically claims any inbox messages into `pending/<batch-id>/`. |
 | `drain <name> [<batch-id>]` | **Protocol-internal — invoked by `/a2a open` watch chain. Users should not run this directly.** Reads and acks the messages staged by `watch` (moves `pending/<batch-id>/` → `processed/`). |
-| `_open_state {write,clear,read,alive} <sid>` | **Slash-command-internal.** Maintains the open-state record at `<bus>/.open/<sid>` and serves the canonical liveness probe for both the slash command and the hook backstop. |
+| `_open_state {write,clear,read,alive} <sid>` | **Slash-command-internal.** Maintains the open-state record at `<bus>/.open/<sid>` and defines the canonical liveness contract (mtime + 90s window, FAIL-SAFE-DEAD). The slash command invokes `_open_state alive` directly; the hook backstop implements the same probe inline (`_bg_agent_alive`) for performance — it does NOT shell out to the helper. |
 
 The bus directory is `$AGENT2AGENT_DIR` if set, else
 `~/.local/share/agent2agent`.
@@ -116,7 +116,9 @@ the slash command dispatches a backgrounded Task agent that runs
   (advisory; auto-released when the process's fd closes — no stale
   lockfile state. The lockfile path persists; mutual exclusion comes
   from flock + kernel fd cleanup, not file deletion);
-- waits with `fswatch -1 inbox/` if available, else 500ms-poll fallback;
+- waits on a long-running `fswatch -0 -l 0.1 inbox/` stream
+  (NUL-delimited output, 100ms event-coalescing latency) if available,
+  else 500ms-poll fallback;
 - on first message, atomically `os.replace`s the inbox files into
   `pending/<batch-id>/` and exits 0 with `PENDING_BATCH <id> count=<n>`;
 - on a 540s budget timeout with no message, exits 0 with
@@ -131,11 +133,15 @@ user-visible polling chatter.
 **Open-state record.** `/a2a open` writes
 `<bus>/.open/<session-id>` (JSON: `name`, `agent_id`, `started_at`,
 `output_file`). The slash command and the SessionStart /
-UserPromptSubmit hook both consult this record via the helper's
-`_open_state alive <sid>` subcommand to detect orphaned chains
-(FAIL-SAFE-DEAD: an `output_file` whose mtime is older than 90s, or
-which is missing entirely, is treated as DEAD and the hook surfaces a
-`[agent2agent] watch chain dropped` re-arm hint).
+UserPromptSubmit hook share the **same liveness contract** — mtime +
+90s window, FAIL-SAFE-DEAD: an `output_file` whose mtime is older than
+90s, or which is missing entirely, is treated as DEAD and the hook
+surfaces a `[agent2agent] watch chain dropped` re-arm hint. The slash
+command invokes the helper's `_open_state alive <sid>` subcommand; the
+hook implements the same probe inline (`_bg_agent_alive` in
+`hooks/spellbook_hook.py`) — it reads the JSON state and stats
+`output_file` directly rather than shelling out, for performance and
+reliability inside the hook hot path.
 
 **When to use which.** Operators do not choose; `/a2a open` enables
 both paths simultaneously. The hook-receive path is the safety net for
