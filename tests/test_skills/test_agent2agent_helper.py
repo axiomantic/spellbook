@@ -24,8 +24,10 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -869,4 +871,324 @@ def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
     )
     assert re.match(r"^WATCH_RECYCLE elapsed=0s$", stdout_b.strip()), (
         f"stdout={stdout_b!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# watch: fswatch + 500ms polling backstop + spurious-wake re-entry (T3b)
+#
+# These tests extend T3a coverage to the full WAIT/DRAIN state machine:
+#   - fswatch wake (when fswatch is on PATH) returns PENDING_BATCH
+#   - polling backstop wakes even with fswatch unavailable (PATH stripped)
+#   - spurious fswatch events (dotfiles) do NOT exit early
+#   - atomic concurrent claim: one watcher + one read, never duplicates
+# All tests use subprocess.Popen for the same isolation reasons as T3a.
+# ---------------------------------------------------------------------------
+
+
+def _watch_env_no_fswatch(tmp_path: Path) -> dict:
+    """Subprocess env with AGENT2AGENT_DIR set AND PATH stripped of fswatch.
+
+    Forces ``shutil.which("fswatch")`` inside the subprocess to return None
+    so we exercise the polling-only branch on every host (incl. CI without
+    fswatch installed). PATH is set to a directory that we know does not
+    contain fswatch so the python interpreter and other essentials remain
+    unchanged for the test runner's spawn.
+    """
+    env = _watch_env(tmp_path)
+    # Use an empty/nonexistent PATH so shutil.which("fswatch") -> None.
+    # We invoke python by absolute path (sys.executable) so PATH stripping
+    # does not break the subprocess spawn itself.
+    env["PATH"] = "/nonexistent-dir-for-watch-test"
+    return env
+
+
+def _spawn_watch_no_fswatch(
+    tmp_path: Path, name: str, max_elapsed: float
+) -> subprocess.Popen:
+    """Like _spawn_watch but with PATH stripped of fswatch."""
+    return subprocess.Popen(
+        [
+            sys.executable, str(HELPER_PATH),
+            "watch", name, "--max-elapsed", str(max_elapsed),
+        ],
+        env=_watch_env_no_fswatch(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+
+def _drop_inbox_message(
+    tmp_path: Path, name: str, msg_id: str, sender: str = "bob", body: str = "hi"
+) -> Path:
+    """Atomically drop a message file into <name>/inbox/. Mirrors cmd_send's
+    tempfile + os.replace idiom so the watcher only ever sees a fully-written
+    file (no half-baked content during fswatch wake).
+    """
+    inbox = tmp_path / name / "inbox"
+    inbox.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"id": msg_id, "from": sender, "body": body})
+    target = inbox / f"{msg_id}.json"
+    # tempfile in same dir -> os.replace = atomic rename on POSIX.
+    fd, tmp = tempfile.mkstemp(dir=str(inbox), prefix=".tmp-", suffix=".json")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(payload)
+        os.replace(tmp, target)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    return target
+
+
+def _fswatch_available() -> bool:
+    return shutil.which("fswatch") is not None
+
+
+@pytest.mark.skipif(not _fswatch_available(), reason="fswatch not on PATH")
+def test_watch_blocks_then_returns_on_send(tmp_path):
+    """fswatch path: empty inbox; drop a message after 0.6s; watcher exits
+    with PENDING_BATCH count=1 within ~2s and the file is in pending/."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=10.0)
+    try:
+        time.sleep(0.6)
+        msg_id = "msg-fswatch-0001"
+        _drop_inbox_message(tmp_path, "alice", msg_id, sender="bob", body="hi-fs")
+        rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0)
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=2.0)
+
+    assert rc == 0, f"stderr={stderr!r} stdout={stdout!r}"
+    m = re.match(r"^PENDING_BATCH (\S+) count=1$", stdout.strip())
+    assert m, f"stdout={stdout!r}"
+    batch_id = m.group(1)
+
+    # File moved out of inbox/ and into pending/<batch_id>/.
+    inbox_files = list((tmp_path / "alice" / "inbox").glob("*.json"))
+    assert inbox_files == [], f"inbox should be empty, got {inbox_files!r}"
+    batch_dir = tmp_path / "alice" / "pending" / batch_id
+    assert batch_dir.is_dir(), f"missing batch dir {batch_dir}"
+    pending_files = sorted(p.name for p in batch_dir.iterdir())
+    assert pending_files == [f"{msg_id}.json"], (
+        f"pending files: {pending_files!r}"
+    )
+
+
+def test_watch_polling_path_when_no_fswatch(tmp_path):
+    """Polling-only branch: PATH stripped so shutil.which('fswatch') is None.
+
+    Watcher logs the fallback marker to stderr ONCE, then a message dropped
+    after 0.3s is detected via the 0.5s poll within ~1s and emits
+    PENDING_BATCH count=1.
+    """
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch_no_fswatch(tmp_path, "alice", max_elapsed=10.0)
+    try:
+        time.sleep(0.3)
+        msg_id = "msg-poll-0001"
+        _drop_inbox_message(tmp_path, "alice", msg_id, sender="bob", body="hi-poll")
+        rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0)
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=2.0)
+
+    assert rc == 0, f"stderr={stderr!r} stdout={stdout!r}"
+    m = re.match(r"^PENDING_BATCH (\S+) count=1$", stdout.strip())
+    assert m, f"stdout={stdout!r}"
+    batch_id = m.group(1)
+    assert "fswatch unavailable, polling-only" in stderr, (
+        f"polling-only marker missing in stderr={stderr!r}"
+    )
+
+    # File moved out of inbox/ and into pending/<batch_id>/.
+    inbox_files = list((tmp_path / "alice" / "inbox").glob("*.json"))
+    assert inbox_files == [], f"inbox should be empty, got {inbox_files!r}"
+    batch_dir = tmp_path / "alice" / "pending" / batch_id
+    pending_files = sorted(p.name for p in batch_dir.iterdir())
+    assert pending_files == [f"{msg_id}.json"], (
+        f"pending files: {pending_files!r}"
+    )
+
+
+@pytest.mark.skipif(not _fswatch_available(), reason="fswatch not on PATH")
+def test_watch_recovers_from_spurious_fswatch_event(tmp_path):
+    """fswatch fires for a dotfile: _list_inbox filters it; watcher must NOT
+    emit PENDING_BATCH count=0 and must NOT exit early. It runs out the
+    --max-elapsed budget and exits with WATCH_RECYCLE.
+    """
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=4.0)
+    try:
+        time.sleep(0.4)
+        # Dotfile in inbox triggers fswatch but is filtered by _list_inbox.
+        # We use a dotfile name distinct from .watcher.lock to avoid stomping
+        # the active watcher's mutex fd.
+        spurious = tmp_path / "alice" / "inbox" / ".tmp-spurious-event"
+        spurious.write_text("ignore-me", encoding="utf-8")
+        rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=4.0 + 5)
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=2.0)
+
+    assert rc == 0, f"stderr={stderr!r}"
+    assert stdout.strip() == "WATCH_RECYCLE elapsed=4s", (
+        f"watcher must NOT exit early on spurious wake; stdout={stdout!r}"
+    )
+    # Specifically: must not have emitted a zero-count PENDING_BATCH.
+    assert "count=0" not in stdout, f"unexpected zero-count batch: stdout={stdout!r}"
+
+
+@pytest.mark.skipif(not _fswatch_available(), reason="fswatch not on PATH")
+def test_watch_atomic_consume_under_concurrent_reader(tmp_path):
+    """Pre-seed 3 messages; race watcher vs cmd_read on one of them.
+
+    Invariants:
+      - watcher's PENDING_BATCH count is 2 or 3 (never duplicated).
+      - every original message ends up in EXACTLY ONE of:
+        processed/<id>.json  (read claimed it) OR
+        pending/<batch>/<id>.json  (watcher claimed it).
+      - total file count across both dirs == 3 (no duplicates, no losses
+        beyond the inherent race).
+    """
+    _open_inbox(tmp_path, "alice")
+    msg_ids = ["msg-race-001", "msg-race-002", "msg-race-003"]
+    for mid in msg_ids:
+        _drop_inbox_message(tmp_path, "alice", mid, sender="bob", body=f"b-{mid}")
+
+    # Spawn watcher; concurrently fire `read` on one specific message.
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=5.0)
+    try:
+        # Run read targeting the middle message. We do not assert read's
+        # rc here: if the watcher beat it to the rename, read returns 1
+        # ("no message"). The invariants below are the contract.
+        read_proc = subprocess.run(
+            [sys.executable, str(HELPER_PATH), "read", "alice", "msg-race-002"],
+            env=_watch_env(tmp_path),
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        )
+        rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0 + 5)
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=2.0)
+
+    assert rc == 0, f"stderr={stderr!r} stdout={stdout!r}"
+    m = re.match(r"^PENDING_BATCH (\S+) count=(\d+)$", stdout.strip())
+    assert m, f"stdout={stdout!r}"
+    batch_id = m.group(1)
+    count = int(m.group(2))
+    assert count in (2, 3), (
+        f"PENDING_BATCH count must be 2 or 3 (no duplicates); got {count}"
+    )
+
+    # Inbox must be empty (everything was claimed by exactly one path).
+    inbox_files = sorted(
+        p.name for p in (tmp_path / "alice" / "inbox").iterdir()
+        if p.is_file() and p.name.endswith(".json")
+        and not p.name.startswith(".")
+    )
+    assert inbox_files == [], f"inbox should be drained, got {inbox_files!r}"
+
+    pending_dir = tmp_path / "alice" / "pending" / batch_id
+    pending_files = (
+        sorted(p.name for p in pending_dir.iterdir())
+        if pending_dir.is_dir() else []
+    )
+    processed_dir = tmp_path / "alice" / "processed"
+    processed_files = (
+        sorted(p.name for p in processed_dir.iterdir())
+        if processed_dir.is_dir() else []
+    )
+
+    # Disjoint: no message is in both places.
+    assert set(pending_files).isdisjoint(set(processed_files)), (
+        f"duplicate claim: pending={pending_files!r} processed={processed_files!r}"
+    )
+
+    # Union covers ALL original messages exactly once.
+    expected = sorted(f"{mid}.json" for mid in msg_ids)
+    actual = sorted(pending_files + processed_files)
+    assert actual == expected, (
+        f"messages lost or duplicated; expected={expected!r} actual={actual!r} "
+        f"(pending={pending_files!r} processed={processed_files!r}) "
+        f"read_rc={read_proc.returncode} read_stderr={read_proc.stderr!r}"
+    )
+
+    # PENDING_BATCH count must equal len(pending_files).
+    assert count == len(pending_files), (
+        f"PENDING_BATCH count={count} mismatches actual pending file count "
+        f"{len(pending_files)}"
+    )
+
+
+def test_watch_caps_batch_at_max_batch(tmp_path):
+    """--max-batch caps the batch size; overflow stays in inbox for next cycle.
+
+    Pre-seed 7 messages with --max-batch=3. Watcher claims exactly 3 into
+    pending/<batch>/, leaves 4 in inbox.
+    """
+    _open_inbox(tmp_path, "alice")
+    msg_ids = [f"msg-cap-{i:03d}" for i in range(7)]
+    for mid in msg_ids:
+        _drop_inbox_message(tmp_path, "alice", mid, sender="bob", body=mid)
+
+    # We need to pass --max-batch; existing _spawn_watch does not, so build inline.
+    proc = subprocess.Popen(
+        [
+            sys.executable, str(HELPER_PATH),
+            "watch", "alice",
+            "--max-elapsed", "5.0",
+            "--max-batch", "3",
+        ],
+        env=_watch_env(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0 + 5)
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=2.0)
+
+    assert rc == 0, f"stderr={stderr!r}"
+    m = re.match(r"^PENDING_BATCH (\S+) count=3$", stdout.strip())
+    assert m, f"stdout={stdout!r}"
+    batch_id = m.group(1)
+
+    pending_files = sorted(
+        p.name for p in (tmp_path / "alice" / "pending" / batch_id).iterdir()
+    )
+    assert len(pending_files) == 3, f"pending: {pending_files!r}"
+
+    # 4 messages remain in inbox (lex-sortable: the LAST 4 of 7, since
+    # _list_inbox returns them sorted and we claim the FIRST max_batch).
+    inbox_remaining = sorted(
+        p.name for p in (tmp_path / "alice" / "inbox").iterdir()
+        if p.is_file() and p.name.endswith(".json") and not p.name.startswith(".")
+    )
+    assert len(inbox_remaining) == 4, f"inbox remaining: {inbox_remaining!r}"
+
+    # Disjoint: no overlap between claimed and remaining.
+    assert set(pending_files).isdisjoint(set(inbox_remaining)), (
+        f"overlap: pending={pending_files!r} inbox={inbox_remaining!r}"
+    )
+
+    # Union covers all 7.
+    all_seen = sorted(pending_files + inbox_remaining)
+    expected = sorted(f"{mid}.json" for mid in msg_ids)
+    assert all_seen == expected, (
+        f"messages lost; expected={expected!r} actual={all_seen!r}"
     )

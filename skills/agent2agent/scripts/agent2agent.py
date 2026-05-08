@@ -25,8 +25,10 @@ import fcntl
 import json
 import os
 import re
+import select
 import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -525,9 +527,6 @@ def cmd_drain(args: argparse.Namespace) -> int:
 def cmd_watch(args: argparse.Namespace) -> int:
     """Block until a new message lands or the recycle budget elapses.
 
-    T3a scope: lockfile + RECOVER + recycle only. T3b adds fswatch wakeup,
-    500ms polling backstop, and atomic batch claim into ``pending/<batch-id>/``.
-
     Behavior:
       * If ``inbox/`` does not exist: print ``WATCH_INBOX_GONE`` and exit 1.
       * Acquire ``inbox/.watcher.lock`` via ``fcntl.flock(LOCK_EX|LOCK_NB)``.
@@ -536,10 +535,20 @@ def cmd_watch(args: argparse.Namespace) -> int:
       * RECOVER: if any non-empty batch dir exists in ``pending/``, print
         ``PENDING_BATCH <batch-id> count=<n>`` for the lex-oldest batch and
         exit 0 immediately.
-      * WAIT (T3a-scope): sleep in ``poll_interval`` increments until
-        ``max_elapsed`` is reached, then print ``WATCH_RECYCLE elapsed=<N>s``
-        and exit 0. T3b will replace this with fswatch + polling for live
-        message detection.
+      * WAIT/DRAIN: spawn ``fswatch -0 -l 0.1 <inbox>`` if available; in
+        either case run a 500ms polling backstop. On message arrival,
+        atomically claim up to ``--max-batch`` files into
+        ``pending/<batch-id>/`` via ``os.replace``, then print
+        ``PENDING_BATCH <batch-id> count=<n>`` and exit 0.
+      * Spurious fswatch wake (no real messages after filtering): drain the
+        fswatch buffer, do NOT exit, do NOT emit a zero-count batch.
+      * Concurrent claim: if every candidate vanishes mid-claim (a parallel
+        ``read`` won the race for all of them), tear down the empty batch
+        dir and re-enter WAIT.
+      * Recycle: when ``elapsed >= max_elapsed`` print
+        ``WATCH_RECYCLE elapsed=<N>s`` and exit 0.
+      * fswatch unavailable: log ``watch: fswatch unavailable, polling-only``
+        ONCE to stderr and continue with polling-only.
       * Lockfile path persists across cycles; the mutex is enforced by
         ``flock`` + kernel fd cleanup, not by unlinking the lockfile.
         atexit + signal handlers (SIGINT, SIGTERM) release the flock and
@@ -638,19 +647,119 @@ def cmd_watch(args: argparse.Namespace) -> int:
             print(f"PENDING_BATCH {batch.name} count={len(files)}")
             return 0
 
-    # WAIT (T3a-scope): budget-only sleep loop. T3b replaces this with
-    # fswatch wakeup + 500ms polling + atomic batch claim into
-    # pending/<batch-id>/. For T3a, the only exit is max_elapsed -> recycle.
+    # WAIT/DRAIN: spawn fswatch (if available) for low-latency wake; ALWAYS
+    # run a `poll_interval` polling backstop so a wedged or absent fswatch
+    # cannot stall delivery beyond the polling cadence. Spurious wakes
+    # (events for filtered files like dotfiles or our own pending/ writes)
+    # re-enter the loop without emitting a zero-count batch. Concurrent
+    # readers that drain every candidate file mid-claim cause us to tear
+    # down the empty batch dir and re-enter WAIT.
+    fswatch_path = shutil.which("fswatch")
+    fswatch_proc: subprocess.Popen | None = None
+    if fswatch_path:
+        try:
+            fswatch_proc = subprocess.Popen(
+                [fswatch_path, "-0", "-l", "0.1", str(inbox)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                bufsize=0,
+            )
+        except OSError:
+            fswatch_proc = None
+    if fswatch_proc is None:
+        print("watch: fswatch unavailable, polling-only", file=sys.stderr)
+
     poll_interval = args.poll_interval
     max_elapsed = args.max_elapsed
+    max_batch = args.max_batch
     start = time.monotonic()
-    while True:
-        elapsed = time.monotonic() - start
-        if elapsed >= max_elapsed:
-            print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
-            return 0
-        remaining = max_elapsed - elapsed
-        time.sleep(min(poll_interval, remaining))
+    try:
+        while True:
+            elapsed = time.monotonic() - start
+            if elapsed >= max_elapsed:
+                print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
+                return 0
+
+            # Snapshot inbox; if any real messages are present, attempt an
+            # atomic batch claim. If every candidate vanishes mid-claim
+            # (concurrent reader took all of them), tear down the empty
+            # batch dir and re-enter WAIT. Per-message ENOENT is benign:
+            # skip that file and continue claiming the rest.
+            msgs = _list_inbox(name)
+            if msgs:
+                msgs = msgs[:max_batch]
+                batch_id = (
+                    "batch-"
+                    + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+                    + f"-{os.getpid()}"
+                )
+                batch_dir = pending_root / batch_id
+                batch_dir.mkdir(parents=True)
+                claimed: list[str] = []
+                for m in msgs:
+                    target = batch_dir / m.name
+                    try:
+                        os.replace(m, target)
+                    except FileNotFoundError:
+                        # Source vanished — concurrent reader claimed it.
+                        continue
+                    except OSError as exc:
+                        if exc.errno == errno.ENOENT:
+                            continue
+                        raise
+                    claimed.append(m.name)
+                if claimed:
+                    print(
+                        f"PENDING_BATCH {batch_id} count={len(claimed)}"
+                    )
+                    return 0
+                # Every candidate vanished mid-claim. Remove the empty
+                # batch dir (do NOT emit a zero-count batch) and re-enter
+                # WAIT.
+                try:
+                    batch_dir.rmdir()
+                except OSError:
+                    pass
+                # Loop continues — recompute elapsed at top.
+
+            remaining = max_elapsed - elapsed
+            wait_slice = min(poll_interval, remaining)
+            if fswatch_proc is not None and fswatch_proc.poll() is None:
+                try:
+                    rlist, _, _ = select.select(
+                        [fswatch_proc.stdout], [], [], wait_slice
+                    )
+                except (OSError, ValueError):
+                    rlist = []
+                if rlist:
+                    # Drain the fswatch buffer; the contents are not
+                    # trusted — only the wake matters. If this turns out
+                    # to be a spurious wake (no real messages), the next
+                    # iteration's _list_inbox returns empty and we fall
+                    # back into select.
+                    try:
+                        os.read(fswatch_proc.stdout.fileno(), 4096)
+                    except OSError:
+                        pass
+            else:
+                time.sleep(wait_slice)
+    finally:
+        if fswatch_proc is not None and fswatch_proc.poll() is None:
+            try:
+                fswatch_proc.terminate()
+            except OSError:
+                pass
+            try:
+                fswatch_proc.wait(timeout=1.0)
+            except subprocess.TimeoutExpired:
+                try:
+                    fswatch_proc.kill()
+                except OSError:
+                    pass
+                try:
+                    fswatch_proc.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    pass
 
 
 def cmd_help(_args: argparse.Namespace) -> int:
