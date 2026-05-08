@@ -413,6 +413,85 @@ class TestBashGateFailClosed:
         assert proc.returncode == 2
 
 
+class TestBashGateAskPrompt:
+    """Verify T2 (TIER-ASK) findings translate to Claude Code's
+    ``permissionDecision: "ask"`` JSON on stdout with exit 0,
+    rather than the hard exit-2 deny path that swallowed them
+    before the T2-as-ask fix.
+
+    Coverage matrix (matches the four cases in the fix brief):
+
+    1. pure T2  -> ``permissionDecision: "ask"`` JSON, exit 0
+    2. pure T3  -> exit 2, no ask JSON (existing behavior preserved)
+    3. mixed T2 + non-ask CRITICAL -> exit 2 (deny wins)
+    4. pure T0/T1/safe -> no stdout, exit 0 (existing behavior preserved)
+    """
+
+    def test_pure_t2_emits_ask_prompt(self):
+        """``git push`` matches the T2 record only; the hook must emit
+        ``permissionDecision: "ask"`` and exit 0 so the harness can
+        surface a yellow permission prompt."""
+        proc = _run_bash_gate({"command": "git push"})
+        assert proc.returncode == 0, (
+            f"expected exit 0 (ask), got {proc.returncode}; "
+            f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+        )
+        output = json.loads(proc.stdout.strip())
+        hook_output = output["hookSpecificOutput"]
+        assert hook_output["hookEventName"] == "PreToolUse"
+        assert hook_output["permissionDecision"] == "ask"
+        assert "permissionDecisionReason" in hook_output
+        assert hook_output["permissionDecisionReason"]  # non-empty
+
+    def test_pure_t2_gh_pr_merge_emits_ask_prompt(self):
+        """Second seeded T2 record: ``gh pr merge``."""
+        proc = _run_bash_gate({"command": "gh pr merge --squash"})
+        assert proc.returncode == 0
+        output = json.loads(proc.stdout.strip())
+        assert output["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+    def test_pure_t3_still_exits_2(self):
+        """T3 deny path is unchanged — no ask JSON, exit 2.
+
+        Deny error JSON is routed to stderr per Claude Code hook protocol
+        (commit 324cab5b); stdout stays empty on the deny path.
+        """
+        proc = _run_bash_gate(
+            {"command": "git push --force origin main"}
+        )
+        assert proc.returncode == 2
+        # Output must be the legacy ``{"error": "..."}`` shape, not an
+        # ``ask`` JSON. Parsing it as JSON should yield an ``error`` key.
+        output = json.loads(proc.stderr.strip())
+        assert "error" in output
+        assert "hookSpecificOutput" not in output
+
+    def test_mixed_t2_and_critical_exits_2(self):
+        """A T2 match combined with a non-ask CRITICAL finding (here
+        the bashlex compound-command parser firing on ``&&``) must
+        collapse to deny — ask never wins over a real block.
+
+        Compound deny is opt-in since 0.63.2; this test opts in via
+        ``SPELLBOOK_BASH_DENY_COMPOUND=1`` so the bashlex layer can
+        produce a CRITICAL alongside the T2 TIER-ASK.
+        """
+        proc = _run_bash_gate(
+            {"command": "git push && echo done"},
+            env_overrides={"SPELLBOOK_BASH_DENY_COMPOUND": "1"},
+        )
+        assert proc.returncode == 2
+        output = json.loads(proc.stderr.strip())
+        assert "error" in output
+        assert "hookSpecificOutput" not in output
+
+    def test_safe_command_emits_no_stdout(self):
+        """T0/T1 / safe commands keep the silent exit-0 contract — no
+        stdout payload, no ask prompt."""
+        proc = _run_bash_gate({"command": "ls -la"})
+        assert proc.returncode == 0
+        assert proc.stdout.strip() == ""
+
+
 # #############################################################################
 # state-sanitize tests via unified hook
 # #############################################################################

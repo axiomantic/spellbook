@@ -348,13 +348,70 @@ def _validate_tool_use_id(tool_use_id: str) -> bool:
 # Handlers: Security gates (FAIL-CLOSED)
 # ---------------------------------------------------------------------------
 
+def _handle_check_result(result: dict) -> None:
+    """Process a ``check_tool_input`` result, exiting if the gate denies or asks.
+
+    On ``verdict == "ask"``: delegates to :func:`_emit_ask_and_exit` (which
+    exits 0 with a ``permissionDecision`` JSON on stdout).
+    On ``safe == False``: prints the error JSON to stderr and exits 2 (block).
+    Otherwise returns silently (allow).
+    """
+    if result.get("verdict") == "ask":
+        _emit_ask_and_exit(result["findings"])
+    if not result["safe"]:
+        reasons = "; ".join(
+            f["message"]
+            for f in result["findings"]
+            if f.get("severity") != "LOW"
+        )
+        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
+        sys.exit(2)
+
+
+def _emit_ask_and_exit(findings: list[dict]) -> None:
+    """Emit Claude Code's ``permissionDecision: "ask"`` JSON and exit 0.
+
+    Used when ``check_tool_input`` returns ``verdict == "ask"`` — every
+    non-LOW finding is a TIER-ASK (e.g. ``git push``, ``gh pr merge``).
+    The harness shows a yellow permission prompt the operator can
+    approve from inside the session; T3 deny still hits the exit-2
+    branch.
+    """
+    reason = "; ".join(
+        f.get("message", "")
+        for f in findings
+        if f.get("rule_id", "").startswith("TIER-ASK")
+    )
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "ask",
+                    "permissionDecisionReason": reason,
+                }
+            }
+        )
+    )
+    sys.exit(0)
+
+
 def _gate_bash(data: dict) -> None:
     """Security: validate bash commands. FAIL-CLOSED.
 
-    Calls check_tool_input from the security module. If the check finds
-    dangerous patterns, exits with code 2 and a structured error on stdout.
+    Calls check_tool_input from the security module. The ``verdict`` field
+    selects the action:
+
+    - ``"allow"``: no findings above LOW; return silently.
+    - ``"ask"``: only TIER-ASK findings (T2, e.g. ``git push``); emit
+      ``permissionDecision: "ask"`` and exit 0 so the harness surfaces
+      a permission prompt.
+    - ``"deny"``: TIER-DENY (T3), CRITICAL bashlex/exfil findings, or
+      any mix containing a non-ask finding; exit 2 with a structured
+      error on stderr. Error messages never include blocked content
+      (anti-reflection).
+
     If the security module cannot be imported, blocks (fail-closed).
-    Error messages never include blocked content (anti-reflection).
     """
     try:
         from spellbook.gates.check import check_tool_input
@@ -369,16 +426,14 @@ def _gate_bash(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("Bash", tool_input)
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 def _gate_spawn(data: dict) -> None:
     """Security: validate spawn prompts. FAIL-CLOSED.
 
     Normalizes tool_name from MCP prefix to bare name before checking.
+    See :func:`_gate_bash` for the verdict / exit-code contract.
     """
     try:
         from spellbook.gates.check import check_tool_input
@@ -393,16 +448,14 @@ def _gate_spawn(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("spawn_claude_session", tool_input)
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 def _gate_state_sanitize(data: dict) -> None:
     """Security: validate workflow state. FAIL-CLOSED.
 
     Normalizes tool_name from MCP prefix to bare name before checking.
+    See :func:`_gate_bash` for the verdict / exit-code contract.
     """
     try:
         from spellbook.gates.check import check_tool_input
@@ -417,10 +470,7 @@ def _gate_state_sanitize(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("workflow_state_save", tool_input)
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 # ---------------------------------------------------------------------------
