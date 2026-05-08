@@ -495,24 +495,33 @@ def cmd_drain(args: argparse.Namespace) -> int:
     if args.batch_id is not None:
         target = pending_root / args.batch_id
         target_dirs = [target] if target.is_dir() else []
-    elif args.all:
-        target_dirs = sorted(
-            (d for d in pending_root.iterdir() if d.is_dir()),
-            key=lambda p: p.name,
-        )
     else:
-        candidates = sorted(
-            (d for d in pending_root.iterdir() if d.is_dir()),
-            key=lambda p: p.name,
-        )
-        target_dirs = [candidates[0]] if candidates else []
+        # iterdir() can race with cross-session close that removes
+        # pending_root entirely. Treat that as "no pending batches".
+        try:
+            entries = sorted(
+                (d for d in pending_root.iterdir() if d.is_dir()),
+                key=lambda p: p.name,
+            )
+        except FileNotFoundError:
+            entries = []
+        if args.all:
+            target_dirs = entries
+        else:
+            target_dirs = [entries[0]] if entries else []
 
     output: list[dict] = []
     for d in target_dirs:
-        messages = sorted(
-            (m for m in d.iterdir() if not m.name.startswith(".")),
-            key=lambda p: p.name,
-        )
+        # A concurrent drain (e.g. another session calling drain --all)
+        # may remove this batch dir mid-iteration. Skip cleanly rather
+        # than crash the whole call.
+        try:
+            messages = sorted(
+                (m for m in d.iterdir() if not m.name.startswith(".")),
+                key=lambda p: p.name,
+            )
+        except FileNotFoundError:
+            continue
         for m in messages:
             target = processed_root / m.name
             try:
@@ -766,10 +775,12 @@ def cmd_watch(args: argparse.Namespace) -> int:
                     # trusted — only the wake matters. If this turns out
                     # to be a spurious wake (no real messages), the next
                     # iteration's _list_inbox returns empty and we fall
-                    # back into select.
+                    # back into select. ValueError here covers the case
+                    # where fswatch_proc.stdout was already closed by a
+                    # racing reaper between poll() and fileno().
                     try:
                         os.read(fswatch_proc.stdout.fileno(), 4096)
-                    except OSError:
+                    except (OSError, ValueError):
                         pass
             else:
                 time.sleep(wait_slice)
