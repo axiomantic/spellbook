@@ -6,7 +6,7 @@ the default test suite — no integration marker.
 
 Coverage:
     * send + read + peek roundtrip
-    * listen / unlisten lifecycle
+    * open / close lifecycle
     * bind / unbind / bound-name
     * names listing
     * notify metadata-only output (count + senders, no bodies)
@@ -55,45 +55,45 @@ def _run(module, *argv: str) -> tuple[int, str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Lifecycle: listen / unlisten / bind / unbind / bound-name
+# Lifecycle: open / close / bind / unbind / bound-name
 # ---------------------------------------------------------------------------
 
 
-def test_listen_creates_inbox_and_bindings(a2a, monkeypatch):
-    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-listen")
-    rc, _, _ = _run(a2a, "listen", "alice")
+def test_open_creates_inbox_and_bindings(a2a, monkeypatch):
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-open")
+    rc, _, _ = _run(a2a, "open", "alice")
     assert rc == 0
     bus = a2a.bus_dir()
     assert (bus / "alice" / "inbox").is_dir()
     assert (bus / "alice" / "processed").is_dir()
     assert (bus / "alice" / "sent").is_dir()
-    assert (bus / ".bindings" / "session-listen").read_text() == "alice"
+    assert (bus / ".bindings" / "session-open").read_text() == "alice"
 
 
-def test_listen_without_session_id_still_creates_inbox(a2a):
-    rc, stdout, _ = _run(a2a, "listen", "alice")
+def test_open_without_session_id_still_creates_inbox(a2a):
+    rc, stdout, _ = _run(a2a, "open", "alice")
     assert rc == 0
     assert "no CLAUDE_CODE_SESSION_ID" in stdout
     assert (a2a.bus_dir() / "alice" / "inbox").is_dir()
 
 
-def test_unlisten_removes_inbox_and_clears_binding(a2a, monkeypatch):
-    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-unlisten")
-    _run(a2a, "listen", "bob")
+def test_close_removes_inbox_and_clears_binding(a2a, monkeypatch):
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-close")
+    _run(a2a, "open", "bob")
     bus = a2a.bus_dir()
     assert (bus / "bob").is_dir()
 
-    rc, _, _ = _run(a2a, "unlisten", "bob")
+    rc, _, _ = _run(a2a, "close", "bob")
     assert rc == 0
     assert not (bus / "bob").exists()
-    assert not (bus / ".bindings" / "session-unlisten").exists()
+    assert not (bus / ".bindings" / "session-close").exists()
 
 
 def test_bind_then_unbind_then_bound_name(a2a, monkeypatch):
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-bind")
-    _run(a2a, "listen", "carol")  # creates inbox
+    _run(a2a, "open", "carol")  # creates inbox
     # Re-bind to a different name that already has an inbox.
-    _run(a2a, "listen", "dave")
+    _run(a2a, "open", "dave")
     rc, _, _ = _run(a2a, "bind", "carol")
     assert rc == 0
 
@@ -110,7 +110,7 @@ def test_bind_then_unbind_then_bound_name(a2a, monkeypatch):
 
 def test_bound_name_with_explicit_session_id(a2a, monkeypatch):
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-A")
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
 
     monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
     rc, stdout, _ = _run(a2a, "bound-name", "--session-id", "session-A")
@@ -130,7 +130,7 @@ def test_send_to_unregistered_recipient_fails(a2a):
 
 
 def test_send_then_peek_then_read_roundtrip(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     rc, stdout, _ = _run(a2a, "send", "--from", "bob", "--to", "alice", "hello-world")
     assert rc == 0
     msg_id = stdout.strip().split()[-3]  # "agent2agent: sent <id> to alice"
@@ -162,7 +162,7 @@ def test_send_then_peek_then_read_roundtrip(a2a):
 
 
 def test_send_with_reply_to_records_correlation(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "first")
     rc, peek_out, _ = _run(a2a, "peek", "alice")
     first_id = json.loads(peek_out)["id"]
@@ -179,7 +179,7 @@ def test_send_with_reply_to_records_correlation(a2a):
 
 
 def test_check_lists_pending_messages(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "one")
     _run(a2a, "send", "--from", "carol", "--to", "alice", "two")
 
@@ -196,14 +196,14 @@ def test_check_lists_pending_messages(a2a):
 
 
 def test_notify_silent_when_inbox_empty(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     rc, stdout, _ = _run(a2a, "notify", "alice")
     assert rc == 0
     assert stdout == ""
 
 
 def test_notify_reports_count_and_senders_without_bodies(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "secret-body-A")
     _run(a2a, "send", "--from", "carol", "--to", "alice", "secret-body-B")
 
@@ -217,7 +217,7 @@ def test_notify_reports_count_and_senders_without_bodies(a2a):
 
 
 def test_notify_dedupes_repeated_senders(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "msg1")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "msg2")
     _run(a2a, "send", "--from", "bob", "--to", "alice", "msg3")
@@ -234,11 +234,11 @@ def test_notify_dedupes_repeated_senders(a2a):
 
 def test_notify_stale_binding_is_silently_cleaned_up(a2a, monkeypatch, tmp_path):
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-stale")
-    _run(a2a, "listen", "ghost")
+    _run(a2a, "open", "ghost")
     binding = a2a.bus_dir() / ".bindings" / "session-stale"
     assert binding.exists()
 
-    # Simulate another session having unlistened 'ghost'.
+    # Simulate another session having closed 'ghost'.
     import shutil
     shutil.rmtree(a2a.bus_dir() / "ghost")
 
@@ -254,8 +254,8 @@ def test_notify_stale_binding_is_silently_cleaned_up(a2a, monkeypatch, tmp_path)
 
 
 def test_names_lists_only_valid_dirs(a2a):
-    _run(a2a, "listen", "alice")
-    _run(a2a, "listen", "bob")
+    _run(a2a, "open", "alice")
+    _run(a2a, "open", "bob")
     # Hidden + invalid-name dirs must be skipped.
     (a2a.bus_dir() / ".bindings").mkdir(exist_ok=True)
     (a2a.bus_dir() / ".hidden").mkdir(exist_ok=True)
@@ -292,20 +292,20 @@ def test_names_returns_zero_when_bus_missing(a2a, tmp_path, monkeypatch):
 def test_invalid_name_is_rejected_with_exit_2(a2a, bad_name):
     """Any subcommand that takes <name> must reject path-traversal-shaped input."""
     with pytest.raises(SystemExit) as ei:
-        _run(a2a, "listen", bad_name)
+        _run(a2a, "open", bad_name)
     assert ei.value.code == 2
 
 
 def test_invalid_session_id_is_rejected(a2a, monkeypatch):
-    """Bind/listen reject malformed session ids via SystemExit(2)."""
+    """Bind/open reject malformed session ids via SystemExit(2)."""
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "with space")
     with pytest.raises(SystemExit) as ei:
-        _run(a2a, "listen", "alice")
+        _run(a2a, "open", "alice")
     assert ei.value.code == 2
 
 
 def test_send_rejects_invalid_from_name(a2a):
-    _run(a2a, "listen", "alice")
+    _run(a2a, "open", "alice")
     with pytest.raises(SystemExit) as ei:
         _run(a2a, "send", "--from", "../escape", "--to", "alice", "hi")
     assert ei.value.code == 2

@@ -94,7 +94,7 @@ def _bind(bus_dir: Path, session_id: str, name: str) -> None:
     env["AGENT2AGENT_DIR"] = str(bus_dir)
     env["CLAUDE_CODE_SESSION_ID"] = session_id
     proc = subprocess.run(
-        [sys.executable, HELPER, "listen", name],
+        [sys.executable, HELPER, "open", name],
         capture_output=True, text=True, env=env, timeout=10,
     )
     assert proc.returncode == 0, proc.stderr
@@ -158,7 +158,7 @@ class TestAgent2AgentHook:
         bus = tmp_path / "bus"
         sid = "session-stale"
         _bind(bus, sid, "ghost")
-        # Simulate another session having unlisten'd 'ghost' meanwhile.
+        # Simulate another session having close'd 'ghost' meanwhile.
         shutil.rmtree(bus / "ghost")
         binding_path = bus / ".bindings" / sid
         assert binding_path.exists(), "precondition: binding file must still exist"

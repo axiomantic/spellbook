@@ -7,7 +7,7 @@ under ``$AGENT2AGENT_DIR/<name>/{inbox,processed,sent}/`` (default
 (tempfile + rename) and named so they sort lexicographically in
 chronological order.
 
-Sessions ``listen <name>`` to claim a name AND bind the current Claude
+Sessions ``open <name>`` to claim a name AND bind the current Claude
 session id (``$CLAUDE_CODE_SESSION_ID``) to it. The spellbook
 ``UserPromptSubmit`` hook reads the binding and runs ``notify <name>`` at
 the start of every user turn. ``notify`` outputs metadata only — never
@@ -206,23 +206,23 @@ def _read_message_file(path: Path) -> dict | None:
 # ---------------------------------------------------------------------------
 
 
-def cmd_listen(args: argparse.Namespace) -> int:
+def cmd_open(args: argparse.Namespace) -> int:
     _validate_name(args.name)
     _ensure_dirs(args.name)
     sid = _current_session_id()
     if sid:
         _validate_session_id(sid)
         _write_binding(sid, args.name)
-        print(f"agent2agent: listening as {args.name!r} (session bound)")
+        print(f"agent2agent: opened as {args.name!r} (session bound)")
     else:
         print(
-            f"agent2agent: listening as {args.name!r} "
+            f"agent2agent: opened as {args.name!r} "
             f"(no CLAUDE_CODE_SESSION_ID — hook auto-notify disabled)"
         )
     return 0
 
 
-def cmd_unlisten(args: argparse.Namespace) -> int:
+def cmd_close(args: argparse.Namespace) -> int:
     _validate_name(args.name)
     target = name_dir(args.name)
     if target.exists():
@@ -232,7 +232,7 @@ def cmd_unlisten(args: argparse.Namespace) -> int:
         bound = _read_binding(sid)
         if bound == args.name:
             _remove_binding(sid)
-    print(f"agent2agent: unlistened {args.name!r}")
+    print(f"agent2agent: closed {args.name!r}")
     return 0
 
 
@@ -295,7 +295,7 @@ def cmd_notify(args: argparse.Namespace) -> int:
     """
     _validate_name(args.name)
     if not name_dir(args.name).exists():
-        # Stale binding cleanup: another session may have unlistened this name.
+        # Stale binding cleanup: another session may have closed this name.
         sid = _current_session_id()
         if sid and _SESSION_ID_RE.match(sid):
             bound = _read_binding(sid)
@@ -373,12 +373,12 @@ def cmd_send(args: argparse.Namespace) -> int:
     if body is None:
         body = ""
 
-    # Recipient inbox must exist for delivery (i.e. recipient has run listen).
+    # Recipient inbox must exist for delivery (i.e. recipient has run open).
     target_inbox = inbox_dir(args.to)
     if not target_inbox.exists():
         print(
             f"agent2agent: recipient {args.to!r} has no inbox "
-            f"(have they run `listen {args.to}`?)",
+            f"(have they run `open {args.to}`?)",
             file=sys.stderr,
         )
         return 1
@@ -451,8 +451,8 @@ USAGE
   agent2agent.py <subcommand> [args]
 
 SUBCOMMANDS
-  listen <name>                   Claim <name> + bind current session id.
-  unlisten <name>                 Release <name> + clear session binding.
+  open <name>                     Claim <name> + bind current session id.
+  close <name>                    Release <name> + clear session binding.
   bind <name>                     Bind current session to existing <name>.
   unbind                          Remove binding for current session.
   bound-name [--session-id <id>]  Print bound name (exit 1 if not bound).
@@ -467,7 +467,7 @@ SUBCOMMANDS
 
 ENV
   AGENT2AGENT_DIR        Bus directory (default ~/.local/share/agent2agent).
-  CLAUDE_CODE_SESSION_ID Read by listen / unlisten / bind / unbind /
+  CLAUDE_CODE_SESSION_ID Read by open / close / bind / unbind /
                          bound-name (auto-set by Claude Code).
 """
 
@@ -480,13 +480,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sub = p.add_subparsers(dest="command")
 
-    sp_listen = sub.add_parser("listen", add_help=False)
-    sp_listen.add_argument("name")
-    sp_listen.set_defaults(func=cmd_listen)
+    sp_open = sub.add_parser("open", add_help=False)
+    sp_open.add_argument("name")
+    sp_open.set_defaults(func=cmd_open)
 
-    sp_unlisten = sub.add_parser("unlisten", add_help=False)
-    sp_unlisten.add_argument("name")
-    sp_unlisten.set_defaults(func=cmd_unlisten)
+    sp_close = sub.add_parser("close", add_help=False)
+    sp_close.add_argument("name")
+    sp_close.set_defaults(func=cmd_close)
 
     sp_bind = sub.add_parser("bind", add_help=False)
     sp_bind.add_argument("name")
