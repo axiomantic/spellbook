@@ -143,21 +143,17 @@ To revert all security hardening:
 git revert --no-commit ab83dc2..HEAD
 ```
 
-## Sandboxing with cco (macOS)
+## Sandboxing with spellbook-cco (Linux + macOS)
 
-Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. [nikvdp/cco](https://github.com/nikvdp/cco) is a thin wrapper that re-adds containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
+Running Claude Code with `--dangerously-skip-permissions` removes per-tool approval prompts but leaves the assistant with full access to your machine. Spellbook ships a hardened fork of [nikvdp/cco](https://github.com/nikvdp/cco) as `spellbook-cco` to re-add containment automatically: on macOS it uses `sandbox-exec` (Seatbelt) natively with a tightened SBPL profile and a DYLD-environment scrub, on Linux it uses `bubblewrap`, and Docker is a fallback on both.
 
-cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`) and the config directory (`$SPELLBOOK_CONFIG_DIR`, for the `.mcp-token` auth file). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
+spellbook-cco works with spellbook because the sandbox only needs read access to the spellbook source tree (`$SPELLBOOK_DIR`) and the config directory (`$SPELLBOOK_CONFIG_DIR`, for the `.mcp-token` auth file). The spellbook daemon runs as a launchd service outside the sandbox and is unaffected. Hook subprocesses (PreToolUse/PostToolUse) run inside the sandboxed process tree but route all filesystem writes (error logs, messaging inbox drains) through the daemon's HTTP API, so no write access to any spellbook directory is required.
 
 Spellbook ships a launcher at `scripts/spellbook-sandbox` that handles this for you.
 
 ### Quick start
 
-Install cco:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/nikvdp/cco/master/install.sh | bash
-```
+`spellbook-cco` is installed automatically by the spellbook installer (`install.py`), which clones the pinned `elijahr/cco` fork and writes the wrapper to `~/.local/bin/spellbook-cco`. No separate `curl | bash` step is required.
 
 Launch Claude Code (or OpenCode) through the wrapper:
 
@@ -176,10 +172,10 @@ alias opencode='/path/to/spellbook/scripts/spellbook-sandbox opencode'
 
 ### What the wrapper does
 
-The wrapper uses cco's `--safe` mode by default, which hides `$HOME` reads so only the current project directory and explicitly allowlisted paths are visible inside the sandbox. It resolves `$SPELLBOOK_DIR` (auto-detected from the script's location, or set via env var) and `$SPELLBOOK_CONFIG_DIR` (env, `~/.local/spellbook`, or `~/.config/spellbook`), then execs:
+The wrapper uses spellbook-cco's `--safe` mode by default, which hides `$HOME` reads so only the current project directory and explicitly allowlisted paths are visible inside the sandbox. It resolves `$SPELLBOOK_DIR` (auto-detected from the script's location, or set via env var) and `$SPELLBOOK_CONFIG_DIR` (env, `~/.local/spellbook`, or `~/.config/spellbook`), then execs:
 
 ```bash
-cco --safe --add-dir "$SPELLBOOK_DIR":ro --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
+spellbook-cco --safe --add-dir "$SPELLBOOK_DIR":ro --add-dir "$SPELLBOOK_CONFIG_DIR":ro "$@"
 ```
 
 - `--safe` hides `$HOME` reads except for the working directory and explicitly allowed paths
@@ -216,12 +212,28 @@ Then in the Electron desktop app, open the server selection dialog and add:
 - URL: `http://127.0.0.1:8080`
 - Password: `mypass`
 
-The server runs inside cco's sandbox with the same protections as the CLI. The desktop UI connects over HTTP and is unaffected by sandbox restrictions.
+The server runs inside spellbook-cco's sandbox with the same protections as the CLI. The desktop UI connects over HTTP and is unaffected by sandbox restrictions.
 
 Notes:
 - The Tauri desktop app does not support external servers; use the Electron version.
 - `opencode serve` supports `--hostname`, `--cors`, and `--mdns` (Bonjour auto-discovery) flags.
 - Set `OPENCODE_SERVER_PASSWORD` to a strong value in production; without it the server is unauthenticated.
+
+### Rolling back to vanilla cco
+
+If a post-deploy regression in `spellbook-cco` blocks your workflow and you need to fall back to the upstream `nikvdp/cco` binary while a fix is in flight, set the environment override:
+
+```bash
+export SPELLBOOK_USE_VANILLA_CCO=1
+```
+
+When the override is active, `scripts/spellbook-sandbox` and the spellbook installer route to the legacy upstream `cco` binary on `PATH` instead of the hardened `spellbook-cco` wrapper, and emit a one-line `WARNING:` to stderr so the downgrade is auditable.
+
+**When to use it:** only as a temporary unblock for catastrophic post-deploy breakage in `spellbook-cco` (e.g., a wrapper bug that prevents Claude Code from starting). File an issue first; the override should not become a long-lived configuration.
+
+**Caveat:** vanilla `cco` does not include the hardened SBPL profile or the DYLD-environment scrub that `spellbook-cco` applies on macOS. Running with the override re-exposes the gaps the fork was created to close.
+
+**How to remove the override:** unset the variable in the shell where you set it (`unset SPELLBOOK_USE_VANILLA_CCO`) and remove the corresponding `export` line from any rc file (`~/.zshrc`, `~/.bashrc`, `~/.profile`) you persisted it to. The next sandbox launch will resume using `spellbook-cco`.
 
 ## Source Citations
 
