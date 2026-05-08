@@ -1,0 +1,4 @@
+# Pin line endings on files where byte-identity is assumed by tests.
+# See tests/test_security/test_agent_frontmatter.py for the snapshot test.
+agents/*.md text eol=lf
+tests/test_security/agent_snapshots.json text eol=lf
