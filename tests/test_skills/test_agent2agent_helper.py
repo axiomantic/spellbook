@@ -14,9 +14,11 @@ Coverage:
     * invalid name rejection (path-traversal guard)
     * invalid session-id rejection
     * watch: lockfile + RECOVER + WATCH_RECYCLE (subprocess-based)
+    * watch: SIGKILL'd watcher releases flock via kernel fd cleanup
 """
 from __future__ import annotations
 
+import fcntl
 import importlib.util
 import io
 import json
@@ -611,6 +613,53 @@ def _spawn_watch(tmp_path: Path, name: str, max_elapsed: float) -> subprocess.Po
     )
 
 
+def _wait_for_watcher_locked(lockfile: Path, timeout: float = 2.0) -> None:
+    """Block until the lockfile contains a pid (digits-only, non-empty).
+
+    The watcher writes its pid into the lockfile AFTER ``fcntl.flock``
+    succeeds. Polling for non-empty content (rather than ``exists()``)
+    closes a TOCTOU window: ``os.open(O_CREAT)`` creates the file BEFORE
+    flock returns, so existence alone does not prove the watcher actually
+    holds the mutex.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if lockfile.exists():
+            try:
+                content = lockfile.read_text().strip()
+            except OSError:
+                content = ""
+            if content.isdigit():
+                return
+        time.sleep(0.02)
+    raise TimeoutError(f"watcher never wrote pid to {lockfile}")
+
+
+def _flock_acquirable(lockfile: Path) -> bool:
+    """Return True iff a fresh opener can acquire LOCK_EX|LOCK_NB on lockfile.
+
+    Used to assert release semantics without relying on ``lockfile.exists()``
+    (the lockfile path is intentionally persistent; the mutex is enforced
+    by flock + kernel fd cleanup, not by unlinking).
+    """
+    if not lockfile.exists():
+        # Path absence is *also* fine — fresh opener would create+flock.
+        return True
+    fd = os.open(str(lockfile), os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return False
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        return True
+    finally:
+        os.close(fd)
+
+
 def _wait_proc(proc: subprocess.Popen, paranoia_timeout: float) -> tuple[int, str, str]:
     """Wait for proc with paranoia-bound timeout. Returns (rc, stdout, stderr)."""
     try:
@@ -638,8 +687,9 @@ def test_watch_recycles_when_no_message_arrives(tmp_path):
     assert re.match(r"^WATCH_RECYCLE elapsed=2s$", stdout.strip()), (
         f"stdout={stdout!r}"
     )
-    # Lockfile released on exit.
-    assert not (tmp_path / "alice" / "inbox" / ".watcher.lock").exists()
+    # Lockfile path is intentionally persistent; the mutex is the flock,
+    # not the path. Assert a fresh opener can acquire the lock.
+    assert _flock_acquirable(tmp_path / "alice" / "inbox" / ".watcher.lock")
 
 
 def test_watch_recovers_pending_on_entry(tmp_path):
@@ -681,7 +731,13 @@ def test_watch_inbox_gone_emits_marker(tmp_path):
 
 
 def test_watch_lockfile_released_on_exit(tmp_path):
-    """After watch's RECOVER exit, the lockfile must be unlinked."""
+    """After watch's RECOVER exit, the flock must be released so a fresh
+    watcher can acquire it.
+
+    The lockfile *path* is intentionally persistent (unlinking it would
+    introduce a flock+unlink race). The mutex contract is "next opener
+    can flock", not "path is gone".
+    """
     _open_inbox(tmp_path, "alice")
     _seed_pending_for_watch(tmp_path, "alice", "batch-x", count=1)
 
@@ -691,18 +747,24 @@ def test_watch_lockfile_released_on_exit(tmp_path):
     assert "PENDING_BATCH" in stdout
 
     lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
-    assert not lockfile.exists(), "lockfile must be removed on watch exit"
+    assert _flock_acquirable(lockfile), (
+        "flock must be released on watch exit so a fresh opener can acquire"
+    )
 
 
 def test_watch_recycle_lockfile_released(tmp_path):
-    """After WATCH_RECYCLE exit, lockfile is released and a new watch can run."""
+    """After WATCH_RECYCLE exit, flock is released and a new watch can run.
+
+    The lockfile path persists; the mutex source is flock + kernel fd
+    cleanup. We assert "fresh opener can flock" rather than "path is gone".
+    """
     _open_inbox(tmp_path, "alice")
 
     proc1 = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
     rc1, stdout1, stderr1 = _wait_proc(proc1, paranoia_timeout=1.0 + 5)
     assert rc1 == 0, f"stderr={stderr1!r}"
     assert stdout1.strip() == "WATCH_RECYCLE elapsed=1s"
-    assert not (tmp_path / "alice" / "inbox" / ".watcher.lock").exists()
+    assert _flock_acquirable(tmp_path / "alice" / "inbox" / ".watcher.lock")
 
     # Second watch must succeed (no WATCH_LOCKED).
     proc2 = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
@@ -719,12 +781,12 @@ def test_watch_concurrent_attempt_blocked_by_lockfile(tmp_path):
     # Watcher A: long-ish budget so it is alive when B spawns.
     proc_a = _spawn_watch(tmp_path, "alice", max_elapsed=5.0)
     try:
-        # Wait for A to acquire the lockfile (poll up to 2s).
+        # Wait for A to actually hold the flock. The pid is written AFTER
+        # flock succeeds, so polling for non-empty pid content (rather
+        # than path existence) closes the TOCTOU window where O_CREAT
+        # has materialized the file but flock hasn't yet been acquired.
         lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
-        deadline = time.monotonic() + 2.0
-        while time.monotonic() < deadline and not lockfile.exists():
-            time.sleep(0.05)
-        assert lockfile.exists(), "watcher A failed to create lockfile"
+        _wait_for_watcher_locked(lockfile, timeout=2.0)
 
         # Watcher B should be rejected immediately.
         proc_b = _spawn_watch(tmp_path, "alice", max_elapsed=5.0)
@@ -756,3 +818,55 @@ def test_watch_recover_with_only_empty_batch_dir_falls_through_to_recycle(tmp_pa
     rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=1.0 + 5)
     assert rc == 0, f"stderr={stderr!r}"
     assert stdout.strip() == "WATCH_RECYCLE elapsed=1s"
+
+
+def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
+    """SIGKILL'd watcher must release flock via kernel fd cleanup.
+
+    SIGKILL bypasses atexit and signal handlers entirely, so the only
+    thing standing between watcher A's death and watcher B's spawn is
+    the kernel auto-releasing the flock when A's fd is reaped. If the
+    spec ever drifts away from kernel-fd-cleanup as the source of mutex
+    release, this test catches it: B would observe WATCH_LOCKED 75 and
+    fail.
+    """
+    _open_inbox(tmp_path, "alice")
+    lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
+
+    # Watcher A: long budget so it's alive (and holding flock) when killed.
+    proc_a = _spawn_watch(tmp_path, "alice", max_elapsed=30.0)
+    try:
+        # Wait until A has actually acquired the flock (pid written).
+        _wait_for_watcher_locked(lockfile, timeout=2.0)
+        proc_a.kill()  # SIGKILL — bypasses atexit + signal handlers.
+        rc_a = proc_a.wait(timeout=1.0)
+        # SIGKILL = 9; conventional rc = -9 from Popen.wait when killed.
+        assert rc_a == -9 or rc_a == 137 or rc_a < 0, (
+            f"watcher A expected to die from SIGKILL, got rc={rc_a}"
+        )
+    finally:
+        # Drain stdio so the OS can reap A's fds.
+        try:
+            proc_a.stdout.close()
+        except Exception:
+            pass
+        try:
+            proc_a.stderr.close()
+        except Exception:
+            pass
+
+    # Watcher B: same name, same env. With kernel fd-cleanup intact, B must
+    # acquire the flock immediately and run normally (empty inbox -> recycle).
+    proc_b = _spawn_watch(tmp_path, "alice", max_elapsed=0.5)
+    rc_b, stdout_b, stderr_b = _wait_proc(proc_b, paranoia_timeout=5.0)
+    assert rc_b == 0, (
+        f"watcher B expected exit 0 (kernel auto-released A's flock), "
+        f"got rc={rc_b}; stdout={stdout_b!r} stderr={stderr_b!r}"
+    )
+    assert "WATCH_LOCKED" not in stderr_b, (
+        f"watcher B saw WATCH_LOCKED — kernel did not release A's flock; "
+        f"stderr={stderr_b!r}"
+    )
+    assert re.match(r"^WATCH_RECYCLE elapsed=0s$", stdout_b.strip()), (
+        f"stdout={stdout_b!r}"
+    )

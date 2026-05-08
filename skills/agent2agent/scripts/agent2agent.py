@@ -540,9 +540,14 @@ def cmd_watch(args: argparse.Namespace) -> int:
         ``max_elapsed`` is reached, then print ``WATCH_RECYCLE elapsed=<N>s``
         and exit 0. T3b will replace this with fswatch + polling for live
         message detection.
-      * Lockfile is auto-released on process exit (kernel guarantee on flock
-        fd close), atexit-cleaned, and unlinked. Signal handlers (SIGINT,
-        SIGTERM) trigger the same cleanup.
+      * Lockfile path persists across cycles; the mutex is enforced by
+        ``flock`` + kernel fd cleanup, not by unlinking the lockfile.
+        atexit + signal handlers (SIGINT, SIGTERM) release the flock and
+        close the fd; if the process is killed (SIGKILL), the kernel
+        releases the flock when the fd is reaped. The next watcher opens
+        the same persistent inode and acquires flock. Unlinking is
+        deliberately avoided to prevent a flock+unlink race in which two
+        watchers end up holding flock on disjoint inodes for the same path.
     """
     name = args.name
     _validate_name(name)
@@ -585,18 +590,18 @@ def cmd_watch(args: argparse.Namespace) -> int:
         if cleaned["done"]:
             return
         cleaned["done"] = True
+        # NOTE: do NOT unlink the lockfile here. The mutex is enforced by
+        # flock + kernel fd cleanup; the lockfile path is intentionally
+        # persistent. Unlinking introduces a race window between LOCK_UN
+        # and unlink in which a fresh opener can flock the same inode
+        # before we unlink it, leaving two watchers holding flock on
+        # disjoint inodes for the same path. Closing the fd is sufficient.
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         except OSError:
             pass
         try:
             os.close(fd)
-        except OSError:
-            pass
-        try:
-            os.unlink(str(lockfile))
-        except FileNotFoundError:
-            pass
         except OSError:
             pass
 
@@ -612,13 +617,23 @@ def cmd_watch(args: argparse.Namespace) -> int:
 
     pending_root.mkdir(parents=True, exist_ok=True)
 
-    # RECOVER: emit oldest non-empty batch immediately.
-    existing_batches = sorted(
-        (d for d in pending_root.iterdir() if d.is_dir()),
-        key=lambda p: p.name,
-    )
+    # RECOVER: emit oldest non-empty batch immediately. A concurrent
+    # cmd_drain may remove a batch dir between our outer listing and the
+    # inner iterdir; treat that as "no batch here" and continue, rather
+    # than letting a FileNotFoundError escape and break the stdout-marker
+    # contract that downstream watch-chain consumers depend on.
+    try:
+        existing_batches = sorted(
+            (d for d in pending_root.iterdir() if d.is_dir()),
+            key=lambda p: p.name,
+        )
+    except FileNotFoundError:
+        existing_batches = []
     for batch in existing_batches:
-        files = [f for f in batch.iterdir() if not f.name.startswith(".")]
+        try:
+            files = [f for f in batch.iterdir() if not f.name.startswith(".")]
+        except FileNotFoundError:
+            continue
         if files:
             print(f"PENDING_BATCH {batch.name} count={len(files)}")
             return 0
