@@ -821,6 +821,78 @@ def show_admin_info(admin_enabled: bool) -> None:
 # Main Installation Logic
 # =============================================================================
 
+
+def _offer_sandbox_aliases(
+    args: argparse.Namespace,
+    session: "object",
+    spellbook_dir: Path,
+) -> None:
+    """Offer to install sandbox shell aliases when the spellbook-cco wrapper
+    (or vanilla cco under SPELLBOOK_USE_VANILLA_CCO=1) is on PATH.
+
+    Default codepath: gate on ``shutil.which("spellbook-cco")``. The wrapper
+    is the canonical entry point post-WI-7 fork landing.
+
+    Rollback codepath: when ``SPELLBOOK_USE_VANILLA_CCO=1`` is set in the
+    environment, gate on ``shutil.which("cco")`` instead. Mirrors the
+    pattern in ``installer/platforms/claude_code.py::_install_claude_code_aliases``
+    so both entry points honour the same rollback escape hatch.
+
+    Short-circuits silently when ``args.dry_run`` is true or
+    ``session.success`` is false.
+    """
+    if args.dry_run or not getattr(session, "success", False):
+        return
+
+    sandbox_binary = (
+        "cco" if os.environ.get("SPELLBOOK_USE_VANILLA_CCO") == "1" else "spellbook-cco"
+    )
+    # F1 (Phase 4.5 finding): under env override emit the canonical
+    # rollback WARNING to stderr BEFORE the which() gate so operators
+    # see the rollback codepath in transcripts even when the relevant
+    # binary is absent. Imported from spellbook_cco.py so the byte
+    # content is centralized and cannot drift between call sites. The
+    # once-globally install block in claude_code.py may also have
+    # already emitted this string earlier in the same install.py run;
+    # duplicate emission is acceptable -- tests assert substring
+    # presence, not equality, and a duplicate stderr line is noise but
+    # not incorrect.
+    if sandbox_binary == "cco":
+        from installer.components.spellbook_cco import emit_rollback_warning
+
+        emit_rollback_warning()
+    if not shutil.which(sandbox_binary):
+        return
+
+    try:
+        from installer.components.aliases import (
+            get_shell_rc_path,
+            install_aliases,
+        )
+
+        rc_path = get_shell_rc_path()
+        if rc_path is not None:
+            offer_aliases = False
+            if getattr(args, "yes", False):
+                offer_aliases = True
+            elif sys.stdin.isatty():
+                sys.stdout.write(
+                    f"\n{sandbox_binary} detected. Install shell aliases so "
+                    "`claude` and `opencode` launch sandboxed? [Y/n] "
+                )
+                sys.stdout.flush()
+                response = input().strip().lower()
+                offer_aliases = response in ("", "y", "yes")
+
+            if offer_aliases:
+                alias_result = install_aliases(spellbook_dir, dry_run=args.dry_run)
+                if alias_result["installed"]:
+                    print(f"  Aliases installed in {alias_result['rc_path']}")
+                    print(f"  Restart your shell or run: source {alias_result['rc_path']}")
+    except Exception as e:
+        print(f"\nWarning: Could not install aliases: {e}")
+
+
 def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     """Run the actual installation after bootstrap."""
     # Add spellbook to path for imports
@@ -1117,36 +1189,12 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     else:
         show_admin_info(admin_enabled)
 
-    # Offer sandbox aliases if cco is available
-    if not args.dry_run and session.success and shutil.which("cco"):
-        try:
-            from installer.components.aliases import (
-                get_shell_rc_path,
-                install_aliases,
-            )
-
-            rc_path = get_shell_rc_path()
-            if rc_path is not None:
-                offer_aliases = False
-                if getattr(args, "yes", False):
-                    offer_aliases = True
-                elif sys.stdin.isatty():
-                    sys.stdout.write(
-                        "\ncco detected. Install shell aliases so `claude` and "
-                        "`opencode` launch sandboxed? [Y/n] "
-                    )
-                    sys.stdout.flush()
-                    response = input().strip().lower()
-                    offer_aliases = response in ("", "y", "yes")
-
-                if offer_aliases:
-                    alias_result = install_aliases(spellbook_dir, dry_run=args.dry_run)
-                    if alias_result["installed"]:
-                        print(f"  Aliases installed in {alias_result['rc_path']}")
-                        print("  Restart your shell or run: source "
-                              f"{alias_result['rc_path']}")
-        except Exception as e:
-            print(f"\nWarning: Could not install aliases: {e}")
+    # Offer sandbox aliases if the spellbook-cco wrapper is available
+    # (or vanilla cco under the SPELLBOOK_USE_VANILLA_CCO=1 rollback escape
+    # hatch). Extracted into a helper so the gate is independently testable
+    # and mirrors the dispatch shape in
+    # installer/platforms/claude_code.py::_install_claude_code_aliases.
+    _offer_sandbox_aliases(args, session, spellbook_dir)
 
     # Show what's new on upgrade
     if not args.dry_run:
