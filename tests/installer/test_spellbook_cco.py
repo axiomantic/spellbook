@@ -41,6 +41,9 @@ from installer.components.spellbook_cco import (
     SPELLBOOK_CCO_REPO_URL,
     SPELLBOOK_CCO_WRAPPER_PATH,
     SPELLBOOK_CCO_WRAPPER_TAG,
+    _WARNING_PATH_NOT_SET,
+    _WARNING_SKIP_FORK_PIN,
+    _WARNING_USE_VANILLA_CCO,
     install_spellbook_cco,
     uninstall_spellbook_cco,
 )
@@ -478,11 +481,16 @@ def test_install_rolls_back_when_git_rev_parse_mismatch(
     assert install_root.exists() is False
     assert result["installed"] is False
     assert result["action"] == "skipped"
-    assert "pin verification failed" in (result["skipped_reason"] or "")
+    expected_failure = (
+        f"pin verification failed: expected deadbee, got {fake_cco_fork_repo['head_sha']}"
+    )
+    assert result["skipped_reason"] == expected_failure
 
+    # Dynamic WARNING (no module constant): assert full equality with the
+    # canonical f-string format used in the production rollback path
+    # (``f"WARNING: {failure_msg}\n"``).
     captured = capsys.readouterr()
-    assert "WARNING" in captured.err
-    assert "pin verification failed" in captured.err
+    assert captured.err == f"WARNING: {expected_failure}\n"
 
 
 @pytest.mark.posix_only
@@ -536,10 +544,18 @@ def test_install_rolls_back_when_version_parse_mismatch(
     assert install_root.exists() is False
     assert result["installed"] is False
     assert result["action"] == "skipped"
-    assert "pin verification failed" in (result["skipped_reason"] or "")
+    # Step 1 of _verify_pin matches (rev-parse=head_sha == pin); step 2
+    # diverges because the patched stub hardcodes `cco deadbee` so the
+    # awk-parsed runtime SHA is "deadbee".
+    expected_failure = (
+        f"pin verification failed: expected {fake_cco_fork_repo['head_sha']}, got deadbee"
+    )
+    assert result["skipped_reason"] == expected_failure
 
+    # Dynamic WARNING (no module constant): assert full equality with the
+    # canonical f-string format used in the production rollback path.
     captured = capsys.readouterr()
-    assert "WARNING" in captured.err
+    assert captured.err == f"WARNING: {expected_failure}\n"
 
 
 @pytest.mark.posix_only
@@ -642,10 +658,11 @@ def test_install_warns_when_local_bin_not_on_path(
     assert wrapper_path.exists()
     assert result["installed"] is True
 
+    # Full-equality on the imported canonical constant: catches drift in
+    # any of the three pieces (WARNING prefix, "not on PATH" phrase, and
+    # the exact reproduction-command quoting) in a single assertion.
     captured = capsys.readouterr()
-    assert "WARNING" in captured.err
-    assert "not on PATH" in captured.err
-    assert 'export PATH="$HOME/.local/bin:$PATH"' in captured.err
+    assert captured.err == _WARNING_PATH_NOT_SET
 
 
 @pytest.mark.posix_only
@@ -677,9 +694,10 @@ def test_use_vanilla_cco_env_routes_to_skipped(monkeypatch, tmp_path, isolated_w
         "install_root": None,
     }
 
+    # Full-equality on the imported canonical constant catches drift in
+    # the module-level warning text.
     captured = capsys.readouterr()
-    assert "WARNING" in captured.err
-    assert "SPELLBOOK_USE_VANILLA_CCO=1" in captured.err
+    assert captured.err == _WARNING_USE_VANILLA_CCO
 
 
 @pytest.mark.posix_only
@@ -711,10 +729,11 @@ def test_install_succeeds_with_SKIP_FORK_PIN_at_wrong_sha(
     assert result["action"] == "installed"
     assert result["skipped_reason"] is None
 
+    # Full-equality on the imported canonical constant catches drift in
+    # the module-level warning text. ``path_with_local_bin`` ensures the
+    # PATH-not-set warning is suppressed, so this is the ONLY emission.
     captured = capsys.readouterr()
-    assert "WARNING" in captured.err
-    assert "SPELLBOOK_INSTALLER_SKIP_FORK_PIN" in captured.err
-    assert "audit gate" in captured.err
+    assert captured.err == _WARNING_SKIP_FORK_PIN
 
 
 def test_uninstall_removes_only_tagged_wrapper(monkeypatch, tmp_path, capsys):

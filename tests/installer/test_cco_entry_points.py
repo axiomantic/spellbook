@@ -27,6 +27,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from installer.components.spellbook_cco import _WARNING_USE_VANILLA_CCO
+
 
 # ---------------------------------------------------------------------------
 # installer/tui.py :: render_post_install_notes  (Task 4)
@@ -116,10 +118,12 @@ def test_tui_post_install_notes_routes_to_vanilla_cco_under_env_override(monkeyp
     # Panel still rendered.
     assert len(console.printed) == 1
 
-    # F1: WARNING must fire to stderr under env override.
+    # F1: WARNING must fire to stderr under env override. The full
+    # canonical warning (and ONLY that warning) must appear on stderr;
+    # tightening from substring-on-fragments to full-equality with the
+    # imported constant catches drift in the canonical wording.
     captured = capsys.readouterr()
-    assert "WARNING:" in captured.err
-    assert "SPELLBOOK_USE_VANILLA_CCO=1" in captured.err
+    assert captured.err == _WARNING_USE_VANILLA_CCO
 
 
 def test_tui_post_install_notes_emits_no_rollback_warning_by_default(monkeypatch, capsys):
@@ -138,8 +142,11 @@ def test_tui_post_install_notes_emits_no_rollback_warning_by_default(monkeypatch
     console = _CapturingConsole()
     tui.render_post_install_notes(console, ["claude_code"])
 
+    # Full-equality assertion: stderr must be empty on the default codepath.
+    # Stronger than the prior `not in` substring check, which would pass
+    # even if some other emitter wrote to stderr.
     captured = capsys.readouterr()
-    assert "SPELLBOOK_USE_VANILLA_CCO=1" not in captured.err
+    assert captured.err == ""
 
 
 def test_tui_post_install_notes_skips_panel_when_neither_binary_present(monkeypatch):
@@ -271,10 +278,12 @@ def test_install_offer_sandbox_aliases_routes_to_vanilla_cco_under_env_override(
     assert which_calls == ["cco"]
     assert aliases_calls == [(tmp_path / "spellbook", False)]
 
-    # F1: WARNING must fire to stderr under env override.
+    # F1: WARNING must fire to stderr under env override. The full
+    # canonical warning (and ONLY that warning) must appear on stderr;
+    # tightening from substring-on-fragments to full-equality with the
+    # imported constant catches drift in the canonical wording.
     captured = capsys.readouterr()
-    assert "WARNING:" in captured.err
-    assert "SPELLBOOK_USE_VANILLA_CCO=1" in captured.err
+    assert captured.err == _WARNING_USE_VANILLA_CCO
 
 
 def test_install_offer_sandbox_aliases_emits_no_rollback_warning_by_default(
@@ -315,8 +324,11 @@ def test_install_offer_sandbox_aliases_emits_no_rollback_warning_by_default(
 
     install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
 
+    # Full-equality assertion: stderr must be empty on the default codepath.
+    # Stronger than the prior `not in` substring check, which would pass
+    # even if some other emitter wrote to stderr.
     captured = capsys.readouterr()
-    assert "SPELLBOOK_USE_VANILLA_CCO=1" not in captured.err
+    assert captured.err == ""
 
 
 def test_install_offer_sandbox_aliases_skips_when_dry_run(monkeypatch, tmp_path):

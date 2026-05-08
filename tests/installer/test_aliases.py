@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+from installer.components.spellbook_cco import _WARNING_USE_VANILLA_CCO
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SANDBOX_SCRIPT = REPO_ROOT / "scripts" / "spellbook-sandbox"
 SANDBOX_DOC = REPO_ROOT / "scripts" / "spellbook-sandbox.md"
@@ -688,10 +690,10 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
 # rollback env var routes the dispatcher to gate on vanilla ``cco``).
 # ---------------------------------------------------------------------------
 
-# Canonical rollback WARNING substring. The full WARNING string fired by
-# the installer must contain this substring; tests assert exact substring
-# presence so the wording stays stable across refactors.
-ROLLBACK_WARNING_SUBSTR = "SPELLBOOK_USE_VANILLA_CCO=1"
+# Canonical rollback WARNING is asserted via full-equality with
+# ``_WARNING_USE_VANILLA_CCO`` (imported from the production module at the
+# top of this file). The substring constant that lived here previously was
+# replaced when the green-mirage audit tightened these assertions.
 
 
 @pytest.mark.posix_only
@@ -702,7 +704,12 @@ def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
     runs as part of every ``ClaudeCodeInstaller.install()`` invocation
     (gated on ``not skip_global_steps``). The per-dir alias dispatcher
     runs after, and depends on the wrapper being on PATH.
+
+    Ordering is verified via a single shared ``events`` list both stubs
+    append into. The cco recorder still preserves its (install_root,
+    dry_run) call-arg capture for the per-call-shape assertion.
     """
+    from installer.core import InstallResult
     from installer.platforms import claude_code as platform_mod
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -720,9 +727,13 @@ def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
         lambda *a, **kw: False,
     )
 
+    # Single shared event log so we can assert ordering ("cco" precedes
+    # "aliases") rather than just "both got called".
+    events: list[str] = []
     cco_calls: list[dict] = []
 
     def cco_recorder(install_root=None, dry_run=False):
+        events.append("cco")
         cco_calls.append({"install_root": install_root, "dry_run": dry_run})
         return {
             "installed": True,
@@ -732,19 +743,19 @@ def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
             "install_root": "/Users/eek/.local/spellbook/cco",
         }
 
-    monkeypatch.setattr(platform_mod, "install_spellbook_cco", cco_recorder)
-    # Stub the per-dir alias dispatcher so we don't double-pay on
-    # tested-elsewhere wiring.
-    monkeypatch.setattr(
-        platform_mod,
-        "_install_claude_code_aliases",
-        lambda sb_dir, dry_run=False: {
+    def alias_recorder(sb_dir, dry_run=False):
+        events.append("aliases")
+        return {
             "installed": True,
             "rc_path": "/fake/.zshrc",
             "aliases": ["claude"],
             "skipped_reason": None,
-        },
-    )
+        }
+
+    monkeypatch.setattr(platform_mod, "install_spellbook_cco", cco_recorder)
+    # Stub the per-dir alias dispatcher so we don't double-pay on
+    # tested-elsewhere wiring.
+    monkeypatch.setattr(platform_mod, "_install_claude_code_aliases", alias_recorder)
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=True)
     results = installer.install()
@@ -752,11 +763,22 @@ def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
     # install_spellbook_cco was called exactly once with dry_run forwarded.
     assert cco_calls == [{"install_root": None, "dry_run": True}]
 
-    # An InstallResult for spellbook_cco is recorded.
+    # Ordering: cco runs strictly before aliases (chain-dependency contract).
+    assert events == ["cco", "aliases"]
+
+    # The recorded InstallResult for spellbook_cco matches the canonical
+    # shape exactly (component, platform, success, action, message). The
+    # message is a deterministic f-string in ClaudeCodeInstaller.install():
+    # ``f"spellbook-cco: {action} ({skipped_reason or 'ok'})"``.
     cco_results = [r for r in results if r.component == "spellbook_cco"]
-    assert len(cco_results) == 1
-    assert cco_results[0].action == "installed"
-    assert cco_results[0].success is True
+    expected = InstallResult(
+        component="spellbook_cco",
+        platform="claude_code",
+        success=True,
+        action="installed",
+        message="spellbook-cco: installed (ok)",
+    )
+    assert cco_results == [expected]
 
 
 @pytest.mark.posix_only
@@ -813,25 +835,48 @@ def test_install_chains_emits_warning_under_env_override(tmp_path, monkeypatch, 
     results = installer.install()
 
     captured = capsys.readouterr()
-    # Stable WARNING substring fired by the once-globally block.
-    assert "WARNING:" in captured.err
-    assert ROLLBACK_WARNING_SUBSTR in captured.err
+    # The canonical rollback WARNING fires twice on this codepath (once
+    # from the once-globally install block, once from
+    # ``_install_claude_code_aliases`` when the dispatcher routes through
+    # the vanilla branch). Assert exact stderr equality so any drift in
+    # the canonical wording or the emission count is caught.
+    assert captured.err == _WARNING_USE_VANILLA_CCO * 2
 
-    # An InstallResult for spellbook_cco records the skip with reason naming
-    # the env var.
+    # The recorded InstallResult for spellbook_cco matches the canonical
+    # shape exactly. The cco_result dict synthesized inline by the
+    # once-globally block under env override is:
+    #   action="skipped",
+    #   skipped_reason="SPELLBOOK_USE_VANILLA_CCO=1 active; routing
+    #                   aliases to legacy vanilla cco"
+    # which the message f-string renders as below.
+    from installer.core import InstallResult
+
     cco_results = [r for r in results if r.component == "spellbook_cco"]
-    assert len(cco_results) == 1
-    assert cco_results[0].action == "skipped"
-    assert ROLLBACK_WARNING_SUBSTR in cco_results[0].message
+    expected_cco = InstallResult(
+        component="spellbook_cco",
+        platform="claude_code",
+        success=False,
+        action="skipped",
+        message=(
+            "spellbook-cco: skipped "
+            "(SPELLBOOK_USE_VANILLA_CCO=1 active; routing aliases to legacy vanilla cco)"
+        ),
+    )
+    assert cco_results == [expected_cco]
 
-    # The per-dir aliases were short-circuited (install_aliases NOT called);
-    # the recorded aliases InstallResult is success=True, action="skipped"
-    # with a skipped_reason naming the missing sandbox binary.
+    # The per-dir aliases were short-circuited (install_aliases NOT called).
+    # The recorded aliases InstallResult uses the canonical skipped_reason
+    # produced by ``_install_claude_code_aliases`` when ``shutil.which``
+    # returns None for the sandbox binary (vanilla cco under env override).
     alias_results = [r for r in results if r.component == "aliases"]
-    assert len(alias_results) == 1
-    assert alias_results[0].action == "skipped"
-    assert alias_results[0].success is True
-    assert "cco" in alias_results[0].message
+    expected_aliases = InstallResult(
+        component="aliases",
+        platform="claude_code",
+        success=True,
+        action="skipped",
+        message="aliases: cco not on PATH; re-run install.py",
+    )
+    assert alias_results == [expected_aliases]
 
 
 @pytest.mark.posix_only
@@ -879,10 +924,21 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path, monkeypatch):
     # Exactly one call with dry_run forwarded.
     assert uninstall_calls == [{"install_root": None, "dry_run": False}]
 
-    # An InstallResult for spellbook_cco is recorded with action="removed".
+    # The recorded InstallResult for spellbook_cco matches the canonical
+    # shape exactly. ``ClaudeCodeInstaller.uninstall`` always sets
+    # success=True for this component and renders the message as
+    # ``f"spellbook-cco: {action} ({skipped_reason or 'ok'})"``.
+    from installer.core import InstallResult
+
     cco_results = [r for r in results if r.component == "spellbook_cco"]
-    assert len(cco_results) == 1
-    assert cco_results[0].action == "removed"
+    expected = InstallResult(
+        component="spellbook_cco",
+        platform="claude_code",
+        success=True,
+        action="removed",
+        message="spellbook-cco: removed (ok)",
+    )
+    assert cco_results == [expected]
 
 
 @pytest.mark.posix_only
@@ -933,20 +989,34 @@ def test_install_chain_failure_when_fork_install_fails(tmp_path, monkeypatch, ca
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
     results = installer.install()
 
-    # spellbook_cco InstallResult records the failure reason.
-    cco_results = [r for r in results if r.component == "spellbook_cco"]
-    assert len(cco_results) == 1
-    assert cco_results[0].action == "skipped"
-    assert cco_results[0].success is False
-    assert "git clone failed" in cco_results[0].message
+    # The recorded InstallResult for spellbook_cco matches the canonical
+    # shape exactly. The cco_failed stub returns
+    # ``skipped_reason="git clone failed: network unreachable"`` and the
+    # message f-string renders it verbatim.
+    from installer.core import InstallResult
 
-    # Per-dir aliases short-circuited with a clear skipped_reason naming the
-    # missing sandbox binary.
+    cco_results = [r for r in results if r.component == "spellbook_cco"]
+    expected_cco = InstallResult(
+        component="spellbook_cco",
+        platform="claude_code",
+        success=False,
+        action="skipped",
+        message="spellbook-cco: skipped (git clone failed: network unreachable)",
+    )
+    assert cco_results == [expected_cco]
+
+    # Per-dir aliases short-circuited with the canonical skipped_reason
+    # produced by ``_install_claude_code_aliases`` when the spellbook-cco
+    # wrapper is absent from PATH (default codepath, no env override).
     alias_results = [r for r in results if r.component == "aliases"]
-    assert len(alias_results) == 1
-    assert alias_results[0].action == "skipped"
-    assert alias_results[0].success is True
-    assert "spellbook-cco" in alias_results[0].message
+    expected_aliases = InstallResult(
+        component="aliases",
+        platform="claude_code",
+        success=True,
+        action="skipped",
+        message="aliases: spellbook-cco not on PATH; re-run install.py",
+    )
+    assert alias_results == [expected_aliases]
 
 
 @pytest.mark.posix_only
@@ -1008,10 +1078,11 @@ def test_install_claude_code_aliases_routes_to_vanilla_under_env_override(
         "skipped_reason": None,
     }
 
-    # Stable WARNING fired by the dispatcher itself under env override.
+    # Canonical WARNING fired by the dispatcher itself under env override.
+    # Full-equality (not substring) so any drift in the imported constant's
+    # wording is caught here.
     captured = capsys.readouterr()
-    assert "WARNING:" in captured.err
-    assert ROLLBACK_WARNING_SUBSTR in captured.err
+    assert captured.err == _WARNING_USE_VANILLA_CCO
 
 
 # ---------------------------------------------------------------------------
