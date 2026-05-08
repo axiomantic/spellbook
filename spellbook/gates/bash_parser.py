@@ -505,20 +505,12 @@ def _classify_node(node: object) -> list[dict]:
     if kind in {"list", "pipeline"}:
         return _classify_compound(node)
     if kind in {"if", "for", "while", "until", "case"}:
-        # Control-flow constructs are inherently compound (a body, not a
-        # single command). Emit BASH-PARSER-COMPOUND so the operator must
-        # split into separate Bash invocations or opt in via the env
-        # escape hatch. The walker still recurses into the construct's
-        # body so any nested CMDSUB / dangerous redirect is also surfaced.
-        return [
-            _finding(
-                "BASH-PARSER-COMPOUND",
-                "CRITICAL",
-                f"Compound control-flow construct (`{kind}`) is not allowed; "
-                "split into separate Bash invocations.",
-                _node_text(node),
-            )
-        ]
+        # Control-flow constructs are compound by nature; we allow the
+        # structure itself. The walker still recurses into the body so
+        # any nested CMDSUB / dangerous redirect / direct-shell / etc.
+        # surfaces from per-segment classification, and the L2 regex layer
+        # catches dangerous payloads anywhere in the full command string.
+        return []
     if kind == "command":
         return _classify_command(node)
     if kind == "commandsubstitution":
@@ -559,41 +551,16 @@ def _classify_node(node: object) -> list[dict]:
 
 
 def _classify_compound(node: object) -> list[dict]:
-    parts = getattr(node, "parts", ()) or ()
-    # A ListNode that wraps a single command followed by a trailing ``&``
-    # operator is "background this command" — semantically a single command,
-    # not a chain. Don't emit COMPOUND for that; let the walker still recurse
-    # into the command itself.
-    #
-    # SECURITY: ``ls & pwd`` parses as a ListNode with parts
-    # [command, operator(&), command] — i.e., operators == ["&"] but TWO
-    # command parts. Treating that as "single bg command" lets the second
-    # command slip past the compound check. Require exactly one command part
-    # before short-circuiting.
-    operators = [
-        getattr(p, "op", None)
-        for p in parts
-        if getattr(p, "kind", None) == "operator"
-    ]
-    command_parts = [p for p in parts if getattr(p, "kind", None) == "command"]
-    if (
-        getattr(node, "kind", None) == "list"
-        and operators == ["&"]
-        and len(command_parts) == 1
-    ):
-        # Single-command background — not actually a compound chain.
-        return []
+    """Compound command structure (list / pipeline) is allowed.
 
-    op_text = ", ".join(op for op in operators if op) or "|"
-    return [
-        _finding(
-            "BASH-PARSER-COMPOUND",
-            "CRITICAL",
-            f"Compound command ({op_text}) is not allowed; "
-            "split into separate Bash invocations.",
-            _node_text(node),
-        )
-    ]
+    The L4 walker still recurses into each command sub-node and applies
+    per-command classifiers (env-prefix, shellout, wrapper, direct-shell,
+    redirect, cmdsub) to every segment. Dangerous payloads anywhere in
+    a compound chain are caught by the L2 substring regex layer
+    (``DANGEROUS_BASH_PATTERNS`` / ``EXFILTRATION_RULES``) and by the L4
+    per-segment classifiers.
+    """
+    return []
 
 
 # ---------------------------------------------------------------------------

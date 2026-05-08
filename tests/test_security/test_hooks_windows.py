@@ -428,7 +428,7 @@ class TestCheckModuleCLI:
             "tool_input": {"command": "rm -rf /"},
         })
         assert proc.returncode == 2
-        error_data = json.loads(proc.stdout.strip())
+        error_data = json.loads(proc.stderr.strip())
         # Error message concatenates all finding messages (tier + regex
         # layers); assert structural shape rather than exact text so future
         # tier seed adjustments do not break this test.

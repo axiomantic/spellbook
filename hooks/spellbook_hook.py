@@ -360,18 +360,18 @@ def _gate_bash(data: dict) -> None:
         from spellbook.gates.check import check_tool_input
     except ImportError as e:
         _log_hook_error("gate_bash", "Bash", e)
-        print(json.dumps({"error": "Security check failed: security module not available"}))
+        print(json.dumps({"error": "Security check failed: security module not available"}), file=sys.stderr)
         sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
     result = check_tool_input("Bash", tool_input)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}))
+        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
         sys.exit(2)
 
 
@@ -384,18 +384,18 @@ def _gate_spawn(data: dict) -> None:
         from spellbook.gates.check import check_tool_input
     except ImportError as e:
         _log_hook_error("gate_spawn", "spawn_claude_session", e)
-        print(json.dumps({"error": "Security check failed: security module not available"}))
+        print(json.dumps({"error": "Security check failed: security module not available"}), file=sys.stderr)
         sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
     result = check_tool_input("spawn_claude_session", tool_input)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}))
+        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
         sys.exit(2)
 
 
@@ -408,18 +408,18 @@ def _gate_state_sanitize(data: dict) -> None:
         from spellbook.gates.check import check_tool_input
     except ImportError as e:
         _log_hook_error("gate_state_sanitize", "workflow_state_save", e)
-        print(json.dumps({"error": "Security check failed: security module not available"}))
+        print(json.dumps({"error": "Security check failed: security module not available"}), file=sys.stderr)
         sys.exit(2)
 
     tool_input = data.get("tool_input")
     if not tool_input:
-        print(json.dumps({"error": "Security check failed: no tool input provided"}))
+        print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
     result = check_tool_input("workflow_state_save", tool_input)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}))
+        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
         sys.exit(2)
 
 

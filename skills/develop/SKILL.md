@@ -38,6 +38,16 @@ When operating in YOLO mode or when user selected "Fully autonomous":
 - Proceed without asking confirmation
 - Treat all review findings as mandatory fixes
 - Only stop for genuine blockers (missing files, 3+ test failures, contradictions)
+- **STOP for scope expansion regardless of autonomous mode.** If a
+  decision would introduce capabilities, infrastructure, or external
+  integrations the operator did not mention in the initial request,
+  pause and surface to the operator. See `~/.claude/CLAUDE.md`
+  "Autonomous Mode and Scope Discipline".
+- **STOP before parallel session fan-out.** Generation of chunk
+  prompts, `forge_project_init`, sub-orchestrator dispatch, and
+  spawning of parallel sessions are gated by `feature-implement`
+  Phase 3.4.7 (One-Pager Approval Gate). Autonomous mode does not
+  waive that gate.
 
 If you find yourself typing "Should I proceed?" — STOP. You already have permission.
 </CRITICAL>
