@@ -153,7 +153,7 @@ class TestPreToolUseBashGate:
             f"Expected exit 2 (blocked), got {proc.returncode}. "
             f"stdout={proc.stdout!r}, stderr={proc.stderr!r}"
         )
-        # Verify structured error JSON on stderr
+        # Verify structured error JSON on stderr (per Claude Code hook protocol)
         error_output = json.loads(proc.stderr)
         assert "error" in error_output
         assert isinstance(error_output["error"], str)
