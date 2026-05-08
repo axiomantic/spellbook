@@ -588,6 +588,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Constraints`) and SHA-256-snapshot the existing 7 agents to catch
   unintended modification.
 
+- **`installer/components/spellbook_cco.py` component (security
+  architecture Phase 5).** New installer component clones the
+  `elijahr/cco` fork at audit-pinned SHA `d7044ef` to
+  `~/.local/spellbook/cco/` and writes the
+  `~/.local/bin/spellbook-cco` wrapper. Pin verification is enforced
+  by default; `SPELLBOOK_INSTALLER_SKIP_FORK_PIN=1` bypasses it with
+  a stderr `WARNING` line so accidental drift is loud.
+- **macOS L5 sandbox layer ships via the fork's hardened SBPL
+  profile.** The `spellbook-cco` wrapper applies the fork's profile,
+  which adds DYLD environment scrub, file-read denies for
+  user-writable dylib paths (preventing `DYLD_INSERT_LIBRARIES`-style
+  injection), scoped `process-exec` deny+re-allow, and
+  `mach-priv-task-port` deny. macOS now reaches feature parity with
+  the Linux sandbox path rather than no-opping.
+- **`SPELLBOOK_SANDBOX_SKIP_PIN=1` escape hatch.** Renamed from
+  `SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1`; the old name is still accepted
+  for one release with a stderr `DEPRECATION` warning, then removed.
+
+### Changed
+
+- **`installer/platforms/claude_code.py` macOS path.** No longer
+  no-ops; chains `install_spellbook_cco` then `install_aliases` so
+  macOS users get the same hardened sandbox surface as Linux users.
+- **`installer/tui.py` and `install.py` detection.** The TUI / CLI
+  installer now probes for `spellbook-cco` on `PATH` instead of
+  vanilla `cco`, so re-runs of the installer correctly identify
+  prior spellbook-managed installs.
+- **`scripts/spellbook-sandbox` gating.** The sandbox launcher gates
+  on `spellbook-cco` (not vanilla `cco`) and verifies the audit-pinned
+  `d7044ef` SHA by parsing `spellbook-cco --version` output. A version
+  mismatch fails closed with a remediation hint.
+- **`docs/security.md` retitled.** Section is now "Sandboxing with
+  spellbook-cco (Linux + macOS)". Manual install instructions removed
+  in favor of `install.py`, which is now the single source of truth
+  for sandbox setup on both platforms.
+- **`README.md` cco onboarding rewritten.** Instructions reference
+  `spellbook-cco` rather than vanilla `cco`, and point at `install.py`
+  instead of the upstream `nikvdp/cco` repo for installation.
+
+### Rollback
+
+- **`SPELLBOOK_USE_VANILLA_CCO=1` falls back to vanilla
+  `nikvdp/cco`.** If the hardened fork breaks something on your
+  system, set this env var to revert to the upstream vanilla `cco`
+  binary. **This bypasses the hardened SBPL profile and DYLD scrub**,
+  so only use it long enough to recover, then unset the env var and
+  re-run `install.py` so the spellbook-managed sandbox is restored.
+
 ## [0.56.0] - 2026-04-30
 
 ### Added
