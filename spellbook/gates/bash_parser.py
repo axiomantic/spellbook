@@ -401,7 +401,7 @@ def parse_and_check(command: str, security_mode: str = "paranoid") -> list[dict]
 
     findings: list[dict] = []
     for tree in trees:
-        findings.extend(_walk(tree, command))
+        findings.extend(_walk(tree, command, security_mode))
     return findings
 
 
@@ -410,14 +410,14 @@ def parse_and_check(command: str, security_mode: str = "paranoid") -> list[dict]
 # ---------------------------------------------------------------------------
 
 
-def _walk(node: object, command: str) -> list[dict]:
+def _walk(node: object, command: str, security_mode: str) -> list[dict]:
     """Recursively classify ``node`` and its children.
 
     Top-level dispatch sits in :func:`_classify_node` so the test suite can
     drive the unknown-node fail-closed path with a synthetic node.
     """
     findings: list[dict] = []
-    findings.extend(_classify_node(node))
+    findings.extend(_classify_node(node, security_mode))
 
     # Recurse into children in a kind-aware manner so we do not double-count
     # parent findings or miss nested substitutions.
@@ -429,7 +429,7 @@ def _walk(node: object, command: str) -> list[dict]:
             # Operators and pipes are leaves; nothing to recurse into.
             if child_kind in {"operator", "pipe", "reservedword"}:
                 continue
-            findings.extend(_walk(child, command))
+            findings.extend(_walk(child, command, security_mode))
     elif kind == "compound":
         # CompoundNode wraps control-flow constructs (if/for/while/until/case
         # and function bodies). The wrapped construct(s) live under ``.list``,
@@ -437,7 +437,7 @@ def _walk(node: object, command: str) -> list[dict]:
         # silently skip every nested command, providing a clean bypass for
         # ``while true; do rm -rf /; done`` and similar.
         for child in getattr(node, "list", ()) or ():
-            findings.extend(_walk(child, command))
+            findings.extend(_walk(child, command, security_mode))
     elif kind == "command":
         # Command parts contain Words (with possibly nested commandsub /
         # processsub), Assignments, and Redirects. We classified the
@@ -450,41 +450,41 @@ def _walk(node: object, command: str) -> list[dict]:
                 # Words can hold nested commandsubstitution /
                 # processsubstitution under .parts.
                 for sub in getattr(part, "parts", ()) or ():
-                    findings.extend(_walk(sub, command))
+                    findings.extend(_walk(sub, command, security_mode))
             elif part_kind == "redirect":
                 # Classify the redirect itself (deny-list path check), THEN
                 # recurse into its output target — a WordNode whose ``.parts``
                 # may contain a CommandsubstitutionNode (``ls > $(whoami).txt``).
-                findings.extend(_classify_node(part))
+                findings.extend(_classify_node(part, security_mode))
                 output = getattr(part, "output", None)
                 if output is not None:
                     for sub in getattr(output, "parts", ()) or ():
-                        findings.extend(_walk(sub, command))
+                        findings.extend(_walk(sub, command, security_mode))
             elif part_kind == "assignment":
                 # Classify the env-prefix itself, THEN recurse into the
                 # assignment's parts so a CMDSUB inside the value
                 # (``VAR=$(whoami) ls``) is detected.
-                findings.extend(_classify_node(part))
+                findings.extend(_classify_node(part, security_mode))
                 for sub in getattr(part, "parts", ()) or ():
-                    findings.extend(_walk(sub, command))
+                    findings.extend(_walk(sub, command, security_mode))
             else:
-                findings.extend(_walk(part, command))
+                findings.extend(_walk(part, command, security_mode))
     elif kind in {"commandsubstitution", "processsubstitution"}:
         inner = getattr(node, "command", None)
         if inner is not None:
-            findings.extend(_walk(inner, command))
+            findings.extend(_walk(inner, command, security_mode))
     elif kind in {"if", "for", "while", "until", "case", "function"}:
         for child in getattr(node, "parts", ()) or ():
             child_kind = getattr(child, "kind", None)
             if child_kind in {"operator", "pipe", "reservedword"}:
                 continue
-            findings.extend(_walk(child, command))
+            findings.extend(_walk(child, command, security_mode))
     elif kind == "word":
         # Top-level / orphaned WordNode: walk its parts so a command-sub
         # inside (``echo prefix$(whoami)suffix``) is still detected when
         # the parent walker forwarded the word directly.
         for sub in getattr(node, "parts", ()) or ():
-            findings.extend(_walk(sub, command))
+            findings.extend(_walk(sub, command, security_mode))
 
     return findings
 
@@ -494,7 +494,7 @@ def _walk(node: object, command: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _classify_node(node: object) -> list[dict]:
+def _classify_node(node: object, security_mode: str) -> list[dict]:
     """Emit findings for a single AST node based on its ``kind``.
 
     Unknown kinds fail closed with an audit-log entry, unless the operator
@@ -503,13 +503,25 @@ def _classify_node(node: object) -> list[dict]:
     kind = getattr(node, "kind", None)
 
     if kind in {"list", "pipeline"}:
-        return _classify_compound(node)
-    if kind in {"if", "for", "while", "until", "case"}:
-        # Control-flow constructs are compound by nature; we allow the
-        # structure itself. The walker still recurses into the body so
-        # any nested CMDSUB / dangerous redirect / direct-shell / etc.
-        # surfaces from per-segment classification, and the L2 regex layer
-        # catches dangerous payloads anywhere in the full command string.
+        return _classify_compound(node, security_mode)
+    if kind in {"if", "for", "while", "until", "case", "function"}:
+        # Control-flow constructs (and function definitions) are compound by
+        # nature. Default behavior: allow the structure itself; the walker
+        # still recurses into the body so any nested CMDSUB / dangerous
+        # redirect / direct-shell / etc. surfaces from per-segment
+        # classification, and the L2 regex layer catches dangerous payloads
+        # anywhere in the full command string. Under either compound-deny
+        # opt-in, emit a uniform deny finding naming the construct.
+        if _compound_deny_enabled(security_mode):
+            return [
+                _finding(
+                    "BASH-PARSER-COMPOUND",
+                    "CRITICAL",
+                    f"Compound control-flow construct (`{kind}`) is not allowed; "
+                    "split into separate Bash invocations.",
+                    _node_text(node),
+                )
+            ]
         return []
     if kind == "command":
         return _classify_command(node)
@@ -550,17 +562,38 @@ def _classify_node(node: object) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _classify_compound(node: object) -> list[dict]:
-    """Compound command structure (list / pipeline) is allowed.
+def _classify_compound(node: object, security_mode: str) -> list[dict]:
+    """Compound command structure (list / pipeline).
 
-    The L4 walker still recurses into each command sub-node and applies
-    per-command classifiers (env-prefix, shellout, wrapper, direct-shell,
-    redirect, cmdsub) to every segment. Dangerous payloads anywhere in
-    a compound chain are caught by the L2 substring regex layer
-    (``DANGEROUS_BASH_PATTERNS`` / ``EXFILTRATION_RULES``) and by the L4
-    per-segment classifiers.
+    Default behavior (neither opt-in active): allowed. The L4 walker still
+    recurses into each command sub-node and applies per-command classifiers
+    (env-prefix, shellout, wrapper, direct-shell, redirect, cmdsub) to every
+    segment. Dangerous payloads anywhere in a compound chain are caught by
+    the L2 substring regex layer (``DANGEROUS_BASH_PATTERNS`` /
+    ``EXFILTRATION_RULES``) and by the L4 per-segment classifiers.
+
+    Under either opt-in (``security_mode="paranoid"`` or
+    ``SPELLBOOK_BASH_DENY_COMPOUND=1``), emit a uniform deny finding for
+    every compound regardless of segment count or operator mix.
     """
-    return []
+    if not _compound_deny_enabled(security_mode):
+        return []
+    parts = getattr(node, "parts", ()) or ()
+    operators = [
+        getattr(p, "op", None)
+        for p in parts
+        if getattr(p, "kind", None) == "operator"
+    ]
+    op_text = ", ".join(op for op in operators if op) or "|"
+    return [
+        _finding(
+            "BASH-PARSER-COMPOUND",
+            "CRITICAL",
+            f"Compound command ({op_text}) is not allowed; "
+            "split into separate Bash invocations.",
+            _node_text(node),
+        )
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -1162,6 +1195,24 @@ def _handle_unknown_kind(node: object, kind: object) -> list[dict]:
 def _env_allowlist() -> frozenset[str]:
     raw = os.environ.get("SPELLBOOK_BASH_PARSER_ALLOW", "")
     return frozenset(s.strip() for s in raw.split(",") if s.strip())
+
+
+def _compound_deny_enabled(security_mode: str) -> bool:
+    """Return True when compound-command deny is active.
+
+    Two opt-in paths:
+
+    - ``security_mode="paranoid"`` (call-site)
+    - ``SPELLBOOK_BASH_DENY_COMPOUND=1`` (operator env var; truthy values
+      are ``1``, ``true``, ``yes``; case-insensitive).
+    """
+    if security_mode == "paranoid":
+        return True
+    return os.environ.get("SPELLBOOK_BASH_DENY_COMPOUND", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
 
 
 # ---------------------------------------------------------------------------
