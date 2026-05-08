@@ -309,3 +309,243 @@ def test_send_rejects_invalid_from_name(a2a):
     with pytest.raises(SystemExit) as ei:
         _run(a2a, "send", "--from", "../escape", "--to", "alice", "hi")
     assert ei.value.code == 2
+
+
+# ---------------------------------------------------------------------------
+# pending/ staging dir + drain
+# ---------------------------------------------------------------------------
+
+
+def test_open_creates_pending_dir(a2a):
+    """`open <name>` must create the pending/ subdir alongside inbox/processed/sent."""
+    rc, _, _ = _run(a2a, "open", "alice")
+    assert rc == 0
+    bus = a2a.bus_dir()
+    assert (bus / "alice" / "pending").is_dir()
+
+
+def _seed_pending(bus: Path, name: str, batch_id: str, payloads: list[dict]) -> list[str]:
+    """Write each payload as ``pending/<batch_id>/<id>.json``. Returns the ids."""
+    pending_batch = bus / name / "pending" / batch_id
+    pending_batch.mkdir(parents=True, exist_ok=True)
+    ids = []
+    for i, payload in enumerate(payloads):
+        msg_id = payload.get("id", f"msg-{batch_id}-{i:03d}")
+        ids.append(msg_id)
+        (pending_batch / f"{msg_id}.json").write_text(
+            json.dumps(payload), encoding="utf-8"
+        )
+    return ids
+
+
+def test_drain_returns_messages_and_moves_to_processed(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    ids = _seed_pending(
+        bus, "alice", "batch-x",
+        [{"id": "m1", "from": "bob", "body": "hello"},
+         {"id": "m2", "from": "carol", "body": "world"}],
+    )
+
+    rc, stdout, _ = _run(a2a, "drain", "alice", "batch-x")
+    assert rc == 0
+    payload = json.loads(stdout)
+    # Order: lex-sorted by file name, so m1 then m2
+    assert payload == {
+        "messages": [
+            {"id": "m1", "from": "bob", "body": "hello"},
+            {"id": "m2", "from": "carol", "body": "world"},
+        ],
+        "count": 2,
+    }
+    # Files moved to processed/.
+    processed = bus / "alice" / "processed"
+    assert {p.name for p in processed.iterdir() if p.suffix == ".json"} == {
+        f"{ids[0]}.json", f"{ids[1]}.json"
+    }
+    # pending/batch-x/ removed (empty rmdir).
+    assert not (bus / "alice" / "pending" / "batch-x").exists()
+
+
+def test_drain_idempotent(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    _seed_pending(
+        bus, "alice", "batch-x",
+        [{"id": "m1", "from": "bob", "body": "hello"},
+         {"id": "m2", "from": "carol", "body": "world"}],
+    )
+
+    rc1, stdout1, _ = _run(a2a, "drain", "alice", "batch-x")
+    assert rc1 == 0
+    assert json.loads(stdout1)["count"] == 2
+
+    rc2, stdout2, _ = _run(a2a, "drain", "alice", "batch-x")
+    assert rc2 == 0
+    assert json.loads(stdout2) == {"messages": [], "count": 0}
+
+
+def test_drain_atomic_move(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    _seed_pending(bus, "alice", "batch-x",
+                  [{"id": "m1", "from": "bob", "body": "hello"}])
+    pending_file = bus / "alice" / "pending" / "batch-x" / "m1.json"
+    processed_file = bus / "alice" / "processed" / "m1.json"
+    assert pending_file.exists()
+    assert not processed_file.exists()
+
+    rc, _, _ = _run(a2a, "drain", "alice", "batch-x")
+    assert rc == 0
+    assert not pending_file.exists()
+    assert processed_file.exists()
+    assert json.loads(processed_file.read_text()) == {
+        "id": "m1", "from": "bob", "body": "hello"
+    }
+
+
+def test_drain_batch_id_selection(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    _seed_pending(bus, "alice", "batch-a",
+                  [{"id": "ma1", "from": "bob", "body": "from-a"}])
+    _seed_pending(bus, "alice", "batch-b",
+                  [{"id": "mb1", "from": "carol", "body": "from-b"}])
+
+    rc, stdout, _ = _run(a2a, "drain", "alice", "batch-a")
+    assert rc == 0
+    assert json.loads(stdout) == {
+        "messages": [{"id": "ma1", "from": "bob", "body": "from-a"}],
+        "count": 1,
+    }
+    # batch-b untouched.
+    assert (bus / "alice" / "pending" / "batch-b" / "mb1.json").exists()
+    assert not (bus / "alice" / "pending" / "batch-a").exists()
+
+
+def test_drain_all_processes_oldest_first(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    # batch ids sort lexicographically: batch-a < batch-b
+    _seed_pending(bus, "alice", "batch-a",
+                  [{"id": "ma1", "from": "bob", "body": "from-a"}])
+    _seed_pending(bus, "alice", "batch-b",
+                  [{"id": "mb1", "from": "carol", "body": "from-b"}])
+
+    rc, stdout, _ = _run(a2a, "drain", "alice", "--all")
+    assert rc == 0
+    assert json.loads(stdout) == {
+        "messages": [
+            {"id": "ma1", "from": "bob", "body": "from-a"},
+            {"id": "mb1", "from": "carol", "body": "from-b"},
+        ],
+        "count": 2,
+    }
+    assert not (bus / "alice" / "pending" / "batch-a").exists()
+    assert not (bus / "alice" / "pending" / "batch-b").exists()
+
+
+def test_drain_no_args_picks_oldest_batch(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    _seed_pending(bus, "alice", "batch-a",
+                  [{"id": "ma1", "from": "bob", "body": "from-a"}])
+    _seed_pending(bus, "alice", "batch-b",
+                  [{"id": "mb1", "from": "carol", "body": "from-b"}])
+
+    rc, stdout, _ = _run(a2a, "drain", "alice")
+    assert rc == 0
+    assert json.loads(stdout) == {
+        "messages": [{"id": "ma1", "from": "bob", "body": "from-a"}],
+        "count": 1,
+    }
+    # Only batch-a drained; batch-b remains.
+    assert (bus / "alice" / "pending" / "batch-b" / "mb1.json").exists()
+    assert not (bus / "alice" / "pending" / "batch-a").exists()
+
+
+def test_drain_handles_malformed(a2a):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    pending_batch = bus / "alice" / "pending" / "batch-m"
+    pending_batch.mkdir(parents=True, exist_ok=True)
+    bad = pending_batch / "bad.json"
+    bad.write_text("not-json", encoding="utf-8")
+
+    rc, stdout, _ = _run(a2a, "drain", "alice", "batch-m")
+    assert rc == 0
+    payload = json.loads(stdout)
+    assert payload["count"] == 1
+    assert len(payload["messages"]) == 1
+    entry = payload["messages"][0]
+    assert entry["id"] == "bad.json"
+    assert "error" in entry
+    assert entry["error"].startswith("JSONDecodeError:")
+    expected_processed = bus / "alice" / "processed" / "bad.json"
+    assert entry["raw_path"] == str(expected_processed)
+    # File moved to processed/, gone from pending/.
+    assert not bad.exists()
+    assert expected_processed.exists()
+    assert expected_processed.read_text() == "not-json"
+    assert "body" not in entry
+
+
+def test_drain_missing_batch_returns_count_zero(a2a):
+    _run(a2a, "open", "alice")
+    rc, stdout, _ = _run(a2a, "drain", "alice", "missing-batch-id")
+    assert rc == 0
+    assert json.loads(stdout) == {"messages": [], "count": 0}
+
+
+def test_drain_atomic_on_partial_failure(a2a, monkeypatch):
+    _run(a2a, "open", "alice")
+    bus = a2a.bus_dir()
+    _seed_pending(
+        bus, "alice", "batch-x",
+        [{"id": "m1", "from": "bob", "body": "one"},
+         {"id": "m2", "from": "bob", "body": "two"},
+         {"id": "m3", "from": "bob", "body": "three"}],
+    )
+
+    real_replace = a2a.os.replace
+    state = {"calls": 0}
+
+    def flaky_replace(src, dst):
+        state["calls"] += 1
+        if state["calls"] == 2:
+            raise OSError(13, "EACCES (simulated)")
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(a2a.os, "replace", flaky_replace)
+
+    with pytest.raises(OSError):
+        _run(a2a, "drain", "alice", "batch-x")
+
+    pending_dir_x = bus / "alice" / "pending" / "batch-x"
+    processed = bus / "alice" / "processed"
+
+    pending_files = {p.name for p in pending_dir_x.iterdir() if p.suffix == ".json"}
+    processed_files = {p.name for p in processed.iterdir() if p.suffix == ".json"}
+
+    # Exactly one file should have moved (the first call), then the second
+    # call raised and aborted. m1.json moved; m2.json + m3.json remain.
+    assert processed_files == {"m1.json"}
+    assert pending_files == {"m2.json", "m3.json"}
+    # Invariant: every message is in EXACTLY ONE place.
+    assert pending_files.isdisjoint(processed_files)
+
+    # Restore real os.replace and re-run; remaining messages must drain cleanly.
+    monkeypatch.setattr(a2a.os, "replace", real_replace)
+    rc, stdout, _ = _run(a2a, "drain", "alice", "batch-x")
+    assert rc == 0
+    payload = json.loads(stdout)
+    assert payload == {
+        "messages": [
+            {"id": "m2", "from": "bob", "body": "two"},
+            {"id": "m3", "from": "bob", "body": "three"},
+        ],
+        "count": 2,
+    }
+    final_processed = {p.name for p in processed.iterdir() if p.suffix == ".json"}
+    assert final_processed == {"m1.json", "m2.json", "m3.json"}
+    assert not pending_dir_x.exists()

@@ -71,6 +71,10 @@ def sent_dir(name: str) -> Path:
     return name_dir(name) / "sent"
 
 
+def pending_dir(name: str) -> Path:
+    return name_dir(name) / "pending"
+
+
 # ---------------------------------------------------------------------------
 # Validation helpers
 # ---------------------------------------------------------------------------
@@ -124,6 +128,7 @@ def _ensure_dirs(name: str) -> None:
     inbox_dir(name).mkdir(parents=True, exist_ok=True)
     processed_dir(name).mkdir(parents=True, exist_ok=True)
     sent_dir(name).mkdir(parents=True, exist_ok=True)
+    pending_dir(name).mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -435,6 +440,83 @@ def cmd_names(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_drain(args: argparse.Namespace) -> int:
+    """Drain `pending/<batch-id>/` by atomically moving each message to processed/.
+
+    Modes:
+      - ``drain <name> <batch-id>``  -- drain only the named batch.
+      - ``drain <name> --all``       -- drain every batch (oldest-batch first).
+      - ``drain <name>``             -- drain only the oldest pending batch.
+
+    Output is JSON ``{"messages": [...], "count": N}`` on stdout. Idempotent:
+    a missing pending dir, missing batch, or empty batch all return
+    ``{"messages": [], "count": 0}`` with exit 0.
+
+    Atomicity: each message moves via ``os.replace`` (atomic on POSIX). If a
+    move raises mid-batch, already-moved messages stay in processed/ and
+    remaining messages stay in pending/. The exception propagates so the
+    caller observes the partial-success state and can retry.
+
+    Malformed messages (un-parseable JSON / encoding errors) are STILL moved
+    to processed/, but emitted as ``{"id": <filename>, "error": "<msg>",
+    "raw_path": "<dst>"}`` rather than as a parsed body. This avoids leaving
+    poison messages in pending/ where they would block the next drain.
+    """
+    _validate_name(args.name)
+    pending_root = pending_dir(args.name)
+    processed_root = processed_dir(args.name)
+    processed_root.mkdir(parents=True, exist_ok=True)
+
+    if not pending_root.exists():
+        print(json.dumps({"messages": [], "count": 0}, indent=2))
+        return 0
+
+    if args.batch_id is not None:
+        target = pending_root / args.batch_id
+        target_dirs = [target] if target.is_dir() else []
+    elif args.all:
+        target_dirs = sorted(
+            (d for d in pending_root.iterdir() if d.is_dir()),
+            key=lambda p: p.name,
+        )
+    else:
+        candidates = sorted(
+            (d for d in pending_root.iterdir() if d.is_dir()),
+            key=lambda p: p.name,
+        )
+        target_dirs = [candidates[0]] if candidates else []
+
+    output: list[dict] = []
+    for d in target_dirs:
+        messages = sorted(
+            (m for m in d.iterdir() if not m.name.startswith(".")),
+            key=lambda p: p.name,
+        )
+        for m in messages:
+            target = processed_root / m.name
+            try:
+                body = json.loads(m.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+                os.replace(m, target)
+                output.append({
+                    "id": m.name,
+                    "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+                    "raw_path": str(target),
+                })
+                continue
+            os.replace(m, target)
+            output.append(body)
+        # Best-effort: remove now-empty batch dir. Non-empty (e.g. a hidden
+        # tempfile) is fine -- next drain will pick it up.
+        try:
+            d.rmdir()
+        except OSError:
+            pass
+
+    print(json.dumps({"messages": output, "count": len(output)}, indent=2))
+    return 0
+
+
 def cmd_help(_args: argparse.Namespace) -> int:
     print(_USAGE)
     return 0
@@ -462,6 +544,10 @@ SUBCOMMANDS
   read <name> [<msg-id>]          Print one message + move to processed/.
   send --from <a> --to <b> [--reply-to <id>] [--stdin] <body>
                                   Send a message atomically.
+  drain <name> [<batch-id>] [--all]
+                                  Protocol-internal: atomically move messages
+                                  from pending/<batch-id>/ to processed/ and
+                                  emit them as JSON. Used by the watch-chain.
   names                           List registered names.
   help                            Show this message.
 
@@ -527,6 +613,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
     sp_names = sub.add_parser("names", add_help=False)
     sp_names.set_defaults(func=cmd_names)
+
+    sp_drain = sub.add_parser("drain", add_help=False)
+    sp_drain.add_argument("name")
+    sp_drain.add_argument("batch_id", nargs="?", default=None)
+    sp_drain.add_argument("--all", action="store_true")
+    sp_drain.set_defaults(func=cmd_drain)
 
     for alias in ("help", "-h", "--help"):
         sp_help = sub.add_parser(alias, add_help=False)
