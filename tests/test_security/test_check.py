@@ -190,6 +190,95 @@ class TestCheckToolInputReturnStructure:
         result = check_tool_input("Bash", {"command": "ls"})
         assert isinstance(result["findings"], list)
 
+    def test_return_has_verdict_key(self):
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input("Bash", {"command": "ls"})
+        assert "verdict" in result
+
+
+class TestCheckToolInputVerdict:
+    """Tests for the ``verdict`` projection of findings -> allow/ask/deny.
+
+    The hook surface uses ``verdict`` to pick between Claude Code's
+    ``permissionDecision: "ask"`` JSON (T2-only) and a hard exit-2 deny
+    (T3, CRITICAL bashlex/exfil findings, or any mix containing a
+    non-ask finding).
+    """
+
+    def test_safe_command_is_allow(self):
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input("Bash", {"command": "ls"})
+        assert result["safe"] is True
+        assert result["verdict"] == "allow"
+
+    def test_pure_t2_is_ask(self):
+        """A pure T2 (TIER-ASK) match resolves to ``verdict == "ask"``."""
+        from spellbook.gates.check import check_tool_input
+
+        # ``git push`` is seeded as T2 in tiers.toml; no other layer fires.
+        result = check_tool_input("Bash", {"command": "git push"})
+        assert result["safe"] is False  # T2 emits HIGH-severity finding
+        assert result["verdict"] == "ask"
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        assert "TIER-ASK" in rule_ids
+
+    def test_pure_t3_is_deny(self):
+        """A pure T3 (TIER-DENY) match resolves to ``verdict == "deny"``."""
+        from spellbook.gates.check import check_tool_input
+
+        result = check_tool_input(
+            "Bash", {"command": "git push --force origin main"}
+        )
+        assert result["safe"] is False
+        assert result["verdict"] == "deny"
+
+    def test_critical_bashlex_finding_is_deny(self):
+        """A CRITICAL non-tier finding (bashlex compound + tier match)
+        resolves to ``verdict == "deny"`` even though TIER-ASK would
+        otherwise fire — deny wins over ask."""
+        from spellbook.gates.check import check_tool_input
+
+        # ``git push && echo done`` triggers BASH-PARSER-COMPOUND (CRITICAL)
+        # AND TIER-ASK (T2) — mixed findings must collapse to deny.
+        result = check_tool_input(
+            "Bash", {"command": "git push && echo done"}
+        )
+        rule_ids = [f["rule_id"] for f in result["findings"]]
+        assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+        assert result["verdict"] == "deny"
+
+    def test_compute_verdict_mixed_ask_and_deny(self):
+        """Direct unit test for ``_compute_verdict``: a synthetic mix of
+        TIER-ASK and TIER-DENY findings must collapse to ``deny``.
+        Guards the deny-wins invariant against future finding-source
+        changes that could otherwise let an ASK leak through."""
+        from spellbook.gates.check import _compute_verdict
+
+        findings = [
+            {"rule_id": "TIER-ASK", "severity": "HIGH", "message": "ask"},
+            {"rule_id": "TIER-DENY", "severity": "CRITICAL", "message": "deny"},
+        ]
+        assert _compute_verdict(findings, safe=False) == "deny"
+
+    def test_compute_verdict_pure_ask(self):
+        from spellbook.gates.check import _compute_verdict
+
+        findings = [
+            {"rule_id": "TIER-ASK", "severity": "HIGH", "message": "ask"},
+        ]
+        assert _compute_verdict(findings, safe=False) == "ask"
+
+    def test_compute_verdict_low_only_is_allow(self):
+        """LOW-severity findings keep ``safe = True`` and verdict = allow."""
+        from spellbook.gates.check import _compute_verdict
+
+        findings = [
+            {"rule_id": "INJ-LOW", "severity": "LOW", "message": "low"},
+        ]
+        assert _compute_verdict(findings, safe=True) == "allow"
+
 
 class TestCheckToolInputSecurityModes:
     """Tests for security_mode parameter in check_tool_input."""
