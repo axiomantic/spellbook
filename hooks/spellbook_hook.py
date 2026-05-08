@@ -2027,7 +2027,7 @@ def _wl_tool_safety_sniff(
 
 
 # ---------------------------------------------------------------------------
-# agent2agent: surface inbox metadata for sessions bound via `listen <name>`
+# agent2agent: surface inbox metadata for sessions bound via `open <name>`
 # ---------------------------------------------------------------------------
 
 # Mirror of the helper's bus-dir resolution. Kept in sync with
@@ -2122,7 +2122,7 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
     except Exception as e:
         _log_hook_error("memory_recall_for_prompt", "UserPromptSubmit", e)
 
-    # agent2agent inbox metadata (only for sessions bound via `listen <name>`).
+    # agent2agent inbox metadata (only for sessions bound via `open <name>`).
     # Metadata-only by design: NEVER call read/peek/check from here.
     try:
         out = _agent2agent_notify_for_prompt(data)

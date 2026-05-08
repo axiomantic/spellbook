@@ -155,7 +155,7 @@ def test_send_then_peek_then_read_roundtrip(a2a):
     processed = a2a.bus_dir() / "alice" / "processed"
     assert any(p.suffix == ".json" for p in processed.iterdir())
 
-    # Sent log is written to sender's sent/ even though sender never listened.
+    # Sent log is written to sender's sent/ even though sender never opened.
     sent = a2a.bus_dir() / "bob" / "sent"
     assert sent.is_dir()
     assert any(p.suffix == ".json" for p in sent.iterdir())
