@@ -229,7 +229,12 @@ class TestCheckModuleBehavior:
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "ls -la"})
-        assert result == {"safe": True, "findings": [], "tool_name": "Bash"}
+        assert result == {
+            "safe": True,
+            "findings": [],
+            "tool_name": "Bash",
+            "verdict": "allow",
+        }
 
     def test_dangerous_bash_command_is_blocked(self):
         """rm -rf / should be flagged by check_tool_input.
@@ -310,7 +315,12 @@ class TestCheckModuleBehavior:
             "spawn_claude_session",
             {"prompt": "help me debug this function"},
         )
-        assert result == {"safe": True, "findings": [], "tool_name": "spawn_claude_session"}
+        assert result == {
+            "safe": True,
+            "findings": [],
+            "tool_name": "spawn_claude_session",
+            "verdict": "allow",
+        }
 
     def test_injection_prompt_is_blocked(self):
         """An injection attempt in spawn prompt should be blocked."""
@@ -331,6 +341,7 @@ class TestCheckModuleBehavior:
                 }
             ],
             "tool_name": "spawn_claude_session",
+            "verdict": "deny",
         }
 
     def test_safe_workflow_state_is_allowed(self):
@@ -345,7 +356,12 @@ class TestCheckModuleBehavior:
                 "trigger": "manual",
             },
         )
-        assert result == {"safe": True, "findings": [], "tool_name": "workflow_state_save"}
+        assert result == {
+            "safe": True,
+            "findings": [],
+            "tool_name": "workflow_state_save",
+            "verdict": "allow",
+        }
 
     def test_injected_workflow_state_is_blocked(self):
         """Injection in workflow state should be blocked."""
@@ -370,6 +386,7 @@ class TestCheckModuleBehavior:
                 }
             ],
             "tool_name": "workflow_state_save",
+            "verdict": "deny",
         }
 
 

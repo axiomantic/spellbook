@@ -234,11 +234,18 @@ class TestCheckToolInputVerdict:
         assert result["safe"] is False
         assert result["verdict"] == "deny"
 
-    def test_critical_bashlex_finding_is_deny(self):
+    def test_critical_bashlex_finding_is_deny(self, monkeypatch):
         """A CRITICAL non-tier finding (bashlex compound + tier match)
         resolves to ``verdict == "deny"`` even though TIER-ASK would
-        otherwise fire — deny wins over ask."""
+        otherwise fire — deny wins over ask.
+
+        Compound deny is opt-in since 0.63.2; this test exercises the
+        deny-wins verdict logic against that opt-in path so the bashlex
+        layer can produce a CRITICAL alongside the T2 TIER-ASK.
+        """
         from spellbook.gates.check import check_tool_input
+
+        monkeypatch.setenv("SPELLBOOK_BASH_DENY_COMPOUND", "1")
 
         # ``git push && echo done`` triggers BASH-PARSER-COMPOUND (CRITICAL)
         # AND TIER-ASK (T2) — mixed findings must collapse to deny.
