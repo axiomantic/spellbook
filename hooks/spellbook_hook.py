@@ -2330,19 +2330,13 @@ def _handle_session_start(data: dict) -> dict | None:
         return None
 
     project_path = data.get("cwd", "")
-    if not project_path:
-        result = _fallback_directive()
-        if orphan_hint:
-            result["hookSpecificOutput"]["additionalContext"] += (
-                "\n\n" + orphan_hint
-            )
-        return result
+    ws = None
+    if project_path:
+        ws = _mcp_call("workflow_state_load", {
+            "project_path": project_path,
+            "max_age_hours": 24,
+        })
 
-    # Load workflow state
-    ws = _mcp_call("workflow_state_load", {
-        "project_path": project_path,
-        "max_age_hours": 24,
-    })
     if not ws or not ws.get("found"):
         result = _fallback_directive()
         if orphan_hint:
