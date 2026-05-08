@@ -47,18 +47,23 @@ COMMAND_PATH = (
 # the "When it exits" sentence. Reproduce that ordering exactly so a
 # drift in either side fails the test.
 #
-# The script path uses ``$SPELLBOOK_DIR`` rather than a hardcoded
-# developer-machine absolute path so the slash command is portable across
-# operators. Per ``~/.claude/CLAUDE.md`` the harness substitutes
-# ``$SPELLBOOK_DIR`` (and ``$SPELLBOOK_CONFIG_DIR``) when interpreting
-# paths in spellbook artifacts, so the bg Task agent receives the
-# operator-specific absolute path at dispatch time. Hardcoding
-# ``/Users/eek/Development/spellbook/...`` worked on the author's box
-# but breaks for every other operator — T8 reconciliation.
+# The script path uses ``<SPELLBOOK_ABS>`` as a substitution placeholder
+# (parallel to ``<NAME>``) rather than a hardcoded developer-machine
+# absolute path so the slash command is portable across operators. The
+# orchestrator substitutes both placeholders at dispatch time: ``<NAME>``
+# from Phase B/C, and ``<SPELLBOOK_ABS>`` from the operator's
+# ``SPELLBOOK_DIR`` value resolved per ``~/.claude/CLAUDE.md``. Earlier
+# revisions used the literal token ``$SPELLBOOK_DIR`` here, but that
+# relied on an LLM-side reading convention that does NOT carry through
+# to dispatched subagent prompts: the bg Task agent's Bash invocation
+# expanded ``$SPELLBOOK_DIR`` against the shell environment (where it is
+# unset and empty), producing ``python3 /skills/agent2agent/...`` and
+# failing on the first cycle. Using an obvious placeholder forces the
+# orchestrator to substitute, matching the existing ``<NAME>`` pattern.
 PHASE_D_PROMPT_VERBATIM = (
     "Run exactly this one Bash command and wait for it to exit:\n"
     "\n"
-    "    python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
+    "    python3 <SPELLBOOK_ABS>/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
     "\n"
     "Set the Bash timeout parameter to 600000 milliseconds.\n"
     "\n"

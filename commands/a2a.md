@@ -149,26 +149,37 @@ Verify exit 0. On non-zero exit: surface stderr to the user and abort
 
 ### Phase D — Background Task dispatch (LOAD-BEARING)
 
-Embed this prompt VERBATIM, with `<NAME>` substituted at dispatch time.
+Embed this prompt VERBATIM, with TWO substitutions performed at dispatch
+time:
+
+- `<NAME>` → the inbox name from Phase C.
+- `<SPELLBOOK_ABS>` → the **absolute** path of `$SPELLBOOK_DIR` (resolved
+  from `~/.claude/CLAUDE.md`'s `SPELLBOOK_DIR=...` line, e.g.
+  `/Users/eek/Development/spellbook` or `~/.local/spellbook/source`).
+
 DO NOT paraphrase. DO NOT add commentary. DO NOT change the indentation
-of the Bash command line.
+of the Bash command line. DO NOT pass the literal token `$SPELLBOOK_DIR`
+to the subagent — the bg Task agent's Bash invocation is run by the
+shell, where `$SPELLBOOK_DIR` is an unset env var and expands to empty,
+producing `python3 /skills/agent2agent/...` and a hard failure on the
+first cycle. The CLAUDE.md `$SPELLBOOK_DIR` substitution rule is an
+LLM-side reading convention; it is NOT applied to dispatched subagent
+prompts. The orchestrator (you) is responsible for substituting the
+absolute path BEFORE calling Task.
 
 ```
 Run exactly this one Bash command and wait for it to exit:
 
-    python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py watch <NAME>
+    python3 <SPELLBOOK_ABS>/skills/agent2agent/scripts/agent2agent.py watch <NAME>
 
 Set the Bash timeout parameter to 600000 milliseconds.
 
 When it exits, respond with ONLY the last non-empty line of its stdout. Do not interpret, summarize, or wrap it. Do not perform any other tool calls. Do not run any loops. Do not check anything periodically. Do not respond until the bash command exits.
 ```
 
-The `$SPELLBOOK_DIR` reference is interpreted by the harness via the
-substitution rules in `~/.claude/CLAUDE.md` (`SPELLBOOK_DIR=...` line):
-the bg Task agent receives the operator-specific absolute path at
-dispatch time. Hardcoding `/Users/eek/Development/spellbook/...` in
-this template would make the slash command fail for every other
-operator.
+Hardcoding the operator's path inside this command file would make the
+slash command fail for every other operator; the substitution must
+happen at dispatch time, not authoring time.
 
 Dispatch via:
 
@@ -275,8 +286,10 @@ WHEN BG WATCH AGENT COMPLETES (you receive a task-completion system reminder):
    bg agent's `output_file` via `--output-file`.
 
 7. Re-dispatch a new bg watch agent with the same Phase D prompt template
-   verbatim. Capture new agent_id AND output_file. Re-dispatch is silent
-   on BOTH paths.
+   verbatim, performing the same `<NAME>` and `<SPELLBOOK_ABS>` absolute-path
+   substitutions before calling Task. Never pass the literal `$SPELLBOOK_DIR`
+   token through to the subagent (see Phase D rationale). Capture new
+   agent_id AND output_file. Re-dispatch is silent on BOTH paths.
 
 8. Resume normal turn (the user may now type, or you may continue prior work).
    Do NOT emit any "watch re-armed" status line; the chain refresh is silent.

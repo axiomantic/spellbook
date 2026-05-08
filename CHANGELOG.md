@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.64.1] - 2026-05-08
+
+### Fixed
+
+- **Agent2Agent watch-chain Phase D dispatch.** The bg watch agent
+  failed on its first cycle because the Phase D prompt template
+  embedded the literal token `$SPELLBOOK_DIR` in the Bash command. The
+  `~/.claude/CLAUDE.md` substitution rule is an LLM-side reading
+  convention and is NOT applied to dispatched subagent prompts; the bg
+  Task agent's shell expanded `$SPELLBOOK_DIR` against an unset env var
+  (empty), producing `python3 /skills/agent2agent/...` and an
+  immediate failure. `commands/a2a.md` Phase D now uses an explicit
+  `<SPELLBOOK_ABS>` placeholder (parallel to `<NAME>`) and the
+  orchestrator is required to substitute the absolute path before
+  calling Task. Phase F step 7 (re-dispatch) carries the same
+  requirement.
+
 ## [0.64.0] - 2026-05-08
 
 ### Added
