@@ -2027,7 +2027,7 @@ def _wl_tool_safety_sniff(
 
 
 # ---------------------------------------------------------------------------
-# agent2agent: surface inbox metadata for sessions bound via `listen <name>`
+# agent2agent: surface inbox metadata for sessions bound via `open <name>`
 # ---------------------------------------------------------------------------
 
 # Mirror of the helper's bus-dir resolution. Kept in sync with
@@ -2111,6 +2111,93 @@ def _agent2agent_notify_for_prompt(data: dict) -> str | None:
     return out if out else None
 
 
+def _bg_agent_alive(agent_id, state) -> bool:
+    """FAIL-SAFE-DEAD liveness probe of the bg watch-chain Task agent.
+
+    Shares the mtime+600s-window probe with
+    ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
+    op=``alive`` (T4); differs in return contract — this hook helper
+    returns a ``bool``, while the helper's CLI op returns exit codes
+    (0 alive, 1 dead, 2 state missing/malformed). Both are
+    fail-safe-DEAD: there is no fail-safe-alive branch on either side,
+    so any divergence in the shared probe is a bug. The agent is
+    considered ALIVE only when ALL of:
+
+      - ``agent_id`` is non-empty
+      - ``state`` is a dict containing ``output_file`` (the absolute path
+        the slash command captured at Task dispatch time)
+      - that path exists on disk
+      - its mtime is fresh (< 600.0 seconds ago)
+
+    Any failure of those preconditions returns ``False`` (DEAD). There is
+    no fail-safe-alive branch: a missing output_file, a stat error, or an
+    older-than-600s mtime are all treated as DEAD. This matches T4's exit
+    1 / 2 ``not alive`` semantics from ``cmd_open_state alive``.
+
+    The 600s threshold must EXCEED the 540s WATCH_RECYCLE budget. While
+    blocked on ``watch``, the bg agent emits no stdout, so its transcript
+    mtime does not advance during idle windows (validated by the A9
+    zero-idle-tokens manual e2e). A threshold smaller than 540s would
+    false-positive ``DEAD`` mid-idle. 600s gives a 60s grace margin for
+    the inter-cycle re-dispatch (Task agent exit → main loop reads marker
+    → spawns next bg agent → first transcript write).
+    """
+    if not agent_id:
+        return False
+    output_path = state.get("output_file") if isinstance(state, dict) else None
+    if not output_path:
+        return False
+    op = Path(output_path)
+    if not op.exists():
+        return False
+    try:
+        age = time.time() - op.stat().st_mtime
+    except OSError:
+        return False
+    return age < 600.0
+
+
+def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
+    """SessionStart / UserPromptSubmit backstop: detect a dropped watch chain.
+
+    Returns a static-template re-arm hint string when the current session
+    has an open watch-chain record (``<bus>/.open/<sid>``) whose bg agent
+    is no longer alive (per ``_bg_agent_alive`` / T4). Returns ``None`` in
+    every other case (silent path: no state, alive agent, malformed JSON,
+    invalid bound name, etc.).
+
+    SECURITY: this function ONLY:
+      - reads JSON from ``.open/<sid>`` (a file written by THIS user's
+        slash command);
+      - stats the bg-agent transcript path captured in that JSON;
+      - emits a static template that includes the bound name (already
+        public to the operator).
+    NEVER calls ``read``, ``peek``, ``check``, or anything that could
+    surface message bodies. The transcript file is stat'd, NOT read.
+    """
+    session_id = data.get("session_id", "") or ""
+    if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+    bus = _a2a_bus_dir()
+    state_path = bus / ".open" / session_id
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(state, dict):
+        return None
+    name = state.get("name")
+    agent_id = state.get("agent_id")
+    if not name or not _A2A_NAME_RE.match(name):
+        return None
+    if _bg_agent_alive(agent_id, state):
+        return None
+    return (
+        f"[agent2agent] watch chain dropped (likely session compaction or "
+        f"process death). Run `/a2a open {name}` to re-arm the inbox watcher."
+    )
+
+
 def _handle_user_prompt_submit(data: dict) -> list[str]:
     """UserPromptSubmit handler: auto-inject memory context for prompts."""
     outputs: list[str] = []
@@ -2122,7 +2209,7 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
     except Exception as e:
         _log_hook_error("memory_recall_for_prompt", "UserPromptSubmit", e)
 
-    # agent2agent inbox metadata (only for sessions bound via `listen <name>`).
+    # agent2agent inbox metadata (only for sessions bound via `open <name>`).
     # Metadata-only by design: NEVER call read/peek/check from here.
     try:
         out = _agent2agent_notify_for_prompt(data)
@@ -2130,6 +2217,16 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
             outputs.append(out)
     except Exception as e:
         _log_hook_error("agent2agent_notify_for_prompt", "UserPromptSubmit", e)
+
+    # agent2agent orphaned-chain backstop: surface a re-arm hint when the
+    # bg watch agent for an open chain has died (compaction, process death).
+    # Metadata-only: reads `.open/<sid>` JSON + stats the transcript path.
+    try:
+        orphan_hint = _agent2agent_check_orphaned_chain(data)
+        if orphan_hint:
+            outputs.append(orphan_hint)
+    except Exception as e:
+        _log_hook_error("agent2agent_check_orphaned_chain", "UserPromptSubmit", e)
 
     # Pattern-based self-capture (Gap 4). Non-blocking, fail-open.
     try:
@@ -2198,22 +2295,58 @@ def _handle_pre_compact(data: dict) -> None:
 
 
 def _handle_session_start(data: dict) -> dict | None:
-    """Post-compaction recovery including stint stack restoration."""
+    """Post-compaction recovery + orphaned-watch-chain backstop.
+
+    The orphan check runs FIRST, BEFORE the ``source != "compact"`` early
+    return, so the re-arm hint surfaces on every SessionStart (cold start,
+    resume, compaction). The check depends only on ``session_id`` and the
+    presence of a ``<bus>/.open/<sid>`` record, NOT on the source kind.
+
+    Wiring (per design §6.1):
+      - Non-compact source + orphan: return a SessionStart payload whose
+        ``additionalContext`` is the orphan hint.
+      - Non-compact source + no orphan: return None (existing behavior
+        preserved).
+      - Compact source: build the existing recovery directive AS-IS,
+        then APPEND the orphan hint (separated by a blank line) when
+        present.
+    """
     source = data.get("source", "")
+
+    # Backstop runs unconditionally — orphan detection is independent of
+    # source. Fail-open: any unexpected exception is logged and the rest
+    # of SessionStart proceeds as if no orphan was detected.
+    try:
+        orphan_hint = _agent2agent_check_orphaned_chain(data)
+    except Exception as e:
+        _log_hook_error("agent2agent_check_orphaned_chain", "SessionStart", e)
+        orphan_hint = None
+
     if source != "compact":
+        if orphan_hint:
+            return {
+                "hookSpecificOutput": {
+                    "hookEventName": "SessionStart",
+                    "additionalContext": orphan_hint,
+                }
+            }
         return None
 
     project_path = data.get("cwd", "")
-    if not project_path:
-        return _fallback_directive()
+    ws = None
+    if project_path:
+        ws = _mcp_call("workflow_state_load", {
+            "project_path": project_path,
+            "max_age_hours": 24,
+        })
 
-    # Load workflow state
-    ws = _mcp_call("workflow_state_load", {
-        "project_path": project_path,
-        "max_age_hours": 24,
-    })
     if not ws or not ws.get("found"):
-        return _fallback_directive()
+        result = _fallback_directive()
+        if orphan_hint:
+            result["hookSpecificOutput"]["additionalContext"] += (
+                "\n\n" + orphan_hint
+            )
+        return result
 
     state = ws.get("state", {})
 
@@ -2235,6 +2368,11 @@ def _handle_session_start(data: dict) -> dict | None:
             bm = entry.get('behavioral_mode', '')
             bm_suffix = f" [MODE: {bm[:80]}]" if bm else ""
             directive += f"  {i+1}. {entry['name']} - {entry.get('purpose', '')}{bm_suffix}\n"
+
+    # Append orphan hint last so it remains visible alongside the recovery
+    # directive without being buried.
+    if orphan_hint:
+        directive += "\n\n" + orphan_hint
 
     return {
         "hookSpecificOutput": {
