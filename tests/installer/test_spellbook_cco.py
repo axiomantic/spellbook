@@ -247,6 +247,7 @@ def test_wrapper_tag_constant():
 # ===========================================================================
 
 
+@pytest.mark.posix_only
 def test_install_calls_git_clone(monkeypatch, tmp_path, isolated_wrapper):
     """The install path invokes ``git clone`` on the configured remote URL."""
     install_root = tmp_path / "clone"
@@ -334,6 +335,7 @@ def test_uninstall_dry_run_does_not_remove(monkeypatch, tmp_path):
     }
 
 
+@pytest.mark.posix_only
 def test_install_returns_dict_shape_on_success(monkeypatch, tmp_path, path_with_local_bin):
     """Full success path returns the orchestrator-locked dict shape."""
     install_root = tmp_path / "clone"
@@ -403,6 +405,7 @@ def test_uninstall_returns_dict_shape(tmp_path, monkeypatch):
 # ===========================================================================
 
 
+@pytest.mark.posix_only
 def test_install_clones_then_verifies_pin_against_fake_repo(
     fake_cco_fork_repo, monkeypatch, tmp_path, path_with_local_bin
 ):
@@ -450,6 +453,7 @@ def test_install_clones_then_verifies_pin_against_fake_repo(
     }
 
 
+@pytest.mark.posix_only
 def test_install_rolls_back_when_git_rev_parse_mismatch(
     fake_cco_fork_repo, monkeypatch, tmp_path, isolated_wrapper, capsys
 ):
@@ -481,6 +485,7 @@ def test_install_rolls_back_when_git_rev_parse_mismatch(
     assert "pin verification failed" in captured.err
 
 
+@pytest.mark.posix_only
 def test_install_rolls_back_when_version_parse_mismatch(
     fake_cco_fork_repo, monkeypatch, tmp_path, isolated_wrapper, capsys
 ):
@@ -537,6 +542,7 @@ def test_install_rolls_back_when_version_parse_mismatch(
     assert "WARNING" in captured.err
 
 
+@pytest.mark.posix_only
 def test_install_idempotent_on_second_run(
     fake_cco_fork_repo, monkeypatch, tmp_path, path_with_local_bin
 ):
@@ -573,6 +579,7 @@ def test_install_idempotent_on_second_run(
     assert wrapper_path.stat().st_mtime_ns == first_mtime
 
 
+@pytest.mark.posix_only
 def test_install_overwrites_untagged_wrapper_with_warning(
     fake_cco_fork_repo, monkeypatch, tmp_path, path_with_local_bin, capsys
 ):
@@ -604,6 +611,7 @@ def test_install_overwrites_untagged_wrapper_with_warning(
     assert str(wrapper_path) in captured.err
 
 
+@pytest.mark.posix_only
 def test_install_warns_when_local_bin_not_on_path(
     fake_cco_fork_repo, monkeypatch, tmp_path, isolated_wrapper, capsys
 ):
@@ -640,6 +648,7 @@ def test_install_warns_when_local_bin_not_on_path(
     assert 'export PATH="$HOME/.local/bin:$PATH"' in captured.err
 
 
+@pytest.mark.posix_only
 def test_use_vanilla_cco_env_routes_to_skipped(monkeypatch, tmp_path, isolated_wrapper, capsys):
     """``SPELLBOOK_USE_VANILLA_CCO=1`` returns the rollback shape AND emits
     a stderr WARNING. Does NOT clone, does NOT touch the wrapper."""
@@ -673,6 +682,7 @@ def test_use_vanilla_cco_env_routes_to_skipped(monkeypatch, tmp_path, isolated_w
     assert "SPELLBOOK_USE_VANILLA_CCO=1" in captured.err
 
 
+@pytest.mark.posix_only
 def test_install_succeeds_with_SKIP_FORK_PIN_at_wrong_sha(
     fake_cco_fork_repo, monkeypatch, tmp_path, path_with_local_bin, capsys
 ):
@@ -834,6 +844,7 @@ def test_uninstall_aggregation_untagged_wrapper_with_managed_clone(monkeypatch, 
 # ===========================================================================
 
 
+@pytest.mark.posix_only
 def test_real_install_smoke_against_fake_fork_repo(
     fake_cco_fork_repo, monkeypatch, tmp_path, path_with_local_bin
 ):
