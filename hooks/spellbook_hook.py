@@ -388,7 +388,7 @@ def _gate_bash(data: dict) -> None:
       a permission prompt.
     - ``"deny"``: TIER-DENY (T3), CRITICAL bashlex/exfil findings, or
       any mix containing a non-ask finding; exit 2 with a structured
-      error on stdout. Error messages never include blocked content
+      error on stderr. Error messages never include blocked content
       (anti-reflection).
 
     If the security module cannot be imported, blocks (fail-closed).
