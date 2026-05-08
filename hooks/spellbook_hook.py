@@ -359,7 +359,11 @@ def _handle_check_result(result: dict) -> None:
     if result.get("verdict") == "ask":
         _emit_ask_and_exit(result["findings"])
     if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
+        reasons = "; ".join(
+            f["message"]
+            for f in result["findings"]
+            if f.get("severity") != "LOW"
+        )
         print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
         sys.exit(2)
 
