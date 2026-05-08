@@ -2114,9 +2114,14 @@ def _agent2agent_notify_for_prompt(data: dict) -> str | None:
 def _bg_agent_alive(agent_id, state) -> bool:
     """FAIL-SAFE-DEAD liveness probe of the bg watch-chain Task agent.
 
-    Mirrors ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
-    op=``alive`` byte-for-byte (T4) so the slash command and the hook
-    agree on liveness. The agent is considered ALIVE only when ALL of:
+    Shares the mtime+90s-window probe with
+    ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
+    op=``alive`` (T4); differs in return contract — this hook helper
+    returns a ``bool``, while the helper's CLI op returns exit codes
+    (0 alive, 1 dead, 2 state missing/malformed). Both are
+    fail-safe-DEAD: there is no fail-safe-alive branch on either side,
+    so any divergence in the shared probe is a bug. The agent is
+    considered ALIVE only when ALL of:
 
       - ``agent_id`` is non-empty
       - ``state`` is a dict containing ``output_file`` (the absolute path

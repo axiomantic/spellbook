@@ -369,8 +369,9 @@ def test_hook_helper_constants_in_sync():
 #
 # These tests exercise the hook-side backstop that surfaces a re-arm hint
 # when the bg watch agent for an `open <name>` session has died. The
-# liveness probe is FAIL-SAFE-DEAD and mirrors the helper's
-# `cmd__open_state alive` semantics byte-for-byte (see T4).
+# liveness probe is FAIL-SAFE-DEAD and shares the mtime+90s-window probe
+# with the helper's `cmd__open_state alive` (see T4); the two sides
+# differ only in return contract (bool here, exit codes 0/1/2 there).
 
 
 def _seed_open_state(
@@ -442,6 +443,31 @@ class TestBgAgentAlive:
     def test_returns_false_when_state_missing_output_file(self, tmp_path):
         state = {"agent_id": "agent-x"}  # no output_file key
         assert spellbook_hook._bg_agent_alive("agent-x", state) is False
+
+    def test_docstring_does_not_overclaim_byte_for_byte_parity(self):
+        """T8 docstring reconciliation: hook returns bool, helper returns exit codes.
+
+        Pre-T8 the docstring claimed `_bg_agent_alive` mirrored
+        ``cmd_open_state`` op=alive **byte-for-byte**, but the two
+        differ in their return contract (the hook returns ``bool``;
+        the helper returns exit codes 0/1/2). The docstring must
+        honestly describe what is shared (the mtime+90s-window probe)
+        and what differs (return type, fail-safe orientation),
+        without the misleading "byte-for-byte" claim.
+        """
+        doc = spellbook_hook._bg_agent_alive.__doc__ or ""
+        assert "byte-for-byte" not in doc, (
+            "T8 reconciliation: `_bg_agent_alive` and `cmd_open_state alive` "
+            "share the mtime+90s-window probe but differ in return contract "
+            "(bool vs exit code). The docstring must not claim "
+            "byte-for-byte parity. Drop the phrase or qualify it."
+        )
+        # The docstring still has to call out the FAIL-SAFE-DEAD orientation
+        # so a future reader knows neither side fails-safe-alive.
+        assert "FAIL-SAFE-DEAD" in doc or "fail-safe-DEAD" in doc, (
+            "Docstring must continue to call out FAIL-SAFE-DEAD orientation "
+            "(no fail-safe-alive branch)."
+        )
 
 
 class TestOrphanedChainCheck:

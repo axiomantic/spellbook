@@ -794,9 +794,13 @@ def cmd_open_state(args: argparse.Namespace) -> int:
             exit 1 → output_file missing OR mtime >= 90s ago
             Stdout is empty on every exit (machine-checkable via ``$?`` only).
 
-    Mirrors ``hooks/spellbook_hook.py::_bg_agent_alive`` byte-for-byte so the
-    slash command and the hook agree on liveness. NOT advertised in _USAGE
-    (slash-internal: leading underscore on the subcommand name).
+    Shares the mtime+90s-window probe with
+    ``hooks/spellbook_hook.py::_bg_agent_alive`` (both fail-safe-DEAD).
+    The two sides differ in return contract — this CLI op uses exit
+    codes 0/1/2 (machine-checkable via ``$?``) while the hook helper
+    returns a ``bool`` — but the underlying liveness criterion is
+    identical. NOT advertised in _USAGE (slash-internal: leading
+    underscore on the subcommand name).
     """
     op = args.op
     sid = args.session_id

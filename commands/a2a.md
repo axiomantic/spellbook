@@ -155,12 +155,19 @@ of the Bash command line.
 ```
 Run exactly this one Bash command and wait for it to exit:
 
-    python3 /Users/eek/Development/spellbook/skills/agent2agent/scripts/agent2agent.py watch <NAME>
+    python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py watch <NAME>
 
 Set the Bash timeout parameter to 600000 milliseconds.
 
 When it exits, respond with ONLY the last non-empty line of its stdout. Do not interpret, summarize, or wrap it. Do not perform any other tool calls. Do not run any loops. Do not check anything periodically. Do not respond until the bash command exits.
 ```
+
+The `$SPELLBOOK_DIR` reference is interpreted by the harness via the
+substitution rules in `~/.claude/CLAUDE.md` (`SPELLBOOK_DIR=...` line):
+the bg Task agent receives the operator-specific absolute path at
+dispatch time. Hardcoding `/Users/eek/Development/spellbook/...` in
+this template would make the slash command fail for every other
+operator.
 
 Dispatch via:
 

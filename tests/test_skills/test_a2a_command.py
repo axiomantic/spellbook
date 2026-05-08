@@ -46,10 +46,19 @@ COMMAND_PATH = (
 # elevates it to a MUST and inserts it between the bash command line and
 # the "When it exits" sentence. Reproduce that ordering exactly so a
 # drift in either side fails the test.
+#
+# The script path uses ``$SPELLBOOK_DIR`` rather than a hardcoded
+# developer-machine absolute path so the slash command is portable across
+# operators. Per ``~/.claude/CLAUDE.md`` the harness substitutes
+# ``$SPELLBOOK_DIR`` (and ``$SPELLBOOK_CONFIG_DIR``) when interpreting
+# paths in spellbook artifacts, so the bg Task agent receives the
+# operator-specific absolute path at dispatch time. Hardcoding
+# ``/Users/eek/Development/spellbook/...`` worked on the author's box
+# but breaks for every other operator — T8 reconciliation.
 PHASE_D_PROMPT_VERBATIM = (
     "Run exactly this one Bash command and wait for it to exit:\n"
     "\n"
-    "    python3 /Users/eek/Development/spellbook/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
+    "    python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
     "\n"
     "Set the Bash timeout parameter to 600000 milliseconds.\n"
     "\n"
@@ -351,4 +360,101 @@ def test_a2a_phase_f_invokes_drain_helper() -> None:
     assert re.search(r"\bdrain\b", body), (
         "Phase F PENDING_BATCH path must invoke `drain <name> <batch-id>` "
         "per design §5.3 Phase F step 5"
+    )
+
+
+# ---------------------------------------------------------------------------
+# T8: SKILL.md architecture sections — proves prose pass landed
+# ---------------------------------------------------------------------------
+
+
+SKILL_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "skills"
+    / "agent2agent"
+    / "SKILL.md"
+)
+
+
+def test_skill_md_documents_watch_chain() -> None:
+    """SKILL.md must document the watch-chain architecture per impl plan §Task 8.
+
+    The pre-T8 SKILL.md only covered the hook-driven UserPromptSubmit
+    notify path; T8 adds an architecture section that explains the new
+    watch chain (T3a/T3b/T4/T5/T6 implementation), the open-state record
+    at ``<bus>/.open/<sid>``, the ``WATCH_RECYCLE`` heartbeat, the
+    fswatch + polling backstop, the silent-idle cost model, and the
+    ``/a2a`` slash command surface.
+
+    These markers are the load-bearing terms a reader needs to find when
+    diagnosing a chain issue or onboarding to the architecture. Each
+    must appear in SKILL.md; their absence is a regression of the prose
+    pass.
+    """
+    body = SKILL_PATH.read_text(encoding="utf-8")
+    required_markers = [
+        # Watch-chain architecture (impl plan §Task 8 Step 8.3)
+        "watch chain",
+        "WATCH_RECYCLE",
+        "PENDING_BATCH",
+        "pending/",
+        "open-state",
+        "fswatch",
+        # Compaction limitation (impl plan §Task 8 Step 8.3 para 3)
+        "Compaction",
+        # Silent-idle cost model (impl plan §Task 8 Step 8.4)
+        "Silent-Idle",
+        # Slash command surface (impl plan §Task 8 Step 8.5)
+        "/a2a open",
+        "/a2a close",
+        # Protocol-internal subcommands (impl plan §Task 8 Step 8.5)
+        "watch",
+        "drain",
+    ]
+    missing = [m for m in required_markers if m not in body]
+    assert not missing, (
+        "SKILL.md must document the watch-chain architecture per impl plan "
+        f"§Task 8; missing markers: {missing!r}"
+    )
+
+
+def test_skill_md_silent_idle_cost_model_cites_token_numbers() -> None:
+    """SKILL.md Silent-Idle section must cite the design §0.5 cost numbers.
+
+    Per impl plan §Task 8 Step 8.4: the Silent-Idle Cost Model
+    subsection embeds the per-cycle, per-hour, and per-day idle token
+    estimates from design §0.5. These numbers gate the operator's
+    decision to ``/a2a close`` for overnight idle. Drifting away from
+    them silently is a regression.
+    """
+    body = SKILL_PATH.read_text(encoding="utf-8")
+    # Per-hour idle range (~10–15k tokens) is the most decision-relevant
+    # number; per-day (~240–400k) is the headline that drives the
+    # `/a2a close` recommendation. Both must be present.
+    required_phrases = [
+        "Per-hour",  # table row label per design §0.5 phrasing
+        "Per-day",   # table row label per design §0.5 phrasing
+        "/a2a close",
+    ]
+    missing = [p for p in required_phrases if p not in body]
+    assert not missing, (
+        "SKILL.md Silent-Idle Cost Model subsection must cite per-hour/"
+        "per-day idle estimates and recommend `/a2a close` for true "
+        f"silence per impl plan §Task 8 Step 8.4; missing: {missing!r}"
+    )
+
+
+def test_skill_md_protocol_internal_subcommands_marked() -> None:
+    """`watch` and `drain` rows in the Quick Reference must be marked protocol-internal.
+
+    Per impl plan §Task 8 Step 8.5: the Quick Reference table gains
+    `watch` and `drain` rows annotated as ``Protocol-internal — invoked
+    by `/a2a open` watch chain. Users should not run these directly``.
+    Without this annotation, operators may invoke ``watch`` directly
+    and break the lockfile invariant.
+    """
+    body = SKILL_PATH.read_text(encoding="utf-8")
+    assert "Protocol-internal" in body, (
+        "SKILL.md Quick Reference must annotate `watch` and `drain` "
+        "rows as `Protocol-internal` per impl plan §Task 8 Step 8.5"
     )
