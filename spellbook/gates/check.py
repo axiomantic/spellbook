@@ -298,7 +298,8 @@ def main() -> None:
         {"tool_name": str, "tool_input": dict}
 
     Exits 0 if safe, 2 if blocked. On block, prints a JSON error
-    object to stdout:
+    object to stderr (per Claude Code's hook protocol — exit 2 with
+    reason on stderr so the harness surfaces it to the user):
         {"error": "Security check failed: <reason>"}
 
     This keeps the opencode plugin and gemini policy toml entry
@@ -310,6 +311,7 @@ def main() -> None:
     except (json.JSONDecodeError, ValueError):
         print(
             json.dumps({"error": "Security check failed: invalid JSON input"}),
+            file=sys.stderr,
             flush=True,
         )
         sys.exit(1)
@@ -322,6 +324,7 @@ def main() -> None:
         reasons = "; ".join(f["message"] for f in result["findings"])
         print(
             json.dumps({"error": f"Security check failed: {reasons}"}),
+            file=sys.stderr,
             flush=True,
         )
         sys.exit(2)
