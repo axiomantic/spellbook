@@ -348,6 +348,22 @@ def _validate_tool_use_id(tool_use_id: str) -> bool:
 # Handlers: Security gates (FAIL-CLOSED)
 # ---------------------------------------------------------------------------
 
+def _handle_check_result(result: dict) -> None:
+    """Process a ``check_tool_input`` result, exiting if the gate denies or asks.
+
+    On ``verdict == "ask"``: delegates to :func:`_emit_ask_and_exit` (which
+    exits 0 with a ``permissionDecision`` JSON on stdout).
+    On ``safe == False``: prints the error JSON to stderr and exits 2 (block).
+    Otherwise returns silently (allow).
+    """
+    if result.get("verdict") == "ask":
+        _emit_ask_and_exit(result["findings"])
+    if not result["safe"]:
+        reasons = "; ".join(f["message"] for f in result["findings"])
+        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
+        sys.exit(2)
+
+
 def _emit_ask_and_exit(findings: list[dict]) -> None:
     """Emit Claude Code's ``permissionDecision: "ask"`` JSON and exit 0.
 
@@ -406,12 +422,7 @@ def _gate_bash(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("Bash", tool_input)
-    if result.get("verdict") == "ask":
-        _emit_ask_and_exit(result["findings"])
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 def _gate_spawn(data: dict) -> None:
@@ -433,12 +444,7 @@ def _gate_spawn(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("spawn_claude_session", tool_input)
-    if result.get("verdict") == "ask":
-        _emit_ask_and_exit(result["findings"])
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 def _gate_state_sanitize(data: dict) -> None:
@@ -460,12 +466,7 @@ def _gate_state_sanitize(data: dict) -> None:
         sys.exit(2)
 
     result = check_tool_input("workflow_state_save", tool_input)
-    if result.get("verdict") == "ask":
-        _emit_ask_and_exit(result["findings"])
-    if not result["safe"]:
-        reasons = "; ".join(f["message"] for f in result["findings"])
-        print(json.dumps({"error": f"Security check failed: {reasons}"}), file=sys.stderr)
-        sys.exit(2)
+    _handle_check_result(result)
 
 
 # ---------------------------------------------------------------------------

@@ -482,6 +482,40 @@ class TestCompoundDenyOptIn:
             f"expected exactly one BASH-PARSER-COMPOUND finding; got {findings!r}"
         )
 
+    def test_pipeline_op_text_is_pipe(self, monkeypatch):
+        """Pipeline nodes use ``kind == "pipe"``; the finding message must
+        reflect the actual pipe operator instead of the fallback default."""
+        from spellbook.gates.bash_parser import parse_and_check
+
+        monkeypatch.delenv("SPELLBOOK_BASH_DENY_COMPOUND", raising=False)
+        findings = parse_and_check("ls | head | wc -l", security_mode="paranoid")
+        compound = [f for f in findings if f["rule_id"] == "BASH-PARSER-COMPOUND"]
+        assert compound, f"expected at least one BASH-PARSER-COMPOUND; got {findings!r}"
+        # The pipeline finding should mention the pipe operator. Other
+        # finding kinds (e.g., from inner nodes) may exist, but at least one
+        # COMPOUND finding must surface ``|``.
+        pipe_msgs = [f["message"] for f in compound if "(|)" in f["message"]]
+        assert pipe_msgs, (
+            f"expected a COMPOUND finding with op text `|`; got {compound!r}"
+        )
+
+    def test_duplicate_operators_are_deduplicated(self, monkeypatch):
+        """Repeated operators (``a && b && c``) must not produce a duplicated
+        op text like ``&&, &&`` in the finding message."""
+        from spellbook.gates.bash_parser import parse_and_check
+
+        monkeypatch.delenv("SPELLBOOK_BASH_DENY_COMPOUND", raising=False)
+        findings = parse_and_check("a && b && c", security_mode="paranoid")
+        compound = [f for f in findings if f["rule_id"] == "BASH-PARSER-COMPOUND"]
+        assert compound, f"expected at least one BASH-PARSER-COMPOUND; got {findings!r}"
+        # The list-node finding for ``a && b && c`` should report ``&&`` once.
+        and_msgs = [f["message"] for f in compound if "&&" in f["message"]]
+        assert and_msgs, f"expected a COMPOUND finding mentioning `&&`; got {compound!r}"
+        for msg in and_msgs:
+            assert "&&, &&" not in msg, (
+                f"operator text was not deduplicated: {msg!r}"
+            )
+
     def test_control_flow_denied_under_paranoid_mode(self, monkeypatch):
         from spellbook.gates.bash_parser import parse_and_check
 

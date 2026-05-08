@@ -359,15 +359,18 @@ _KNOWN_NODE_KINDS: frozenset[str] = frozenset(
 # ---------------------------------------------------------------------------
 
 
-def parse_and_check(command: str, security_mode: str = "paranoid") -> list[dict]:
+def parse_and_check(command: str, security_mode: str = "standard") -> list[dict]:
     """Parse ``command`` with bashlex and emit deny findings.
 
     Args:
         command: The raw Bash tool invocation string.
-        security_mode: ``"standard"`` or ``"paranoid"`` (matches
-            :mod:`spellbook.gates.rules`). The bashlex parser treats both
-            equally — every category is paranoid by design — but the
-            argument is preserved for symmetry with ``check_patterns``.
+        security_mode: ``"standard"`` (default) or ``"paranoid"`` (matches
+            :mod:`spellbook.gates.rules`). ``"standard"`` matches the
+            post-0.63.2 public default — compound commands are allowed and
+            the per-segment classifiers do the work. ``"paranoid"``
+            re-enables ``BASH-PARSER-COMPOUND`` for compound and
+            control-flow constructs (alternatively, set
+            ``SPELLBOOK_BASH_DENY_COMPOUND=1``).
 
     Returns:
         List of finding dicts. Empty list = no parser objection.
@@ -580,11 +583,11 @@ def _classify_compound(node: object, security_mode: str) -> list[dict]:
         return []
     parts = getattr(node, "parts", ()) or ()
     operators = [
-        getattr(p, "op", None)
+        getattr(p, "op", "|") if getattr(p, "kind", None) == "pipe" else getattr(p, "op", None)
         for p in parts
-        if getattr(p, "kind", None) == "operator"
+        if getattr(p, "kind", None) in {"operator", "pipe"}
     ]
-    op_text = ", ".join(op for op in operators if op) or "|"
+    op_text = ", ".join(dict.fromkeys(op for op in operators if op)) or "|"
     return [
         _finding(
             "BASH-PARSER-COMPOUND",
