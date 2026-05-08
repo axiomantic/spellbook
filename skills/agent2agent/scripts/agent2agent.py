@@ -762,6 +762,119 @@ def cmd_watch(args: argparse.Namespace) -> int:
                     pass
 
 
+def cmd_open_state(args: argparse.Namespace) -> int:
+    """Slash-command-internal: persist/probe the open-state record for a
+    watch-chain session. State lives at ``<bus>/.open/<session-id>``.
+
+    Operations:
+      - ``write <sid> <name> <agent-id> --output-file <abs-path>``
+            Atomically write JSON ``{name, agent_id, started_at, output_file}``
+            via ``tempfile.NamedTemporaryFile`` + ``os.replace``.
+      - ``clear <sid>`` -- ``os.unlink`` the state file; idempotent on missing.
+      - ``read  <sid>`` -- print raw JSON or empty string when absent (exit 0).
+      - ``alive <sid>`` -- FAIL-SAFE-DEAD probe of the bg agent's transcript:
+            exit 2 → state file missing or malformed
+            exit 0 → output_file exists AND mtime < 90s ago
+            exit 1 → output_file missing OR mtime >= 90s ago
+            Stdout is empty on every exit (machine-checkable via ``$?`` only).
+
+    Mirrors ``hooks/spellbook_hook.py::_bg_agent_alive`` byte-for-byte so the
+    slash command and the hook agree on liveness. NOT advertised in _USAGE
+    (slash-internal: leading underscore on the subcommand name).
+    """
+    op = args.op
+    sid = args.session_id
+    if not sid or not _SESSION_ID_RE.match(sid):
+        print(f"agent2agent: invalid session-id: {sid!r}", file=sys.stderr)
+        return 2
+
+    bus = bus_dir()
+    state_dir = bus / ".open"
+    target = state_dir / sid
+
+    if op == "write":
+        if not args.name or not args.agent_id:
+            print(
+                "agent2agent: write requires <name> <agent-id>",
+                file=sys.stderr,
+            )
+            return 2
+        if not _NAME_RE.match(args.name):
+            print(
+                f"agent2agent: invalid name {args.name!r}: must match {_NAME_RE.pattern}",
+                file=sys.stderr,
+            )
+            return 2
+        if not args.output_file:
+            print(
+                "agent2agent: write requires --output-file <abs-path>",
+                file=sys.stderr,
+            )
+            return 2
+        if not os.path.isabs(args.output_file):
+            print(
+                f"agent2agent: --output-file must be absolute: {args.output_file}",
+                file=sys.stderr,
+            )
+            return 2
+        state_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "name": args.name,
+            "agent_id": args.agent_id,
+            "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "output_file": args.output_file,
+        }
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            dir=str(state_dir),
+            prefix=".tmp-open-",
+            suffix=".json",
+            delete=False,
+            encoding="utf-8",
+        ) as tf:
+            json.dump(payload, tf, ensure_ascii=False, separators=(",", ":"))
+            tmp_path = tf.name
+        os.replace(tmp_path, target)
+        return 0
+
+    if op == "clear":
+        try:
+            os.unlink(target)
+        except FileNotFoundError:
+            pass
+        return 0
+
+    if op == "read":
+        try:
+            print(target.read_text(encoding="utf-8"), end="")
+        except FileNotFoundError:
+            pass
+        return 0
+
+    if op == "alive":
+        try:
+            state = json.loads(target.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return 2
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            return 2
+        agent_id = state.get("agent_id") if isinstance(state, dict) else None
+        output_file = state.get("output_file") if isinstance(state, dict) else None
+        if not agent_id or not output_file:
+            return 1
+        op_path = Path(output_file)
+        if not op_path.exists():
+            return 1
+        try:
+            age = time.time() - op_path.stat().st_mtime
+        except OSError:
+            return 1
+        return 0 if age < 90.0 else 1
+
+    print(f"agent2agent: unknown op: {op}", file=sys.stderr)
+    return 2
+
+
 def cmd_help(_args: argparse.Namespace) -> int:
     print(_USAGE)
     return 0
@@ -878,6 +991,22 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_watch.add_argument("--max-batch", dest="max_batch", type=int, default=50)
     sp_watch.add_argument("--max-elapsed", dest="max_elapsed", type=float, default=540.0)
     sp_watch.set_defaults(func=cmd_watch)
+
+    # Slash-command-internal: persist/probe the watch-chain open-state record.
+    # Leading underscore in the subcommand name marks it as not-for-direct-use;
+    # intentionally NOT advertised in _USAGE.
+    sp_open_state = sub.add_parser("_open_state", add_help=False)
+    sp_open_state.add_argument("op", choices=["write", "clear", "read", "alive"])
+    sp_open_state.add_argument("session_id")
+    sp_open_state.add_argument("name", nargs="?", default=None)
+    sp_open_state.add_argument("agent_id", nargs="?", default=None)
+    sp_open_state.add_argument(
+        "--output-file",
+        dest="output_file",
+        default=None,
+        help="Absolute path to bg Task agent's transcript file (write only).",
+    )
+    sp_open_state.set_defaults(func=cmd_open_state)
 
     for alias in ("help", "-h", "--help"):
         sp_help = sub.add_parser(alias, add_help=False)

@@ -30,6 +30,7 @@ import sys
 import tempfile
 import time
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -1192,3 +1193,208 @@ def test_watch_caps_batch_at_max_batch(tmp_path):
     assert all_seen == expected, (
         f"messages lost; expected={expected!r} actual={all_seen!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# _open_state: slash-command-internal write/clear/read/alive (T4)
+#
+# Per impl plan §"Task 4" and design §3.5:
+#   - State file lives at <bus>/.open/<session-id> (one record per session,
+#     not per name; a session opens at most one chain at a time).
+#   - JSON payload: {name, agent_id, started_at (UTC ISO8601), output_file}.
+#   - `write` requires absolute --output-file. `clear` is idempotent.
+#   - `read` prints raw JSON or empty string when absent (exit 0).
+#   - `alive`:
+#         exit 2 → state file missing or malformed (FAIL-SAFE-DEAD)
+#         exit 0 → transcript exists AND mtime < 90s old
+#         exit 1 → transcript missing OR mtime ≥ 90s old
+#     Stdout is empty on every alive exit (machine-checkable via $? only).
+# ---------------------------------------------------------------------------
+
+
+def _open_state_path(bus: Path, session_id: str) -> Path:
+    return bus / ".open" / session_id
+
+
+def test_open_state_write_atomic(a2a, tmp_path):
+    """write creates .open/<sid> with the expected JSON payload."""
+    transcript = tmp_path / "fake-transcript.output"
+    transcript.write_text("ignored body", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-foo")
+    assert state_file.is_file()
+
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+    # started_at is dynamic (clock); construct expected from observed value
+    # after parsing it as UTC ISO8601 to round-trip the contract.
+    started_at = payload.get("started_at", "")
+    parsed = datetime.fromisoformat(started_at)
+    assert parsed.tzinfo is not None and parsed.utcoffset() == timedelta(0), (
+        f"started_at must be UTC ISO8601, got {started_at!r}"
+    )
+
+    expected = {
+        "name": "alice",
+        "agent_id": "agent-xyz",
+        "started_at": started_at,
+        "output_file": str(transcript),
+    }
+    assert payload == expected
+
+
+def test_open_state_write_requires_output_file(a2a):
+    """Missing --output-file fails with exit 2 + stderr mentioning the flag."""
+    rc, _, stderr = _run(
+        a2a, "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+    )
+    assert rc == 2
+    assert "--output-file" in stderr
+
+
+def test_open_state_write_rejects_relative_output_file(a2a):
+    """Relative --output-file path fails with exit 2 + 'must be absolute'."""
+    rc, _, stderr = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", "rel/path.output",
+    )
+    assert rc == 2
+    assert "must be absolute" in stderr
+
+
+def test_open_state_clear_idempotent(a2a, tmp_path):
+    """clear is exit-0 when state absent; removes file when present; idempotent."""
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-foo")
+
+    # Phase 1: clear with no state file present → exit 0, no error.
+    rc, _, stderr = _run(a2a, "_open_state", "clear", "sess-foo")
+    assert rc == 0
+    assert stderr == ""
+    assert not state_file.exists()
+
+    # Phase 2: write then clear → file removed.
+    transcript = tmp_path / "t.output"
+    transcript.write_text("x", encoding="utf-8")
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+    assert state_file.is_file()
+
+    rc, _, stderr = _run(a2a, "_open_state", "clear", "sess-foo")
+    assert rc == 0
+    assert stderr == ""
+    assert not state_file.exists()
+
+    # Phase 3: clear again → still exit 0 (idempotent).
+    rc, _, stderr = _run(a2a, "_open_state", "clear", "sess-foo")
+    assert rc == 0
+    assert stderr == ""
+    assert not state_file.exists()
+
+
+def test_open_state_read_missing(a2a, tmp_path):
+    """read with no state file: exit 0, stdout empty. With state: exact JSON."""
+    # Missing state.
+    rc, stdout, stderr = _run(a2a, "_open_state", "read", "sess-foo")
+    assert rc == 0
+    assert stdout == ""
+    assert stderr == ""
+
+    # Write state, then read returns the exact JSON contents.
+    transcript = tmp_path / "t.output"
+    transcript.write_text("x", encoding="utf-8")
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+
+    bus = a2a.bus_dir()
+    on_disk = _open_state_path(bus, "sess-foo").read_text(encoding="utf-8")
+
+    rc, stdout, stderr = _run(a2a, "_open_state", "read", "sess-foo")
+    assert rc == 0
+    assert stdout == on_disk
+    assert stderr == ""
+
+
+def test_open_state_alive_missing_returns_2(a2a):
+    """alive with no state file: FAIL-SAFE-DEAD via exit 2, empty stdout."""
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 2
+    assert stdout == ""
+
+
+def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
+    """alive: state present + transcript mtime < 90s ago → exit 0."""
+    transcript = tmp_path / "fresh.output"
+    transcript.write_text("x", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+
+    # Fresh mtime (now). os.utime to be explicit; default write was already fresh.
+    now = time.time()
+    os.utime(str(transcript), (now, now))
+
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 0
+    assert stdout == ""
+
+
+def test_open_state_alive_stale_transcript_returns_1(a2a, tmp_path):
+    """alive: state present + transcript mtime ≥ 90s ago → exit 1."""
+    transcript = tmp_path / "stale.output"
+    transcript.write_text("x", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+
+    # Force mtime to ~120s in the past (well beyond the 90s threshold).
+    stale = time.time() - 120.0
+    os.utime(str(transcript), (stale, stale))
+
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 1
+    assert stdout == ""
+
+
+def test_open_state_alive_missing_transcript_returns_1(a2a, tmp_path):
+    """alive: state present but output_file path doesn't exist → exit 1."""
+    transcript = tmp_path / "exists-briefly.output"
+    transcript.write_text("x", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a,
+        "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        "--output-file", str(transcript),
+    )
+    assert rc == 0
+
+    # Remove transcript AFTER writing state, so state references a missing path.
+    transcript.unlink()
+
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 1
+    assert stdout == ""
