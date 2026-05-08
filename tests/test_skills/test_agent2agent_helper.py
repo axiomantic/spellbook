@@ -13,6 +13,7 @@ Coverage:
     * notify dedup of duplicate senders
     * invalid name rejection (path-traversal guard)
     * invalid session-id rejection
+    * watch: lockfile + RECOVER + WATCH_RECYCLE (subprocess-based)
 """
 from __future__ import annotations
 
@@ -20,7 +21,10 @@ import importlib.util
 import io
 import json
 import os
+import re
+import subprocess
 import sys
+import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -549,3 +553,206 @@ def test_drain_atomic_on_partial_failure(a2a, monkeypatch):
     final_processed = {p.name for p in processed.iterdir() if p.suffix == ".json"}
     assert final_processed == {"m1.json", "m2.json", "m3.json"}
     assert not pending_dir_x.exists()
+
+
+# ---------------------------------------------------------------------------
+# watch: lockfile + RECOVER + WATCH_RECYCLE (T3a)
+#
+# These tests use subprocess.Popen on the helper script directly, NOT the
+# in-process _run fixture. Reason: cmd_watch installs atexit handlers,
+# signal handlers, and an fcntl.flock on a fd that is tied to process
+# lifetime. Repeated in-process invocations leak state between tests.
+# Each subprocess gets a fresh process boundary.
+# ---------------------------------------------------------------------------
+
+
+def _seed_pending_for_watch(bus: Path, name: str, batch_id: str, count: int = 1) -> None:
+    """Seed N message files into pending/<batch_id>/ to force the RECOVER path."""
+    pending_batch = bus / name / "pending" / batch_id
+    pending_batch.mkdir(parents=True, exist_ok=True)
+    for i in range(count):
+        msg_id = f"msg-{batch_id}-{i:03d}"
+        (pending_batch / f"{msg_id}.json").write_text(
+            json.dumps({"id": msg_id, "from": "bob", "body": f"hi-{i}"}),
+            encoding="utf-8",
+        )
+
+
+def _watch_env(tmp_path: Path) -> dict:
+    """Subprocess env with AGENT2AGENT_DIR pinned to tmp_path."""
+    env = os.environ.copy()
+    env["AGENT2AGENT_DIR"] = str(tmp_path)
+    env.pop("CLAUDE_CODE_SESSION_ID", None)
+    return env
+
+
+def _open_inbox(tmp_path: Path, name: str) -> None:
+    """Run `open <name>` via subprocess to create the inbox dir tree."""
+    rc = subprocess.run(
+        [sys.executable, str(HELPER_PATH), "open", name],
+        env=_watch_env(tmp_path),
+        capture_output=True,
+        text=True,
+    ).returncode
+    assert rc == 0
+
+
+def _spawn_watch(tmp_path: Path, name: str, max_elapsed: float) -> subprocess.Popen:
+    """Spawn `watch <name> --max-elapsed=<n>` as a subprocess; returns Popen."""
+    return subprocess.Popen(
+        [
+            sys.executable, str(HELPER_PATH),
+            "watch", name, "--max-elapsed", str(max_elapsed),
+        ],
+        env=_watch_env(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+
+def _wait_proc(proc: subprocess.Popen, paranoia_timeout: float) -> tuple[int, str, str]:
+    """Wait for proc with paranoia-bound timeout. Returns (rc, stdout, stderr)."""
+    try:
+        stdout, stderr = proc.communicate(timeout=paranoia_timeout)
+    except subprocess.TimeoutExpired:
+        proc.terminate()
+        try:
+            stdout, stderr = proc.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            stdout, stderr = proc.communicate()
+        raise AssertionError(
+            f"watch subprocess did not exit within {paranoia_timeout}s "
+            f"(stdout={stdout!r} stderr={stderr!r})"
+        )
+    return proc.returncode, stdout, stderr
+
+
+def test_watch_recycles_when_no_message_arrives(tmp_path):
+    """Empty inbox + empty pending: budget-only loop exits with WATCH_RECYCLE."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=2.0)
+    rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=2.0 + 5)
+    assert rc == 0, f"stderr={stderr!r}"
+    assert re.match(r"^WATCH_RECYCLE elapsed=2s$", stdout.strip()), (
+        f"stdout={stdout!r}"
+    )
+    # Lockfile released on exit.
+    assert not (tmp_path / "alice" / "inbox" / ".watcher.lock").exists()
+
+
+def test_watch_recovers_pending_on_entry(tmp_path):
+    """Pre-existing pending/<batch>/ short-circuits idle wait; emits PENDING_BATCH."""
+    _open_inbox(tmp_path, "alice")
+    _seed_pending_for_watch(tmp_path, "alice", "batch-foo", count=1)
+
+    t0 = time.monotonic()
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=10.0)
+    rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0)
+    elapsed = time.monotonic() - t0
+
+    assert rc == 0, f"stderr={stderr!r}"
+    assert stdout.strip() == "PENDING_BATCH batch-foo count=1"
+    # RECOVER path must NOT wait for the budget; should exit promptly.
+    assert elapsed < 3.0, (
+        f"watch took {elapsed:.2f}s; RECOVER path must exit promptly without idling"
+    )
+
+
+def test_watch_recovers_oldest_batch_when_multiple_pending(tmp_path):
+    """Multiple pending batches: emit oldest (lex-sorted) batch id."""
+    _open_inbox(tmp_path, "alice")
+    _seed_pending_for_watch(tmp_path, "alice", "batch-a", count=2)
+    _seed_pending_for_watch(tmp_path, "alice", "batch-b", count=1)
+
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=10.0)
+    rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0)
+    assert rc == 0, f"stderr={stderr!r}"
+    assert stdout.strip() == "PENDING_BATCH batch-a count=2"
+
+
+def test_watch_inbox_gone_emits_marker(tmp_path):
+    """Inbox dir not created (no `open`): exit 1 with WATCH_INBOX_GONE."""
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=2.0)
+    rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=5.0)
+    assert rc == 1, f"stderr={stderr!r}"
+    assert stdout.strip() == "WATCH_INBOX_GONE"
+
+
+def test_watch_lockfile_released_on_exit(tmp_path):
+    """After watch's RECOVER exit, the lockfile must be unlinked."""
+    _open_inbox(tmp_path, "alice")
+    _seed_pending_for_watch(tmp_path, "alice", "batch-x", count=1)
+
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=10.0)
+    rc, stdout, _ = _wait_proc(proc, paranoia_timeout=5.0)
+    assert rc == 0
+    assert "PENDING_BATCH" in stdout
+
+    lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
+    assert not lockfile.exists(), "lockfile must be removed on watch exit"
+
+
+def test_watch_recycle_lockfile_released(tmp_path):
+    """After WATCH_RECYCLE exit, lockfile is released and a new watch can run."""
+    _open_inbox(tmp_path, "alice")
+
+    proc1 = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+    rc1, stdout1, stderr1 = _wait_proc(proc1, paranoia_timeout=1.0 + 5)
+    assert rc1 == 0, f"stderr={stderr1!r}"
+    assert stdout1.strip() == "WATCH_RECYCLE elapsed=1s"
+    assert not (tmp_path / "alice" / "inbox" / ".watcher.lock").exists()
+
+    # Second watch must succeed (no WATCH_LOCKED).
+    proc2 = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+    rc2, stdout2, stderr2 = _wait_proc(proc2, paranoia_timeout=1.0 + 5)
+    assert rc2 == 0, f"stderr={stderr2!r}"
+    assert stdout2.strip() == "WATCH_RECYCLE elapsed=1s"
+    assert "WATCH_LOCKED" not in stderr2
+
+
+def test_watch_concurrent_attempt_blocked_by_lockfile(tmp_path):
+    """Second watcher while first is alive: exits 75 with WATCH_LOCKED stderr."""
+    _open_inbox(tmp_path, "alice")
+
+    # Watcher A: long-ish budget so it is alive when B spawns.
+    proc_a = _spawn_watch(tmp_path, "alice", max_elapsed=5.0)
+    try:
+        # Wait for A to acquire the lockfile (poll up to 2s).
+        lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline and not lockfile.exists():
+            time.sleep(0.05)
+        assert lockfile.exists(), "watcher A failed to create lockfile"
+
+        # Watcher B should be rejected immediately.
+        proc_b = _spawn_watch(tmp_path, "alice", max_elapsed=5.0)
+        rc_b, stdout_b, stderr_b = _wait_proc(proc_b, paranoia_timeout=5.0)
+        assert rc_b == 75, (
+            f"watcher B expected exit 75, got {rc_b}; "
+            f"stdout={stdout_b!r} stderr={stderr_b!r}"
+        )
+        assert re.search(r"^WATCH_LOCKED \d+$", stderr_b.strip()), (
+            f"stderr={stderr_b!r}"
+        )
+        # B must not have produced PENDING_BATCH or WATCH_RECYCLE.
+        assert stdout_b.strip() == ""
+    finally:
+        # Let A run to completion.
+        rc_a, stdout_a, stderr_a = _wait_proc(proc_a, paranoia_timeout=5.0 + 5)
+
+    assert rc_a == 0, f"stderr={stderr_a!r}"
+    assert stdout_a.strip() == "WATCH_RECYCLE elapsed=5s"
+
+
+def test_watch_recover_with_only_empty_batch_dir_falls_through_to_recycle(tmp_path):
+    """An empty pending/<batch>/ directory must NOT trigger RECOVER."""
+    _open_inbox(tmp_path, "alice")
+    # Empty batch dir (no files) -- watch must skip it and fall to WAIT/recycle.
+    (tmp_path / "alice" / "pending" / "batch-empty").mkdir(parents=True)
+
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+    rc, stdout, stderr = _wait_proc(proc, paranoia_timeout=1.0 + 5)
+    assert rc == 0, f"stderr={stderr!r}"
+    assert stdout.strip() == "WATCH_RECYCLE elapsed=1s"

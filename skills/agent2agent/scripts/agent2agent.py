@@ -19,12 +19,17 @@ See ``$SPELLBOOK_DIR/skills/agent2agent/SKILL.md`` for the full protocol.
 from __future__ import annotations
 
 import argparse
+import atexit
+import errno
+import fcntl
 import json
 import os
 import re
 import shutil
+import signal
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -517,6 +522,122 @@ def cmd_drain(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_watch(args: argparse.Namespace) -> int:
+    """Block until a new message lands or the recycle budget elapses.
+
+    T3a scope: lockfile + RECOVER + recycle only. T3b adds fswatch wakeup,
+    500ms polling backstop, and atomic batch claim into ``pending/<batch-id>/``.
+
+    Behavior:
+      * If ``inbox/`` does not exist: print ``WATCH_INBOX_GONE`` and exit 1.
+      * Acquire ``inbox/.watcher.lock`` via ``fcntl.flock(LOCK_EX|LOCK_NB)``.
+        If held by another process: print ``WATCH_LOCKED <pid>`` to stderr and
+        exit 75.
+      * RECOVER: if any non-empty batch dir exists in ``pending/``, print
+        ``PENDING_BATCH <batch-id> count=<n>`` for the lex-oldest batch and
+        exit 0 immediately.
+      * WAIT (T3a-scope): sleep in ``poll_interval`` increments until
+        ``max_elapsed`` is reached, then print ``WATCH_RECYCLE elapsed=<N>s``
+        and exit 0. T3b will replace this with fswatch + polling for live
+        message detection.
+      * Lockfile is auto-released on process exit (kernel guarantee on flock
+        fd close), atexit-cleaned, and unlinked. Signal handlers (SIGINT,
+        SIGTERM) trigger the same cleanup.
+    """
+    name = args.name
+    _validate_name(name)
+    inbox = inbox_dir(name)
+    pending_root = pending_dir(name)
+    if not inbox.is_dir():
+        print("WATCH_INBOX_GONE")
+        return 1
+
+    lockfile = inbox / ".watcher.lock"
+    try:
+        fd = os.open(str(lockfile), os.O_CREAT | os.O_RDWR, 0o644)
+    except FileNotFoundError:
+        # Inbox dir vanished between is_dir() and os.open() — race with
+        # cross-session close.
+        print("WATCH_INBOX_GONE")
+        return 1
+    except OSError as exc:
+        if exc.errno == errno.ENOENT:
+            print("WATCH_INBOX_GONE")
+            return 1
+        raise
+
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(fd)
+        print(f"WATCH_LOCKED {os.getpid()}", file=sys.stderr)
+        return 75
+
+    # Write our pid for diagnostics; truncate first so a stale value can't
+    # confuse a reader.
+    os.lseek(fd, 0, os.SEEK_SET)
+    os.ftruncate(fd, 0)
+    os.write(fd, str(os.getpid()).encode("ascii"))
+
+    cleaned = {"done": False}
+
+    def _cleanup() -> None:
+        if cleaned["done"]:
+            return
+        cleaned["done"] = True
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+        try:
+            os.unlink(str(lockfile))
+        except FileNotFoundError:
+            pass
+        except OSError:
+            pass
+
+    atexit.register(_cleanup)
+
+    def _signal_exit(signum: int, _frame) -> None:
+        _cleanup()
+        # 128 + signum is conventional; SIGINT=2 -> 130, SIGTERM=15 -> 143.
+        sys.exit(128 + signum)
+
+    signal.signal(signal.SIGINT, _signal_exit)
+    signal.signal(signal.SIGTERM, _signal_exit)
+
+    pending_root.mkdir(parents=True, exist_ok=True)
+
+    # RECOVER: emit oldest non-empty batch immediately.
+    existing_batches = sorted(
+        (d for d in pending_root.iterdir() if d.is_dir()),
+        key=lambda p: p.name,
+    )
+    for batch in existing_batches:
+        files = [f for f in batch.iterdir() if not f.name.startswith(".")]
+        if files:
+            print(f"PENDING_BATCH {batch.name} count={len(files)}")
+            return 0
+
+    # WAIT (T3a-scope): budget-only sleep loop. T3b replaces this with
+    # fswatch wakeup + 500ms polling + atomic batch claim into
+    # pending/<batch-id>/. For T3a, the only exit is max_elapsed -> recycle.
+    poll_interval = args.poll_interval
+    max_elapsed = args.max_elapsed
+    start = time.monotonic()
+    while True:
+        elapsed = time.monotonic() - start
+        if elapsed >= max_elapsed:
+            print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
+            return 0
+        remaining = max_elapsed - elapsed
+        time.sleep(min(poll_interval, remaining))
+
+
 def cmd_help(_args: argparse.Namespace) -> int:
     print(_USAGE)
     return 0
@@ -548,6 +669,13 @@ SUBCOMMANDS
                                   Protocol-internal: atomically move messages
                                   from pending/<batch-id>/ to processed/ and
                                   emit them as JSON. Used by the watch-chain.
+  watch <name> [--max-elapsed <sec>] [--poll-interval <sec>] [--max-batch <n>]
+                                  Protocol-internal: block until a new message
+                                  lands (atomically staged into pending/) or
+                                  the recycle budget elapses. Holds an
+                                  exclusive flock on inbox/.watcher.lock so
+                                  only one watcher per name runs at a time.
+                                  Used by the watch-chain.
   names                           List registered names.
   help                            Show this message.
 
@@ -619,6 +747,13 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_drain.add_argument("batch_id", nargs="?", default=None)
     sp_drain.add_argument("--all", action="store_true")
     sp_drain.set_defaults(func=cmd_drain)
+
+    sp_watch = sub.add_parser("watch", add_help=False)
+    sp_watch.add_argument("name")
+    sp_watch.add_argument("--poll-interval", dest="poll_interval", type=float, default=0.5)
+    sp_watch.add_argument("--max-batch", dest="max_batch", type=int, default=50)
+    sp_watch.add_argument("--max-elapsed", dest="max_elapsed", type=float, default=540.0)
+    sp_watch.set_defaults(func=cmd_watch)
 
     for alias in ("help", "-h", "--help"):
         sp_help = sub.add_parser(alias, add_help=False)
