@@ -303,7 +303,12 @@ no-op that prints a benign status message. Steps:
    Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \
        _open_state clear $session_id
    ```
-8. Print `agent2agent: closed <name>`.
+8. The helper's `close` subcommand prints either
+   `agent2agent: closed '<name>'` (when an inbox or session binding was
+   actually released) or `agent2agent: not bound to '<name>'` (when the
+   call was a no-op — e.g. a second `/a2a close` after the first
+   already tore the chain down). Both exit 0; relay whichever line the
+   helper emitted.
 
 ## /a2a send
 

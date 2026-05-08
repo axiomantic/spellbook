@@ -237,14 +237,20 @@ def cmd_open(args: argparse.Namespace) -> int:
 def cmd_close(args: argparse.Namespace) -> int:
     _validate_name(args.name)
     target = name_dir(args.name)
-    if target.exists():
+    inbox_existed = target.exists()
+    if inbox_existed:
         shutil.rmtree(target, ignore_errors=True)
+    binding_cleared = False
     sid = _current_session_id()
     if sid and _SESSION_ID_RE.match(sid):
         bound = _read_binding(sid)
         if bound == args.name:
             _remove_binding(sid)
-    print(f"agent2agent: closed {args.name!r}")
+            binding_cleared = True
+    if inbox_existed or binding_cleared:
+        print(f"agent2agent: closed {args.name!r}")
+    else:
+        print(f"agent2agent: not bound to {args.name!r}")
     return 0
 
 
@@ -583,8 +589,18 @@ def cmd_watch(args: argparse.Namespace) -> int:
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
+        # Read the holder's pid from the lockfile contents (the holder
+        # writes its pid AFTER acquiring flock; see lines below). If the
+        # read fails or the file is empty (race window between truncate
+        # and write on the holder side), report ``unknown`` so an
+        # operator at least knows the slot is taken.
+        try:
+            os.lseek(fd, 0, os.SEEK_SET)
+            holder = os.read(fd, 64).decode("ascii", errors="replace").strip()
+        except OSError:
+            holder = ""
         os.close(fd)
-        print(f"WATCH_LOCKED {os.getpid()}", file=sys.stderr)
+        print(f"WATCH_LOCKED {holder or 'unknown'}", file=sys.stderr)
         return 75
 
     # Write our pid for diagnostics; truncate first so a stale value can't

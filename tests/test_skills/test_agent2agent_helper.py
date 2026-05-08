@@ -92,10 +92,38 @@ def test_close_removes_inbox_and_clears_binding(a2a, monkeypatch):
     bus = a2a.bus_dir()
     assert (bus / "bob").is_dir()
 
-    rc, _, _ = _run(a2a, "close", "bob")
+    rc, stdout, _ = _run(a2a, "close", "bob")
     assert rc == 0
+    assert stdout.strip() == "agent2agent: closed 'bob'"
     assert not (bus / "bob").exists()
     assert not (bus / ".bindings" / "session-close").exists()
+
+
+def test_close_idempotent_reports_not_bound(a2a, monkeypatch):
+    """Second close (or close of an unbound name) is exit 0 with a
+    distinct ``not bound`` stdout, not the same ``closed`` line as the
+    first call. Operators rely on the message to know whether the call
+    actually released anything.
+    """
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-close-idem")
+    _run(a2a, "open", "bob")
+    rc, stdout1, _ = _run(a2a, "close", "bob")
+    assert rc == 0
+    assert stdout1.strip() == "agent2agent: closed 'bob'"
+
+    rc, stdout2, _ = _run(a2a, "close", "bob")
+    assert rc == 0
+    assert stdout2.strip() == "agent2agent: not bound to 'bob'"
+
+
+def test_close_unknown_name_reports_not_bound(a2a, monkeypatch):
+    """Closing a name that was never opened in this session is a no-op
+    (exit 0, ``not bound`` stdout). No prior state required.
+    """
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "session-close-unknown")
+    rc, stdout, _ = _run(a2a, "close", "ghost")
+    assert rc == 0
+    assert stdout.strip() == "agent2agent: not bound to 'ghost'"
 
 
 def test_bind_then_unbind_then_bound_name(a2a, monkeypatch):
@@ -798,8 +826,16 @@ def test_watch_concurrent_attempt_blocked_by_lockfile(tmp_path):
             f"watcher B expected exit 75, got {rc_b}; "
             f"stdout={stdout_b!r} stderr={stderr_b!r}"
         )
-        assert re.search(r"^WATCH_LOCKED \d+$", stderr_b.strip()), (
-            f"stderr={stderr_b!r}"
+        m = re.search(r"^WATCH_LOCKED (\d+)$", stderr_b.strip())
+        assert m, f"stderr={stderr_b!r}"
+        # The reported pid MUST be the holder's (watcher A), not the loser's
+        # (watcher B). Diagnostic value: an operator should be able to kill
+        # the holder by the printed pid. Regression guard against the old
+        # ``os.getpid()`` bug where the loser printed its own pid.
+        reported_pid = int(m.group(1))
+        assert reported_pid == proc_a.pid, (
+            f"WATCH_LOCKED reported pid={reported_pid} (loser={proc_b.pid}); "
+            f"expected holder pid={proc_a.pid}"
         )
         # B must not have produced PENDING_BATCH or WATCH_RECYCLE.
         assert stdout_b.strip() == ""
