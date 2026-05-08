@@ -1273,8 +1273,8 @@ def test_watch_caps_batch_at_max_batch(tmp_path):
 #   - `read` prints raw JSON or empty string when absent (exit 0).
 #   - `alive`:
 #         exit 2 → state file missing or malformed (FAIL-SAFE-DEAD)
-#         exit 0 → transcript exists AND mtime < 90s old
-#         exit 1 → transcript missing OR mtime ≥ 90s old
+#         exit 0 → transcript exists AND mtime < 600s old
+#         exit 1 → transcript missing OR mtime ≥ 600s old
 #     Stdout is empty on every alive exit (machine-checkable via $? only).
 # ---------------------------------------------------------------------------
 
@@ -1406,7 +1406,7 @@ def test_open_state_alive_missing_returns_2(a2a):
 
 
 def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
-    """alive: state present + transcript mtime < 90s ago → exit 0."""
+    """alive: state present + transcript mtime < 600s ago → exit 0."""
     transcript = tmp_path / "fresh.output"
     transcript.write_text("x", encoding="utf-8")
 
@@ -1427,7 +1427,7 @@ def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
 
 
 def test_open_state_alive_stale_transcript_returns_1(a2a, tmp_path):
-    """alive: state present + transcript mtime ≥ 90s ago → exit 1."""
+    """alive: state present + transcript mtime ≥ 600s ago → exit 1."""
     transcript = tmp_path / "stale.output"
     transcript.write_text("x", encoding="utf-8")
 
@@ -1438,8 +1438,8 @@ def test_open_state_alive_stale_transcript_returns_1(a2a, tmp_path):
     )
     assert rc == 0
 
-    # Force mtime to ~120s in the past (well beyond the 90s threshold).
-    stale = time.time() - 120.0
+    # Force mtime to ~700s in the past (well beyond the 600s threshold).
+    stale = time.time() - 700.0
     os.utime(str(transcript), (stale, stale))
 
     rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")

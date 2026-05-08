@@ -70,7 +70,7 @@ python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py <subcommand> [a
 | `help` | Usage text. |
 | `watch <name>` | **Protocol-internal — invoked by `/a2a open` watch chain. Users should not run this directly.** Blocks until a message arrives or the 540s recycle budget expires; atomically claims any inbox messages into `pending/<batch-id>/`. |
 | `drain <name> [<batch-id>]` | **Protocol-internal — invoked by `/a2a open` watch chain. Users should not run this directly.** Reads and acks the messages staged by `watch` (moves `pending/<batch-id>/` → `processed/`). |
-| `_open_state {write,clear,read,alive} <sid>` | **Slash-command-internal.** Maintains the open-state record at `<bus>/.open/<sid>` and defines the canonical liveness contract (mtime + 90s window, FAIL-SAFE-DEAD). The slash command invokes `_open_state alive` directly; the hook backstop implements the same probe inline (`_bg_agent_alive`) for performance — it does NOT shell out to the helper. |
+| `_open_state {write,clear,read,alive} <sid>` | **Slash-command-internal.** Maintains the open-state record at `<bus>/.open/<sid>` and defines the canonical liveness contract (mtime + 600s window, FAIL-SAFE-DEAD). The slash command invokes `_open_state alive` directly; the hook backstop implements the same probe inline (`_bg_agent_alive`) for performance — it does NOT shell out to the helper. |
 
 The bus directory is `$AGENT2AGENT_DIR` if set, else
 `~/.local/share/agent2agent`.
@@ -134,8 +134,8 @@ user-visible polling chatter.
 `<bus>/.open/<session-id>` (JSON: `name`, `agent_id`, `started_at`,
 `output_file`). The slash command and the SessionStart /
 UserPromptSubmit hook share the **same liveness contract** — mtime +
-90s window, FAIL-SAFE-DEAD: an `output_file` whose mtime is older than
-90s, or which is missing entirely, is treated as DEAD and the hook
+600s window, FAIL-SAFE-DEAD: an `output_file` whose mtime is older than
+600s, or which is missing entirely, is treated as DEAD and the hook
 surfaces a `[agent2agent] watch chain dropped` re-arm hint. The slash
 command invokes the helper's `_open_state alive <sid>` subcommand; the
 hook implements the same probe inline (`_bg_agent_alive` in
@@ -178,7 +178,7 @@ restarts, the bg Task agent dies with it. The chain does not
 auto-recover from the receiving session alone; the SessionStart and
 UserPromptSubmit hooks surface a `[agent2agent] watch chain dropped`
 hint when they detect an open-state record whose bg agent's
-transcript file is stale (>90s) or missing. To re-arm: run
+transcript file is stale (>600s) or missing. To re-arm: run
 `/a2a open` again.
 
 ### Silent-Idle Cost Model

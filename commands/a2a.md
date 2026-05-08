@@ -115,12 +115,13 @@ is a bug.
 
 If the user invoked `/a2a open <name>` skip this phase entirely. Otherwise:
 
-1. Gather candidates by running the following Bash one-liners in order
-   (skip any that produce empty stdout):
-   - `basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"` — project basename
-   - `git branch --show-current 2>/dev/null` — current branch (skip if detached)
-   - `stint_check().top.name` — top stint name from MCP (skip if empty)
-   - `git config user.name 2>/dev/null` — git user name
+1. Gather candidates in order (skip any that come up empty):
+   - **project basename** — Bash: `basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"`
+   - **current branch** — Bash: `git branch --show-current 2>/dev/null` (skip if detached)
+   - **top stint name** — call the `stint_check` MCP tool with the current
+     project path, then read `result["top"]["name"]` (skip if the stack is
+     empty or the call fails). This is a tool call, not a shell command.
+   - **git user name** — Bash: `git config user.name 2>/dev/null`
 2. Slugify each candidate:
    - lowercase
    - replace `re.sub(r"[^a-z0-9._-]+", "-", s)`

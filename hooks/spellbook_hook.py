@@ -2114,7 +2114,7 @@ def _agent2agent_notify_for_prompt(data: dict) -> str | None:
 def _bg_agent_alive(agent_id, state) -> bool:
     """FAIL-SAFE-DEAD liveness probe of the bg watch-chain Task agent.
 
-    Shares the mtime+90s-window probe with
+    Shares the mtime+600s-window probe with
     ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
     op=``alive`` (T4); differs in return contract — this hook helper
     returns a ``bool``, while the helper's CLI op returns exit codes
@@ -2127,17 +2127,20 @@ def _bg_agent_alive(agent_id, state) -> bool:
       - ``state`` is a dict containing ``output_file`` (the absolute path
         the slash command captured at Task dispatch time)
       - that path exists on disk
-      - its mtime is fresh (< 90.0 seconds ago)
+      - its mtime is fresh (< 600.0 seconds ago)
 
     Any failure of those preconditions returns ``False`` (DEAD). There is
     no fail-safe-alive branch: a missing output_file, a stat error, or an
-    older-than-90s mtime are all treated as DEAD. This matches T4's exit
+    older-than-600s mtime are all treated as DEAD. This matches T4's exit
     1 / 2 ``not alive`` semantics from ``cmd_open_state alive``.
 
-    The 90s threshold is the design's mtime heuristic for liveness; it is
-    independent of the watch-side 540s WATCH_RECYCLE budget. The threshold
-    is generous because a live bg watch agent's transcript is touched at
-    least every few seconds while suspended on the watch subprocess.
+    The 600s threshold must EXCEED the 540s WATCH_RECYCLE budget. While
+    blocked on ``watch``, the bg agent emits no stdout, so its transcript
+    mtime does not advance during idle windows (validated by the A9
+    zero-idle-tokens manual e2e). A threshold smaller than 540s would
+    false-positive ``DEAD`` mid-idle. 600s gives a 60s grace margin for
+    the inter-cycle re-dispatch (Task agent exit → main loop reads marker
+    → spawns next bg agent → first transcript write).
     """
     if not agent_id:
         return False
@@ -2151,7 +2154,7 @@ def _bg_agent_alive(agent_id, state) -> bool:
         age = time.time() - op.stat().st_mtime
     except OSError:
         return False
-    return age < 90.0
+    return age < 600.0
 
 
 def _agent2agent_check_orphaned_chain(data: dict) -> str | None:

@@ -378,7 +378,7 @@ def test_hook_helper_constants_in_sync():
 #
 # These tests exercise the hook-side backstop that surfaces a re-arm hint
 # when the bg watch agent for an `open <name>` session has died. The
-# liveness probe is FAIL-SAFE-DEAD and shares the mtime+90s-window probe
+# liveness probe is FAIL-SAFE-DEAD and shares the mtime+600s-window probe
 # with the helper's `cmd__open_state alive` (see T4); the two sides
 # differ only in return contract (bool here, exit codes 0/1/2 there).
 
@@ -416,8 +416,8 @@ class TestBgAgentAlive:
       - missing/empty agent_id        -> False
       - state missing output_file     -> False
       - output_file path not on disk  -> False
-      - mtime stale (>= 90s)          -> False
-      - mtime fresh (< 90s)           -> True
+      - mtime stale (>= 600s)         -> False
+      - mtime fresh (< 600s)          -> True
     """
 
     def test_returns_true_when_transcript_recent(self, tmp_path):
@@ -431,7 +431,9 @@ class TestBgAgentAlive:
     def test_returns_false_when_transcript_stale(self, tmp_path):
         transcript = tmp_path / "agent-transcript.output"
         transcript.write_text("", encoding="utf-8")
-        old = time.time() - 120.0
+        # Push mtime past the 600s liveness threshold (use 700s to leave
+        # plenty of margin against clock skew on slow CI runners).
+        old = time.time() - 700.0
         os.utime(transcript, (old, old))
         state = {"agent_id": "agent-x", "output_file": str(transcript)}
         assert spellbook_hook._bg_agent_alive("agent-x", state) is False
@@ -460,14 +462,14 @@ class TestBgAgentAlive:
         ``cmd_open_state`` op=alive **byte-for-byte**, but the two
         differ in their return contract (the hook returns ``bool``;
         the helper returns exit codes 0/1/2). The docstring must
-        honestly describe what is shared (the mtime+90s-window probe)
+        honestly describe what is shared (the mtime+600s-window probe)
         and what differs (return type, fail-safe orientation),
         without the misleading "byte-for-byte" claim.
         """
         doc = spellbook_hook._bg_agent_alive.__doc__ or ""
         assert "byte-for-byte" not in doc, (
             "T8 reconciliation: `_bg_agent_alive` and `cmd_open_state alive` "
-            "share the mtime+90s-window probe but differ in return contract "
+            "share the mtime+600s-window probe but differ in return contract "
             "(bool vs exit code). The docstring must not claim "
             "byte-for-byte parity. Drop the phrase or qualify it."
         )

@@ -804,11 +804,11 @@ def cmd_open_state(args: argparse.Namespace) -> int:
       - ``read  <sid>`` -- print raw JSON or empty string when absent (exit 0).
       - ``alive <sid>`` -- FAIL-SAFE-DEAD probe of the bg agent's transcript:
             exit 2 → state file missing or malformed
-            exit 0 → output_file exists AND mtime < 90s ago
-            exit 1 → output_file missing OR mtime >= 90s ago
+            exit 0 → output_file exists AND mtime < 600s ago
+            exit 1 → output_file missing OR mtime >= 600s ago
             Stdout is empty on every exit (machine-checkable via ``$?`` only).
 
-    Shares the mtime+90s-window probe with
+    Shares the mtime+600s-window probe with
     ``hooks/spellbook_hook.py::_bg_agent_alive`` (both fail-safe-DEAD).
     The two sides differ in return contract — this CLI op uses exit
     codes 0/1/2 (machine-checkable via ``$?``) while the hook helper
@@ -903,7 +903,11 @@ def cmd_open_state(args: argparse.Namespace) -> int:
             age = time.time() - op_path.stat().st_mtime
         except OSError:
             return 1
-        return 0 if age < 90.0 else 1
+        # 600s threshold must exceed the 540s WATCH_RECYCLE budget so the
+        # liveness probe doesn't false-positive DEAD during a normal idle
+        # window. See _bg_agent_alive in hooks/spellbook_hook.py for the
+        # full rationale.
+        return 0 if age < 600.0 else 1
 
     print(f"agent2agent: unknown op: {op}", file=sys.stderr)
     return 2
