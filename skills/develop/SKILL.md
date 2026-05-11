@@ -504,7 +504,7 @@ Task (or subagent simulation):
 ```
 
 <CRITICAL>
-### Subagent Skill Invocation Verification
+### Subagent Skill Invocation Verification (MANDATORY)
 
 After dispatching ANY subagent that should invoke a skill:
 
@@ -516,24 +516,10 @@ After dispatching ANY subagent that should invoke a skill:
 
 A subagent that reports "the skill is not available in this environment" without showing an attempted Skill tool call is making an untested claim. Reject it. Skills are delivered via system-reminder, NOT via the deferred-tools list, and the catalog is injected lazily after the first tool call. A subagent must attempt the call before declaring it impossible.
 
+**Exemption:** This verification does NOT apply to "inline audit prompt" gates (4.4, 4.6.1) which have no skill to invoke. For those gates, verify the audit artifact instead of skill invocation.
+
 Anti-rationalization #9 (Self-Review Substitution) applies here.
 </CRITICAL>
-
-### Post-Dispatch Skill Invocation Verification (MANDATORY)
-
-After ANY subagent dispatched to invoke a skill returns, the orchestrator MUST perform this mechanical check before accepting results:
-
-```
-STEP 1: Does the subagent output contain "Launching skill: [skill-name]" or equivalent?
-STEP 2: If NO → REJECT result immediately. Do NOT check compilation. Do NOT read files.
-         Re-dispatch with the canonical template from dispatching-parallel-agents.
-STEP 3: If YES → Verify gate artifacts exist. Only then proceed to next gate.
-STEP 4: If "skill not available" claimed without an attempted Skill tool call → REJECT.
-         Subagents must attempt invocation; they cannot declare skills absent
-         without trying.
-```
-
-**Accepting unverified results is a process violation.** Subagents will produce files that pass compilation but bypassed all quality gates. The gates exist because compilation success does not imply correctness, review, or verification.
 
 ### Phase 4 Dispatch Discipline: Gate Non-Collapse Rule
 
