@@ -92,9 +92,9 @@ def start_daemon(foreground: bool = False) -> None:
     env["SPELLBOOK_DIR"] = str(spellbook_dir)
 
     if daemon_python:
-        cmd = [daemon_python, "-m", "spellbook.mcp.server"]
+        cmd = [daemon_python, "-m", "spellbook.mcp"]
     else:
-        cmd = [uv_path, "run", str(server_script)]  # type: ignore[list-item]
+        cmd = [uv_path, "run", "python", "-m", "spellbook.mcp"]  # type: ignore[list-item]
 
     if foreground:
         print(f"Starting server on {host}:{port} (foreground mode)")
