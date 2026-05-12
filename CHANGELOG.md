@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Daemon MCP launch now targets the package entry point, not the back-compat
+  shim.** `daemon/manager.py` was invoking `python -m spellbook.mcp.server`,
+  which is a re-export shim with no top-level execution; the subprocess exited 0
+  immediately and the daemon never bound to the port, causing `spellbook server
+  start` to report "Server failed to start" with an empty log file. Both the
+  default `python -m` invocation and the `uv run` fallback path now use
+  `python -m spellbook.mcp`, which routes through `spellbook/mcp/__main__.py`
+  and correctly calls `mcp.run(...)`.
+
 ### Added
 
 - **Develop skill Phase 4 guardrail hardening.** Bans phrases like "TDD mode"
