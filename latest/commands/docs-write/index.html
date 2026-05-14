@@ -7957,211 +7957,229 @@
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">    2. Write in the voice defined by the tone profile.</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">    3. Use ONLY information present in the source code context.</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">       Do not fabricate APIs, parameters, or behaviors.</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">    4. Apply every rule from Writing Guide Rules during writing.</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">    5. Keep total output under 6K tokens.</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">    6. For tutorials: add &quot;Last verified: {today&#39;s date}&quot; at the end.</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">    7. Write the complete document to: {project_root}/{section.output_path}</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">  result_schema:</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">    files_written:</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">      - path: string</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">        diataxis_type: string</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">        tone_profile: string</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">        word_count: number</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">        last_verified_date: string  # ISO date for tutorials, empty for others</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">```</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="gs">**Parallelization:**</span> All sections can be written in parallel. Cross-references use <span class="sb">`[CROSS-REF: target]`</span> placeholders during generation, which are resolved in Step 7 (post-write pass) after all sections are complete.
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="gu">#### 3c. Record Result</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>For each completed subagent, record:
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="k">-</span><span class="w"> </span><span class="sb">`path`</span>: the output path where the file was written
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">-</span><span class="w"> </span><span class="sb">`diataxis_type`</span>: from the plan entry
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tone_profile`</span>: from the plan entry
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span><span class="sb">`word_count`</span>: from the subagent result
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span><span class="sb">`last_verified_date`</span>: today&#39;s date (ISO format) for tutorials; empty string for other types
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>If a subagent fails:
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="k">-</span><span class="w"> </span>Log the failure with section title and error.
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>Add to <span class="sb">`skipped_sections`</span> with the reason.
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">-</span><span class="w"> </span>Continue with the next section.
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gu">### Step 4: Generate README</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>The README is a special section using the <span class="sb">`readme_plan`</span> from <span class="sb">`plan.json`</span>.
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">```</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">  description: &quot;Generate project README&quot;</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">  prompt: |</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">    Write a README.md for the project &quot;{project_metadata.name}&quot;.</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">    ## Tone Profile: Adaptive</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">    {extracted Adaptive tone profile from tone-profiles.md}</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">    ## README Template</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">    4. Symbol-name verification: any function name, method name, class</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">       name, constant, file path, or namespaced key (e.g. Redis key,</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">       env var) that appears in your output MUST be grounded in the</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">       source code context you were given. If the plan, audit, or</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">       existing content suggests a name that does not appear in your</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">       source context, do ONE of the following — do not invent or</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">       guess:</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">         (a) grep the project source for the candidate name and use</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">             the verified result, OR</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">         (b) rephrase to describe behavior without naming a specific</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">             symbol (e.g. &quot;the Lua script invoked by the registry&quot;</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">             instead of a fabricated method name), OR</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">         (c) leave a `&lt;!-- TODO: verify symbol name in source --&gt;`</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">             comment inline so review can catch it.</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">       Plausible-sounding LLM-generated names are the most common</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">       fact-check failure in this pipeline. The build will not catch</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">       them; only source verification will.</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">    5. Apply every rule from Writing Guide Rules during writing.</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">    6. Keep total output under 6K tokens.</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">    7. For tutorials: add &quot;Last verified: {today&#39;s date}&quot; at the end.</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">    8. Write the complete document to: {project_root}/{section.output_path}</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">  result_schema:</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">    files_written:</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">      - path: string</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">        diataxis_type: string</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">        tone_profile: string</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">        word_count: number</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">        last_verified_date: string  # ISO date for tutorials, empty for others</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">```</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="gs">**Parallelization:**</span> All sections can be written in parallel. Cross-references use <span class="sb">`[CROSS-REF: target]`</span> placeholders during generation, which are resolved in Step 7 (post-write pass) after all sections are complete.
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="gu">#### 3c. Record Result</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>For each completed subagent, record:
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="k">-</span><span class="w"> </span><span class="sb">`path`</span>: the output path where the file was written
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="k">-</span><span class="w"> </span><span class="sb">`diataxis_type`</span>: from the plan entry
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tone_profile`</span>: from the plan entry
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="k">-</span><span class="w"> </span><span class="sb">`word_count`</span>: from the subagent result
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span><span class="sb">`last_verified_date`</span>: today&#39;s date (ISO format) for tutorials; empty string for other types
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>If a subagent fails:
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="k">-</span><span class="w"> </span>Log the failure with section title and error.
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="k">-</span><span class="w"> </span>Add to <span class="sb">`skipped_sections`</span> with the reason.
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="k">-</span><span class="w"> </span>Continue with the next section.
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">    {extracted README template from doc-templates.md}</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="gu">### Step 4: Generate README</span>
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">    ## Writing Guide Rules (MANDATORY)</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>The README is a special section using the <span class="sb">`readme_plan`</span> from <span class="sb">`plan.json`</span>.
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">    {full content of writing-guide.md}</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">    ## Project Information</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">    - Name: {project_metadata.name}</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">    - Description: {project_metadata.description}</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="sb">    - Language: {audit_result.language}</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">    - Framework: {audit_result.framework}</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="sb">    - License: {project_metadata.license}</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">    - Version: {project_metadata.version}</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">    - Repo URL: {project_metadata.repo_url}</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">    ## README Sections to Include (in order)</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">    {readme_plan.sections as numbered list}</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">    ## Source Code Context</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">    {package manifest content, main module entry point, key exports -- max 12K tokens}</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">    ## Existing README</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">    {if existing README exists and mode is audit_improve:}</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">    Preserve accurate content, improve structure and tone:</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">    {existing README content}</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">    {otherwise:}</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">    No existing README. Generate from scratch.</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">```</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">Task:</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">  description: &quot;Generate project README&quot;</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">  prompt: |</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">    Write a README.md for the project &quot;{project_metadata.name}&quot;.</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">    ## Tone Profile: Adaptive</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">    {extracted Adaptive tone profile from tone-profiles.md}</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">    ## README Template</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">    {extracted README template from doc-templates.md}</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">    ## Writing Guide Rules (MANDATORY)</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">    {full content of writing-guide.md}</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">    ## Project Information</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">    - Name: {project_metadata.name}</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">    - Description: {project_metadata.description}</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">    - Language: {audit_result.language}</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">    - Framework: {audit_result.framework}</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">    - License: {project_metadata.license}</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">    - Version: {project_metadata.version}</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">    - Repo URL: {project_metadata.repo_url}</span>
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">    ## Instructions</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">    ## README Sections to Include (in order)</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">    1. Follow the README template structure.</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">    2. Hook: one sentence explaining what the project does and why someone would care.</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">    3. Installation: single copy-paste command. No multi-step manual configuration.</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">    4. Quick Start: working example in under 10 lines of code.</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">    5. Features: bullet list, not prose paragraphs.</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">    6. Apply every rule from Writing Guide Rules.</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">    7. Write the complete README to: {project_root}/{readme_plan.output_path}</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">  result_schema:</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">    files_written:</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">      - path: string</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">        diataxis_type: string</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">        tone_profile: string</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">        word_count: number</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">        last_verified_date: string  # ISO date for tutorials, empty for others</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">```</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">    {readme_plan.sections as numbered list}</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">    ## Source Code Context</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">    {package manifest content, main module entry point, key exports -- max 12K tokens}</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">    ## Existing README</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">    {if existing README exists and mode is audit_improve:}</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">    Preserve accurate content, improve structure and tone:</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">    {existing README content}</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">    {otherwise:}</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">    No existing README. Generate from scratch.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">    ## Instructions</span>
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>Record the README result alongside other section results.
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gu">### Step 5: Generate Build Config and Hosting Config</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="k">1.</span> Write the <span class="sb">`build_config_content`</span> from <span class="sb">`plan.json`</span> to <span class="sb">`{project_root}/{build_config_path}`</span>.
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="k">2.</span> Create a <span class="sb">`docs/index.md`</span> landing page if one does not exist:
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sb">   ```markdown</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>   # {project_metadata.name}
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>   {project_metadata.description}
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>   ## Getting Started
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>[link to first tutorial if it exists]
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>   ## Reference
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>[links to reference docs if they exist]
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="sb">   ```</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">    1. Follow the README template structure.</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">    2. Hook: one sentence explaining what the project does and why someone would care.</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">    3. Installation: single copy-paste command. No multi-step manual configuration.</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">    4. Quick Start: working example in under 10 lines of code.</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="sb">    5. Features: bullet list, not prose paragraphs.</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="sb">    6. Apply every rule from Writing Guide Rules.</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">    7. Write the complete README to: {project_root}/{readme_plan.output_path}</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">  result_schema:</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">    files_written:</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">      - path: string</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="sb">        diataxis_type: string</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="sb">        tone_profile: string</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="sb">        word_count: number</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="sb">        last_verified_date: string  # ISO date for tutorials, empty for others</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="sb">```</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>Record the README result alongside other section results.
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gu">### Step 5: Generate Build Config and Hosting Config</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">3.</span> If <span class="sb">`hosting_config`</span> exists in the plan, write <span class="sb">`hosting_config.config_content`</span> to <span class="sb">`{project_root}/{hosting_config.config_path}`</span>.
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">1.</span> Write the <span class="sb">`build_config_content`</span> from <span class="sb">`plan.json`</span> to <span class="sb">`{project_root}/{build_config_path}`</span>.
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="gu">### Step 6: Save Generation Record</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>Build the <span class="sb">`DocsWritten`</span> object from all recorded results.
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">2.</span> Create a <span class="sb">`docs/index.md`</span> landing page if one does not exist:
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="sb">   ```markdown</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>   # {project_metadata.name}
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="gs">**If sections_filter was present (selective regeneration):**</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="k">1.</span> Read the existing <span class="sb">`written-manifest.json`</span>.
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="k">2.</span> For each regenerated section, replace its entry in <span class="sb">`files_written`</span> (match by <span class="sb">`path`</span>).
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">3.</span> Increment <span class="sb">`generation_passes`</span>.
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">4.</span> Write the merged manifest.
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>   {project_metadata.description}
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>   ## Getting Started
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>[link to first tutorial if it exists]
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="gs">**If no sections_filter (full generation):**</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">1.</span> Build a fresh manifest from all results.
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">2.</span> Set <span class="sb">`generation_passes`</span> to 1.
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">3.</span> Write the manifest.
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>   ## Reference
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>[links to reference docs if they exist]
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>Write to <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via Write tool.
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">3.</span> If <span class="sb">`hosting_config`</span> exists in the plan, write <span class="sb">`hosting_config.config_content`</span> to <span class="sb">`{project_root}/{hosting_config.config_path}`</span>.
 <a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="gu">### Step 7: Resolve Cross-References</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="gu">### Step 6: Save Generation Record</span>
 <a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>After all sections are written, scan all generated files for unresolved <span class="sb">`[CROSS-REF: section-name]`</span> placeholders.
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>Build the <span class="sb">`DocsWritten`</span> object from all recorded results.
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>For each placeholder:
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">1.</span> Look up the target section in the plan TOC by title or slug.
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">2.</span> If the target file exists, replace the placeholder with a Markdown link: <span class="sb">`[section-title](relative-path)`</span>.
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">3.</span> If the target file does not exist (was skipped), replace with: <span class="sb">`&lt;!-- TODO: Link to section-name when available --&gt;`</span>.
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="gu">## Output</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>Write <span class="sb">`DocsWritten`</span> to <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via the Write tool.
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DocsWritten</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="w">  </span><span class="nx">files_written</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                       </span><span class="c1">// Relative to project root</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="w">    </span><span class="nx">diataxis_type</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="w">    </span><span class="nx">tone_profile</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="w">    </span><span class="nx">word_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="w">    </span><span class="nx">last_verified_date</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// ISO date for tutorials, empty for others</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="w">  </span><span class="nx">generation_passes</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">            </span><span class="c1">// Incremented on each selective regeneration</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="w">  </span><span class="nx">skipped_sections</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="w">    </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="w">    </span><span class="nx">reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="p">}</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="sb">```</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gs">**If sections_filter was present (selective regeneration):**</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">1.</span> Read the existing <span class="sb">`written-manifest.json`</span>.
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">2.</span> For each regenerated section, replace its entry in <span class="sb">`files_written`</span> (match by <span class="sb">`path`</span>).
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">3.</span> Increment <span class="sb">`generation_passes`</span>.
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">4.</span> Write the merged manifest.
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="gs">**If no sections_filter (full generation):**</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="k">1.</span> Build a fresh manifest from all results.
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="k">2.</span> Set <span class="sb">`generation_passes`</span> to 1.
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="k">3.</span> Write the manifest.
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>Write to <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via Write tool.
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="gu">### Step 7: Resolve Cross-References</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>After all sections are written, scan all generated files for unresolved <span class="sb">`[CROSS-REF: section-name]`</span> placeholders.
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>For each placeholder:
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="k">1.</span> Look up the target section in the plan TOC by title or slug.
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">2.</span> If the target file exists, replace the placeholder with a Markdown link: <span class="sb">`[section-title](relative-path)`</span>.
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">3.</span> If the target file does not exist (was skipped), replace with: <span class="sb">`&lt;!-- TODO: Link to section-name when available --&gt;`</span>.
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gu">## Output</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Write <span class="sb">`DocsWritten`</span> to <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via the Write tool.
 <a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="gu">## Failure Handling</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>| Scenario | Response |
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>|----------|----------|
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>| No docstrings or type hints in source | Generate stub reference from function/class signatures. Add a <span class="sb">`&lt;!-- NEEDS HUMAN REVIEW: No docstrings found in source --&gt;`</span> comment at the top of the generated file. |
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>| Source file from source_hints not found | Skip the missing file. Log warning. If all source hints for a section are missing, add to <span class="sb">`skipped_sections`</span> with reason &quot;all source files missing&quot;. Continue with next section. |
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>| Very large module (&gt;200 public exports or &gt;5K source lines) | Focus on public API surface only. Split into sub-sections if the plan calls for a single reference doc. Generate a top-level overview with links to sub-sections. |
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>| Cross-reference target not yet written | Insert <span class="sb">`[CROSS-REF: section-name]`</span> placeholder during generation. Resolve in Step 7 after all sections are complete. |
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>| Writing subagent fails | Log the error. Add section to <span class="sb">`skipped_sections`</span>. Continue with remaining sections. Report skipped sections in the manifest. |
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>| Existing manifest merge conflict | On path collision during merge, the newly generated entry replaces the old one. Log: &quot;Replaced previous entry for [path]&quot;. |
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">-</span><span class="w"> </span>Writing documentation files to spellbook artifact directories (output goes to the project repo at output_path)
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the writing-guide.md banned list in generated content
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">-</span><span class="w"> </span>Mixing Diataxis types within a single document (tutorial steps in a reference doc, concept explanations in a how-to)
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">-</span><span class="w"> </span>Exceeding 12K token source context per writing subagent dispatch
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">-</span><span class="w"> </span>Exceeding 6K token output per generated section
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Skipping writing guide rules in writing subagent prompts (rules must be included in full)
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Fabricating API signatures, parameters, return types, or behaviors not present in source code
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">-</span><span class="w"> </span>Silently overwriting an existing written-manifest.json without offering reuse (unless sections_filter is present)
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">-</span><span class="w"> </span>Generating non-MVP sections when running in MVP tier
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="k">-</span><span class="w"> </span>Omitting the tone profile or Diataxis type rules from writing subagent prompts
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">-</span><span class="w"> </span>Resolving cross-references with dead links (use TODO comments for missing targets)
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>&lt;reflection&gt;
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>After completing generation, verify:
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">-</span><span class="w"> </span>Were all MVP sections from the plan either written or logged as skipped with a reason?
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the full writing guide rules in its prompt?
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the correct tone profile for its section?
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="k">-</span><span class="w"> </span>Are all generated files located in the project repository at their planned output_path?
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="k">-</span><span class="w"> </span>If sections_filter was present, were results merged into the existing manifest (not replaced)?
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="k">-</span><span class="w"> </span>Were all <span class="sb">`[CROSS-REF: ...]`</span> placeholders resolved or converted to TODO comments?
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="k">-</span><span class="w"> </span>Does the written-manifest.json accurately reflect what was generated?
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="k">-</span><span class="w"> </span>Are there any skipped sections that should be flagged to the user?
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DocsWritten</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="w">  </span><span class="nx">files_written</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                       </span><span class="c1">// Relative to project root</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="w">    </span><span class="nx">diataxis_type</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">    </span><span class="nx">tone_profile</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="w">    </span><span class="nx">word_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="w">    </span><span class="nx">last_verified_date</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// ISO date for tutorials, empty for others</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="w">  </span><span class="nx">generation_passes</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">            </span><span class="c1">// Incremented on each selective regeneration</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="w">  </span><span class="nx">skipped_sections</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">    </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="w">    </span><span class="nx">reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="p">}</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">```</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="gu">## Failure Handling</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>| Scenario | Response |
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>|----------|----------|
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>| No docstrings or type hints in source | Generate stub reference from function/class signatures. Add a <span class="sb">`&lt;!-- NEEDS HUMAN REVIEW: No docstrings found in source --&gt;`</span> comment at the top of the generated file. |
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>| Source file from source_hints not found | Skip the missing file. Log warning. If all source hints for a section are missing, add to <span class="sb">`skipped_sections`</span> with reason &quot;all source files missing&quot;. Continue with next section. |
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>| Very large module (&gt;200 public exports or &gt;5K source lines) | Focus on public API surface only. Split into sub-sections if the plan calls for a single reference doc. Generate a top-level overview with links to sub-sections. |
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>| Cross-reference target not yet written | Insert <span class="sb">`[CROSS-REF: section-name]`</span> placeholder during generation. Resolve in Step 7 after all sections are complete. |
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>| Writing subagent fails | Log the error. Add section to <span class="sb">`skipped_sections`</span>. Continue with remaining sections. Report skipped sections in the manifest. |
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>| Existing manifest merge conflict | On path collision during merge, the newly generated entry replaces the old one. Log: &quot;Replaced previous entry for [path]&quot;. |
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span>Writing documentation files to spellbook artifact directories (output goes to the project repo at output_path)
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="k">-</span><span class="w"> </span>Using any phrase from the writing-guide.md banned list in generated content
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="k">-</span><span class="w"> </span>Mixing Diataxis types within a single document (tutorial steps in a reference doc, concept explanations in a how-to)
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="k">-</span><span class="w"> </span>Exceeding 12K token source context per writing subagent dispatch
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="k">-</span><span class="w"> </span>Exceeding 6K token output per generated section
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="k">-</span><span class="w"> </span>Skipping writing guide rules in writing subagent prompts (rules must be included in full)
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="k">-</span><span class="w"> </span>Fabricating API signatures, parameters, return types, or behaviors not present in source code
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="k">-</span><span class="w"> </span>Writing any symbol, function, method, class, file path, or namespaced key (Redis key, env var) into output without confirming it exists in the provided source code context or via grep against project source (see Step 3b Instructions rule 4). This is the most common fact-check failure in the pipeline and the build cannot catch it.
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="k">-</span><span class="w"> </span>Silently overwriting an existing written-manifest.json without offering reuse (unless sections_filter is present)
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="k">-</span><span class="w"> </span>Generating non-MVP sections when running in MVP tier
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">-</span><span class="w"> </span>Omitting the tone profile or Diataxis type rules from writing subagent prompts
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">-</span><span class="w"> </span>Resolving cross-references with dead links (use TODO comments for missing targets)
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>&lt;reflection&gt;
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>After completing generation, verify:
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="k">-</span><span class="w"> </span>Were all MVP sections from the plan either written or logged as skipped with a reason?
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the full writing guide rules in its prompt?
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="k">-</span><span class="w"> </span>Did every writing subagent receive the correct tone profile for its section?
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="k">-</span><span class="w"> </span>Are all generated files located in the project repository at their planned output_path?
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="k">-</span><span class="w"> </span>If sections_filter was present, were results merged into the existing manifest (not replaced)?
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">-</span><span class="w"> </span>Were all <span class="sb">`[CROSS-REF: ...]`</span> placeholders resolved or converted to TODO comments?
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">-</span><span class="w"> </span>Does the written-manifest.json accurately reflect what was generated?
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>Are there any skipped sections that should be flagged to the user?
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>&lt;/reflection&gt;
 </code></pre></div>
 
 
