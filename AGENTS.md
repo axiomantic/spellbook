@@ -435,9 +435,8 @@ This catches any real I/O that escapes the sandbox during tests. Use `@pytest.ma
 
 ### PR Review Bot
 
-- Bot username: `axiomantic-momus[bot]`
-- Re-review comment: `/ai-review`
-- Auto-reviews on PR creation: yes
+- Automatic PR reviewer: `gemini-code-assist` (external GitHub App; reviews PRs automatically; no in-repo configuration).
+- On-demand reviewer: `axiomantic-momus[bot]` (momus). Trigger by commenting `/ai-review` on a PR, or manually via `workflow_dispatch` of the Momus workflow. Does not auto-review on PR open.
 
 ## Pre-Commit Checklist
 
