@@ -29,11 +29,10 @@ export function Tabs({ children }: TabsProps) {
   const tabs: Array<{ title: string; body: ReactNode }> = []
   Children.forEach(children, (child) => {
     if (!isValidElement(child)) return
-    // `react-markdown` passes the component back through; check by type
-    // identity OR by the lowercased tag name on the props chain.
+    // `react-markdown` passes the component back through; check by
+    // function identity.
     const el = child as ReactElement<TabProps>
-    const isTab = el.type === Tab || (typeof el.type !== 'string' && el.type === Tab)
-    if (!isTab) return
+    if (el.type !== Tab) return
     const title = el.props?.title ?? `Tab ${tabs.length + 1}`
     tabs.push({ title, body: el.props?.children })
   })

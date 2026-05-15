@@ -70,7 +70,7 @@ const openCanvas: CanvasDetailType = {
   created_at: '2026-05-12T10:00:00Z',
   last_updated: '2026-05-13T12:00:00Z',
   closed: false,
-  page: 'page.md',
+  page: 'index.md',
   content: '# Inner Heading\n\n<callout type="note">Body text</callout>',
   bytes: 64,
 }

@@ -23,7 +23,7 @@ filesystem tree under `~/.local/spellbook/canvas/<name>/`:
 The agent drives the canvas with three MCP tools (`canvas_open`,
 `canvas_write`, `canvas_close`) and observes the catalog via a fourth
 (`canvas_list`). The admin SPA at `/admin/canvas/<name>` subscribes to a
-`CANVAS` WebSocket subsystem; every `canvas.written` / `canvas.opened` /
+`CANVAS` WebSocket subsystem; every `canvas.updated` / `canvas.opened` /
 `canvas.closed` event invalidates the relevant React Query cache key and
 re-fetches the page. The render path is `react-markdown@9` + `remark-gfm` +
 `rehype-raw`, with a curated `components` prop dispatching the shortcodes
@@ -35,7 +35,7 @@ Canvas lifecycle:
    call; returns the existing metadata on subsequent calls. The returned
    `url` is the page the operator opens in a browser tab.
 2. `canvas_write("plan-x", markdown_body)` — last-write-wins atomic replace
-   of `pages/index.md`. Publishes `canvas.written` on the event bus, which
+   of `pages/index.md`. Publishes `canvas.updated` on the event bus, which
    the SPA picks up within ~100ms.
 3. `canvas_close("plan-x")` — marks the canvas closed in `meta.json`.
    Subsequent `canvas_write` calls return `{"code": "closed"}`. Files are
