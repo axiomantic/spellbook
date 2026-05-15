@@ -348,3 +348,32 @@ export interface ErrorDetail {
 export interface ErrorResponse {
   error: ErrorDetail
 }
+
+// Canvas
+export interface CanvasListItem {
+  name: string
+  title: string
+  created_at: string
+  last_updated: string
+  closed: boolean
+}
+
+export interface CanvasListResponse {
+  canvases: CanvasListItem[]
+  count: number
+}
+
+export interface CanvasDetail {
+  name: string
+  title: string
+  created_at: string
+  last_updated: string
+  closed: boolean
+  page: string
+  content: string
+  bytes: number
+}
+
+export interface CanvasErrorResponse {
+  error: { code: string; message: string }
+}
