@@ -11,11 +11,11 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from spellbook.core.auth import load_token
 from spellbook.admin.auth import (
-    create_exchange_token,
+    create_handoff_token,
     create_session_cookie,
     create_ws_ticket,
     require_admin_auth,
-    validate_exchange_token,
+    validate_handoff_token,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -56,14 +56,14 @@ async def exchange_token(request: Request):
     stored_token = load_token()
     if not stored_token or not secrets.compare_digest(mcp_token, stored_token):
         raise HTTPException(status_code=401, detail="Invalid token")
-    exchange = create_exchange_token()
+    exchange = create_handoff_token()
     return {"exchange_token": exchange}
 
 
 @router.get("/callback")
 async def auth_callback(auth: str):
     """Consume exchange token and set session cookie."""
-    if not validate_exchange_token(auth):
+    if not validate_handoff_token(auth):
         raise HTTPException(
             status_code=401, detail="Invalid or expired exchange token"
         )

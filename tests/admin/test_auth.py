@@ -3,39 +3,39 @@ import time
 import pytest
 
 
-class TestExchangeToken:
-    def test_create_exchange_token_returns_string(self, mock_mcp_token):
-        from spellbook.admin.auth import create_exchange_token
+class TestHandoffToken:
+    def test_create_handoff_token_returns_string(self, mock_mcp_token):
+        from spellbook.admin.auth import create_handoff_token
 
-        token = create_exchange_token()
+        token = create_handoff_token()
         assert isinstance(token, str)
         assert len(token) > 20
 
-    def test_validate_exchange_token_consumes_on_first_use(self, mock_mcp_token):
+    def test_validate_handoff_token_consumes_on_first_use(self, mock_mcp_token):
         from spellbook.admin.auth import (
-            create_exchange_token,
-            validate_exchange_token,
+            create_handoff_token,
+            validate_handoff_token,
         )
 
-        token = create_exchange_token()
-        assert validate_exchange_token(token) is True
-        assert validate_exchange_token(token) is False  # consumed
+        token = create_handoff_token()
+        assert validate_handoff_token(token) is True
+        assert validate_handoff_token(token) is False  # consumed
 
-    def test_validate_exchange_token_rejects_expired(self, mock_mcp_token):
+    def test_validate_handoff_token_rejects_expired(self, mock_mcp_token):
         from spellbook.admin.auth import (
-            create_exchange_token,
-            validate_exchange_token,
-            _exchange_tokens,
+            create_handoff_token,
+            validate_handoff_token,
+            _handoff_tokens,
         )
 
-        token = create_exchange_token()
-        _exchange_tokens[token] = time.time() - 1  # expired
-        assert validate_exchange_token(token) is False
+        token = create_handoff_token()
+        _handoff_tokens[token] = time.time() - 1  # expired
+        assert validate_handoff_token(token) is False
 
-    def test_validate_exchange_token_rejects_unknown(self, mock_mcp_token):
-        from spellbook.admin.auth import validate_exchange_token
+    def test_validate_handoff_token_rejects_unknown(self, mock_mcp_token):
+        from spellbook.admin.auth import validate_handoff_token
 
-        assert validate_exchange_token("nonexistent-token") is False
+        assert validate_handoff_token("nonexistent-token") is False
 
 
 class TestSessionCookie:
