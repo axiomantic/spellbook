@@ -18,10 +18,16 @@ These are pure-ASGI classes with no FastAPI dependency. Header parsing uses
 from __future__ import annotations
 
 import secrets
+from typing import TYPE_CHECKING
 
 from starlette.datastructures import Headers
 from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
+
+from spellbook.admin import auth as admin_auth
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # Safe HTTP methods: never gated by the Origin check.
 _SAFE_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -116,16 +122,26 @@ class OriginCheckMiddleware:
     to the Origin check so the failure mode is indistinguishable from
     "no auth attempted" (no token-validity oracle).
 
-    ``load_token`` is resolved at request time via ``from spellbook.admin
-    import auth as admin_auth; admin_auth.load_token()``, NOT captured at
-    construction. This keeps ``monkeypatch.setattr("spellbook.admin.auth.
-    load_token", ...)`` working in tests and lets the token file rotate at
-    runtime without restarting the daemon.
+    ``load_token`` is resolved at request time via the module-level
+    ``admin_auth`` reference (``admin_auth.load_token()``), NOT captured at
+    construction. Attribute access on the module happens per request, so
+    test-time mocking of ``spellbook.admin.auth:load_token`` and runtime
+    token-file rotation are both still observed without restarting the
+    daemon. The import is top-level: ``spellbook.admin.auth`` only depends
+    on ``spellbook.core.auth`` and ``fastapi`` (no back-edge to this
+    module or ``spellbook.admin.app``), so there is no import cycle.
     """
 
-    def __init__(self, app: ASGIApp, allowed_origins: list[str]) -> None:
+    def __init__(
+        self, app: ASGIApp, allowed_origins: "Iterable[str]"
+    ) -> None:
         self.app = app
-        self.allowed_origins = list(allowed_origins)
+        # Stored as a frozenset so the per-request ``origin in
+        # self.allowed_origins`` membership test is O(1) rather than O(n)
+        # over a list. Accepts any iterable (list, frozenset) so callers
+        # passing ``app.state.allowed_origins`` work regardless of its
+        # concrete type.
+        self.allowed_origins: frozenset[str] = frozenset(allowed_origins)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         # Only HTTP is gated here. WebSocket has its own Origin check in ws.py;
@@ -141,9 +157,9 @@ class OriginCheckMiddleware:
 
         headers = Headers(scope=scope)
 
-        # Bearer exemption. Imported lazily so monkeypatch on
-        # ``spellbook.admin.auth.load_token`` is respected in tests and so
-        # token rotation is observed at request time.
+        # Bearer exemption. ``admin_auth`` is the module object, imported
+        # at module load; ``admin_auth.load_token`` is resolved per request
+        # so test-time mocking and runtime token rotation are both honored.
         auth_header = headers.get("authorization", "")
         # RFC 7235: the auth-scheme token is case-insensitive. Compare the
         # scheme prefix in lowercase, but slice the ORIGINAL header so a
@@ -151,8 +167,6 @@ class OriginCheckMiddleware:
         # Strip the extracted token to tolerate trailing whitespace.
         if auth_header.lower().startswith("bearer "):
             provided = auth_header[7:].strip()
-            from spellbook.admin import auth as admin_auth
-
             expected = admin_auth.load_token() or ""
             if expected and secrets.compare_digest(provided, expected):
                 await self.app(scope, receive, send)

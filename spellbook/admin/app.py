@@ -108,11 +108,17 @@ def create_admin_app() -> FastAPI:
     # re-reading the environment at request time.
     bound_port = int(get_env("PORT", "8765"))
     app.state.bound_port = bound_port
-    app.state.allowed_origins = [
-        "http://127.0.0.1:" + str(bound_port),
-        "http://localhost:" + str(bound_port),
-        "http://[::1]:" + str(bound_port),
-    ]
+    # Stored as a frozenset: membership (``origin in allowed_origins``) is
+    # the only operation performed by both the OriginCheck middleware and
+    # the WS handler, so O(1) lookup and an immutable, order-independent
+    # type are the right end-to-end contract.
+    app.state.allowed_origins = frozenset(
+        {
+            "http://127.0.0.1:" + str(bound_port),
+            "http://localhost:" + str(bound_port),
+            "http://[::1]:" + str(bound_port),
+        }
+    )
 
     # CSRF defense (design-doc C4): require a same-origin ``Origin`` header
     # on state-changing methods (POST/PUT/PATCH/DELETE) when the request is
