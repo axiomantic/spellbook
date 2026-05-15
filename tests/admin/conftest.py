@@ -4,18 +4,12 @@ import secrets
 
 @pytest.fixture(autouse=True)
 def clear_handoff_store():
-    """Clear handoff/exchange token store between tests."""
+    """Clear handoff token store between tests."""
     from spellbook.admin import auth as admin_auth
 
-    for attr in ("_handoff_tokens", "_exchange_tokens"):
-        store = getattr(admin_auth, attr, None)
-        if store is not None:
-            store.clear()
+    admin_auth._handoff_tokens.clear()
     yield
-    for attr in ("_handoff_tokens", "_exchange_tokens"):
-        store = getattr(admin_auth, attr, None)
-        if store is not None:
-            store.clear()
+    admin_auth._handoff_tokens.clear()
 
 
 @pytest.fixture(autouse=True)
