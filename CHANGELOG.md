@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Admin web UI: DNS rebinding defense.** A new
+  `HostValidatorMiddleware` on the admin sub-app rejects any request
+  whose `Host` header is not in the bare-hostname allowlist
+  (`127.0.0.1`, `localhost`, `::1`). The validator is IPv6-aware
+  (parses bracketed `[::1]:port` correctly) and case-insensitive.
+  Closes the prior gap where a malicious page could rebind DNS to
+  127.0.0.1 and ride the user's admin session cookie.
+- **Admin web UI: Origin allowlist on state-changing routes.** A new
+  `OriginCheckMiddleware` requires a same-origin `Origin` header
+  (`http://127.0.0.1:<port>`, `http://localhost:<port>`,
+  `http://[::1]:<port>`) on POST/PUT/PATCH/DELETE requests
+  authenticated by the session cookie. Bearer-authenticated callers
+  (e.g., the `spellbook admin` CLI) are exempted via constant-time
+  comparison against the MCP token, since CSRF only threatens cookie
+  flows. Bearer scheme matching is case-insensitive per RFC 7235.
+- **Admin web UI: opaque-handoff login flow.** The CLI -> browser
+  handshake no longer carries a token in the URL. Replaces
+  `POST /admin/api/auth/exchange` + `GET /admin/api/auth/callback?auth=...`
+  with `POST /admin/api/auth/handoff` (bearer-authenticated, empty body)
+  returning a `{login_url}` whose path is `/admin/api/auth/handoff/<id>`.
+  The `<id>` is a single-use opaque server-side lookup key (256-bit
+  entropy, 60s TTL), not a credential. Tokens no longer appear in
+  browser history, `Referer` headers, or process argv visible to other
+  local UIDs.
+- **Admin WebSocket: same-origin enforcement.** The `/admin/ws` upgrade
+  handler now checks the `Origin` header against the same allowlist as
+  the HTTP middleware and rejects with WebSocket close code 1008
+  (Policy Violation) on mismatch or missing Origin. No bearer
+  exemption on WS.
+
 - **Opt-in to re-enable `BASH-PARSER-COMPOUND` deny findings.** The 0.63.2
   compound-allow change was a deliberate widening of the bash gate's
   allowlist: the L4 parser stopped emitting a CRITICAL deny on every
@@ -24,6 +54,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nodes AND for `if` / `for` / `while` / `until` / `case` / `function`
   control-flow constructs. With neither opt-in active, default behavior
   is unchanged from 0.63.2.
+
+### Fixed
+
+- **Admin session cookie scope.** `spellbook_admin_session` is now
+  issued with `Path=/admin` (was default `Path=/`), so browsers no
+  longer send it to `/mcp` or `/health`. Pre-existing `Path=/` cookies
+  continue to authenticate during the natural 24h expiry window
+  (broader path matches narrower); no user action required.
 
 ## [0.64.1] - 2026-05-08
 
