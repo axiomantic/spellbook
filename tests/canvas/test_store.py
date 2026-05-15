@@ -194,17 +194,24 @@ def test_list_canvases_sorted_by_last_updated_desc(canvas_tmp_root):
 
     ``write_page`` is page-only; ``canvas_write`` (MCP layer, A.3) bumps
     ``meta.last_updated``. Here we simulate the MCP layer by writing
-    meta directly with bumped timestamps.
+    explicit ``last_updated`` timestamps directly, so the assertion does
+    not rely on wall-clock spacing between ``open_canvas`` calls (slow
+    CI can produce identical timestamps within a millisecond resolution
+    grid).
     """
-    import time
+    from datetime import datetime, timedelta, timezone
 
     meta_alpha, _, _ = store.open_canvas("alpha")
-    time.sleep(0.01)
     meta_beta, _, _ = store.open_canvas("beta")
-    time.sleep(0.01)
-    # Bump alpha's last_updated to make it newer than beta.
-    bumped = meta_alpha.model_copy(update={"last_updated": store._now_utc()})
-    store.write_meta("alpha", bumped)
+    base = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    # beta is older; alpha is bumped to be newer.
+    store.write_meta(
+        "beta", meta_beta.model_copy(update={"last_updated": base})
+    )
+    store.write_meta(
+        "alpha",
+        meta_alpha.model_copy(update={"last_updated": base + timedelta(seconds=1)}),
+    )
     items = store.list_canvases()
     names = [i["name"] for i in items]
     assert names == ["alpha", "beta"]
