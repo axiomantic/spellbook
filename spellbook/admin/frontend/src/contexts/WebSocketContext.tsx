@@ -54,6 +54,15 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['focus'] })
           queryClient.invalidateQueries({ queryKey: ['dashboard'] })
           break
+        case 'canvas':
+          queryClient.invalidateQueries({ queryKey: ['canvas'] })
+          if (event.data && typeof (event.data as { canvas?: unknown }).canvas === 'string') {
+            queryClient.invalidateQueries({
+              queryKey: ['canvas', (event.data as { canvas: string }).canvas],
+            })
+          }
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+          break
         default:
           queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       }

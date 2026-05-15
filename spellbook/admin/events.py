@@ -23,6 +23,7 @@ class Subsystem(str, Enum):
     FORGE = "forge"
     FOCUS = "focus"
     WORKER_LLM = "worker_llm"
+    CANVAS = "canvas"
 
 
 @dataclass

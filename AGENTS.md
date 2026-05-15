@@ -53,6 +53,10 @@ Pre-commit hooks auto-generate documentation files. If a hook fails:
 
 When a pre-commit hook fails, it often generates or modifies files. Stage those files (`git add`) and commit again.
 
+## Switching Between Worktrees
+
+To switch which worktree the installed spellbook runs from, always run `uv run install.py` from the target worktree. Don't just re-point `~/.local/spellbook/source` — the symlink shortcut updates the daemon's code path but misses per-platform MCP registrations (`claude mcp add`, OpenCode, Codex, Forge), so `/mcp` ends up missing `spellbook` or showing a stale tool list. `install.py` is idempotent; run it.
+
 ## Architecture Notes
 
 - The MCP server (`spellbook/`) runs as a persistent daemon, not inline with the CLI

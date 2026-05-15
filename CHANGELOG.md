@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Canvas — admin UI for agent-authored markdown pages with live updates.**
+  A new `/admin/canvas` section displays Markdown pages an agent writes to
+  `~/.local/spellbook/canvas/<name>/`, with diagrams (Mermaid) and charts
+  (Vega-Lite) rendered inline via curated shortcodes, updated live over the
+  existing admin WebSocket.
+  - Four MCP tools (`canvas_open`, `canvas_write`, `canvas_close`,
+    `canvas_list`) let any agent session open and update named canvases
+    from a terminal. Errors return structured codes (`invalid_name`,
+    `page_too_large`, `not_found`, `closed`).
+  - Filesystem store with atomic writes (tempfile + `os.replace`), name
+    validation, path-traversal guard, and configurable max page size
+    (1 MB default via `SPELLBOOK_CANVAS_MAX_PAGE_BYTES`).
+  - Admin REST routes behind `require_admin_auth`: `GET /api/canvas`
+    (list) and `GET /api/canvas/{name}` (detail).
+  - New `CANVAS` event-bus subsystem with `canvas.opened` /
+    `canvas.updated` / `canvas.closed` events.
+  - React `/admin/canvas` list and `/admin/canvas/<name>` detail pages,
+    Markdown rendered via `react-markdown` + `remark-gfm` + `rehype-raw`,
+    with six curated shortcodes (`<chart>`, `<diagram>`, `<callout>`,
+    `<tabs>`/`<tab>`, `<choice>`, `<approve>`). Mermaid + Vega-Lite are
+    lazy-loaded out of the initial bundle.
+  - Live update: WebSocket `canvas` subsystem invalidates `['canvas']`,
+    `['canvas', name]`, and `['dashboard']` query caches.
+  - `/canvas` slash command + `skills/canvas/SKILL.md` for agent-facing
+    guidance.
+  - Threat model: trusted-local-agent only. `rehype-raw` is an explicit
+    escape hatch; agents MUST NOT render unsanitized external content.
+    The constraint is documented in the MCP tool docstrings, SKILL.md,
+    and slash-command doc.
+  - One-way only in MVP (agent writes, browser reads). Multi-page
+    canvases, two-way inbox / form submission, page history, full-text
+    search, and RJSF form rendering are reserved for v2.
+
 - **Develop skill Phase 4 guardrail hardening.** Bans phrases like "TDD mode"
 and "or read SKILL.md" that signal subagents to inline behavior instead of
 invoking the Skill tool; mandates a "Launching skill:" check in subagent
