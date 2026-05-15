@@ -37,6 +37,7 @@ async def login(request: Request):
         httponly=True,
         samesite="strict",
         max_age=86400,
+        path="/admin",
     )
     return response
 
@@ -101,6 +102,7 @@ async def handoff_consume(handoff_id: str):
         httponly=True,
         samesite="strict",
         max_age=86400,
+        path="/admin",
     )
     return response
 
@@ -116,5 +118,5 @@ async def get_ws_ticket(session_id: str = Depends(require_admin_auth)):
 async def logout():
     """Clear session cookie."""
     response = JSONResponse({"status": "ok"})
-    response.delete_cookie("spellbook_admin_session")
+    response.delete_cookie("spellbook_admin_session", path="/admin")
     return response

@@ -116,6 +116,51 @@ class TestLogin:
         assert response.json() == {"status": "ok"}
         assert "spellbook_admin_session" in response.cookies
 
+    def test_login_sets_cookie_with_admin_path(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """
+        ESCAPE: test_login_sets_cookie_with_admin_path
+          CLAIM: A successful POST /api/auth/login sets the
+                 spellbook_admin_session cookie with ``Path=/admin``, scoping
+                 it to the admin app and preventing the browser from sending
+                 it to sibling paths like /mcp or /health.
+          PATH:  login handler -> JSONResponse.set_cookie(..., path="/admin")
+                 -> Starlette serializes Set-Cookie header with Path attribute.
+          CHECK: Status 200 and the raw Set-Cookie header for
+                 ``spellbook_admin_session`` contains ``Path=/admin``.
+          MUTATION: If the path kwarg was missing (default), Starlette emits
+                    ``Path=/`` and the assertion fails. If the path kwarg was
+                    ``/admin/`` (trailing slash), the assertion still passes
+                    on substring match but the deliberate exact form is
+                    pinned by the equality reconstruction below.
+          ESCAPE: A handler that wrote ``Path=/admin/foo`` would still
+                  contain ``Path=/admin`` as a prefix; this is an accepted
+                  loosening since "/admin" is itself a substring of any
+                  more-specific path and the parent-route policy is the M2
+                  contract.
+          IMPACT: Without Path=/admin, the cookie is sent to /mcp and
+                  /health, widening the cookie's exposure surface (M2).
+        """
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": mock_mcp_token},
+        )
+        assert response.status_code == 200
+        set_cookie_headers = [
+            v.decode() for k, v in response.headers.raw if k.lower() == b"set-cookie"
+        ]
+        session_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie, got: "
+            f"{set_cookie_headers!r}"
+        )
+        assert "Path=/admin" in session_headers[0], (
+            f"Set-Cookie header missing Path=/admin: {session_headers[0]!r}"
+        )
+
     def test_login_with_wrong_token_returns_401(self, unauthenticated_client):
         response = unauthenticated_client.post(
             "/api/auth/login",
@@ -339,6 +384,57 @@ class TestHandoffGet:
         # The cookie value validates as a real session cookie.
         assert validate_session_cookie(morsel.value) is not None
 
+    def test_handoff_sets_cookie_with_admin_path(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """
+        ESCAPE: test_handoff_sets_cookie_with_admin_path
+          CLAIM: A successful GET /api/auth/handoff/{id} sets the
+                 spellbook_admin_session cookie with ``Path=/admin``, matching
+                 the login endpoint's scoping (M2).
+          PATH:  POST /handoff to mint id -> GET /handoff/{id} -> handler ->
+                 RedirectResponse.set_cookie(..., path="/admin") -> Set-Cookie
+                 header.
+          CHECK: Status 302 and the Set-Cookie header for
+                 ``spellbook_admin_session`` contains ``Path=/admin``.
+          MUTATION: If the path kwarg was missing on the handoff_consume's
+                    set_cookie call, the header would carry ``Path=/`` and
+                    the assertion fails. If only the login path was fixed
+                    but not the handoff path, this test would catch the
+                    drift.
+          ESCAPE: A handler that wrote ``Path=/admin/foo`` would still
+                  contain ``Path=/admin`` as a prefix; same loosening as in
+                  the login test, deliberate.
+          IMPACT: Without Path=/admin on the handoff-issued cookie, the
+                  M2 mitigation is incomplete: bearer-handoff sessions
+                  would still send the cookie to /mcp and /health.
+        """
+        # Mint a handoff id, then consume it.
+        mint_response = unauthenticated_client.post(
+            "/api/auth/handoff",
+            headers={"Authorization": f"Bearer {mock_mcp_token}"},
+        )
+        assert mint_response.status_code == 200
+        login_url = mint_response.json()["login_url"]
+        handoff_id = login_url.rsplit("/", 1)[1]
+        response = unauthenticated_client.get(
+            f"/api/auth/handoff/{handoff_id}", follow_redirects=False
+        )
+        assert response.status_code == 302
+        set_cookie_headers = [
+            v.decode() for k, v in response.headers.raw if k.lower() == b"set-cookie"
+        ]
+        session_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie, got: "
+            f"{set_cookie_headers!r}"
+        )
+        assert "Path=/admin" in session_headers[0], (
+            f"Set-Cookie header missing Path=/admin: {session_headers[0]!r}"
+        )
+
     def test_handoff_get_replayed_returns_404(
         self, unauthenticated_client, mock_mcp_token
     ):
@@ -449,6 +545,69 @@ class TestHandoffGet:
         )
         assert r1.status_code == 302
         assert r2.status_code == 302
+
+
+class TestLogout:
+    """POST /api/auth/logout: clears the session cookie."""
+
+    def test_logout_deletes_cookie_with_admin_path(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """
+        ESCAPE: test_logout_deletes_cookie_with_admin_path
+          CLAIM: POST /api/auth/logout emits a Set-Cookie deletion header
+                 for ``spellbook_admin_session`` scoped to ``Path=/admin``,
+                 so the browser's cookie store key matches the one written
+                 by /login and /handoff (both at Path=/admin) and the
+                 deletion actually evicts the cookie.
+          PATH:  Authenticate via /login -> POST /logout -> handler ->
+                 JSONResponse.delete_cookie(name, path="/admin") -> Starlette
+                 emits ``Set-Cookie: spellbook_admin_session=""; Max-Age=0;
+                 Path=/admin; ...``.
+          CHECK: Status 200 and the deletion Set-Cookie header contains both
+                 ``spellbook_admin_session=`` and ``Path=/admin``. Browser
+                 cookie-eviction semantics require the deletion's path to
+                 match the original cookie's path, so this is the load-
+                 bearing assertion.
+          MUTATION: If the path kwarg on delete_cookie was missing, the
+                    deletion header would carry ``Path=/`` and would not
+                    evict the ``Path=/admin``-scoped cookie set by /login;
+                    the assertion fails.
+          ESCAPE: A handler that emitted a deletion with ``Path=/admin/foo``
+                  would still contain the substring ``Path=/admin`` and
+                  pass this test, but would also fail to evict the cookie
+                  in a real browser. The accompanying /admin-scoped
+                  login/handoff tests pin the parent-path contract.
+          IMPACT: Without matching Path=/admin on the deletion, /logout is
+                  a no-op in browsers: the session cookie stays in the
+                  cookie jar and continues to be sent to /admin until its
+                  Max-Age expires (24h). M2 fix is incomplete.
+        """
+        # First log in to mint a session cookie (and let httpx capture it
+        # in the client jar), then call logout and inspect Set-Cookie.
+        login_response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": mock_mcp_token},
+        )
+        assert login_response.status_code == 200
+        logout_response = unauthenticated_client.post("/api/auth/logout")
+        assert logout_response.status_code == 200
+        set_cookie_headers = [
+            v.decode()
+            for k, v in logout_response.headers.raw
+            if k.lower() == b"set-cookie"
+        ]
+        session_deletion_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_deletion_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie on "
+            f"logout, got: {set_cookie_headers!r}"
+        )
+        assert "Path=/admin" in session_deletion_headers[0], (
+            f"Logout Set-Cookie header missing Path=/admin: "
+            f"{session_deletion_headers[0]!r}"
+        )
 
 
 class TestOldEndpointsRemoved:
