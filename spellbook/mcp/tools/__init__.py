@@ -5,6 +5,7 @@ functions from the 13 tool submodules with the shared FastMCP instance.
 """
 
 from spellbook.mcp.tools import (  # noqa: F401
+    canvas,
     config,
     coordination,
     forged,
