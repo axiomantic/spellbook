@@ -8,7 +8,7 @@ import { CanvasList } from '../CanvasList'
 import type { CanvasListResponse } from '../../api/types'
 
 /**
- * Stub `global.fetch` to return `body` as a JSON Response.
+ * Stub `globalThis.fetch` to return `body` as a JSON Response.
  *
  * The real `useCanvasList` hook is exercised end-to-end: its `queryFn`
  * calls `fetchApi('/api/canvas')`, which calls `fetch('/admin/api/canvas')`.
@@ -20,11 +20,11 @@ function stubFetchJson(body: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   })
-  return vi.spyOn(global, 'fetch').mockResolvedValue(response)
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(response)
 }
 
 function stubFetchError(error: Error) {
-  return vi.spyOn(global, 'fetch').mockRejectedValue(error)
+  return vi.spyOn(globalThis, 'fetch').mockRejectedValue(error)
 }
 
 function renderList() {
@@ -123,7 +123,7 @@ describe('CanvasList', () => {
 
   it('shows the LoadingSpinner while loading', () => {
     // Pending forever — the query stays in loading state.
-    vi.spyOn(global, 'fetch').mockReturnValue(new Promise(() => {}))
+    vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}))
     const { container } = renderList()
     const spinner = container.querySelector('.animate-spin')
     expect(spinner).not.toBeNull()

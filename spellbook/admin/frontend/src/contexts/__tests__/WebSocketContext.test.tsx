@@ -10,9 +10,9 @@ import type { WSEvent } from '../../api/types'
  * `case 'canvas':` arm added by Track B.3.
  *
  * Approach:
- *   - Stub `global.fetch` so `useWebSocket`'s `fetchApi('/api/auth/ws-ticket')`
+ *   - Stub `globalThis.fetch` so `useWebSocket`'s `fetchApi('/api/auth/ws-ticket')`
  *     resolves and the provider proceeds to construct a WebSocket.
- *   - Replace `global.WebSocket` with a controllable fake that captures
+ *   - Replace `globalThis.WebSocket` with a controllable fake that captures
  *     `onmessage`. The test then invokes `onmessage` with a synthetic
  *     `MessageEvent` whose `data` is the JSON-stringified WS frame.
  *   - Spy on `QueryClient.invalidateQueries` and assert the exact calls.
@@ -54,7 +54,7 @@ class FakeWebSocket implements FakeWS {
 function stubWsTicket() {
   // useWebSocket calls fetchApi('/api/auth/ws-ticket', { method: 'POST' }),
   // which becomes fetch('/admin/api/auth/ws-ticket', { method: 'POST', ... }).
-  return vi.spyOn(global, 'fetch').mockResolvedValue(
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(
     new Response(JSON.stringify({ ticket: 'test-ticket' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -99,14 +99,14 @@ describe('WebSocketProvider — canvas dispatch (B.3)', () => {
 
   beforeEach(() => {
     lastFakeWs = null
-    originalWebSocket = global.WebSocket
+    originalWebSocket = globalThis.WebSocket
     // @ts-expect-error — replacing the constructor with a fake
-    global.WebSocket = FakeWebSocket
+    globalThis.WebSocket = FakeWebSocket
     stubWsTicket()
   })
 
   afterEach(() => {
-    global.WebSocket = originalWebSocket
+    globalThis.WebSocket = originalWebSocket
     vi.restoreAllMocks()
   })
 

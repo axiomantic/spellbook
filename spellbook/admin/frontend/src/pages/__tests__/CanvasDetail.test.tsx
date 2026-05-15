@@ -16,7 +16,7 @@ import { CanvasDetail } from '../CanvasDetail'
 import type { CanvasDetail as CanvasDetailType } from '../../api/types'
 
 /**
- * Stub `global.fetch` to return `body` as a JSON Response.
+ * Stub `globalThis.fetch` to return `body` as a JSON Response.
  *
  * The real `useCanvas` hook is exercised end-to-end: its `queryFn` calls
  * `fetchApi('/api/canvas/<encoded-name>')`, which calls
@@ -27,11 +27,11 @@ function stubFetchJson(body: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   })
-  return vi.spyOn(global, 'fetch').mockResolvedValue(response)
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(response)
 }
 
 function stubFetchError(error: Error) {
-  return vi.spyOn(global, 'fetch').mockRejectedValue(error)
+  return vi.spyOn(globalThis, 'fetch').mockRejectedValue(error)
 }
 
 function renderDetail(initialName = 'alpha') {
@@ -94,7 +94,7 @@ describe('CanvasDetail', () => {
 
   it('shows the LoadingSpinner while loading', () => {
     // Pending forever — query stays in loading state.
-    vi.spyOn(global, 'fetch').mockReturnValue(new Promise(() => {}))
+    vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}))
     const { container } = renderDetail()
     expect(container.querySelector('.animate-spin')).not.toBeNull()
   })
@@ -165,7 +165,7 @@ describe('CanvasDetail', () => {
   })
 
   it('is disabled (no fetch fires) when route param `name` is missing', async () => {
-    const fetchSpy = vi.spyOn(global, 'fetch')
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
     const queryClient = new QueryClient({
       defaultOptions: {
