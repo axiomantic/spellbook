@@ -32,7 +32,17 @@ def authed_app(admin_app):
 def authed_client(authed_app):
     from fastapi.testclient import TestClient
 
-    with TestClient(authed_app) as c:
+    # The admin app wires HostValidatorMiddleware (loopback Host allowlist)
+    # and OriginCheckMiddleware. Starlette's TestClient defaults to
+    # ``Host: testserver``, which the Host validator rejects with 400.
+    # Send the same default loopback Host/Origin headers the shared admin
+    # fixtures use (see tests/admin/conftest.py::_DEFAULT_TEST_HEADERS) so
+    # these route tests exercise the route logic, not the Host rejection.
+    default_headers = {
+        "Host": "127.0.0.1:8765",
+        "Origin": "http://127.0.0.1:8765",
+    }
+    with TestClient(authed_app, headers=default_headers) as c:
         yield c
 
 

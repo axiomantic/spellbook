@@ -68,7 +68,27 @@ async def websocket_handler(ws: WebSocket) -> None:
     """WebSocket endpoint handler at /ws.
 
     Query parameter ?ticket= must contain a valid WS ticket.
+
+    Defense-in-depth against cross-origin WebSocket hijack: the ``Origin``
+    header is checked against ``ws.app.state.allowed_origins`` (populated
+    in :func:`spellbook.admin.app.create_admin_app` from the bound port).
+    Browsers always send ``Origin`` on WS upgrade; non-browser clients
+    that omit ``Origin`` are rejected unconditionally (no Bearer exemption
+    on WS — the ticket alone is insufficient).
+
+    The Origin check runs BEFORE ``accept()``, so a rejection results in
+    ``websocket.close(code=1008)`` which Starlette converts to HTTP 403
+    on the underlying transport.
     """
+    # Origin check (CSRF / WS-hijack defense). Unconditional: no Bearer
+    # exemption on the WS upgrade because the only client that legitimately
+    # connects here is the admin SPA, which always runs same-origin.
+    origin = ws.headers.get("origin")
+    allowed = getattr(ws.app.state, "allowed_origins", None) or []
+    if not origin or origin not in allowed:
+        await ws.close(code=1008)  # 1008 = Policy Violation
+        return
+
     # Validate ticket before accepting
     ticket = ws.query_params.get("ticket", "")
     if not ticket or not validate_ws_ticket(ticket):

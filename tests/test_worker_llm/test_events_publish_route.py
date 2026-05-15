@@ -302,7 +302,9 @@ async def test_admin_scoped_publish_path_is_gone(mcp_http_app):
     """
     transport = httpx.ASGITransport(app=mcp_http_app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://testserver"
+        transport=transport,
+        base_url="http://127.0.0.1:8765",
+        headers={"Origin": "http://127.0.0.1:8765"},
     ) as client:
         r = await client.post(
             "/admin/api/events/publish",

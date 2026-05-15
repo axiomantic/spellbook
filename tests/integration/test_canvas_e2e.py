@@ -47,8 +47,19 @@ def admin_client(monkeypatch):
     monkeypatch.setattr("spellbook.admin.auth.load_token", lambda: token)
     monkeypatch.setattr("spellbook.admin.routes.auth.load_token", lambda: token)
 
+    # The admin app wires HostValidatorMiddleware (loopback Host allowlist)
+    # and OriginCheckMiddleware. Starlette's TestClient defaults to
+    # ``Host: testserver``, which the Host validator rejects with 400.
+    # Send the same default loopback Host/Origin headers the shared admin
+    # fixtures use (see tests/admin/conftest.py::_DEFAULT_TEST_HEADERS) so
+    # this integration test exercises the canvas round-trip, not the Host
+    # rejection.
+    default_headers = {
+        "Host": "127.0.0.1:8765",
+        "Origin": "http://127.0.0.1:8765",
+    }
     app = create_admin_app()
-    with TestClient(app) as c:
+    with TestClient(app, headers=default_headers) as c:
         c.cookies.set("spellbook_admin_session", create_session_cookie("test-session"))
         yield c
 

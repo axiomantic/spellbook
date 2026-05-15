@@ -9,7 +9,8 @@ from pathlib import Path
 import logging
 
 from spellbook.admin.events import event_bus
-from spellbook.core.config import config_get
+from spellbook.admin.middleware import HostValidatorMiddleware, OriginCheckMiddleware
+from spellbook.core.config import config_get, get_env
 from spellbook.hooks.observability import purge_loop as hook_purge_loop
 from spellbook.worker_llm.observability import purge_loop, threshold_eval_loop
 from spellbook.worker_llm.queue import start_queue, stop_queue
@@ -98,6 +99,52 @@ def create_admin_app() -> FastAPI:
         redoc_url=None,
         openapi_url=None,
         lifespan=_lifespan,
+    )
+
+    # Capture the bound port from the same alias the CLI uses
+    # (``spellbook.admin.cli`` resolves ``PORT`` -> ``SPELLBOOK_MCP_PORT`` via
+    # ``get_env``). Stored on ``app.state`` so downstream middleware (Origin)
+    # and the WebSocket handler can derive their loopback allowlists without
+    # re-reading the environment at request time.
+    bound_port = int(get_env("PORT", "8765"))
+    app.state.bound_port = bound_port
+    # Stored as a frozenset: membership (``origin in allowed_origins``) is
+    # the only operation performed by both the OriginCheck middleware and
+    # the WS handler, so O(1) lookup and an immutable, order-independent
+    # type are the right end-to-end contract.
+    app.state.allowed_origins = frozenset(
+        {
+            "http://127.0.0.1:" + str(bound_port),
+            "http://localhost:" + str(bound_port),
+            "http://[::1]:" + str(bound_port),
+        }
+    )
+
+    # CSRF defense (design-doc C4): require a same-origin ``Origin`` header
+    # on state-changing methods (POST/PUT/PATCH/DELETE) when the request is
+    # not authenticated via a valid Bearer token. ``allowed_origins`` is
+    # sourced from ``app.state.allowed_origins`` (populated above from the
+    # bound port) so the allowlist tracks whatever port the daemon actually
+    # bound.
+    #
+    # Middleware add order is load-bearing: Starlette wraps middleware in
+    # LIFO order (last added = outermost = runs first). The required
+    # execution order per design §3 is HostValidator FIRST (reject bad Host
+    # before any other processing) then OriginCheck SECOND. So we add
+    # OriginCheck here (inner) and HostValidator below (outer).
+    app.add_middleware(
+        OriginCheckMiddleware,
+        allowed_origins=app.state.allowed_origins,
+    )
+
+    # DNS-rebinding defense (design-doc C1): reject requests whose ``Host``
+    # header is not one of the bare loopback hostnames. MUST be added after
+    # ``app.state`` is populated so the middleware stack is built with the
+    # final state object. Added LAST so it runs FIRST in the execution
+    # order (outermost middleware).
+    app.add_middleware(
+        HostValidatorMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost", "::1"],
     )
 
     # Global exception handler for fault isolation

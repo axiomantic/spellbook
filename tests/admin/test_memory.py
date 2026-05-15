@@ -81,7 +81,7 @@ def memory_root(tmp_path, monkeypatch):
 def auth_client(memory_root, mock_mcp_token):
     """Authenticated test client with memory_root fixture in scope."""
     app = create_admin_app()
-    with TestClient(app) as c:
+    with TestClient(app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"}) as c:
         cookie = create_session_cookie("test-session")
         c.cookies.set("spellbook_admin_session", cookie)
         yield c
@@ -154,7 +154,7 @@ class TestMemoryList:
 
     def test_list_requires_auth(self, memory_root):
         app = create_admin_app()
-        with TestClient(app) as c:
+        with TestClient(app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"}) as c:
             response = c.get("/api/memories")
             assert response.status_code == 401
 
@@ -300,7 +300,7 @@ class TestMemorySearch:
 
     def test_search_requires_auth(self, memory_root):
         app = create_admin_app()
-        with TestClient(app) as c:
+        with TestClient(app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"}) as c:
             response = c.get("/api/memories/search?q=foo")
             assert response.status_code == 401
 
