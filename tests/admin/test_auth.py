@@ -287,6 +287,52 @@ class TestHandoffPost:
         assert response.status_code == 401
         assert response.json() == {"detail": "Invalid token"}
 
+    def test_handoff_post_with_lowercase_bearer_scheme_returns_login_url(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """RFC 7235: scheme matching on POST /handoff is case-insensitive.
+
+        ESCAPE: test_handoff_post_with_lowercase_bearer_scheme_returns_login_url
+          CLAIM: POST /api/auth/handoff with ``Authorization: bearer <mcp>``
+                 (lowercase scheme) succeeds and returns a login_url, matching
+                 the ``Bearer`` variant under RFC 7235's case-insensitivity.
+          PATH:  OriginCheck (bearer-exempt; lowercase scheme accepted) ->
+                 route handler (lowercase scheme accepted) -> compare_digest
+                 -> create_handoff_token -> build login_url.
+          CHECK: 200, body is a dict with sole key ``login_url``, and the URL
+                 matches the same regex used by the canonical
+                 valid-bearer test.
+          MUTATION:
+            - Case-sensitive scheme check in the route -> ``provided`` stays
+              ``""`` -> compare_digest fails -> 401, status assertion fails.
+            - Case-sensitive scheme check in the OriginCheckMiddleware ->
+              bearer exemption misses, request falls through to Origin
+              (default valid Origin from conftest), reaches route, route
+              ALSO case-sensitively rejects -> 401, status assertion fails.
+            - Wrong slice index after lowering -> compare_digest false -> 401.
+          ESCAPE: A handler that always 200'd regardless of bearer would pass
+                  this row but fail the invalid-bearer tests above.
+          IMPACT: Without case-insensitive scheme matching at the route,
+                  RFC-compliant lowercase-bearer clients cannot mint
+                  handoff URLs.
+        """
+        import re
+
+        response = unauthenticated_client.post(
+            "/api/auth/handoff",
+            headers={"Authorization": f"bearer {mock_mcp_token}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert set(body.keys()) == {"login_url"}
+        bound_port = unauthenticated_client.app.state.bound_port
+        pattern = (
+            rf"^http://127\.0\.0\.1:{bound_port}/admin/api/auth/handoff/[A-Za-z0-9_-]{{32,}}$"
+        )
+        assert re.match(pattern, body["login_url"]), (
+            f"login_url {body['login_url']!r} does not match {pattern!r}"
+        )
+
     def test_handoff_bad_bearer_with_good_origin_returns_401(
         self, unauthenticated_client
     ):

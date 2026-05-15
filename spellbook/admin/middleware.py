@@ -145,8 +145,12 @@ class OriginCheckMiddleware:
         # ``spellbook.admin.auth.load_token`` is respected in tests and so
         # token rotation is observed at request time.
         auth_header = headers.get("authorization", "")
-        if auth_header.startswith("Bearer "):
-            provided = auth_header[len("Bearer "):]
+        # RFC 7235: the auth-scheme token is case-insensitive. Compare the
+        # scheme prefix in lowercase, but slice the ORIGINAL header so a
+        # mixed-case token body is preserved verbatim for compare_digest.
+        # Strip the extracted token to tolerate trailing whitespace.
+        if auth_header.lower().startswith("bearer "):
+            provided = auth_header[7:].strip()
             from spellbook.admin import auth as admin_auth
 
             expected = admin_auth.load_token() or ""

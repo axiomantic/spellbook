@@ -195,6 +195,54 @@ def test_admin_app_state_has_bound_port_and_origins():
     ]
 
 
+def test_admin_app_host_validator_runs_before_origin_check():
+    """Pin middleware execution order: Host outermost, Origin inner.
+
+    A request with BOTH a bad Host AND a bad Origin should be rejected by
+    the Host middleware (status 400, body "Invalid host header"), NOT by
+    the Origin middleware (status 403, body "Forbidden: invalid Origin").
+
+    Catches regression: if the middleware add-order were inverted (Origin
+    added after Host, making Origin outermost), the request would hit the
+    Origin layer first and we'd see the 403 body instead of the 400 body.
+
+    ESCAPE: test_admin_app_host_validator_runs_before_origin_check
+      CLAIM: HostValidatorMiddleware runs strictly before OriginCheckMiddleware.
+      PATH:  TestClient -> HostValidator (Host=evil.com, NOT in allowlist) ->
+             400 "Invalid host header". Origin middleware is never reached.
+      CHECK: status == 400 AND body exactly "Invalid host header".
+      MUTATION:
+        - Swapping the add_middleware order in create_admin_app (Origin then
+          Host) would make Origin the outermost layer; Origin would see the
+          bad Origin header and 403 with body "Forbidden: invalid Origin".
+          Both the status and body assertions would fail.
+        - Removing the Host middleware entirely would let the request reach
+          Origin and 403 -- same failure mode.
+        - Changing the Host rejection body string would also fail the
+          body assertion, pinning the exact rejection text.
+      ESCAPE: A stack that rejected EVERY request with 400 "Invalid host
+              header" would pass this, but the same-origin and bearer
+              passthrough tests above would fail for it.
+      IMPACT: Order inversion would expose the Origin layer to malicious
+              Host headers, defeating the DNS-rebinding defense's intent
+              (the Host check should fire first; Origin is a separate
+              CSRF defense for browser-origin requests).
+    """
+    from spellbook.admin.app import create_admin_app
+
+    app = create_admin_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        headers={"Host": "evil.com", "Origin": "http://evil.com"},
+        json={"password": "anything"},
+    )
+
+    assert response.status_code == 400
+    assert response.text == "Invalid host header"
+
+
 def test_admin_app_rejects_bad_host():
     """Task 3 contract: ``HostValidatorMiddleware`` is wired into the admin
     app with the bare-hostname allowlist ``["127.0.0.1", "localhost", "::1"]``.

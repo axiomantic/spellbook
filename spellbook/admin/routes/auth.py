@@ -65,8 +65,11 @@ async def handoff_mint(request: Request):
     """
     auth_header = request.headers.get("authorization", "")
     provided = ""
-    if auth_header.startswith("Bearer "):
-        provided = auth_header[len("Bearer "):]
+    # RFC 7235: the auth-scheme token is case-insensitive. Compare the
+    # scheme prefix in lowercase, slice the original header (token body
+    # preserves case), and strip to tolerate trailing whitespace.
+    if auth_header.lower().startswith("bearer "):
+        provided = auth_header[7:].strip()
     stored_token = load_token()
     if not stored_token or not secrets.compare_digest(provided, stored_token):
         raise HTTPException(status_code=401, detail="Invalid token")

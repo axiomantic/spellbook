@@ -330,6 +330,72 @@ def test_post_with_invalid_bearer_no_origin_rejected(monkeypatch) -> None:
     assert resp.text == "Forbidden: invalid Origin"
 
 
+def test_post_with_lowercase_bearer_scheme_allowed(monkeypatch) -> None:
+    """RFC 7235: the ``Bearer`` scheme token is case-insensitive.
+
+    ESCAPE: test_post_with_lowercase_bearer_scheme_allowed
+      CLAIM: POST with ``Authorization: bearer <valid>`` (lowercase scheme)
+             and no Origin -> 200, because RFC 7235 requires scheme matching
+             to be case-insensitive.
+      PATH:  TestClient -> OriginCheckMiddleware -> Authorization parses with
+             case-insensitive scheme check -> load_token() returns the
+             patched value -> secrets.compare_digest() returns True ->
+             pass through -> 200.
+      CHECK: status == 200 and body == "ok".
+      MUTATION:
+        - Case-sensitive ``startswith("Bearer ")`` -> lowercase scheme is
+          NOT recognised, middleware falls through to the Origin check,
+          which has no Origin header and 403s. Status assertion fails.
+        - Slicing the original (mixed-case) header with the wrong index
+          would corrupt the token; secrets.compare_digest would return
+          False; the request would fall through to 403.
+      ESCAPE: A middleware that allows every Authorization-bearing request
+              regardless of scheme/case would pass this row but fail the
+              invalid-bearer rejection row above.
+      IMPACT: Without case-insensitive scheme matching, RFC-compliant
+              clients that send lowercase ``bearer`` are silently treated
+              as unauthenticated, locking out valid CLIs.
+    """
+    monkeypatch.setattr(
+        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
+    )
+    client = _make_client()
+    resp = client.post(
+        "/mutate", headers={"Authorization": "bearer secret-token-123"}
+    )
+    assert resp.status_code == 200
+    assert resp.text == "ok"
+
+
+def test_post_with_mixed_case_bearer_scheme_allowed(monkeypatch) -> None:
+    """RFC 7235: the ``Bearer`` scheme token is case-insensitive (uppercase).
+
+    ESCAPE: test_post_with_mixed_case_bearer_scheme_allowed
+      CLAIM: POST with ``Authorization: BEARER <valid>`` and no Origin -> 200.
+      PATH:  Same as the lowercase test above, but with the scheme uppercased.
+      CHECK: status == 200 and body == "ok".
+      MUTATION:
+        - Case-sensitive ``startswith("Bearer ")`` -> ``BEARER`` is NOT
+          recognised -> middleware falls through to Origin check -> 403.
+        - Lowercasing the whole header for token extraction would corrupt
+          the token; compare_digest fails -> 403.
+      ESCAPE: A middleware that allows every Authorization header regardless
+              of value would pass this row but fail the invalid-bearer
+              rejection row.
+      IMPACT: Same as the lowercase variant above; pins case-insensitivity
+              across the full case-folding spectrum.
+    """
+    monkeypatch.setattr(
+        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
+    )
+    client = _make_client()
+    resp = client.post(
+        "/mutate", headers={"Authorization": "BEARER secret-token-123"}
+    )
+    assert resp.status_code == 200
+    assert resp.text == "ok"
+
+
 def test_post_with_valid_bearer_bad_origin_allowed(monkeypatch) -> None:
     """A valid Bearer token wins even when the Origin is bad.
 
