@@ -37,13 +37,26 @@ def admin_app():
     return create_admin_app()
 
 
+_DEFAULT_TEST_HEADERS = {
+    "Host": "127.0.0.1:8765",
+    "Origin": "http://127.0.0.1:8765",
+}
+
+
 @pytest.fixture
 def client(admin_app, mock_mcp_token):
-    """Test client with authenticated session."""
+    """Test client with authenticated session.
+
+    Constructed with default ``Host`` and ``Origin`` headers acceptable to
+    the HostValidator and OriginCheck middlewares so existing tests do not
+    need per-call header changes. Individual tests can override these by
+    passing explicit ``headers={...}`` kwargs to request methods; httpx
+    request-level headers take precedence over client-level defaults.
+    """
     from fastapi.testclient import TestClient
     from spellbook.admin.auth import create_session_cookie
 
-    with TestClient(admin_app) as client:
+    with TestClient(admin_app, headers=_DEFAULT_TEST_HEADERS) as client:
         cookie = create_session_cookie("test-session")
         client.cookies.set("spellbook_admin_session", cookie)
         yield client
@@ -51,8 +64,11 @@ def client(admin_app, mock_mcp_token):
 
 @pytest.fixture
 def unauthenticated_client(admin_app):
-    """Test client without auth cookie."""
+    """Test client without auth cookie.
+
+    See :func:`client` for the rationale behind default Host/Origin headers.
+    """
     from fastapi.testclient import TestClient
 
-    with TestClient(admin_app) as client:
+    with TestClient(admin_app, headers=_DEFAULT_TEST_HEADERS) as client:
         yield client
