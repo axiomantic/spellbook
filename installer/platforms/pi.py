@@ -24,7 +24,6 @@ from ..components.symlinks import (
     cleanup_spellbook_symlinks,
     create_skill_symlinks,
     create_symlink,
-    remove_symlink,
     remove_spellbook_symlinks,
 )
 from ..demarcation import (
@@ -62,9 +61,25 @@ def _load_mcp_config_dict(config_path: Path) -> dict:
 
 
 def _write_mcp_config(config_path: Path, config: dict) -> None:
-    """Write JSON config atomically."""
+    """Write JSON config atomically.
+
+    Writes to a temporary file in the same directory as ``config_path`` (so
+    ``os.replace`` is an atomic rename on the same filesystem) and then
+    atomically replaces the target. On any failure the temporary file is
+    removed so a partial write never lands at ``config_path``.
+    """
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    payload = json.dumps(config, indent=2) + "\n"
+    tmp_path = config_path.with_name(f"{config_path.name}.tmp.{os.getpid()}")
+    try:
+        tmp_path.write_text(payload, encoding="utf-8")
+        os.replace(tmp_path, config_path)
+    except BaseException:
+        try:
+            tmp_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def _generate_mcp_json_section() -> dict:
@@ -157,16 +172,6 @@ class PiInstaller(PlatformInstaller):
         """Path to ~/.pi/agent/prompts/."""
         return self.config_dir / "prompts"
 
-    @property
-    def extensions_dir(self) -> Path:
-        """Path to ~/.pi/agent/extensions/."""
-        return self.config_dir / "extensions"
-
-    @property
-    def task_extension_source(self) -> Path:
-        """Source path for the Task extension in the spellbook repo."""
-        return self.spellbook_dir / "extensions" / "pi" / "Task"
-
     def detect(self) -> PlatformStatus:
         """Detect Pi installation status."""
         installed_version = get_installed_version(self.context_file)
@@ -212,23 +217,16 @@ class PiInstaller(PlatformInstaller):
                         except OSError:
                             pass
 
-        # Check for the Task extension
-        has_task_ext = False
-        task_ext_target = self.extensions_dir / "Task"
-        if task_ext_target.is_symlink() or task_ext_target.is_dir():
-            has_task_ext = True
-
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=installed_version is not None or has_mcp or has_skills or has_prompts or has_task_ext,
+            installed=installed_version is not None or has_mcp or has_skills or has_prompts,
             version=installed_version,
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
                 "skills_installed": has_skills,
                 "prompts_installed": has_prompts,
-                "task_extension_installed": has_task_ext,
             },
         )
 
@@ -373,25 +371,6 @@ class PiInstaller(PlatformInstaller):
                 )
             )
 
-        # Step 2.5: Install the Task extension for pi
-        self._step("Installing Task extension")
-        if not self.dry_run:
-            self.extensions_dir.mkdir(parents=True, exist_ok=True)
-
-        task_ext_target = self.extensions_dir / "Task"
-        task_ext_result = create_symlink(
-            self.task_extension_source, task_ext_target, self.dry_run
-        )
-        results.append(
-            InstallResult(
-                component="task_extension",
-                platform=self.platform_id,
-                success=task_ext_result.success,
-                action=task_ext_result.action,
-                message=f"Task extension: {task_ext_result.action}",
-            )
-        )
-
         # Step 3: Install AGENTS.md with demarcated section
         self._step("Updating AGENTS.md")
         spellbook_content = generate_claude_context(self.spellbook_dir)
@@ -509,24 +488,6 @@ class PiInstaller(PlatformInstaller):
                     )
                 )
 
-        # Remove Task extension symlink
-        task_ext_target = self.extensions_dir / "Task"
-        if task_ext_target.is_symlink():
-            task_ext_result = remove_symlink(
-                task_ext_target,
-                verify_source=self.task_extension_source,
-                dry_run=self.dry_run,
-            )
-            results.append(
-                InstallResult(
-                    component="task_extension",
-                    platform=self.platform_id,
-                    success=task_ext_result.success,
-                    action=task_ext_result.action,
-                    message=f"Task extension: {task_ext_result.action}",
-                )
-            )
-
         # Remove MCP server from mcp.json (global step)
         if not skip_global_steps:
             success, msg = _remove_pi_mcp_config(self.mcp_config_file, self.dry_run)
@@ -561,10 +522,5 @@ class PiInstaller(PlatformInstaller):
             for item in self.prompts_dir.iterdir():
                 if item.is_symlink():
                     symlinks.append(item)
-
-        # Task extension
-        task_ext_target = self.extensions_dir / "Task"
-        if task_ext_target.is_symlink():
-            symlinks.append(task_ext_target)
 
         return symlinks
