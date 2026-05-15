@@ -59,8 +59,12 @@ def _resolve_canvas_root() -> str:
 
     Tests monkeypatch this to redirect to a tmp directory. Mirrors
     ``spellbook.admin.routes.memory._resolve_memory_root``.
+
+    Uses ``os.path.join`` (not a slash-literal subpath) so the result has
+    consistent native separators on every platform. Mixed-separator paths
+    are accepted by the OS but break naive suffix / prefix checks downstream.
     """
-    return os.path.expanduser("~/.local/spellbook/canvas")
+    return os.path.join(os.path.expanduser("~"), ".local", "spellbook", "canvas")
 
 
 def _max_page_bytes() -> int:
