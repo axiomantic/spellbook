@@ -88,3 +88,44 @@ def test_ws_ticket_endpoint_returns_ticket(admin_app, mock_mcp_token, client):
     assert "ticket" in response.json()
     ticket = response.json()["ticket"]
     assert len(ticket) > 0
+
+
+def test_ws_origin_mismatched_close_1008(admin_app, mock_mcp_token):
+    """A WebSocket upgrade with a non-allowlisted Origin must be rejected.
+
+    Defense-in-depth against cross-origin WebSocket hijack: the handler
+    rejects (close code 1008, Policy Violation) any upgrade whose Origin
+    is not in ``ws.app.state.allowed_origins``. Starlette converts
+    ``close(1008)`` before ``accept()`` into HTTP 403 on the underlying
+    transport, which surfaces to httpx as ``WebSocketDisconnect``.
+    """
+    # Construct a TestClient WITHOUT the default Origin header so the
+    # per-call ``headers=`` kwarg is the only Origin the handler sees.
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765"})
+    ticket = create_ws_ticket()
+    with pytest.raises(WebSocketDisconnect) as exc_info:
+        with client.websocket_connect(
+            f"/ws?ticket={ticket}",
+            headers={"Origin": "http://evil.com"},
+        ) as ws:
+            ws.receive_json()
+    # 1008 if server closed cleanly before accept; 1006 if the transport
+    # converted the pre-accept close into an abrupt disconnect.
+    assert exc_info.value.code in (1008, 1006)
+
+
+def test_ws_origin_missing_close_1008(admin_app, mock_mcp_token):
+    """A WebSocket upgrade without an Origin header must be rejected.
+
+    Non-browser clients that omit Origin are rejected by the same
+    defense-in-depth check as mismatched origins.
+    """
+    # No Origin header at all: build a client whose only default header
+    # is Host (HostValidator still requires a valid Host) and do not
+    # add Origin per call.
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765"})
+    ticket = create_ws_ticket()
+    with pytest.raises(WebSocketDisconnect) as exc_info:
+        with client.websocket_connect(f"/ws?ticket={ticket}") as ws:
+            ws.receive_json()
+    assert exc_info.value.code in (1008, 1006)
