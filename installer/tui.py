@@ -401,6 +401,8 @@ def render_post_install_notes(
         lines.append("[cyan]Claude Code[/cyan]: MCP server registered. Verify: /mcp")
     if "forgecode" in platforms:
         lines.append("[cyan]ForgeCode[/cyan]: Restart forge to load the spellbook MCP server")
+    if "pi" in platforms:
+        lines.append("[cyan]Pi[/cyan]: Restart to reload skills and prompts. Verify: /reload")
 
     if shutil.which("cco"):
         lines.append(

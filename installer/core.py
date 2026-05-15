@@ -156,9 +156,10 @@ def get_platform_installer(
     """
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
+    from .platforms.forgecode import ForgeCodeInstaller
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
-    from .platforms.forgecode import ForgeCodeInstaller
+    from .platforms.pi import PiInstaller
 
     config_dir = config_dir_override or get_platform_config_dir(platform)
 
@@ -168,6 +169,7 @@ def get_platform_installer(
         "codex": CodexInstaller,
         "gemini": GeminiInstaller,
         "forgecode": ForgeCodeInstaller,
+        "pi": PiInstaller,
     }
 
     installer_class = installers.get(platform)
