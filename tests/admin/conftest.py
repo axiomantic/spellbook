@@ -3,6 +3,22 @@ import secrets
 
 
 @pytest.fixture(autouse=True)
+def clear_handoff_store():
+    """Clear handoff/exchange token store between tests."""
+    from spellbook.admin import auth as admin_auth
+
+    for attr in ("_handoff_tokens", "_exchange_tokens"):
+        store = getattr(admin_auth, attr, None)
+        if store is not None:
+            store.clear()
+    yield
+    for attr in ("_handoff_tokens", "_exchange_tokens"):
+        store = getattr(admin_auth, attr, None)
+        if store is not None:
+            store.clear()
+
+
+@pytest.fixture(autouse=True)
 def mock_mcp_token(monkeypatch):
     """Mock the MCP token for all admin tests."""
     token = secrets.token_urlsafe(32)
