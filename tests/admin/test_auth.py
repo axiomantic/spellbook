@@ -1,6 +1,7 @@
 import time
 
 import pytest
+import tripwire
 
 
 class TestHandoffToken:
@@ -511,16 +512,16 @@ class TestHandoffGet:
         assert second.status_code == 404
 
     def test_handoff_get_expired_returns_404(
-        self, unauthenticated_client, mock_mcp_token, monkeypatch
+        self, unauthenticated_client, mock_mcp_token
     ):
         """
         ESCAPE: test_handoff_get_expired_returns_404
           CLAIM: After the 60s TTL expires (advance time +61s), the GET
                  returns 404. validate_handoff_token's expiry branch is
                  exercised.
-          PATH:  monkeypatch spellbook.admin.auth.time.time to +61s ->
-                 GET -> validate_handoff_token pops and sees expiry < now
-                 -> False -> 404.
+          PATH:  tripwire mock of spellbook.admin.auth:time.time returns
+                 real_now+61 -> GET -> validate_handoff_token pops and sees
+                 expiry < now -> False -> 404.
           CHECK: status_code == 404.
           MUTATION: If the TTL was bumped to >60s or the comparison was
                     inverted, the test fails. If the handler returned 401
@@ -532,15 +533,30 @@ class TestHandoffGet:
         """
         import time as time_mod
 
+        # Mint the handoff OUTSIDE the sandbox so create_handoff_token() uses
+        # real wall-clock time (expiry = real_now + 60).
         handoff_id, _ = self._mint(unauthenticated_client, mock_mcp_token)
         real_time = time_mod.time
-        monkeypatch.setattr(
-            "spellbook.admin.auth.time.time", lambda: real_time() + 61
-        )
-        response = unauthenticated_client.get(
-            f"/api/auth/handoff/{handoff_id}", follow_redirects=False
-        )
+
+        # Inside the sandbox, every spellbook.admin.auth time.time() call
+        # reports real_now + 61, putting the freshly-minted token past its
+        # 60s TTL. The GET path invokes time.time() twice
+        # (_cleanup_expired's `now`, then validate_handoff_token's
+        # `time.time() < expiry`); extra registered side effects are marked
+        # not-required so unused ones are discarded at sandbox exit.
+        advance = tripwire.mock("spellbook.admin.auth:time.time")
+        for _ in range(8):
+            advance.__call__.required(False).calls(lambda: real_time() + 61)
+
+        with tripwire:
+            response = unauthenticated_client.get(
+                f"/api/auth/handoff/{handoff_id}", follow_redirects=False
+            )
+
         assert response.status_code == 404
+        with tripwire.in_any_order():
+            advance.assert_call(args=(), kwargs={})
+            advance.assert_call(args=(), kwargs={})
 
     def test_handoff_get_unknown_returns_404(self, unauthenticated_client):
         """

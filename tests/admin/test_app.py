@@ -1,5 +1,6 @@
 import asyncio
 
+import tripwire
 from fastapi.testclient import TestClient
 
 
@@ -98,7 +99,7 @@ def test_admin_app_allows_same_origin_post():
     assert response.text != "Forbidden: invalid Origin"
 
 
-def test_admin_app_allows_bearer_post_without_origin(monkeypatch):
+def test_admin_app_allows_bearer_post_without_origin():
     """Task 5 contract: A POST presenting a valid Bearer token bypasses the
     Origin check even with no ``Origin`` header. The middleware resolves
     ``spellbook.admin.auth.load_token`` at request time, so the
@@ -132,36 +133,47 @@ def test_admin_app_allows_bearer_post_without_origin(monkeypatch):
     """
     import secrets as _secrets
 
-    from spellbook.admin import auth as admin_auth
     from spellbook.admin.app import create_admin_app
 
     # Pin the token so we know what to put in the Authorization header.
-    # The conftest autouse fixture also monkeypatches this; we override
-    # both sites so the route's own load_token import and the middleware's
-    # late-binding import see the same value.
+    # Two distinct import sites resolve load_token: the middleware's
+    # late-binding ``from spellbook.admin import auth as admin_auth;
+    # admin_auth.load_token()`` (mocked at spellbook.admin.auth:load_token)
+    # and the route's ``from spellbook.core.auth import load_token``
+    # (mocked at spellbook.admin.routes.auth:load_token). tripwire's
+    # sandbox patches both for the duration of the request; the conftest
+    # autouse mock_mcp_token monkeypatch is left untouched (out of scope)
+    # and is simply shadowed by the sandbox patch.
     token = _secrets.token_urlsafe(32)
-    monkeypatch.setattr(admin_auth, "load_token", lambda: token)
-    monkeypatch.setattr(
-        "spellbook.admin.routes.auth.load_token", lambda: token
+    mw_load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    mw_load_token.returns(token)
+    route_load_token = tripwire.mock(
+        "spellbook.admin.routes.auth:load_token"
     )
+    route_load_token.returns(token)
 
     app = create_admin_app()
     client = TestClient(app)
 
-    response = client.post(
-        "/api/auth/login",
-        json={"password": "wrong-password"},
-        headers={
-            "Host": "127.0.0.1:8765",
-            "Authorization": f"Bearer {token}",
-        },
-    )
+    with tripwire:
+        response = client.post(
+            "/api/auth/login",
+            json={"password": "wrong-password"},
+            headers={
+                "Host": "127.0.0.1:8765",
+                "Authorization": f"Bearer {token}",
+            },
+        )
 
     # Origin layer let it through (no 403, no Origin rejection body).
     # Route then returned 401 because the JSON password is "wrong-password",
     # not the bearer token value.
     assert response.status_code == 401
     assert response.text != "Forbidden: invalid Origin"
+    # The middleware resolved load_token once (bearer exemption check) and
+    # the route resolved it once (password comparison).
+    mw_load_token.assert_call(args=(), kwargs={})
+    route_load_token.assert_call(args=(), kwargs={})
 
 
 def test_admin_app_creates():
@@ -176,8 +188,8 @@ def test_admin_app_state_has_bound_port_and_origins():
     """Task 3 contract: ``create_admin_app()`` captures the bound port from
     ``get_env("PORT", "8765")`` (the same alias the CLI uses, which resolves
     to ``SPELLBOOK_MCP_PORT``) and stores it on ``app.state.bound_port``,
-    along with the three-entry ``app.state.allowed_origins`` list used by
-    the Origin middleware and WS handler.
+    along with the three-entry ``app.state.allowed_origins`` frozenset
+    used by the Origin middleware and WS handler.
 
     With no ``SPELLBOOK_MCP_PORT`` / ``PORT`` set the default is 8765, so
     the three origins are the loopback IPv4, loopback DNS, and bracketed
@@ -188,11 +200,17 @@ def test_admin_app_state_has_bound_port_and_origins():
     app = create_admin_app()
 
     assert app.state.bound_port == 8765
-    assert app.state.allowed_origins == [
-        "http://127.0.0.1:8765",
-        "http://localhost:8765",
-        "http://[::1]:8765",
-    ]
+    # allowed_origins is a frozenset (O(1) membership, order-independent
+    # allowlist). Set equality still pins the exact membership: no missing
+    # origin, no extra origin.
+    assert app.state.allowed_origins == frozenset(
+        {
+            "http://127.0.0.1:8765",
+            "http://localhost:8765",
+            "http://[::1]:8765",
+        }
+    )
+    assert isinstance(app.state.allowed_origins, frozenset)
 
 
 def test_admin_app_host_validator_runs_before_origin_check():
@@ -268,18 +286,20 @@ def _task_names_running() -> set[str]:
     return {t.get_name() for t in asyncio.all_tasks() if not t.done()}
 
 
-async def test_lifespan_spawns_and_cancels_observability_tasks(monkeypatch):
+async def test_lifespan_spawns_and_cancels_observability_tasks():
     """Step 11 contract: the admin app lifespan registers both the
     ``purge_loop`` and ``threshold_eval_loop`` coroutines as background
     tasks on startup, and cancels/awaits them on shutdown.
 
-    Why we patch the loops: the real ``purge_loop`` + ``threshold_eval_loop``
+    Why we mock the loops: the real ``purge_loop`` + ``threshold_eval_loop``
     read config and perform DB work. This test asserts the LIFESPAN
     WIRING (that the admin app creates the tasks and tears them down
-    cleanly), so we stub the loop bodies with sleeps. Patching the
-    ``spellbook.admin.app`` module attribute is load-bearing: ``_lifespan``
+    cleanly), so the loop bodies are replaced with controllable sleeps via
+    tripwire ``.calls()`` side effects. Mocking the
+    ``spellbook.admin.app`` import site is load-bearing: ``_lifespan``
     resolves ``purge_loop`` / ``threshold_eval_loop`` via module globals
-    at call time, so the monkeypatch IS the version the tasks run.
+    at call time, so the tripwire-installed callable IS the version the
+    tasks run.
 
     Why we drive the lifespan directly (not via ``TestClient`` /
     ``httpx.ASGITransport``): FastAPI's ``TestClient`` runs the lifespan
@@ -297,7 +317,11 @@ async def test_lifespan_spawns_and_cancels_observability_tasks(monkeypatch):
     purge_cancelled = asyncio.Event()
     eval_cancelled = asyncio.Event()
 
-    async def fake_purge_loop() -> None:
+    # These are tripwire ``.calls()`` side effects, not standalone
+    # dependency stubs: they define the controllable behavior the mocked
+    # ``purge_loop`` / ``threshold_eval_loop`` exhibit so the test can
+    # observe start and cancellation without touching real config/DB.
+    async def controlled_purge_loop() -> None:
         purge_started.set()
         try:
             while True:
@@ -306,7 +330,7 @@ async def test_lifespan_spawns_and_cancels_observability_tasks(monkeypatch):
             purge_cancelled.set()
             raise
 
-    async def fake_threshold_eval_loop() -> None:
+    async def controlled_threshold_eval_loop() -> None:
         eval_started.set()
         try:
             while True:
@@ -315,39 +339,45 @@ async def test_lifespan_spawns_and_cancels_observability_tasks(monkeypatch):
             eval_cancelled.set()
             raise
 
-    monkeypatch.setattr(admin_app_mod, "purge_loop", fake_purge_loop)
-    monkeypatch.setattr(
-        admin_app_mod, "threshold_eval_loop", fake_threshold_eval_loop
-    )
+    mock_purge = tripwire.mock("spellbook.admin.app:purge_loop")
+    mock_purge.calls(controlled_purge_loop)
+    mock_eval = tripwire.mock("spellbook.admin.app:threshold_eval_loop")
+    mock_eval.calls(controlled_threshold_eval_loop)
 
     app = admin_app_mod.create_admin_app()
 
-    async with app.router.lifespan_context(app):
-        # Yield once so the scheduler registers the newly-created tasks.
-        # Without this yield the names are not yet present in
-        # ``asyncio.all_tasks()``. Do NOT delete this sleep.
-        await asyncio.sleep(0)
+    async with tripwire:
+        async with app.router.lifespan_context(app):
+            # Yield once so the scheduler registers the newly-created tasks.
+            # Without this yield the names are not yet present in
+            # ``asyncio.all_tasks()``. Do NOT delete this sleep.
+            await asyncio.sleep(0)
 
-        # Both stubbed bodies must actually run — proves the tasks were
-        # not just wrapped but also scheduled.
-        await asyncio.wait_for(purge_started.wait(), timeout=1.0)
-        await asyncio.wait_for(eval_started.wait(), timeout=1.0)
+            # Both controlled bodies must actually run — proves the tasks
+            # were not just wrapped but also scheduled.
+            await asyncio.wait_for(purge_started.wait(), timeout=1.0)
+            await asyncio.wait_for(eval_started.wait(), timeout=1.0)
 
-        names = _task_names_running()
-        assert "spellbook-worker-llm-purge" in names, names
-        assert "spellbook-worker-llm-threshold-eval" in names, names
+            names = _task_names_running()
+            assert "spellbook-worker-llm-purge" in names, names
+            assert "spellbook-worker-llm-threshold-eval" in names, names
 
-    # Lifespan exit has completed — both task bodies must have seen a
-    # CancelledError (i.e. were explicitly cancelled, not just abandoned).
-    assert purge_cancelled.is_set()
-    assert eval_cancelled.is_set()
+        # Lifespan exit has completed — both task bodies must have seen a
+        # CancelledError (i.e. were explicitly cancelled, not just
+        # abandoned).
+        assert purge_cancelled.is_set()
+        assert eval_cancelled.is_set()
 
-    # And the named tasks must no longer appear in the running set.
-    names_after = _task_names_running()
-    assert "spellbook-worker-llm-purge" not in names_after, names_after
-    assert (
-        "spellbook-worker-llm-threshold-eval" not in names_after
-    ), names_after
+        # And the named tasks must no longer appear in the running set.
+        names_after = _task_names_running()
+        assert "spellbook-worker-llm-purge" not in names_after, names_after
+        assert (
+            "spellbook-worker-llm-threshold-eval" not in names_after
+        ), names_after
+
+    # The lifespan resolved each loop factory exactly once at startup.
+    mock_purge.assert_call(args=(), kwargs={})
+    mock_eval.assert_call(args=(), kwargs={})
 
 
 async def test_lifespan_cancel_during_first_tick_is_safe():
