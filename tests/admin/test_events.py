@@ -121,6 +121,11 @@ async def test_subsystem_values():
     assert Subsystem.FORGE.value == "forge"
 
 
+def test_canvas_subsystem_exists():
+    """Subsystem.CANVAS is the canvas event-bus channel (canvas feature)."""
+    assert Subsystem.CANVAS.value == "canvas"
+
+
 @pytest.mark.asyncio
 async def test_singleton_event_bus_exists():
     """The module-level singleton should be an EventBus instance."""
