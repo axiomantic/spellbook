@@ -17,6 +17,7 @@ PR Shepherd. Your reputation depends on PRs that reach merge-ready state without
 3. **Address ALL findings per cycle**: Partial fixes waste a review cycle. Batch all bot findings before pushing.
 4. **Never merge automatically**: Report merge-ready status. User decides when to merge. This rule is absolute and is NOT overridden by any session-level autonomy directive — including but not limited to "do the PR dance autonomously", "yolo", "just land it", "pick it up where we left off", "stop asking", "go go go", or any equivalent phrasing. "Autonomous" scopes commit / push / comment / iterate / re-request-review. It does not scope merge, tag-push, branch deletion, or any other destructive or visible-to-others action listed in the global git-safety rules. If the user wants you to merge, they will say "merge it" (or equivalent imperative) AFTER you report merge-ready status. Until then: stop at Step 5.
 5. **Version bump before first cycle**: If the project uses semver (pyproject.toml, package.json), ensure version bump + CHANGELOG entry exist before the first review cycle. This prevents wasting a cycle on a finding the bot will always flag.
+6. **One PR at a time, never wrapped in `/loop`**: This command already polls internally (Step 3 watches CI, Step 4 polls for bot feedback). Wrapping it in `/loop` creates a watcher around a watcher and re-fires the full polling cycle on the loop's timer even after merge-ready. Running it concurrently on multiple PRs multiplies GraphQL load by N. Today's GitHub GraphQL quota is 5000/hour — a single misconfigured run can exhaust it in under an hour.
 
 ## Inputs
 
@@ -80,16 +81,33 @@ NEVER hardcode a bot name. NEVER assume which bot a project uses. Always read co
 
 ### Step 3: Wait for CI
 
-Poll CI status until terminal state:
+Every `gh pr checks` invocation (with `--watch` or `--json`) is a GraphQL query, so polling cadence directly drives GraphQL quota burn. Use a long interval — CI runs are minutes-long, sub-minute polling is theater.
+
+#### Step 3 pre-flight: GraphQL rate-limit check
+
+Before entering `--watch` or each manual poll, check remaining GraphQL budget. If below threshold, sleep until reset rather than letting the loop crash mid-cycle:
 
 ```bash
-gh pr checks "$PR_NUMBER" --watch
+remaining=$(gh api rate_limit --jq '.resources.graphql.remaining')
+reset=$(gh api rate_limit --jq '.resources.graphql.reset')
+if [ "$remaining" -lt 200 ]; then
+  now=$(date +%s)
+  echo "GraphQL low ($remaining); sleeping until reset..."
+  sleep $((reset - now + 5))
+fi
 ```
 
-If `--watch` is unavailable or times out, poll manually:
+#### Poll for terminal state
+
+```bash
+gh pr checks "$PR_NUMBER" --watch --interval 60
+```
+
+If `--watch` is unavailable or times out, poll manually with the same cadence — never tighter than 30s:
 
 ```bash
 gh pr checks "$PR_NUMBER" --json name,state,conclusion
+sleep 60
 ```
 
 **CI passes:** Proceed to Step 4.
@@ -190,6 +208,9 @@ PR Dance complete.
 - Using `requested_reviewers` API to request bot re-review
 - Adding AI attribution or co-authored-by trailers to commits
 - Referencing GitHub issue numbers in commit messages
+- Invoking this command under `/loop` — it already polls internally; `/loop` creates a watcher around a watcher and re-fires the full cycle on the loop's timer even after merge-ready, exhausting the GitHub GraphQL quota
+- Running this command on more than one PR concurrently — serialize across PRs to keep GraphQL spend bounded
+- Polling CI checks tighter than 30s (use `--interval 60` with `--watch`, or `sleep 60` between manual polls) — sub-minute polling burns GraphQL quota with no UX benefit, since CI runs are minutes-long
 </FORBIDDEN>
 
 <analysis>
@@ -205,5 +226,19 @@ After each cycle:
 - Did I address ALL findings, not just some?
 - Did I re-request review after pushing?
 - Is CI actually green, or did I misread the status?
-- Have I been looping too many times? (>4 cycles may indicate a deeper issue worth surfacing to the user)
 </reflection>
+
+### Cycle budget (hard cap)
+
+Track a cycle counter. After **4 cycles** without reaching merge-ready, STOP and surface to the user:
+
+```
+PR Dance paused after 4 cycles without converging.
+- Last CI state: <green|failing|pending>
+- Last bot review: <clean|N findings>
+- Suggested causes: flaky test, bot disagreement on a contested change, repeated push without addressing root cause.
+
+How would you like to proceed? (a) continue another N cycles, (b) hand back for manual review, (c) abandon.
+```
+
+This is a hard cap, not advice. After 4 cycles, do NOT start a 5th without explicit user confirmation. Repeated cycling without convergence is almost always a signal of a structural problem (flaky test, contested finding, missing context) that more polling will not fix.

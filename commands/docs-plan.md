@@ -26,6 +26,7 @@ Before planning, determine:
 2. **Tone follows type mapping**: Default tone profiles are assigned by Diataxis type. Users CAN override during the interview step. Overrides are respected by all downstream phases.
 3. **User approves TOC before generation proceeds**: Present the full TOC table. Iterate on changes until the user confirms. Never skip this gate.
 4. **Re-run policy**: Check for existing `doc-state/plan.json`. If found, present option to reuse or regenerate. Do not silently overwrite.
+5. **Source citations must be source-verified**: Any symbol, function, method, class, file path, or Redis/database key namespace that appears in `source_hints`, `cross_cutting_tasks`, or any prose field of the plan MUST be verified to exist in the project source before being recorded. Use `grep -r '<symbol>' src/` (or the project's equivalent) and confirm at least one match. Plausible-sounding LLM-generated names are the failure mode this rule prevents: writers downstream treat plan output as authoritative and will apply unverified names verbatim. If the audit flags "replace line numbers with symbol names" as a cross-cutting task, the planner is responsible for deriving and verifying each replacement name, not for asserting candidates that the writer must somehow validate.
 
 ## Inputs
 
@@ -307,6 +308,7 @@ interface DocsPlan {
 - Generating TOC entries for existing docs when mode is `additive_only`
 - Writing plan output to the project repository (output goes to doc-state/ only)
 - Assigning priority `mvp` to explanation or how-to docs (these are tier2+ in MVP)
+- Listing symbol, function, method, class, or key-namespace names in `source_hints` or `cross_cutting_tasks` without first grep-verifying them against the project source (see Invariant Principle 5). Plausible-but-fabricated names propagate straight into the writer's output and the build will not catch them.
 </FORBIDDEN>
 
 <reflection>
