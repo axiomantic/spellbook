@@ -8,9 +8,13 @@ WebSocket scopes pass through. Requests presenting a valid Bearer token
 Bearer token does NOT short-circuit -- it falls through to the Origin
 check, which fails closed with 403.
 
-``load_token`` is resolved at request time (not at middleware construction)
-so ``monkeypatch.setattr("spellbook.admin.auth.load_token", ...)`` works in
-tests.
+``load_token`` is resolved at request time via the module-level
+``spellbook.admin.auth`` reference (``admin_auth.load_token()``), not
+captured at middleware construction. The bearer-exemption tests pin the
+token value by mocking ``spellbook.admin.auth:load_token`` with tripwire
+(register ``tripwire.mock("spellbook.admin.auth:load_token").returns(...)``,
+execute under ``with tripwire:``, then assert ``.assert_call(...)`` after
+the sandbox).
 
 These tests target the bare middleware wrapped around a trivial Starlette
 app; they do NOT exercise the full admin app (Task 5 wires it).
@@ -19,6 +23,7 @@ app; they do NOT exercise the full admin app (Task 5 wires it).
 from __future__ import annotations
 
 import pytest
+import tripwire
 from fastapi.testclient import TestClient
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
@@ -261,19 +266,20 @@ def test_delete_missing_origin_rejected() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_post_with_valid_bearer_no_origin_allowed(monkeypatch) -> None:
+def test_post_with_valid_bearer_no_origin_allowed() -> None:
     """A valid Bearer token bypasses the Origin check.
 
     ESCAPE: test_post_with_valid_bearer_no_origin_allowed
       CLAIM: POST with ``Authorization: Bearer <valid>`` and no Origin -> 200.
       PATH:  TestClient -> OriginCheckMiddleware -> Authorization parses as
-             Bearer -> load_token() returns the patched value ->
+             Bearer -> load_token() returns the tripwire-mocked value ->
              secrets.compare_digest() returns True -> pass through -> 200.
       CHECK: status == 200 and body == "ok".
       MUTATION:
         - Closing load_token over construction time (instead of resolving
-          per-request) would defeat the monkeypatch and load_token's real
-          implementation would be called; this test would 403.
+          per-request) would defeat the tripwire mock and load_token's real
+          implementation would be called; tripwire would additionally raise
+          UnusedMocksError because the registered mock never fired.
         - Using ``==`` instead of secrets.compare_digest still passes (the
           equality is the same), but the security property differs; the
           invalid-bearer test below pins fail-closed behavior.
@@ -284,18 +290,21 @@ def test_post_with_valid_bearer_no_origin_allowed(monkeypatch) -> None:
       IMPACT: Without the bearer exemption, the CLI's POST /handoff (which
               has no browser Origin header) cannot authenticate.
     """
-    monkeypatch.setattr(
-        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
-    )
+    load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token.returns("secret-token-123")
     client = _make_client()
-    resp = client.post(
-        "/mutate", headers={"Authorization": "Bearer secret-token-123"}
-    )
+
+    with tripwire:
+        resp = client.post(
+            "/mutate", headers={"Authorization": "Bearer secret-token-123"}
+        )
+
     assert resp.status_code == 200
     assert resp.text == "ok"
+    load_token.assert_call(args=(), kwargs={})
 
 
-def test_post_with_invalid_bearer_no_origin_rejected(monkeypatch) -> None:
+def test_post_with_invalid_bearer_no_origin_rejected() -> None:
     """An invalid Bearer token does NOT short-circuit -- falls through to Origin.
 
     ESCAPE: test_post_with_invalid_bearer_no_origin_rejected
@@ -319,18 +328,21 @@ def test_post_with_invalid_bearer_no_origin_rejected(monkeypatch) -> None:
               the design contract is to fall through to Origin so the
               status code is identical to "no auth attempted".
     """
-    monkeypatch.setattr(
-        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
-    )
+    load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token.returns("secret-token-123")
     client = _make_client()
-    resp = client.post(
-        "/mutate", headers={"Authorization": "Bearer wrong-token"}
-    )
+
+    with tripwire:
+        resp = client.post(
+            "/mutate", headers={"Authorization": "Bearer wrong-token"}
+        )
+
     assert resp.status_code == 403
     assert resp.text == "Forbidden: invalid Origin"
+    load_token.assert_call(args=(), kwargs={})
 
 
-def test_post_with_lowercase_bearer_scheme_allowed(monkeypatch) -> None:
+def test_post_with_lowercase_bearer_scheme_allowed() -> None:
     """RFC 7235: the ``Bearer`` scheme token is case-insensitive.
 
     ESCAPE: test_post_with_lowercase_bearer_scheme_allowed
@@ -356,18 +368,21 @@ def test_post_with_lowercase_bearer_scheme_allowed(monkeypatch) -> None:
               clients that send lowercase ``bearer`` are silently treated
               as unauthenticated, locking out valid CLIs.
     """
-    monkeypatch.setattr(
-        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
-    )
+    load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token.returns("secret-token-123")
     client = _make_client()
-    resp = client.post(
-        "/mutate", headers={"Authorization": "bearer secret-token-123"}
-    )
+
+    with tripwire:
+        resp = client.post(
+            "/mutate", headers={"Authorization": "bearer secret-token-123"}
+        )
+
     assert resp.status_code == 200
     assert resp.text == "ok"
+    load_token.assert_call(args=(), kwargs={})
 
 
-def test_post_with_mixed_case_bearer_scheme_allowed(monkeypatch) -> None:
+def test_post_with_mixed_case_bearer_scheme_allowed() -> None:
     """RFC 7235: the ``Bearer`` scheme token is case-insensitive (uppercase).
 
     ESCAPE: test_post_with_mixed_case_bearer_scheme_allowed
@@ -385,18 +400,21 @@ def test_post_with_mixed_case_bearer_scheme_allowed(monkeypatch) -> None:
       IMPACT: Same as the lowercase variant above; pins case-insensitivity
               across the full case-folding spectrum.
     """
-    monkeypatch.setattr(
-        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
-    )
+    load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token.returns("secret-token-123")
     client = _make_client()
-    resp = client.post(
-        "/mutate", headers={"Authorization": "BEARER secret-token-123"}
-    )
+
+    with tripwire:
+        resp = client.post(
+            "/mutate", headers={"Authorization": "BEARER secret-token-123"}
+        )
+
     assert resp.status_code == 200
     assert resp.text == "ok"
+    load_token.assert_call(args=(), kwargs={})
 
 
-def test_post_with_valid_bearer_bad_origin_allowed(monkeypatch) -> None:
+def test_post_with_valid_bearer_bad_origin_allowed() -> None:
     """A valid Bearer token wins even when the Origin is bad.
 
     ESCAPE: test_post_with_valid_bearer_bad_origin_allowed
@@ -414,16 +432,19 @@ def test_post_with_valid_bearer_bad_origin_allowed(monkeypatch) -> None:
       IMPACT: The CLI may send requests from contexts where the Origin
               header (if any) is meaningless; bearer must take precedence.
     """
-    monkeypatch.setattr(
-        "spellbook.admin.auth.load_token", lambda: "secret-token-123"
-    )
+    load_token = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token.returns("secret-token-123")
     client = _make_client()
-    resp = client.post(
-        "/mutate",
-        headers={
-            "Authorization": "Bearer secret-token-123",
-            "Origin": "http://evil.com",
-        },
-    )
+
+    with tripwire:
+        resp = client.post(
+            "/mutate",
+            headers={
+                "Authorization": "Bearer secret-token-123",
+                "Origin": "http://evil.com",
+            },
+        )
+
     assert resp.status_code == 200
     assert resp.text == "ok"
+    load_token.assert_call(args=(), kwargs={})
