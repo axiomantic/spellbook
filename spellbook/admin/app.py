@@ -9,7 +9,8 @@ from pathlib import Path
 import logging
 
 from spellbook.admin.events import event_bus
-from spellbook.core.config import config_get
+from spellbook.admin.middleware import HostValidatorMiddleware
+from spellbook.core.config import config_get, get_env
 from spellbook.hooks.observability import purge_loop as hook_purge_loop
 from spellbook.worker_llm.observability import purge_loop, threshold_eval_loop
 from spellbook.worker_llm.queue import start_queue, stop_queue
@@ -98,6 +99,28 @@ def create_admin_app() -> FastAPI:
         redoc_url=None,
         openapi_url=None,
         lifespan=_lifespan,
+    )
+
+    # Capture the bound port from the same alias the CLI uses
+    # (``spellbook.admin.cli`` resolves ``PORT`` -> ``SPELLBOOK_MCP_PORT`` via
+    # ``get_env``). Stored on ``app.state`` so downstream middleware (Origin)
+    # and the WebSocket handler can derive their loopback allowlists without
+    # re-reading the environment at request time.
+    bound_port = int(get_env("PORT", "8765"))
+    app.state.bound_port = bound_port
+    app.state.allowed_origins = [
+        "http://127.0.0.1:" + str(bound_port),
+        "http://localhost:" + str(bound_port),
+        "http://[::1]:" + str(bound_port),
+    ]
+
+    # DNS-rebinding defense (design-doc C1): reject requests whose ``Host``
+    # header is not one of the bare loopback hostnames. MUST be added after
+    # ``app.state`` is populated so the middleware stack is built with the
+    # final state object.
+    app.add_middleware(
+        HostValidatorMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost", "::1"],
     )
 
     # Global exception handler for fault isolation

@@ -1,5 +1,7 @@
 import asyncio
 
+from fastapi.testclient import TestClient
+
 
 def test_admin_app_creates():
     from spellbook.admin.app import create_admin_app
@@ -7,6 +9,47 @@ def test_admin_app_creates():
     app = create_admin_app()
     assert app is not None
     assert app.title == "Spellbook Admin"
+
+
+def test_admin_app_state_has_bound_port_and_origins():
+    """Task 3 contract: ``create_admin_app()`` captures the bound port from
+    ``get_env("PORT", "8765")`` (the same alias the CLI uses, which resolves
+    to ``SPELLBOOK_MCP_PORT``) and stores it on ``app.state.bound_port``,
+    along with the three-entry ``app.state.allowed_origins`` list used by
+    the Origin middleware and WS handler.
+
+    With no ``SPELLBOOK_MCP_PORT`` / ``PORT`` set the default is 8765, so
+    the three origins are the loopback IPv4, loopback DNS, and bracketed
+    loopback IPv6 forms at that port.
+    """
+    from spellbook.admin.app import create_admin_app
+
+    app = create_admin_app()
+
+    assert app.state.bound_port == 8765
+    assert app.state.allowed_origins == [
+        "http://127.0.0.1:8765",
+        "http://localhost:8765",
+        "http://[::1]:8765",
+    ]
+
+
+def test_admin_app_rejects_bad_host():
+    """Task 3 contract: ``HostValidatorMiddleware`` is wired into the admin
+    app with the bare-hostname allowlist ``["127.0.0.1", "localhost", "::1"]``.
+
+    A request with ``Host: evil.com`` must be rejected with HTTP 400 and the
+    plain-text body ``"Invalid host header"`` produced by the middleware.
+    """
+    from spellbook.admin.app import create_admin_app
+
+    app = create_admin_app()
+    client = TestClient(app)
+
+    response = client.get("/api/health", headers={"Host": "evil.com"})
+
+    assert response.status_code == 400
+    assert response.text == "Invalid host header"
 
 
 def _task_names_running() -> set[str]:
