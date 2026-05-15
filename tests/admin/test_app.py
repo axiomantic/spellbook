@@ -3,6 +3,167 @@ import asyncio
 from fastapi.testclient import TestClient
 
 
+def test_admin_app_rejects_cross_origin_post():
+    """Task 5 contract: ``OriginCheckMiddleware`` is wired into the admin app
+    with ``allowed_origins=app.state.allowed_origins``. A state-changing POST
+    that presents a valid loopback ``Host`` but a cross-origin ``Origin``
+    (and no Bearer) must be rejected with 403 and the plain-text body
+    ``"Forbidden: invalid Origin"`` produced by the Origin middleware.
+
+    The Host check (outer) is satisfied by ``Host: 127.0.0.1:8765`` so the
+    rejection is unambiguously from the Origin layer, not the Host layer.
+
+    ESCAPE: test_admin_app_rejects_cross_origin_post
+      CLAIM: OriginCheckMiddleware is registered on the admin app and runs
+             AFTER HostValidator on POSTs lacking a valid bearer.
+      PATH:  TestClient -> HostValidator (Host=127.0.0.1:8765, pass)
+             -> OriginCheckMiddleware (POST, no bearer, Origin=evil) -> 403.
+      CHECK: status == 403 AND body == "Forbidden: invalid Origin".
+      MUTATION: (a) Removing the ``app.add_middleware(OriginCheckMiddleware,
+                ...)`` call would let the request reach the route, which
+                returns 401 (invalid password) or 422. Either fails the 403
+                check. (b) Body-text check pins the rejecter to the Origin
+                middleware specifically, distinguishing it from a hypothetical
+                401/403 from the route or the Host middleware ("Invalid host
+                header").
+      ESCAPE: A middleware that 403s every POST unconditionally would pass
+              this test, but ``test_admin_app_allows_bearer_post_without_origin``
+              below fails for it.
+      IMPACT: A missing wiring lets cross-origin browsers POST to the admin
+              API (CSRF), which is the whole defense being added in this PR.
+    """
+    from spellbook.admin.app import create_admin_app
+
+    app = create_admin_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        json={"password": "irrelevant"},
+        headers={
+            "Host": "127.0.0.1:8765",
+            "Origin": "http://evil.com",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.text == "Forbidden: invalid Origin"
+
+
+def test_admin_app_allows_same_origin_post():
+    """Task 5 contract: A POST whose ``Origin`` exactly matches an entry in
+    ``app.state.allowed_origins`` (here ``http://127.0.0.1:8765``) passes
+    the Origin check and reaches the route. The route then enforces its own
+    auth (here the password is wrong so it returns 401), which is fine --
+    we only assert the Origin layer did NOT reject with 403, and crucially
+    that the body is NOT the Origin-rejection body.
+
+    ESCAPE: test_admin_app_allows_same_origin_post
+      CLAIM: A same-origin POST is not rejected by OriginCheckMiddleware
+             and is allowed through to the route handler.
+      PATH:  TestClient -> HostValidator (Host=127.0.0.1:8765, pass)
+             -> OriginCheckMiddleware (POST, Origin matches allowlist) -> route
+             -> route returns 401 ("Invalid password") because the password
+             in the body doesn't match the mocked MCP token.
+      CHECK: status != 403 AND body != "Forbidden: invalid Origin".
+             Status is 401 specifically (route's invalid-password response).
+      MUTATION: (a) An OriginCheck that rejects every POST regardless of
+                Origin would 403 here -- both checks fail. (b) Missing
+                ``app.state.allowed_origins`` plumbing (empty list) would
+                cause all Origins to mismatch -> 403. (c) Order swap
+                (Origin outer, Host inner) doesn't fail THIS test directly
+                but is pinned by the cross-origin test above.
+      ESCAPE: A middleware stack that passed everything through (no Origin
+              check at all) would also reach the route and 401, passing this
+              test. The cross-origin test above is the partner that rules
+              that out.
+      IMPACT: If same-origin POSTs were blocked, the admin UI's own forms
+              (login, etc.) would all fail.
+    """
+    from spellbook.admin.app import create_admin_app
+
+    app = create_admin_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        json={"password": "irrelevant"},
+        headers={
+            "Host": "127.0.0.1:8765",
+            "Origin": "http://127.0.0.1:8765",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.text != "Forbidden: invalid Origin"
+
+
+def test_admin_app_allows_bearer_post_without_origin(monkeypatch):
+    """Task 5 contract: A POST presenting a valid Bearer token bypasses the
+    Origin check even with no ``Origin`` header. The middleware resolves
+    ``spellbook.admin.auth.load_token`` at request time, so the
+    ``mock_mcp_token`` autouse fixture (which monkeypatches that symbol)
+    determines the expected token; we re-read it here to construct the
+    Authorization header.
+
+    The route's invalid-password 401 is the expected reach -- we only assert
+    the Origin layer let the request through (status != 403 AND body !=
+    Origin rejection body).
+
+    ESCAPE: test_admin_app_allows_bearer_post_without_origin
+      CLAIM: Valid-bearer requests bypass OriginCheckMiddleware regardless
+             of Origin presence.
+      PATH:  TestClient -> HostValidator (Host=127.0.0.1:8765, pass)
+             -> OriginCheckMiddleware (POST, valid bearer -> exempt) -> route
+             -> 401 (invalid password).
+      CHECK: status == 401 AND body != "Forbidden: invalid Origin".
+      MUTATION: (a) Removing the bearer-exemption branch from
+                OriginCheckMiddleware would 403 this request (no Origin
+                header). (b) Wiring the middleware with the wrong
+                allowed_origins (and removing bearer exemption) would 403.
+                (c) Comparing the bearer with the wrong load_token reference
+                would 403.
+      ESCAPE: A middleware stack with NO OriginCheck at all would also pass
+              this test, but the cross-origin rejection test above pins
+              that down.
+      IMPACT: Without bearer exemption, CLI tools using Bearer auth (which
+              never send an Origin header) would be blocked from mutating
+              endpoints.
+    """
+    import secrets as _secrets
+
+    from spellbook.admin import auth as admin_auth
+    from spellbook.admin.app import create_admin_app
+
+    # Pin the token so we know what to put in the Authorization header.
+    # The conftest autouse fixture also monkeypatches this; we override
+    # both sites so the route's own load_token import and the middleware's
+    # late-binding import see the same value.
+    token = _secrets.token_urlsafe(32)
+    monkeypatch.setattr(admin_auth, "load_token", lambda: token)
+    monkeypatch.setattr(
+        "spellbook.admin.routes.auth.load_token", lambda: token
+    )
+
+    app = create_admin_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/auth/login",
+        json={"password": "wrong-password"},
+        headers={
+            "Host": "127.0.0.1:8765",
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    # Origin layer let it through (no 403, no Origin rejection body).
+    # Route then returned 401 because the JSON password is "wrong-password",
+    # not the bearer token value.
+    assert response.status_code == 401
+    assert response.text != "Forbidden: invalid Origin"
+
+
 def test_admin_app_creates():
     from spellbook.admin.app import create_admin_app
 
