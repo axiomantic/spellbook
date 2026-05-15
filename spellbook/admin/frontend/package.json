@@ -21,10 +21,12 @@
     "react-dom": "^19.2.4",
     "react-markdown": "^9.1.0",
     "react-router-dom": "^6.26.0",
-    "react-vega": "^8.0.0",
+    "react-vega": "^7.7.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "vega-lite": "^6.4.3"
+    "vega": "^6.2.0",
+    "vega-embed": "^6.29.0",
+    "vega-lite": "^5.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
