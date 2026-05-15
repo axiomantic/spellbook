@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the HTTP middleware and rejects with WebSocket close code 1008
   (Policy Violation) on mismatch or missing Origin. No bearer
   exemption on WS.
+- **Develop skill Phase 4 guardrail hardening.** Bans phrases like "TDD mode"
+  and "or read SKILL.md" that signal subagents to inline behavior instead of
+  invoking the Skill tool; mandates a "Launching skill:" check in subagent
+  output before accepting results; requires each Phase 4 gate (4.3–4.5.1) be
+  a separate dispatch to prevent gate collapse during parallel dispatch.
 
 - **Opt-in to re-enable `BASH-PARSER-COMPOUND` deny findings.** The 0.63.2
   compound-allow change was a deliberate widening of the bash gate's
