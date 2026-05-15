@@ -241,6 +241,30 @@ def test_write_page_oversize(canvas_tmp_root, monkeypatch):
         store.write_page("foo", "0123456789X")  # 11 bytes
 
 
+def test_max_page_bytes_non_integer_falls_back_to_default(monkeypatch, caplog):
+    """Malformed env var is logged and ignored, not raised."""
+    monkeypatch.setenv("SPELLBOOK_CANVAS_MAX_PAGE_BYTES", "not-an-int")
+    with caplog.at_level("WARNING"):
+        result = store._max_page_bytes()
+    assert result == 1 * 1024 * 1024
+    assert any("not-an-int" in r.message for r in caplog.records)
+
+
+def test_max_page_bytes_non_positive_falls_back_to_default(monkeypatch, caplog):
+    """Zero or negative env var is logged and ignored."""
+    monkeypatch.setenv("SPELLBOOK_CANVAS_MAX_PAGE_BYTES", "0")
+    with caplog.at_level("WARNING"):
+        result = store._max_page_bytes()
+    assert result == 1 * 1024 * 1024
+    assert any("must be positive" in r.message for r in caplog.records)
+
+
+def test_max_page_bytes_unset_returns_default(monkeypatch):
+    """Unset env var returns the 1 MB default."""
+    monkeypatch.delenv("SPELLBOOK_CANVAS_MAX_PAGE_BYTES", raising=False)
+    assert store._max_page_bytes() == 1 * 1024 * 1024
+
+
 def test_write_page_non_index(canvas_tmp_root):
     """MVP only accepts ``index.md``."""
     store.open_canvas("foo")

@@ -71,9 +71,38 @@ def _max_page_bytes() -> int:
     """Maximum bytes accepted by ``write_page``.
 
     Read at call time (not import time) so tests can flip the limit via
-    ``monkeypatch.setenv``.
+    ``monkeypatch.setenv``. A malformed env var (non-integer or
+    non-positive) is logged and ignored; the default 1 MB applies. This
+    prevents a typo in operator config from breaking every
+    ``canvas_write`` call with an opaque ``ValueError``.
     """
-    return int(os.environ.get("SPELLBOOK_CANVAS_MAX_PAGE_BYTES", str(1 * 1024 * 1024)))
+    default = 1 * 1024 * 1024
+    raw = os.environ.get("SPELLBOOK_CANVAS_MAX_PAGE_BYTES")
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "SPELLBOOK_CANVAS_MAX_PAGE_BYTES=%r is not an integer; "
+            "falling back to %d bytes (default).",
+            raw,
+            default,
+        )
+        return default
+    if value <= 0:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "SPELLBOOK_CANVAS_MAX_PAGE_BYTES=%r must be positive; "
+            "falling back to %d bytes (default).",
+            raw,
+            default,
+        )
+        return default
+    return value
 
 
 def _canvas_dir(name: str) -> str:
