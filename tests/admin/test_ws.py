@@ -11,21 +11,21 @@ from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
 
 
 def test_ws_rejects_missing_ticket(admin_app):
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     with pytest.raises(Exception):
         with client.websocket_connect("/ws"):
             pass
 
 
 def test_ws_rejects_invalid_ticket(admin_app):
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     with pytest.raises(Exception):
         with client.websocket_connect("/ws?ticket=invalid-ticket"):
             pass
 
 
 def test_ws_accepts_valid_ticket(admin_app, mock_mcp_token):
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     ticket = create_ws_ticket()
     with client.websocket_connect(f"/ws?ticket={ticket}") as ws:
         # Connection accepted -- send a pong to verify bidirectional
@@ -34,7 +34,7 @@ def test_ws_accepts_valid_ticket(admin_app, mock_mcp_token):
 
 def test_ws_ticket_single_use(admin_app, mock_mcp_token):
     """A WS ticket can only be used once."""
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     ticket = create_ws_ticket()
     # First connection succeeds
     with client.websocket_connect(f"/ws?ticket={ticket}") as ws:
@@ -47,7 +47,7 @@ def test_ws_ticket_single_use(admin_app, mock_mcp_token):
 
 def test_ws_receives_events(admin_app, mock_mcp_token):
     """Events published to the bus should appear on the WebSocket."""
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     ticket = create_ws_ticket()
     with client.websocket_connect(f"/ws?ticket={ticket}") as ws:
         # Publish an event to the bus
@@ -76,7 +76,7 @@ def test_ws_receives_events(admin_app, mock_mcp_token):
 
 def test_ws_ticket_endpoint_requires_auth(admin_app):
     """POST /api/auth/ws-ticket requires session cookie."""
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     response = client.post("/api/auth/ws-ticket")
     assert response.status_code == 401
 

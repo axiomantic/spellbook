@@ -133,7 +133,7 @@ def seeded_client(seeded_engine, admin_app, mock_mcp_token):
             yield session
 
     admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     cookie = create_session_cookie("test-session")
     client.cookies.set("spellbook_admin_session", cookie)
     yield client
@@ -154,7 +154,7 @@ def empty_client(async_engine, admin_app, mock_mcp_token):
             yield session
 
     admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     cookie = create_session_cookie("test-session")
     client.cookies.set("spellbook_admin_session", cookie)
     yield client
@@ -327,7 +327,7 @@ class TestWorkerLLMCallsRoute:
 
         admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
         try:
-            client = TestClient(admin_app)
+            client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
             # No session cookie set.
             response = client.get("/api/worker-llm/calls")
             assert response.status_code == 401
@@ -474,7 +474,7 @@ class TestWorkerLLMMetricsRoute:
 
         admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
         try:
-            client = TestClient(admin_app)
+            client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
             cookie = create_session_cookie("test-session")
             client.cookies.set("spellbook_admin_session", cookie)
             response = client.get("/api/worker-llm/metrics?window_hours=1")
@@ -505,7 +505,7 @@ class TestWorkerLLMMetricsRoute:
 
         admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
         try:
-            client = TestClient(admin_app)
+            client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
             response = client.get("/api/worker-llm/metrics")
             assert response.status_code == 401
         finally:
