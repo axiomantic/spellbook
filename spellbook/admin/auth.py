@@ -35,7 +35,7 @@ _ws_tickets: dict[str, float] = {}       # ticket -> expiry timestamp
 
 
 def create_handoff_token() -> str:
-    """Create a one-time exchange token valid for 60 seconds."""
+    """Create a one-time handoff token valid for 60 seconds."""
     token = secrets.token_urlsafe(32)
     _handoff_tokens[token] = time.time() + 60
     _cleanup_expired(_handoff_tokens)
@@ -43,7 +43,7 @@ def create_handoff_token() -> str:
 
 
 def validate_handoff_token(token: str) -> bool:
-    """Validate and consume an exchange token (single use)."""
+    """Validate and consume a handoff token (single use)."""
     _cleanup_expired(_handoff_tokens)
     expiry = _handoff_tokens.pop(token, None)
     return expiry is not None and time.time() < expiry
