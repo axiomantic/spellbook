@@ -48,6 +48,17 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   spawning of parallel sessions are gated by `feature-implement`
   Phase 3.4.7 (One-Pager Approval Gate). Autonomous mode does not
   waive that gate.
+- **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
+  full autonomous mode, design and plan approval gates require explicit
+  artifact verification before continuation. Before auto-proceeding:
+  1. Verify the artifact exists at the expected path (`ls`)
+  2. Verify section numbering is sequential and complete (no gaps like
+     starting at Section 8 with Sections 1–7 missing)
+  3. Verify cited file paths and function names actually exist
+  4. Verify dependency graph (for impl plans) has no cycles
+  Skipping these checks because "autonomous mode" is a Pattern 10
+  (Momentum Preservation) rationalization. The gate exists because
+  artifact-shaped failures are invisible without verification.
 
 If you find yourself typing "Should I proceed?" — STOP. You already have permission.
 </CRITICAL>
@@ -65,6 +76,42 @@ If you find yourself typing "Should I proceed?" — STOP. You already have permi
 - Neither → `CURRENT_AGENT_TYPE = "general"`
 
 **All Task tool calls MUST use `CURRENT_AGENT_TYPE` as `subagent_type`** (except pure exploration which may use `explore`).
+</CRITICAL>
+
+---
+
+## Platform Adaptation: Pi (π)
+
+<CRITICAL>
+**If running in Pi (`pi-coding-agent`):** The following adaptations apply.
+
+**Detection:** System prompt mentions "pi" or available tools include `subagent` (not `Task`).
+
+**Tool name mapping:**
+- "Task tool" → `subagent` tool. All references to `Task()` dispatch in this skill mean `subagent()` in Pi.
+- `subagent_type` field does NOT exist in Pi. Skip `CURRENT_AGENT_TYPE` propagation entirely.
+- `forge_project_init` is NOT available. Use `subagent` with `planner` or `delegate` agent for design synthesis.
+- `spawn_session` is NOT available.
+
+**Skill invocation in Pi:** Pi loads skills via system-prompt auto-trigger by text patterns or via `/skill:name`. There is no "Skill tool" RPC. To verify a subagent invoked the intended skill:
+
+1. Subagent prompt MUST instruct: "Begin your response with exactly: `SKILL_INVOCATION: [skill-name]`. If the skill is unavailable in your environment, output: `SKILL_UNAVAILABLE: [reason]` instead."
+2. Orchestrator MUST verify the `SKILL_INVOCATION:` header is present in the first 3 lines of subagent output.
+3. If header missing or wrong skill name: REJECT the result. Re-dispatch with clearer instruction. Do NOT integrate findings from a subagent that may have executed from memory rather than invoking the skill.
+
+**Available Pi subagent types:** `delegate`, `scout`, `worker`, `reviewer`, `planner`, `oracle`, `context-builder`, `researcher`. Map develop-skill agent references as:
+
+| Develop says | Pi uses |
+|---|---|
+| explore agent | `scout` or `delegate` |
+| dehallucination/devils-advocate | `delegate` (skill auto-fires) |
+| design-exploration | `planner` |
+| reviewing-design-docs / reviewing-impl-plans / requesting-code-review | `reviewer` |
+| writing-plans | `planner` |
+| executing-plans / test-driven-development / finishing | `worker` |
+| fact-checking / auditing-green-mirage | `delegate` or `reviewer` |
+
+**Artifact paths:** Pi sessions typically use `~/Development/<project>/` instead of `~/.local/spellbook/docs/<project-encoded>/`. Use whichever convention the operator established; do not silently switch.
 </CRITICAL>
 
 ---
@@ -211,6 +258,57 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 ---
 
+## MANDATORY: Artifact Verification Protocol
+
+<CRITICAL>
+Subagents are unreliable contract executors. They over-deliver, under-deliver,
+and silently use the wrong path. Every dispatch must enforce an artifact contract
+in BOTH directions: prompt and return.
+</CRITICAL>
+
+### Orchestrator → Subagent (in every dispatch prompt)
+
+1. **Absolute paths only.** "Write to `/Users/.../project/design.md`" — NEVER
+   "write to `design.md`". Subagent CWD may differ from orchestrator CWD.
+2. **Exact artifact count.** "Produce EXACTLY one file: `[path]`. Do NOT
+   produce `plan.md`, `notes.md`, or any sibling artifact. If your skill
+   wants to produce more, list them in your return summary and ask before
+   writing."
+3. **Section schema.** For documents: "The document MUST have sections
+   numbered 1 through N with no gaps. Section headings: [list]. Verify
+   sequential numbering before returning."
+4. **Forbidden phrasing.** Do not say "create the design AND the plan" —
+   that triggers Phase Collapse (Pattern 6) inside the subagent.
+
+### Subagent → Orchestrator (in every return summary)
+
+Subagent return MUST include:
+
+```
+ARTIFACTS_WRITTEN:
+  - /absolute/path/file1.md (N lines, sections 1–K)
+  - /absolute/path/file2.ts (M lines)
+ARTIFACTS_NOT_WRITTEN: (anything skill wanted to write but operator forbade)
+SKILL_INVOCATION: [skill-name]
+COMPILE_STATUS: pass | fail | n/a
+TEST_STATUS: N/N pass | n/a
+```
+
+### Orchestrator post-dispatch verification (mandatory)
+
+Before moving to next phase, run via subagent:
+
+```bash
+ls -la [expected_paths]
+# For documents: grep -c "^## " [path]   # section count check
+```
+
+If artifact missing, at wrong path, or section count wrong: re-dispatch.
+Do NOT accept "the file is there, trust me" — verify. The cost of one
+`ls` is far lower than the cost of building Phase N+1 on a missing artifact.
+
+---
+
 ## MANDATORY: Pre-Dispatch Ritual
 
 <CRITICAL>
@@ -309,18 +407,33 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 ### What To Do Instead
 
 ```
-Task:
+Task (or subagent in Pi):
   description: "[Brief description]"
-  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo, yolo-focused, or general
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # OpenCode only; omit in Pi
   prompt: |
     First, invoke the [skill-name] skill using the Skill tool.
     Then follow its complete workflow.
+
+    Begin your response with exactly: SKILL_INVOCATION: [skill-name]
+    (or SKILL_UNAVAILABLE: [reason] if you cannot invoke).
+
+    CRITICAL: Write all files to ABSOLUTE paths. Do NOT use the
+    current working directory as an implicit output location.
+    Expected artifact path: [absolute path]
+    Expected artifact count: 1 (do not produce sibling files)
+
+    Return summary MUST include:
+      ARTIFACTS_WRITTEN: [absolute paths with line counts]
+      SKILL_INVOCATION: [skill-name]
+      COMPILE_STATUS: pass | fail | n/a
+      TEST_STATUS: N/N pass | n/a
 
     ## Context for the Skill
     [Provide context here]
 ```
 
 **OpenCode:** Always use `CURRENT_AGENT_TYPE` (detected at session start) to ensure subagents inherit YOLO permissions.
+**Pi:** Skip `subagent_type` field entirely; Pi has no agent-type permissions axis.
 </FORBIDDEN>
 
 ---
@@ -546,6 +659,81 @@ Every Phase 4 dispatch point follows this protocol:
 
 Skipping ANY step is forbidden. See Anti-Rationalization patterns #8, #9, #10.
 </CRITICAL>
+
+### Phase 4.0 Pre-Implementation Environment Gate
+
+<CRITICAL>
+Before dispatching any implementation subagent, verify test infrastructure
+is available. A subagent that writes Lua scripts but cannot run them against
+Real Redis is shipping unverified code regardless of how many mocks pass.
+</CRITICAL>
+
+Dispatch a one-shot environment probe before Phase 4.1:
+
+```bash
+# Examples — adapt per project tech stack
+redis-cli ping              # if Redis is in scope
+docker ps                   # if containers are in scope
+psql -c '\l' postgres       # if Postgres is in scope
+curl -fsS [healthcheck_url] # if external API is in scope
+node --version              # interpreter sanity
+```
+
+For each unavailable dependency: write a `test-limitations.md` documenting
+what cannot be validated this session. Implementation may proceed with mocks
+BUT all subagents implementing against the unavailable infrastructure MUST
+add at least one integration test file (skipped if infra absent) so a future
+session can validate. Do NOT silently assume mocks cover real behavior.
+
+### Phase 4.1 Worktree Pre-Check
+
+Before using `worktree: true` in subagent dispatch:
+
+```bash
+cd [project_root]
+git status                    # must be clean OR commit/stash first
+git log --oneline -1          # must show at least one commit
+git branch --show-current     # confirm target branch
+```
+
+Worktrees CANNOT be created from:
+- An empty git repo (no commits on branch)
+- A directory that is not a git repo at all
+- A branch with uncommitted changes that would conflict
+
+If any check fails: commit/init first, then dispatch with worktree.
+Do NOT silently fall back to non-isolated parallel — file collisions
+between subagents will eat your afternoon.
+
+### Phase 4 Batching Threshold Protocol
+
+<CRITICAL>
+For implementations with >12 tasks OR >2 parallel tracks: per-task gates
+(4.3 → 4.4 → 4.5 → 4.5.1) MUST be executed by track managers, not by
+the CEO orchestrator.
+</CRITICAL>
+
+**Why:** 24 tasks × 4 gates = 96 dispatches. Each return accumulates in
+CEO context. By task 12 the CEO is reading more than orchestrating, and
+the end-of-Phase-4 audit (4.6.1) runs in a context already polluted with
+implementation detail.
+
+**How:**
+
+| Task count | Mode | Per-task gates run by |
+|---|---|---|
+| < 8 | direct / delegated | CEO (one dispatch per gate per task) |
+| 8–12 | delegated | CEO with batched per-domain dispatches |
+| > 12 OR ≥ 2 tracks | sub_orchestrators | Track managers (CEO sees only summaries) |
+| > 25 OR cross-session | work_items | Separate sessions |
+
+When sub_orchestrators is selected, see `dispatching-sub-orchestrators`
+skill for the Manager dispatch template, including the inline quality
+gate that each Manager runs after every sub-task.
+
+**Do NOT collapse per-task gates into one batched gate at CEO level.**
+That is not batching — that is gate elision (Pattern 8). Batching means
+routing to managers; elision means running fewer gates.
 
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:
@@ -885,6 +1073,75 @@ Commands share state via these session variables:
 
 - `SESSION_PREFERENCES` - User workflow preferences (from Phase 0)
 - `SESSION_CONTEXT` - Research findings, design context (built across phases)
+
+### Session Handoff Protocol
+
+<CRITICAL>
+Long develop sessions hit context limits. The skill assumes one session
+completes all phases; reality is that COMPLEX features often span sessions.
+Without a standard handoff, the next session re-discovers state and drifts.
+</CRITICAL>
+
+**When to write a handoff:** before context compaction, when the operator
+pauses an in-flight develop session, or whenever the orchestrator estimates
+remaining context cannot complete the current phase plus the next gate.
+
+**Where:** `~/.local/spellbook/handoffs/YYYY-MM-DD-<feature-slug>.md`
+(or `<project_root>/HANDOFF.md` if the operator established that convention).
+
+**Schema:**
+
+```markdown
+# Handoff: <feature-slug>
+Generated: YYYY-MM-DD HH:MM
+Session: <session id or git branch>
+
+## Resume At
+- Phase: 4.5 (per-task code review)
+- Sub-step: Wave 2, group "coordination"
+- Tier: STANDARD
+- Execution mode: sub_orchestrators
+
+## Completed
+- Phases 0–3.4 (full audit trail in <design_doc> and <impl_plan>)
+- Tasks 1–10 implemented (commits abc123..def456)
+- Per-task gates 4.3–4.4 done for tasks 1–10
+
+## Pending
+- Tasks 11–24 (see plan.md §<task list>)
+- Per-task gate 4.5 (code review) for all tasks
+- End-of-Phase-4 gates 4.6.1–4.6.5
+
+## Blockers
+- Redis not available locally; integration tests skipped
+- Pi `exec()` API for spawn unverified (see spike/SPAWN_DECISION.md)
+
+## Artifacts
+- design.md  — /absolute/path (1664 lines, sections 1–15)
+- plan.md    — /absolute/path (402 lines, 24 tasks)
+- HANDOFF.md — /absolute/path (this file)
+- review/    — /absolute/path (post-hoc review reports)
+
+## Git State
+- Branch: main
+- HEAD: <sha>  <commit subject>
+- Working tree: clean | <list of dirty files>
+
+## Test Status
+- Unit: 109/109 pass (--pool=forks required for OOM)
+- Integration: 4/4 pass against real Redis db 4
+- TypeScript: 0 errors
+
+## Next Dispatch
+Phase 4.5 code-review subagent for coordination group:
+  files: src/mesh/{bidder,taskmaster,archivist,compacter}.ts
+  skill: requesting-code-review
+  output: review/code-review-coordination.md
+```
+
+**On resume:** the next session MUST read the handoff before any other action,
+then verify the git HEAD and test status still match. If the working tree
+diverged from the handoff, treat as new session and re-classify complexity.
 
 ### STOP AND VERIFY Markers
 
