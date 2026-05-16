@@ -125,6 +125,12 @@ _ALLOWED_KEYS: frozenset[str] = frozenset(f.name for f in fields(TierRecord))
 # is brittle across Python versions.
 _REQUIRED_KEYS: frozenset[str] = frozenset({"tool", "pattern", "tier", "description"})
 
+#: Allow-listed top-level TOML keys. ``tiers`` is the [[tiers]] array of
+#: tables; ``protected`` is the [protected] section consumed by the
+#: protected-branch loader added in a follow-up commit (planned:
+#: ``spellbook.gates.git_push.load_protected_config``).
+_ALLOWED_TOP_LEVEL: frozenset[str] = frozenset({"tiers", "protected"})
+
 
 def _parse_record(raw: dict, source_idx: int, source: Path | None) -> TierRecord:
     """Validate a raw dict and construct a :class:`TierRecord`."""
@@ -210,6 +216,13 @@ def load_tiers(path: Path) -> list[TierRecord]:
     """
     text = path.read_text(encoding="utf-8")
     data = tomllib.loads(text)
+
+    unknown_top = set(data.keys()) - _ALLOWED_TOP_LEVEL
+    if unknown_top:
+        raise ValueError(
+            f"{path}: unknown top-level keys {sorted(unknown_top)}; "
+            f"allowed keys are {sorted(_ALLOWED_TOP_LEVEL)}"
+        )
 
     rows = data.get("tiers", []) or []
     if not isinstance(rows, list):
