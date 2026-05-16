@@ -171,9 +171,120 @@ def load_protected_config(toml_path: Path) -> ProtectedConfig:
 
 
 def _reset_caches() -> None:
-    """Clear all module-level caches. Test-fixture hook.
-
-    Currently clears only ``load_protected_config``'s ``lru_cache``.
-    Task 3 extends this to clear ``_HEAD_CACHE``.
-    """
+    """Clear all module-level caches. Test-fixture hook."""
     load_protected_config.cache_clear()
+    _HEAD_CACHE.clear()
+
+
+# ---------------------------------------------------------------------------
+# Current-branch resolver (with HEAD-mtime cache)
+# ---------------------------------------------------------------------------
+
+
+import subprocess  # noqa: E402 — grouped with branch-resolver concerns
+
+#: Per-process cache: cwd -> (head_mtime, branch_or_None).
+#: Sentinel mtime ``-1.0`` caches "not a git repo" so subsequent calls
+#: in the same cwd don't restat. Any real mtime > -1.0 invalidates it.
+_HEAD_CACHE: dict[str, tuple[float, str | None]] = {}
+
+
+def _run_symbolic_ref(cwd: str, timeout: float = 1.0) -> tuple[str | None, bool]:
+    """Invoke ``git -C cwd symbolic-ref --short HEAD``.
+
+    Returns:
+        (branch, transient_failure):
+          - (branch_name, False) on success.
+          - (None, True) on transient failure (TimeoutExpired,
+            FileNotFoundError, generic OSError) — caller should NOT
+            cache this; retry next call.
+          - (None, False) on stable non-zero exit (CalledProcessError,
+            e.g. detached HEAD) — caller MAY cache.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "symbolic-ref", "--short", "HEAD"],
+            capture_output=True,
+            timeout=timeout,
+            check=True,
+            text=True,
+        )
+    except subprocess.TimeoutExpired:
+        return (None, True)
+    except FileNotFoundError:
+        return (None, True)
+    except subprocess.CalledProcessError:
+        return (None, False)  # detached HEAD or similar; stable
+    except OSError:
+        return (None, True)
+    branch = result.stdout.strip()
+    return (branch or None, False)
+
+
+def _resolve_current_branch(cwd: str | None) -> str | None:
+    """Return the current symbolic branch name for ``cwd``, or ``None``.
+
+    Strategy:
+      1. If ``cwd`` is empty/None → return None.
+      2. Locate the canonical HEAD file:
+         a. ``<cwd>/.git`` is a directory → ``<cwd>/.git/HEAD``.
+         b. ``<cwd>/.git`` is a file → parse ``gitdir: <path>`` and use
+            ``<path>/HEAD`` (worktree case).
+         c. otherwise → not a git repo; cache ``(-1.0, None)`` and return None.
+      3. Stat HEAD; on success compare mtime with cache; return cached
+         branch when mtime matches.
+      4. On miss, call ``git symbolic-ref``. Transient failures are not
+         cached; stable failures are cached as ``(mtime, None)``.
+    """
+    if not cwd:
+        return None
+    git_path = Path(cwd) / ".git"
+
+    head_path: Path | None
+    if git_path.is_dir():
+        head_path = git_path / "HEAD"
+    elif git_path.is_file():
+        try:
+            pointer = git_path.read_text(encoding="utf-8").strip()
+        except OSError:
+            # Pointer unreadable — skip cache, always probe.
+            branch, _ = _run_symbolic_ref(cwd)
+            return branch
+        if not pointer.startswith("gitdir:"):
+            branch, _ = _run_symbolic_ref(cwd)
+            return branch
+        gitdir = pointer[len("gitdir:"):].strip()
+        head_path = Path(gitdir) / "HEAD"
+    else:
+        _HEAD_CACHE[cwd] = (-1.0, None)
+        return None
+
+    try:
+        mtime = head_path.stat().st_mtime
+    except OSError:
+        _HEAD_CACHE[cwd] = (-1.0, None)
+        return None
+
+    cached = _HEAD_CACHE.get(cwd)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+
+    # Fast path: parse the HEAD file directly when it is a plain
+    # symbolic ref (the overwhelmingly common case). Avoids spawning
+    # ``git`` and works for minimal fake repos used in tests. Falls
+    # back to subprocess for detached HEAD or unusual HEAD contents.
+    try:
+        head_text = head_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        head_text = ""
+    branch: str | None = None
+    if head_text.startswith("ref: refs/heads/"):
+        branch = head_text[len("ref: refs/heads/"):].strip() or None
+        _HEAD_CACHE[cwd] = (mtime, branch)
+        return branch
+
+    branch, transient = _run_symbolic_ref(cwd)
+    if transient:
+        return None  # do NOT cache
+    _HEAD_CACHE[cwd] = (mtime, branch)
+    return branch
