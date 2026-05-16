@@ -18,6 +18,12 @@
 #
 # Editing this file: changes take effect at the next `install.py` run for the
 # T3-derived L2 deny list, and immediately for in-process hook classification.
+#
+# Top-level allow-list (strict): only ``tiers`` and ``protected`` are
+# accepted at the top level. Unknown keys (typos, custom sections)
+# raise ValueError at load time. The ``protected`` table is consumed
+# separately (documentation block added in a follow-up commit once the
+# table itself is shipped).
 
 # ---------------------------------------------------------------------------
 # T3 — forbidden. These records ALSO project into settings.json deny.
