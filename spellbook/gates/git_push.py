@@ -558,7 +558,15 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
         if dest.startswith("refs/heads/"):
             dest = dest[len("refs/heads/"):]
         # ``HEAD`` as dest is rare; leave for resolver.
-        refspec_dests.append(dest)
+        # Skip empty dest -- can only arise from malformed input like
+        # ``:`` or ``+:`` (no source, no dest). Adding ``""`` to dests
+        # would match no protected pattern and silently allow; instead,
+        # drop it so refspec_dests reflects only well-formed refspecs.
+        # If ALL refspecs are malformed, refspec_dests is empty and we
+        # fall back to the "no refspec -> resolve current branch" path,
+        # which is the safest interpretation of a degenerate input.
+        if dest:
+            refspec_dests.append(dest)
 
     return (remote, refspec_dests, all_or_mirror, set_upstream)
 

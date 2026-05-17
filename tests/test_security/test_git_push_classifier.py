@@ -969,6 +969,35 @@ def test_trailing_colon_refspec_treats_dest_as_src(tmp_path):
     ) == "T2"
 
 
+def test_degenerate_colon_only_refspec_falls_back_to_current_branch(tmp_path):
+    """``git push origin :`` (colon only, no src and no dest) is
+    malformed input git itself would reject. The classifier drops the
+    empty dest and falls back to the "no refspec -> resolve current
+    branch" path, which is the safest interpretation -- a degenerate
+    input on a protected branch still asks (T2), not silently allow."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    # Degenerate ``:`` on a non-protected branch -> falls back to
+    # current-branch resolve, which is non-protected -> T_UNCLASSIFIED.
+    feature_repo = tmp_path / "feature_repo"
+    feature_repo.mkdir()
+    _make_git_repo(feature_repo, branch="feature/x")
+    assert classify_git_push(
+        "git push origin :", str(feature_repo), _cfg()
+    ) == T_UNCLASSIFIED
+
+    # Same degenerate input but on ``main`` -> current-branch resolve
+    # hits the protected pattern -> T2. Confirms we did not silently
+    # allow by accepting empty dest into refspec_dests.
+    main_repo = tmp_path / "main_repo"
+    main_repo.mkdir()
+    _make_git_repo(main_repo, branch="main")
+    assert classify_git_push(
+        "git push origin :", str(main_repo), _cfg()
+    ) == "T2"
+
+
 def test_tag_refspec_does_not_match_branch_pattern(tmp_path):
     """`refs/tags/v1.0` is not stripped (only `refs/heads/` is); branch globs
     must not falsely match tag refs."""
