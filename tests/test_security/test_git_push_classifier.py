@@ -866,6 +866,84 @@ def test_delete_refspec_targets_destination(tmp_path):
     ) == "T2"
 
 
+# ---------------------------------------------------------------------------
+# SECURITY regressions: implicit-remote refspec parsing (SH1/SH2/SH3)
+#
+# These cases were silently misclassified as T_UNCLASSIFIED because the
+# parser treated a leading refspec (``:main``, ``+main``) as the REMOTE
+# name. Git treats the first positional as a refspec when the remote is
+# omitted (it uses ``branch.<name>.pushRemote`` / ``remote.pushDefault``
+# / ``origin`` as the implicit remote). These tests lock down the fix.
+# ---------------------------------------------------------------------------
+
+
+def test_implicit_remote_delete_refspec_classified_as_t2_for_protected(tmp_path):
+    """SH1+SH3: ``git push :main`` (implicit remote, delete refspec) targets
+    a protected branch and MUST be flagged T2. Pre-fix, the parser took
+    ``:main`` as the remote name and returned T_UNCLASSIFIED."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push("git push :main", str(tmp_path), _cfg()) == "T2"
+
+
+def test_implicit_remote_force_refspec_classified_as_t2_for_protected(tmp_path):
+    """SH1+SH3: ``git push +main`` (implicit remote, force refspec) targets
+    a protected branch and MUST be flagged T2. Pre-fix, the parser took
+    ``+main`` as the remote name and returned T_UNCLASSIFIED."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push("git push +main", str(tmp_path), _cfg()) == "T2"
+
+
+def test_implicit_remote_delete_refspec_non_protected_branch_unclassified(tmp_path):
+    """SH1 negative: ``git push :feature`` (implicit remote, delete refspec)
+    targets a non-protected branch and MUST remain T_UNCLASSIFIED. Guards
+    against over-matching where the SH1 fix mistakenly flags every
+    implicit-remote refspec."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push :feature", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_dest_plus_prefix_after_colon_classified_as_t2(tmp_path):
+    """SH2: ``git push origin HEAD:+main`` — the ``+`` AFTER the colon is
+    ambiguous (git may create a literal ``+main`` ref). Safer default:
+    treat the post-colon ``+`` as a force-prefix on the dest, so the
+    dest matches the ``main`` protected pattern and returns T2."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin HEAD:+main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_implicit_remote_explicit_dest_master_classified_as_t2(tmp_path):
+    """SH1+SH3 (master variant): ``git push :master`` (implicit remote,
+    delete refspec) targets a protected branch and MUST be flagged T2."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push("git push :master", str(tmp_path), _cfg()) == "T2"
+
+
+def test_implicit_remote_no_refspec_uses_current_branch_resolver(tmp_path):
+    """SH3 negative: bare ``git push`` from the ``main`` branch with no
+    refspec MUST still T2 via the resolver path. Confirms the SH3 fix
+    (early return only when ``remote is None AND refspec_dests empty``)
+    does not regress the bare-push code path."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push("git push", str(tmp_path), _cfg()) == "T2"
+
+
 def test_tag_refspec_does_not_match_branch_pattern(tmp_path):
     """`refs/tags/v1.0` is not stripped (only `refs/heads/` is); branch globs
     must not falsely match tag refs."""

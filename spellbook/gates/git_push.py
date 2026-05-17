@@ -423,12 +423,30 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
         positionals.append(tok)
         i += 1
 
-    remote = positionals[0] if positionals else None
-    raw_refspecs = positionals[1:]
+    # SH1: If the first positional looks like a refspec (contains ``:``
+    # or starts with ``+``) AND is NOT a URL-form remote, the remote is
+    # IMPLICIT — git defaults to the configured
+    # ``branch.<name>.pushRemote`` / ``remote.pushDefault`` / ``origin``.
+    # Pre-fix, the parser treated ``:main`` / ``+main`` as the remote
+    # NAME, so they were rejected as "unknown remote" and the destructive
+    # refspec slipped through as T_UNCLASSIFIED. The ``_is_url_form``
+    # guard prevents URL-form remotes (which legitimately contain ``:``
+    # for the scheme separator, e.g. ``https://...`` or
+    # ``git@host:path``) from being mis-parsed as refspecs.
+    if (
+        positionals
+        and (":" in positionals[0] or positionals[0].startswith("+"))
+        and not _is_url_form(positionals[0])
+    ):
+        remote = None
+        raw_refspecs = positionals
+    else:
+        remote = positionals[0] if positionals else None
+        raw_refspecs = positionals[1:]
 
     refspec_dests: list[str] = []
     for spec in raw_refspecs:
-        # Strip leading ``+`` (force-style).
+        # Strip leading ``+`` (refspec-level force prefix).
         if spec.startswith("+"):
             spec = spec[1:]
         # Take destination (after the colon) if present, else source.
@@ -436,7 +454,17 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
             _, dest = spec.split(":", 1)
         else:
             dest = spec
-        # Normalize ``refs/heads/foo`` -> ``foo`` for fnmatch.
+        # SH2: Defensive — strip leading ``+`` from the dest too. Per
+        # git's refspec ABNF, ``+`` is only valid as a refspec-level
+        # prefix, but an input like ``HEAD:+main`` is ambiguous: git
+        # MAY create a ref literally named ``+main``, but the operator
+        # almost certainly meant ``+HEAD:main`` (force HEAD to main).
+        # Treat a post-``:`` ``+`` as a force-prefix on the dest to
+        # fail-safe toward asking instead of silently allowing.
+        if dest.startswith("+"):
+            dest = dest[1:]
+        # Normalize ``refs/heads/foo`` -> ``foo`` for fnmatch. Done AFTER
+        # the ``+`` strip so ``+refs/heads/main`` is normalized correctly.
         if dest.startswith("refs/heads/"):
             dest = dest[len("refs/heads/"):]
         # ``HEAD`` as dest is rare; leave for resolver.
@@ -492,21 +520,28 @@ def classify_git_push(
     if all_or_mirror:
         return "T2"
 
-    # Bare ``git push`` with no remote: rely on resolver, treat origin/upstream
-    # config as implicit (since git's default-push-remote is conventionally
-    # origin). Pass through to the resolver path below.
-    if remote is None:
+    # SH3: Bare ``git push`` with no remote AND no refspecs: rely on the
+    # resolver alone. The SH1 fix lets ``git push :main`` (delete) reach
+    # this point with remote=None but refspec_dests=["main"], so the
+    # early-return guard must require BOTH conditions; otherwise the
+    # refspec is silently ignored and the resolver checks the WRONG
+    # target (the current branch, not the refspec dest).
+    if remote is None and not refspec_dests:
         branch = _resolve_current_branch(cwd)
         if branch is None:
             return _failsafe(autonomous)
         return "T2" if _match_protected(branch, config.branches) else T_UNCLASSIFIED
 
-    # URL-form remote -> out of scope for name-based matching.
-    if _is_url_form(remote):
+    # URL-form remote -> out of scope for name-based matching. None-guard:
+    # ``remote`` may legitimately be None now (implicit-remote refspec
+    # path from SH1), so skip URL-form check in that case.
+    if remote is not None and _is_url_form(remote):
         return T_UNCLASSIFIED
 
-    # Unknown remote name -> out of scope.
-    if remote not in config.remotes:
+    # Unknown remote name -> out of scope. None-guard: same rationale as
+    # above. Implicit-remote refspecs (remote is None) fall through to
+    # the dest-matching loop below (the SH3 fix-point).
+    if remote is not None and remote not in config.remotes:
         return T_UNCLASSIFIED
 
     # Refspecs given: classify against each target. Any protected hit -> T2.
