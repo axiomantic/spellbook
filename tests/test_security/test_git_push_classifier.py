@@ -956,6 +956,19 @@ def test_implicit_remote_no_refspec_uses_current_branch_resolver(tmp_path):
     assert classify_git_push("git push", str(tmp_path), _cfg()) == "T2"
 
 
+def test_trailing_colon_refspec_treats_dest_as_src(tmp_path):
+    """``git push origin main:`` (empty dest after colon) is treated as
+    ``main:main`` per git's "ref without colon == ref:ref" rule.
+    Without this, dest would be ``""`` which matches no protected
+    pattern and silently allows a push to a protected branch."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin main:", str(tmp_path), _cfg()
+    ) == "T2"
+
+
 def test_tag_refspec_does_not_match_branch_pattern(tmp_path):
     """`refs/tags/v1.0` is not stripped (only `refs/heads/` is); branch globs
     must not falsely match tag refs."""

@@ -533,8 +533,15 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
         if spec.startswith("+"):
             spec = spec[1:]
         # Take destination (after the colon) if present, else source.
+        # ``main:`` (trailing colon, empty dest) is treated as
+        # ``main:main`` per git's "ref without colon == ref:ref" rule
+        # (defensive — git would typically reject the empty-dest form,
+        # but if a future git accepts it, we want to classify
+        # against the source ref rather than silently allow an empty
+        # dest that matches no protected pattern).
         if ":" in spec:
-            _, dest = spec.split(":", 1)
+            src, dest = spec.split(":", 1)
+            dest = dest or src
         else:
             dest = spec
         # SH2: Defensive — strip leading ``+`` from the dest too. Per
