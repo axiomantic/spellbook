@@ -300,6 +300,7 @@ def classify_tool_call(
     tool_name: str,
     tool_input: dict,
     records: Iterable[TierRecord],
+    cwd: str | None = None,
 ) -> str:
     """Classify a single tool call against tier records.
 
@@ -308,6 +309,10 @@ def classify_tool_call(
         tool_input: Tool input dict. For Bash, the ``"command"`` key is
             inspected; for other tools, only ``tool_name`` is matched.
         records: Iterable of :class:`TierRecord`.
+        cwd: Optional working directory. When provided AND the call is a
+            Bash ``git push``, the :mod:`spellbook.gates.git_push`
+            pre-pass runs first; its result (if not ``None``) is folded
+            into the highest-tier-wins outcome alongside the record loop.
 
     Returns:
         The tier of the highest-tier matching record, or
@@ -316,6 +321,35 @@ def classify_tool_call(
     """
     best_rank = _TIER_RANK[T_UNCLASSIFIED]
     best_tier = T_UNCLASSIFIED
+
+    # Pre-pass: git push classifier (WI-fork). Runs only for Bash git push
+    # invocations; returns None for everything else so the record loop is
+    # the sole source of truth for non-push commands.
+    if tool_name == "Bash":
+        command = (tool_input or {}).get("command", "") or ""
+        if command.lstrip().startswith("git push"):
+            # Local import to avoid pulling the subprocess + fnmatch deps
+            # into install-time consumers that only need load_tiers /
+            # derive_l2_deny_list.
+            import os as _os
+            from spellbook.gates.git_push import (
+                classify_git_push,
+                load_protected_config,
+            )
+            autonomous = _os.environ.get(
+                "SPELLBOOK_GIT_PUSH_AUTONOMOUS", ""
+            ).strip().lower() in {"1", "true", "yes"}
+            config = load_protected_config(
+                Path(__file__).resolve().parent / "tiers.toml"
+            )
+            pre = classify_git_push(
+                command, cwd, config, autonomous=autonomous
+            )
+            if pre is not None:
+                rank = _TIER_RANK.get(pre, -1)
+                if rank > best_rank:
+                    best_rank = rank
+                    best_tier = pre
 
     for rec in records:
         if not _record_matches(rec, tool_name, tool_input):

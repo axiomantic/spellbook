@@ -425,7 +425,7 @@ def _gate_bash(data: dict) -> None:
         print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
-    result = check_tool_input("Bash", tool_input)
+    result = check_tool_input("Bash", tool_input, cwd=data.get("cwd", ""))
     _handle_check_result(result)
 
 
@@ -447,7 +447,7 @@ def _gate_spawn(data: dict) -> None:
         print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
-    result = check_tool_input("spawn_claude_session", tool_input)
+    result = check_tool_input("spawn_claude_session", tool_input, cwd=data.get("cwd", ""))
     _handle_check_result(result)
 
 
@@ -469,7 +469,7 @@ def _gate_state_sanitize(data: dict) -> None:
         print(json.dumps({"error": "Security check failed: no tool input provided"}), file=sys.stderr)
         sys.exit(2)
 
-    result = check_tool_input("workflow_state_save", tool_input)
+    result = check_tool_input("workflow_state_save", tool_input, cwd=data.get("cwd", ""))
     _handle_check_result(result)
 
 
