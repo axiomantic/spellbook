@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SPELLBOOK_PROTECTED_BRANCHES` / `SPELLBOOK_PROTECTED_REMOTES` env
   vars (comma-separated, or `__disable__` to suppress that axis). New
   T3 rule covers force-push-via-plus (`git push origin +main`). Set
-  `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` to fail-silent on subprocess
-  errors in high-trust automation contexts. Users with redundant
+  `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` (also accepts `true`/`yes`) to
+  fail-silent on subprocess errors in high-trust automation contexts. Users with redundant
   `Bash(git push --force/-f origin {master,main}:*)` deny entries in
   their personal `~/.claude/settings.json` can now remove them (the
   T3 force-push tier rules already cover the same patterns via
