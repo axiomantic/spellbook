@@ -290,6 +290,115 @@ def test_reset_caches_clears_head_cache(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Gemini code-review regression tests (PR feedback)
+# ---------------------------------------------------------------------------
+
+
+def test_worktree_relative_gitdir_resolves_against_worktree_cwd(tmp_path, monkeypatch):
+    """HIGH: Worktree .git file with RELATIVE gitdir pointer must resolve
+    against the worktree directory, not the process CWD.
+
+    Real git worktrees commonly write `gitdir: ../.git/worktrees/<name>`
+    (relative). The previous code did ``Path(gitdir) / "HEAD"`` which
+    resolves against the process CWD, producing a non-existent HEAD path
+    whenever the process CWD differs from the worktree.
+
+    Mutation guard: changing the process CWD between calls must not
+    affect resolution, because the gitdir is relative to the worktree
+    cwd parameter, not os.getcwd().
+    """
+    from spellbook.gates.git_push import _reset_caches, _resolve_current_branch
+
+    # Build a fake "main" repo with .git directory.
+    main_repo = tmp_path / "main"
+    main_repo.mkdir()
+    main_git = main_repo / ".git"
+    main_git.mkdir()
+    (main_git / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+
+    # Build the worktree metadata directory under main/.git/worktrees/feature.
+    wt_meta = main_git / "worktrees" / "feature"
+    wt_meta.mkdir(parents=True)
+    (wt_meta / "HEAD").write_text("ref: refs/heads/feature/x\n", encoding="utf-8")
+
+    # Build the worktree itself: main/.worktrees/feature/.git is a FILE
+    # whose gitdir pointer is RELATIVE (the realistic case).
+    wt_dir = main_repo / ".worktrees" / "feature"
+    wt_dir.mkdir(parents=True)
+    # Relative path from wt_dir to wt_meta:
+    # wt_dir   = main/.worktrees/feature
+    # wt_meta  = main/.git/worktrees/feature
+    # relative = ../../.git/worktrees/feature
+    (wt_dir / ".git").write_text(
+        "gitdir: ../../.git/worktrees/feature\n", encoding="utf-8"
+    )
+
+    # First resolution: process cwd is incidental.
+    assert _resolve_current_branch(str(wt_dir)) == "feature/x"
+
+    # Reset caches so the second call must re-resolve from scratch.
+    _reset_caches()
+
+    # Change process CWD to an unrelated directory. The buggy code would
+    # try to resolve the relative gitdir against this directory and fail.
+    unrelated = tmp_path / "unrelated_dir"
+    unrelated.mkdir()
+    monkeypatch.chdir(unrelated)
+
+    # Must STILL return the worktree branch — the gitdir is resolved
+    # against wt_dir, not against os.getcwd().
+    assert _resolve_current_branch(str(wt_dir)) == "feature/x"
+
+
+def test_head_cache_bounded_size(tmp_path):
+    """MED: _HEAD_CACHE must not grow unboundedly. Insert past the cap
+    and verify FIFO eviction keeps size at _HEAD_CACHE_MAX."""
+    from spellbook.gates.git_push import _HEAD_CACHE, _HEAD_CACHE_MAX, _cache_set
+
+    # Pre-condition: empty (autouse _reset_git_push_caches fixture handles this).
+    assert len(_HEAD_CACHE) == 0
+
+    # Insert _HEAD_CACHE_MAX + 2 distinct keys. Each insert past the cap
+    # must evict the oldest.
+    for i in range(_HEAD_CACHE_MAX + 2):
+        _cache_set(f"/fake/path/{i}", (float(i), f"branch-{i}"))
+
+    # Size must be exactly capped.
+    assert len(_HEAD_CACHE) == _HEAD_CACHE_MAX
+
+    # FIFO eviction: the two oldest keys (0 and 1) are gone; the most
+    # recent (cap+1) is present.
+    assert "/fake/path/0" not in _HEAD_CACHE
+    assert "/fake/path/1" not in _HEAD_CACHE
+    assert f"/fake/path/{_HEAD_CACHE_MAX + 1}" in _HEAD_CACHE
+
+
+def test_cwd_cache_key_normalized(tmp_path):
+    """MED: cwd is normalized via Path.resolve() so /tmp/foo, /tmp/foo/,
+    and /tmp/foo/. share a single cache entry instead of three."""
+    from spellbook.gates.git_push import _HEAD_CACHE, _resolve_current_branch
+
+    real = tmp_path / "real"
+    real.mkdir()
+    _make_git_repo(real, branch="main")
+
+    base = str(real)
+
+    # First call populates the cache with the canonical key.
+    assert _resolve_current_branch(base) == "main"
+    size_after_first = len(_HEAD_CACHE)
+    assert size_after_first == 1
+
+    # Trailing slash — semantically the same directory.
+    assert _resolve_current_branch(base + "/") == "main"
+    assert len(_HEAD_CACHE) == size_after_first
+
+    # Embedded "/." — semantically the same directory.
+    assert _resolve_current_branch(base + "/.") == "main"
+    assert len(_HEAD_CACHE) == size_after_first
+
+
+# ---------------------------------------------------------------------------
 # _run_symbolic_ref subprocess-fallback coverage (tripwire-mocked)
 #
 # These tests exercise the path where HEAD does NOT begin with

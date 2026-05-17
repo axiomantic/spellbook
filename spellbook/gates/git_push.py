@@ -13,6 +13,7 @@ import os
 import re
 import shlex
 import subprocess
+from collections import OrderedDict
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from functools import lru_cache
@@ -188,7 +189,29 @@ def _reset_caches() -> None:
 #: Per-process cache: cwd -> (head_mtime, branch_or_None).
 #: Sentinel mtime ``-1.0`` caches "not a git repo" so subsequent calls
 #: in the same cwd don't restat. Any real mtime > -1.0 invalidates it.
-_HEAD_CACHE: dict[str, tuple[float, str | None]] = {}
+#:
+#: Bounded via ``_HEAD_CACHE_MAX`` with FIFO eviction (see ``_cache_set``)
+#: so long-lived processes (e.g. the spellbook hook daemon) cannot grow
+#: this cache without bound across many transient cwds (tmp dirs,
+#: ephemeral worktrees). Reads via ``_cache_get`` bump LRU order.
+_HEAD_CACHE_MAX: int = 128
+_HEAD_CACHE: OrderedDict[str, tuple[float, str | None]] = OrderedDict()
+
+
+def _cache_set(key: str, value: tuple[float, str | None]) -> None:
+    """Insert into _HEAD_CACHE with FIFO eviction past _HEAD_CACHE_MAX."""
+    _HEAD_CACHE[key] = value
+    _HEAD_CACHE.move_to_end(key)
+    while len(_HEAD_CACHE) > _HEAD_CACHE_MAX:
+        _HEAD_CACHE.popitem(last=False)
+
+
+def _cache_get(key: str) -> tuple[float, str | None] | None:
+    """Get + bump-to-end (LRU). Returns None on miss."""
+    val = _HEAD_CACHE.get(key)
+    if val is not None:
+        _HEAD_CACHE.move_to_end(key)
+    return val
 
 
 def _run_symbolic_ref(cwd: str, timeout: float = 1.0) -> tuple[str | None, bool]:
@@ -240,6 +263,14 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
     """
     if not cwd:
         return None
+    # Normalize for consistent cache keying. Resolve symlinks and
+    # collapse redundant separators / "." / ".." components so
+    # semantically-equivalent paths (e.g. /tmp/foo, /tmp/foo/,
+    # /tmp/foo/.) share a single cache entry.
+    try:
+        cwd = str(Path(cwd).resolve(strict=False))
+    except OSError:
+        return None
     git_path = Path(cwd) / ".git"
 
     head_path: Path | None
@@ -256,18 +287,23 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
             branch, _ = _run_symbolic_ref(cwd)
             return branch
         gitdir = pointer[len("gitdir:"):].strip()
-        head_path = Path(gitdir) / "HEAD"
+        # Resolve relative gitdir against the worktree's cwd (the
+        # directory containing the .git file), not the process CWD.
+        # Real worktrees commonly have relative gitdir pointers such
+        # as ``gitdir: ../.git/worktrees/<name>``. Absolute gitdir
+        # paths are unaffected because ``Path(cwd) / abs_path == abs_path``.
+        head_path = (Path(cwd) / gitdir).resolve() / "HEAD"
     else:
-        _HEAD_CACHE[cwd] = (-1.0, None)
+        _cache_set(cwd, (-1.0, None))
         return None
 
     try:
         mtime = head_path.stat().st_mtime
     except OSError:
-        _HEAD_CACHE[cwd] = (-1.0, None)
+        _cache_set(cwd, (-1.0, None))
         return None
 
-    cached = _HEAD_CACHE.get(cwd)
+    cached = _cache_get(cwd)
     if cached is not None and cached[0] == mtime:
         return cached[1]
 
@@ -282,13 +318,13 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
     branch: str | None = None
     if head_text.startswith("ref: refs/heads/"):
         branch = head_text[len("ref: refs/heads/"):].strip() or None
-        _HEAD_CACHE[cwd] = (mtime, branch)
+        _cache_set(cwd, (mtime, branch))
         return branch
 
     branch, transient = _run_symbolic_ref(cwd)
     if transient:
         return None  # do NOT cache
-    _HEAD_CACHE[cwd] = (mtime, branch)
+    _cache_set(cwd, (mtime, branch))
     return branch
 
 
