@@ -43,6 +43,12 @@ description = "short-flag force-push to a protected branch; T3 deny"
 
 [[tiers]]
 tool = "Bash"
+pattern = "git push (origin|upstream) +(master|main)"
+tier = "T3"
+description = "force-push-via-plus to a protected branch (no --force flag); T3 deny"
+
+[[tiers]]
+tool = "Bash"
 pattern = "rm -rf /"
 tier = "T3"
 description = "delete the filesystem root; T3 deny"
@@ -70,12 +76,6 @@ mcp_qualifier = "github"
 # ---------------------------------------------------------------------------
 # T2 — ask. External / irreversible-but-recoverable side effects.
 # ---------------------------------------------------------------------------
-
-[[tiers]]
-tool = "Bash"
-pattern = "git push"
-tier = "T2"
-description = "any git push; ask before pushing"
 
 [[tiers]]
 tool = "Bash"
