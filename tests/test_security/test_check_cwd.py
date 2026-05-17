@@ -10,6 +10,7 @@ re-declare it here (per design §9.5 / M-1)."""
 from pathlib import Path
 
 import pytest
+import tripwire
 
 
 def _make_git_repo(path: Path, branch: str = "main") -> None:
@@ -71,3 +72,45 @@ def test_non_push_command_unaffected(tmp_path):
         "Bash", {"command": "git status"}, cwd=str(tmp_path)
     )
     assert result["verdict"] == "allow"
+
+
+def test_git_push_fancy_does_not_load_protected_config(tmp_path):
+    """Token-boundary regression: hypothetical ``git push-fancy``
+    subcommand must NOT trigger the protected-config load.
+
+    The pre-pass dispatcher in tiers.classify_tool_call checks for
+    exactly the ``git push`` token pair (not ``startswith("git push")``).
+    A ``startswith`` check would erroneously match ``git push-fancy``,
+    ``git push-mirror``, or any other hypothetical subcommand that
+    git may grow, performing an unnecessary TOML parse + env-overlay
+    pass on every invocation.
+
+    Tripwire mock with ``required(False)`` and zero registered calls
+    asserts the mock is NEVER called: if classify_tool_call ever
+    invokes load_protected_config for ``git push-fancy``, tripwire's
+    strict mode flags the unexpected call.
+    """
+    # Pre-import to ensure the patch target exists when tripwire patches it.
+    import spellbook.gates.git_push  # noqa: F401
+
+    from spellbook.gates.check import check_tool_input
+
+    mock_load = tripwire.mock(
+        "spellbook.gates.git_push:load_protected_config"
+    )
+
+    with tripwire:
+        result = check_tool_input(
+            "Bash",
+            {"command": "git push-fancy origin main"},
+            cwd=str(tmp_path),
+        )
+
+    # No protected-config load means the pre-pass short-circuited
+    # before reaching classify_git_push. Verdict comes from the
+    # record loop only.
+    assert result["verdict"] == "allow", result
+    # Tripwire's exit verification asserts no unexpected calls were
+    # made to load_protected_config; the variable is bound to assert
+    # the mock object exists for clarity.
+    assert mock_load is not None

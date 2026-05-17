@@ -267,8 +267,12 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
     # collapse redundant separators / "." / ".." components so
     # semantically-equivalent paths (e.g. /tmp/foo, /tmp/foo/,
     # /tmp/foo/.) share a single cache entry.
+    #
+    # os.path.realpath is the C-level normalization; faster than
+    # Path.resolve() and resolves symlinks (required for correct cache
+    # keying — /tmp/foo and /tmp/symlink-to-foo must share an entry).
     try:
-        cwd = str(Path(cwd).resolve(strict=False))
+        cwd = os.path.realpath(cwd)
     except OSError:
         return None
     git_path = Path(cwd) / ".git"
@@ -349,6 +353,13 @@ def _is_url_form(remote: str) -> bool:
     return False
 
 
+# Known git push flags that consume the next positional argument.
+# Hardcoded; if a future git release adds a value-taking flag not in
+# this set, the parser will treat that flag's VALUE as a positional
+# argument (remote or refspec), potentially producing a false-positive
+# T_UNCLASSIFIED for an actual protected-branch push. The trade-off
+# preserves a small, auditable parser over a full git argv grammar.
+# Verified against git 2.45 documentation as of this branch's merge.
 _FLAGS_TAKING_VALUE: frozenset[str] = frozenset({
     "-o", "--push-option",
     "--repo",
@@ -422,7 +433,7 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
             spec = spec[1:]
         # Take destination (after the colon) if present, else source.
         if ":" in spec:
-            dest = spec.split(":", 1)[1]
+            _, dest = spec.split(":", 1)
         else:
             dest = spec
         # Normalize ``refs/heads/foo`` -> ``foo`` for fnmatch.

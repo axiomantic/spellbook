@@ -327,7 +327,9 @@ def classify_tool_call(
     # the sole source of truth for non-push commands.
     if tool_name == "Bash":
         command = (tool_input or {}).get("command", "") or ""
-        if command.lstrip().startswith("git push"):
+        # Token-exact match — `git push-fancy` and similar hypothetical
+        # subcommands must NOT trigger the protected-config load.
+        if command.lstrip().split(None, 2)[:2] == ["git", "push"]:
             # Local import to avoid pulling the subprocess + fnmatch deps
             # into install-time consumers that only need load_tiers /
             # derive_l2_deny_list.
