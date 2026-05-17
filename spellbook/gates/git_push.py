@@ -445,17 +445,29 @@ def _is_url_form(remote: str) -> bool:
 # git push and the safer-failure trade-off is preserved.
 _FLAGS_TAKING_VALUE: frozenset[str] = frozenset({
     "-o", "--push-option",
-    "--repo",
     "--receive-pack",
     "--exec",
 })
 
+# ``--repo`` is handled specially (not in _FLAGS_TAKING_VALUE). Per
+# git-push(1), ``--repo=<repository>`` overrides the destination
+# repository -- i.e. it specifies the REMOTE that subsequent positional
+# refspecs target. Lumping it with the discard-the-next-token flags
+# silently mis-classified ``git push --repo upstream main`` (where
+# ``main`` is the refspec, not the remote): the parser ate ``upstream``,
+# then read ``main`` as an unknown remote name and returned
+# T_UNCLASSIFIED, bypassing protection. Treating ``--repo X`` (and
+# ``--repo=X``) as a remote override fixes both the space-form and
+# equals-form cases.
 
-def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
+
+def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool] | None:
     """Parse a ``git push`` invocation.
 
     Returns:
-        (remote, refspecs, all_or_mirror, set_upstream):
+        ``None`` if ``shlex.split`` fails on malformed input (unclosed
+        quotes etc.); the caller treats this as the fail-safe path.
+        Otherwise: ``(remote, refspecs, all_or_mirror, set_upstream)``.
           remote        -- first positional after flag-stripping, or None.
           refspecs      -- remaining positionals (already ``+`` and ``HEAD:``
                           stripped to dest branch name).
@@ -466,7 +478,14 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
     try:
         tokens = shlex.split(command)
     except ValueError:
-        return (None, [], False, False)
+        # Malformed shell input (unclosed quote, bad escape). Signal
+        # parse failure so the caller can fail-safe -- silently returning
+        # ``(None, [], False, False)`` here would route through the
+        # bare-push branch and resolve the CURRENT branch instead of the
+        # intended one, which could classify a malformed
+        # ``git push origin "main`` (intended dest: main) as
+        # T_UNCLASSIFIED when the operator's checkout is on a feature.
+        return None
 
     # Drop ``git`` and ``push``.
     if len(tokens) < 2 or tokens[0] != "git" or tokens[1] != "push":
@@ -474,6 +493,7 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
     rest = tokens[2:]
 
     positionals: list[str] = []
+    repo_override: str | None = None
     all_or_mirror = False
     set_upstream = False
     i = 0
@@ -485,6 +505,21 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
             continue
         if tok in ("-u", "--set-upstream"):
             set_upstream = True
+            i += 1
+            continue
+        # --repo (space form) overrides the remote. Only consume the
+        # next token as the override if it doesn't itself look like a
+        # flag (defensive: same pattern as _FLAGS_TAKING_VALUE).
+        if tok == "--repo":
+            if i + 1 < len(rest) and not rest[i + 1].startswith("-"):
+                repo_override = rest[i + 1]
+                i += 2
+            else:
+                i += 1
+            continue
+        # --repo=X (equals form).
+        if tok.startswith("--repo="):
+            repo_override = tok[len("--repo="):]
             i += 1
             continue
         if tok in _FLAGS_TAKING_VALUE:
@@ -506,6 +541,14 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
         positionals.append(tok)
         i += 1
 
+    # ``--repo`` overrides the remote. When present, ALL positionals are
+    # refspecs (none of them is the remote name) -- this fixes the case
+    # ``git push --repo upstream main``, where previously ``main`` was
+    # mis-classified as an unknown remote and the push slipped through
+    # as T_UNCLASSIFIED.
+    if repo_override is not None:
+        remote = repo_override
+        raw_refspecs = positionals
     # SH1: If the first positional looks like a refspec (contains ``:``
     # or starts with ``+``) AND is NOT a URL-form remote, the remote is
     # IMPLICIT — git defaults to the configured
@@ -516,7 +559,7 @@ def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
     # guard prevents URL-form remotes (which legitimately contain ``:``
     # for the scheme separator, e.g. ``https://...`` or
     # ``git@host:path``) from being mis-parsed as refspecs.
-    if (
+    elif (
         positionals
         and (":" in positionals[0] or positionals[0].startswith("+"))
         and not _is_url_form(positionals[0])
@@ -612,7 +655,15 @@ def classify_git_push(
     if not config.remotes:
         return T_UNCLASSIFIED
 
-    remote, refspec_dests, all_or_mirror, _set_upstream = _parse_push_args(command)
+    parsed = _parse_push_args(command)
+    if parsed is None:
+        # shlex.split failed (malformed shell input). Fail-safe rather
+        # than fall through to the bare-push path with the WRONG
+        # current-branch resolution: an unparseable
+        # ``git push origin "main`` could otherwise be classified by
+        # the operator's checkout instead of the intended dest.
+        return _failsafe(autonomous)
+    remote, refspec_dests, all_or_mirror, _set_upstream = parsed
 
     # --all / --mirror -> broad scope; always ask.
     if all_or_mirror:

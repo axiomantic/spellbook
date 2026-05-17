@@ -998,6 +998,79 @@ def test_degenerate_colon_only_refspec_falls_back_to_current_branch(tmp_path):
     ) == "T2"
 
 
+def test_repo_flag_space_form_overrides_remote(tmp_path):
+    """``git push --repo upstream main`` treats ``upstream`` as the
+    remote (per --repo's documented semantics) and ``main`` as the
+    refspec, not as the remote. Pre-fix: ``--repo`` was in
+    _FLAGS_TAKING_VALUE so the parser ate ``upstream``, then read
+    ``main`` as an unknown remote and returned T_UNCLASSIFIED --
+    silently allowing a push to protected ``main``."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push --repo upstream main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_repo_flag_equals_form_overrides_remote(tmp_path):
+    """``git push --repo=upstream main`` -- same as the space form but
+    with the equals syntax. Pre-fix: equals-form fell through the
+    ``--`` + ``=`` generic skip branch and ``main`` became the (bogus)
+    remote, returning T_UNCLASSIFIED."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push --repo=upstream main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_repo_flag_with_unknown_remote_returns_unclassified(tmp_path):
+    """``git push --repo unknown_remote main`` -- the override sets the
+    remote to an unrecognized name; classifier returns T_UNCLASSIFIED
+    (out of scope for name-based matching). Confirms the override path
+    routes through the existing unknown-remote guard."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push --repo unknown_remote main", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_malformed_shlex_input_fails_safe(tmp_path):
+    """``git push origin "main`` (unclosed quote) cannot be tokenized
+    by shlex. Pre-fix: parser silently returned (None, [], False, False),
+    routing through the bare-push branch which resolved the CURRENT
+    branch (a feature branch) and returned T_UNCLASSIFIED -- silently
+    allowing a push whose stated dest was the protected ``main``.
+    Post-fix: shlex.split failure short-circuits to _failsafe -> T2
+    in non-autonomous mode."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    # Unclosed double-quote in command -> shlex.split raises ValueError.
+    result = classify_git_push(
+        'git push origin "main', str(tmp_path), _cfg(),
+    )
+    assert result == "T2"
+
+
+def test_malformed_shlex_input_autonomous_silent(tmp_path):
+    """Same as above but in autonomous mode: failsafe returns
+    T_UNCLASSIFIED (no operator to prompt; orchestrator decides)."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    result = classify_git_push(
+        'git push origin "main', str(tmp_path), _cfg(), autonomous=True,
+    )
+    assert result == T_UNCLASSIFIED
+
+
 def test_tag_refspec_does_not_match_branch_pattern(tmp_path):
     """`refs/tags/v1.0` is not stripped (only `refs/heads/` is); branch globs
     must not falsely match tag refs."""
