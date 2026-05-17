@@ -235,6 +235,18 @@ def test_resolve_branch_non_git_cwd_returns_none(tmp_path):
     assert _resolve_current_branch(str(tmp_path)) is None
 
 
+def test_relative_cwd_returns_none_defensively():
+    """Relative cwd values are rejected (would resolve against process
+    CWD, not the caller's project root). Defensive fail-shut to None
+    triggers _failsafe -> T2-ask in classify_git_push."""
+    from spellbook.gates.git_push import _reset_caches, _resolve_current_branch
+
+    _reset_caches()
+    assert _resolve_current_branch(".") is None
+    assert _resolve_current_branch("relative/path") is None
+    assert _resolve_current_branch("foo") is None
+
+
 def test_head_cache_invalidated_on_head_mtime_change(tmp_path):
     import os
     import time

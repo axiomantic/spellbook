@@ -125,7 +125,11 @@ def load_protected_config(toml_path: Path) -> ProtectedConfig:
     # --- TOML layer ---------------------------------------------------------
     try:
         text = toml_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
+    except OSError:
+        # FileNotFoundError is the common case (no tiers.toml on disk),
+        # but PermissionError and other OSError subclasses must not crash
+        # the gate mid-classification — treat any read failure as "no
+        # TOML layer present" and fall through to defaults + env overlay.
         text = ""
     if text:
         data = tomllib.loads(text)
@@ -263,6 +267,17 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
     """
     if not cwd:
         return None
+    # Reject relative cwd defensively. In a long-lived daemon (the
+    # spellbook hook daemon, the MCP server), the process CWD is
+    # unrelated to the operator's project root, so passing a relative
+    # path to os.path.realpath would silently resolve against the wrong
+    # root and produce wrong-branch results. All valid callers (the
+    # Claude Code hook, the MCP wrapper, the CLI) pass absolute paths;
+    # treat a relative cwd as a programming error and fail shut. The
+    # None return triggers _failsafe -> T2-ask in classify_git_push,
+    # which is the safer default than a silently wrong allow.
+    if not os.path.isabs(cwd):
+        return None
     # Normalize for consistent cache keying. Resolve symlinks and
     # collapse redundant separators / "." / ".." components so
     # semantically-equivalent paths (e.g. /tmp/foo, /tmp/foo/,
@@ -362,6 +377,15 @@ def _is_url_form(remote: str) -> bool:
 # T_UNCLASSIFIED for an actual protected-branch push. The trade-off
 # preserves a small, auditable parser over a full git argv grammar.
 # Verified against git 2.45 documentation as of this branch's merge.
+#
+# Additional limitation: flag values that legitimately start with ``-``
+# (e.g. ``git push --exec="-foo"`` or ``--exec -foo`` where the value is
+# ``-foo``) are NOT consumed by the value-skip logic below — the leading
+# hyphen makes the parser conservatively treat the value as a separate
+# flag (see ``_parse_push_args``'s defensive ``not rest[i + 1].startswith("-")``
+# check). This biases toward T_UNCLASSIFIED for malformed-looking pushes;
+# in practice such hyphen-prefixed values are virtually never used with
+# git push and the safer-failure trade-off is preserved.
 _FLAGS_TAKING_VALUE: frozenset[str] = frozenset({
     "-o", "--push-option",
     "--repo",
