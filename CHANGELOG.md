@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **gates, git push (BREAKING):** the catch-all `git push` → TIER-ASK
+  rule has been narrowed to protected-branch pushes only. Add a
+  `[protected]` block to `spellbook/gates/tiers.toml` to customize
+  (defaults: `branches = ["master", "main"]`,
+  `remotes = ["origin", "upstream"]`); override via
+  `SPELLBOOK_PROTECTED_BRANCHES` / `SPELLBOOK_PROTECTED_REMOTES` env
+  vars (comma-separated, or `__disable__` to suppress that axis). New
+  T3 rule covers force-push-via-plus (`git push origin +main`). Set
+  `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` to fail-silent on subprocess
+  errors in high-trust automation contexts. Users with redundant
+  `Bash(git push --force/-f origin {master,main}:*)` deny entries in
+  their personal `~/.claude/settings.json` can now remove them (the
+  T3 force-push tier rules already cover the same patterns via
+  L2 derivation).
+
 ### Added
 
 - **Canvas — admin UI for agent-authored markdown pages with live updates.**
@@ -297,7 +314,7 @@ a separate dispatch to prevent gate collapse during parallel dispatch.
 - **Bash policy unified across Claude and Gemini paths.** Renamed
   `hooks/gemini-policy.toml` to `hooks/bash-policy.toml`. Added a TOML
   loader to `spellbook/gates/rules.py` so the Claude path picks up the
-  supplemental SB-BASH-* rules previously only consumed by the Gemini
+  supplemental SB-BASH-*rules previously only consumed by the Gemini
   installer. Old filename is preserved as a migration alias for one
   release. SB-BASH-001..009 ship as additional defense-in-depth findings
   on top of the existing BASH-* / EXF-* regex set.
