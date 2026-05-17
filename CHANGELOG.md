@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.65.0] - 2026-05-17
+
 ### Changed
 
 - **gates, git push (BREAKING):** the catch-all `git push` → TIER-ASK
