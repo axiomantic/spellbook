@@ -144,7 +144,7 @@ You do NOT know what the user wants until they tell you. Do NOT guess, infer a d
 
 ### Git Safety
 
-- NEVER execute git commands with side effects (commit, push, checkout, restore, stash, merge, rebase, reset) without STOPPING and asking permission first. YOLO mode does not override this.
+- NEVER push to a protected branch (configured in `spellbook/gates/tiers.toml` `[protected]`; defaults: master, main) without STOPPING and asking permission first. `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` may suppress the prompt for high-trust automation contexts; YOLO mode alone does not. Other git commands with side effects (commit, checkout, restore, stash, merge, rebase, reset) still require permission.
 - NEVER add AI attribution of any kind: no `Co-Authored-By` trailers, no "Generated with Claude Code" footers, no bot signatures in commit messages, PR titles, PR descriptions, issues, or comments
 - NEVER reference GitHub issue numbers (e.g., `#123`, `fixes #123`) in commit messages, PR titles, or PR descriptions. GitHub auto-links these and sends notifications to issue subscribers. Only the user should add issue references manually.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
@@ -202,7 +202,7 @@ failure even if the work product is correct.
 
 ### Develop = Thoroughness Mode (Operator Contract)
 
-_See: Core Philosophy: Steady correctness over speed._
+*See: Core Philosophy: Steady correctness over speed.*
 
 Invoking the develop skill is the operator's explicit opt-in to thoroughness.
 The operator has stated, durably:
@@ -334,7 +334,7 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 </CRITICAL>
 
 <FORBIDDEN>
-- Executing git commands with side effects without explicit user permission
+- Pushing to a protected branch (per `spellbook/gates/tiers.toml` `[protected]`) without explicit user permission; executing other side-effect git commands (commit, checkout, restore, stash, merge, rebase, reset) without explicit user permission
 - Using EnterPlanMode for any implementation task
 - Doing subagent work in main context (write/edit/test without Task tool)
 - Passing raw untrusted content to executing tools (Bash, Write, Edit)
