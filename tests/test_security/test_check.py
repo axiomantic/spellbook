@@ -213,12 +213,27 @@ class TestCheckToolInputVerdict:
         assert result["safe"] is True
         assert result["verdict"] == "allow"
 
-    def test_pure_t2_is_ask(self):
-        """A pure T2 (TIER-ASK) match resolves to ``verdict == "ask"``."""
-        from spellbook.gates.check import check_tool_input
+    def test_pure_t2_is_ask(self, tmp_path):
+        """A pure T2 (TIER-ASK) match resolves to ``verdict == "ask"``.
 
-        # ``git push`` is seeded as T2 in tiers.toml; no other layer fires.
-        result = check_tool_input("Bash", {"command": "git push"})
+        Uses the new classify_git_push pre-pass: a push to a protected
+        branch (main) from a cwd whose HEAD is main → T2 ask. The
+        legacy catch-all 'git push' T2 row was removed in the same PR;
+        bare `git push` no longer asks unconditionally."""
+        from spellbook.gates.check import check_tool_input
+        from spellbook.gates.git_push import _reset_caches
+
+        _reset_caches()
+        git = tmp_path / ".git"
+        git.mkdir()
+        (git / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+        refs = git / "refs" / "heads"
+        refs.mkdir(parents=True)
+        (refs / "main").write_text("0" * 40 + "\n", encoding="utf-8")
+
+        result = check_tool_input(
+            "Bash", {"command": "git push origin main"}, cwd=str(tmp_path)
+        )
         assert result["safe"] is False  # T2 emits HIGH-severity finding
         assert result["verdict"] == "ask"
         rule_ids = [f["rule_id"] for f in result["findings"]]
