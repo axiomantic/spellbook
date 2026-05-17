@@ -9,6 +9,7 @@ for the full architecture rationale.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shlex
@@ -23,6 +24,9 @@ try:
     import tomllib
 except ImportError:  # Python <3.11
     import tomli as tomllib  # type: ignore[no-redef]
+
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -125,11 +129,19 @@ def load_protected_config(toml_path: Path) -> ProtectedConfig:
     # --- TOML layer ---------------------------------------------------------
     try:
         text = toml_path.read_text(encoding="utf-8")
-    except OSError:
-        # FileNotFoundError is the common case (no tiers.toml on disk),
-        # but PermissionError and other OSError subclasses must not crash
+    except FileNotFoundError:
+        # Common case: no tiers.toml on disk; rely on defaults + env overlay.
+        text = ""
+    except OSError as exc:
+        # PermissionError and other OSError subclasses must not crash
         # the gate mid-classification — treat any read failure as "no
         # TOML layer present" and fall through to defaults + env overlay.
+        # Unlike FileNotFoundError, these are unexpected and worth
+        # surfacing so operators can diagnose.
+        logger.warning(
+            "Failed to read %s for [protected] config: %s; falling back to defaults",
+            toml_path, exc,
+        )
         text = ""
     if text:
         data = tomllib.loads(text)
@@ -218,6 +230,22 @@ def _cache_get(key: str) -> tuple[float, str | None] | None:
     return val
 
 
+def _find_git_dir(cwd: str) -> Path | None:
+    """Walk up from cwd looking for a .git dir or file (worktree pointer).
+
+    Mirrors git's own repo-discovery: ``git -C <subdir>`` walks parents
+    until it finds .git or hits the filesystem root. Returns the .git
+    path on hit (the existing branching distinguishes dir vs file in
+    the caller); returns None if no .git is found up to root.
+    """
+    p = Path(cwd)
+    for ancestor in (p, *p.parents):
+        candidate = ancestor / ".git"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _run_symbolic_ref(cwd: str, timeout: float = 1.0) -> tuple[str | None, bool]:
     """Invoke ``git -C cwd symbolic-ref --short HEAD``.
 
@@ -290,9 +318,25 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
         cwd = os.path.realpath(cwd)
     except OSError:
         return None
-    git_path = Path(cwd) / ".git"
+
+    # Fast cache check: "not a git repo" sentinel. Real mtime entries
+    # still need revalidation below (re-stat to detect HEAD changes),
+    # so don't short-circuit those. Use _cache_get so the sentinel
+    # entry bumps LRU order consistently with other cache reads.
+    cached_pre = _cache_get(cwd)
+    if cached_pre is not None and cached_pre[0] == -1.0:
+        return None
+
+    # Walk up parents looking for .git, mirroring git's own discovery.
+    # The prior implementation only checked ``Path(cwd) / ".git"`` and
+    # short-circuited to "not a git repo" if not found AT cwd, which
+    # broke every push invoked from a subdirectory of a repo.
+    git_path = _find_git_dir(cwd)
 
     head_path: Path | None
+    if git_path is None:
+        _cache_set(cwd, (-1.0, None))
+        return None
     if git_path.is_dir():
         head_path = git_path / "HEAD"
     elif git_path.is_file():
@@ -306,14 +350,19 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
             branch, _ = _run_symbolic_ref(cwd)
             return branch
         gitdir = pointer[len("gitdir:"):].strip()
-        # Resolve relative gitdir against the worktree's cwd (the
-        # directory containing the .git file), not the process CWD.
-        # Real worktrees commonly have relative gitdir pointers such
-        # as ``gitdir: ../.git/worktrees/<name>``. Absolute gitdir
-        # paths are unaffected because ``os.path.join(cwd, abs) == abs``.
+        # Resolve relative gitdir against the directory containing the
+        # .git file (the worktree root), NOT the process CWD or the
+        # original cwd argument. With the walk-up logic added for
+        # subdir support, ``cwd`` may be a subdirectory of the worktree
+        # while ``git_path`` is in an ancestor, so we anchor on
+        # ``git_path.parent`` for correctness. Real worktrees commonly
+        # have relative gitdir pointers such as
+        # ``gitdir: ../.git/worktrees/<name>``. Absolute gitdir paths
+        # are unaffected because ``os.path.join(base, abs) == abs``.
         # Uses ``os.path.realpath`` for consistency with the cwd
         # normalization above (C-level, faster than Path.resolve()).
-        head_path = Path(os.path.realpath(os.path.join(cwd, gitdir))) / "HEAD"
+        gitdir_base = str(git_path.parent)
+        head_path = Path(os.path.realpath(os.path.join(gitdir_base, gitdir))) / "HEAD"
     else:
         _cache_set(cwd, (-1.0, None))
         return None
@@ -334,7 +383,15 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
     # back to subprocess for detached HEAD or unusual HEAD contents.
     try:
         head_text = head_path.read_text(encoding="utf-8").strip()
-    except OSError:
+    except OSError as exc:
+        # Transient race between mtime stat and read, or permissions
+        # change mid-resolve. Common enough to not warrant a warning,
+        # but surface at DEBUG so operators tracing fallback behavior
+        # can see why the subprocess path was taken.
+        logger.debug(
+            "Could not read HEAD at %s: %s; falling back to subprocess",
+            head_path, exc,
+        )
         head_text = ""
     branch: str | None = None
     if head_text.startswith("ref: refs/heads/"):

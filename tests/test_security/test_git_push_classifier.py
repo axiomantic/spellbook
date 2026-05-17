@@ -1044,3 +1044,69 @@ def test_validate_tiers_toml_raises_on_bad_tiers(tmp_path):
     )
     with pytest.raises(ValueError, match=r"tier must be one of"):
         validate_tiers_toml(toml_path)
+
+
+# ---------------------------------------------------------------------------
+# Round-7 Gemini findings regression tests
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_branch_in_subdirectory_walks_up_to_repo_root(tmp_path):
+    """A cwd inside a subdirectory of a repo must still resolve via the
+    in-process fast-path (no subprocess), matching git's own walk-up
+    discovery. Regression: prior to the round-7 fix, subdir cwds
+    fail-shorted to None -> failsafe T2-ask, defeating the PR's
+    narrowing for any push run from a subdir."""
+    from spellbook.gates.git_push import _resolve_current_branch, _reset_caches
+    _reset_caches()
+    # Build a repo at tmp_path/repo with HEAD=feature/x
+    repo = tmp_path / "repo"
+    git = repo / ".git"
+    refs = git / "refs" / "heads" / "feature"
+    refs.mkdir(parents=True)
+    (git / "HEAD").write_text("ref: refs/heads/feature/x\n", encoding="utf-8")
+    (refs / "x").write_text("0" * 40 + "\n", encoding="utf-8")
+    # Make a nested subdir
+    subdir = repo / "src" / "deep" / "nested"
+    subdir.mkdir(parents=True)
+    # Resolve from the subdir — must find feature/x
+    assert _resolve_current_branch(str(subdir)) == "feature/x"
+
+
+def test_resolve_branch_walk_up_finds_worktree_dotgit_file(tmp_path):
+    """A cwd inside a worktree subdir must walk up to the .git FILE
+    (worktree pointer), not just dir."""
+    from spellbook.gates.git_push import _resolve_current_branch, _reset_caches
+    _reset_caches()
+    # Main repo
+    main = tmp_path / "main"
+    main_git = main / ".git"
+    (main_git / "worktrees" / "wt").mkdir(parents=True)
+    (main_git / "worktrees" / "wt" / "HEAD").write_text(
+        "ref: refs/heads/wt-branch\n", encoding="utf-8"
+    )
+    # Worktree dir with .git as FILE pointing at the wt dir
+    worktree = tmp_path / "worktree"
+    worktree.mkdir()
+    (worktree / ".git").write_text(
+        f"gitdir: {main_git / 'worktrees' / 'wt'}\n", encoding="utf-8"
+    )
+    # Subdir of the worktree
+    sub = worktree / "src" / "deep"
+    sub.mkdir(parents=True)
+    assert _resolve_current_branch(str(sub)) == "wt-branch"
+
+
+def test_resolve_branch_no_git_anywhere_up_to_root(tmp_path):
+    """A cwd with no .git anywhere in its ancestry returns None and
+    caches the negative result."""
+    from spellbook.gates.git_push import _resolve_current_branch, _reset_caches, _HEAD_CACHE
+    _reset_caches()
+    nogit = tmp_path / "no" / "git" / "here"
+    nogit.mkdir(parents=True)
+    # NB: tmp_path itself has no .git, and walk-up reaches /tmp (also no .git)
+    # The walk reaches root eventually; root usually has no .git either.
+    assert _resolve_current_branch(str(nogit)) is None
+    # Sentinel cached
+    import os
+    assert _HEAD_CACHE.get(os.path.realpath(str(nogit))) == (-1.0, None)
