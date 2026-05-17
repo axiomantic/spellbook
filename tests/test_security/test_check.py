@@ -249,7 +249,7 @@ class TestCheckToolInputVerdict:
         assert result["safe"] is False
         assert result["verdict"] == "deny"
 
-    def test_critical_bashlex_finding_is_deny(self, monkeypatch):
+    def test_critical_bashlex_finding_is_deny(self, monkeypatch, tmp_path):
         """A CRITICAL non-tier finding (bashlex compound + tier match)
         resolves to ``verdict == "deny"`` even though TIER-ASK would
         otherwise fire — deny wins over ask.
@@ -257,18 +257,39 @@ class TestCheckToolInputVerdict:
         Compound deny is opt-in since 0.63.2; this test exercises the
         deny-wins verdict logic against that opt-in path so the bashlex
         layer can produce a CRITICAL alongside the T2 TIER-ASK.
+
+        After the catch-all 'git push' T2 row was removed (Task 7),
+        the T2 leg must fire via classify_git_push: build a real .git
+        with HEAD=main and push to 'origin main' so the pre-pass
+        returns T2.
         """
         from spellbook.gates.check import check_tool_input
+        from spellbook.gates.git_push import _reset_caches
 
+        _reset_caches()
         monkeypatch.setenv("SPELLBOOK_BASH_DENY_COMPOUND", "1")
 
-        # ``git push && echo done`` triggers BASH-PARSER-COMPOUND (CRITICAL)
-        # AND TIER-ASK (T2) — mixed findings must collapse to deny.
+        git = tmp_path / ".git"
+        git.mkdir()
+        (git / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+        refs = git / "refs" / "heads"
+        refs.mkdir(parents=True)
+        (refs / "main").write_text("0" * 40 + "\n", encoding="utf-8")
+
+        # ``git push origin main && echo done`` triggers
+        # BASH-PARSER-COMPOUND (CRITICAL) AND TIER-ASK (T2 via pre-pass)
+        # — mixed findings must collapse to deny.
         result = check_tool_input(
-            "Bash", {"command": "git push && echo done"}
+            "Bash",
+            {"command": "git push origin main && echo done"},
+            cwd=str(tmp_path),
         )
         rule_ids = [f["rule_id"] for f in result["findings"]]
         assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+        assert "TIER-ASK" in rule_ids, (
+            "T2 leg must fire via pre-pass; if missing, the invariant "
+            "'T2 + CRITICAL → deny-wins' is no longer being tested"
+        )
         assert result["verdict"] == "deny"
 
     def test_compute_verdict_mixed_ask_and_deny(self):
