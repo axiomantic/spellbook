@@ -1058,6 +1058,38 @@ def test_malformed_shlex_input_fails_safe(tmp_path):
     assert result == "T2"
 
 
+def test_scp_remote_without_user_prefix_treated_as_url(tmp_path):
+    """``git push host:path/to/repo main`` -- SCP-like syntax without
+    a user@ prefix. Pre-fix: regex required ``@``, so the remote was
+    parsed as an implicit refspec (positionals[0] contains ``:``),
+    making ``path/to/repo`` and ``main`` both refspec dests; the
+    ``main`` dest matched protected and produced a false-positive T2.
+    Post-fix: the slash-after-colon discriminator recognizes
+    ``host:path/...`` as URL-form -> T_UNCLASSIFIED (out of scope for
+    name-based matching, same as fully-qualified URL remotes)."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push host:path/to/repo main", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_bare_refspec_with_colon_not_treated_as_scp_url(tmp_path):
+    """``git push origin feature:main`` -- ``feature:main`` is a refspec
+    (no slash after the colon), NOT an SCP URL. Confirms the
+    slash-after-colon discriminator does not over-match: ``feature``
+    looks like a hostname syntactically but is actually the source ref."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    # dest=main -> protected -> T2.
+    assert classify_git_push(
+        "git push origin feature:main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
 def test_malformed_shlex_input_autonomous_silent(tmp_path):
     """Same as above but in autonomous mode: failsafe returns
     T_UNCLASSIFIED (no operator to prompt; orchestrator decides)."""

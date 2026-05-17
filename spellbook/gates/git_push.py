@@ -414,8 +414,19 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
 from spellbook.gates.tiers import T_UNCLASSIFIED  # noqa: E402 — circular: tiers.py lazy-imports git_push.py inside classify_tool_call
 
 
-# Predicate for URL-form remotes. ``scheme://...`` OR ``user@host:...``.
-_URL_REMOTE_RE = re.compile(r"^[\w.+-]+@[\w.+-]+:")
+# Predicate for URL-form remotes. Three accepted shapes:
+#   1. ``scheme://...``                      -- handled by `://` check below.
+#   2. ``user@host:path``                    -- first regex alternative.
+#   3. ``host:path/with/slashes``            -- second regex alternative.
+#      Requires a slash AFTER the colon so we don't false-match bare
+#      refspecs like ``feature:main`` (no slash after the colon).
+# The slash-after-colon discriminator is the same heuristic git itself
+# uses internally to disambiguate SCP-like remotes from local paths
+# containing colons.
+_URL_REMOTE_RE = re.compile(
+    r"^[\w.+-]+@[\w.+-]+:"      # user@host:...
+    r"|^[\w.+-]+:[^:]*/"        # host:path/with/slash (SCP without user)
+)
 
 
 def _is_url_form(remote: str) -> bool:
