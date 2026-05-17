@@ -295,8 +295,10 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
         # directory containing the .git file), not the process CWD.
         # Real worktrees commonly have relative gitdir pointers such
         # as ``gitdir: ../.git/worktrees/<name>``. Absolute gitdir
-        # paths are unaffected because ``Path(cwd) / abs_path == abs_path``.
-        head_path = (Path(cwd) / gitdir).resolve() / "HEAD"
+        # paths are unaffected because ``os.path.join(cwd, abs) == abs``.
+        # Uses ``os.path.realpath`` for consistency with the cwd
+        # normalization above (C-level, faster than Path.resolve()).
+        head_path = Path(os.path.realpath(os.path.join(cwd, gitdir))) / "HEAD"
     else:
         _cache_set(cwd, (-1.0, None))
         return None
