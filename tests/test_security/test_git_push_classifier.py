@@ -399,3 +399,344 @@ def test_resolve_branch_subprocess_success_returns_branch(tmp_path):
         stdout="packed-branch\n",
         stderr="",
     )
+
+
+# ---------------------------------------------------------------------------
+# classify_git_push — Task 4
+# ---------------------------------------------------------------------------
+
+
+def _cfg(branches=("master", "main"), remotes=("origin", "upstream")):
+    from spellbook.gates.git_push import ProtectedConfig
+    return ProtectedConfig(branches=tuple(branches), remotes=frozenset(remotes))
+
+
+def test_command_not_starting_git_push_returns_none(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    assert classify_git_push("git status", str(tmp_path), _cfg()) is None
+    assert classify_git_push("ls", str(tmp_path), _cfg()) is None
+
+
+def test_push_to_protected_branch_returns_t2(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push("git push origin main", str(tmp_path), _cfg()) == "T2"
+
+
+def test_push_to_feature_branch_returns_unclassified(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin feature/x", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_bare_push_resolves_via_head(tmp_path):
+    """`git push` with no refspec resolves via current branch."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push("git push", str(tmp_path), _cfg()) == "T2"
+
+    (tmp_path / "fx").mkdir()
+    _make_git_repo(tmp_path / "fx", branch="feature/y")
+    assert classify_git_push(
+        "git push", str(tmp_path / "fx"), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_explicit_refspec_main_returns_t2(tmp_path):
+    """`git push origin feature/x:main` targets main regardless of HEAD."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin feature/x:main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_force_refspec_plus_main_returns_t2(tmp_path):
+    """`git push origin +main` -> pre-pass T2 (T3 from the new tiers.toml
+    row will additionally fire via the record loop -- verified in Task 9
+    L2 regression)."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin +main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_all_flag_returns_t2(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push --all origin", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_mirror_flag_returns_t2(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push --mirror origin", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_set_upstream_flags_stripped(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push(
+        "git push -u origin main", str(tmp_path), _cfg()
+    ) == "T2"
+    assert classify_git_push(
+        "git push --set-upstream origin main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_unknown_remote_returns_unclassified(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push(
+        "git push some-fork main", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+@pytest.mark.parametrize("remote", [
+    "git@github.com:foo/bar.git",
+    "git@github.com:foo/bar",
+    "ssh://git@github.com/foo/bar.git",
+    "https://github.com/foo/bar.git",
+    "file:///tmp/repo",
+])
+def test_url_form_remote_returns_unclassified(tmp_path, remote):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push(
+        f"git push {remote} main", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_fnmatch_release_glob_matches(tmp_path):
+    """fnmatch.fnmatchcase('*') is multi-segment greedy -- both
+    `release/v1.0` AND `release/v1.0/rc1` match `release/*`."""
+    from spellbook.gates.git_push import classify_git_push
+
+    cfg = _cfg(branches=("release/*",))
+    _make_git_repo(tmp_path, branch="release/v1.0")
+    assert classify_git_push("git push origin release/v1.0", str(tmp_path), cfg) == "T2"
+
+    (tmp_path / "rc").mkdir()
+    _make_git_repo(tmp_path / "rc", branch="release/v1.0/rc1")
+    assert classify_git_push(
+        "git push origin release/v1.0/rc1", str(tmp_path / "rc"), cfg
+    ) == "T2"
+
+
+def test_fnmatch_non_match_substring(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    cfg = _cfg(branches=("main",))
+    _make_git_repo(tmp_path, branch="mains")
+    assert classify_git_push("git push origin mains", str(tmp_path), cfg) == T_UNCLASSIFIED
+
+    cfg2 = _cfg(branches=("release/*",))
+    (tmp_path / "rf").mkdir()
+    _make_git_repo(tmp_path / "rf", branch="release-fix")
+    assert classify_git_push(
+        "git push origin release-fix", str(tmp_path / "rf"), cfg2
+    ) == T_UNCLASSIFIED
+
+
+def test_fnmatchcase_distinguishes_Main_from_main(tmp_path):
+    """fnmatchcase MUST be case-sensitive on every platform.
+    Locks the fnmatchcase-vs-fnmatch choice against silent case-folding
+    on macOS / Windows."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    cfg = _cfg(branches=("main",))
+    _make_git_repo(tmp_path, branch="Main")
+    assert classify_git_push("git push origin Main", str(tmp_path), cfg) == T_UNCLASSIFIED
+
+
+def test_disable_sentinel_branches_short_circuits(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    cfg = _cfg(branches=())  # sentinel-disabled axis
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push("git push origin main", str(tmp_path), cfg) == T_UNCLASSIFIED
+
+
+def test_disable_sentinel_remotes_short_circuits(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    cfg = _cfg(remotes=())  # sentinel-disabled axis
+    _make_git_repo(tmp_path, branch="main")
+    assert classify_git_push("git push origin main", str(tmp_path), cfg) == T_UNCLASSIFIED
+
+
+def test_subprocess_failure_failsafe_t2(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    mock_resolve = tripwire.mock("spellbook.gates.git_push:_resolve_current_branch")
+    mock_resolve.returns(None)
+    with tripwire:
+        result = classify_git_push("git push", str(tmp_path), _cfg())
+    assert result == "T2"
+    mock_resolve.assert_call(args=(str(tmp_path),), kwargs={})
+
+
+def test_subprocess_failure_autonomous_silent(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    mock_resolve = tripwire.mock("spellbook.gates.git_push:_resolve_current_branch")
+    mock_resolve.returns(None)
+    with tripwire:
+        result = classify_git_push("git push", str(tmp_path), _cfg(), autonomous=True)
+    assert result == T_UNCLASSIFIED
+    mock_resolve.assert_call(args=(str(tmp_path),), kwargs={})
+
+
+def test_non_git_cwd_failsafe_t2(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+
+    # tmp_path has no .git -- bare push falls into failsafe.
+    assert classify_git_push("git push", str(tmp_path), _cfg()) == "T2"
+
+
+def test_non_git_cwd_autonomous_unclassified(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    assert classify_git_push(
+        "git push", str(tmp_path), _cfg(), autonomous=True
+    ) == T_UNCLASSIFIED
+
+
+def test_head_colon_refspec_resolved(tmp_path):
+    """`git push origin HEAD:main` -> target = main (after the colon)."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin HEAD:main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+# ---------------------------------------------------------------------------
+# classify_git_push — additional coverage (review findings M-1/L-1/L-2/L-3/S-5/S-6)
+# ---------------------------------------------------------------------------
+
+
+def test_multi_refspec_mixed_protected_returns_t2(tmp_path):
+    """Multi-refspec: any protected hit → T2 (short-circuit on first match)."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin main feature/x", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_multi_refspec_all_non_protected_returns_unclassified(tmp_path):
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/a")
+    assert classify_git_push(
+        "git push origin feature/a feature/b", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+def test_multi_refspec_head_plus_branch(tmp_path):
+    """HEAD substitutes the current branch; main pattern still T2s via the literal."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin HEAD main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_combined_plus_and_refs_heads_strip(tmp_path):
+    """`+refs/heads/main` → strip both `+` and `refs/heads/` → match `main`."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin +refs/heads/main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_end_of_options_separator(tmp_path):
+    """`git push -- origin main` should still classify correctly."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push -- origin main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_delete_refspec_targets_destination(tmp_path):
+    """`git push origin :main` (delete remote main) → T2 — the dangerous case."""
+    from spellbook.gates.git_push import classify_git_push
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin :main", str(tmp_path), _cfg()
+    ) == "T2"
+
+
+def test_tag_refspec_does_not_match_branch_pattern(tmp_path):
+    """`refs/tags/v1.0` is not stripped (only `refs/heads/` is); branch globs
+    must not falsely match tag refs."""
+    from spellbook.gates.git_push import classify_git_push
+    from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    _make_git_repo(tmp_path, branch="feature/x")
+    assert classify_git_push(
+        "git push origin refs/tags/v1.0", str(tmp_path), _cfg()
+    ) == T_UNCLASSIFIED
+
+
+import pytest as _pytest
+
+
+@_pytest.mark.parametrize("cmd", ["", "   ", "GIT PUSH origin main", "gitpush origin main"])
+def test_non_git_push_inputs_return_none(tmp_path, cmd):
+    """Empty/whitespace/case-mismatch/glued inputs must short-circuit to None."""
+    from spellbook.gates.git_push import classify_git_push
+
+    assert classify_git_push(cmd, str(tmp_path), _cfg()) is None
+
+
+def test_git_pushed_fail_does_not_match(tmp_path):
+    """The word-boundary check (S-5 fix) rejects `git pushed-fail`."""
+    from spellbook.gates.git_push import classify_git_push
+
+    assert classify_git_push("git pushed-fail origin main", str(tmp_path), _cfg()) is None
+
+
+def test_git_push_fancy_subcommand_does_not_match(tmp_path):
+    """`git push-fancy` (hypothetical) is NOT `git push`."""
+    from spellbook.gates.git_push import classify_git_push
+
+    assert classify_git_push("git push-fancy origin main", str(tmp_path), _cfg()) is None

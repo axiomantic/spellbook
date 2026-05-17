@@ -288,3 +288,203 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
         return None  # do NOT cache
     _HEAD_CACHE[cwd] = (mtime, branch)
     return branch
+
+
+# ---------------------------------------------------------------------------
+# classify_git_push -- main entry point
+# ---------------------------------------------------------------------------
+
+
+import re  # noqa: E402
+import shlex  # noqa: E402
+from fnmatch import fnmatchcase  # noqa: E402
+
+from spellbook.gates.tiers import T_UNCLASSIFIED  # noqa: E402
+
+
+# Predicate for URL-form remotes. ``scheme://...`` OR ``user@host:...``.
+_URL_REMOTE_RE = re.compile(r"^[\w.+-]+@[\w.+-]+:")
+
+
+def _is_url_form(remote: str) -> bool:
+    """Return True if ``remote`` looks like a URL (not a remote name)."""
+    if "://" in remote:
+        return True
+    if _URL_REMOTE_RE.search(remote):
+        return True
+    return False
+
+
+_FLAGS_TAKING_VALUE: frozenset[str] = frozenset({
+    "-o", "--push-option",
+    "--repo",
+    "--receive-pack",
+    "--exec",
+})
+
+
+def _parse_push_args(command: str) -> tuple[str | None, list[str], bool, bool]:
+    """Parse a ``git push`` invocation.
+
+    Returns:
+        (remote, refspecs, all_or_mirror, set_upstream):
+          remote        -- first positional after flag-stripping, or None.
+          refspecs      -- remaining positionals (already ``+`` and ``HEAD:``
+                          stripped to dest branch name).
+          all_or_mirror -- True if ``--all`` or ``--mirror`` present.
+          set_upstream  -- True if ``-u`` / ``--set-upstream`` present
+                          (used informationally; does not change targets).
+    """
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return (None, [], False, False)
+
+    # Drop ``git`` and ``push``.
+    if len(tokens) < 2 or tokens[0] != "git" or tokens[1] != "push":
+        return (None, [], False, False)
+    rest = tokens[2:]
+
+    positionals: list[str] = []
+    all_or_mirror = False
+    set_upstream = False
+    i = 0
+    while i < len(rest):
+        tok = rest[i]
+        if tok in ("--all", "--mirror"):
+            all_or_mirror = True
+            i += 1
+            continue
+        if tok in ("-u", "--set-upstream"):
+            set_upstream = True
+            i += 1
+            continue
+        if tok in _FLAGS_TAKING_VALUE:
+            # Defensive: if the supposed value is itself a flag, only
+            # skip the flag; git would reject this input anyway.
+            if i + 1 < len(rest) and not rest[i + 1].startswith("-"):
+                i += 2
+            else:
+                i += 1
+            continue
+        if tok.startswith("--") and "=" in tok:
+            # ``--push-option=...`` etc. -- single token.
+            i += 1
+            continue
+        if tok.startswith("-"):
+            # Other unknown short/long flag; assume valueless to stay safe.
+            i += 1
+            continue
+        positionals.append(tok)
+        i += 1
+
+    remote = positionals[0] if positionals else None
+    raw_refspecs = positionals[1:]
+
+    refspec_dests: list[str] = []
+    for spec in raw_refspecs:
+        # Strip leading ``+`` (force-style).
+        if spec.startswith("+"):
+            spec = spec[1:]
+        # Take destination (after the colon) if present, else source.
+        if ":" in spec:
+            dest = spec.split(":", 1)[1]
+        else:
+            dest = spec
+        # Normalize ``refs/heads/foo`` -> ``foo`` for fnmatch.
+        if dest.startswith("refs/heads/"):
+            dest = dest[len("refs/heads/"):]
+        # ``HEAD`` as dest is rare; leave for resolver.
+        refspec_dests.append(dest)
+
+    return (remote, refspec_dests, all_or_mirror, set_upstream)
+
+
+def _failsafe(autonomous: bool) -> str:
+    """Return T2 in non-autonomous mode, T_UNCLASSIFIED in autonomous."""
+    return T_UNCLASSIFIED if autonomous else "T2"
+
+
+def _match_protected(target: str, patterns: tuple[str, ...]) -> bool:
+    """fnmatchcase target against each pattern. Empty patterns -> no match."""
+    return any(fnmatchcase(target, p) for p in patterns)
+
+
+def classify_git_push(
+    command: str,
+    cwd: str | None,
+    config: ProtectedConfig,
+    *,
+    autonomous: bool = False,
+) -> str | None:
+    """Pre-pass classifier for ``git push``.
+
+    Returns:
+        ``None`` when ``command`` is not a ``git push`` invocation.
+        ``"T2"`` when the push targets a protected branch on a
+        recognized remote (or for fail-safe in non-autonomous mode).
+        :data:`T_UNCLASSIFIED` for feature-branch / unknown-remote /
+        URL-form-remote / sentinel-disabled / autonomous-failsafe pushes.
+
+    See design doc Section 4 and Section 5 for the full state table.
+    """
+    # Word-boundary check: must be exactly the "git push" subcommand
+    # (not "git pushed-fail" or "git push-fancy"). Using split(None, 2)
+    # so a single-token "gitpush" or "git" alone also fails fast.
+    _tokens_head = command.lstrip().split(None, 2)
+    if len(_tokens_head) < 2 or _tokens_head[0] != "git" or _tokens_head[1] != "push":
+        return None
+
+    # Sentinel-disabled axes short-circuit before any subprocess work.
+    if not config.branches:
+        return T_UNCLASSIFIED
+    if not config.remotes:
+        return T_UNCLASSIFIED
+
+    remote, refspec_dests, all_or_mirror, _set_upstream = _parse_push_args(command)
+
+    # --all / --mirror -> broad scope; always ask.
+    if all_or_mirror:
+        return "T2"
+
+    # Bare ``git push`` with no remote: rely on resolver, treat origin/upstream
+    # config as implicit (since git's default-push-remote is conventionally
+    # origin). Pass through to the resolver path below.
+    if remote is None:
+        branch = _resolve_current_branch(cwd)
+        if branch is None:
+            return _failsafe(autonomous)
+        return "T2" if _match_protected(branch, config.branches) else T_UNCLASSIFIED
+
+    # URL-form remote -> out of scope for name-based matching.
+    if _is_url_form(remote):
+        return T_UNCLASSIFIED
+
+    # Unknown remote name -> out of scope.
+    if remote not in config.remotes:
+        return T_UNCLASSIFIED
+
+    # Refspecs given: classify against each target. Any protected hit -> T2.
+    if refspec_dests:
+        # Replace ``HEAD`` dests with resolved current branch.
+        resolved_targets: list[str] = []
+        head_resolved: str | None | bool = False  # tri-state: not-yet-resolved
+        for dest in refspec_dests:
+            if dest == "HEAD":
+                if head_resolved is False:
+                    head_resolved = _resolve_current_branch(cwd)
+                if head_resolved is None:
+                    return _failsafe(autonomous)
+                resolved_targets.append(head_resolved)  # type: ignore[arg-type]
+            else:
+                resolved_targets.append(dest)
+        for t in resolved_targets:
+            if _match_protected(t, config.branches):
+                return "T2"
+        return T_UNCLASSIFIED
+
+    # Remote provided, no refspec: target is current branch.
+    branch = _resolve_current_branch(cwd)
+    if branch is None:
+        return _failsafe(autonomous)
+    return "T2" if _match_protected(branch, config.branches) else T_UNCLASSIFIED
