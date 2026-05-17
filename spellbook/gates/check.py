@@ -358,8 +358,13 @@ def main() -> None:
 
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
+    # Empty string -> None preserves fail-safe semantics in classify_git_push,
+    # which treats ``cwd is None`` as the "cannot resolve branch" trigger and
+    # falls back to T2. Passing ``cwd=""`` would resolve relative to an
+    # undefined directory and silently skip the protected-branch pre-pass.
+    cwd = data.get("cwd") or None
 
-    result = check_tool_input(tool_name, tool_input)
+    result = check_tool_input(tool_name, tool_input, cwd=cwd)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
         print(
