@@ -661,6 +661,18 @@ def classify_git_push(
         return None
 
     # Sentinel-disabled axes short-circuit before any subprocess work.
+    # Both axes are required for the gate to fire — they form a
+    # conjunctive policy ("protected BRANCHES pushed to recognized
+    # REMOTES"). Disabling either axis (empty list) is the documented
+    # way to opt out of the gate without uninstalling spellbook:
+    #   * branches=[]  -> "no branch is protected"   -> silent pass.
+    #   * remotes=[]   -> "no remote is recognized"  -> silent pass.
+    # This is by design (see CHANGELOG entry for the 0.65.0 narrowing
+    # release): operators who want one-axis-only semantics (e.g. "any
+    # remote, but only main is protected") can leave remotes at its
+    # default (``["origin", "upstream"]``) — the default is liberal
+    # enough to cover the common case without forcing operators to
+    # enumerate every remote name.
     if not config.branches:
         return T_UNCLASSIFIED
     if not config.remotes:
