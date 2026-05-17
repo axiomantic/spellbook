@@ -336,12 +336,16 @@ def classify_tool_call(
                 classify_git_push,
                 load_protected_config,
             )
+            # Function-local import to break the module-load cycle:
+            # check.py imports classify_tool_call from tiers.py at module
+            # top, so tiers.py can only reach into check.py at call time.
+            # Sharing _tiers_toml_path() ensures tests that override the
+            # helper for _cached_tiers() also override the git-push pre-pass.
+            from spellbook.gates.check import _tiers_toml_path
             autonomous = _os.environ.get(
                 "SPELLBOOK_GIT_PUSH_AUTONOMOUS", ""
             ).strip().lower() in {"1", "true", "yes"}
-            config = load_protected_config(
-                Path(__file__).resolve().parent / "tiers.toml"
-            )
+            config = load_protected_config(_tiers_toml_path())
             pre = classify_git_push(
                 command, cwd, config, autonomous=autonomous
             )

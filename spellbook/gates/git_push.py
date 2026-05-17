@@ -10,7 +10,11 @@ for the full architecture rationale.
 from __future__ import annotations
 
 import os
+import re
+import shlex
+import subprocess
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
 from functools import lru_cache
 from pathlib import Path
 
@@ -181,8 +185,6 @@ def _reset_caches() -> None:
 # ---------------------------------------------------------------------------
 
 
-import subprocess  # noqa: E402 — grouped with branch-resolver concerns
-
 #: Per-process cache: cwd -> (head_mtime, branch_or_None).
 #: Sentinel mtime ``-1.0`` caches "not a git repo" so subsequent calls
 #: in the same cwd don't restat. Any real mtime > -1.0 invalidates it.
@@ -295,11 +297,7 @@ def _resolve_current_branch(cwd: str | None) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-import re  # noqa: E402
-import shlex  # noqa: E402
-from fnmatch import fnmatchcase  # noqa: E402
-
-from spellbook.gates.tiers import T_UNCLASSIFIED  # noqa: E402
+from spellbook.gates.tiers import T_UNCLASSIFIED  # noqa: E402 — circular: tiers.py lazy-imports git_push.py inside classify_tool_call
 
 
 # Predicate for URL-form remotes. ``scheme://...`` OR ``user@host:...``.
