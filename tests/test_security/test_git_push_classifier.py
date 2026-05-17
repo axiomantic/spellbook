@@ -574,24 +574,68 @@ def test_fnmatchcase_distinguishes_Main_from_main(tmp_path):
 
 
 def test_disable_sentinel_branches_short_circuits(tmp_path):
+    """Sentinel-disabled branches axis MUST short-circuit BEFORE the resolver.
+
+    Asserts the perf-property of the short-circuit at git_push.py:439-442,
+    not just its T_UNCLASSIFIED outcome. Uses a BARE ``git push`` (which
+    would otherwise invoke ``_resolve_current_branch`` via the
+    ``remote is None`` branch) so the tripwire fires if the short-circuit
+    is removed. With the short-circuit in place the resolver is never
+    called; with it removed, the lambda below fails the test.
+    """
     from spellbook.gates.git_push import classify_git_push
     from spellbook.gates.tiers import T_UNCLASSIFIED
+
+    # required(False): if the resolver IS called, the lambda fails the test.
+    # If it is NOT called (the property under test), the unconsumed
+    # configuration is benign rather than raising UnusedMocksError.
+    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch").__call__.required(False).calls(
+        lambda *a, **k: pytest.fail("resolver must not be called when branches axis is sentinel-disabled")
+    )
 
     cfg = _cfg(branches=())  # sentinel-disabled axis
     _make_git_repo(tmp_path, branch="main")
-    assert classify_git_push("git push origin main", str(tmp_path), cfg) == T_UNCLASSIFIED
+    with tripwire:
+        # Bare push: without the short-circuit, this would hit the
+        # ``remote is None`` branch and call _resolve_current_branch.
+        assert classify_git_push("git push", str(tmp_path), cfg) == T_UNCLASSIFIED
 
 
 def test_disable_sentinel_remotes_short_circuits(tmp_path):
+    """Sentinel-disabled remotes axis MUST short-circuit BEFORE the resolver.
+
+    Same rationale as the branches counterpart: uses a bare ``git push`` so
+    that, if the short-circuit at git_push.py:439-442 were removed, the
+    ``remote is None`` branch would invoke ``_resolve_current_branch`` and
+    trip the tripwire lambda below.
+    """
     from spellbook.gates.git_push import classify_git_push
     from spellbook.gates.tiers import T_UNCLASSIFIED
 
+    # required(False): if the resolver IS called, the lambda fails the test.
+    # If it is NOT called (the property under test), the unconsumed
+    # configuration is benign rather than raising UnusedMocksError.
+    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch").__call__.required(False).calls(
+        lambda *a, **k: pytest.fail("resolver must not be called when remotes axis is sentinel-disabled")
+    )
+
     cfg = _cfg(remotes=())  # sentinel-disabled axis
     _make_git_repo(tmp_path, branch="main")
-    assert classify_git_push("git push origin main", str(tmp_path), cfg) == T_UNCLASSIFIED
+    with tripwire:
+        # Bare push: without the short-circuit, this would hit the
+        # ``remote is None`` branch and call _resolve_current_branch.
+        assert classify_git_push("git push", str(tmp_path), cfg) == T_UNCLASSIFIED
 
 
-def test_subprocess_failure_failsafe_t2(tmp_path):
+def test_resolver_returns_none_failsafe_t2(tmp_path):
+    """When ``_resolve_current_branch`` returns None for a bare ``git push``,
+    non-autonomous mode failsafes to T2 (operator confirmation).
+
+    Note: this test exercises the resolver-returned-None branch in
+    ``classify_git_push``, NOT the subprocess machinery. Genuine
+    subprocess-fallback coverage lives in the ``test_resolve_branch_*``
+    tests above (detached-HEAD fixture + tripwire subprocess mocks).
+    """
     from spellbook.gates.git_push import classify_git_push
 
     mock_resolve = tripwire.mock("spellbook.gates.git_push:_resolve_current_branch")
@@ -602,7 +646,15 @@ def test_subprocess_failure_failsafe_t2(tmp_path):
     mock_resolve.assert_call(args=(str(tmp_path),), kwargs={})
 
 
-def test_subprocess_failure_autonomous_silent(tmp_path):
+def test_resolver_returns_none_autonomous_silent(tmp_path):
+    """When ``_resolve_current_branch`` returns None for a bare ``git push``,
+    autonomous mode degrades silently to T_UNCLASSIFIED.
+
+    Note: this test exercises the resolver-returned-None branch in
+    ``classify_git_push``, NOT the subprocess machinery. Genuine
+    subprocess-fallback coverage lives in the ``test_resolve_branch_*``
+    tests above (detached-HEAD fixture + tripwire subprocess mocks).
+    """
     from spellbook.gates.git_push import classify_git_push
     from spellbook.gates.tiers import T_UNCLASSIFIED
 
