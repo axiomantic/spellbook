@@ -488,3 +488,27 @@ def classify_git_push(
     if branch is None:
         return _failsafe(autonomous)
     return "T2" if _match_protected(branch, config.branches) else T_UNCLASSIFIED
+
+
+# ---------------------------------------------------------------------------
+# validate_tiers_toml -- install-time umbrella validator (Task 5)
+# ---------------------------------------------------------------------------
+
+
+def validate_tiers_toml(toml_path: Path) -> None:
+    """Umbrella validator: eagerly parse [[tiers]] AND [protected].
+
+    Install-time hook so schema errors in either section surface at
+    install / `spellbook validate`, not split between L2 derivation
+    (tiers) and first-push (protected).
+
+    Raises:
+        ValueError: schema error in either section.
+        FileNotFoundError: ``toml_path`` does not exist.
+    """
+    from spellbook.gates.tiers import load_tiers  # local import to avoid cycle
+    load_tiers(toml_path)
+    # Clear cache so we re-parse the file we were just handed
+    # (lru_cache key would otherwise be stale if same path reused in tests).
+    load_protected_config.cache_clear()
+    load_protected_config(toml_path)

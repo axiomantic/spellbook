@@ -740,3 +740,56 @@ def test_git_push_fancy_subcommand_does_not_match(tmp_path):
     from spellbook.gates.git_push import classify_git_push
 
     assert classify_git_push("git push-fancy origin main", str(tmp_path), _cfg()) is None
+
+
+# ---------------------------------------------------------------------------
+# validate_tiers_toml umbrella validator — Task 5
+# ---------------------------------------------------------------------------
+
+
+def test_validate_tiers_toml_passes_on_clean_file(tmp_path):
+    from spellbook.gates.git_push import validate_tiers_toml
+
+    toml_path = tmp_path / "tiers.toml"
+    toml_path.write_text(
+        '[[tiers]]\n'
+        'tool = "Bash"\n'
+        'pattern = "ls"\n'
+        'tier = "T0"\n'
+        'description = "x"\n'
+        '\n'
+        '[protected]\n'
+        'branches = ["main"]\n'
+        'remotes = ["origin"]\n',
+        encoding="utf-8",
+    )
+    # Must not raise.
+    validate_tiers_toml(toml_path)
+
+
+def test_validate_tiers_toml_raises_on_bad_protected(tmp_path):
+    from spellbook.gates.git_push import validate_tiers_toml
+
+    toml_path = tmp_path / "tiers.toml"
+    toml_path.write_text(
+        '[protected]\nbranches = "main"\n',  # wrong type
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match=r"branches.*list"):
+        validate_tiers_toml(toml_path)
+
+
+def test_validate_tiers_toml_raises_on_bad_tiers(tmp_path):
+    from spellbook.gates.git_push import validate_tiers_toml
+
+    toml_path = tmp_path / "tiers.toml"
+    toml_path.write_text(
+        '[[tiers]]\n'
+        'tool = "Bash"\n'
+        'pattern = "x"\n'
+        'tier = "T99"\n'  # invalid tier
+        'description = "x"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match=r"tier must be one of"):
+        validate_tiers_toml(toml_path)
