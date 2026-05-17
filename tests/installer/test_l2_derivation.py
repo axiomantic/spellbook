@@ -418,3 +418,59 @@ def test_claude_code_installer_uses_derived_deny(tmp_path):
     import sys as _sys
     if _sys.platform == "win32":
         tripwire.subprocess.assert_which(name="powershell", returns=None)
+
+
+def test_derive_managed_deny_calls_validate_tiers_toml(tmp_path):
+    """A malformed [protected] block in the install-time path raises
+    ValueError instead of being silently ignored until first push."""
+    import pytest
+
+    spellbook_dir = tmp_path
+    (spellbook_dir / "spellbook" / "gates").mkdir(parents=True)
+    tiers_path = spellbook_dir / "spellbook" / "gates" / "tiers.toml"
+    tiers_path.write_text(
+        '[protected]\n'
+        'branches = 42\n',  # wrong type
+        encoding="utf-8",
+    )
+
+    # Clear lru_cache so the malformed file is actually parsed in this test.
+    from spellbook.gates.git_push import _reset_caches
+    _reset_caches()
+
+    from installer.components.permissions import derive_managed_deny
+    with pytest.raises(ValueError, match=r"branches.*list"):
+        derive_managed_deny(spellbook_dir)
+
+
+def test_derive_l2_deny_list_after_t2_pushpath_removal():
+    """Pin the shipped tiers.toml L2 projection after the catch-all
+    git push T2 row was removed and the +(master|main) T3 row added."""
+    from pathlib import Path
+
+    from spellbook.gates.tiers import derive_l2_deny_list
+
+    tiers_path = Path(__file__).resolve().parents[2] / "spellbook" / "gates" / "tiers.toml"
+    deny = derive_l2_deny_list(tiers_path)
+
+    # Catch-all is gone.
+    assert "Bash(git push:*)" not in deny, deny
+
+    # Existing T3 --force / -f rows still expand.
+    for expected in (
+        "Bash(git push --force origin master:*)",
+        "Bash(git push --force origin main:*)",
+        "Bash(git push -f origin master:*)",
+        "Bash(git push -f origin main:*)",
+    ):
+        assert expected in deny, (expected, deny)
+
+    # New T3 +(master|main) row expands to all four combinations
+    # of (origin|upstream) x (master|main).
+    for expected in (
+        "Bash(git push origin +master:*)",
+        "Bash(git push origin +main:*)",
+        "Bash(git push upstream +master:*)",
+        "Bash(git push upstream +main:*)",
+    ):
+        assert expected in deny, (expected, deny)

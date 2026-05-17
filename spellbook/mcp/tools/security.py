@@ -21,6 +21,7 @@ from spellbook.sessions.injection import inject_recovery_context
 def security_check_tool_input(
     tool_name: str,
     tool_input: dict,
+    cwd: str | None = None,
 ) -> dict:
     """Check a tool's input against security pattern rules.
 
@@ -36,10 +37,16 @@ def security_check_tool_input(
     Args:
         tool_name: The name of the tool being invoked.
         tool_input: The input dict for the tool.
+        cwd: Working directory for context-aware checks (e.g.,
+            git-push protected-branch resolution). Optional; when
+            omitted, branch resolution falls back to fail-safe T2
+            (operator confirmation required).
 
     Returns:
         {"safe": bool, "findings": [...], "tool_name": str}
     """
     from spellbook.gates.check import check_tool_input
 
-    return check_tool_input(tool_name=tool_name, tool_input=tool_input)
+    return check_tool_input(
+        tool_name=tool_name, tool_input=tool_input, cwd=cwd
+    )

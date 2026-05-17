@@ -83,19 +83,28 @@ def _cached_tiers() -> tuple:
         return ()
 
 
-def _tier_findings(tool_name: str, tool_input: dict) -> list[dict]:
+def _tier_findings(
+    tool_name: str, tool_input: dict, cwd: str | None = None
+) -> list[dict]:
     """Run the tier classifier and translate the result to gate findings.
 
     A T3 match produces a CRITICAL TIER-DENY finding (the gate blocks).
     A T2 / unclassified match produces a HIGH TIER-ASK finding (caller
     surfaces an `ask` verdict). T0 / T1 produce no findings (silent /
     loud allow; loud-allow auditing is the caller's responsibility).
+
+    Args:
+        tool_name: e.g. ``"Bash"``, ``"Edit"``, ``"mcp__..."``.
+        tool_input: Tool input dict.
+        cwd: Optional working directory; forwarded to
+            :func:`spellbook.gates.tiers.classify_tool_call` so the
+            git_push pre-pass can resolve the current branch.
     """
     records = _cached_tiers()
     if not records:
         return []
 
-    tier = classify_tool_call(tool_name, tool_input or {}, records)
+    tier = classify_tool_call(tool_name, tool_input or {}, records, cwd=cwd)
     verdict = tier_to_verdict(tier)
 
     if verdict == "deny":
@@ -149,6 +158,7 @@ def check_tool_input(
     tool_name: str,
     tool_input: dict,
     security_mode: str = "standard",
+    cwd: str | None = None,
 ) -> dict:
     """Check tool input against relevant security pattern sets.
 
@@ -187,7 +197,7 @@ def check_tool_input(
         # L3 tier classifier (WI-6b): map the call to a reversibility tier
         # and emit TIER-DENY (T3) / TIER-ASK (T2) findings. T0 / T1 produce
         # no findings; T_UNCLASSIFIED falls through to the regex layers.
-        findings.extend(_tier_findings(tool_name, tool_input))
+        findings.extend(_tier_findings(tool_name, tool_input, cwd=cwd))
         # L2 DANGEROUS_BASH_PATTERNS — legacy regex set kept for defense in
         # depth even when the tier classifier already accepted the call.
         findings.extend(
@@ -216,7 +226,7 @@ def check_tool_input(
         # tools (mcp__server__tool). The classifier emits TIER-DENY for T3
         # records (e.g. mcp__github__delete_*) and TIER-ASK for T2 records
         # (e.g. mcp__atlassian__transition_issue).
-        findings.extend(_tier_findings(tool_name, tool_input))
+        findings.extend(_tier_findings(tool_name, tool_input, cwd=cwd))
         for text in _extract_strings(tool_input):
             findings.extend(
                 check_patterns(text, INJECTION_RULES, security_mode)
@@ -348,8 +358,13 @@ def main() -> None:
 
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
+    # Empty string -> None preserves fail-safe semantics in classify_git_push,
+    # which treats ``cwd is None`` as the "cannot resolve branch" trigger and
+    # falls back to T2. Passing ``cwd=""`` would resolve relative to an
+    # undefined directory and silently skip the protected-branch pre-pass.
+    cwd = data.get("cwd") or None
 
-    result = check_tool_input(tool_name, tool_input)
+    result = check_tool_input(tool_name, tool_input, cwd=cwd)
     if not result["safe"]:
         reasons = "; ".join(f["message"] for f in result["findings"])
         print(
