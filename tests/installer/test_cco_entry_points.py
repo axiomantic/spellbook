@@ -26,6 +26,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import tripwire
 
 from installer.components.spellbook_cco import _WARNING_USE_VANILLA_CCO
 
@@ -61,19 +62,14 @@ def test_tui_post_install_notes_gate_on_spellbook_cco_by_default(monkeypatch):
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
 
-    which_calls: list[str] = []
-
-    def which_router(name: str) -> str | None:
-        which_calls.append(name)
-        return "/usr/local/bin/spellbook-cco" if name == "spellbook-cco" else None
-
-    monkeypatch.setattr(tui.shutil, "which", which_router)
+    tripwire.subprocess.mock_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
     console = _CapturingConsole()
-    tui.render_post_install_notes(console, ["claude_code"])
+    with tripwire:
+        tui.render_post_install_notes(console, ["claude_code"])
 
     # Gate is consulted on the post-rewrite binary name, not vanilla cco.
-    assert which_calls == ["spellbook-cco"]
+    tripwire.subprocess.assert_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
     # Exactly one panel was rendered (Next Steps).
     assert len(console.printed) == 1
@@ -101,19 +97,14 @@ def test_tui_post_install_notes_routes_to_vanilla_cco_under_env_override(monkeyp
 
     monkeypatch.setenv("SPELLBOOK_USE_VANILLA_CCO", "1")
 
-    which_calls: list[str] = []
-
-    def which_router(name: str) -> str | None:
-        which_calls.append(name)
-        return "/usr/local/bin/cco" if name == "cco" else None
-
-    monkeypatch.setattr(tui.shutil, "which", which_router)
+    tripwire.subprocess.mock_which("cco", returns="/usr/local/bin/cco")
 
     console = _CapturingConsole()
-    tui.render_post_install_notes(console, ["claude_code"])
+    with tripwire:
+        tui.render_post_install_notes(console, ["claude_code"])
 
     # Under env override the gate consults the vanilla binary.
-    assert which_calls == ["cco"]
+    tripwire.subprocess.assert_which("cco", returns="/usr/local/bin/cco")
 
     # Panel still rendered.
     assert len(console.printed) == 1
@@ -133,14 +124,13 @@ def test_tui_post_install_notes_emits_no_rollback_warning_by_default(monkeypatch
     from installer import tui
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
-    monkeypatch.setattr(
-        tui.shutil,
-        "which",
-        lambda name: "/usr/local/bin/spellbook-cco" if name == "spellbook-cco" else None,
-    )
+    tripwire.subprocess.mock_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
     console = _CapturingConsole()
-    tui.render_post_install_notes(console, ["claude_code"])
+    with tripwire:
+        tui.render_post_install_notes(console, ["claude_code"])
+
+    tripwire.subprocess.assert_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
     # Full-equality assertion: stderr must be empty on the default codepath.
     # Stronger than the prior `not in` substring check, which would pass
@@ -155,11 +145,15 @@ def test_tui_post_install_notes_skips_panel_when_neither_binary_present(monkeypa
     from installer import tui
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
-    monkeypatch.setattr(tui.shutil, "which", lambda name: None)
+    # Default codepath gates on spellbook-cco; the SUT consults the gate
+    # before deciding whether to render the panel.
+    tripwire.subprocess.mock_which("spellbook-cco", returns=None)
 
     console = _CapturingConsole()
-    tui.render_post_install_notes(console, [])
+    with tripwire:
+        tui.render_post_install_notes(console, [])
 
+    tripwire.subprocess.assert_which("spellbook-cco", returns=None)
     assert console.printed == []
 
 
@@ -187,43 +181,32 @@ def test_install_offer_sandbox_aliases_gates_on_spellbook_cco_by_default(monkeyp
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
 
-    which_calls: list[str] = []
+    tripwire.subprocess.mock_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
-    def which_router(name: str) -> str | None:
-        which_calls.append(name)
-        return "/usr/local/bin/spellbook-cco" if name == "spellbook-cco" else None
+    # Mock the lazily-imported aliases module attributes via tripwire.
+    rc_path = Path("/fake/.zshrc")
+    get_shell_rc = tripwire.mock("installer.components.aliases:get_shell_rc_path")
+    get_shell_rc.returns(rc_path)
 
-    monkeypatch.setattr(install_mod.shutil, "which", which_router)
-
-    # Stub the aliases module that _offer_sandbox_aliases imports lazily.
-    aliases_calls: list[tuple] = []
-
-    def fake_install_aliases(spellbook_dir: Path, dry_run: bool = False) -> dict:
-        aliases_calls.append((spellbook_dir, dry_run))
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude", "opencode"],
-            "skipped_reason": None,
-        }
-
-    fake_aliases_mod = SimpleNamespace(
-        install_aliases=fake_install_aliases,
-        get_shell_rc_path=lambda: Path("/fake/.zshrc"),
-    )
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "installer.components.aliases",
-        fake_aliases_mod,
-    )
+    install_alias_mock = tripwire.mock("installer.components.aliases:install_aliases")
+    install_alias_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude", "opencode"],
+        "skipped_reason": None,
+    })
 
     args = argparse.Namespace(dry_run=False, yes=True)
     session = _make_session(success=True)
 
-    install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+    with tripwire:
+        install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
 
-    assert which_calls == ["spellbook-cco"]
-    assert aliases_calls == [(tmp_path / "spellbook", False)]
+    tripwire.subprocess.assert_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
+    get_shell_rc.assert_call(args=(), kwargs={})
+    install_alias_mock.assert_call(
+        args=(tmp_path / "spellbook",), kwargs={"dry_run": False}
+    )
 
 
 def test_install_offer_sandbox_aliases_routes_to_vanilla_cco_under_env_override(
@@ -241,42 +224,31 @@ def test_install_offer_sandbox_aliases_routes_to_vanilla_cco_under_env_override(
 
     monkeypatch.setenv("SPELLBOOK_USE_VANILLA_CCO", "1")
 
-    which_calls: list[str] = []
+    tripwire.subprocess.mock_which("cco", returns="/usr/local/bin/cco")
 
-    def which_router(name: str) -> str | None:
-        which_calls.append(name)
-        return "/usr/local/bin/cco" if name == "cco" else None
+    rc_path = Path("/fake/.zshrc")
+    get_shell_rc = tripwire.mock("installer.components.aliases:get_shell_rc_path")
+    get_shell_rc.returns(rc_path)
 
-    monkeypatch.setattr(install_mod.shutil, "which", which_router)
-
-    aliases_calls: list[tuple] = []
-
-    def fake_install_aliases(spellbook_dir: Path, dry_run: bool = False) -> dict:
-        aliases_calls.append((spellbook_dir, dry_run))
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude", "opencode"],
-            "skipped_reason": None,
-        }
-
-    fake_aliases_mod = SimpleNamespace(
-        install_aliases=fake_install_aliases,
-        get_shell_rc_path=lambda: Path("/fake/.zshrc"),
-    )
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "installer.components.aliases",
-        fake_aliases_mod,
-    )
+    install_alias_mock = tripwire.mock("installer.components.aliases:install_aliases")
+    install_alias_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude", "opencode"],
+        "skipped_reason": None,
+    })
 
     args = argparse.Namespace(dry_run=False, yes=True)
     session = _make_session(success=True)
 
-    install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+    with tripwire:
+        install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
 
-    assert which_calls == ["cco"]
-    assert aliases_calls == [(tmp_path / "spellbook", False)]
+    tripwire.subprocess.assert_which("cco", returns="/usr/local/bin/cco")
+    get_shell_rc.assert_call(args=(), kwargs={})
+    install_alias_mock.assert_call(
+        args=(tmp_path / "spellbook",), kwargs={"dry_run": False}
+    )
 
     # F1: WARNING must fire to stderr under env override. The full
     # canonical warning (and ONLY that warning) must appear on stderr;
@@ -295,34 +267,31 @@ def test_install_offer_sandbox_aliases_emits_no_rollback_warning_by_default(
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
 
-    monkeypatch.setattr(
-        install_mod.shutil,
-        "which",
-        lambda name: "/usr/local/bin/spellbook-cco" if name == "spellbook-cco" else None,
-    )
+    tripwire.subprocess.mock_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
 
-    def fake_install_aliases(spellbook_dir: Path, dry_run: bool = False) -> dict:
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude", "opencode"],
-            "skipped_reason": None,
-        }
+    rc_path = Path("/fake/.zshrc")
+    get_shell_rc = tripwire.mock("installer.components.aliases:get_shell_rc_path")
+    get_shell_rc.returns(rc_path)
 
-    fake_aliases_mod = SimpleNamespace(
-        install_aliases=fake_install_aliases,
-        get_shell_rc_path=lambda: Path("/fake/.zshrc"),
-    )
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "installer.components.aliases",
-        fake_aliases_mod,
-    )
+    install_alias_mock = tripwire.mock("installer.components.aliases:install_aliases")
+    install_alias_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude", "opencode"],
+        "skipped_reason": None,
+    })
 
     args = argparse.Namespace(dry_run=False, yes=True)
     session = _make_session(success=True)
 
-    install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+    with tripwire:
+        install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+
+    tripwire.subprocess.assert_which("spellbook-cco", returns="/usr/local/bin/spellbook-cco")
+    get_shell_rc.assert_call(args=(), kwargs={})
+    install_alias_mock.assert_call(
+        args=(tmp_path / "spellbook",), kwargs={"dry_run": False}
+    )
 
     # Full-equality assertion: stderr must be empty on the default codepath.
     # Stronger than the prior `not in` substring check, which would pass
@@ -338,16 +307,15 @@ def test_install_offer_sandbox_aliases_skips_when_dry_run(monkeypatch, tmp_path)
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
 
-    def which_must_not_be_called(name: str) -> str | None:
-        pytest.fail(f"shutil.which({name!r}) called under dry_run=True")
-
-    monkeypatch.setattr(install_mod.shutil, "which", which_must_not_be_called)
-
     args = argparse.Namespace(dry_run=True, yes=True)
     session = _make_session(success=True)
 
-    # Returns cleanly without dispatching anything.
-    install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+    # No tripwire mocks: dry_run short-circuits before any external
+    # interaction. If shutil.which OR the aliases module were consulted,
+    # tripwire's strict verifier would raise UnmockedInteractionError —
+    # which is exactly the regression guard we want here.
+    with tripwire:
+        install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
 
 
 def test_install_offer_sandbox_aliases_skips_when_session_failed(monkeypatch, tmp_path):
@@ -356,12 +324,11 @@ def test_install_offer_sandbox_aliases_skips_when_session_failed(monkeypatch, tm
 
     monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
 
-    def which_must_not_be_called(name: str) -> str | None:
-        pytest.fail(f"shutil.which({name!r}) called when session.success is False")
-
-    monkeypatch.setattr(install_mod.shutil, "which", which_must_not_be_called)
-
     args = argparse.Namespace(dry_run=False, yes=True)
     session = _make_session(success=False)
 
-    install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")
+    # No tripwire mocks: session-failed short-circuits before any
+    # external interaction. Any escape would raise
+    # UnmockedInteractionError.
+    with tripwire:
+        install_mod._offer_sandbox_aliases(args, session, tmp_path / "spellbook")

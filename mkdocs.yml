@@ -219,6 +219,7 @@ nav:
       - commands/audit-mirage-report.md
       - commands/canvas.md
       - commands/design-explore.md
+      - commands/canvas.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
       - commands/code-review-tarot.md
@@ -317,6 +318,16 @@ nav:
         - agents/justice-resolver.md
         - agents/lovers-integrator.md
         - agents/queen-affective.md
+      - Narrowing-Role Agents:
+        - agents/git-committer.md
+        - agents/git-pusher.md
+        - agents/implementer.md
+        - agents/jira-mutator.md
+        - agents/jira-reader.md
+        - agents/pr-creator.md
+        - agents/pr-merger.md
+        - agents/test-runner.md
+        - agents/web-researcher.md
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
     - Citations: reference/citations.md

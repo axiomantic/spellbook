@@ -36,6 +36,8 @@
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
 - [Sandboxed Usage](#sandboxed-usage)
+  - [Rolling back to vanilla cco](#rolling-back-to-vanilla-cco)
+  - [Windows: alias install + sandbox path TBD](#windows-alias-install--sandbox-path-tbd)
 - [What Spellbook Does](#what-spellbook-does)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
@@ -50,7 +52,7 @@
 - [What's Included](#whats-included)
   - [Skills (57 total)](#skills-57-total)
   - [Commands (96 total)](#commands-96-total)
-  - [Agents (7 total)](#agents-7-total)
+  - [Agents (16 total)](#agents-16-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
   - [AI Coding Assistants](#ai-coding-assistants)
@@ -289,6 +291,9 @@ Reusable workflows for structured development:
 [testing-strategy]: https://axiomantic.github.io/spellbook/latest/skills/testing-strategy/
 [opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
+[agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
+[canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
+[permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
@@ -514,8 +519,11 @@ Reusable workflows for structured development:
 [/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
 [/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
 [/write-readme]: https://axiomantic.github.io/spellbook/latest/commands/write-readme/
+[/a2a]: https://axiomantic.github.io/spellbook/latest/commands/a2a/
+[/canvas]: https://axiomantic.github.io/spellbook/latest/commands/canvas/
+[/crystallize-consolidate]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-consolidate/
 
-### Agents (7 total)
+### Agents (16 total)
 
 | Agent | Description |
 |-------|-------------|
@@ -526,6 +534,15 @@ Reusable workflows for structured development:
 | [justice-resolver] | Tarot: Conflict synthesizer |
 | [lovers-integrator] | Tarot: Integration specialist |
 | [queen-affective] | Tarot: Emotional state monitor |
+| [git-committer] | Narrowing-role: git commit operations |
+| [git-pusher] | Narrowing-role: git push operations |
+| [implementer] | Narrowing-role: code implementation |
+| [jira-mutator] | Narrowing-role: JIRA write operations |
+| [jira-reader] | Narrowing-role: JIRA read operations |
+| [pr-creator] | Narrowing-role: PR creation |
+| [pr-merger] | Narrowing-role: PR merge operations |
+| [test-runner] | Narrowing-role: test execution |
+| [web-researcher] | Narrowing-role: web research |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -536,6 +553,15 @@ Reusable workflows for structured development:
 [justice-resolver]: https://axiomantic.github.io/spellbook/latest/agents/justice-resolver/
 [lovers-integrator]: https://axiomantic.github.io/spellbook/latest/agents/lovers-integrator/
 [queen-affective]: https://axiomantic.github.io/spellbook/latest/agents/queen-affective/
+[git-committer]: https://axiomantic.github.io/spellbook/latest/agents/git-committer/
+[git-pusher]: https://axiomantic.github.io/spellbook/latest/agents/git-pusher/
+[implementer]: https://axiomantic.github.io/spellbook/latest/agents/implementer/
+[jira-mutator]: https://axiomantic.github.io/spellbook/latest/agents/jira-mutator/
+[jira-reader]: https://axiomantic.github.io/spellbook/latest/agents/jira-reader/
+[pr-creator]: https://axiomantic.github.io/spellbook/latest/agents/pr-creator/
+[pr-merger]: https://axiomantic.github.io/spellbook/latest/agents/pr-merger/
+[test-runner]: https://axiomantic.github.io/spellbook/latest/agents/test-runner/
+[web-researcher]: https://axiomantic.github.io/spellbook/latest/agents/web-researcher/
 
 ## Creative Modes
 

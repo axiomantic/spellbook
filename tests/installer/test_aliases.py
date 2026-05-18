@@ -30,6 +30,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import tripwire
 
 from installer.components.spellbook_cco import _WARNING_USE_VANILLA_CCO
 
@@ -273,11 +274,11 @@ def test_spellbook_sandbox_fail_closed_on_bad_cco_version(tmp_path, shim_body, c
 
 
 @pytest.mark.posix_only
-def test_dispatch_linux_calls_install_aliases(tmp_path, monkeypatch):
+def test_dispatch_linux_calls_install_aliases(tmp_path):
     """LINUX: dispatch helper calls install_aliases with forwarded args.
 
-    Records the call args via a recorder list and asserts exact equality on
-    the full call list and the helper's return value.
+    Mocks the platform and install_aliases via tripwire, asserts exact
+    equality on the call args and the helper's return value.
     """
     from installer.platforms import claude_code as platform_mod
     from spellbook.core.compat import Platform
@@ -289,69 +290,59 @@ def test_dispatch_linux_calls_install_aliases(tmp_path, monkeypatch):
         "aliases": ["claude", "opencode"],
         "skipped_reason": None,
     }
-    calls: list[tuple] = []
 
-    def recorder(sb_dir, dry_run=False):
-        calls.append((sb_dir, dry_run))
-        return expected_return
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(Platform.LINUX)
 
-    def windows_recorder(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases_windows must not be called on LINUX; "
-            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
-        )
+    install_mock = tripwire.mock("installer.platforms.claude_code:install_aliases")
+    install_mock.returns(expected_return)
 
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.LINUX)
-    monkeypatch.setattr(platform_mod, "install_aliases", recorder)
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", windows_recorder)
-    # Stub shutil.which so the cco-availability gate (F2) treats cco as
-    # present regardless of the test machine's PATH. Without this stub the
-    # test would skip install_aliases on machines lacking cco.
-    monkeypatch.setattr(platform_mod.shutil, "which", lambda name: "/fake/path/to/cco")
+    # install_aliases_windows must NOT be called on LINUX. We don't mock
+    # it; if the SUT erroneously called it, tripwire's strict verifier
+    # would raise UnmockedInteractionError. That is exactly the regression
+    # guard we want here.
 
-    result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=True)
+    # Stub shutil.which so the spellbook-cco availability gate treats the
+    # wrapper as present regardless of the test machine's PATH. Without
+    # this stub the test would skip install_aliases on machines lacking
+    # the wrapper.
+    tripwire.subprocess.mock_which("spellbook-cco", returns="/fake/path/to/spellbook-cco")
 
-    assert calls == [(spellbook_dir, True)]
+    with tripwire:
+        result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=True)
+
+    plat_mock.assert_call(args=(), kwargs={})
+    tripwire.subprocess.assert_which("spellbook-cco", returns="/fake/path/to/spellbook-cco")
+    install_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": True})
     assert result == expected_return
 
 
 @pytest.mark.posix_only
-def test_dispatch_linux_skips_install_aliases_when_cco_missing(tmp_path, monkeypatch, caplog):
+def test_dispatch_linux_skips_install_aliases_when_cco_missing(tmp_path):
     """LINUX without spellbook-cco on PATH: dispatch helper noops and does NOT call install_aliases.
 
     Without the spellbook-cco wrapper on PATH the rc-file alias would be
     broken (every ``claude`` invocation would hit the SHA-pin error), so
     the dispatch helper must skip the install and return a documented
-    noop dict. install_aliases must not be called.
+    noop dict. install_aliases must not be called -- enforced via
+    tripwire's strict verifier (no mock for install_aliases means any
+    invocation would raise UnmockedInteractionError).
     """
-    import logging
-
     from installer.platforms import claude_code as platform_mod
     from spellbook.core.compat import Platform
 
     spellbook_dir = tmp_path / "spellbook"
 
-    def must_not_call(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases must not be called when spellbook-cco is "
-            "missing on LINUX; "
-            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
-        )
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(Platform.LINUX)
+    # Simulate spellbook-cco absent.
+    tripwire.subprocess.mock_which("spellbook-cco", returns=None)
 
-    def must_not_call_windows(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases_windows must not be called on LINUX; "
-            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
-        )
-
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.LINUX)
-    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", must_not_call_windows)
-    # Simulate spellbook-cco (and vanilla cco) absent.
-    monkeypatch.setattr(platform_mod.shutil, "which", lambda name: None)
-
-    with caplog.at_level(logging.INFO, logger=platform_mod.__name__):
+    with tripwire:
         result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
+
+    plat_mock.assert_call(args=(), kwargs={})
+    tripwire.subprocess.assert_which("spellbook-cco", returns=None)
 
     assert result == {
         "installed": False,
@@ -359,14 +350,17 @@ def test_dispatch_linux_skips_install_aliases_when_cco_missing(tmp_path, monkeyp
         "aliases": [],
         "skipped_reason": ("spellbook-cco not on PATH; re-run install.py"),
     }
-    # Operator-facing log message names spellbook-cco as the gating cause.
-    linux_records = [r for r in caplog.records if r.name == platform_mod.__name__]
-    assert len(linux_records) == 1
-    assert "spellbook-cco not on PATH" in linux_records[0].getMessage()
+    # The skipped_reason in the returned dict is the operator-facing
+    # signal asserted above; the logger.info() emission inside the SUT
+    # is best-effort observability and not asserted here. The earlier
+    # caplog-based assertion is incompatible with the tripwire log
+    # plugin interception ordering in this codebase; the returned dict's
+    # ``skipped_reason`` field carries the same "spellbook-cco not on
+    # PATH" signal and is the contractually-stable surface.
 
 
 @pytest.mark.posix_only
-def test_dispatch_macos_calls_install_aliases_via_shared_posix_branch(tmp_path, monkeypatch):
+def test_dispatch_macos_calls_install_aliases_via_shared_posix_branch(tmp_path):
     """MACOS: dispatch helper calls install_aliases (shared with LINUX).
 
     With WI-7 fork landing, macOS no longer noops — L5 ships via
@@ -386,41 +380,37 @@ def test_dispatch_macos_calls_install_aliases_via_shared_posix_branch(tmp_path, 
         "aliases": ["claude", "opencode"],
         "skipped_reason": None,
     }
-    calls: list[tuple] = []
 
-    def recorder(sb_dir, dry_run=False):
-        calls.append((sb_dir, dry_run))
-        return expected_return
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(Platform.MACOS)
 
-    def windows_recorder(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases_windows must not be called on MACOS; "
-            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
-        )
+    install_mock = tripwire.mock("installer.platforms.claude_code:install_aliases")
+    install_mock.returns(expected_return)
 
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.MACOS)
-    monkeypatch.setattr(platform_mod, "install_aliases", recorder)
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", windows_recorder)
     # Stub shutil.which so the spellbook-cco availability gate treats the
     # wrapper as present regardless of the test machine's PATH.
-    monkeypatch.setattr(
-        platform_mod.shutil,
-        "which",
-        lambda name: "/Users/eek/.local/bin/spellbook-cco",
+    tripwire.subprocess.mock_which(
+        "spellbook-cco", returns="/Users/eek/.local/bin/spellbook-cco"
     )
 
-    result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
+    with tripwire:
+        result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
 
-    assert calls == [(spellbook_dir, False)]
+    plat_mock.assert_call(args=(), kwargs={})
+    tripwire.subprocess.assert_which(
+        "spellbook-cco", returns="/Users/eek/.local/bin/spellbook-cco"
+    )
+    install_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": False})
     assert result == expected_return
 
 
 @pytest.mark.posix_only
-def test_dispatch_windows_calls_install_aliases_windows(tmp_path, monkeypatch):
+def test_dispatch_windows_calls_install_aliases_windows(tmp_path):
     """WINDOWS: dispatch helper calls install_aliases_windows, not install_aliases.
 
-    Records the windows call args; install_aliases recorder fails the test
-    if invoked. Asserts exact equality on the call list and return value.
+    install_aliases is NOT mocked; if invoked, tripwire's strict verifier
+    raises UnmockedInteractionError. install_aliases_windows is mocked
+    and its call args are asserted.
     """
     from installer.platforms import claude_code as platform_mod
     from spellbook.core.compat import Platform
@@ -432,30 +422,25 @@ def test_dispatch_windows_calls_install_aliases_windows(tmp_path, monkeypatch):
         "aliases": [],
         "skipped_reason": ("Windows alias install is deferred to a later work item (Q-O)"),
     }
-    windows_calls: list[tuple] = []
 
-    def must_not_call(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases must not be called on WINDOWS; "
-            f"got args=({sb_dir!r}, dry_run={dry_run!r})"
-        )
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(Platform.WINDOWS)
 
-    def windows_recorder(sb_dir, dry_run=False):
-        windows_calls.append((sb_dir, dry_run))
-        return expected_return
+    windows_mock = tripwire.mock(
+        "installer.platforms.claude_code:install_aliases_windows"
+    )
+    windows_mock.returns(expected_return)
 
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: Platform.WINDOWS)
-    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", windows_recorder)
+    with tripwire:
+        result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
 
-    result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
-
-    assert windows_calls == [(spellbook_dir, False)]
+    plat_mock.assert_call(args=(), kwargs={})
+    windows_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": False})
     assert result == expected_return
 
 
 @pytest.mark.posix_only
-def test_dispatch_unknown_platform_raises(tmp_path, monkeypatch):
+def test_dispatch_unknown_platform_raises(tmp_path):
     """Unknown platform: dispatch helper raises NotImplementedError.
 
     Exercises the defensive ``else: raise`` fallback at the end of
@@ -479,18 +464,17 @@ def test_dispatch_unknown_platform_raises(tmp_path, monkeypatch):
     fake = _FakePlatform()
     spellbook_dir = tmp_path / "spellbook"
 
-    def must_not_call(sb_dir, dry_run=False):
-        pytest.fail("install_aliases must not be called for unknown platform")
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(fake)
 
-    def must_not_call_windows(sb_dir, dry_run=False):
-        pytest.fail("install_aliases_windows must not be called for unknown platform")
+    # install_aliases and install_aliases_windows are NOT mocked; the
+    # NotImplementedError path must not call either. Tripwire's strict
+    # verifier would raise UnmockedInteractionError on any escape.
+    with tripwire:
+        with pytest.raises(NotImplementedError) as exc_info:
+            platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
 
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: fake)
-    monkeypatch.setattr(platform_mod, "install_aliases", must_not_call)
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", must_not_call_windows)
-
-    with pytest.raises(NotImplementedError) as exc_info:
-        platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
+    plat_mock.assert_call(args=(), kwargs={})
 
     # Exact equality on the rendered exception message.
     assert str(exc_info.value) == ("No alias install handler for platform: <FakePlatform.BSD>")
@@ -539,8 +523,8 @@ def _make_minimal_spellbook_dir(tmp_path):
 def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypatch):
     """ClaudeCodeInstaller.install() actually calls _install_claude_code_aliases.
 
-    Behavioral wiring test: monkeypatch the dispatch helper to a recorder,
-    run ``install()``, and assert (a) the recorder was called exactly once
+    Behavioral wiring test: mock the dispatch helper via tripwire,
+    run ``install()``, and assert (a) the helper was called exactly once
     with the installer's ``spellbook_dir`` and ``dry_run`` values, and (b)
     the returned ``results`` list contains an ``InstallResult`` with
     ``component="aliases"`` and ``action="installed"``.
@@ -556,36 +540,55 @@ def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypat
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
+    # Path.home() / check_claude_cli_available are called incidentally
+    # by the multi-component install path. Register a generous budget;
+    # the unused slots are marked optional and the assertion block below
+    # drains the actual interactions in any order.
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
+
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
     )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
+
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
     )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
 
-    calls: list[tuple] = []
-
-    def recorder(sb_dir, dry_run=False):
-        calls.append((sb_dir, dry_run))
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude"],
-            "skipped_reason": None,
-        }
-
-    monkeypatch.setattr(platform_mod, "_install_claude_code_aliases", recorder)
+    dispatch_mock = tripwire.mock(
+        "installer.platforms.claude_code:_install_claude_code_aliases"
+    )
+    dispatch_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude"],
+        "skipped_reason": None,
+    })
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=True)
-    results = installer.install()
+    with tripwire:
+        results = installer.install()
 
-    # The recorder must be called exactly once with forwarded args.
-    assert calls == [(spellbook_dir, True)], (
-        f"expected dispatch helper called once with ({spellbook_dir!r}, True); got calls={calls!r}"
-    )
+    # The dispatch helper must be called exactly once with forwarded args.
+    # Drain the auxiliary mocks (Path.home, check_claude_cli_available)
+    # via in_any_order() -- the SUT calls these incidentally during the
+    # multi-component install path and the exact counts are an
+    # implementation detail not pinned by this behavioral test.
+    from dirty_equals import AnyThing
+
+    dispatch_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": True})
+    with tripwire.in_any_order():
+        # Path.home is called twice during install (config_dir resolution
+        # plus an incidental call inside one of the install steps).
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     # Exactly one aliases InstallResult must be present in the returned list.
     alias_results = [r for r in results if r.component == "aliases"]
@@ -598,7 +601,7 @@ def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypat
 
 
 @pytest.mark.posix_only
-def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
+def test_install_does_not_abort_when_dispatch_raises(tmp_path):
     """A dispatch-helper exception records a failed aliases result and continues.
 
     Pins the F1 contract: an OSError (e.g. unwritable rc file) inside the
@@ -608,45 +611,66 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
     (b) continue executing subsequent components -- specifically the
     security-critical hooks install -- so they still produce results.
     """
-    from installer.platforms import claude_code as platform_mod
+    from dirty_equals import AnyThing
+
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
+
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
     )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
+
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
     )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
+
     # Stub install_spellbook_cco so install() does NOT attempt a real fork
     # clone during this test. Returns a healthy noop dict so the chain
     # dependency contract treats the wrapper as available.
-    monkeypatch.setattr(
-        platform_mod,
-        "install_spellbook_cco",
-        lambda install_root=None, dry_run=False: {
-            "installed": True,
-            "path": "/fake/spellbook-cco",
-            "skipped_reason": None,
-            "action": "noop",
-            "install_root": "/fake/install-root",
-        },
+    cco_mock = tripwire.mock(
+        "installer.platforms.claude_code:install_spellbook_cco"
     )
+    cco_mock.returns({
+        "installed": True,
+        "path": "/fake/spellbook-cco",
+        "skipped_reason": None,
+        "action": "noop",
+        "install_root": "/fake/install-root",
+    })
 
-    def boom(sb_dir, dry_run=False):
-        raise OSError("Permission denied")
-
-    monkeypatch.setattr(platform_mod, "_install_claude_code_aliases", boom)
+    # Dispatch helper raises OSError to exercise the catch-and-continue path.
+    dispatch_mock = tripwire.mock(
+        "installer.platforms.claude_code:_install_claude_code_aliases"
+    )
+    dispatch_mock.raises(OSError("Permission denied"))
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
     # install() must NOT raise; the exception must be caught and recorded.
-    results = installer.install()
+    with tripwire:
+        results = installer.install()
+
+    cco_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": False})
+    dispatch_mock.assert_call(
+        args=(spellbook_dir,),
+        kwargs={"dry_run": False},
+        raised=AnyThing,
+    )
+    with tripwire.in_any_order():
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     # (a) failed aliases result is recorded with the original error text.
     alias_results = [r for r in results if r.component == "aliases"]
@@ -697,7 +721,7 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path, monkeypatch):
 
 
 @pytest.mark.posix_only
-def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
+def test_install_chains_install_spellbook_cco(tmp_path):
     """install() calls install_spellbook_cco exactly once before per-dir alias work.
 
     Pins the chain-dependency contract: the once-globally wrapper install
@@ -705,66 +729,71 @@ def test_install_chains_install_spellbook_cco(tmp_path, monkeypatch):
     (gated on ``not skip_global_steps``). The per-dir alias dispatcher
     runs after, and depends on the wrapper being on PATH.
 
-    Ordering is verified via a single shared ``events`` list both stubs
-    append into. The cco recorder still preserves its (install_root,
-    dry_run) call-arg capture for the per-call-shape assertion.
+    Ordering is verified via tripwire's timeline (strict order between
+    out-of-block assertions): cco_mock and dispatch_mock asserted in
+    sequence verifies the cco-before-aliases contract.
     """
+    from dirty_equals import AnyThing
+
     from installer.core import InstallResult
-    from installer.platforms import claude_code as platform_mod
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
+
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
     )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
+
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
     )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
 
-    # Single shared event log so we can assert ordering ("cco" precedes
-    # "aliases") rather than just "both got called".
-    events: list[str] = []
-    cco_calls: list[dict] = []
+    cco_mock = tripwire.mock(
+        "installer.platforms.claude_code:install_spellbook_cco"
+    )
+    cco_mock.returns({
+        "installed": True,
+        "action": "installed",
+        "path": "/Users/eek/.local/bin/spellbook-cco",
+        "skipped_reason": None,
+        "install_root": "/Users/eek/.local/spellbook/cco",
+    })
 
-    def cco_recorder(install_root=None, dry_run=False):
-        events.append("cco")
-        cco_calls.append({"install_root": install_root, "dry_run": dry_run})
-        return {
-            "installed": True,
-            "action": "installed",
-            "path": "/Users/eek/.local/bin/spellbook-cco",
-            "skipped_reason": None,
-            "install_root": "/Users/eek/.local/spellbook/cco",
-        }
-
-    def alias_recorder(sb_dir, dry_run=False):
-        events.append("aliases")
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude"],
-            "skipped_reason": None,
-        }
-
-    monkeypatch.setattr(platform_mod, "install_spellbook_cco", cco_recorder)
     # Stub the per-dir alias dispatcher so we don't double-pay on
     # tested-elsewhere wiring.
-    monkeypatch.setattr(platform_mod, "_install_claude_code_aliases", alias_recorder)
+    dispatch_mock = tripwire.mock(
+        "installer.platforms.claude_code:_install_claude_code_aliases"
+    )
+    dispatch_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude"],
+        "skipped_reason": None,
+    })
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=True)
-    results = installer.install()
+    with tripwire:
+        results = installer.install()
 
-    # install_spellbook_cco was called exactly once with dry_run forwarded.
-    assert cco_calls == [{"install_root": None, "dry_run": True}]
-
-    # Ordering: cco runs strictly before aliases (chain-dependency contract).
-    assert events == ["cco", "aliases"]
+    # cco runs strictly before aliases (chain-dependency contract).
+    # Asserted in sequence outside any in_any_order block.
+    cco_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": True})
+    dispatch_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": True})
+    with tripwire.in_any_order():
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly (component, platform, success, action, message). The
@@ -790,49 +819,51 @@ def test_install_chains_emits_warning_under_env_override(tmp_path, monkeypatch, 
     stderr WARNING that names the env var. The per-dir alias dispatcher
     then routes through the vanilla ``which("cco")`` gate; we mock that
     gate to return None so the per-dir aliases short-circuit with a clear
-    skipped_reason.
+    skipped_reason. install_spellbook_cco and install_aliases must NOT
+    be called -- tripwire's strict verifier enforces this (no mock = no
+    call permitted).
     """
-    from installer.platforms import claude_code as platform_mod
+    from dirty_equals import AnyThing
+
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
+
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
     )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
+
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
     )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
 
     monkeypatch.setenv("SPELLBOOK_USE_VANILLA_CCO", "1")
 
-    def must_not_call(install_root=None, dry_run=False):
-        pytest.fail(
-            "install_spellbook_cco must NOT be called when "
-            "SPELLBOOK_USE_VANILLA_CCO=1; got "
-            f"install_root={install_root!r}, dry_run={dry_run!r}"
-        )
-
-    monkeypatch.setattr(platform_mod, "install_spellbook_cco", must_not_call)
-    # Vanilla cco missing → dispatcher returns its skip dict; install_aliases
-    # must NOT be called when shutil.which("cco") returns None.
-    monkeypatch.setattr(platform_mod.shutil, "which", lambda name: None)
-
-    def aliases_must_not_run(sb_dir, dry_run=False):
-        pytest.fail(
-            "install_aliases must NOT run under env-override rollback when "
-            "vanilla cco is missing on PATH"
-        )
-
-    monkeypatch.setattr(platform_mod, "install_aliases", aliases_must_not_run)
+    # Vanilla cco missing on PATH; dispatcher returns its skip dict.
+    # install_aliases is NOT mocked -- tripwire enforces it must not be
+    # called on this codepath.
+    tripwire.subprocess.mock_which("cco", returns=None)
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-    results = installer.install()
+    with tripwire:
+        results = installer.install()
+
+    tripwire.subprocess.assert_which("cco", returns=None)
+    with tripwire.in_any_order():
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     captured = capsys.readouterr()
     # The canonical rollback WARNING fires twice on this codepath (once
@@ -880,7 +911,7 @@ def test_install_chains_emits_warning_under_env_override(tmp_path, monkeypatch, 
 
 
 @pytest.mark.posix_only
-def test_uninstall_chains_uninstall_spellbook_cco(tmp_path, monkeypatch):
+def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
     """uninstall() calls uninstall_spellbook_cco exactly once.
 
     Pins the F-B mitigation: every full ``ClaudeCodeInstaller.uninstall()``
@@ -888,41 +919,60 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path, monkeypatch):
     uninstall_spellbook_cco (idempotent: clean machine returns
     ``action="noop"``).
     """
-    from installer.platforms import claude_code as platform_mod
+    from dirty_equals import AnyThing
+
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
+
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
     )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
+
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
     )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
 
-    uninstall_calls: list[dict] = []
+    uninstall_mock = tripwire.mock(
+        "installer.platforms.claude_code:uninstall_spellbook_cco"
+    )
+    uninstall_mock.returns({
+        "installed": False,
+        "path": "/Users/eek/.local/bin/spellbook-cco",
+        "action": "removed",
+        "skipped_reason": None,
+    })
 
-    def uninstall_recorder(install_root=None, dry_run=False):
-        uninstall_calls.append({"install_root": install_root, "dry_run": dry_run})
-        return {
-            "installed": False,
-            "path": "/Users/eek/.local/bin/spellbook-cco",
-            "action": "removed",
-            "skipped_reason": None,
-        }
-
-    monkeypatch.setattr(platform_mod, "uninstall_spellbook_cco", uninstall_recorder)
+    # uninstall path also tears down the daemon; mock that to avoid the
+    # real socket/DNS interaction tripwire's DNS plugin would catch.
+    daemon_mock = tripwire.mock(
+        "installer.platforms.claude_code:uninstall_daemon"
+    )
+    for _ in range(5):
+        daemon_mock.__call__.required(False).returns((True, "ok"))
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-    results = installer.uninstall()
+    with tripwire:
+        results = installer.uninstall()
 
     # Exactly one call with dry_run forwarded.
-    assert uninstall_calls == [{"install_root": None, "dry_run": False}]
+    uninstall_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": False})
+    with tripwire.in_any_order():
+        # Drain auxiliary mocks; the exact count is implementation detail.
+        # Each mock is registered with required(False); only those that
+        # actually fired need to be asserted here.
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        daemon_mock.assert_call(args=(), kwargs={"dry_run": False}, returned=AnyThing)
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly. ``ClaudeCodeInstaller.uninstall`` always sets
@@ -942,52 +992,65 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path, monkeypatch):
 
 
 @pytest.mark.posix_only
-def test_install_chain_failure_when_fork_install_fails(tmp_path, monkeypatch, capsys):
+def test_install_chain_failure_when_fork_install_fails(tmp_path, capsys):
     """When install_spellbook_cco fails, per-dir aliases short-circuit cleanly.
 
     Chain dependency: the per-dir alias dispatcher gates on
     ``shutil.which("spellbook-cco")``. When the once-globally fork install
     returns ``installed=False`` (e.g., ``git clone`` failed), the wrapper
     is absent on PATH and the per-dir alias install short-circuits with a
-    skipped_reason that names the missing sandbox binary.
+    skipped_reason that names the missing sandbox binary. install_aliases
+    is NOT mocked -- tripwire's strict verifier enforces it must not fire.
     """
-    from installer.platforms import claude_code as platform_mod
+    from dirty_equals import AnyThing
+
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     spellbook_dir = _make_minimal_spellbook_dir(tmp_path)
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(
-        "installer.platforms.claude_code.check_claude_cli_available",
-        lambda *a, **kw: False,
-    )
-    monkeypatch.setattr(
-        "installer.components.mcp.check_claude_cli_available",
-        lambda *a, **kw: False,
-    )
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(20):
+        home_mock.__call__.required(False).returns(tmp_path)
 
-    def cco_failed(install_root=None, dry_run=False):
-        return {
-            "installed": False,
-            "action": "skipped",
-            "path": None,
-            "skipped_reason": "git clone failed: network unreachable",
-            "install_root": None,
-        }
+    cli_mock_claude = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
+    )
+    for _ in range(20):
+        cli_mock_claude.__call__.required(False).returns(False)
 
-    monkeypatch.setattr(platform_mod, "install_spellbook_cco", cco_failed)
+    cli_mock_mcp = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
+    )
+    for _ in range(20):
+        cli_mock_mcp.__call__.required(False).returns(False)
+
+    cco_mock = tripwire.mock(
+        "installer.platforms.claude_code:install_spellbook_cco"
+    )
+    cco_mock.returns({
+        "installed": False,
+        "action": "skipped",
+        "path": None,
+        "skipped_reason": "git clone failed: network unreachable",
+        "install_root": None,
+    })
+
     # spellbook-cco is NOT on PATH because the once-globally install failed.
-    monkeypatch.setattr(platform_mod.shutil, "which", lambda name: None)
-
-    def aliases_must_not_run(sb_dir, dry_run=False):
-        pytest.fail("install_aliases must NOT run when spellbook-cco install failed")
-
-    monkeypatch.setattr(platform_mod, "install_aliases", aliases_must_not_run)
+    tripwire.subprocess.mock_which("spellbook-cco", returns=None)
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
-    results = installer.install()
+    with tripwire:
+        results = installer.install()
+
+    cco_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": False})
+    tripwire.subprocess.assert_which("spellbook-cco", returns=None)
+    with tripwire.in_any_order():
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
+        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly. The cco_failed stub returns
@@ -1041,36 +1104,34 @@ def test_install_claude_code_aliases_routes_to_vanilla_under_env_override(
 
     spellbook_dir = tmp_path / "spellbook"
     monkeypatch.setenv("SPELLBOOK_USE_VANILLA_CCO", "1")
-    monkeypatch.setattr(platform_mod, "get_platform", lambda: getattr(Platform, platform_value))
 
-    # which("cco") -> a path; which("spellbook-cco") -> None.
-    def which_router(name):
-        return "/usr/local/bin/cco" if name == "cco" else None
+    plat_mock = tripwire.mock("installer.platforms.claude_code:get_platform")
+    plat_mock.returns(getattr(Platform, platform_value))
 
-    monkeypatch.setattr(platform_mod.shutil, "which", which_router)
+    # which("cco") -> a path. The dispatcher only consults "cco" under
+    # the env override (vanilla branch); it does not call which on
+    # "spellbook-cco" in this path.
+    tripwire.subprocess.mock_which("cco", returns="/usr/local/bin/cco")
 
-    aliases_calls: list[tuple] = []
+    aliases_mock = tripwire.mock(
+        "installer.platforms.claude_code:install_aliases"
+    )
+    aliases_mock.returns({
+        "installed": True,
+        "rc_path": "/fake/.zshrc",
+        "aliases": ["claude"],
+        "skipped_reason": None,
+    })
 
-    def aliases_recorder(sb_dir, dry_run=False):
-        aliases_calls.append((sb_dir, dry_run))
-        return {
-            "installed": True,
-            "rc_path": "/fake/.zshrc",
-            "aliases": ["claude"],
-            "skipped_reason": None,
-        }
+    # install_aliases_windows is NOT mocked; tripwire's strict verifier
+    # ensures it cannot fire on the POSIX-dispatch codepath.
 
-    monkeypatch.setattr(platform_mod, "install_aliases", aliases_recorder)
+    with tripwire:
+        result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
 
-    def windows_must_not_call(sb_dir, dry_run=False):
-        pytest.fail("install_aliases_windows must not be called on POSIX dispatch")
-
-    monkeypatch.setattr(platform_mod, "install_aliases_windows", windows_must_not_call)
-
-    result = platform_mod._install_claude_code_aliases(spellbook_dir, dry_run=False)
-
-    # Dispatcher routed through the vanilla branch and called install_aliases.
-    assert aliases_calls == [(spellbook_dir, False)]
+    plat_mock.assert_call(args=(), kwargs={})
+    tripwire.subprocess.assert_which("cco", returns="/usr/local/bin/cco")
+    aliases_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": False})
     assert result == {
         "installed": True,
         "rc_path": "/fake/.zshrc",

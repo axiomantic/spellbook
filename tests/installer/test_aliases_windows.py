@@ -23,6 +23,7 @@ import logging
 from pathlib import Path
 
 import pytest
+import tripwire
 
 from installer.components.aliases import install_aliases_windows
 
@@ -48,13 +49,16 @@ def test_install_aliases_windows_returns_noop_dict(tmp_path):
 
 
 @pytest.mark.windows_only
-def test_install_aliases_windows_does_not_write_files(tmp_path, monkeypatch):
+def test_install_aliases_windows_does_not_write_files(tmp_path):
     """The stub must not create any files anywhere.
 
-    Monkeypatches ``Path.home`` to a sandboxed directory so that a
+    Mocks ``Path.home`` via tripwire to a sandboxed directory so that a
     regression which copy-pasted ``install_aliases()``'s body (and thus
     wrote to ``Path.home() / ".zshrc"``) would be caught — snapshotting
     only ``tmp_path`` would miss writes to the user's actual home dir.
+
+    The stub does not call ``Path.home``; the mock is registered with
+    ``required=False`` so the test does not fail when no call is made.
 
     Snapshots both the fake home and an empty spellbook_dir under
     tmp_path before and after the call, asserting exact recursive
@@ -62,7 +66,8 @@ def test_install_aliases_windows_does_not_write_files(tmp_path, monkeypatch):
     """
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
-    monkeypatch.setattr(Path, "home", lambda: fake_home)
+    home_mock = tripwire.mock("pathlib:Path.home")
+    home_mock.returns(fake_home).required(False)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
@@ -70,7 +75,8 @@ def test_install_aliases_windows_does_not_write_files(tmp_path, monkeypatch):
     home_before = sorted(fake_home.rglob("*"))
     spellbook_before = sorted(spellbook_dir.rglob("*"))
 
-    install_aliases_windows(spellbook_dir)
+    with tripwire:
+        install_aliases_windows(spellbook_dir)
 
     home_after = sorted(fake_home.rglob("*"))
     spellbook_after = sorted(spellbook_dir.rglob("*"))
@@ -80,7 +86,7 @@ def test_install_aliases_windows_does_not_write_files(tmp_path, monkeypatch):
 
 
 @pytest.mark.windows_only
-def test_install_aliases_windows_dry_run_path(tmp_path, monkeypatch):
+def test_install_aliases_windows_dry_run_path(tmp_path):
     """``dry_run=True`` returns the same noop shape and writes nothing.
 
     The stub is a no-op regardless of ``dry_run``; this test pins that
@@ -88,13 +94,16 @@ def test_install_aliases_windows_dry_run_path(tmp_path, monkeypatch):
     branching cannot accidentally write under dry_run=True (or vice
     versa) without updating this test.
 
-    Monkeypatches ``Path.home`` for the same reason as
+    Mocks ``Path.home`` via tripwire for the same reason as
     ``test_install_aliases_windows_does_not_write_files``: a regression
     that wrote to the user's actual rc file would otherwise be invisible.
+    The stub does not call ``Path.home``; the mock is registered with
+    ``required=False`` so the test does not fail when no call is made.
     """
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
-    monkeypatch.setattr(Path, "home", lambda: fake_home)
+    home_mock = tripwire.mock("pathlib:Path.home")
+    home_mock.returns(fake_home).required(False)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
@@ -102,7 +111,8 @@ def test_install_aliases_windows_dry_run_path(tmp_path, monkeypatch):
     home_before = sorted(fake_home.rglob("*"))
     spellbook_before = sorted(spellbook_dir.rglob("*"))
 
-    result = install_aliases_windows(spellbook_dir, dry_run=True)
+    with tripwire:
+        result = install_aliases_windows(spellbook_dir, dry_run=True)
 
     home_after = sorted(fake_home.rglob("*"))
     spellbook_after = sorted(spellbook_dir.rglob("*"))
