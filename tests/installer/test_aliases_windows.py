@@ -67,7 +67,10 @@ def test_install_aliases_windows_does_not_write_files(tmp_path):
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
     home_mock = tripwire.mock("pathlib:Path.home")
-    home_mock.returns(fake_home).required(False)
+    # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
+    # registrations, NOT a retroactive modifier. Order matters: set the flag
+    # BEFORE the value-stacking call so the FIFO entry inherits required=False.
+    home_mock.required(False).returns(fake_home)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
@@ -103,7 +106,10 @@ def test_install_aliases_windows_dry_run_path(tmp_path):
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
     home_mock = tripwire.mock("pathlib:Path.home")
-    home_mock.returns(fake_home).required(False)
+    # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
+    # registrations, NOT a retroactive modifier. Order matters: set the flag
+    # BEFORE the value-stacking call so the FIFO entry inherits required=False.
+    home_mock.required(False).returns(fake_home)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
