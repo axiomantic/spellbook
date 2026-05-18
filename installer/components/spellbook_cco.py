@@ -681,7 +681,18 @@ def uninstall_spellbook_cco(
     clone_action: str | None = None
     if resolved_install_root.exists():
         if _is_managed_install_root(resolved_install_root):
-            shutil.rmtree(resolved_install_root, ignore_errors=True)
+            # Best-effort removal: log per-path failures via onerror so
+            # disk/permission issues are observable, but never raise --
+            # uninstall must always return a result dict (the caller
+            # records it in InstallResult).
+            def _onerror(_func, path, exc_info):  # type: ignore[no-untyped-def]
+                logger.warning(
+                    "Failed to remove managed clone path %s: %s",
+                    path,
+                    exc_info[1] if exc_info else "<unknown>",
+                )
+
+            shutil.rmtree(resolved_install_root, onerror=_onerror)
             clone_action = "removed"
         else:
             clone_action = "preserved-foreign"

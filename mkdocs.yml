@@ -219,7 +219,6 @@ nav:
       - commands/audit-mirage-report.md
       - commands/canvas.md
       - commands/design-explore.md
-      - commands/canvas.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
       - commands/code-review-tarot.md

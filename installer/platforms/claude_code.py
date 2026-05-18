@@ -419,6 +419,12 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 try:
                     cco_result = install_spellbook_cco(install_root=None, dry_run=self.dry_run)
                 except Exception as e:  # noqa: BLE001 - wide net by design
+                    # logger.exception preserves traceback context so operators
+                    # debugging installer failures see the full chain, not just
+                    # the stringified message we surface in the InstallResult.
+                    logger.exception(
+                        "Unexpected error installing spellbook-cco: %s", e
+                    )
                     cco_result = {
                         "installed": False,
                         "path": None,
@@ -459,6 +465,9 @@ class ClaudeCodeInstaller(PlatformInstaller):
         try:
             alias_result = _install_claude_code_aliases(self.spellbook_dir, dry_run=self.dry_run)
         except Exception as e:
+            # logger.exception so operators get the full traceback in
+            # debug-level logs alongside the failed InstallResult.
+            logger.exception("Failed to install Claude Code aliases: %s", e)
             results.append(
                 InstallResult(
                     component="aliases",

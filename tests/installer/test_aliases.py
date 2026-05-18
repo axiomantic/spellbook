@@ -671,6 +671,14 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path):
         home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
         cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
         cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+        # claude_code.py now logger.exception()'s the caught alias OSError
+        # for operator observability (gemini cycle-6 finding). Drain the
+        # LoggingPlugin entry so the strict verifier does not flag it.
+        tripwire.log.assert_log(
+            level="ERROR",
+            message=AnyThing,
+            logger_name="installer.platforms.claude_code",
+        )
 
     # (a) failed aliases result is recorded with the original error text.
     alias_results = [r for r in results if r.component == "aliases"]

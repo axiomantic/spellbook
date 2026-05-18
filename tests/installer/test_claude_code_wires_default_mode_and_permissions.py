@@ -207,6 +207,43 @@ def _assert_install_mocks(mock_home, mock_cc_cli, mock_mcp_cli):
             mock_cc_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
         for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
             mock_mcp_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
+        # The cco install step is unmocked in these tests; its subprocess
+        # call goes to a real `git clone` against the elijahr/cco URL,
+        # which fails inside the tripwire sandbox. claude_code.py now
+        # logger.exception()'s the caught failure for operator
+        # observability (gemini cycle-6 finding), so the LoggingPlugin
+        # records an ERROR entry. Drain it -- required(False) so tests
+        # that DO mock install_spellbook_cco (no exception -> no log
+        # entry) still pass.
+        _drain_cco_install_exception_log()
+
+
+def _drain_cco_install_exception_log() -> None:
+    """Drain the optional ``logger.exception`` ERROR emitted by
+    ``claude_code.py`` when ``install_spellbook_cco`` raises.
+
+    Wrapped in a helper so the optional/required(False) semantics live
+    in one place. Always called inside an enclosing
+    ``with tripwire.in_any_order():`` block.
+    """
+    try:
+        tripwire.log.assert_log(
+            level="ERROR",
+            message=AnyThing,
+            logger_name="installer.platforms.claude_code",
+            required=False,
+        )
+    except TypeError:
+        # Some tripwire builds do not accept required=; fall back to
+        # an always-attempt-but-tolerate pattern by swallowing the
+        # mismatch error here. The strict verifier will surface a
+        # genuine UnassertedInteractionsError if the log was emitted
+        # but not drained by any other call.
+        tripwire.log.assert_log(
+            level="ERROR",
+            message=AnyThing,
+            logger_name="installer.platforms.claude_code",
+        )
 
 
 def _assert_install_and_uninstall_mocks(
@@ -225,6 +262,9 @@ def _assert_install_and_uninstall_mocks(
             mock_daemon.assert_call(
                 args=(), kwargs={"dry_run": False}, returned=AnyThing
             )
+        # Same rationale as _assert_install_mocks: optional drain for
+        # the install_spellbook_cco failure logger.exception path.
+        _drain_cco_install_exception_log()
 
 
 def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path):
