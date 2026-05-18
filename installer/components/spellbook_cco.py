@@ -60,6 +60,31 @@ SPELLBOOK_CCO_WRAPPER_TAG: str = "# spellbook-cco-managed: v1"
 SPELLBOOK_CCO_WRAPPER_DIR: Path = Path.home() / ".local" / "bin"
 SPELLBOOK_CCO_WRAPPER_PATH: Path = SPELLBOOK_CCO_WRAPPER_DIR / "spellbook-cco"
 
+
+def _get_wrapper_dir() -> Path:
+    """Return the wrapper install directory.
+
+    Indirection layer so tests can mock via tripwire (which only
+    intercepts callable invocations, not bare attribute reads on
+    module-level Path constants).
+    """
+    return SPELLBOOK_CCO_WRAPPER_DIR
+
+
+def _get_wrapper_path() -> Path:
+    """Return the full path to the spellbook-cco wrapper script."""
+    return SPELLBOOK_CCO_WRAPPER_PATH
+
+
+def _get_repo_url() -> str:
+    """Return the upstream cco fork repo URL."""
+    return SPELLBOOK_CCO_REPO_URL
+
+
+def _get_pinned_sha() -> str:
+    """Return the pinned cco fork commit SHA."""
+    return SPELLBOOK_CCO_PINNED_SHA
+
 # Marker file dropped INSIDE the clone's .git/ dir so uninstall can
 # distinguish a directory we created from a foreign directory living at
 # the same path. We deliberately keep the marker out of the working tree
@@ -166,20 +191,22 @@ def _wrapper_template(install_root: Path, pinned_sha: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _verify_pin(install_root: Path) -> tuple[bool, str]:
+def _verify_pin(install_root: Path, pinned_sha: str | None = None) -> tuple[bool, str]:
     """Two-step pin verification.
 
     Step 1: ``git -C <install_root> rev-parse --short=7 HEAD`` is compared
-    string-equal to ``SPELLBOOK_CCO_PINNED_SHA``.
+    string-equal to ``pinned_sha`` (defaults to ``_get_pinned_sha()``).
 
     Step 2: ``<install_root>/cco --version`` is parsed via "second
     whitespace token of the first line" (mirroring spellbook-sandbox's
-    awk parse) and compared string-equal to ``SPELLBOOK_CCO_PINNED_SHA``.
+    awk parse) and compared string-equal to ``pinned_sha``.
 
     Returns ``(matched, observed_sha)``. ``observed_sha`` may be an empty
     string when the underlying subprocess errors. The caller uses both
     fields to compose a precise ``skipped_reason``.
     """
+    expected_sha = pinned_sha if pinned_sha is not None else _get_pinned_sha()
+
     # Step 1.
     rev_proc = subprocess.run(
         ["git", "-C", str(install_root), "rev-parse", "--short=7", "HEAD"],
@@ -190,7 +217,7 @@ def _verify_pin(install_root: Path) -> tuple[bool, str]:
     if rev_proc.returncode != 0:
         return False, ""
     git_sha = rev_proc.stdout.strip()
-    if git_sha != SPELLBOOK_CCO_PINNED_SHA:
+    if git_sha != expected_sha:
         return False, git_sha
 
     # Step 2.
@@ -205,7 +232,7 @@ def _verify_pin(install_root: Path) -> tuple[bool, str]:
     first_line = version_proc.stdout.splitlines()[0] if version_proc.stdout else ""
     tokens = first_line.split()
     runtime_sha = tokens[1] if len(tokens) >= 2 else ""
-    if runtime_sha != SPELLBOOK_CCO_PINNED_SHA:
+    if runtime_sha != expected_sha:
         return False, runtime_sha
 
     return True, runtime_sha
@@ -216,8 +243,17 @@ def _verify_pin(install_root: Path) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 
 
-def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
+def _clone_or_fetch(
+    install_root: Path,
+    repo_url: str | None = None,
+    pinned_sha: str | None = None,
+) -> tuple[bool, str | None]:
     """Bring ``install_root`` to the pinned SHA via clone or fetch+checkout.
+
+    Args:
+        install_root: clone destination.
+        repo_url: upstream URL. Defaults to ``_get_repo_url()``.
+        pinned_sha: commit SHA to check out. Defaults to ``_get_pinned_sha()``.
 
     Returns ``(ok, skipped_reason)``. On success returns ``(True, None)``.
     On any abort condition returns ``(False, "<reason>")`` so the caller
@@ -229,6 +265,9 @@ def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
           then ``git checkout PIN``. Aborts if working tree is dirty.
         - install_root present + remote mismatch -> abort.
     """
+    expected_url = repo_url if repo_url is not None else _get_repo_url()
+    expected_sha = pinned_sha if pinned_sha is not None else _get_pinned_sha()
+
     parent = install_root.parent
     parent.mkdir(parents=True, exist_ok=True)
 
@@ -239,7 +278,7 @@ def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
                 "clone",
                 "--depth",
                 "50",
-                SPELLBOOK_CCO_REPO_URL,
+                expected_url,
                 str(install_root),
             ],
             capture_output=True,
@@ -272,12 +311,12 @@ def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
         )
         if remote_proc.returncode != 0:
             return False, (
-                f"install_root remote mismatch: expected {SPELLBOOK_CCO_REPO_URL}, got <none>"
+                f"install_root remote mismatch: expected {expected_url}, got <none>"
             )
         actual_remote = remote_proc.stdout.strip()
-        if actual_remote != SPELLBOOK_CCO_REPO_URL:
+        if actual_remote != expected_url:
             return False, (
-                f"install_root remote mismatch: expected {SPELLBOOK_CCO_REPO_URL}, "
+                f"install_root remote mismatch: expected {expected_url}, "
                 f"got {actual_remote}"
             )
 
@@ -308,12 +347,12 @@ def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
     # 1. In production with a real fork, the pinned commit IS reachable
     #    from master via --depth 50, so this checkout succeeds and lands
     #    HEAD on the pin before verification.
-    # 2. In Tier-2 tests where the operator monkeypatches the pin to a
-    #    sha that doesn't match the fixture's HEAD, this checkout fails
+    # 2. In Tier-2 tests where the operator overrides the pin to a sha
+    #    that doesn't match the fixture's HEAD, this checkout fails
     #    silently and ``_verify_pin`` produces the right error message
     #    (rather than this helper masking it as "git checkout failed").
     subprocess.run(
-        ["git", "-C", str(install_root), "checkout", SPELLBOOK_CCO_PINNED_SHA],
+        ["git", "-C", str(install_root), "checkout", expected_sha],
         capture_output=True,
         text=True,
         check=False,
@@ -326,8 +365,19 @@ def _clone_or_fetch(install_root: Path) -> tuple[bool, str | None]:
 # ---------------------------------------------------------------------------
 
 
-def _write_wrapper(install_root: Path, pinned_sha: str) -> str:
-    """Write the spellbook-cco wrapper to ``SPELLBOOK_CCO_WRAPPER_PATH``.
+def _write_wrapper(
+    install_root: Path,
+    pinned_sha: str,
+    wrapper_dir: Path | None = None,
+    wrapper_path: Path | None = None,
+) -> str:
+    """Write the spellbook-cco wrapper to ``wrapper_path``.
+
+    Args:
+        install_root: clone path that the wrapper exec's into.
+        pinned_sha: SHA stamped into the wrapper's audit comment.
+        wrapper_dir: install directory. Defaults to ``_get_wrapper_dir()``.
+        wrapper_path: full wrapper path. Defaults to ``_get_wrapper_path()``.
 
     Returns the action taken (one of ``"installed"`` or ``"noop"``).
 
@@ -337,8 +387,10 @@ def _write_wrapper(install_root: Path, pinned_sha: str) -> str:
         - present + tagged + byte-different (path drift)   -> overwrite, "installed"
         - present + untagged                               -> WARNING + overwrite, "installed"
     """
-    wrapper_path = SPELLBOOK_CCO_WRAPPER_PATH
-    wrapper_dir = SPELLBOOK_CCO_WRAPPER_DIR
+    if wrapper_path is None:
+        wrapper_path = _get_wrapper_path()
+    if wrapper_dir is None:
+        wrapper_dir = _get_wrapper_dir()
     wrapper_dir.mkdir(parents=True, exist_ok=True)
 
     canonical_text = _wrapper_template(install_root.resolve(), pinned_sha)
@@ -375,6 +427,12 @@ def _write_wrapper(install_root: Path, pinned_sha: str) -> str:
 def install_spellbook_cco(
     install_root: Path | None = None,
     dry_run: bool = False,
+    *,
+    repo_url: str | None = None,
+    pinned_sha: str | None = None,
+    wrapper_dir: Path | None = None,
+    wrapper_path: Path | None = None,
+    verify_pin_fn: "Callable[[Path, str], tuple[bool, str]] | None" = None,
 ) -> dict:
     """Install (or update to pin) the elijahr/cco fork and write the wrapper.
 
@@ -383,6 +441,20 @@ def install_spellbook_cco(
             ``SPELLBOOK_CCO_DEFAULT_INSTALL_ROOT``. Tests override.
         dry_run: when ``True`` no subprocess or filesystem mutation
             occurs; the call returns a shape-only result.
+        repo_url: upstream fork URL. Defaults to ``_get_repo_url()``.
+        pinned_sha: commit SHA to install. Defaults to ``_get_pinned_sha()``.
+        wrapper_dir: wrapper install directory. Defaults to ``_get_wrapper_dir()``.
+        wrapper_path: full wrapper path. Defaults to ``_get_wrapper_path()``.
+        verify_pin_fn: pin-verification function. Defaults to
+            ``_verify_pin``. Tests inject a wrapper to simulate step-2
+            mismatches without monkeypatching module attributes.
+
+    The keyword-only overrides are the test seam: production callers
+    leave them at their defaults and the SUT reads the module-level
+    constants via getter indirection. Tests pass explicit values so they
+    do not need to monkeypatch module attributes (forbidden) or mock
+    the getters via tripwire (cannot coexist with real subprocess for
+    Tier 2 file:// repo tests).
 
     Returns:
         ``{"installed": bool, "path": str | None, "skipped_reason":
@@ -391,12 +463,18 @@ def install_spellbook_cco(
     resolved_install_root = (
         Path(install_root) if install_root is not None else SPELLBOOK_CCO_DEFAULT_INSTALL_ROOT
     )
+    resolved_repo_url = repo_url if repo_url is not None else _get_repo_url()
+    resolved_pinned_sha = pinned_sha if pinned_sha is not None else _get_pinned_sha()
+    resolved_wrapper_dir = wrapper_dir if wrapper_dir is not None else _get_wrapper_dir()
+    resolved_wrapper_path = (
+        wrapper_path if wrapper_path is not None else _get_wrapper_path()
+    )
 
     # Dry-run short-circuit: no subprocess, no FS mutation.
     if dry_run:
         return {
             "installed": False,
-            "path": str(SPELLBOOK_CCO_WRAPPER_PATH),
+            "path": str(resolved_wrapper_path),
             "skipped_reason": "dry-run",
             "action": "noop",
             "install_root": str(resolved_install_root),
@@ -424,7 +502,11 @@ def install_spellbook_cco(
         }
 
     # Clone or fetch the fork to the pinned SHA.
-    ok, reason = _clone_or_fetch(resolved_install_root)
+    ok, reason = _clone_or_fetch(
+        resolved_install_root,
+        repo_url=resolved_repo_url,
+        pinned_sha=resolved_pinned_sha,
+    )
     if not ok:
         return {
             "installed": False,
@@ -438,14 +520,15 @@ def install_spellbook_cco(
     if os.environ.get("SPELLBOOK_INSTALLER_SKIP_FORK_PIN") == "1":
         _emit_warning(_WARNING_SKIP_FORK_PIN)
     else:
-        matched, observed = _verify_pin(resolved_install_root)
+        verify_fn = verify_pin_fn if verify_pin_fn is not None else _verify_pin
+        matched, observed = verify_fn(resolved_install_root, resolved_pinned_sha)
         if not matched:
             # Rollback: do NOT write wrapper; tear down the clone if we
             # created it (presence of the managed-marker is the test).
             if _is_managed_install_root(resolved_install_root):
                 shutil.rmtree(resolved_install_root, ignore_errors=True)
             failure_msg = (
-                f"pin verification failed: expected {SPELLBOOK_CCO_PINNED_SHA}, "
+                f"pin verification failed: expected {resolved_pinned_sha}, "
                 f"got {observed or '<unparseable>'}"
             )
             _emit_warning(f"{_WARNING_PREFIX} {failure_msg}\n")
@@ -458,16 +541,21 @@ def install_spellbook_cco(
             }
 
     # Wrapper write (idempotent).
-    action = _write_wrapper(resolved_install_root, SPELLBOOK_CCO_PINNED_SHA)
+    action = _write_wrapper(
+        resolved_install_root,
+        resolved_pinned_sha,
+        wrapper_dir=resolved_wrapper_dir,
+        wrapper_path=resolved_wrapper_path,
+    )
 
     # PATH check.
     path_dirs = [Path(p) for p in os.environ.get("PATH", "").split(os.pathsep) if p]
-    if SPELLBOOK_CCO_WRAPPER_DIR not in path_dirs:
+    if resolved_wrapper_dir not in path_dirs:
         _emit_warning(_WARNING_PATH_NOT_SET)
 
     return {
         "installed": True,
-        "path": str(SPELLBOOK_CCO_WRAPPER_PATH),
+        "path": str(resolved_wrapper_path),
         "skipped_reason": None,
         "action": action,
         "install_root": str(resolved_install_root.resolve()),
@@ -477,8 +565,16 @@ def install_spellbook_cco(
 def uninstall_spellbook_cco(
     install_root: Path | None = None,
     dry_run: bool = False,
+    *,
+    wrapper_path: Path | None = None,
 ) -> dict:
     """Remove the spellbook-managed fork clone and wrapper.
+
+    Args:
+        install_root: clone path to remove. Defaults to
+            ``SPELLBOOK_CCO_DEFAULT_INSTALL_ROOT``.
+        dry_run: when ``True`` no FS mutation occurs.
+        wrapper_path: full wrapper path. Defaults to ``_get_wrapper_path()``.
 
     Wrapper removal: only when the file content contains
     ``SPELLBOOK_CCO_WRAPPER_TAG`` (operator-rolled wrappers preserved).
@@ -493,7 +589,8 @@ def uninstall_spellbook_cco(
         Path(install_root) if install_root is not None else SPELLBOOK_CCO_DEFAULT_INSTALL_ROOT
     )
 
-    wrapper_path = SPELLBOOK_CCO_WRAPPER_PATH
+    if wrapper_path is None:
+        wrapper_path = _get_wrapper_path()
 
     if dry_run:
         # Convey "would do work" via installed=True so the caller can tell
