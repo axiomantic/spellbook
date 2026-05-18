@@ -353,7 +353,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bash policy unified across Claude and Gemini paths.** Renamed
   `hooks/gemini-policy.toml` to `hooks/bash-policy.toml`. Added a TOML
   loader to `spellbook/gates/rules.py` so the Claude path picks up the
-  supplemental SB-BASH-*rules previously only consumed by the Gemini
+  supplemental SB-BASH-* rules previously only consumed by the Gemini
   installer. Old filename is preserved as a migration alias for one
   release. SB-BASH-001..009 ship as additional defense-in-depth findings
   on top of the existing BASH-* / EXF-* regex set.
