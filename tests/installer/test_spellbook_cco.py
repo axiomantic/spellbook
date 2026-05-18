@@ -70,23 +70,39 @@ from installer.components.spellbook_cco import (
 # Expected wrapper template (orchestrator contract -- 5-line spec).
 #
 # Format substitutions:
-#   {install_root}: absolute, resolved path of the fork clone
-#   {pinned_sha}:   SPELLBOOK_CCO_PINNED_SHA at write time
+#   {install_root}:     absolute, resolved path of the fork clone
+#   {pinned_sha}:       SPELLBOOK_CCO_PINNED_SHA at write time
+#   {project_encoded}:  spellbook repo root with '/' -> '-', leading slash
+#                       stripped (matches CLAUDE.md project-encoded
+#                       convention). Used to address the per-repo
+#                       ``~/.local/spellbook/docs/<project-encoded>/``
+#                       audit-doc subtree.
 # ---------------------------------------------------------------------------
 EXPECTED_WRAPPER_TEMPLATE = (
     "#!/usr/bin/env bash\n"
     "# spellbook-cco-managed: v1\n"
     "# Source:    {install_root} (fork of nikvdp/cco @ {pinned_sha})\n"
-    "# Audit:     ~/.local/spellbook/docs/Users-eek-Development-spellbook"
+    "# Audit:     ~/.local/spellbook/docs/{project_encoded}"
     "/verifications/sec_9_3_result.md\n"
     'exec {install_root}/cco "$@"\n'
 )
 
 
-def _expected_wrapper_text(install_root: Path, pinned_sha: str) -> str:
+def _expected_wrapper_text(
+    install_root: Path,
+    pinned_sha: str,
+    spellbook_repo_root: Path | None = None,
+) -> str:
+    repo_root = (
+        spellbook_repo_root
+        if spellbook_repo_root is not None
+        else spellbook_cco._get_spellbook_repo_root()
+    )
+    project_encoded = str(repo_root).lstrip("/").replace("/", "-")
     return EXPECTED_WRAPPER_TEMPLATE.format(
         install_root=str(install_root.resolve()),
         pinned_sha=pinned_sha,
+        project_encoded=project_encoded,
     )
 
 

@@ -168,7 +168,36 @@ def emit_rollback_warning() -> None:
     _emit_warning(_WARNING_USE_VANILLA_CCO)
 
 
-def _wrapper_template(install_root: Path, pinned_sha: str) -> str:
+def _get_spellbook_repo_root() -> Path:
+    """Return the spellbook repo root containing this installer module.
+
+    ``installer/components/spellbook_cco.py`` -> three ``.parent`` hops
+    reach the repo root. Indirection layer so tests can mock via
+    tripwire without monkeypatching ``__file__``.
+    """
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _encode_project_path(project_root: Path) -> str:
+    """Return the spellbook ``project-encoded`` form of ``project_root``.
+
+    Matches the convention documented in ``CLAUDE.md`` (and mirrored by
+    ``spellbook.memory.claude_memory._encode_project``): leading ``/`` is
+    stripped, remaining slashes are replaced with dashes.
+
+    Duplicated here (rather than imported) so the installer component
+    has no dependency on the ``spellbook.memory`` package -- the
+    installer runs in the bootstrap path before the spellbook venv is
+    guaranteed importable.
+    """
+    return str(project_root).lstrip("/").replace("/", "-")
+
+
+def _wrapper_template(
+    install_root: Path,
+    pinned_sha: str,
+    spellbook_repo_root: Path | None = None,
+) -> str:
     """Return the wrapper script body for the given resolved install_root.
 
     Five-line script (orchestrator contract). The Audit reference is the
@@ -176,12 +205,21 @@ def _wrapper_template(install_root: Path, pinned_sha: str) -> str:
     hardening. ``install_root`` MUST be the resolved absolute path so
     idempotency byte-comparison does not spuriously trigger on symlink
     variance.
+
+    ``spellbook_repo_root`` is the directory the audit doc was authored
+    in; the encoded form is what ``~/.local/spellbook/docs/`` partitions
+    its per-repo subdirectories by. Defaults to the spellbook repo this
+    installer module lives in, so the wrapper's Audit comment resolves
+    correctly on whichever machine ran the installer (rather than baking
+    in the developer's path).
     """
+    repo_root = spellbook_repo_root if spellbook_repo_root is not None else _get_spellbook_repo_root()
+    project_encoded = _encode_project_path(repo_root)
     return (
         "#!/usr/bin/env bash\n"
         f"{SPELLBOOK_CCO_WRAPPER_TAG}\n"
         f"# Source:    {install_root} (fork of nikvdp/cco @ {pinned_sha})\n"
-        "# Audit:     ~/.local/spellbook/docs/Users-eek-Development-spellbook"
+        f"# Audit:     ~/.local/spellbook/docs/{project_encoded}"
         "/verifications/sec_9_3_result.md\n"
         f'exec {install_root}/cco "$@"\n'
     )
@@ -371,6 +409,7 @@ def _write_wrapper(
     pinned_sha: str,
     wrapper_dir: Path | None = None,
     wrapper_path: Path | None = None,
+    spellbook_repo_root: Path | None = None,
 ) -> str:
     """Write the spellbook-cco wrapper to ``wrapper_path``.
 
@@ -379,6 +418,11 @@ def _write_wrapper(
         pinned_sha: SHA stamped into the wrapper's audit comment.
         wrapper_dir: install directory. Defaults to ``_get_wrapper_dir()``.
         wrapper_path: full wrapper path. Defaults to ``_get_wrapper_path()``.
+        spellbook_repo_root: repo root used to compute the
+            project-encoded audit-doc path. Defaults to
+            ``_get_spellbook_repo_root()``. Tests inject explicit values
+            so the wrapper's audit comment is deterministic across dev
+            machines.
 
     Returns the action taken (one of ``"installed"`` or ``"noop"``).
 
@@ -394,7 +438,9 @@ def _write_wrapper(
         wrapper_dir = _get_wrapper_dir()
     wrapper_dir.mkdir(parents=True, exist_ok=True)
 
-    canonical_text = _wrapper_template(install_root.resolve(), pinned_sha)
+    canonical_text = _wrapper_template(
+        install_root.resolve(), pinned_sha, spellbook_repo_root=spellbook_repo_root
+    )
 
     if not wrapper_path.exists():
         wrapper_path.write_text(canonical_text)
@@ -434,6 +480,7 @@ def install_spellbook_cco(
     wrapper_dir: Path | None = None,
     wrapper_path: Path | None = None,
     verify_pin_fn: Callable[[Path, str], tuple[bool, str]] | None = None,
+    spellbook_repo_root: Path | None = None,
 ) -> dict:
     """Install (or update to pin) the elijahr/cco fork and write the wrapper.
 
@@ -559,6 +606,7 @@ def install_spellbook_cco(
         resolved_pinned_sha,
         wrapper_dir=resolved_wrapper_dir,
         wrapper_path=resolved_wrapper_path,
+        spellbook_repo_root=spellbook_repo_root,
     )
 
     # PATH check.

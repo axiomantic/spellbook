@@ -1,9 +1,14 @@
-"""Tests for spellbook.cli.commands.memory - memory search/export command."""
+"""Tests for spellbook.cli.commands.memory - memory search/export command.
+
+All mocks use tripwire per project policy (see AGENTS.md, "Testing with
+Tripwire"). ``monkeypatch.setattr`` of module attributes is forbidden.
+"""
 
 import argparse
 import json
 
 import pytest
+import tripwire
 
 from spellbook.cli.commands.memory import register
 
@@ -61,13 +66,11 @@ class TestRegister:
 class TestSearchRun:
     """Tests for memory search with no DB."""
 
-    def test_search_no_db_returns_empty(self, tmp_path, monkeypatch, capsys):
+    def test_search_no_db_returns_empty(self, tmp_path, capsys):
         """Search with nonexistent DB returns empty gracefully."""
-        str(tmp_path / "nonexistent.db")
-        monkeypatch.setattr(
-            "spellbook.cli.commands.memory.get_db_path",
-            lambda: tmp_path / "nonexistent.db",
-        )
+        db_path = tmp_path / "nonexistent.db"
+        mock_get_db_path = tripwire.mock("spellbook.cli.commands.memory:get_db_path")
+        mock_get_db_path.__call__.required(False).calls(lambda: db_path)
 
         parser = argparse.ArgumentParser()
         parser.add_argument("--json", action="store_true", default=False)
@@ -86,12 +89,11 @@ class TestSearchRun:
 class TestExportRun:
     """Tests for memory export with no DB."""
 
-    def test_export_no_db_returns_empty(self, tmp_path, monkeypatch, capsys):
+    def test_export_no_db_returns_empty(self, tmp_path, capsys):
         """Export with nonexistent DB returns empty gracefully."""
-        monkeypatch.setattr(
-            "spellbook.cli.commands.memory.get_db_path",
-            lambda: tmp_path / "nonexistent.db",
-        )
+        db_path = tmp_path / "nonexistent.db"
+        mock_get_db_path = tripwire.mock("spellbook.cli.commands.memory:get_db_path")
+        mock_get_db_path.__call__.required(False).calls(lambda: db_path)
 
         parser = argparse.ArgumentParser()
         parser.add_argument("--json", action="store_true", default=False)
