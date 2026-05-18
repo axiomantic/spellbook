@@ -526,8 +526,20 @@ def install_spellbook_cco(
         if not matched:
             # Rollback: do NOT write wrapper; tear down the clone if we
             # created it (presence of the managed-marker is the test).
+            # Log on failure so disk/permission issues are observable rather
+            # than silently swallowed; the rollback is still best-effort
+            # (the SUT continues to emit the pin-verification WARNING and
+            # returns the canonical skipped-reason regardless).
             if _is_managed_install_root(resolved_install_root):
-                shutil.rmtree(resolved_install_root, ignore_errors=True)
+
+                def _onerror(_func, path, exc_info):  # type: ignore[no-untyped-def]
+                    logger.warning(
+                        "Best-effort rollback failed to remove %s: %s",
+                        path,
+                        exc_info[1] if exc_info else "<unknown>",
+                    )
+
+                shutil.rmtree(resolved_install_root, onerror=_onerror)
             failure_msg = (
                 f"pin verification failed: expected {resolved_pinned_sha}, "
                 f"got {observed or '<unparseable>'}"

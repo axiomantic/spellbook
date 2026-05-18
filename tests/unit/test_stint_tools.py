@@ -15,6 +15,15 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from spellbook.core.db import close_all_connections, get_connection, init_db  # noqa: E402  (sys.path mangling above)
+from spellbook.coordination.stint import (  # noqa: E402  (sys.path mangling above)
+    _is_ordered_subsequence,
+    _validate_stint_entry,
+    check_stint,
+    classify_correction,
+    pop_stint,
+    push_stint,
+    replace_stint,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -111,17 +120,6 @@ class TestStintDatabaseSchema:
                 (index_name,),
             )
             assert cursor.fetchone() is not None, f"{index_name} index not created"
-
-
-from spellbook.coordination.stint import (  # noqa: E402  (deferred until after schema tests)
-    _is_ordered_subsequence,
-    _validate_stint_entry,
-    check_stint,
-    classify_correction,
-    pop_stint,
-    push_stint,
-    replace_stint,
-)
 
 
 class TestSessionIsolation:
