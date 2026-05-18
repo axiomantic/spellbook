@@ -20,7 +20,6 @@ than module-level) follows the L2 fix pattern from Task 2.
 """
 
 import logging
-from pathlib import Path
 
 import pytest
 import tripwire
@@ -52,43 +51,23 @@ def test_install_aliases_windows_returns_noop_dict(tmp_path):
 def test_install_aliases_windows_does_not_write_files(tmp_path):
     """The stub must not create any files anywhere.
 
-    Mocks ``Path.home`` via tripwire to a sandboxed directory so that a
-    regression which copy-pasted ``install_aliases()``'s body (and thus
-    wrote to ``Path.home() / ".zshrc"``) would be caught — snapshotting
-    only ``tmp_path`` would miss writes to the user's actual home dir.
-
-    The stub does not call ``Path.home``; the mock is registered with
-    ``required=False`` so the test does not fail when no call is made.
-
-    Snapshots both the fake home and an empty spellbook_dir under
-    tmp_path before and after the call, asserting exact recursive
-    equality on the sorted path list.
+    The stub does not call ``Path.home`` and does not write any files.
+    Tripwire's guard catches any regression that introduces an unmocked
+    ``Path.home`` call (the SUT runs inside ``with tripwire:`` so an
+    accidental ``Path.home()`` raises ``UnmockedInteractionError``).
+    Snapshots an empty spellbook_dir under tmp_path before and after
+    the call, asserting exact recursive equality on the sorted path list.
     """
-    fake_home = tmp_path / "fake_home"
-    fake_home.mkdir()
-    home_mock = tripwire.mock("pathlib:Path.home")
-    # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
-    # registrations on a MethodProxy, NOT a retroactive modifier and NOT a
-    # method on the _BaseMock returned by tripwire.mock(...). Access the
-    # MethodProxy via `.__call__` and set the flag BEFORE value-stacking so
-    # the FIFO entry inherits required=False. (`home_mock.required(False)`
-    # routes through __getattr__("required") and is then call-time-checked
-    # against an active sandbox, which fails outside `with tripwire:`.)
-    home_mock.__call__.required(False).returns(fake_home)
-
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
 
-    home_before = sorted(fake_home.rglob("*"))
     spellbook_before = sorted(spellbook_dir.rglob("*"))
 
     with tripwire:
         install_aliases_windows(spellbook_dir)
 
-    home_after = sorted(fake_home.rglob("*"))
     spellbook_after = sorted(spellbook_dir.rglob("*"))
 
-    assert home_before == home_after == []
     assert spellbook_before == spellbook_after == []
 
 
@@ -98,41 +77,23 @@ def test_install_aliases_windows_dry_run_path(tmp_path):
 
     The stub is a no-op regardless of ``dry_run``; this test pins that
     contract so that a future implementation that introduces dry_run
-    branching cannot accidentally write under dry_run=True (or vice
-    versa) without updating this test.
+    branching cannot accidentally write without updating this test.
 
-    Mocks ``Path.home`` via tripwire for the same reason as
-    ``test_install_aliases_windows_does_not_write_files``: a regression
-    that wrote to the user's actual rc file would otherwise be invisible.
-    The stub does not call ``Path.home``; the mock is registered with
-    ``required=False`` so the test does not fail when no call is made.
+    Tripwire's guard catches any regression that introduces an unmocked
+    ``Path.home`` call (the SUT runs inside ``with tripwire:`` so an
+    accidental ``Path.home()`` raises ``UnmockedInteractionError``).
     """
-    fake_home = tmp_path / "fake_home"
-    fake_home.mkdir()
-    home_mock = tripwire.mock("pathlib:Path.home")
-    # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
-    # registrations on a MethodProxy, NOT a retroactive modifier and NOT a
-    # method on the _BaseMock returned by tripwire.mock(...). Access the
-    # MethodProxy via `.__call__` and set the flag BEFORE value-stacking so
-    # the FIFO entry inherits required=False. (`home_mock.required(False)`
-    # routes through __getattr__("required") and is then call-time-checked
-    # against an active sandbox, which fails outside `with tripwire:`.)
-    home_mock.__call__.required(False).returns(fake_home)
-
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
 
-    home_before = sorted(fake_home.rglob("*"))
     spellbook_before = sorted(spellbook_dir.rglob("*"))
 
     with tripwire:
         result = install_aliases_windows(spellbook_dir, dry_run=True)
 
-    home_after = sorted(fake_home.rglob("*"))
     spellbook_after = sorted(spellbook_dir.rglob("*"))
 
     assert result == _EXPECTED_NOOP_RESULT
-    assert home_before == home_after == []
     assert spellbook_before == spellbook_after == []
 
 
