@@ -1,6 +1,5 @@
 """Tests for position tracker (last 10 tool actions)."""
 
-import pytest
 
 
 def test_extract_position_last_10_actions():
@@ -118,7 +117,6 @@ def test_extract_position_includes_success_flag():
 def test_extract_position_returns_typed_actions():
     """Test that results conform to ToolAction type."""
     from spellbook.extractors.position import extract_position
-    from spellbook.extractors.types import ToolAction
 
     messages = [
         {

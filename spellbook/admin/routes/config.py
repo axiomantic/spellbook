@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from spellbook.admin.auth import require_admin_auth
@@ -685,7 +685,7 @@ async def update_config_key(
             ).model_dump(),
         )
 
-    result = await asyncio.to_thread(set_config_value, key, body.value)
+    await asyncio.to_thread(set_config_value, key, body.value)
 
     await event_bus.publish(
         Event(
@@ -747,7 +747,7 @@ async def batch_update_config(
             )
 
     if effective_updates:
-        result = await asyncio.to_thread(batch_set_config, effective_updates)
+        await asyncio.to_thread(batch_set_config, effective_updates)
 
         for key, value in effective_updates.items():
             await event_bus.publish(

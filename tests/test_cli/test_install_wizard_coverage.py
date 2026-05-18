@@ -90,7 +90,6 @@ def stub_config_get(monkeypatch):
     state: dict[str, object] = {}
 
     from spellbook.core import config as _core_cfg
-    from installer.wizards import defaults as _defaults_mod
 
     def _fake_get(key):
         return state.get(key)

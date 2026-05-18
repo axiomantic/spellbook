@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from spellbook.cli.commands.config import register, run
+from spellbook.cli.commands.config import register
 
 
 class TestRegister:

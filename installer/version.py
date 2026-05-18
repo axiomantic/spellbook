@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from .demarcation import get_installed_version
 
 
 def read_version(version_file: Path) -> str:

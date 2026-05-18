@@ -4,13 +4,12 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from installer.components.hooks import install_hooks, _get_hook_path
+from installer.components.hooks import _get_hook_path, install_hooks  # noqa: E402  (sys.path mangling above)
 
 
 def _expected_unified_command(prefix="$SPELLBOOK_DIR", config_prefix="$SPELLBOOK_CONFIG_DIR"):

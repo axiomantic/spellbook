@@ -7,7 +7,6 @@ one-shot config->state migration that session_init invokes.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -278,7 +277,7 @@ class TestMigration:
         }
 
     def test_only_dead_keys_present(self, state_paths):
-        from spellbook.core.state import migrate_config_to_state, read_state
+        from spellbook.core.state import migrate_config_to_state
 
         cfg = state_paths["config_dir"] / "spellbook.json"
         cfg.write_text(json.dumps({"tts_enabled": True, "notify_enabled": True}))

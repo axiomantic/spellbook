@@ -25,7 +25,7 @@ from spellbook.memory.store import (
 def db(tmp_path):
     db_path = str(tmp_path / "test.db")
     init_db(db_path)
-    conn = get_connection(db_path)
+    get_connection(db_path)
     yield db_path
     close_all_connections()
 

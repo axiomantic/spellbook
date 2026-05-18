@@ -37,6 +37,7 @@ dev = [
     "fastmcp>=0.4.1",
     "fastapi>=0.136.1",
     "pyyaml>=6.0",
+    "ruff>=0.6.0",
 ]
 docs = [
     "mkdocs>=1.5.0",
@@ -93,3 +94,17 @@ disabled_plugins = ["socket"]
 
 [tool.tripwire.firewall]
 allow = ["socket:*", "database:*", "db:*", "subprocess:*", "http:*", "dns:*"]
+
+[tool.ruff]
+line-length = 100
+# NOTE: target-version follows the code, not requires-python. The codebase
+# uses 3.11 syntax (e.g. `except*` in spellbook/admin/routes/ws.py:88) even
+# though `requires-python = ">=3.10"`. The mismatch is pre-existing and
+# out of scope for the ruff bundling task.
+target-version = "py311"
+extend-exclude = [
+    "spellbook/db/migrations/versions",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

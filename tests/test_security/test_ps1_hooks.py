@@ -12,7 +12,6 @@ This test module validates:
 These tests run on ALL platforms (content validation, not execution).
 """
 
-import os
 from pathlib import Path
 
 import pytest

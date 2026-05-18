@@ -1,10 +1,6 @@
-import os
 import sys
-import pytest
 import json
 import time
-from pathlib import Path
-from datetime import datetime
 
 def test_packet_dataclass():
     """Test Packet dataclass structure."""
@@ -189,7 +185,7 @@ def test_preferences_read_write(tmp_path, monkeypatch):
     prefs = load_preferences()
 
     assert prefs["terminal"]["program"] == "iterm2"
-    assert prefs["terminal"]["detected"] == False
+    assert prefs["terminal"]["detected"] is False
 
 def test_preferences_defaults(tmp_path, monkeypatch):
     """Test default preferences when no file exists."""
@@ -210,7 +206,6 @@ def test_preferences_defaults(tmp_path, monkeypatch):
 def test_metrics_logging(tmp_path, monkeypatch):
     """Test feature metrics logging."""
     from spellbook.health.metrics import log_feature_metrics
-    from datetime import datetime
     import json
 
     # Use tmp_path as home and clear env vars for portable default

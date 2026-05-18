@@ -10,7 +10,6 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-import pytest
 
 from spellbook.memory.utils import derive_namespace_from_cwd
 

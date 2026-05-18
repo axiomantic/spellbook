@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import pytest
 
 
 def _write_claude_memory(dir_path: Path, name: str, frontmatter: str, body: str) -> Path:

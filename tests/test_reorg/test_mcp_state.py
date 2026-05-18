@@ -4,7 +4,6 @@ Verifies that shared MCP server state variables are importable and have
 the expected types and default values.
 """
 
-import pytest
 
 
 class TestMcpStateImports:

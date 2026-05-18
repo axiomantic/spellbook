@@ -36,6 +36,8 @@
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
 - [Sandboxed Usage](#sandboxed-usage)
+  - [Rolling back to vanilla cco](#rolling-back-to-vanilla-cco)
+  - [Windows: alias install + sandbox path TBD](#windows-alias-install--sandbox-path-tbd)
 - [What Spellbook Does](#what-spellbook-does)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
@@ -50,7 +52,7 @@
 - [What's Included](#whats-included)
   - [Skills (57 total)](#skills-57-total)
   - [Commands (96 total)](#commands-96-total)
-  - [Agents (7 total)](#agents-7-total)
+  - [Agents (16 total)](#agents-16-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
   - [AI Coding Assistants](#ai-coding-assistants)
@@ -108,19 +110,38 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 
 ## Sandboxed Usage
 
-Spellbook recommends running AI coding assistants inside [nikvdp/cco](https://github.com/nikvdp/cco)'s sandbox. The `spellbook-sandbox` launcher wraps `cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden.
+Spellbook recommends running AI coding assistants inside a `cco` sandbox. `install.py` writes `~/.local/bin/spellbook-cco` automatically — a wrapper around the audit-pinned [elijahr/cco](https://github.com/elijahr/cco) hardened fork (SHA `d7044ef`). The `spellbook-sandbox` launcher invokes `spellbook-cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden. You do not need to install upstream `cco` yourself.
+
+The `spellbook-cco` wrapper is the only spellbook-supported entry point. Vanilla `cco` exists solely for the post-deploy rollback path described below.
 
 ```bash
-# Install cco first: https://github.com/nikvdp/cco#quick-start
-
-# Launch sandboxed
+# install.py already wrote ~/.local/bin/spellbook-cco; just launch:
 spellbook-sandbox                    # Claude Code (default)
 spellbook-sandbox opencode           # OpenCode CLI
 spellbook-sandbox opencode serve     # OpenCode server (for desktop/web app)
 spellbook-sandbox codex              # Codex
 ```
 
-The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-cco-macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
+The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-spellbook-cco-linux--macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
+
+### Rolling back to vanilla cco
+
+If the hardened fork misbehaves on your machine, set `SPELLBOOK_USE_VANILLA_CCO=1` in your shell rc and re-run `install.py`. The installer skips the `spellbook-cco` wrapper, the alias installer gates on `which cco` instead, and `spellbook-sandbox` routes through vanilla [nikvdp/cco](https://github.com/nikvdp/cco) at its legacy pin. Unset the variable and re-run `install.py` to return to the supported path.
+
+### Windows: alias install + sandbox path TBD
+
+Windows native sandboxing and alias installation are deferred to a later work item (open question Q-O). They are not in scope for the current security architecture phase.
+
+Current behavior on Windows:
+
+- The installer's `install_aliases_windows()` is an intentional noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
+- `spellbook-cco` is not written on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
+- `cmd.exe` is a known limitation: `doskey` macros do not persist across cmd sessions without an `AutoRun` registry edit, so cmd users are explicitly not served by the alias installer.
+
+Windows users have two options until the Windows path lands:
+
+- Invoke `spellbook-sandbox` directly, only meaningful if `spellbook-cco` (or vanilla `cco` under `SPELLBOOK_USE_VANILLA_CCO=1`) is already on `PATH`.
+- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option. Run `install.py` inside the WSL Linux distro and the installer will write `spellbook-cco` there automatically.
 
 ## What Spellbook Does
 
@@ -270,6 +291,9 @@ Reusable workflows for structured development:
 [testing-strategy]: https://axiomantic.github.io/spellbook/latest/skills/testing-strategy/
 [opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
+[agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
+[canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
+[permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
@@ -495,8 +519,11 @@ Reusable workflows for structured development:
 [/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
 [/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
 [/write-readme]: https://axiomantic.github.io/spellbook/latest/commands/write-readme/
+[/a2a]: https://axiomantic.github.io/spellbook/latest/commands/a2a/
+[/canvas]: https://axiomantic.github.io/spellbook/latest/commands/canvas/
+[/crystallize-consolidate]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-consolidate/
 
-### Agents (7 total)
+### Agents (16 total)
 
 | Agent | Description |
 |-------|-------------|
@@ -507,6 +534,15 @@ Reusable workflows for structured development:
 | [justice-resolver] | Tarot: Conflict synthesizer |
 | [lovers-integrator] | Tarot: Integration specialist |
 | [queen-affective] | Tarot: Emotional state monitor |
+| [git-committer] | Narrowing-role: git commit operations |
+| [git-pusher] | Narrowing-role: git push operations |
+| [implementer] | Narrowing-role: code implementation |
+| [jira-mutator] | Narrowing-role: JIRA write operations |
+| [jira-reader] | Narrowing-role: JIRA read operations |
+| [pr-creator] | Narrowing-role: PR creation |
+| [pr-merger] | Narrowing-role: PR merge operations |
+| [test-runner] | Narrowing-role: test execution |
+| [web-researcher] | Narrowing-role: web research |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -517,6 +553,15 @@ Reusable workflows for structured development:
 [justice-resolver]: https://axiomantic.github.io/spellbook/latest/agents/justice-resolver/
 [lovers-integrator]: https://axiomantic.github.io/spellbook/latest/agents/lovers-integrator/
 [queen-affective]: https://axiomantic.github.io/spellbook/latest/agents/queen-affective/
+[git-committer]: https://axiomantic.github.io/spellbook/latest/agents/git-committer/
+[git-pusher]: https://axiomantic.github.io/spellbook/latest/agents/git-pusher/
+[implementer]: https://axiomantic.github.io/spellbook/latest/agents/implementer/
+[jira-mutator]: https://axiomantic.github.io/spellbook/latest/agents/jira-mutator/
+[jira-reader]: https://axiomantic.github.io/spellbook/latest/agents/jira-reader/
+[pr-creator]: https://axiomantic.github.io/spellbook/latest/agents/pr-creator/
+[pr-merger]: https://axiomantic.github.io/spellbook/latest/agents/pr-merger/
+[test-runner]: https://axiomantic.github.io/spellbook/latest/agents/test-runner/
+[web-researcher]: https://axiomantic.github.io/spellbook/latest/agents/web-researcher/
 
 ## Creative Modes
 

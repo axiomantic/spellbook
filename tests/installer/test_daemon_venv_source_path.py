@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
 from typing import List
 
 import pytest
@@ -64,8 +63,6 @@ def config_dir(tmp_path, monkeypatch):
     cfg = tmp_path / "spellbook-config"
     cfg.mkdir()
     import installer.config as config_mod
-    import installer.components.source_link as source_link_mod
-    import installer.components.hooks as hooks_mod
     monkeypatch.setattr(config_mod, "get_spellbook_config_dir", lambda: cfg)
     # source_link now resolves via installer.config at call time, patched above
     # hooks now resolve via installer.config at call time, patched above

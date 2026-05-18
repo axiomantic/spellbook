@@ -1,6 +1,5 @@
 """Tests for tooling discovery system."""
 
-import pytest
 import yaml
 from pathlib import Path
 

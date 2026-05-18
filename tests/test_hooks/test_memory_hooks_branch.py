@@ -1,9 +1,7 @@
 """Tests for branch and namespace handling in memory hooks via unified hook."""
 
-import json
 import os
 import subprocess
-import sys
 
 import pytest
 

@@ -5,7 +5,6 @@ Following TDD: these tests are written BEFORE implementation.
 
 import pytest
 import json
-from pathlib import Path
 
 
 class TestValidatorDataclass:
@@ -274,7 +273,7 @@ class TestValidatorsForStage:
         result = validators_for_stage("DISCOVER")
 
         # DISCOVER is early stage - should have requirements clarity if applicable
-        validator_ids = [v.id for v in result]
+        [v.id for v in result]
         # At minimum, we should get an empty list or design validators
         assert isinstance(result, list)
 
@@ -369,7 +368,7 @@ class TestResolveValidatorOrder:
 
     def test_resolve_validator_order_cycle_detection(self):
         """resolve_validator_order must detect circular dependencies."""
-        from spellbook.forged.validators import resolve_validator_order, VALIDATOR_CATALOG, Validator
+        from spellbook.forged.validators import resolve_validator_order, VALIDATOR_CATALOG
 
         # This test verifies the function would detect cycles if they existed
         # Since VALIDATOR_CATALOG shouldn't have cycles, we test that valid input works
@@ -510,13 +509,12 @@ class TestTransformLevelHandling:
     def test_transform_level_mechanical_can_auto_apply(self, tmp_path):
         """Validators with transform_level='mechanical' can auto-apply fixes."""
         from spellbook.forged.validators import (
-            validator_invoke,
             VALIDATOR_CATALOG,
             get_transform_level,
         )
 
         # Check if there are any mechanical validators
-        mechanical_validators = [
+        [
             vid for vid, v in VALIDATOR_CATALOG.items()
             if v.transform_level == "mechanical"
         ]

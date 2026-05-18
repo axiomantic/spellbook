@@ -12,7 +12,6 @@ from sqlalchemy import select
 
 from spellbook.db.forged_models import (
     ForgeToken,
-    GateCompletion,
     IterationState as IterationStateORM,
     ForgeReflection,
 )

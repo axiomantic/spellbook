@@ -6,8 +6,11 @@ launcher into the user's shell rc file. Uses demarcated sections for
 idempotent install/uninstall.
 """
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Demarcation markers for shell rc files (# comment style, matching
 # the pattern used by installer/platforms/codex.py for TOML files).
@@ -102,7 +105,7 @@ def install_aliases(
 
         {
             "installed": bool,
-            "rc_path": str,
+            "rc_path": str | None,
             "aliases": list[str],
             "skipped_reason": str | None,
         }
@@ -144,6 +147,60 @@ def install_aliases(
         "rc_path": str(rc_path),
         "aliases": ["claude", "opencode"],
         "skipped_reason": None,
+    }
+
+
+def install_aliases_windows(
+    spellbook_dir: Path, dry_run: bool = False
+) -> dict:
+    """Install Windows shell aliases for spellbook tools.
+
+    Stub for WI-7: Windows alias install + sandbox path is deferred to a
+    later work item (Q-O in the security architecture plan). cco does not
+    have a documented Windows backend and the spellbook-sandbox script is
+    POSIX-only, so there is no production-ready alias target for Windows.
+
+    Returns a noop result matching ``install_aliases()``'s return shape so
+    callers can dispatch on ``get_platform()`` without special-casing the
+    return type. Does not raise. Performs no filesystem writes regardless
+    of ``dry_run``.
+
+    When implementing for Q-O, the production version should:
+
+    1. Detect PowerShell ``$PROFILE`` location for the active user.
+    2. Reuse the demarcation marker pattern (``_START_MARKER`` /
+       ``_END_MARKER``) from :func:`install_aliases` for idempotency and
+       clean uninstall.
+    3. Return the same dict shape with ``installed=True`` and
+       ``rc_path=str(profile_path)`` on success.
+
+    Returns::
+
+        {
+            "installed": False,
+            "rc_path": None,
+            "aliases": [],
+            "skipped_reason": "Windows alias install is deferred to a later work item (Q-O)",
+        }
+    """
+    # ``spellbook_dir`` is accepted to mirror ``install_aliases()``'s
+    # signature so callers can dispatch on ``get_platform()`` without
+    # per-platform argument plumbing. It is intentionally unused while
+    # the Windows path is deferred to Q-O. ``dry_run`` is surfaced in
+    # the log message for operator visibility.
+    del spellbook_dir
+
+    logger.info(
+        "Windows alias install (dry_run=%s) is deferred to a later work item "
+        "(Q-O); see install README for status.",
+        dry_run,
+    )
+
+    return {
+        "installed": False,
+        "rc_path": None,
+        "aliases": [],
+        "skipped_reason": "Windows alias install is deferred to a later work item (Q-O)",
     }
 
 

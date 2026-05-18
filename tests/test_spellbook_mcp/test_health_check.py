@@ -1,7 +1,5 @@
 """Tests for MCP health check tool and CLI script."""
 
-import json
-import os
 import pytest
 import time
 from pathlib import Path
@@ -99,8 +97,6 @@ class TestHealthCheckMCPTool:
         version_file.write_text("1.2.3\n")
 
         # Patch the __file__ lookup to use our temp path
-        from spellbook.mcp.tools import health as _health_mod; original_get_version = _health_mod._get_version
-
         def mock_get_version():
             return "1.2.3"
 
@@ -417,7 +413,6 @@ class TestGetVersion:
 
     def test_reads_version_from_file(self, tmp_path, monkeypatch):
         """Test reading version from .version file."""
-        from spellbook import server
 
         # Monkeypatch __file__ to use tmp_path
         fake_server_file = tmp_path / "spellbook" / "mcp" / "tools" / "health.py"
@@ -428,7 +423,8 @@ class TestGetVersion:
         version_file.write_text("2.0.0\n")
 
         # We need to temporarily replace the __file__ reference
-        from spellbook.mcp.tools import health as _h_mod; original_file = _h_mod.__file__
+        from spellbook.mcp.tools import health as _h_mod
+        original_file = _h_mod.__file__
 
         try:
             _h_mod.__file__ = str(fake_server_file)
@@ -439,14 +435,14 @@ class TestGetVersion:
 
     def test_returns_unknown_when_file_missing(self, tmp_path, monkeypatch):
         """Test that missing .version file returns unknown."""
-        from spellbook import server
 
         fake_server_file = tmp_path / "spellbook" / "mcp" / "tools" / "health.py"
         fake_server_file.parent.mkdir(parents=True)
         fake_server_file.touch()
         # Don't create .version file
 
-        from spellbook.mcp.tools import health as _h_mod; original_file = _h_mod.__file__
+        from spellbook.mcp.tools import health as _h_mod
+        original_file = _h_mod.__file__
         monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
 
         try:
@@ -458,7 +454,6 @@ class TestGetVersion:
 
     def test_uses_spellbook_dir_env_fallback(self, tmp_path, monkeypatch):
         """Test that SPELLBOOK_DIR env var is used as fallback."""
-        from spellbook import server
 
         # Set up a temp dir with .version
         spellbook_dir = tmp_path / "spellbook"
@@ -470,7 +465,8 @@ class TestGetVersion:
         fake_server_file.parent.mkdir(parents=True)
         fake_server_file.touch()
 
-        from spellbook.mcp.tools import health as _h_mod; original_file = _h_mod.__file__
+        from spellbook.mcp.tools import health as _h_mod
+        original_file = _h_mod.__file__
         monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
 
         try:
@@ -599,7 +595,6 @@ class TestHealthCheckCLI:
         """Test platform detection prefers claude."""
         import shutil
 
-        original_which = shutil.which
 
         def mock_which(cmd):
             if cmd == "claude":
@@ -615,7 +610,6 @@ class TestHealthCheckCLI:
         """Test platform detection falls back to gemini."""
         import shutil
 
-        original_which = shutil.which
 
         def mock_which(cmd):
             if cmd == "gemini":

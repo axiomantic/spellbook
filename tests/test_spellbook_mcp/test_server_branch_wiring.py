@@ -1,6 +1,5 @@
 """Tests for branch wiring in server.py REST endpoints and MCP tools."""
 
-import json
 from types import SimpleNamespace
 
 import pytest

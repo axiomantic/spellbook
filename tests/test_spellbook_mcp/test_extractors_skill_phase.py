@@ -1,6 +1,5 @@
 """Tests for skill phase extraction."""
 
-import pytest
 
 
 def test_extract_skill_phase_no_skill_invocation():

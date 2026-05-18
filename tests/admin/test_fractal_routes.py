@@ -3,7 +3,6 @@
 import asyncio
 from types import SimpleNamespace
 
-import pytest
 
 from spellbook.admin.events import Event
 

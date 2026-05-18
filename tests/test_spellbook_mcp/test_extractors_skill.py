@@ -1,6 +1,5 @@
 """Tests for active skill extraction."""
 
-import pytest
 
 
 def test_extract_skill_from_tool_call():

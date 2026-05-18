@@ -9,7 +9,6 @@ that switching worktrees does not leave stale references behind.
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -85,7 +84,7 @@ def test_unchanged_when_already_correct(config_dir, source_dir):
             "Windows due to short-name / resolve() normalization. The "
             "other source_link tests cover the same code path."
         )
-    from installer.components.source_link import ensure_source_link, SourceLinkResult
+    from installer.components.source_link import ensure_source_link
 
     link_path = config_dir / "source"
     # Use the cross-platform helper so the link is created the same way

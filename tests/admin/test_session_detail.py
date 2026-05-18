@@ -7,7 +7,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
 
 
 def _write_session_file(project_dir: Path, session_id: str, messages: list[dict]) -> Path:

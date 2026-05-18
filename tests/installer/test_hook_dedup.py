@@ -9,7 +9,6 @@ accumulating multiple hook entries over time.
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -19,8 +18,6 @@ def config_dir(tmp_path, monkeypatch):
     cfg = tmp_path / "spellbook-config"
     cfg.mkdir()
     import installer.config as config_mod
-    import installer.components.hooks as hooks_mod
-    import installer.components.source_link as source_link_mod
     monkeypatch.setattr(config_mod, "get_spellbook_config_dir", lambda: cfg)
     # hooks now resolve via installer.config at call time, patched above
     # source_link now resolves via installer.config at call time, patched above

@@ -1,7 +1,6 @@
 """Test that MCP server does NOT expose skill tools after cleanup."""
 
 import pytest
-from pathlib import Path
 
 
 def test_skill_tools_removed_from_server():
@@ -49,7 +48,7 @@ def test_skill_ops_module_does_not_exist():
     """Verify skill_ops.py has been deleted."""
     # Try to import skill_ops - should fail
     with pytest.raises(ImportError):
-        from spellbook import skill_ops
+        from spellbook import skill_ops  # noqa: F401  (import IS the SUT)
 
 
 def test_no_skill_ops_imports_in_server():

@@ -4,7 +4,6 @@ Verifies that the routes module is importable and contains the expected
 custom route handler functions.
 """
 
-import pytest
 
 
 class TestMcpRoutesImportable:

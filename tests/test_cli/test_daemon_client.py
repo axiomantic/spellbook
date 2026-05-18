@@ -64,7 +64,6 @@ class TestStreamEvents:
 
     def test_stream_events_is_async(self):
         """stream_events should be an async generator or coroutine."""
-        import asyncio
         import inspect
 
         from spellbook.cli.daemon_client import stream_events

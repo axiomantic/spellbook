@@ -2,7 +2,6 @@
 
 import pytest
 import json
-from pathlib import Path
 
 
 def test_load_jsonl_basic(tmp_path):

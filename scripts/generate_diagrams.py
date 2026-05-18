@@ -28,9 +28,9 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
-from spellbook.sdk.unified import get_agent_client, AgentOptions, AgentMessage
+from spellbook.sdk.unified import get_agent_client, AgentOptions
 
 from diagram_config import (
     AGENTS_DIR,
@@ -577,6 +577,17 @@ SOURCE DIFF:
 Output the patched diagram content:"""
 
 
+def _get_repo_root() -> Path:
+    """Return the repo root. Indirection layer so tests can mock via tripwire.
+
+    The bare module-level ``REPO_ROOT`` constant is not tripwire-mockable
+    (tripwire only intercepts callables). Functions that need to operate
+    relative to the repo root should route through this helper rather than
+    reading ``REPO_ROOT`` directly when they need to be unit-testable.
+    """
+    return REPO_ROOT
+
+
 def get_source_diff(source_path: Path) -> str:
     """Get the git diff for a source file.
 
@@ -585,13 +596,14 @@ def get_source_diff(source_path: Path) -> str:
 
     Returns the diff text, or empty string if no diff is available.
     """
-    source_rel = str(source_path.relative_to(REPO_ROOT))
+    repo_root = _get_repo_root()
+    source_rel = str(source_path.relative_to(repo_root))
 
     # Try uncommitted changes first
     try:
         result = subprocess.run(
             ["git", "diff", "HEAD", "--", source_rel],
-            capture_output=True, text=True, cwd=REPO_ROOT,
+            capture_output=True, text=True, cwd=repo_root,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -602,7 +614,7 @@ def get_source_diff(source_path: Path) -> str:
     try:
         result = subprocess.run(
             ["git", "diff", "HEAD~1", "--", source_rel],
-            capture_output=True, text=True, cwd=REPO_ROOT,
+            capture_output=True, text=True, cwd=repo_root,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -932,7 +944,7 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 
-async def main_async() -> int:
+async def main_async(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
     )
@@ -993,7 +1005,7 @@ async def main_async() -> int:
         action="store_true",
         help="Stamp stale diagrams as fresh without regenerating (just update hash)",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Discover all items
     all_skills = discover_skills()
@@ -1119,13 +1131,13 @@ async def main_async() -> int:
                         answer = input("  [S]tamp (enter) / [g]enerate / [q]uit: ").strip().lower()
                         if answer in ("s", "stamp", ""):
                             stamped.append((item, current_hash))
-                            print(f"  -> Stamped as fresh (non-structural change)")
+                            print("  -> Stamped as fresh (non-structural change)")
                             break
                         if answer in ("g", "generate"):
                             to_generate.append((item, current_hash))
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 's', 'g', or 'q'.")
                 elif classification == "PATCH":
@@ -1139,7 +1151,7 @@ async def main_async() -> int:
                             to_generate.append((item, current_hash))
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 'p', 'g', or 'q'.")
                 else:  # REGENERATE
@@ -1150,10 +1162,10 @@ async def main_async() -> int:
                             break
                         if answer in ("s", "skip"):
                             skipped.append((item, current_hash))
-                            print(f"  -> Will skip (stamp on completion)")
+                            print("  -> Will skip (stamp on completion)")
                             break
                         if answer in ("q", "quit"):
-                            print(f"\nAborted. No changes made.")
+                            print("\nAborted. No changes made.")
                             return 0
                         print("  Please enter 'g', 's', or 'q'.")
             else:
@@ -1165,10 +1177,10 @@ async def main_async() -> int:
                         break
                     if answer in ("s", "skip"):
                         skipped.append((item, current_hash))
-                        print(f"  -> Will skip (stamp on completion)")
+                        print("  -> Will skip (stamp on completion)")
                         break
                     if answer in ("q", "quit"):
-                        print(f"\nAborted. No changes made.")
+                        print("\nAborted. No changes made.")
                         return 0
                     print("  Please enter 'y', 's', or 'q'.")
 
@@ -1200,7 +1212,7 @@ async def main_async() -> int:
             )
             if patched_content is not None:
                 # Build output with metadata header
-                source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                source_rel = str(item.source_path.relative_to(_get_repo_root()))
                 now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                 meta = {
                     "source": source_rel,
@@ -1231,7 +1243,7 @@ async def main_async() -> int:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                     item.diagram_path.write_text(output_content, encoding="utf-8")
                     generated_count += 1
-                    print(f" done (regenerated)")
+                    print(" done (regenerated)")
                 else:
                     failed_count += 1
                     print(f" FAILED: {result.message}")
@@ -1252,7 +1264,7 @@ async def main_async() -> int:
                 print(f" done ({result.message})")
             elif result.status == "failed":
                 failed_count += 1
-                print(f" FAILED")
+                print(" FAILED")
                 print(f"         Error: {result.message}")
             else:
                 print(f" {result.status}: {result.message}")
@@ -1310,7 +1322,7 @@ async def main_async() -> int:
                     provider_args=args.provider_args,
                 )
                 if patched_content is not None:
-                    source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                    source_rel = str(item.source_path.relative_to(_get_repo_root()))
                     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                     meta = {
                         "source": source_rel,
@@ -1349,7 +1361,7 @@ async def main_async() -> int:
             print(f" done ({result.message})")
         elif result.status == "failed":
             failed_count += 1
-            print(f" FAILED")
+            print(" FAILED")
             print(f"         Error: {result.message}")
         else:
             print(f" {result.status}: {result.message}")

@@ -3,13 +3,11 @@
 import random
 import string
 
-import pytest
 
 from spellbook.gates.rules import (
     check_patterns,
     INJECTION_RULES,
     shannon_entropy,
-    Severity,
 )
 
 

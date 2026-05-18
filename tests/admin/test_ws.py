@@ -1,13 +1,12 @@
 """WebSocket route tests: auth, event delivery, ping/pong."""
 
-import asyncio
 
 import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
 from spellbook.admin.auth import create_ws_ticket
-from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
+from spellbook.admin.events import Event, Subsystem, event_bus
 
 
 def test_ws_rejects_missing_ticket(admin_app):

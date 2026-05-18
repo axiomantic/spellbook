@@ -11,7 +11,7 @@ __all__ = [
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastmcp import Context
 
@@ -22,7 +22,6 @@ from spellbook.core.path_utils import (
     get_project_path_from_context,
 )
 from spellbook.sessions.parser import list_sessions_with_samples, split_by_char_limit
-from spellbook.daemon.terminal import detect_terminal, spawn_terminal_window
 from spellbook.sdk.unified import get_agent_client, AgentOptions
 
 

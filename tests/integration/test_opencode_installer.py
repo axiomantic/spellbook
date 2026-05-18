@@ -122,7 +122,7 @@ class TestOpenCodeInstaller:
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
-        results = installer.install()
+        installer.install()
 
         # Check opencode.json was created
         opencode_json = opencode_config_dir / "opencode.json"

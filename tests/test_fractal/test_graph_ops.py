@@ -3,7 +3,6 @@
 Tests cover create_graph, resume_graph, delete_graph, and update_graph_status.
 """
 
-import pytest
 
 
 class TestCreateGraph:

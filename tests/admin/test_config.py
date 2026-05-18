@@ -1,6 +1,5 @@
 """Tests for config editor API routes."""
 
-import json
 
 import pytest
 

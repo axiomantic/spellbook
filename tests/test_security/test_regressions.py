@@ -6,7 +6,6 @@ These are regression tests: if a rule is accidentally weakened or removed,
 the corresponding test will fail.
 """
 
-import pytest
 
 from spellbook.gates.rules import (
     EXFILTRATION_RULES,

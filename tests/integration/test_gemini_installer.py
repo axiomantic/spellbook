@@ -1,7 +1,5 @@
 """Integration tests for Gemini installer."""
 
-import pytest
-from pathlib import Path
 from installer.platforms.gemini import GeminiInstaller
 
 

@@ -6,7 +6,6 @@ plus a convenience check for whether the daemon process is running.
 
 from __future__ import annotations
 
-from pathlib import Path
 
 from spellbook.core.compat import _pid_exists
 from spellbook.daemon._paths import get_pid_file

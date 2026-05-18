@@ -12,9 +12,7 @@ Validates:
 - Security events are logged on rejection
 """
 
-import hashlib
 import json
-import sqlite3
 
 import pytest
 

@@ -231,7 +231,7 @@ class TestParseDiffHunks:
     """Test unified diff parsing into structured DiffHunk objects."""
 
     def test_parse_single_file_two_hunks(self):
-        from spellbook.memory.diff_symbols import DiffHunk, parse_diff_hunks
+        from spellbook.memory.diff_symbols import parse_diff_hunks
 
         hunks = parse_diff_hunks(SAMPLE_UNIFIED_DIFF)
 
@@ -393,7 +393,6 @@ class TestExtractSymbolsFromHunkPython:
     def test_extract_added_class(self):
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -430,7 +429,6 @@ class TestExtractSymbolsFromHunkPython:
     def test_extract_removed_function(self):
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -469,7 +467,6 @@ class TestExtractSymbolsFromHunkPython:
         """When same symbol appears in both added and removed lines, it's modified."""
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -526,7 +523,6 @@ class TestExtractSymbolsFromHunkPython:
         """Methods inside a class context should be identified as methods."""
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -563,7 +559,6 @@ class TestExtractSymbolsFromHunkJS:
     def test_extract_added_export_function(self):
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -592,7 +587,6 @@ class TestExtractSymbolsFromHunkJS:
     def test_extract_added_class_method(self):
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -620,7 +614,6 @@ class TestExtractSymbolsFromHunkJS:
     def test_extract_modified_const(self):
         from spellbook.memory.diff_symbols import (
             DiffHunk,
-            SymbolChange,
             extract_symbols_from_hunk,
         )
 
@@ -839,7 +832,7 @@ class TestExtractChangedSymbols:
         """End-to-end: git repo with Python changes produces SymbolChange objects."""
         import subprocess
 
-        from spellbook.memory.diff_symbols import SymbolChange, extract_changed_symbols
+        from spellbook.memory.diff_symbols import extract_changed_symbols
 
         repo = str(tmp_path)
         subprocess.run(["git", "init"], cwd=repo, capture_output=True)

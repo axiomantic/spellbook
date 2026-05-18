@@ -1,6 +1,5 @@
 """Tests for code-review mode router."""
 
-import pytest
 
 from spellbook.code_review.router import (
     ModeHandler,

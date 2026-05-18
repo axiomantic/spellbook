@@ -2,7 +2,6 @@
 
 import json
 import logging
-import pytest
 from pathlib import Path
 
 
@@ -11,7 +10,7 @@ class TestConfigGet:
 
     def test_returns_none_when_file_missing(self, tmp_path, monkeypatch):
         """Test that missing config file returns None."""
-        from spellbook.core.config import config_get, get_config_path
+        from spellbook.core.config import config_get
 
         # Point to a non-existent config
         fake_config = tmp_path / "nonexistent" / "spellbook.json"
@@ -1001,7 +1000,7 @@ class TestTelemetryConfig:
 
     def test_telemetry_enable_with_custom_endpoint(self, tmp_path, monkeypatch):
         """Test telemetry_enable with custom endpoint URL."""
-        from spellbook.core.config import telemetry_enable, telemetry_status
+        from spellbook.core.config import telemetry_enable
         from spellbook.core.db import init_db
 
         db_path = str(tmp_path / "test.db")

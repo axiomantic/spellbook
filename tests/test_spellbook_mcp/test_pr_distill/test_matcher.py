@@ -1,7 +1,6 @@
 """Tests for pr_distill pattern matching."""
 
 import re
-import pytest
 
 from spellbook.pr_distill.matcher import (
     check_pattern_match,

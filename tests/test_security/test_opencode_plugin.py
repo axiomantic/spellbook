@@ -9,7 +9,6 @@ The installer (OpenCodeInstaller) should:
 - Be idempotent (re-running produces identical file)
 """
 
-import json
 import pytest
 from pathlib import Path
 
@@ -174,7 +173,7 @@ class TestInstallerPluginInstallation:
         ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
         with tripwire:
-            results = installer.install()
+            installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
         target = config_dir / "plugins" / "spellbook-security.ts"
@@ -235,7 +234,7 @@ class TestInstallerPluginInstallation:
         ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context").returns("# Context")
         with tripwire:
-            results = installer.install()
+            installer.install()
             results2 = installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
@@ -251,7 +250,7 @@ class TestInstallerPluginInstallation:
         ctx_mock = tripwire.mock("installer.platforms.opencode:generate_codex_context")
         ctx_mock.returns("# Context")
         with tripwire:
-            results = installer.install()
+            installer.install()
         ctx_mock.assert_call(args=(IsInstance(Path),), kwargs={})
 
         target = config_dir / "plugins" / "spellbook-security.ts"

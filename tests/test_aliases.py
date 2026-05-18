@@ -13,6 +13,10 @@ from installer.components.aliases import (
     uninstall_aliases,
 )
 
+# These tests assume POSIX rc-file paths (.zshrc, .bashrc, fish config.fish)
+# and "\n" line endings. They are not valid on Windows.
+pytestmark = pytest.mark.posix_only
+
 
 # ---------------------------------------------------------------------------
 # get_shell_rc_path

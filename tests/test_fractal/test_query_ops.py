@@ -982,9 +982,7 @@ class TestGetReadyToSynthesize:
     async def test_ready_basic(self, branching_graph):
         """Node with all children synthesized/saturated is returned."""
         from spellbook.fractal.node_ops import (
-            add_node,
             mark_saturated,
-            synthesize_node,
         )
         from spellbook.fractal.query_ops import get_ready_to_synthesize
 

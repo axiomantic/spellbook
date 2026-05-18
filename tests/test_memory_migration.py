@@ -9,13 +9,11 @@ Covers:
 - verify_migration: count comparison, hash matching, discrepancy detection
 """
 
-import datetime
 import hashlib
 import json
 import os
 import sqlite3
 
-import pytest
 import yaml
 
 

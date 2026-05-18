@@ -14,16 +14,13 @@ only the OS abstraction layer (installer.compat) from installer/; higher-level
 installer logic is accessed by shelling out to install.py.
 """
 
-import json
 import logging
-import os
 import re
 import shutil
 import subprocess
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from spellbook.core.compat import CrossPlatformLock, get_config_dir
 

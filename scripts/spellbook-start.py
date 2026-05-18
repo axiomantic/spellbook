@@ -7,7 +7,6 @@ Reads config and outputs session startup data including fun-mode selections.
 import json
 import os
 import random
-import sys
 from pathlib import Path
 
 

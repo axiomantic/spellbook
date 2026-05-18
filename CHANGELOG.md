@@ -361,10 +361,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bash policy unified across Claude and Gemini paths.** Renamed
   `hooks/gemini-policy.toml` to `hooks/bash-policy.toml`. Added a TOML
   loader to `spellbook/gates/rules.py` so the Claude path picks up the
-  supplemental SB-BASH-* rules previously only consumed by the Gemini
+  supplemental `SB-BASH-*` rules previously only consumed by the Gemini
   installer. Old filename is preserved as a migration alias for one
   release. SB-BASH-001..009 ship as additional defense-in-depth findings
-  on top of the existing BASH-* / EXF-* regex set.
+  on top of the existing `BASH-*` / `EXF-*` regex set.
 - **PR dance command** (`commands/pr-dance.md`) now explicitly refuses
   to merge under any session-level autonomy directive ("yolo", "do the
   PR dance autonomously", "just land it", "go go go"). Autonomy scopes
@@ -575,6 +575,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   drops the rebrand-transition section from `.gemini/styleguide.md`
   (one reviewer guardrail mentioning bigfoot is retained so PRs
   reintroducing the old name are flagged).
+
+### Added
+
+- **Narrowing-role subagents (security architecture Phase 5).** Nine
+  new agents in `agents/` define narrowed tool surfaces for common
+  development verbs: `implementer` for worktree edits, `web-researcher`
+  (requires Phase 8 devcontainer to be safe in production),
+  `git-committer` and `git-pusher` for split local/remote git, separate
+  `pr-creator`/`pr-merger` for `gh pr` operations, `jira-reader`/
+  `jira-mutator` for Atlassian MCP read vs. write, and `test-runner`
+  for scoped test invocations. Each agent's `tools:` frontmatter is a
+  *narrowing* list — `(parent_tools ∩ frontmatter_tools)` — and never
+  grants capabilities the parent does not already hold. Agents are
+  discovered via `$CLAUDE_CONFIG_DIR/agents/`; spellbook's installer
+  now creates per-config-dir symlinks back to `$SPELLBOOK_DIR/agents/`,
+  with idempotent install/uninstall that preserves user-authored agent
+  files. Schema-validation tests guard the canonical 5-section body
+  contract (`Purpose` / `Tools` / `Output Schema` / `Guardrails` /
+  `Constraints`) and SHA-256-snapshot the existing 7 agents to catch
+  unintended modification.
+
+- **`installer/components/spellbook_cco.py` component (security
+  architecture Phase 7).** New installer component clones the
+  `elijahr/cco` fork at audit-pinned SHA `d7044ef` to
+  `~/.local/spellbook/cco/` and writes the
+  `~/.local/bin/spellbook-cco` wrapper. Pin verification is enforced
+  by default; `SPELLBOOK_INSTALLER_SKIP_FORK_PIN=1` bypasses it with
+  a stderr `WARNING` line so accidental drift is loud.
+- **macOS L5 sandbox layer ships via the fork's hardened SBPL
+  profile.** The `spellbook-cco` wrapper applies the fork's profile,
+  which adds DYLD environment scrub, file-read denies for
+  user-writable dylib paths (preventing `DYLD_INSERT_LIBRARIES`-style
+  injection), scoped `process-exec` deny+re-allow, and
+  `mach-priv-task-port` deny. macOS now reaches feature parity with
+  the Linux sandbox path rather than no-opping.
+- **`SPELLBOOK_SANDBOX_SKIP_PIN=1` escape hatch.** Renamed from
+  `SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1`; the old name is still accepted
+  for one release with a stderr `DEPRECATION` warning, then removed.
+
+### Changed
+
+- **`installer/platforms/claude_code.py` macOS path.** No longer
+  no-ops; chains `install_spellbook_cco` then `install_aliases` so
+  macOS users get the same hardened sandbox surface as Linux users.
+- **`installer/tui.py` and `install.py` detection.** The TUI / CLI
+  installer now probes for `spellbook-cco` on `PATH` instead of
+  vanilla `cco`, so re-runs of the installer correctly identify
+  prior spellbook-managed installs.
+- **`scripts/spellbook-sandbox` gating.** The sandbox launcher gates
+  on `spellbook-cco` (not vanilla `cco`) and verifies the audit-pinned
+  `d7044ef` SHA by parsing `spellbook-cco --version` output. A version
+  mismatch fails closed with a remediation hint.
+- **`docs/security.md` retitled.** Section is now "Sandboxing with
+  spellbook-cco (Linux + macOS)". Manual install instructions removed
+  in favor of `install.py`, which is now the single source of truth
+  for sandbox setup on both platforms.
+- **`README.md` cco onboarding rewritten.** Instructions reference
+  `spellbook-cco` rather than vanilla `cco`, and point at `install.py`
+  instead of the upstream `nikvdp/cco` repo for installation.
+
+### Rollback
+
+- **`SPELLBOOK_USE_VANILLA_CCO=1` falls back to vanilla
+  `nikvdp/cco`.** If the hardened fork breaks something on your
+  system, set this env var to revert to the upstream vanilla `cco`
+  binary. **This bypasses the hardened SBPL profile and DYLD scrub**,
+  so only use it long enough to recover, then unset the env var and
+  re-run `install.py` so the spellbook-managed sandbox is restored.
 
 ## [0.56.0] - 2026-04-30
 

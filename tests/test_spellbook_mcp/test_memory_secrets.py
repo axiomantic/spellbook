@@ -1,6 +1,5 @@
 """Tests for secret detection in memory content."""
 
-import pytest
 from spellbook.memory.secrets import scan_for_secrets
 
 

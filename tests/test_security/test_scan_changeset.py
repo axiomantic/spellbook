@@ -20,9 +20,9 @@ import tripwire
 import pytest
 from dirty_equals import IsInstance
 
-pytestmark = pytest.mark.integration
-
 from spellbook.gates.scanner import main as scanner_main
+
+pytestmark = pytest.mark.integration
 
 
 # ---------------------------------------------------------------------------

@@ -12,7 +12,6 @@ Validates that analyze_consent_gap():
 
 import textwrap
 
-import pytest
 
 from spellbook.gates.rules import Category, Severity
 

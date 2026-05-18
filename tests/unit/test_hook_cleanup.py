@@ -1,6 +1,5 @@
 """Verify old shell hooks are removed and only unified hook remains."""
 
-import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

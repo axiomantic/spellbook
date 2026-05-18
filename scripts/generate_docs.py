@@ -6,7 +6,6 @@
 """
 Generate documentation pages from SKILL.md, command, and agent files.
 """
-import sys
 from pathlib import Path
 
 import yaml
@@ -141,7 +140,7 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
     if description:
         # Frame the description as an auto-invocation trigger (descriptions are
         # written for the AI assistant, not for human readers)
-        parts.append(f"\n**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.\n")
+        parts.append("\n**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.\n")
         parts.append(f"\n> {description.rstrip()}\n")
     if attribution:
         parts.append(f"\n{attribution}")

@@ -176,7 +176,7 @@ def _log_hook_error(event: str, tool: str, exc: BaseException) -> None:
 
     tb = "".join(_tb.format_exception(type(exc), exc, exc.__traceback__))
     payload = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": _utcnow().isoformat(),
         "event": f"{event}:{tool}",
         "traceback": tb,
     }
@@ -1514,12 +1514,25 @@ STOP_HARVEST_CACHE_PATH = (
 )
 
 
+def _get_stop_harvest_cache_path() -> Path:
+    """Return the path to the Stop-hook harvest idempotency cache.
+
+    Indirection layer so tests can mock via tripwire. The module-level
+    ``STOP_HARVEST_CACHE_PATH`` constant is computed at import time and
+    bound by ``Path.home()`` resolved then; tripwire cannot intercept
+    bare attribute reads, so the production code paths route through this
+    helper instead of touching the constant directly.
+    """
+    return STOP_HARVEST_CACHE_PATH
+
+
 def _load_stop_harvest_cache() -> dict[str, str]:
     """Return the {transcript_path: last_text_sha256} map, or {} on failure."""
-    if not STOP_HARVEST_CACHE_PATH.exists():
+    cache_path = _get_stop_harvest_cache_path()
+    if not cache_path.exists():
         return {}
     try:
-        raw = json.loads(STOP_HARVEST_CACHE_PATH.read_text())
+        raw = json.loads(cache_path.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
     return raw if isinstance(raw, dict) else {}
@@ -1530,9 +1543,17 @@ def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
     cache = _load_stop_harvest_cache()
     cache[transcript_path] = text_sha
     try:
-        _atomic_write_json(STOP_HARVEST_CACHE_PATH, cache)
-    except OSError:
-        pass
+        _atomic_write_json(_get_stop_harvest_cache_path(), cache)
+    except OSError as exc:
+        # Cache write is best-effort -- losing it means the next Stop hook
+        # re-harvests the same content, which dedup catches downstream. We
+        # still log so disk-full / permission failures are observable
+        # rather than silently masked.
+        logger.warning(
+            "Failed to persist Stop-hook harvest cache to %s: %s",
+            _get_stop_harvest_cache_path(),
+            exc,
+        )
 
 
 def _merge_candidates(

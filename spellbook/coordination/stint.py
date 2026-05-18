@@ -21,7 +21,7 @@ from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
-from spellbook.core.db import get_connection, get_db_path
+from spellbook.core.db import get_connection, get_db_path  # noqa: E402  (logger setup above)
 
 MAX_STINT_DEPTH = 6
 

@@ -12,10 +12,8 @@ Covers:
 
 import hashlib
 import json
-import os
 from pathlib import Path
 
-import tripwire
 import pytest
 
 
@@ -129,7 +127,7 @@ class TestInstallerRunDaemonCentralized:
         monkeypatch.setattr("installer.components.mcp.install_daemon", mock_install_daemon)
 
         installer = Installer(spellbook_dir)
-        session = installer.run(platforms=["claude_code", "opencode"], dry_run=False)
+        installer.run(platforms=["claude_code", "opencode"], dry_run=False)
 
         assert call_order[0] == "install_daemon"
         platform_installs = [c for c in call_order if c.startswith("platform_install:")]
@@ -575,7 +573,7 @@ class TestYesFlagSelectsPlatforms:
         detected = installer.detect_platforms()
 
         # Simulate -y behavior: platforms = installer.detect_platforms()
-        session = installer.run(platforms=detected, dry_run=True)
+        installer.run(platforms=detected, dry_run=True)
 
         # Verify detected platforms were used (at least claude_code is always detected)
         assert len(detected) >= 1

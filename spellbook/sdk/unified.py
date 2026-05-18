@@ -6,7 +6,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, AsyncIterator, Union
+from typing import Any, Callable, Dict, List, Optional, AsyncIterator
 
 @dataclass
 class AgentOptions:

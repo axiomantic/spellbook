@@ -5,7 +5,6 @@ exist in the corresponding spellbook.sessions modules.
 """
 
 import inspect
-from typing import Callable
 
 
 class TestSessionsParserImports:

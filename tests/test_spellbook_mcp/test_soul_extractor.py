@@ -1,6 +1,5 @@
 """Tests for soul extractor integration."""
 
-import pytest
 import json
 
 

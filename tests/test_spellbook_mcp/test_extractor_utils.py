@@ -1,11 +1,9 @@
 """Tests for extractor shared utilities."""
 
-import pytest
 from spellbook.extractors.message_utils import (
     get_tool_calls,
     get_content,
     get_timestamp,
-    get_role,
     is_assistant_message,
     is_user_message,
 )

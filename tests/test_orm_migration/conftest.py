@@ -4,11 +4,9 @@ Creates async databases for each test with the ORM schema.
 Uses StaticPool with shared in-memory connections to keep tables visible.
 """
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
-    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )

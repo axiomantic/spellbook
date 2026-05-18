@@ -5,7 +5,6 @@ CREATE TABLE schemas defined in spellbook/core/db.py and
 spellbook/coordination/curator.py.
 """
 
-import json
 
 import pytest
 from sqlalchemy import create_engine, inspect

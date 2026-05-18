@@ -2,9 +2,7 @@
 
 import json
 import os
-from pathlib import Path
 
-import pytest
 
 from spellbook.pr_distill.config import (
     CONFIG_DIR,

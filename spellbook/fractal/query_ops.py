@@ -7,7 +7,7 @@ points, contradictions, and saturation status. Uses SQLAlchemy ORM models.
 
 import json
 
-from sqlalchemy import select, func, and_, text
+from sqlalchemy import select, and_, text
 
 from spellbook.db.fractal_models import FractalEdge, FractalGraph, FractalNode
 from spellbook.fractal.schema import get_async_fractal_session

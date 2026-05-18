@@ -470,7 +470,6 @@ class TestUpdateNode:
     async def test_update_node_merges_metadata(self, graph_with_root):
         """update_node must merge new metadata into existing, not replace."""
         from spellbook.fractal.node_ops import add_node, update_node
-        from spellbook.fractal.schema import get_fractal_connection
 
         # Create node with initial metadata
         initial_meta = json.dumps({"priority": "high"})
@@ -1092,7 +1091,7 @@ class TestClaimWork:
         from spellbook.fractal.node_ops import add_node, claim_work
 
         # Add a question node
-        node = await add_node(
+        await add_node(
             graph_id=graph_with_root["graph_id"],
             parent_id=graph_with_root["root_node_id"],
             node_type="question",
@@ -1118,7 +1117,7 @@ class TestClaimWork:
         from spellbook.fractal.node_ops import add_node, claim_work
         from spellbook.fractal.schema import get_fractal_connection
 
-        node = await add_node(
+        await add_node(
             graph_id=graph_with_root["graph_id"],
             parent_id=graph_with_root["root_node_id"],
             node_type="question",
@@ -1146,14 +1145,14 @@ class TestClaimWork:
         """claim_work must not double-claim; each call claims a different node."""
         from spellbook.fractal.node_ops import add_node, claim_work
 
-        node1 = await add_node(
+        await add_node(
             graph_id=graph_with_root["graph_id"],
             parent_id=graph_with_root["root_node_id"],
             node_type="question",
             text="Question A",
             db_path=graph_with_root["db_path"],
         )
-        node2 = await add_node(
+        await add_node(
             graph_id=graph_with_root["graph_id"],
             parent_id=graph_with_root["root_node_id"],
             node_type="question",
@@ -1215,7 +1214,7 @@ class TestClaimWork:
             node_type="question", text="Question A2",
             db_path=fractal_db,
         )
-        q_b1 = await add_node(
+        await add_node(
             graph_id=graph_id, parent_id=parent_b["node_id"],
             node_type="question", text="Question B1",
             db_path=fractal_db,
@@ -1278,7 +1277,7 @@ class TestClaimWork:
 
     async def test_claim_work_graph_done(self, graph_with_root):
         """claim_work with no open and no claimed nodes returns graph_done=True."""
-        from spellbook.fractal.node_ops import add_node, mark_saturated
+        from spellbook.fractal.node_ops import mark_saturated
 
         # The root node is the only question. Saturate it so no open/claimed remain.
         await mark_saturated(
@@ -1303,7 +1302,6 @@ class TestClaimWork:
         """claim_work must prefer shallower nodes over deeper ones."""
         from spellbook.fractal.graph_ops import create_graph
         from spellbook.fractal.node_ops import add_node, claim_work
-        from spellbook.fractal.schema import get_fractal_connection
 
         graph = await create_graph(
             seed="Depth preference test",
@@ -1332,7 +1330,7 @@ class TestClaimWork:
             node_type="question", text="Depth 2 question",
             db_path=fractal_db,
         )
-        depth3_q = await add_node(
+        await add_node(
             graph_id=graph_id, parent_id=depth2_q["node_id"],
             node_type="question", text="Depth 3 question",
             db_path=fractal_db,

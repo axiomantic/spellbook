@@ -170,7 +170,7 @@ async def worker_llm_metrics(
         )
         .order_by(WorkerLLMCall.latency_ms.asc())
     )
-    latencies = [int(l) for l in (await db.execute(lat_q)).scalars().all()]
+    latencies = [int(latency) for latency in (await db.execute(lat_q)).scalars().all()]
 
     # Error breakdown: fetch only (error, status) for non-success rows and
     # apply the same Counter.most_common logic. Full-row SELECT avoided.

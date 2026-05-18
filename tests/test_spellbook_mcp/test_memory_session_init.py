@@ -2,7 +2,6 @@
 
 import tripwire
 from dirty_equals import IsInstance
-import pytest
 
 
 class TestSessionInitMemoryRegeneration:
@@ -34,7 +33,7 @@ class TestSessionInitMemoryRegeneration:
 
         with tripwire:
             from spellbook.core.config import session_init
-            result = session_init(project_path="/Users/alice/project")
+            session_init(project_path="/Users/alice/project")
 
         expected_result = {"mode": {"type": "none"}, "fun_mode": "no", "resume_available": False, "platform": None}
         mock_session_state.assert_call(args=(None,), kwargs={})

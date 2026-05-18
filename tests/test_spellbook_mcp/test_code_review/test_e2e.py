@@ -3,7 +3,6 @@
 Tests the complete flow from argument parsing through routing and edge case handling.
 """
 
-import pytest
 
 from spellbook.code_review.arg_parser import parse_args
 from spellbook.code_review.router import route_to_handler, TargetType
@@ -48,7 +47,7 @@ class TestSelfModeWorkflow:
     def test_self_mode_empty_diff_blocks(self) -> None:
         """Self mode with empty diff cannot continue."""
         args = parse_args("--self")
-        handler = route_to_handler(args)
+        route_to_handler(args)
 
         # No files changed
         empty_check = check_empty_diff([])
@@ -82,7 +81,7 @@ class TestFeedbackModeWorkflow:
     def test_feedback_mode_no_comments_blocks(self) -> None:
         """Feedback mode with no comments cannot continue."""
         args = parse_args("--feedback")
-        handler = route_to_handler(args)
+        route_to_handler(args)
 
         # No comments
         no_comments_check = check_no_comments([])
@@ -92,7 +91,7 @@ class TestFeedbackModeWorkflow:
     def test_feedback_mode_has_comments_continues(self) -> None:
         """Feedback mode with comments can continue."""
         args = parse_args("--feedback")
-        handler = route_to_handler(args)
+        route_to_handler(args)
 
         comments = [{"body": "Please fix this", "author": "reviewer"}]
         no_comments_check = check_no_comments(comments)
@@ -135,7 +134,7 @@ class TestGiveModeWorkflow:
     def test_give_mode_large_diff_warns(self) -> None:
         """Give mode with large diff warns but can continue."""
         args = parse_args("--give 123")
-        handler = route_to_handler(args)
+        route_to_handler(args)
 
         # Large diff
         files = [
@@ -244,7 +243,7 @@ class TestEdgeCaseIntegration:
     def test_large_diff_in_self_mode(self) -> None:
         """Large diff in self mode suggests truncation."""
         args = parse_args("--self")
-        handler = route_to_handler(args)
+        route_to_handler(args)
 
         files = [
             FileDiff(path="huge.py", status="modified", additions=2000, deletions=0)

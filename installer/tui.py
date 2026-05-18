@@ -5,6 +5,7 @@ Provides interactive platform selection with checkboxes,
 Rich-based welcome panels, feature selection, and progress display.
 """
 
+import os
 import shutil
 import sys
 
@@ -17,10 +18,11 @@ except ImportError:
     tty = None  # type: ignore[assignment]
     termios = None  # type: ignore[assignment]
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
+from .components.spellbook_cco import emit_rollback_warning
 from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, platform_exists
-from .ui import Colors, color, supports_color
+from .ui import Colors, color
 
 
 # ---------------------------------------------------------------------------
@@ -316,7 +318,6 @@ def render_completion_summary(
         elapsed_seconds: Total elapsed time in seconds.
     """
     from rich.panel import Panel
-    from rich.text import Text
 
     if platforms_failed is None:
         platforms_failed = []
@@ -404,13 +405,30 @@ def render_post_install_notes(
     if "pi" in platforms:
         lines.append("[cyan]Pi[/cyan]: Restart to reload skills and prompts. Verify: /reload")
 
-    if shutil.which("cco"):
+    # Default codepath: gate on the spellbook-cco wrapper (WI-7 fork landing).
+    # Rollback: when SPELLBOOK_USE_VANILLA_CCO=1 is set, fall back to the
+    # vanilla nikvdp/cco binary. Mirrors the dispatch pattern in
+    # installer/platforms/claude_code.py::_install_claude_code_aliases so
+    # both entry points honour the same env override.
+    #
+    # F1 (Phase 4.5 finding): under env override emit the canonical
+    # rollback WARNING to stderr BEFORE the which() gate so operators
+    # see the rollback codepath in transcripts even when the relevant
+    # binary is absent. Imported from spellbook_cco.py so the byte
+    # content is centralized and cannot drift between call sites.
+    _sandbox_binary = (
+        "cco" if os.environ.get("SPELLBOOK_USE_VANILLA_CCO") == "1" else "spellbook-cco"
+    )
+    if _sandbox_binary == "cco":
+        emit_rollback_warning()
+    if shutil.which(_sandbox_binary):
         lines.append(
-            "[cyan]cco[/cyan]: detected on PATH. For sandboxed YOLO mode, launch Claude Code / "
-            "OpenCode via the [cyan]spellbook-sandbox[/cyan] launcher. See docs/security.md"
+            "[cyan]spellbook-cco[/cyan]: detected on PATH. For sandboxed YOLO mode, launch "
+            "Claude Code / OpenCode via the [cyan]spellbook-sandbox[/cyan] launcher. "
+            "See docs/security.md"
         )
         lines.append(
-            "[cyan]Aliases[/cyan]: Run the installer interactively to set up "
+            "[cyan]Aliases[/cyan]: Re-run [cyan]install.py[/cyan] interactively to set up "
             "[cyan]claude[/cyan] and [cyan]opencode[/cyan] shell aliases for sandboxed launch"
         )
 

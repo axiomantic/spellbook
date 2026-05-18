@@ -1,5 +1,6 @@
 """Skill usage analysis tools for measuring skill performance."""
 
+import logging
 import os
 import re
 from collections import defaultdict
@@ -10,6 +11,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from spellbook.sessions.parser import load_jsonl
 
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 # Outcome enum values and their triggers
 OUTCOME_COMPLETED = "completed"      # skill.completed=True, skill.superseded=False
@@ -80,7 +83,6 @@ CORRECTION_PATTERNS = [
 ]
 
 
-from datetime import datetime as dt
 
 
 @dataclass
@@ -416,8 +418,12 @@ def analyze_sessions(
 
             all_invocations.extend(invocations)
             sessions_analyzed += 1
-        except Exception as e:
-            continue  # Skip malformed sessions
+        except Exception as exc:
+            # Skip malformed sessions but surface the cause so operators
+            # can identify corrupt transcripts rather than have them
+            # silently disappear from the aggregate.
+            logger.warning("Skipping malformed session at %s: %s", path, exc)
+            continue
 
     # Aggregate metrics
     metrics = aggregate_metrics(all_invocations, group_by_version=group_by_version)

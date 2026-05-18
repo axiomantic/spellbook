@@ -1,5 +1,4 @@
 # tests/test_distill_session.py
-import pytest
 import sys
 import os
 import json

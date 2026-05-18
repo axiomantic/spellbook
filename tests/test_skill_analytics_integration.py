@@ -1,11 +1,9 @@
 """Integration tests for skill analytics end-to-end flow."""
 
 import json
-import pytest
 import tripwire
 from datetime import datetime, timedelta
 from dirty_equals import IsStr
-from pathlib import Path
 
 
 class TestEndToEndSkillAnalytics:
@@ -13,11 +11,10 @@ class TestEndToEndSkillAnalytics:
 
     def test_full_analytics_flow(self, tmp_path, monkeypatch):
         """Test: session created -> watcher detects -> outcomes persisted -> analytics queried."""
-        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.core.db import init_db, close_all_connections
         from spellbook.sessions.watcher import SessionWatcher
         from spellbook.sessions.skill_analyzer import (
             get_analytics_summary,
-            OUTCOME_COMPLETED,
         )
 
         # Setup
@@ -182,7 +179,7 @@ class TestSessionInactivityHandling:
     def test_inactive_session_finalizes_open_skills(self, tmp_path):
         """Test that inactive sessions have their open skills finalized."""
         from spellbook.core.db import init_db, get_connection, close_all_connections
-        from spellbook.sessions.watcher import SessionWatcher, SessionSkillState, SESSION_INACTIVE_THRESHOLD_SECONDS
+        from spellbook.sessions.watcher import SessionWatcher, SESSION_INACTIVE_THRESHOLD_SECONDS
         from spellbook.sessions.skill_analyzer import OUTCOME_SESSION_ENDED
 
         db_path = tmp_path / "test.db"
@@ -263,7 +260,7 @@ class TestAnalyticsSummaryFiltering:
 
     def test_filter_by_project(self, tmp_path):
         """Test that project_encoded filter works correctly."""
-        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.core.db import init_db, close_all_connections
         from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED,
@@ -301,7 +298,7 @@ class TestAnalyticsSummaryFiltering:
 
     def test_filter_by_skill(self, tmp_path):
         """Test that skill filter works correctly."""
-        from spellbook.core.db import init_db, get_connection, close_all_connections
+        from spellbook.core.db import init_db, close_all_connections
         from spellbook.sessions.skill_analyzer import (
             SkillOutcome, persist_outcome, get_analytics_summary,
             OUTCOME_COMPLETED,

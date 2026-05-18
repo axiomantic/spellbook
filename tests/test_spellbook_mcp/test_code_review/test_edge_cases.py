@@ -1,6 +1,5 @@
 """Tests for code-review edge case handlers."""
 
-import pytest
 
 from spellbook.code_review.edge_cases import (
     EdgeCaseResult,

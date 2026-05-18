@@ -19,7 +19,6 @@ from spellbook.forged.artifacts import (
     write_artifact,
 )
 from spellbook.forged.models import IterationState, VALID_GATES
-from spellbook.forged.schema import get_forged_connection, init_forged_schema
 from spellbook.forged.project_graph import (
     CyclicDependencyError,
     FeatureNode,

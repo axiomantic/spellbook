@@ -19,7 +19,7 @@ from datetime import date
 from spellbook.memory.diff_symbols import SymbolChange
 from spellbook.memory.filestore import read_memory, store_memory
 from spellbook.memory.frontmatter import parse_frontmatter, write_memory_file
-from spellbook.memory.models import Citation, MemoryFile
+from spellbook.memory.models import Citation
 from spellbook.memory.search_serena import AtRiskMemory, find_at_risk_memories
 from spellbook.memory.utils import content_hash as _content_hash, iter_memory_files
 

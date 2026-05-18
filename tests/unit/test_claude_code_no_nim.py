@@ -12,7 +12,6 @@ import ast
 import inspect
 import textwrap
 
-import pytest
 
 
 class TestNimFunctionsRemoved:
@@ -115,7 +114,7 @@ class TestNoNimReferences:
             if "nim" in line.lower():
                 nim_lines.append(f"  line {i}: {line.strip()}")
         assert nim_lines == [], (
-            f"Found 'nim' references in claude_code.py:\n" + "\n".join(nim_lines)
+            "Found 'nim' references in claude_code.py:\n" + "\n".join(nim_lines)
         )
 
 

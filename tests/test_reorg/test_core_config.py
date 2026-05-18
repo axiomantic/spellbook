@@ -5,10 +5,8 @@ and that all public exports from spellbook.core.config exist in the new module.
 """
 
 import inspect
-import os
 import warnings
 
-import pytest
 
 
 class TestCoreConfigImports:

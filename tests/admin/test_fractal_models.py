@@ -4,7 +4,6 @@ Verifies that SQLAlchemy models match the actual fractal.db schema
 defined in spellbook/fractal/schema.py:init_fractal_schema().
 """
 
-import json
 
 import pytest
 from sqlalchemy import create_engine, inspect

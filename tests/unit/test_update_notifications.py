@@ -1,7 +1,6 @@
 """Tests for update notifications in session_init()."""
 
 import tripwire
-import pytest
 
 
 class TestSessionGreetingNotifications:
@@ -9,7 +8,7 @@ class TestSessionGreetingNotifications:
 
     def test_notification_after_auto_update(self, tmp_path, monkeypatch):
         """session_init includes notification after recent auto-update."""
-        from spellbook.core.config import session_init, config_get, config_set, get_config_path
+        from spellbook.core.config import session_init, config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -40,7 +39,7 @@ class TestSessionGreetingNotifications:
 
     def test_notification_major_pending(self, tmp_path, monkeypatch):
         """session_init includes major update notification."""
-        from spellbook.core.config import session_init, config_set, get_config_path
+        from spellbook.core.config import session_init, config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -67,7 +66,7 @@ class TestSessionGreetingNotifications:
 
     def test_notification_cleared_after_showing(self, tmp_path, monkeypatch):
         """last_auto_update is cleared after session_init returns it."""
-        from spellbook.core.config import session_init, config_get, config_set, get_config_path
+        from spellbook.core.config import session_init, config_get, config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"
@@ -95,7 +94,7 @@ class TestSessionGreetingNotifications:
 
     def test_paused_notification(self, tmp_path, monkeypatch):
         """session_init includes paused notification when auto_update_paused."""
-        from spellbook.core.config import session_init, config_set, get_config_path
+        from spellbook.core.config import session_init, config_set
 
         config_path = tmp_path / "spellbook.json"
         lock_path = tmp_path / "config.lock"

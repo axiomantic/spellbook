@@ -7,7 +7,6 @@ from spellbook.sessions.skill_analyzer import (
     aggregate_metrics,
     _get_tool_uses,
     _get_user_content,
-    _get_role,
     _detect_correction,
     _extract_version,
     SkillInvocation,

@@ -17,7 +17,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-from spellbook import *  # noqa: F401,F403
+from spellbook import *  # noqa: E402,F401,F403  (must follow DeprecationWarning emission)
 
 
 def __getattr__(name: str):

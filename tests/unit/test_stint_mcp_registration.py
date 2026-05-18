@@ -10,7 +10,7 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-import pytest
+import pytest  # noqa: E402  (imported after sys.path mangling)
 
 
 def _get_registered_tool_names() -> list[str]:

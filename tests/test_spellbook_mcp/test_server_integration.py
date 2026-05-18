@@ -3,8 +3,6 @@
 import pytest
 import tripwire
 import json
-import os
-from pathlib import Path
 from types import SimpleNamespace
 
 from dirty_equals import IsInstance

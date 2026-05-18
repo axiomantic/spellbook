@@ -1,6 +1,5 @@
 """Tests for recent files extraction."""
 
-import pytest
 
 
 def test_extract_recent_files_from_tool_calls():

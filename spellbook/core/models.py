@@ -1,6 +1,6 @@
 """Shared type definitions for execution mode."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 
 @dataclass

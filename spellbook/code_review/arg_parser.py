@@ -1,7 +1,6 @@
 """Argument parser for code-review skill modes."""
 
-from dataclasses import dataclass, field
-import re
+from dataclasses import dataclass
 
 
 @dataclass

@@ -174,7 +174,7 @@ async def test_unsubscribe_nonexistent_is_noop():
 @pytest.mark.asyncio
 async def test_duplicate_subscribe_replaces_queue():
     bus = EventBus()
-    q1 = await bus.subscribe("sub-1")
+    await bus.subscribe("sub-1")
     q2 = await bus.subscribe("sub-1")
     assert bus.subscriber_count == 1
     # Publishing should go to q2 (the replacement)

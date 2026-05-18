@@ -8,7 +8,6 @@ Ported from lib/pr-distill/config.js.
 
 import json
 import os
-from pathlib import Path
 from typing import TypedDict
 
 

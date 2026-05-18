@@ -418,6 +418,15 @@ def test_claude_code_installer_uses_derived_deny(tmp_path):
     import sys as _sys
     if _sys.platform == "win32":
         tripwire.subprocess.assert_which(name="powershell", returns=None)
+    else:
+        # On POSIX, ``_install_claude_code_aliases`` calls
+        # ``shutil.which("spellbook-cco")`` to gate the per-dir alias
+        # install. Tripwire intercepts that call; without an explicit
+        # assertion the strict verifier raises UnassertedInteractionsError
+        # at teardown when the binary is absent from PATH (CI environment).
+        # Windows takes the ``install_aliases_windows`` branch which does
+        # not call ``shutil.which`` for the cco wrapper.
+        tripwire.subprocess.assert_which(name="spellbook-cco", returns=None)
 
 
 def test_derive_managed_deny_calls_validate_tiers_toml(tmp_path):

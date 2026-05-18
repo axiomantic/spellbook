@@ -4,9 +4,7 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
-from unittest import mock
 
-import pytest
 
 # The script is not a module we import; we test it by importing its functions
 # after adding scripts/ to sys.path, or by running it as a subprocess.

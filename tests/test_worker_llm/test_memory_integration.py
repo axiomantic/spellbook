@@ -32,11 +32,6 @@ from pathlib import Path
 import httpx
 import pytest
 
-from spellbook.memory.models import MemoryFile, MemoryFrontmatter, MemoryResult
-from spellbook.worker_llm.errors import (
-    WorkerLLMTimeout,
-    WorkerLLMUnreachable,
-)
 
 
 # ---------------------------------------------------------------------------

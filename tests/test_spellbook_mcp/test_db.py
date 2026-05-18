@@ -1,8 +1,5 @@
 """Tests for database schema and connection management."""
 
-import pytest
-import sqlite3
-from pathlib import Path
 
 
 def test_init_db_creates_schema(tmp_path):

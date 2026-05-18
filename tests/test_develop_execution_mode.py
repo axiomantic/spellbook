@@ -8,7 +8,6 @@ for execution mode analysis, work packet generation, and session handoff.
 import json
 import os
 import tempfile
-from pathlib import Path
 from datetime import datetime, timezone
 import pytest
 
@@ -217,7 +216,7 @@ def generate_session_commands(
     """
     if has_spawn_tool:
         return [
-            f"# Auto-spawn using MCP tool",
+            "# Auto-spawn using MCP tool",
             f"spawn_claude_session --manifest {manifest_path} --track {track_id}"
         ]
     else:
