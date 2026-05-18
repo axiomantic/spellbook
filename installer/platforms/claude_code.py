@@ -10,7 +10,11 @@ from typing import TYPE_CHECKING, List
 
 from spellbook.core.compat import Platform, get_platform
 
-from ..components.agents import install_agents, uninstall_agents
+from ..components.agents import (
+    cleanup_stale_agent_symlinks,
+    install_agents,
+    uninstall_agents,
+)
 from ..components.aliases import install_aliases, install_aliases_windows
 from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
@@ -335,81 +339,16 @@ class ClaudeCodeInstaller(PlatformInstaller):
         # agents dir but have no matching current source file). This handles
         # renamed/removed source agents without clobbering currently-valid
         # symlinks (which install_agents will report as "unchanged").
+        # Delegated to ``cleanup_stale_agent_symlinks`` so the staleness
+        # heuristic (resolved-target set + broken-link parent-dir match,
+        # honouring both absolute and relative symlink targets) is the
+        # single source of truth shared with future callers.
         self._step("Cleaning up stale agent symlinks")
-        agents_source_dir = self.spellbook_dir / "agents"
-        agents_target_dir = self.config_dir / "agents"
-        # Build the set of CURRENT source targets (resolved paths), not
-        # basenames. A symlink in the target dir is "stale" only when its
-        # resolved target is no longer one of the current spellbook agent
-        # files. Using the resolved-path set (rather than basenames)
-        # preserves user-authored aliases that point at valid spellbook
-        # agents under non-canonical names: a symlink at
-        # ``$CLAUDE_CONFIG_DIR/agents/myalias.md`` whose resolved target is
-        # ``$SPELLBOOK_DIR/agents/alpha.md`` IS valid and must not be
-        # unlinked just because its basename does not appear in the source
-        # set.
-        current_source_targets = (
-            {p.resolve() for p in agents_source_dir.glob("*.md") if p.is_file()}
-            if agents_source_dir.exists()
-            else set()
+        cleanup_stale_agent_symlinks(
+            agents_target_dir=self.config_dir / "agents",
+            agents_source_dir=self.spellbook_dir / "agents",
+            dry_run=self.dry_run,
         )
-        if agents_target_dir.exists():
-            for entry in sorted(agents_target_dir.glob("*.md")):
-                if not entry.is_symlink():
-                    continue
-                # Determine if this symlink should be treated as stale:
-                # - Resolves cleanly: stale iff its resolved target is NOT
-                #   in the current source-target set (covers both renamed
-                #   and removed source files, and aliases pointing at a
-                #   no-longer-current source).
-                # - Broken (resolve fails): stale iff the raw target's
-                #   parent resolves to this spellbook's agents/ dir
-                #   exactly, OR the raw target's parent (string-resolved)
-                #   equals our source agents dir even when the leaf is
-                #   missing (worktree-switch stale).
-                stale = False
-                try:
-                    resolved = entry.resolve(strict=True)
-                    stale = resolved not in current_source_targets
-                except (OSError, RuntimeError):
-                    # Broken symlink. Two stale-cleanup paths:
-                    # (a) raw target's parent (resolved) is the current
-                    #     spellbook agents dir -- same-worktree stale.
-                    # (b) raw target's parent, resolved with strict=False
-                    #     (which tolerates missing leaves), equals this
-                    #     spellbook's agents dir -- worktree-switch stale
-                    #     where the prior worktree dir no longer exists.
-                    try:
-                        raw_target = Path(entry.readlink())
-                    except OSError:
-                        raw_target = None
-                    if raw_target is not None and raw_target.is_absolute():
-                        try:
-                            raw_target.parent.resolve().relative_to(agents_source_dir.resolve())
-                            stale = True
-                        except (ValueError, OSError):
-                            pass
-                        if not stale:
-                            # Tightened heuristic: exact-equality of the
-                            # broken link's parent dir against THIS
-                            # spellbook's agents/ dir (string-resolved with
-                            # strict=False so missing leaves don't error).
-                            # This avoids false positives where the broken
-                            # symlink points into a DIFFERENT spellbook
-                            # installation -- substring matching on
-                            # "spellbook" used to remove those, which is
-                            # not our cleanup's responsibility.
-                            try:
-                                raw_parent_resolved = raw_target.parent.resolve(strict=False)
-                                if raw_parent_resolved == agents_source_dir.resolve():
-                                    stale = True
-                            except OSError:
-                                pass
-                if stale and not self.dry_run:
-                    try:
-                        entry.unlink()
-                    except OSError:
-                        pass
 
         self._step("Installing agents")
         agent_results = install_agents(

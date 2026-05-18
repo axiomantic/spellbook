@@ -228,11 +228,21 @@ def uninstall_agents(
             # prevents accidentally removing a user-authored broken symlink
             # whose target merely passes through ``$SPELLBOOK_DIR/agents/``
             # on its way to a deeper subdir.
+            #
+            # Relative symlink targets are resolved against the symlink's
+            # parent directory so cleanup is robust to both absolute and
+            # relative ``ln -s`` styles. The installer normally creates
+            # absolute links, but operator-hand-rolled or migration-era
+            # relative links would otherwise be silently preserved.
             try:
                 raw_target = Path(entry.readlink())
             except OSError:
                 continue
-            if raw_target.is_absolute() and _resolve_in(raw_target.parent, agents_source_dir):
+            if raw_target.is_absolute():
+                target_parent = raw_target.parent
+            else:
+                target_parent = (entry.parent / raw_target).parent
+            if _resolve_in(target_parent, agents_source_dir):
                 results.append(remove_symlink(entry, dry_run=dry_run))
             continue
         if _resolve_in(resolved, agents_source_dir):
@@ -241,3 +251,107 @@ def uninstall_agents(
             )
         # Symlink to a non-spellbook path: preserve, do not record.
     return results
+
+
+def cleanup_stale_agent_symlinks(
+    agents_target_dir: Path,
+    agents_source_dir: Path,
+    dry_run: bool = False,
+) -> int:
+    """Remove symlinks at ``agents_target_dir`` that point to STALE spellbook agents.
+
+    A symlink is considered stale and is removed when:
+        - It resolves cleanly but its resolved target is no longer one of
+          ``agents_source_dir/*.md`` (renamed / removed source, or alias
+          pointing at a no-longer-current source); OR
+        - It is broken AND its raw target's parent directory equals (or
+          string-resolves to) ``agents_source_dir`` (same-worktree stale,
+          or worktree-switch stale where the prior worktree dir no longer
+          exists). Relative targets are resolved against the symlink's
+          parent directory so both absolute and relative link styles are
+          handled.
+
+    Symlinks resolving to non-spellbook paths are PRESERVED (operator
+    aliases). User-authored regular files are preserved.
+
+    This helper is invoked from the install-time pre-step (claude_code
+    platform) to remove worktree-switch / renamed-source artifacts
+    before re-installing the current agent set. It deliberately differs
+    from ``uninstall_agents``, which removes ALL spellbook-resolving
+    symlinks regardless of staleness.
+
+    Args:
+        agents_target_dir: directory containing the per-platform symlinks
+            (e.g., ``$CLAUDE_CONFIG_DIR/agents/``).
+        agents_source_dir: spellbook's own ``agents/`` dir holding the
+            canonical agent markdown files.
+        dry_run: when True, do not unlink; only count what would have been
+            removed.
+
+    Returns:
+        Number of stale symlinks removed (or that would be removed under
+        ``dry_run=True``).
+    """
+    if not agents_target_dir.exists():
+        return 0
+
+    current_source_targets = (
+        {p.resolve() for p in agents_source_dir.glob("*.md") if p.is_file()}
+        if agents_source_dir.exists()
+        else set()
+    )
+
+    removed = 0
+    try:
+        agents_source_resolved = agents_source_dir.resolve()
+    except (OSError, RuntimeError):
+        agents_source_resolved = agents_source_dir
+
+    for entry in sorted(agents_target_dir.glob("*.md")):
+        if not entry.is_symlink():
+            continue
+
+        stale = False
+        try:
+            resolved = entry.resolve(strict=True)
+            stale = resolved not in current_source_targets
+        except (OSError, RuntimeError):
+            # Broken symlink: resolve the raw target (absolute or
+            # relative-to-entry-parent) and check whether its parent
+            # equals THIS spellbook's agents/ dir.
+            try:
+                raw_target = Path(entry.readlink())
+            except OSError:
+                raw_target = None
+            if raw_target is not None:
+                if raw_target.is_absolute():
+                    target_parent = raw_target.parent
+                else:
+                    target_parent = (entry.parent / raw_target).parent
+                try:
+                    if target_parent.resolve() == agents_source_resolved:
+                        stale = True
+                except (OSError, RuntimeError):
+                    pass
+                if not stale:
+                    # Tightened heuristic: strict=False string-resolution
+                    # so missing-leaf links land cleanly even when the
+                    # prior worktree dir is gone. Avoids substring "match
+                    # any spellbook" false positives that would remove
+                    # links into a DIFFERENT spellbook installation.
+                    try:
+                        raw_parent_resolved = target_parent.resolve(strict=False)
+                        if raw_parent_resolved == agents_source_resolved:
+                            stale = True
+                    except OSError:
+                        pass
+
+        if stale:
+            removed += 1
+            if not dry_run:
+                try:
+                    entry.unlink()
+                except OSError:
+                    pass
+
+    return removed
