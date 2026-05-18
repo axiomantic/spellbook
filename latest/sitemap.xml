@@ -69,7 +69,27 @@
          <lastmod>2026-05-18</lastmod>
     </url>
     <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/git-committer/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/git-pusher/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/agents/hierophant-distiller/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/implementer/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/jira-mutator/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/jira-reader/</loc>
          <lastmod>2026-05-18</lastmod>
     </url>
     <url>
@@ -81,7 +101,23 @@
          <lastmod>2026-05-18</lastmod>
     </url>
     <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/pr-creator/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/pr-merger/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/agents/queen-affective/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/test-runner/</loc>
+         <lastmod>2026-05-18</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/agents/web-researcher/</loc>
          <lastmod>2026-05-18</lastmod>
     </url>
     <url>
