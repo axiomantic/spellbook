@@ -311,8 +311,8 @@ class TestNoRawSQLInTelemetry:
         """telemetry_enable must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_enable
 
-        mock_get_conn = tripwire.mock("spellbook.core.db:get_connection")
-        mock_get_conn.__call__.required(False)
+        # Strict mock: tripwire fails the test if get_connection is invoked.
+        tripwire.mock("spellbook.core.db:get_connection")
 
         with tripwire:
             telemetry_enable(db_path=orm_db)
@@ -321,8 +321,8 @@ class TestNoRawSQLInTelemetry:
         """telemetry_disable must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_disable
 
-        mock_get_conn = tripwire.mock("spellbook.core.db:get_connection")
-        mock_get_conn.__call__.required(False)
+        # Strict mock: tripwire fails the test if get_connection is invoked.
+        tripwire.mock("spellbook.core.db:get_connection")
 
         with tripwire:
             telemetry_disable(db_path=orm_db)
@@ -331,8 +331,8 @@ class TestNoRawSQLInTelemetry:
         """telemetry_status must not call get_connection (raw SQL)."""
         from spellbook.core.config import telemetry_status
 
-        mock_get_conn = tripwire.mock("spellbook.core.db:get_connection")
-        mock_get_conn.__call__.required(False)
+        # Strict mock: tripwire fails the test if get_connection is invoked.
+        tripwire.mock("spellbook.core.db:get_connection")
 
         with tripwire:
             telemetry_status(db_path=orm_db)

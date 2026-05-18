@@ -541,11 +541,9 @@ class TestHandoffGet:
         # reports real_now + 61, putting the freshly-minted token past its
         # 60s TTL. The GET path invokes time.time() twice
         # (_cleanup_expired's `now`, then validate_handoff_token's
-        # `time.time() < expiry`); extra registered side effects are marked
-        # not-required so unused ones are discarded at sandbox exit.
+        # `time.time() < expiry`), so chain two FIFO side effects.
         advance = tripwire.mock("spellbook.admin.auth:time.time")
-        for _ in range(8):
-            advance.__call__.required(False).calls(lambda: real_time() + 61)
+        advance.calls(lambda: real_time() + 61).calls(lambda: real_time() + 61)
 
         with tripwire:
             response = unauthenticated_client.get(

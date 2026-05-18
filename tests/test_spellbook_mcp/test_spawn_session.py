@@ -27,8 +27,7 @@ class TestDetectMacOSTerminal:
         mock_result = type("Result", (), {"returncode": 0, "stdout": "12345\n"})()
         mock_run.returns(mock_result)
 
-        mock_exists = tripwire.mock("spellbook.daemon.terminal:os.path.exists")
-        mock_exists.__call__.required(False)
+        # iTerm2 pgrep succeeds, so os.path.exists is never reached -- no mock needed
 
         with tripwire:
             result = detect_macos_terminal()

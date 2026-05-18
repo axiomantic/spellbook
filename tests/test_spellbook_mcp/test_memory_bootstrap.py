@@ -85,12 +85,12 @@ class TestResolveAutoMemoryDir:
         memory_dir.mkdir(parents=True)
 
         mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
-        mock_home.__call__.returns(tmp_path)
+        mock_home.returns(tmp_path)
 
         with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
-        mock_home.__call__.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_dir_exists_without_leading_dash(self, tmp_path):
@@ -100,24 +100,24 @@ class TestResolveAutoMemoryDir:
         memory_dir.mkdir(parents=True)
 
         mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
-        mock_home.__call__.returns(tmp_path)
+        mock_home.returns(tmp_path)
 
         with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
-        mock_home.__call__.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_dir_missing_returns_none(self, tmp_path):
         from spellbook.memory.bootstrap import _resolve_auto_memory_dir
 
         mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
-        mock_home.__call__.returns(tmp_path)
+        mock_home.returns(tmp_path)
 
         with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
-        mock_home.__call__.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         assert result is None
 
     def test_path_encoding_multi_segment(self, tmp_path):
@@ -128,12 +128,12 @@ class TestResolveAutoMemoryDir:
         memory_dir.mkdir(parents=True)
 
         mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
-        mock_home.__call__.returns(tmp_path)
+        mock_home.returns(tmp_path)
 
         with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/Development/myproject")
 
-        mock_home.__call__.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         assert result == memory_dir
 
     def test_prefers_dash_prefix_over_no_prefix(self, tmp_path):
@@ -146,12 +146,12 @@ class TestResolveAutoMemoryDir:
         no_dash_dir.mkdir(parents=True)
 
         mock_home = tripwire.mock("spellbook.memory.bootstrap:Path.home")
-        mock_home.__call__.returns(tmp_path)
+        mock_home.returns(tmp_path)
 
         with tripwire:
             result = _resolve_auto_memory_dir("/Users/alice/project")
 
-        mock_home.__call__.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         assert result == dash_dir
 
 
@@ -162,18 +162,18 @@ class TestRegenerateMemoryMdForProject:
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
         mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
-        mock_resolve.__call__.returns(auto_memory_dir)
+        mock_resolve.returns(auto_memory_dir)
         mock_db = tripwire.mock("spellbook.memory.bootstrap:get_db_path")
-        mock_db.__call__.returns(Path(db))
+        mock_db.returns(Path(db))
         mock_encode = tripwire.mock("spellbook.memory.bootstrap:encode_cwd")
-        mock_encode.__call__.returns("tmp-test")
+        mock_encode.returns("tmp-test")
 
         with tripwire:
             regenerate_memory_md_for_project("/tmp/test")
 
-        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
-        mock_db.__call__.assert_call(args=(), kwargs={})
-        mock_encode.__call__.assert_call(args=("/tmp/test",), kwargs={})
+        mock_resolve.assert_call(args=("/tmp/test",), kwargs={})
+        mock_db.assert_call(args=(), kwargs={})
+        mock_encode.assert_call(args=("/tmp/test",), kwargs={})
 
         memory_md = auto_memory_dir / "MEMORY.md"
         assert memory_md.exists()
@@ -187,26 +187,26 @@ class TestRegenerateMemoryMdForProject:
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
         mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
-        mock_resolve.__call__.returns(None)
+        mock_resolve.returns(None)
 
         with tripwire:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
 
-        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
+        mock_resolve.assert_call(args=("/tmp/test",), kwargs={})
 
     def test_fail_open_on_exception(self):
         """Exception in generation does not propagate (fail-open)."""
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
         mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
-        mock_resolve.__call__.raises(RuntimeError("boom"))
+        mock_resolve.raises(RuntimeError("boom"))
 
         with tripwire:
             # Should not raise
             regenerate_memory_md_for_project("/tmp/test")
 
-        mock_resolve.__call__.assert_call(
+        mock_resolve.assert_call(
             args=("/tmp/test",), kwargs={}, raised=IsInstance(RuntimeError),
         )
 
@@ -215,18 +215,18 @@ class TestRegenerateMemoryMdForProject:
         from spellbook.memory.bootstrap import regenerate_memory_md_for_project
 
         mock_resolve = tripwire.mock("spellbook.memory.bootstrap:_resolve_auto_memory_dir")
-        mock_resolve.__call__.returns(auto_memory_dir)
+        mock_resolve.returns(auto_memory_dir)
         mock_db = tripwire.mock("spellbook.memory.bootstrap:get_db_path")
-        mock_db.__call__.returns(Path(db))
+        mock_db.returns(Path(db))
         mock_encode = tripwire.mock("spellbook.memory.bootstrap:encode_cwd")
-        mock_encode.__call__.returns("tmp-test")
+        mock_encode.returns("tmp-test")
 
         with tripwire:
             regenerate_memory_md_for_project("/tmp/test")
 
-        mock_resolve.__call__.assert_call(args=("/tmp/test",), kwargs={})
-        mock_db.__call__.assert_call(args=(), kwargs={})
-        mock_encode.__call__.assert_call(args=("/tmp/test",), kwargs={})
+        mock_resolve.assert_call(args=("/tmp/test",), kwargs={})
+        mock_db.assert_call(args=(), kwargs={})
+        mock_encode.assert_call(args=("/tmp/test",), kwargs={})
 
         marker = auto_memory_dir / ".spellbook-bridge-initialized"
         assert marker.exists()

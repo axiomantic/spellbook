@@ -68,8 +68,8 @@ class TestMemoryBridge:
     def test_ignores_non_write_tool(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
-        mock_post.__call__.required(False).returns(None)
+        # Register a strict mock so any unintended call to _http_post fails the test.
+        tripwire.mock("hooks.spellbook_hook:_http_post")
 
         with tripwire:
             _memory_bridge("Read", self._make_data("/some/file.md"))
@@ -77,8 +77,8 @@ class TestMemoryBridge:
     def test_ignores_non_memory_path(self):
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
-        mock_post.__call__.required(False).returns(None)
+        # Register a strict mock so any unintended call to _http_post fails the test.
+        tripwire.mock("hooks.spellbook_hook:_http_post")
 
         with tripwire:
             _memory_bridge("Write", self._make_data("/Users/alice/project/src/main.py"))
@@ -90,8 +90,8 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="",
         )
-        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
-        mock_post.__call__.required(False).returns(None)
+        # Register a strict mock so any unintended call to _http_post fails the test.
+        tripwire.mock("hooks.spellbook_hook:_http_post")
 
         with tripwire:
             _memory_bridge("Write", data)
@@ -104,8 +104,8 @@ class TestMemoryBridge:
             "/Users/alice/.claude/projects/-Users-alice-project/memory/MEMORY.md",
             content="# Spellbook Memory System\n\nThe contents of this file are managed...",
         )
-        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
-        mock_post.__call__.required(False).returns(None)
+        # Register a strict mock so any unintended call to _http_post fails the test.
+        tripwire.mock("hooks.spellbook_hook:_http_post")
 
         with tripwire:
             _memory_bridge("Write", data)
@@ -274,8 +274,8 @@ class TestMemoryBridge:
         """Handles missing tool_input gracefully (fail-open)."""
         from hooks.spellbook_hook import _memory_bridge
 
-        mock_post = tripwire.mock("hooks.spellbook_hook:_http_post")
-        mock_post.__call__.required(False).returns(None)
+        # Register a strict mock so any unintended call to _http_post fails the test.
+        tripwire.mock("hooks.spellbook_hook:_http_post")
 
         with tripwire:
             _memory_bridge("Write", {"cwd": "/tmp", "session_id": "s"})
