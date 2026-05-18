@@ -611,20 +611,25 @@ def install_spellbook_cco(
 
     # PATH check. Resolve each PATH entry so the membership test handles
     # ``~``, trailing slashes, and relative entries equivalently to the
-    # resolved wrapper dir.
-    resolved_wrapper_dir_canonical = resolved_wrapper_dir.expanduser().resolve()
-    path_dirs: list[Path] = []
+    # resolved wrapper dir. ``os.path.normcase`` normalizes case on
+    # case-insensitive filesystems (Windows; default macOS APFS/HFS+);
+    # on POSIX it is a no-op so Linux comparison remains exact.
+    resolved_wrapper_dir_canonical = resolved_wrapper_dir.expanduser().resolve(strict=False)
+    target_key = os.path.normcase(str(resolved_wrapper_dir_canonical))
+    path_keys: set[str] = set()
     for raw in os.environ.get("PATH", "").split(os.pathsep):
         if not raw:
             continue
         try:
-            path_dirs.append(Path(raw).expanduser().resolve())
-        except (OSError, RuntimeError):
+            entry_resolved = Path(raw).expanduser().resolve(strict=False)
+        except (OSError, RuntimeError) as exc:
             # Unresolvable PATH entry (broken symlink loop, permission
             # error): skip rather than crash. Worst case we emit the
             # PATH-not-set WARNING when we shouldn't have.
+            logger.debug("spellbook-cco PATH check: skipping unresolvable entry %r: %s", raw, exc)
             continue
-    if resolved_wrapper_dir_canonical not in path_dirs:
+        path_keys.add(os.path.normcase(str(entry_resolved)))
+    if target_key not in path_keys:
         _emit_warning(_WARNING_PATH_NOT_SET)
 
     return {
