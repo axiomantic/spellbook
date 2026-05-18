@@ -6,6 +6,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 
 | Command | Description | Origin |
 |---------|-------------|--------|
+| [/a2a](a2a.md) | agent2agent inter-session message bus. Triggers: '/a2a', 'open inbox', 'close in... | spellbook |
 | [/address-pr-feedback](address-pr-feedback.md) | Systematically address PR review comments. Fetches all threads, categorizes by s... | spellbook |
 | [/advanced-code-review-context](advanced-code-review-context.md) | Advanced Code Review Phase 2: Context Analysis - load previous reviews, PR histo... | spellbook |
 | [/advanced-code-review-plan](advanced-code-review-plan.md) | Advanced Code Review Phase 1: Strategic Planning - scope analysis, risk categori... | spellbook |
@@ -16,6 +17,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/audit-mirage-analyze](audit-mirage-analyze.md) | Phase 2-3 of auditing-green-mirage: Systematic line-by-line audit and 10 Green M... | spellbook |
 | [/audit-mirage-cross](audit-mirage-cross.md) | Phase 4 of auditing-green-mirage: Cross-test suite-level analysis | spellbook |
 | [/audit-mirage-report](audit-mirage-report.md) | Phase 5-6 of auditing-green-mirage: Findings report generation and output | spellbook |
+| [/canvas](canvas.md) | Open, write to, list, or close a canvas — a live-updating presentation surface s... | spellbook |
 | [/code-review-feedback](code-review-feedback.md) | Feedback mode for code-review: Process received review feedback with categorizat... | spellbook |
 | [/code-review-give](code-review-give.md) | Give mode for code-review: Review someone else's code with multi-pass analysis a... | spellbook |
 | [/code-review-tarot](code-review-tarot.md) | Tarot integration for code-review: Roundtable dialogue with archetype personas f... | spellbook |

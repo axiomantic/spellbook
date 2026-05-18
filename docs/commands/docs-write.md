@@ -163,10 +163,27 @@ Task:
     2. Write in the voice defined by the tone profile.
     3. Use ONLY information present in the source code context.
        Do not fabricate APIs, parameters, or behaviors.
-    4. Apply every rule from Writing Guide Rules during writing.
-    5. Keep total output under 6K tokens.
-    6. For tutorials: add "Last verified: {today's date}" at the end.
-    7. Write the complete document to: {project_root}/{section.output_path}
+    4. Symbol-name verification: any function name, method name, class
+       name, constant, file path, or namespaced key (e.g. Redis key,
+       env var) that appears in your output MUST be grounded in the
+       source code context you were given. If the plan, audit, or
+       existing content suggests a name that does not appear in your
+       source context, do ONE of the following — do not invent or
+       guess:
+         (a) grep the project source for the candidate name and use
+             the verified result, OR
+         (b) rephrase to describe behavior without naming a specific
+             symbol (e.g. "the Lua script invoked by the registry"
+             instead of a fabricated method name), OR
+         (c) leave a `<!-- TODO: verify symbol name in source -->`
+             comment inline so review can catch it.
+       Plausible-sounding LLM-generated names are the most common
+       fact-check failure in this pipeline. The build will not catch
+       them; only source verification will.
+    5. Apply every rule from Writing Guide Rules during writing.
+    6. Keep total output under 6K tokens.
+    7. For tutorials: add "Last verified: {today's date}" at the end.
+    8. Write the complete document to: {project_root}/{section.output_path}
 
   result_schema:
     files_written:
@@ -351,6 +368,7 @@ interface DocsWritten {
 - Exceeding 6K token output per generated section
 - Skipping writing guide rules in writing subagent prompts (rules must be included in full)
 - Fabricating API signatures, parameters, return types, or behaviors not present in source code
+- Writing any symbol, function, method, class, file path, or namespaced key (Redis key, env var) into output without confirming it exists in the provided source code context or via grep against project source (see Step 3b Instructions rule 4). This is the most common fact-check failure in the pipeline and the build cannot catch it.
 - Silently overwriting an existing written-manifest.json without offering reuse (unless sections_filter is present)
 - Generating non-MVP sections when running in MVP tier
 - Omitting the tone profile or Diataxis type rules from writing subagent prompts

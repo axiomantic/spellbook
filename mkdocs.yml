@@ -137,6 +137,7 @@ nav:
     - Skills A-Z:
       - Overview: skills/index.md
       - skills/advanced-code-review.md
+      - skills/agent2agent.md
       - skills/analyzing-domains.md
       - skills/analyzing-skill-usage.md
       - skills/assembling-context.md
@@ -146,6 +147,7 @@ nav:
       - skills/autonomous-roundtable.md
       - skills/design-exploration.md
       - skills/branch-context.md
+      - skills/canvas.md
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
       - skills/debugging.md
@@ -176,6 +178,7 @@ nav:
       - skills/merging-worktrees.md
       - skills/opportunity-awareness.md
       - skills/optimizing-instructions.md
+      - skills/permissions-from-transcripts.md
       - skills/polish-repo.md
       - skills/project-encyclopedia.md
       - skills/reflexion.md
@@ -203,6 +206,7 @@ nav:
       - skills/writing-skills.md
     - Commands A-Z:
       - Overview: commands/index.md
+      - commands/a2a.md
       - commands/address-pr-feedback.md
       - commands/advanced-code-review-context.md
       - commands/advanced-code-review-plan.md
@@ -213,6 +217,7 @@ nav:
       - commands/audit-mirage-analyze.md
       - commands/audit-mirage-cross.md
       - commands/audit-mirage-report.md
+      - commands/canvas.md
       - commands/design-explore.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
@@ -220,6 +225,7 @@ nav:
       - commands/create-issue.md
       - commands/create-pr.md
       - commands/crystallize.md
+      - commands/crystallize-consolidate.md
       - commands/crystallize-verify.md
       - commands/dead-code-analyze.md
       - commands/dead-code-implement.md

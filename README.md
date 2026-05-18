@@ -210,9 +210,9 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context] |
-| **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -283,14 +283,20 @@ Reusable workflows for structured development:
 [fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
+[agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
+[canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
+[permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 
 ### Commands (96 total)
 
 | Command | Description |
 |---------|-------------|
+| [/a2a] | Inter-session agent messaging bus (open inbox, send, check, reply) |
+| [/canvas] | Open, write to, list, or close a browser-rendered presentation surface |
 | [/create-issue] | Create a GitHub issue with proper template discovery and population |
 | [/create-pr] | Create a pull request with proper template discovery and population |
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
+| [/crystallize-consolidate] | Consolidate accumulated rules: merge overlaps, collapse redundancy, retire deprecated |
 | [/crystallize-verify] | Structurally isolated adversarial review of crystallized output |
 | [/decompose-claims] | Decompose text into atomic, independently verifiable claims |
 | [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
@@ -389,9 +395,12 @@ Reusable workflows for structured development:
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
+[/a2a]: https://axiomantic.github.io/spellbook/latest/commands/a2a/
+[/canvas]: https://axiomantic.github.io/spellbook/latest/commands/canvas/
 [/create-issue]: https://axiomantic.github.io/spellbook/latest/commands/create-issue/
 [/create-pr]: https://axiomantic.github.io/spellbook/latest/commands/create-pr/
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
+[/crystallize-consolidate]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-consolidate/
 [/crystallize-verify]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-verify/
 [/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
