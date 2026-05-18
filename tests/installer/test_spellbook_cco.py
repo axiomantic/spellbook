@@ -84,7 +84,7 @@ EXPECTED_WRAPPER_TEMPLATE = (
     "# Source:    {install_root} (fork of nikvdp/cco @ {pinned_sha})\n"
     "# Audit:     ~/.local/spellbook/docs/{project_encoded}"
     "/verifications/sec_9_3_result.md\n"
-    'exec {install_root}/cco "$@"\n'
+    'exec "{install_root}/cco" "$@"\n'
 )
 
 

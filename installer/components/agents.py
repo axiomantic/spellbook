@@ -18,6 +18,7 @@ ways:
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import List
 
@@ -26,6 +27,8 @@ from installer.components.symlinks import (
     create_symlink,
     remove_symlink,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_in(child: Path, parent: Path) -> bool:
@@ -236,7 +239,12 @@ def uninstall_agents(
             # relative links would otherwise be silently preserved.
             try:
                 raw_target = Path(entry.readlink())
-            except OSError:
+            except OSError as exc:
+                logger.warning(
+                    "Skipping broken symlink at %s during agent cleanup: readlink() failed: %s",
+                    entry,
+                    exc,
+                )
                 continue
             if raw_target.is_absolute():
                 target_parent = raw_target.parent
@@ -351,7 +359,11 @@ def cleanup_stale_agent_symlinks(
             if not dry_run:
                 try:
                     entry.unlink()
-                except OSError:
-                    pass
+                except OSError as exc:
+                    logger.warning(
+                        "Failed to remove stale agent symlink %s: %s",
+                        entry,
+                        exc,
+                    )
 
     return removed

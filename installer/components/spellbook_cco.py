@@ -221,7 +221,7 @@ def _wrapper_template(
         f"# Source:    {install_root} (fork of nikvdp/cco @ {pinned_sha})\n"
         f"# Audit:     ~/.local/spellbook/docs/{project_encoded}"
         "/verifications/sec_9_3_result.md\n"
-        f'exec {install_root}/cco "$@"\n'
+        f'exec "{install_root}/cco" "$@"\n'
     )
 
 
