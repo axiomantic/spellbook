@@ -177,7 +177,7 @@ def test_posix_only_mark_is_registered():
     markers = data["tool"]["pytest"]["ini_options"]["markers"]
     matches = [m for m in markers if m.startswith("posix_only:")]
 
-    assert matches == ["posix_only: skip on Windows"]
+    assert matches == ["posix_only: test runs only on POSIX systems (skipped on Windows)"]
 
 
 def test_windows_only_mark_is_registered():
@@ -193,4 +193,4 @@ def test_windows_only_mark_is_registered():
     markers = data["tool"]["pytest"]["ini_options"]["markers"]
     matches = [m for m in markers if m.startswith("windows_only:")]
 
-    assert matches == ["windows_only: skip on non-Windows platforms"]
+    assert matches == ["windows_only: test runs only on Windows (skipped on POSIX systems)"]

@@ -3,6 +3,7 @@
 
 import pytest
 from starlette.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 from spellbook.admin.auth import create_ws_ticket
 from spellbook.admin.events import Event, Subsystem, event_bus
