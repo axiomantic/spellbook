@@ -2,14 +2,20 @@
 
 Tests classify_change(), patch_diagram(), --force-regen flag,
 and integration into the main processing loop.
+
+All mocks use tripwire per project policy (see AGENTS.md, "Testing with
+Tripwire"). ``unittest.mock`` and ``monkeypatch.setattr`` are forbidden
+for mocking dependencies.
 """
 
 import asyncio
 import json
-import subprocess
 import sys
 from pathlib import Path
-from unittest import mock
+
+import pytest
+import tripwire
+from dirty_equals import AnyThing
 
 
 # Add project root so we can import generate_diagrams as a module
@@ -57,13 +63,39 @@ def write_diagram_with_meta(item: generate_diagrams.SourceItem, source_hash: str
     item.diagram_path.write_text(content, encoding="utf-8")
 
 
-def _make_mock_client(return_value=None, side_effect=None):
-    """Create a mock agent client whose run() returns the given value."""
-    client = mock.AsyncMock()
-    if side_effect is not None:
-        client.run.side_effect = side_effect
-    else:
-        client.run.return_value = return_value or ""
+class _StubAgentClient:
+    """Minimal stand-in for the SDK agent client.
+
+    The classify/patch code paths only call ``client.run(prompt)``. A hand-rolled
+    object stands in for the client itself; tripwire is then used to mock
+    ``run`` so behavior, args, and call count are pinned through the same
+    framework as the rest of the test.
+    """
+
+    def __init__(self):
+        async def _default(_prompt):
+            return ""
+
+        self.run = _default
+
+
+def _stub_client_returns(value):
+    client = _StubAgentClient()
+
+    async def _run(_prompt):
+        return value
+
+    client.run = _run
+    return client
+
+
+def _stub_client_raises(exc):
+    client = _StubAgentClient()
+
+    async def _run(_prompt):
+        raise exc
+
+    client.run = _run
     return client
 
 
@@ -75,64 +107,109 @@ def _make_mock_client(return_value=None, side_effect=None):
 class TestGetSourceDiff:
     """Tests for the get_source_diff function."""
 
+    @pytest.mark.allow("subprocess")
     def test_returns_uncommitted_diff_when_available(self, tmp_path: Path) -> None:
         """get_source_diff returns git diff HEAD output when non-empty."""
         source_path = tmp_path / "skill.md"
         source_path.write_text("content", encoding="utf-8")
 
         diff_text = "- old line\n+ new line"
-        git_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout=diff_text, stderr=""
+
+        repo_root_mock = tripwire.mock("generate_diagrams:_get_repo_root")
+        repo_root_mock.returns(tmp_path)
+        tripwire.subprocess.mock_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout=diff_text,
         )
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.subprocess.run", return_value=git_result) as mock_run,
-        ):
+        with tripwire:
             result = generate_diagrams.get_source_diff(source_path)
 
         assert result == diff_text
-        assert mock_run.call_count == 1
+        repo_root_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        tripwire.subprocess.assert_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout=diff_text,
+            stderr="",
+        )
 
+    @pytest.mark.allow("subprocess")
     def test_falls_back_to_head_tilde_1_when_head_empty(self, tmp_path: Path) -> None:
         """get_source_diff tries HEAD~1 when HEAD diff is empty."""
         source_path = tmp_path / "skill.md"
         source_path.write_text("content", encoding="utf-8")
 
-        empty_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
         history_diff = "- old\n+ new"
-        history_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout=history_diff, stderr=""
+
+        repo_root_mock = tripwire.mock("generate_diagrams:_get_repo_root")
+        repo_root_mock.returns(tmp_path)
+        tripwire.subprocess.mock_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout="",
+        )
+        tripwire.subprocess.mock_run(
+            command=["git", "diff", "HEAD~1", "--", "skill.md"],
+            returncode=0,
+            stdout=history_diff,
         )
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.subprocess.run") as mock_run,
-        ):
-            mock_run.side_effect = [empty_result, history_result]
+        with tripwire:
             result = generate_diagrams.get_source_diff(source_path)
 
         assert result == history_diff
-        assert mock_run.call_count == 2
+        repo_root_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        tripwire.subprocess.assert_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        tripwire.subprocess.assert_run(
+            command=["git", "diff", "HEAD~1", "--", "skill.md"],
+            returncode=0,
+            stdout=history_diff,
+            stderr="",
+        )
 
+    @pytest.mark.allow("subprocess")
     def test_returns_empty_when_no_diff_available(self, tmp_path: Path) -> None:
         """get_source_diff returns empty string when both diffs are empty."""
         source_path = tmp_path / "skill.md"
         source_path.write_text("content", encoding="utf-8")
 
-        empty_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
+        repo_root_mock = tripwire.mock("generate_diagrams:_get_repo_root")
+        repo_root_mock.returns(tmp_path)
+        tripwire.subprocess.mock_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout="",
+        )
+        tripwire.subprocess.mock_run(
+            command=["git", "diff", "HEAD~1", "--", "skill.md"],
+            returncode=0,
+            stdout="",
         )
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.subprocess.run", return_value=empty_result),
-        ):
+        with tripwire:
             result = generate_diagrams.get_source_diff(source_path)
 
         assert result == ""
+        repo_root_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+        tripwire.subprocess.assert_run(
+            command=["git", "diff", "HEAD", "--", "skill.md"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+        tripwire.subprocess.assert_run(
+            command=["git", "diff", "HEAD~1", "--", "skill.md"],
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -148,114 +225,142 @@ class TestClassifyChange:
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="STAMP")
+        client = _stub_client_returns("STAMP")
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="- old\n+ new"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old\n+ new")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "STAMP"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_patch_when_sdk_says_patch(self, tmp_path: Path) -> None:
         """classify_change returns 'PATCH' when the agent returns 'PATCH'."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="PATCH\n")
+        client = _stub_client_returns("PATCH\n")
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="- old step\n+ new step"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old step\n+ new step")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "PATCH"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_regenerate_when_sdk_says_regenerate(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent returns 'REGENERATE'."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="REGENERATE")
+        client = _stub_client_returns("REGENERATE")
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="massive rewrite"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("massive rewrite")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "REGENERATE"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_sdk_error(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent raises an exception."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(side_effect=RuntimeError("sdk error"))
+        client = _stub_client_raises(RuntimeError("sdk error"))
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="some diff"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("some diff")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "REGENERATE"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_timeout(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent times out."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(side_effect=asyncio.TimeoutError())
+        client = _stub_client_raises(asyncio.TimeoutError())
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="some diff"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("some diff")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "REGENERATE"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_unexpected_output(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent returns gibberish."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="I think you should regenerate this")
+        client = _stub_client_returns("I think you should regenerate this")
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value="some diff"),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("some diff")
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "REGENERATE"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_falls_back_to_regenerate_when_no_diff_available(self, tmp_path: Path) -> None:
         """When get_source_diff returns empty, falls back to REGENERATE."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with mock.patch("generate_diagrams.get_source_diff", return_value=""):
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("")
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
         assert result == "REGENERATE"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
 
     def test_sends_classification_prompt_with_diff(self, tmp_path: Path) -> None:
         """classify_change sends the diff embedded in the classification prompt to the agent."""
@@ -263,20 +368,30 @@ class TestClassifyChange:
         write_diagram_with_meta(item, "oldhash")
 
         the_diff = "- removed line\n+ added line"
-        client = _make_mock_client(return_value="STAMP")
+        captured_prompts: list[str] = []
 
-        with (
-            mock.patch("generate_diagrams.get_source_diff", return_value=the_diff),
-            mock.patch("generate_diagrams.get_agent_client", return_value=client),
-        ):
+        class _CapturingClient:
+            async def run(self, prompt):
+                captured_prompts.append(prompt)
+                return "STAMP"
+
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns(the_diff)
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(_CapturingClient())
+
+        with tripwire:
             asyncio.run(
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
-        client.run.assert_called_once()
-        prompt = client.run.call_args[0][0]
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+
+        assert len(captured_prompts) == 1
+        prompt = captured_prompts[0]
         assert the_diff in prompt
-        assert "STAMP" in prompt  # Classification prompt mentions STAMP as an option
+        assert "STAMP" in prompt
         assert "PATCH" in prompt
         assert "REGENERATE" in prompt
 
@@ -296,23 +411,30 @@ class TestPatchDiagram:
 
         diff = "- old step\n+ new step"
         patched_mermaid = "```mermaid\ngraph TD\n  A --> B\n  A --> C\n```"
-        client = _make_mock_client(return_value=patched_mermaid)
+        client = _stub_client_returns(patched_mermaid)
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.patch_diagram(item.source_path, item.diagram_path, diff)
             )
 
         assert result == patched_mermaid
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_none_on_sdk_failure(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent raises, signaling fallback to regen."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(side_effect=RuntimeError("error"))
+        client = _stub_client_raises(RuntimeError("error"))
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.patch_diagram(
                     item.source_path, item.diagram_path, "- old\n+ new"
@@ -320,15 +442,19 @@ class TestPatchDiagram:
             )
 
         assert result is None
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_none_on_timeout(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent times out."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(side_effect=asyncio.TimeoutError())
+        client = _stub_client_raises(asyncio.TimeoutError())
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.patch_diagram(
                     item.source_path, item.diagram_path, "- old\n+ new"
@@ -336,15 +462,19 @@ class TestPatchDiagram:
             )
 
         assert result is None
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_none_on_empty_output(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent returns empty output."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="")
+        client = _stub_client_returns("")
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.patch_diagram(
                     item.source_path, item.diagram_path, "- old\n+ new"
@@ -352,15 +482,19 @@ class TestPatchDiagram:
             )
 
         assert result is None
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_none_on_cannot_patch(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent says CANNOT_PATCH."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _make_mock_client(return_value="CANNOT_PATCH")
+        client = _stub_client_returns("CANNOT_PATCH")
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(client)
+
+        with tripwire:
             result = asyncio.run(
                 generate_diagrams.patch_diagram(
                     item.source_path, item.diagram_path, "- old\n+ new"
@@ -368,6 +502,7 @@ class TestPatchDiagram:
             )
 
         assert result is None
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
 
     def test_returns_none_when_diagram_missing(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the diagram file doesn't exist."""
@@ -391,15 +526,24 @@ class TestPatchDiagram:
         existing_content = item.diagram_path.read_text(encoding="utf-8")
 
         patched_mermaid = "```mermaid\ngraph TD\n  A --> B\n```"
-        client = _make_mock_client(return_value=patched_mermaid)
+        captured_prompts: list[str] = []
 
-        with mock.patch("generate_diagrams.get_agent_client", return_value=client):
+        class _CapturingClient:
+            async def run(self, prompt):
+                captured_prompts.append(prompt)
+                return patched_mermaid
+
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.returns(_CapturingClient())
+
+        with tripwire:
             asyncio.run(
                 generate_diagrams.patch_diagram(item.source_path, item.diagram_path, diff)
             )
 
-        client.run.assert_called_once()
-        prompt_text = client.run.call_args[0][0]
+        client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        assert len(captured_prompts) == 1
+        prompt_text = captured_prompts[0]
         assert existing_content in prompt_text
         assert diff in prompt_text
 
@@ -424,29 +568,48 @@ class TestForceRegenFlag:
             "diagram content",
         )
 
-        with (
-            mock.patch("generate_diagrams.classify_change") as mock_classify,
-            mock.patch("generate_diagrams.generate_diagram", return_value=gen_result) as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--force-regen", "--all"]),
-        ):
-            asyncio.run(generate_diagrams.main_async())
+        # NOTE: classify_change is intentionally NOT mocked. tripwire's strict
+        # verifier will raise UnmockedInteractionError if main_async calls
+        # classify_change while --force-regen is set, pinning the contract.
+        gen_mock = tripwire.mock("generate_diagrams:generate_diagram")
+        gen_mock.returns(gen_result)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
 
-        mock_classify.assert_not_called()
-        assert mock_generate.call_count == 1
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(
+                ["--force-regen", "--all"]
+            ))
+
+        with tripwire.in_any_order():
+            gen_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     def test_force_regen_flag_accepted_by_argparse(self) -> None:
         """The --force-regen flag should be recognized by the argument parser."""
-        with (
-            mock.patch("sys.argv", ["generate_diagrams.py", "--force-regen", "--dry-run"]),
-            mock.patch("generate_diagrams.discover_skills", return_value=[]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-        ):
-            result = asyncio.run(generate_diagrams.main_async())
-            assert result == 0
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        with tripwire:
+            result = asyncio.run(generate_diagrams.main_async(
+                ["--force-regen", "--dry-run"]
+            ))
+
+        assert result == 0
+        with tripwire.in_any_order():
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
 
 # ---------------------------------------------------------------------------
@@ -463,26 +626,31 @@ class TestProcessingLoopIntegration:
         current_hash = generate_diagrams.compute_hash(item.source_path)
         write_diagram_with_meta(item, "oldhash")
 
-        classify_coro = mock.AsyncMock(return_value="STAMP")
+        async def _classify(*args, **kwargs):
+            return "STAMP"
 
-        with (
-            mock.patch("generate_diagrams.classify_change", classify_coro) as mock_classify,
-            mock.patch("generate_diagrams.stamp_as_fresh") as mock_stamp,
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--all"]),
-        ):
-            asyncio.run(generate_diagrams.main_async())
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        stamp_mock = tripwire.mock("generate_diagrams:stamp_as_fresh")
+        stamp_mock.returns(None)
+        # NOTE: generate_diagram is intentionally NOT mocked. tripwire's
+        # strict verifier pins that STAMP path must not invoke it.
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
 
-        mock_classify.assert_called_once_with(
-            item.source_path, item.diagram_path,
-            provider=mock.ANY, model=mock.ANY,
-            provider_args=mock.ANY,
-        )
-        mock_stamp.assert_called_once_with(item, current_hash)
-        mock_generate.assert_not_called()
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            stamp_mock.assert_call(args=(item, current_hash), kwargs={}, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     def test_patch_classification_calls_patch_diagram(self, tmp_path: Path) -> None:
         """When classify_change returns PATCH, patch_diagram is called."""
@@ -492,72 +660,123 @@ class TestProcessingLoopIntegration:
 
         patched_content = "```mermaid\ngraph TD\n  A --> C\n```"
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="PATCH")),
-            mock.patch("generate_diagrams.get_source_diff", return_value="- old\n+ new"),
-            mock.patch("generate_diagrams.patch_diagram", mock.AsyncMock(return_value=patched_content)) as mock_patch,
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--all"]),
-        ):
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "PATCH"
 
-        mock_patch.assert_called_once()
-        mock_generate.assert_not_called()
+        async def _patch(*a, **k):
+            return patched_content
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old\n+ new")
+        patch_mock = tripwire.mock("generate_diagrams:patch_diagram")
+        patch_mock.calls(_patch)
+        repo_root_mock = tripwire.mock("generate_diagrams:_get_repo_root")
+        repo_root_mock.returns(tmp_path)
+        # NOTE: generate_diagram is intentionally NOT mocked; PATCH success
+        # must not fall through to full regeneration.
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            diff_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            patch_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            repo_root_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     def test_regenerate_classification_falls_through_to_generate(self, tmp_path: Path) -> None:
         """When classify_change returns REGENERATE, full generate_diagram is called."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with (
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="REGENERATE")),
-            mock.patch("generate_diagrams.stamp_as_fresh") as mock_stamp,
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--all"]),
-        ):
-            mock_generate.return_value = (
-                generate_diagrams.GenerationResult(
-                    item=item, status="generated", message="ok"
-                ),
-                "diagram content",
-            )
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "REGENERATE"
 
-        mock_stamp.assert_not_called()
-        assert mock_generate.call_count == 1
+        gen_result = (
+            generate_diagrams.GenerationResult(
+                item=item, status="generated", message="ok"
+            ),
+            "diagram content",
+        )
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        # NOTE: stamp_as_fresh intentionally unmocked; REGENERATE path
+        # must not call it.
+        gen_mock = tripwire.mock("generate_diagrams:generate_diagram")
+        gen_mock.returns(gen_result)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            gen_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     def test_patch_failure_falls_back_to_full_generation(self, tmp_path: Path) -> None:
         """When patch_diagram returns None, fall back to full generate_diagram."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="PATCH")),
-            mock.patch("generate_diagrams.get_source_diff", return_value="- old\n+ new"),
-            mock.patch("generate_diagrams.patch_diagram", mock.AsyncMock(return_value=None)),
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--all"]),
-        ):
-            mock_generate.return_value = (
-                generate_diagrams.GenerationResult(
-                    item=item, status="generated", message="ok"
-                ),
-                "diagram content",
-            )
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "PATCH"
 
-        assert mock_generate.call_count == 1
+        async def _patch(*a, **k):
+            return None
+
+        gen_result = (
+            generate_diagrams.GenerationResult(
+                item=item, status="generated", message="ok"
+            ),
+            "diagram content",
+        )
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old\n+ new")
+        patch_mock = tripwire.mock("generate_diagrams:patch_diagram")
+        patch_mock.calls(_patch)
+        gen_mock = tripwire.mock("generate_diagrams:generate_diagram")
+        gen_mock.returns(gen_result)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            diff_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            patch_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            gen_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
     def test_existing_force_flag_still_works(self, tmp_path: Path) -> None:
         """The existing --force flag bypasses staleness and classification."""
@@ -566,24 +785,31 @@ class TestProcessingLoopIntegration:
         # Diagram is fresh (matching hash)
         write_diagram_with_meta(item, current_hash)
 
-        with (
-            mock.patch("generate_diagrams.classify_change") as mock_classify,
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("sys.argv", ["generate_diagrams.py", "--force", "--all"]),
-        ):
-            mock_generate.return_value = (
-                generate_diagrams.GenerationResult(
-                    item=item, status="generated", message="ok"
-                ),
-                "diagram content",
-            )
-            asyncio.run(generate_diagrams.main_async())
+        gen_result = (
+            generate_diagrams.GenerationResult(
+                item=item, status="generated", message="ok"
+            ),
+            "diagram content",
+        )
 
-        mock_classify.assert_not_called()
-        assert mock_generate.call_count == 1
+        # NOTE: classify_change intentionally unmocked; --force must bypass it.
+        gen_mock = tripwire.mock("generate_diagrams:generate_diagram")
+        gen_mock.returns(gen_result)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--force", "--all"]))
+
+        with tripwire.in_any_order():
+            gen_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
 
 # ---------------------------------------------------------------------------
@@ -599,65 +825,142 @@ class TestInteractiveSmartClassification:
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with (
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="STAMP")),
-            mock.patch("generate_diagrams.stamp_as_fresh"),
-            mock.patch("generate_diagrams.show_source_changes"),
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("builtins.input", return_value="s") as mock_input,
-            mock.patch("sys.argv", ["generate_diagrams.py", "--interactive", "--all"]),
-        ):
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "STAMP"
 
-        prompt_text = mock_input.call_args[0][0]
-        assert prompt_text == "  [S]tamp (enter) / [g]enerate / [q]uit: "
+        captured_prompts: list[str] = []
+
+        def _fake_input(prompt):
+            captured_prompts.append(prompt)
+            return "s"
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        stamp_mock = tripwire.mock("generate_diagrams:stamp_as_fresh")
+        stamp_mock.returns(None)
+        show_mock = tripwire.mock("generate_diagrams:show_source_changes")
+        show_mock.returns(None)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+        input_mock = tripwire.mock("builtins:input")
+        input_mock.calls(_fake_input)
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--interactive", "--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            stamp_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            show_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            input_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+
+        assert captured_prompts == ["  [S]tamp (enter) / [g]enerate / [q]uit: "]
 
     def test_interactive_patch_shows_patch_prompt(self, tmp_path: Path) -> None:
         """In interactive mode, PATCH classification shows patch/generate/quit prompt."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with (
-            mock.patch("generate_diagrams.REPO_ROOT", tmp_path),
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="PATCH")),
-            mock.patch("generate_diagrams.get_source_diff", return_value="- old\n+ new"),
-            mock.patch("generate_diagrams.patch_diagram", mock.AsyncMock(return_value="```mermaid\ngraph TD\n  A --> B\n```")),
-            mock.patch("generate_diagrams.show_source_changes"),
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("builtins.input", return_value="p") as mock_input,
-            mock.patch("sys.argv", ["generate_diagrams.py", "--interactive", "--all"]),
-        ):
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "PATCH"
 
-        prompt_text = mock_input.call_args[0][0]
-        assert prompt_text == "  [P]atch (enter) / [g]enerate / [q]uit: "
+        async def _patch(*a, **k):
+            return "```mermaid\ngraph TD\n  A --> B\n```"
+
+        captured_prompts: list[str] = []
+
+        def _fake_input(prompt):
+            captured_prompts.append(prompt)
+            return "p"
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old\n+ new")
+        patch_mock = tripwire.mock("generate_diagrams:patch_diagram")
+        patch_mock.calls(_patch)
+        repo_root_mock = tripwire.mock("generate_diagrams:_get_repo_root")
+        repo_root_mock.returns(tmp_path)
+        show_mock = tripwire.mock("generate_diagrams:show_source_changes")
+        show_mock.returns(None)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+        input_mock = tripwire.mock("builtins:input")
+        input_mock.calls(_fake_input)
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--interactive", "--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            input_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            diff_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            patch_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            repo_root_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            show_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+
+        assert captured_prompts == ["  [P]atch (enter) / [g]enerate / [q]uit: "]
 
     def test_interactive_regenerate_shows_generate_prompt(self, tmp_path: Path) -> None:
         """In interactive mode, REGENERATE classification shows generate/skip/quit prompt."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        with (
-            mock.patch("generate_diagrams.classify_change", mock.AsyncMock(return_value="REGENERATE")),
-            mock.patch("generate_diagrams.show_source_changes"),
-            mock.patch("generate_diagrams.generate_diagram") as mock_generate,
-            mock.patch("generate_diagrams.discover_skills", return_value=[item]),
-            mock.patch("generate_diagrams.discover_commands", return_value=[]),
-            mock.patch("generate_diagrams.discover_agents", return_value=[]),
-            mock.patch("builtins.input", return_value="g") as mock_input,
-            mock.patch("sys.argv", ["generate_diagrams.py", "--interactive", "--all"]),
-        ):
-            mock_generate.return_value = (
-                generate_diagrams.GenerationResult(
-                    item=item, status="generated", message="ok"
-                ),
-                "diagram content",
-            )
-            asyncio.run(generate_diagrams.main_async())
+        async def _classify(*a, **k):
+            return "REGENERATE"
 
-        prompt_text = mock_input.call_args[0][0]
-        assert prompt_text == "  [G]enerate (enter) / [s]kip / [q]uit: "
+        captured_prompts: list[str] = []
+
+        def _fake_input(prompt):
+            captured_prompts.append(prompt)
+            return "g"
+
+        gen_result = (
+            generate_diagrams.GenerationResult(
+                item=item, status="generated", message="ok"
+            ),
+            "diagram content",
+        )
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        show_mock = tripwire.mock("generate_diagrams:show_source_changes")
+        show_mock.returns(None)
+        gen_mock = tripwire.mock("generate_diagrams:generate_diagram")
+        gen_mock.returns(gen_result)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+        input_mock = tripwire.mock("builtins:input")
+        input_mock.calls(_fake_input)
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--interactive", "--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            input_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            show_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            gen_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+
+        assert captured_prompts == ["  [G]enerate (enter) / [s]kip / [q]uit: "]

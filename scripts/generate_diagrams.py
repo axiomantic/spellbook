@@ -577,6 +577,17 @@ SOURCE DIFF:
 Output the patched diagram content:"""
 
 
+def _get_repo_root() -> Path:
+    """Return the repo root. Indirection layer so tests can mock via tripwire.
+
+    The bare module-level ``REPO_ROOT`` constant is not tripwire-mockable
+    (tripwire only intercepts callables). Functions that need to operate
+    relative to the repo root should route through this helper rather than
+    reading ``REPO_ROOT`` directly when they need to be unit-testable.
+    """
+    return REPO_ROOT
+
+
 def get_source_diff(source_path: Path) -> str:
     """Get the git diff for a source file.
 
@@ -585,13 +596,14 @@ def get_source_diff(source_path: Path) -> str:
 
     Returns the diff text, or empty string if no diff is available.
     """
-    source_rel = str(source_path.relative_to(REPO_ROOT))
+    repo_root = _get_repo_root()
+    source_rel = str(source_path.relative_to(repo_root))
 
     # Try uncommitted changes first
     try:
         result = subprocess.run(
             ["git", "diff", "HEAD", "--", source_rel],
-            capture_output=True, text=True, cwd=REPO_ROOT,
+            capture_output=True, text=True, cwd=repo_root,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -602,7 +614,7 @@ def get_source_diff(source_path: Path) -> str:
     try:
         result = subprocess.run(
             ["git", "diff", "HEAD~1", "--", source_rel],
-            capture_output=True, text=True, cwd=REPO_ROOT,
+            capture_output=True, text=True, cwd=repo_root,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -932,7 +944,7 @@ def count_by_tier(items: list[SourceItem]) -> tuple[int, int]:
 # ---------------------------------------------------------------------------
 
 
-async def main_async() -> int:
+async def main_async(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Generate diagrams for skills and commands via LLM (Claude or Gemini)",
     )
@@ -993,7 +1005,7 @@ async def main_async() -> int:
         action="store_true",
         help="Stamp stale diagrams as fresh without regenerating (just update hash)",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Discover all items
     all_skills = discover_skills()
@@ -1200,7 +1212,7 @@ async def main_async() -> int:
             )
             if patched_content is not None:
                 # Build output with metadata header
-                source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                source_rel = str(item.source_path.relative_to(_get_repo_root()))
                 now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                 meta = {
                     "source": source_rel,
@@ -1310,7 +1322,7 @@ async def main_async() -> int:
                     provider_args=args.provider_args,
                 )
                 if patched_content is not None:
-                    source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                    source_rel = str(item.source_path.relative_to(_get_repo_root()))
                     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                     meta = {
                         "source": source_rel,
