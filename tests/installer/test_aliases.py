@@ -527,6 +527,42 @@ def _make_minimal_spellbook_dir(tmp_path):
 # if the SUT fires more calls than registered, and
 # ``UnassertedInteractionsError`` at teardown if a recorded interaction
 # is not asserted. Hence: no ``required(False)`` workaround needed.
+#
+# Per-call-site provenance (verified against the installer/ tree under
+# skip_global_steps=False on POSIX):
+#
+#   _INSTALL_HOME_CALLS=2     -> pathlib.Path.home() called by:
+#     - installer/components/aliases.py:30 (rc-file resolution inside
+#       install_aliases via _install_claude_code_aliases)
+#     - installer/platforms/claude_code.py:518 (default_dir = Path.home()
+#       / ".claude" during install config_dir resolution)
+#
+#   _INSTALL_CC_CLI_CALLS=1   -> installer.platforms.claude_code:
+#                                check_claude_cli_available called by:
+#     - installer/platforms/claude_code.py:600 (MCP HTTP registration
+#       branch during ClaudeCodeInstaller.install)
+#
+#   _INSTALL_MCP_CLI_CALLS=1  -> installer.components.mcp:
+#                                check_claude_cli_available called by:
+#     - one of installer/components/mcp.py:53, :114, :157 (the
+#       register_mcp_http_server path invoked during install — exact
+#       branch depends on dry_run/config_dir state; empirically exactly
+#       one of these fires per install cycle)
+#
+#   _UNINSTALL_CC_CLI_CALLS=1 -> installer.platforms.claude_code:
+#                                check_claude_cli_available called by:
+#     - installer/platforms/claude_code.py:847 (MCP unregister branch
+#       during ClaudeCodeInstaller.uninstall)
+#
+#   _UNINSTALL_DAEMON_CALLS=1 -> installer.platforms.claude_code:
+#                                uninstall_daemon called by:
+#     - installer/platforms/claude_code.py:835 (daemon teardown branch
+#       during ClaudeCodeInstaller.uninstall)
+#
+# If the production-code call graph drifts (e.g. an added Path.home() in
+# config.py becomes reachable, or the MCP gating moves), bump the matching
+# constant AND update this comment. A constant that no longer matches its
+# enumerated sites is a bug, not a refactor.
 _INSTALL_HOME_CALLS = 2
 _INSTALL_CC_CLI_CALLS = 1
 _INSTALL_MCP_CLI_CALLS = 1
@@ -546,19 +582,19 @@ def _register_aux_install_mocks(home_path):
     """
     home_mock = tripwire.mock("pathlib:Path.home")
     for _ in range(_INSTALL_HOME_CALLS):
-        home_mock.calls(lambda: home_path)
+        home_mock.returns(home_path)
 
     cc_cli_mock = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_INSTALL_CC_CLI_CALLS):
-        cc_cli_mock.calls(lambda: False)
+        cc_cli_mock.returns(False)
 
     mcp_cli_mock = tripwire.mock(
         "installer.components.mcp:check_claude_cli_available"
     )
     for _ in range(_INSTALL_MCP_CLI_CALLS):
-        mcp_cli_mock.calls(lambda: False)
+        mcp_cli_mock.returns(False)
 
     return home_mock, cc_cli_mock, mcp_cli_mock
 
@@ -924,7 +960,7 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_UNINSTALL_CC_CLI_CALLS):
-        cli_mock_claude.calls(lambda: False)
+        cli_mock_claude.returns(False)
 
     uninstall_mock = tripwire.mock(
         "installer.platforms.claude_code:uninstall_spellbook_cco"
@@ -942,7 +978,10 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
         "installer.platforms.claude_code:uninstall_daemon"
     )
     for _ in range(_UNINSTALL_DAEMON_CALLS):
-        daemon_mock.calls(lambda dry_run: (True, "ok"))
+        # SUT calls uninstall_daemon(dry_run=False); the lambda ignored
+        # its arg and returned a constant, so .returns() is equivalent
+        # and idiomatic for a stateless return value.
+        daemon_mock.returns((True, "ok"))
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
     with tripwire:

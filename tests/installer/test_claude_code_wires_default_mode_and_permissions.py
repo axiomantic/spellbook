@@ -113,7 +113,7 @@ def _redirect_state_file(tmp_path, *, budget: int):
         "installer.components.managed_permissions_state:_state_file_path"
     )
     for _ in range(budget):
-        mock_state_path.calls(lambda: state_path)
+        mock_state_path.returns(state_path)
     return mock_state_path
 
 
@@ -143,19 +143,19 @@ def _register_install_mocks(home_dir):
     """
     mock_home = tripwire.mock("pathlib:Path.home")
     for _ in range(_HOME_CALLS_PER_INSTALL):
-        mock_home.calls(lambda: home_dir)
+        mock_home.returns(home_dir)
 
     mock_cc_cli = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_CC_CLI_CALLS_PER_INSTALL):
-        mock_cc_cli.calls(lambda: False)
+        mock_cc_cli.returns(False)
 
     mock_mcp_cli = tripwire.mock(
         "installer.components.mcp:check_claude_cli_available"
     )
     for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-        mock_mcp_cli.calls(lambda: False)
+        mock_mcp_cli.returns(False)
 
     return mock_home, mock_cc_cli, mock_mcp_cli
 
@@ -173,25 +173,28 @@ def _register_install_and_uninstall_mocks(home_dir):
     """
     mock_home = tripwire.mock("pathlib:Path.home")
     for _ in range(_HOME_CALLS_PER_INSTALL + _HOME_CALLS_PER_UNINSTALL):
-        mock_home.calls(lambda: home_dir)
+        mock_home.returns(home_dir)
 
     mock_cc_cli = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_CC_CLI_CALLS_PER_INSTALL + _CC_CLI_CALLS_PER_UNINSTALL):
-        mock_cc_cli.calls(lambda: False)
+        mock_cc_cli.returns(False)
 
     mock_mcp_cli = tripwire.mock(
         "installer.components.mcp:check_claude_cli_available"
     )
     for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-        mock_mcp_cli.calls(lambda: False)
+        mock_mcp_cli.returns(False)
 
     mock_daemon = tripwire.mock(
         "installer.platforms.claude_code:uninstall_daemon"
     )
     for _ in range(_DAEMON_CALLS_PER_UNINSTALL):
-        mock_daemon.calls(lambda dry_run: (True, "ok"))
+        # SUT calls uninstall_daemon(dry_run=self.dry_run); the lambda
+        # ignored its arg and returned a constant, so .returns() is
+        # equivalent and idiomatic for a stateless return value.
+        mock_daemon.returns((True, "ok"))
 
     return mock_home, mock_cc_cli, mock_mcp_cli, mock_daemon
 
@@ -224,6 +227,7 @@ def _drain_cco_install_exception_log() -> None:
     raise. Always called inside an enclosing ``in_any_order`` block.
     """
     from dirty_equals import AnyThing
+    from tripwire._errors import InteractionMismatchError
 
     try:
         tripwire.log.assert_log(
@@ -231,11 +235,17 @@ def _drain_cco_install_exception_log() -> None:
             message=AnyThing,
             logger_name="installer.platforms.claude_code",
         )
-    except Exception:
-        # No ERROR log recorded → assert_log raised; that's the "no cco
-        # failure" path. The strict verifier will still flag any
-        # recorded-but-unasserted ERROR via UnassertedInteractionsError
-        # at teardown, so swallowing here is safe.
+    except InteractionMismatchError:
+        # Narrowed catch (was bare ``except Exception``): tripwire's
+        # ``LoggingPlugin.assert_log`` → ``Verifier.assert_interaction``
+        # raises ``InteractionMismatchError`` when no matching ERROR log
+        # was recorded (see tripwire/_verifier.py:209). That's the "no
+        # cco failure" path. Real test bugs (typo in ``logger_name``,
+        # wrong level, API breakage) surface as ``MissingAssertionFieldsError``,
+        # ``AllWildcardAssertionError``, ``AttributeError``, etc., and are
+        # no longer swallowed. The strict verifier still flags any
+        # recorded-but-unasserted ERROR via ``UnassertedInteractionsError``
+        # at teardown.
         pass
 
 
