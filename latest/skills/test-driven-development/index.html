@@ -8600,155 +8600,197 @@
 <a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="k">-</span><span class="w"> </span>ESCAPE field describes something the test DOES catch (means you didn&#39;t think hard enough)
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="k">-</span><span class="w"> </span>ESCAPE field is copy-pasted between tests (each test has unique escape paths)
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="gu">## Evidence Requirements</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="gu">### Test Strength Verification (mechanical pre-commit grep)</span>
 <a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| Claim | Required Evidence |
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>|-------|-------------------|
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>| &quot;Test works&quot; | Observed failure output with expected message |
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>| &quot;Feature complete&quot; | All tests pass, watched each fail first |
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>| &quot;Refactor safe&quot; | Tests stayed green throughout |
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>All of the following mean: Delete code. Start over with TDD.
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Code before test
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>Test passes immediately (without watching it fail)
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Can&#39;t explain why test failed
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>&quot;Just this once&quot; / &quot;already manually tested&quot;
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>&quot;Keep as reference&quot; / &quot;adapt existing&quot;
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>&quot;Tests after achieve same goals&quot;
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>&quot;TDD is dogmatic, being pragmatic&quot;
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>&quot;It&#39;s about spirit not ritual&quot;
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">-</span><span class="w"> </span>&quot;Already spent X hours, deleting is wasteful&quot;
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">-</span><span class="w"> </span>&quot;This is different because...&quot;
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">-</span><span class="w"> </span>Tests added &quot;later&quot; / tests after implementation
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>Rationalizing &quot;I already manually tested it&quot;
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>&quot;Need to explore first&quot; (throw away exploration, start with TDD)
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="gu">## Common Rationalizations</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>| Excuse | Reality |
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>|--------|---------|
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>| &quot;Too simple to test&quot; | Simple code breaks. Test takes 30 seconds. |
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>| &quot;I&#39;ll test after&quot; | Tests passing immediately prove nothing. |
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>| &quot;Tests after achieve same goals&quot; | Tests-after = &quot;what does this do?&quot; Tests-first = &quot;what should this do?&quot; You test what you built, not what&#39;s required. You verify remembered edge cases, not discovered ones. |
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>| &quot;Already manually tested&quot; | Ad-hoc is not systematic. No record, can&#39;t re-run. Forgot cases are the ones that break under pressure. |
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>| &quot;Deleting X hours is wasteful&quot; | Sunk cost fallacy. Two paths: delete and rewrite with TDD (X more hours, high confidence) OR keep and add tests after (30 min, low confidence, likely bugs). |
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>| &quot;Keep as reference, write tests first&quot; | You&#39;ll adapt it. That&#39;s testing after. Delete means delete. |
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>| &quot;Need to explore first&quot; | Fine. Throw away exploration, start with TDD. |
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>| &quot;Test hard = design unclear&quot; | Listen to test. Hard to test = hard to use. |
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>| &quot;TDD will slow me down&quot; | TDD is faster than debugging. Finds bugs before commit, prevents regressions, documents behavior, enables refactoring. |
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>| &quot;Manual test faster&quot; | Manual doesn&#39;t prove edge cases. You&#39;ll re-test every change. |
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>| &quot;Existing code has no tests&quot; | You&#39;re improving it. Add tests for existing code. |
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>ESCAPE Analysis is the rigorous version. This is the cheap mechanical version
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>that catches the most common green-mirage patterns at commit time. Run BEFORE
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>any per-task commit:
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="c1"># 1. Banned substring assertions on serialized output</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;expect.*stringContaining.*JSON|expect.*stringContaining.*\{&#39;</span><span class="w"> </span>&lt;test_files&gt;
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="c1"># Replace with: JSON.parse(...) + exact deep equality (toEqual)</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="c1"># 2. Tautological / dead assertions</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;expect\(true\)\.toBe\(true\)|expect\(1\)\.toBe\(1\)|assert True$|assert 1$&#39;</span><span class="w"> </span>&lt;test_files&gt;
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="c1"># Replace with: behavioral assertion that can actually fail</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="c1"># 3. Mock call without argument verification (catches &quot;called X but with what?&quot;)</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;toHaveBeenCalled\(\)$|assert_called\(\)$|called_once\(\)$&#39;</span><span class="w"> </span>&lt;test_files&gt;
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="c1"># Strengthen with: toHaveBeenCalledWith(...) / assert_called_with(...) / called_once_with(...)</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="c1"># 4. Existence-only smoke tests (typeof === &quot;function&quot;)</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;typeof.*===.*function|isinstance.*function|callable\(&#39;</span><span class="w"> </span>&lt;test_files&gt;
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="c1"># Replace with: actually call the thing and assert behavior</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="c1"># 5. Side-effect-free &quot;happy path&quot; tests for stateful operations</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="c1">#    (e.g., &quot;forms a coalition&quot; that asserts return value but never</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="c1">#    inspects the Redis hash that should have been written)</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="c1">#    — no greppable signature; require by checklist:</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="c1">#    For every test of a method that mutates external state, at least one</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="c1">#    assertion MUST inspect the post-state, not just the return value.</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="sb">```</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>If any grep returns hits: strengthen the assertion BEFORE the next gate.
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>A passing test with these patterns is a known green-mirage source
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>(see <span class="sb">`auditing-green-mirage`</span> skill for the catalog).
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="gs">**Mock fidelity rule:**</span> If your mock for an external system (Redis Lua,
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>SQL, HTTP API) does not match the real system&#39;s contract, your test passes
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>are lies. When integration infrastructure is available (Phase 4.0
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>Environment Gate confirmed it), at least one integration test per module
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>MUST exercise the real system. Mocks for <span class="sb">`evalLua`</span>, <span class="sb">`set`</span>, <span class="sb">`xadd`</span>, etc.
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>are convenience aids, not coverage.
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="gu">## Evidence Requirements</span>
 <a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Before marking complete:
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="k">- [ ]</span> Every function has test
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="k">- [ ]</span> Watched each test fail before implementing
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="k">- [ ]</span> Failed for expected reason (feature missing, not typo)
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">- [ ]</span> Wrote minimal code to pass
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">- [ ]</span> All tests pass, output pristine
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">- [ ]</span> Tests use real code (mocks only if unavoidable)
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">- [ ]</span> Edge cases and errors covered
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">- [ ]</span> Every assertion validates CONTENT, not just existence/count
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">- [ ]</span> Every assertion is Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">- [ ]</span> ESCAPE analysis completed for every test function (including MUTATION field)
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">- [ ]</span> Every assertion has a named mutation that would cause it to fail
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">- [ ]</span> No mock.ANY in assertions (use pychoir matchers with justification comment instead)
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">- [ ]</span> Every mock call asserted with ALL arguments; call count verified
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">- [ ]</span> No <span class="sb">`len() &gt; 0`</span> or <span class="sb">`len() == N`</span> without content verification
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">- [ ]</span> No bare substring checks on string output (dynamic content is no excuse -- construct full expected value)
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>If ANY unchecked: Skipped TDD. Start over.
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="gu">## When Stuck</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>| Problem | Solution |
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>|---------|----------|
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>| Don&#39;t know how to test | Write wished-for API. Assertion first. Ask human. |
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>| Test too complicated | Design too complicated. Simplify interface. |
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>| Must mock everything | Code too coupled. Dependency injection. |
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>| Test setup huge | Extract helpers. Still complex? Simplify design. |
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gu">## Bug Fix Pattern</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="gs">**Bug:**</span> Empty email accepted
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gs">**RED**</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;rejects empty email&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">submitForm</span><span class="p">({</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">error</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Email required&#39;</span><span class="p">);</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="p">});</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="sb">```</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>| Claim | Required Evidence |
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>|-------|-------------------|
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>| &quot;Test works&quot; | Observed failure output with expected message |
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>| &quot;Feature complete&quot; | All tests pass, watched each fail first |
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>| &quot;Refactor safe&quot; | Tests stayed green throughout |
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>All of the following mean: Delete code. Start over with TDD.
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Code before test
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">-</span><span class="w"> </span>Test passes immediately (without watching it fail)
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">-</span><span class="w"> </span>Can&#39;t explain why test failed
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">-</span><span class="w"> </span>&quot;Just this once&quot; / &quot;already manually tested&quot;
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">-</span><span class="w"> </span>&quot;Keep as reference&quot; / &quot;adapt existing&quot;
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">-</span><span class="w"> </span>&quot;Tests after achieve same goals&quot;
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">-</span><span class="w"> </span>&quot;TDD is dogmatic, being pragmatic&quot;
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">-</span><span class="w"> </span>&quot;It&#39;s about spirit not ritual&quot;
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">-</span><span class="w"> </span>&quot;Already spent X hours, deleting is wasteful&quot;
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">-</span><span class="w"> </span>&quot;This is different because...&quot;
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Tests added &quot;later&quot; / tests after implementation
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Rationalizing &quot;I already manually tested it&quot;
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">-</span><span class="w"> </span>&quot;Need to explore first&quot; (throw away exploration, start with TDD)
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="gu">## Common Rationalizations</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>| Excuse | Reality |
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>|--------|---------|
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>| &quot;Too simple to test&quot; | Simple code breaks. Test takes 30 seconds. |
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>| &quot;I&#39;ll test after&quot; | Tests passing immediately prove nothing. |
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>| &quot;Tests after achieve same goals&quot; | Tests-after = &quot;what does this do?&quot; Tests-first = &quot;what should this do?&quot; You test what you built, not what&#39;s required. You verify remembered edge cases, not discovered ones. |
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>| &quot;Already manually tested&quot; | Ad-hoc is not systematic. No record, can&#39;t re-run. Forgot cases are the ones that break under pressure. |
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>| &quot;Deleting X hours is wasteful&quot; | Sunk cost fallacy. Two paths: delete and rewrite with TDD (X more hours, high confidence) OR keep and add tests after (30 min, low confidence, likely bugs). |
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>| &quot;Keep as reference, write tests first&quot; | You&#39;ll adapt it. That&#39;s testing after. Delete means delete. |
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| &quot;Need to explore first&quot; | Fine. Throw away exploration, start with TDD. |
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>| &quot;Test hard = design unclear&quot; | Listen to test. Hard to test = hard to use. |
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| &quot;TDD will slow me down&quot; | TDD is faster than debugging. Finds bugs before commit, prevents regressions, documents behavior, enables refactoring. |
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>| &quot;Manual test faster&quot; | Manual doesn&#39;t prove edge cases. You&#39;ll re-test every change. |
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>| &quot;Existing code has no tests&quot; | You&#39;re improving it. Add tests for existing code. |
 <a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="gs">**Verify RED**</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>FAIL:<span class="w"> </span>expected<span class="w"> </span><span class="s1">&#39;Email required&#39;</span>,<span class="w"> </span>got<span class="w"> </span>undefined
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">```</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="gs">**GREEN**</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="kd">function</span><span class="w"> </span><span class="nx">submitForm</span><span class="p">(</span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="kt">FormData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">email</span><span class="o">?</span><span class="p">.</span><span class="nx">trim</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Email required&#39;</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="w">  </span><span class="c1">// ...existing logic</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="p">}</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">```</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="gs">**Verify GREEN**</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>PASS
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="sb">```</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="gs">**REFACTOR**</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>Extract validation for multiple fields if needed.
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>Never fix bugs without a test.
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="gu">## Testing Anti-Patterns</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>When adding mocks or test utilities, avoid common pitfalls:
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>| Anti-Pattern | Problem | Solution |
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>|--------------|---------|----------|
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>| Testing mock behavior | Proves mock works, not code | Use real dependencies when possible |
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>| Test-only methods | Production code polluted for tests | Refactor design for testability |
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>| Blind mocking | Don&#39;t understand what&#39;s mocked | Trace dependency chain first |
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>| Over-mocking | Tests pass but behavior broken | Mock boundaries only (external dependencies: network, DB, filesystem), not internals |
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="gu">## Test Speed &amp; Scope</span>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>Fast tests enable tight red-green-refactor cycles. Slow tests break flow.
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>Before marking complete:
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="k">- [ ]</span> Every function has test
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="k">- [ ]</span> Watched each test fail before implementing
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="k">- [ ]</span> Failed for expected reason (feature missing, not typo)
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="k">- [ ]</span> Wrote minimal code to pass
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="k">- [ ]</span> All tests pass, output pristine
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="k">- [ ]</span> Tests use real code (mocks only if unavoidable)
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="k">- [ ]</span> Edge cases and errors covered
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="k">- [ ]</span> Every assertion validates CONTENT, not just existence/count
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="k">- [ ]</span> Every assertion is Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">- [ ]</span> ESCAPE analysis completed for every test function (including MUTATION field)
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">- [ ]</span> Every assertion has a named mutation that would cause it to fail
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">- [ ]</span> No mock.ANY in assertions (use pychoir matchers with justification comment instead)
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">- [ ]</span> Every mock call asserted with ALL arguments; call count verified
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="k">- [ ]</span> No <span class="sb">`len() &gt; 0`</span> or <span class="sb">`len() == N`</span> without content verification
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="k">- [ ]</span> No bare substring checks on string output (dynamic content is no excuse -- construct full expected value)
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>If ANY unchecked: Skipped TDD. Start over.
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="gu">## When Stuck</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>| Problem | Solution |
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>|---------|----------|
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>| Don&#39;t know how to test | Write wished-for API. Assertion first. Ask human. |
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>| Test too complicated | Design too complicated. Simplify interface. |
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>| Must mock everything | Code too coupled. Dependency injection. |
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>| Test setup huge | Extract helpers. Still complex? Simplify design. |
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="gu">## Bug Fix Pattern</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="gs">**Bug:**</span> Empty email accepted
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="gs">**RED**</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;rejects empty email&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">submitForm</span><span class="p">({</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">error</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Email required&#39;</span><span class="p">);</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="p">});</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="sb">```</span>
 <a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Isolate expensive resources**</span>: Mock GPU, network, and DB calls in unit tests. Real resources belong in integration tests only.
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Smallest possible inputs**</span>: 4x4 matrices, not 1024x1024. Save large inputs for performance/integration tests.
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Never sleep in tests**</span>: Poll with short intervals, or mock the time-dependent component.
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Lightweight fixtures**</span>: If a fixture takes longer than the test itself, it is too heavy for a unit test.
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>Apply marks proactively when writing new tests. A test that calls a GPU kernel is a GPU test even if it is fast today. Common marks: <span class="sb">`slow`</span>, <span class="sb">`gpu`</span>/<span class="sb">`hardware`</span>, <span class="sb">`network`</span>/<span class="sb">`external`</span>, <span class="sb">`integration`</span>, <span class="sb">`smoke`</span>.
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>Scope test runs to changes: if <span class="sb">`src/auth/login.py`</span> changed, run <span class="sb">`tests/test_login.py`</span>, not the entire suite. Run the full suite once at the end of a work unit, not after every edit.
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="gu">## Final Rule</span>
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="sb">```</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="sb">Production code -&gt; test exists and failed first</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="sb">Otherwise -&gt; not TDD</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="gs">**Verify RED**</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>FAIL:<span class="w"> </span>expected<span class="w"> </span><span class="s1">&#39;Email required&#39;</span>,<span class="w"> </span>got<span class="w"> </span>undefined
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="sb">```</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="gs">**GREEN**</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="kd">function</span><span class="w"> </span><span class="nx">submitForm</span><span class="p">(</span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="kt">FormData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">email</span><span class="o">?</span><span class="p">.</span><span class="nx">trim</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Email required&#39;</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="w">  </span><span class="c1">// ...existing logic</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="p">}</span>
 <a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="sb">```</span>
 <a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>No exceptions without your human partner&#39;s permission.
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>The test must fail first. You must watch it fail. The code must be minimal. There are no shortcuts. Every rationalization is a trap. Delete code written before tests. Start over with TDD.
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="gs">**Verify GREEN**</span>
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>PASS
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="sb">```</span>
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="gs">**REFACTOR**</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>Extract validation for multiple fields if needed.
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>Never fix bugs without a test.
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="gu">## Testing Anti-Patterns</span>
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>When adding mocks or test utilities, avoid common pitfalls:
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>| Anti-Pattern | Problem | Solution |
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>|--------------|---------|----------|
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>| Testing mock behavior | Proves mock works, not code | Use real dependencies when possible |
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>| Test-only methods | Production code polluted for tests | Refactor design for testability |
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>| Blind mocking | Don&#39;t understand what&#39;s mocked | Trace dependency chain first |
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>| Over-mocking | Tests pass but behavior broken | Mock boundaries only (external dependencies: network, DB, filesystem), not internals |
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a><span class="gu">## Test Speed &amp; Scope</span>
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>Fast tests enable tight red-green-refactor cycles. Slow tests break flow.
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Isolate expensive resources**</span>: Mock GPU, network, and DB calls in unit tests. Real resources belong in integration tests only.
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Smallest possible inputs**</span>: 4x4 matrices, not 1024x1024. Save large inputs for performance/integration tests.
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Never sleep in tests**</span>: Poll with short intervals, or mock the time-dependent component.
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Lightweight fixtures**</span>: If a fixture takes longer than the test itself, it is too heavy for a unit test.
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>Apply marks proactively when writing new tests. A test that calls a GPU kernel is a GPU test even if it is fast today. Common marks: <span class="sb">`slow`</span>, <span class="sb">`gpu`</span>/<span class="sb">`hardware`</span>, <span class="sb">`network`</span>/<span class="sb">`external`</span>, <span class="sb">`integration`</span>, <span class="sb">`smoke`</span>.
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>Scope test runs to changes: if <span class="sb">`src/auth/login.py`</span> changed, run <span class="sb">`tests/test_login.py`</span>, not the entire suite. Run the full suite once at the end of a work unit, not after every edit.
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a>
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a><span class="gu">## Final Rule</span>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a><span class="sb">```</span>
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="sb">Production code -&gt; test exists and failed first</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="sb">Otherwise -&gt; not TDD</span>
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="sb">```</span>
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>No exceptions without your human partner&#39;s permission.
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>The test must fail first. You must watch it fail. The code must be minimal. There are no shortcuts. Every rationalization is a trap. Delete code written before tests. Start over with TDD.
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

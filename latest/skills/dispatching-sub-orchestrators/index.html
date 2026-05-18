@@ -8201,229 +8201,268 @@
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">batch gates across tasks. Do NOT batch commits across tasks. Each task</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">is a complete unit: gates pass -&gt; commit -&gt; next task.</span>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">## Task-Tool Availability (REPORT THIS)</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">## Manager Inline Quality Gate (per sub-task, BEFORE commit)</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">Subagents dispatched as `general` / `general-purpose` should have the</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">Task tool, but in practice it is sometimes not wired through. On your</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">FIRST dispatch attempt for the FIRST task&#39;s TDD gate:</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">- If the Task tool dispatch succeeds and the sub-subagent returns with</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="sb">  a &quot;Launching skill:&quot; line, set `task_tool_available = true` in your</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">  final summary. Continue using sub-subagents for all gates.</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">- If the Task tool is unavailable, OR the sub-subagent returns without</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">  a &quot;Launching skill:&quot; line on two consecutive attempts, set</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">  `task_tool_available = false` in your final summary. Execute all</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">  remaining gates INLINE in your own context with the same discipline.</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">  Do NOT silently fall back; the CEO needs to know per-gate isolation</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">  was lost so the end-of-Phase-4 gates can compensate.</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">You MUST report this honestly. The CEO will run end-of-Phase-4 gates</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">regardless, but `task_tool_available = false` tells the CEO to give</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">those gates extra weight.</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">&lt;CRITICAL&gt;</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">Between the 4 per-task gates and the per-task commit, run a mechanical</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">quality check on the ACTUAL working tree. The 4 gates above can pass with</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">implementations that compile in isolation but break the rest of the project,</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">or with tests that pass against a stub. This inline check catches both.</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="sb">&lt;/CRITICAL&gt;</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="sb">For each task, after gate 4 (fact-check) and before commit:</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb"># 1. Whole-project type-check (NOT just the new file)</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">&lt;typecheck command&gt;   # e.g., npx tsc --noEmit, mypy ., cargo check</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb"># 2. Run the new test file specifically</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">&lt;targeted test command&gt;   # e.g., vitest run path/to/new.spec.ts</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb"># 3. Quick anti-pattern grep on the modified files</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">rg -n &#39;as any|: any[, )=]|@ts-ignore|@ts-expect-error|expect\(true\)\.toBe\(true\)&#39; &lt;modified_files&gt;</span>
 <a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">## Commit Hygiene (NON-NEGOTIABLE)</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">- Commit format: [commit_format, e.g., &quot;PROM-47: &lt;imperative description&gt;&quot;]</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">- One commit per task (after all 4 gates pass for that task).</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">- NO Co-Authored-By footers.</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="sb">- NO &quot;Generated with Claude Code&quot; or similar AI-attribution.</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">- NO `#issue` references in commit subjects or bodies (GitHub auto-links</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">  these and notifies subscribers; only the human user adds those).</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">- Commit subject under 72 characters.</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="sb">## Assertion Quality (NON-NEGOTIABLE)</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">THE FULL ASSERTION PRINCIPLE: every assertion you write asserts exact</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sb">equality against the COMPLETE expected output. This is from the project&#39;s</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">patterns/assertion-quality-standard.md and is enforced by the</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">auditing-green-mirage gate that runs at CEO level after you return.</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="sb">  assert result == complete_expected_output       -- CORRECT</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="sb">  assert message == f&quot;Date: {date.today()}&quot;       -- CORRECT (dynamic)</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="sb">  assert &quot;substring&quot; in result                    -- BANNED. ALWAYS.</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="sb">  assert len(result) &gt; 0                          -- BANNED.</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="sb">  mock_fn.assert_called_with(mock.ANY, ...)       -- BANNED.</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="sb">Use pytest-tripwire for mocking, per `AGENTS.md` (Testing with Tripwire).</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="sb">Never reach for `unittest.mock`.</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="sb">## Blocker Handling</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb"># 4. (If integration infrastructure is available) run the relevant</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">#    integration test, NOT just unit tests with mocks. Mock-only coverage</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">#    of an external system (Redis Lua, SQL, HTTP) is a known green-mirage</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">#    source. If integration infra is unavailable, log this in your summary</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">#    so the CEO end-of-Phase-4 gates know to weight green-mirage audit higher.</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="sb">```</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>Report per-task in your final summary as one of:
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="k">-</span><span class="w"> </span><span class="sb">`Task N: PASS (typecheck clean, K/K tests, no anti-patterns)`</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="k">-</span><span class="w"> </span><span class="sb">`Task N: PASS-WITH-NOTES (typecheck clean, K/K tests; integration deferred: &lt;reason&gt;)`</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="k">-</span><span class="w"> </span><span class="sb">`Task N: FAIL (&lt;single-sentence reason&gt;)`</span> — in which case you must fix
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>  before commit, OR roll the task back and report the blocker to the CEO.
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>Do NOT silently let &quot;FAIL&quot; become &quot;PASS&quot; by relaxing the test or stubbing
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>the failing branch. That is Pattern 9 (Self-Review Substitution) at the
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>Manager tier. If you cannot honestly report PASS, the CEO needs to know.
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="gu">## Task-Tool Availability (REPORT THIS)</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>Subagents dispatched as <span class="sb">`general`</span> / <span class="sb">`general-purpose`</span> should have the
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>Task tool, but in practice it is sometimes not wired through. On your
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>FIRST dispatch attempt for the FIRST task&#39;s TDD gate:
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="k">-</span><span class="w"> </span>If the Task tool dispatch succeeds and the sub-subagent returns with
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>  a &quot;Launching skill:&quot; line, set <span class="sb">`task_tool_available = true`</span> in your
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>  final summary. Continue using sub-subagents for all gates.
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="sb">- **Local design-doc gap** (small, fixable, your scope) — fix as you go,</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">  note in `design_doc_gaps_discovered`.</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="sb">- **Bug in earlier work** (yours or a previous Manager&#39;s) — fix it. Do</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="sb">  NOT work around. Note in `escalated_issues` so the CEO can verify.</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="sb">- **3 consecutive task failures** — STOP. Do not attempt task 4. Report</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="sb">  in `escalated_issues` with the failure mode for each of the 3 attempts.</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="sb">  The CEO will decide whether to dispatch a debugging subagent or change</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="sb">  the plan.</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">-</span><span class="w"> </span>If the Task tool is unavailable, OR the sub-subagent returns without
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>  a &quot;Launching skill:&quot; line on two consecutive attempts, set
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>  <span class="sb">`task_tool_available = false`</span> in your final summary. Execute all
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>  remaining gates INLINE in your own context with the same discipline.
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>  Do NOT silently fall back; the CEO needs to know per-gate isolation
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>  was lost so the end-of-Phase-4 gates can compensate.
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>You MUST report this honestly. The CEO will run end-of-Phase-4 gates
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>regardless, but <span class="sb">`task_tool_available = false`</span> tells the CEO to give
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>those gates extra weight.
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="sb">- **Out-of-scope file change required** — STOP. Report in</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="sb">  `escalated_issues` with the file path and what change is needed. The</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="sb">  CEO will coordinate with the owning Manager.</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="sb">## Final Return Schema (MANDATORY)</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="sb">Your final response to the CEO MUST follow this exact schema. The CEO</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="sb">parses it programmatically. Free-form prose summaries will be rejected</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="sb">and you will be re-dispatched.</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="gu">## Commit Hygiene (NON-NEGOTIABLE)</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Commit format: [commit_format, e.g., &quot;PROM-47: &lt;imperative description&gt;&quot;]
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>One commit per task (after all 4 gates pass for that task).
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>NO Co-Authored-By footers.
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>NO &quot;Generated with Claude Code&quot; or similar AI-attribution.
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>NO <span class="sb">`#issue`</span> references in commit subjects or bodies (GitHub auto-links
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>  these and notifies subscribers; only the human user adds those).
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Commit subject under 72 characters.
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="sb">```</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gu">## Manager [Letter] Final Summary</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="gs">**task_tool_available:**</span> true | false
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="gs">**task_outcomes:**</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>| Task ID | Outcome | Commit SHA | Test count | Notes |
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>|---------|---------|-----------|------------|-------|
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>| [id]    | PASSED  | [sha7]    | [n]        | [opt] |
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>| [id]    | FAILED  | -         | [n]        | [why] |
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>| [id]    | DEFERRED| -         | -          | [why] |
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="gs">**commit_shas (in order):**</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">sha7</span>]: <span class="na">[task id] - [subject line]</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">sha7</span>]: <span class="na">[task id] - [subject line]</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="gu">## Assertion Quality (NON-NEGOTIABLE)</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>THE FULL ASSERTION PRINCIPLE: every assertion you write asserts exact
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>equality against the COMPLETE expected output. This is from the project&#39;s
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>patterns/assertion-quality-standard.md and is enforced by the
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>auditing-green-mirage gate that runs at CEO level after you return.
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>  assert result == complete_expected_output       -- CORRECT
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>  assert message == f&quot;Date: {date.today()}&quot;       -- CORRECT (dynamic)
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>  assert &quot;substring&quot; in result                    -- BANNED. ALWAYS.
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>  assert len(result) &gt; 0                          -- BANNED.
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>  mock_fn.assert_called_with(mock.ANY, ...)       -- BANNED.
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>Use pytest-tripwire for mocking, per <span class="sb">`AGENTS.md`</span> (Testing with Tripwire).
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>Never reach for <span class="sb">`unittest.mock`</span>.
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="gs">**cumulative_metrics:**</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">-</span><span class="w"> </span>Total tests added: [n]
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="k">-</span><span class="w"> </span>Total tests passing at end: [n]
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="k">-</span><span class="w"> </span>Total files created: [n]
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">-</span><span class="w"> </span>Total files modified: [n]
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span>Lines added: [n]
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="k">-</span><span class="w"> </span>Lines deleted: [n]
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="gu">## Blocker Handling</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Local design-doc gap**</span> (small, fixable, your scope) — fix as you go,
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>  note in <span class="sb">`design_doc_gaps_discovered`</span>.
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Bug in earlier work**</span> (yours or a previous Manager&#39;s) — fix it. Do
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>  NOT work around. Note in <span class="sb">`escalated_issues`</span> so the CEO can verify.
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="gs">**escalated_issues:**</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="k">-</span><span class="w"> </span>[issue 1: what, where, proposed resolution] (or &quot;none&quot;)
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="gs">**design_doc_gaps_discovered:**</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="k">-</span><span class="w"> </span>[gap 1: which design section, what was missing, what assumption you
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>  made and why] (or &quot;none&quot;)
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="gs">**ready_for_next_manager:**</span> YES | NO
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>[If NO, explain what blocks the next Manager.]
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">```</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="k">-</span><span class="w"> </span><span class="gs">**3 consecutive task failures**</span> — STOP. Do not attempt task 4. Report
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>  in <span class="sb">`escalated_issues`</span> with the failure mode for each of the 3 attempts.
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>  The CEO will decide whether to dispatch a debugging subagent or change
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>  the plan.
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Out-of-scope file change required**</span> — STOP. Report in
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>  <span class="sb">`escalated_issues`</span> with the file path and what change is needed. The
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>  CEO will coordinate with the owning Manager.
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="gu">## Final Return Schema (MANDATORY)</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="sb">That schema is the contract. The CEO reads it and decides whether to</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="sb">dispatch the next Manager or stop and ask the user. Do not deviate.</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="sb">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="sb">)</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>Your final response to the CEO MUST follow this exact schema. The CEO
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>parses it programmatically. Free-form prose summaries will be rejected
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>and you will be re-dispatched.
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>
 <a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="sb">```</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>---
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="gu">## Gotchas</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="gu">### Gotcha 1: Task-Tool Availability</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>Real-world finding: dispatched <span class="sb">`general`</span> / <span class="sb">`general-purpose`</span> subagents do not always have the Task tool wired through. A Manager that lacks Task cannot dispatch sub-subagents and must execute the per-task gates inline. This is a degraded mode but not a failed mode.
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="gs">**Mitigation order:**</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">1.</span> Manager attempts Task dispatch on its first gate.
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="k">2.</span> If Task is unavailable, Manager flips to inline execution and reports <span class="sb">`task_tool_available: false`</span>.
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="k">3.</span> CEO reads the flag and gives extra weight to end-of-Phase-4 gates (which run at CEO level regardless).
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="k">4.</span> The end-of-Phase-4 audit (4.6.1), green mirage (4.6.3), and comprehensive fact-check (4.6.4) ARE the compensation. They span all Manager work and run from a fresh CEO-level subagent context.
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="sb">## Manager [Letter] Final Summary</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">**task_tool_available:** true | false</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="sb">**task_outcomes:**</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="sb">| Task ID | Outcome | Commit SHA | Test count | Notes |</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="sb">|---------|---------|-----------|------------|-------|</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="sb">| [id]    | PASSED  | [sha7]    | [n]        | [opt] |</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="sb">| [id]    | FAILED  | -         | [n]        | [why] |</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="sb">| [id]    | DEFERRED| -         | -          | [why] |</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="sb">**commit_shas (in order):**</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="sb">- [sha7]: [task id] - [subject line]</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="sb">- [sha7]: [task id] - [subject line]</span>
 <a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>The CEO MUST NOT skip end-of-Phase-4 gates even if every Manager reported <span class="sb">`task_tool_available: true`</span>. Those gates check cross-Manager integration, which no single Manager can see.
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gu">### Gotcha 2: Single-Worktree Manager Serialization</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>If <span class="sb">`worktree_strategy == &quot;single&quot;`</span> and <span class="sb">`execution_mode == &quot;sub_orchestrators&quot;`</span>, Managers MUST dispatch sequentially. Two Managers committing concurrently to one branch in one working tree race: git index corruption, lost commits, partial worktree state.
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>The serialization is at the Manager level, not the gate level. Within a Manager, sub-subagents may run in parallel for disjoint files (e.g., two TDD sub-subagents writing tests for two independent files), but the Manager&#39;s own commits serialize.
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="sb">**cumulative_metrics:**</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="sb">- Total tests added: [n]</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="sb">- Total tests passing at end: [n]</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="sb">- Total files created: [n]</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">- Total files modified: [n]</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="sb">- Lines added: [n]</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="sb">- Lines deleted: [n]</span>
 <a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="gu">### Gotcha 3: Manager Grouping by File Ownership, Not Wave</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>The implementation plan&#39;s wave assignments (Parallel Group fields) describe what CAN run concurrently for parallelism. They are NOT a Manager assignment.
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>Wave-based Manager grouping creates cross-Manager handoffs mid-execution: Manager A finishes wave 1, Manager B starts wave 2 needing files Manager A produced AND files Manager C produced, but Manager C is still running. The handoff blocks, the dependency graph is implicit, the CEO is babysitting partial state.
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>File-ownership grouping creates clean forward dependencies: Manager A owns module X, Manager B owns module Y that imports X, B waits for A, then runs to completion without further cross-Manager handoffs. The dependency is explicit, the graph is shallow, the CEO sees one transition per Manager.
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="gu">### Gotcha 4: Per-Track Worktrees Compose with Sub-Orchestrators</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>If <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span>, each Manager gets its own worktree on its own branch. Independent Managers run in parallel. After all Managers complete, the existing Phase 4.2.5 (<span class="sb">`merging-worktrees`</span>) merges them.
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>This is NOT a new model — <span class="sb">`per_parallel_track`</span> worktrees already existed. The sub-orchestrator pattern composes with it: each parallel-track worktree gets a Manager, the Manager runs its per-task gates inside its worktree, and the CEO merges Manager branches at the end.
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="gu">### Gotcha 5: Design-Doc Gaps Are Fix-As-You-Go, Not Stop-The-World</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>A Manager that hits a small design-doc gap (e.g., the design doc says &quot;use the existing logger&quot; but doesn&#39;t specify which logger when the project has three) should make a reasonable choice, document it in <span class="sb">`design_doc_gaps_discovered`</span>, and continue. The CEO sees the gap in the Manager summary and can update the design doc post-implementation.
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>A Manager that hits a LARGE design-doc gap (e.g., the design doc doesn&#39;t specify how two subsystems integrate, and getting it wrong would require rewriting multiple tasks) should escalate via <span class="sb">`escalated_issues`</span> and STOP. The CEO will resolve and re-dispatch.
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>The threshold: &quot;Could a reasonable senior implementer make this choice and have it survive code review?&quot; If yes, fix-as-you-go. If no, escalate.
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>---
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="k">-</span><span class="w"> </span>CEO reads source files, runs tests, or uses Write/Edit/Bash directly during Manager execution
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="k">-</span><span class="w"> </span>CEO grants any Manager access to files outside its declared scope
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">-</span><span class="w"> </span>Two Managers given overlapping file ownership (race conditions, merge headaches)
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="k">-</span><span class="w"> </span>Manager grouping by wave instead of file ownership
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="k">-</span><span class="w"> </span>Two Managers running concurrently against a single shared worktree (commit race)
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="k">-</span><span class="w"> </span>Manager that returns free-form prose instead of the structured Final Return Schema
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="k">-</span><span class="w"> </span>Manager that batches commits across tasks (per-task gate -&gt; commit is the unit)
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="k">-</span><span class="w"> </span>Manager that batches gates across tasks (each task runs all 4 gates before next task starts)
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="k">-</span><span class="w"> </span>Manager that silently falls back to inline execution without setting <span class="sb">`task_tool_available: false`</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="k">-</span><span class="w"> </span>CEO that skips end-of-Phase-4 gates because &quot;all Managers reported clean&quot;
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="k">-</span><span class="w"> </span>CEO that uses sub-orchestrator mode for features below the task/track thresholds (Manager overhead exceeds savings)
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a><span class="k">-</span><span class="w"> </span>Manager that touches files outside its scope without escalating
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="k">-</span><span class="w"> </span>Manager that writes its own design-doc gap entries to AGENTS.md or the design doc directly (gaps go in the summary; CEO decides what to persist)
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="k">-</span><span class="w"> </span>AI-attribution footers (Co-Authored-By, &quot;Generated with Claude&quot;) in any commit
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="k">-</span><span class="w"> </span><span class="sb">`#issue`</span> references in commit subjects or bodies (GitHub auto-links and notifies; humans add those manually)
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>---
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>Before declaring sub-orchestrator execution complete, the CEO verifies:
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="k">- [ ]</span> Every Manager returned a summary in the structured Final Return Schema (no prose-only returns accepted)
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="k">- [ ]</span> Every Manager reported <span class="sb">`task_tool_available`</span> honestly (true or false)
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="k">- [ ]</span> Every assigned task has an outcome row (PASSED / FAILED / DEFERRED)
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="k">- [ ]</span> Every PASSED task has a commit SHA
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="k">- [ ]</span> All <span class="sb">`escalated_issues`</span> were resolved or explicitly deferred with user consent
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="k">- [ ]</span> All <span class="sb">`design_doc_gaps_discovered`</span> were captured for post-implementation design-doc update
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="k">- [ ]</span> CEO context contains ONLY: dispatch calls, Manager summaries, todo updates, end-of-Phase-4 gate dispatches (no source file reads, no test output, no inline edits)
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="k">- [ ]</span> End-of-Phase-4 gates 4.6.1, 4.6.2, 4.6.3, 4.6.4, 4.6.5 dispatched (NOT skipped, regardless of Manager reports)
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="k">- [ ]</span> If <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span>: <span class="sb">`merging-worktrees`</span> skill invoked before end-of-Phase-4 gates
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="k">- [ ]</span> Phase 4.7 finishing dispatched after all gates pass
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="sb">**escalated_issues:**</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="sb">- [issue 1: what, where, proposed resolution] (or &quot;none&quot;)</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="sb">**design_doc_gaps_discovered:**</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">- [gap 1: which design section, what was missing, what assumption you</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="sb">  made and why] (or &quot;none&quot;)</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="sb">**ready_for_next_manager:** YES | NO</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="sb">[If NO, explain what blocks the next Manager.]</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="sb">```</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>That schema is the contract. The CEO reads it and decides whether to
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>dispatch the next Manager or stop and ask the user. Do not deviate.
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>&quot;&quot;&quot;
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>)
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>```
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>---
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="gu">## Gotchas</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="gu">### Gotcha 1: Task-Tool Availability</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>Real-world finding: dispatched <span class="sb">`general`</span> / <span class="sb">`general-purpose`</span> subagents do not always have the Task tool wired through. A Manager that lacks Task cannot dispatch sub-subagents and must execute the per-task gates inline. This is a degraded mode but not a failed mode.
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="gs">**Mitigation order:**</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="k">1.</span> Manager attempts Task dispatch on its first gate.
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="k">2.</span> If Task is unavailable, Manager flips to inline execution and reports <span class="sb">`task_tool_available: false`</span>.
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="k">3.</span> CEO reads the flag and gives extra weight to end-of-Phase-4 gates (which run at CEO level regardless).
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">4.</span> The end-of-Phase-4 audit (4.6.1), green mirage (4.6.3), and comprehensive fact-check (4.6.4) ARE the compensation. They span all Manager work and run from a fresh CEO-level subagent context.
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>The CEO MUST NOT skip end-of-Phase-4 gates even if every Manager reported <span class="sb">`task_tool_available: true`</span>. Those gates check cross-Manager integration, which no single Manager can see.
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="gu">### Gotcha 2: Single-Worktree Manager Serialization</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>If <span class="sb">`worktree_strategy == &quot;single&quot;`</span> and <span class="sb">`execution_mode == &quot;sub_orchestrators&quot;`</span>, Managers MUST dispatch sequentially. Two Managers committing concurrently to one branch in one working tree race: git index corruption, lost commits, partial worktree state.
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>The serialization is at the Manager level, not the gate level. Within a Manager, sub-subagents may run in parallel for disjoint files (e.g., two TDD sub-subagents writing tests for two independent files), but the Manager&#39;s own commits serialize.
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">### Gotcha 3: Manager Grouping by File Ownership, Not Wave</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>The implementation plan&#39;s wave assignments (Parallel Group fields) describe what CAN run concurrently for parallelism. They are NOT a Manager assignment.
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>Wave-based Manager grouping creates cross-Manager handoffs mid-execution: Manager A finishes wave 1, Manager B starts wave 2 needing files Manager A produced AND files Manager C produced, but Manager C is still running. The handoff blocks, the dependency graph is implicit, the CEO is babysitting partial state.
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>File-ownership grouping creates clean forward dependencies: Manager A owns module X, Manager B owns module Y that imports X, B waits for A, then runs to completion without further cross-Manager handoffs. The dependency is explicit, the graph is shallow, the CEO sees one transition per Manager.
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="gu">### Gotcha 4: Per-Track Worktrees Compose with Sub-Orchestrators</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>If <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span>, each Manager gets its own worktree on its own branch. Independent Managers run in parallel. After all Managers complete, the existing Phase 4.2.5 (<span class="sb">`merging-worktrees`</span>) merges them.
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>This is NOT a new model — <span class="sb">`per_parallel_track`</span> worktrees already existed. The sub-orchestrator pattern composes with it: each parallel-track worktree gets a Manager, the Manager runs its per-task gates inside its worktree, and the CEO merges Manager branches at the end.
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="gu">### Gotcha 5: Design-Doc Gaps Are Fix-As-You-Go, Not Stop-The-World</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>A Manager that hits a small design-doc gap (e.g., the design doc says &quot;use the existing logger&quot; but doesn&#39;t specify which logger when the project has three) should make a reasonable choice, document it in <span class="sb">`design_doc_gaps_discovered`</span>, and continue. The CEO sees the gap in the Manager summary and can update the design doc post-implementation.
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>A Manager that hits a LARGE design-doc gap (e.g., the design doc doesn&#39;t specify how two subsystems integrate, and getting it wrong would require rewriting multiple tasks) should escalate via <span class="sb">`escalated_issues`</span> and STOP. The CEO will resolve and re-dispatch.
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>The threshold: &quot;Could a reasonable senior implementer make this choice and have it survive code review?&quot; If yes, fix-as-you-go. If no, escalate.
 <a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>If ANY unchecked, the pattern was not followed. Go back and complete it. Do not declare done.
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>---
 <a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>&lt;reflection&gt;
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>After Manager execution completes, ask honestly:
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">-</span><span class="w"> </span>Did I (CEO) read any source code or test output during this phase? If yes, I violated the pattern.
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span>Did any Manager batch gates or commits? If yes, the per-task discipline broke down.
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span>Did the end-of-Phase-4 audit surface integration issues that no single Manager could see? That is the audit doing its job; the pattern is working.
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">-</span><span class="w"> </span>Is my CEO context still clean enough to run the audit gates with full strategic oversight? If not, the Managers&#39; summaries were too verbose; tighten the schema next time.
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>---
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="gu">## Integration</span>
-<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="k">-</span><span class="w"> </span><span class="gs">**feature-implement**</span> — Phase 3.4.5 selects <span class="sb">`sub_orchestrators`</span> execution mode; Phase 4 delegates Manager dispatch to this skill; Phase 4.6.x runs at CEO level after Managers complete.
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">-</span><span class="w"> </span><span class="gs">**dispatching-parallel-agents**</span> — Provides the Subagent Dispatch Template that Managers use for their sub-subagent dispatches; provides the Worktree Dispatch Preamble that Manager prompts include.
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">-</span><span class="w"> </span><span class="gs">**using-git-worktrees**</span> — Used during Phase B when <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span> to create one worktree per Manager.
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="k">-</span><span class="w"> </span><span class="gs">**merging-worktrees**</span> — Used during Phase E to merge per-Manager worktrees back to the base branch.
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">-</span><span class="w"> </span><span class="gs">**test-driven-development**</span> — Each Manager&#39;s TDD gate invokes this skill (or executes inline if Task tool is unavailable).
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">-</span><span class="w"> </span><span class="gs">**requesting-code-review**</span> — Each Manager&#39;s code review gate invokes this skill (or inline fallback).
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="k">-</span><span class="w"> </span><span class="gs">**fact-checking**</span> — Each Manager&#39;s fact-check gate invokes this skill (or inline fallback); CEO also invokes for Phase 4.6.4 comprehensive fact-check.
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a><span class="k">-</span><span class="w"> </span><span class="gs">**auditing-green-mirage**</span> — CEO invokes for Phase 4.6.3 after all Managers complete.
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finishing-a-development-branch**</span> — CEO invokes for Phase 4.7 after all gates pass.
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span>CEO reads source files, runs tests, or uses Write/Edit/Bash directly during Manager execution
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span>CEO grants any Manager access to files outside its declared scope
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">-</span><span class="w"> </span>Two Managers given overlapping file ownership (race conditions, merge headaches)
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>Manager grouping by wave instead of file ownership
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">-</span><span class="w"> </span>Two Managers running concurrently against a single shared worktree (commit race)
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="k">-</span><span class="w"> </span>Manager that returns free-form prose instead of the structured Final Return Schema
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="k">-</span><span class="w"> </span>Manager that batches commits across tasks (per-task gate -&gt; commit is the unit)
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="k">-</span><span class="w"> </span>Manager that batches gates across tasks (each task runs all 4 gates before next task starts)
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="k">-</span><span class="w"> </span>Manager that silently falls back to inline execution without setting <span class="sb">`task_tool_available: false`</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="k">-</span><span class="w"> </span>CEO that skips end-of-Phase-4 gates because &quot;all Managers reported clean&quot;
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">-</span><span class="w"> </span>CEO that uses sub-orchestrator mode for features below the task/track thresholds (Manager overhead exceeds savings)
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">-</span><span class="w"> </span>Manager that touches files outside its scope without escalating
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="k">-</span><span class="w"> </span>Manager that writes its own design-doc gap entries to AGENTS.md or the design doc directly (gaps go in the summary; CEO decides what to persist)
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">-</span><span class="w"> </span>AI-attribution footers (Co-Authored-By, &quot;Generated with Claude&quot;) in any commit
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">-</span><span class="w"> </span><span class="sb">`#issue`</span> references in commit subjects or bodies (GitHub auto-links and notifies; humans add those manually)
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>---
 <a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>
-<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>The CEO/Manager pattern exists because COMPLEX features broke single-CEO orchestration in real production use. The discipline is not optional. CEO reads summaries, Managers do work, end-of-phase gates compensate for inline-execution context loss. Skip any layer and the pattern collapses back into the single-orchestrator bloat it was designed to solve.
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>You are the Chief of Staff. Hire well, scope tightly, read carefully, intervene only when escalated. This is very important to my career.
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>Before declaring sub-orchestrator execution complete, the CEO verifies:
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="k">- [ ]</span> Every Manager returned a summary in the structured Final Return Schema (no prose-only returns accepted)
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="k">- [ ]</span> Every Manager reported <span class="sb">`task_tool_available`</span> honestly (true or false)
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="k">- [ ]</span> Every assigned task has an outcome row (PASSED / FAILED / DEFERRED)
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="k">- [ ]</span> Every PASSED task has a commit SHA
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="k">- [ ]</span> All <span class="sb">`escalated_issues`</span> were resolved or explicitly deferred with user consent
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="k">- [ ]</span> All <span class="sb">`design_doc_gaps_discovered`</span> were captured for post-implementation design-doc update
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a><span class="k">- [ ]</span> CEO context contains ONLY: dispatch calls, Manager summaries, todo updates, end-of-Phase-4 gate dispatches (no source file reads, no test output, no inline edits)
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="k">- [ ]</span> End-of-Phase-4 gates 4.6.1, 4.6.2, 4.6.3, 4.6.4, 4.6.5 dispatched (NOT skipped, regardless of Manager reports)
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a><span class="k">- [ ]</span> If <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span>: <span class="sb">`merging-worktrees`</span> skill invoked before end-of-Phase-4 gates
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="k">- [ ]</span> Phase 4.7 finishing dispatched after all gates pass
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a>
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a>If ANY unchecked, the pattern was not followed. Go back and complete it. Do not declare done.
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>&lt;reflection&gt;
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>After Manager execution completes, ask honestly:
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="k">-</span><span class="w"> </span>Did I (CEO) read any source code or test output during this phase? If yes, I violated the pattern.
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="k">-</span><span class="w"> </span>Did any Manager batch gates or commits? If yes, the per-task discipline broke down.
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="k">-</span><span class="w"> </span>Did the end-of-Phase-4 audit surface integration issues that no single Manager could see? That is the audit doing its job; the pattern is working.
+<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="k">-</span><span class="w"> </span>Is my CEO context still clean enough to run the audit gates with full strategic oversight? If not, the Managers&#39; summaries were too verbose; tighten the schema next time.
+<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a>
+<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a>---
+<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a>
+<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="gu">## Integration</span>
+<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a>
+<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a><span class="k">-</span><span class="w"> </span><span class="gs">**feature-implement**</span> — Phase 3.4.5 selects <span class="sb">`sub_orchestrators`</span> execution mode; Phase 4 delegates Manager dispatch to this skill; Phase 4.6.x runs at CEO level after Managers complete.
+<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="k">-</span><span class="w"> </span><span class="gs">**dispatching-parallel-agents**</span> — Provides the Subagent Dispatch Template that Managers use for their sub-subagent dispatches; provides the Worktree Dispatch Preamble that Manager prompts include.
+<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="k">-</span><span class="w"> </span><span class="gs">**using-git-worktrees**</span> — Used during Phase B when <span class="sb">`worktree_strategy == &quot;per_parallel_track&quot;`</span> to create one worktree per Manager.
+<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="k">-</span><span class="w"> </span><span class="gs">**merging-worktrees**</span> — Used during Phase E to merge per-Manager worktrees back to the base branch.
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">-</span><span class="w"> </span><span class="gs">**test-driven-development**</span> — Each Manager&#39;s TDD gate invokes this skill (or executes inline if Task tool is unavailable).
+<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="k">-</span><span class="w"> </span><span class="gs">**requesting-code-review**</span> — Each Manager&#39;s code review gate invokes this skill (or inline fallback).
+<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="k">-</span><span class="w"> </span><span class="gs">**fact-checking**</span> — Each Manager&#39;s fact-check gate invokes this skill (or inline fallback); CEO also invokes for Phase 4.6.4 comprehensive fact-check.
+<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="k">-</span><span class="w"> </span><span class="gs">**auditing-green-mirage**</span> — CEO invokes for Phase 4.6.3 after all Managers complete.
+<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finishing-a-development-branch**</span> — CEO invokes for Phase 4.7 after all gates pass.
+<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a>
+<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a>The CEO/Manager pattern exists because COMPLEX features broke single-CEO orchestration in real production use. The discipline is not optional. CEO reads summaries, Managers do work, end-of-phase gates compensate for inline-execution context loss. Skip any layer and the pattern collapses back into the single-orchestrator bloat it was designed to solve.
+<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a>
+<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a>You are the Chief of Staff. Hire well, scope tightly, read carefully, intervene only when escalated. This is very important to my career.
+<a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
