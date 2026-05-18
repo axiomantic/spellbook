@@ -35,7 +35,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "forgecode"]
+SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "forgecode", "pi"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -93,6 +93,17 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "default_config_dir": Path.home() / ".forge",
         "cli_flag_name": "forge-config-dir",
         "context_file": "AGENTS.md",
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
+    },
+    "pi": {
+        "name": "Pi",
+        "config_dir_env": "PI_CONFIG_DIR",
+        "default_config_dir": Path.home() / ".pi" / "agent",
+        "cli_flag_name": "pi-config-dir",
+        "context_file": "AGENTS.md",
+        "skills_subdir": "skills",
+        "prompts_subdir": "prompts",
         "mcp_supported": True,
         "mcp_server_name": "spellbook",
     },

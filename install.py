@@ -26,7 +26,7 @@ Usage:
 Options:
     --yes, -y           Accept all defaults without prompting
     --install-dir DIR   Install spellbook to DIR (default: ~/.local/share/spellbook)
-    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini)
+    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,pi)
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
     --no-interactive    Skip platform selection UI
@@ -1173,6 +1173,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
                 elif p == "forgecode":
                     _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
+                elif p == "pi":
+                    _post_notes.append("Pi: Restart to reload skills and prompts. Verify: /reload")
             renderer.render_post_install(_post_notes)
         elif is_interactive():
             try:
@@ -1210,12 +1212,14 @@ Examples:
   curl -fsSL .../install.py | python3 - --yes
 
   # Specific platforms only
-  python3 install.py --platforms claude_code,codex
+  python3 install.py --platforms claude_code,codex,pi
 
   # Install to multiple config dirs for a platform
   python3 install.py --claude-config-dir ~/.claude --claude-config-dir ~/.claude-work
-""",
-    )
+
+  # Select or override Pi config directory
+  python3 install.py --pi-config-dir ~/.pi/agent
+""",    )
     parser.add_argument(
         "--yes", "-y",
         action="store_true",
@@ -1231,7 +1235,7 @@ Examples:
         "--platforms",
         type=str,
         default=None,
-        help="Comma-separated platforms (claude_code,opencode,codex,gemini)",
+        help="Comma-separated platforms (claude_code,opencode,codex,gemini,pi)",
     )
     parser.add_argument(
         "--force",

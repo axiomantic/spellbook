@@ -112,6 +112,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   control-flow constructs. With neither opt-in active, default behavior
   is unchanged from 0.63.2.
 
+### Added
+
+- **Pi (pi-coding-agent) is now a supported install target.** Spellbook can
+  install into [Pi](https://github.com/badlogic/pi): a context file
+  (`AGENTS.md`), the Agent-Skills skills directory, prompt templates, and an
+  MCP server config at `~/.pi/agent/mcp.json`. Installer wiring adds the `pi`
+  platform, the `PI_CONFIG_DIR` setting, and the `--pi-config-dir` CLI flag.
+
 ### Fixed
 
 - **Admin session cookie scope.** `spellbook_admin_session` is now

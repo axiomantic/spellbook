@@ -175,3 +175,6 @@ mise.toml
 .claude/worktrees
 *.db
 .claude/prompts/
+
+# Machine-local Claude Code permission allowlist
+.claude/settings.local.json
