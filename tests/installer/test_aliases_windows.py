@@ -68,9 +68,13 @@ def test_install_aliases_windows_does_not_write_files(tmp_path):
     fake_home.mkdir()
     home_mock = tripwire.mock("pathlib:Path.home")
     # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
-    # registrations, NOT a retroactive modifier. Order matters: set the flag
-    # BEFORE the value-stacking call so the FIFO entry inherits required=False.
-    home_mock.required(False).returns(fake_home)
+    # registrations on a MethodProxy, NOT a retroactive modifier and NOT a
+    # method on the _BaseMock returned by tripwire.mock(...). Access the
+    # MethodProxy via `.__call__` and set the flag BEFORE value-stacking so
+    # the FIFO entry inherits required=False. (`home_mock.required(False)`
+    # routes through __getattr__("required") and is then call-time-checked
+    # against an active sandbox, which fails outside `with tripwire:`.)
+    home_mock.__call__.required(False).returns(fake_home)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
@@ -107,9 +111,13 @@ def test_install_aliases_windows_dry_run_path(tmp_path):
     fake_home.mkdir()
     home_mock = tripwire.mock("pathlib:Path.home")
     # `.required(False)` is a sticky flag for subsequent .returns() / .calls()
-    # registrations, NOT a retroactive modifier. Order matters: set the flag
-    # BEFORE the value-stacking call so the FIFO entry inherits required=False.
-    home_mock.required(False).returns(fake_home)
+    # registrations on a MethodProxy, NOT a retroactive modifier and NOT a
+    # method on the _BaseMock returned by tripwire.mock(...). Access the
+    # MethodProxy via `.__call__` and set the flag BEFORE value-stacking so
+    # the FIFO entry inherits required=False. (`home_mock.required(False)`
+    # routes through __getattr__("required") and is then call-time-checked
+    # against an active sandbox, which fails outside `with tripwire:`.)
+    home_mock.__call__.required(False).returns(fake_home)
 
     spellbook_dir = tmp_path / "spellbook"
     spellbook_dir.mkdir()
