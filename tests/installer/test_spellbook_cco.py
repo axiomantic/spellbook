@@ -236,22 +236,22 @@ def _stack_happy_install_subprocess(
     """
     expected: list[tuple[list[str], str]] = []
 
-    clone_cmd = ["git", "clone", "--depth", "50", repo_url, str(install_root)]
+    clone_cmd = ["git", "clone", "--depth", "50", repo_url, install_root]
     tripwire.subprocess.mock_run(command=clone_cmd, returncode=0, stdout="")
     expected.append((clone_cmd, ""))
 
-    checkout_cmd = ["git", "-C", str(install_root), "checkout", pinned_sha]
+    checkout_cmd = ["git", "-C", install_root, "checkout", pinned_sha]
     tripwire.subprocess.mock_run(command=checkout_cmd, returncode=0, stdout="")
     expected.append((checkout_cmd, ""))
 
-    rev_parse_cmd = ["git", "-C", str(install_root), "rev-parse", "--short=7", "HEAD"]
+    rev_parse_cmd = ["git", "-C", install_root, "rev-parse", "--short=7", "HEAD"]
     rev_parse_stdout = pinned_sha + "\n"
     tripwire.subprocess.mock_run(
         command=rev_parse_cmd, returncode=0, stdout=rev_parse_stdout
     )
     expected.append((rev_parse_cmd, rev_parse_stdout))
 
-    version_cmd = [str(install_root / "cco"), "--version"]
+    version_cmd = [install_root / "cco", "--version"]
     version_stdout = f"cco {pinned_sha} (installation)\n"
     tripwire.subprocess.mock_run(
         command=version_cmd, returncode=0, stdout=version_stdout
@@ -328,7 +328,7 @@ def test_install_calls_git_clone(monkeypatch, tmp_path):
     clone_cmds = [c for c, _ in expected if c[:2] == ["git", "clone"]]
     assert len(clone_cmds) == 1
     assert SPELLBOOK_CCO_REPO_URL in clone_cmds[0]
-    assert str(install_root) in clone_cmds[0]
+    assert install_root in clone_cmds[0]
 
 
 def test_install_dry_run_does_not_clone(monkeypatch, tmp_path):

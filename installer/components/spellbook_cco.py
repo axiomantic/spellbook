@@ -248,7 +248,7 @@ def _verify_pin(install_root: Path, pinned_sha: str | None = None) -> tuple[bool
 
     # Step 1.
     rev_proc = subprocess.run(
-        ["git", "-C", str(install_root), "rev-parse", "--short=7", "HEAD"],
+        ["git", "-C", install_root, "rev-parse", "--short=7", "HEAD"],
         capture_output=True,
         text=True,
         check=False,
@@ -261,7 +261,7 @@ def _verify_pin(install_root: Path, pinned_sha: str | None = None) -> tuple[bool
 
     # Step 2.
     version_proc = subprocess.run(
-        [str(install_root / "cco"), "--version"],
+        [install_root / "cco", "--version"],
         capture_output=True,
         text=True,
         check=False,
@@ -318,7 +318,7 @@ def _clone_or_fetch(
                 "--depth",
                 "50",
                 expected_url,
-                str(install_root),
+                install_root,
             ],
             capture_output=True,
             text=True,
@@ -332,14 +332,14 @@ def _clone_or_fetch(
         # on the next install run).
         canonical_marker, _ = _managed_marker_paths(install_root)
         canonical_marker.parent.mkdir(parents=True, exist_ok=True)
-        canonical_marker.write_text(_MANAGED_MARKER_BODY)
+        canonical_marker.write_text(_MANAGED_MARKER_BODY, encoding="utf-8")
     else:
         # Remote check.
         remote_proc = subprocess.run(
             [
                 "git",
                 "-C",
-                str(install_root),
+                install_root,
                 "config",
                 "--get",
                 "remote.origin.url",
@@ -361,7 +361,7 @@ def _clone_or_fetch(
 
         # Dirty-tree check.
         status_proc = subprocess.run(
-            ["git", "-C", str(install_root), "status", "--porcelain"],
+            ["git", "-C", install_root, "status", "--porcelain"],
             capture_output=True,
             text=True,
             check=False,
@@ -370,7 +370,7 @@ def _clone_or_fetch(
             return False, ("install_root has uncommitted changes; clean and re-run")
 
         fetch_proc = subprocess.run(
-            ["git", "-C", str(install_root), "fetch", "--depth", "50", "origin"],
+            ["git", "-C", install_root, "fetch", "--depth", "50", "origin"],
             capture_output=True,
             text=True,
             check=False,
@@ -391,7 +391,7 @@ def _clone_or_fetch(
     #    silently and ``_verify_pin`` produces the right error message
     #    (rather than this helper masking it as "git checkout failed").
     subprocess.run(
-        ["git", "-C", str(install_root), "checkout", expected_sha],
+        ["git", "-C", install_root, "checkout", expected_sha],
         capture_output=True,
         text=True,
         check=False,
@@ -443,16 +443,16 @@ def _write_wrapper(
     )
 
     if not wrapper_path.exists():
-        wrapper_path.write_text(canonical_text)
+        wrapper_path.write_text(canonical_text, encoding="utf-8")
         wrapper_path.chmod(0o755)
         return "installed"
 
-    existing = wrapper_path.read_text()
+    existing = wrapper_path.read_text(encoding="utf-8")
     if SPELLBOOK_CCO_WRAPPER_TAG in existing:
         if existing == canonical_text:
             return "noop"
         # Tagged but drifted -- overwrite quietly (we own this file).
-        wrapper_path.write_text(canonical_text)
+        wrapper_path.write_text(canonical_text, encoding="utf-8")
         wrapper_path.chmod(0o755)
         return "installed"
 
@@ -461,7 +461,7 @@ def _write_wrapper(
         f"{_WARNING_PREFIX} existing wrapper at {wrapper_path} not "
         "spellbook-managed; overwriting.\n"
     )
-    wrapper_path.write_text(canonical_text)
+    wrapper_path.write_text(canonical_text, encoding="utf-8")
     wrapper_path.chmod(0o755)
     return "installed"
 
@@ -609,9 +609,22 @@ def install_spellbook_cco(
         spellbook_repo_root=spellbook_repo_root,
     )
 
-    # PATH check.
-    path_dirs = [Path(p) for p in os.environ.get("PATH", "").split(os.pathsep) if p]
-    if resolved_wrapper_dir not in path_dirs:
+    # PATH check. Resolve each PATH entry so the membership test handles
+    # ``~``, trailing slashes, and relative entries equivalently to the
+    # resolved wrapper dir.
+    resolved_wrapper_dir_canonical = resolved_wrapper_dir.expanduser().resolve()
+    path_dirs: list[Path] = []
+    for raw in os.environ.get("PATH", "").split(os.pathsep):
+        if not raw:
+            continue
+        try:
+            path_dirs.append(Path(raw).expanduser().resolve())
+        except (OSError, RuntimeError):
+            # Unresolvable PATH entry (broken symlink loop, permission
+            # error): skip rather than crash. Worst case we emit the
+            # PATH-not-set WARNING when we shouldn't have.
+            continue
+    if resolved_wrapper_dir_canonical not in path_dirs:
         _emit_warning(_WARNING_PATH_NOT_SET)
 
     return {
@@ -670,7 +683,7 @@ def uninstall_spellbook_cco(
     # Wrapper disposition.
     wrapper_action: str | None = None
     if wrapper_path.exists():
-        existing = wrapper_path.read_text()
+        existing = wrapper_path.read_text(encoding="utf-8")
         if SPELLBOOK_CCO_WRAPPER_TAG in existing:
             wrapper_path.unlink()
             wrapper_action = "removed"

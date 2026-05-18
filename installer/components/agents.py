@@ -340,7 +340,16 @@ def cleanup_stale_agent_symlinks(
                     if target_parent.resolve() == agents_source_resolved:
                         stale = True
                 except (OSError, RuntimeError):
-                    pass
+                    # Broken symlink target dir we cannot resolve; fall
+                    # through to the strict=False heuristic below. Logged
+                    # at debug so the staleness decision is auditable
+                    # without spamming WARN on normal worktree teardowns.
+                    logger.debug(
+                        "agents prune: strict resolve of %s failed; "
+                        "falling back to strict=False",
+                        target_parent,
+                        exc_info=True,
+                    )
                 if not stale:
                     # Tightened heuristic: strict=False string-resolution
                     # so missing-leaf links land cleanly even when the
@@ -352,7 +361,12 @@ def cleanup_stale_agent_symlinks(
                         if raw_parent_resolved == agents_source_resolved:
                             stale = True
                     except OSError:
-                        pass
+                        logger.debug(
+                            "agents prune: strict=False resolve of %s "
+                            "failed; treating link as non-stale",
+                            target_parent,
+                            exc_info=True,
+                        )
 
         if stale:
             removed += 1
