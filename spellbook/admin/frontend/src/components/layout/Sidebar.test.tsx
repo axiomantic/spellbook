@@ -48,4 +48,29 @@ describe('Sidebar', () => {
       expect(screen.queryByText('// FOCUS')).not.toBeInTheDocument()
     })
   })
+
+  describe('canvas nav link', () => {
+    it('renders a Canvas nav link pointing to /canvas', () => {
+      renderSidebar()
+
+      const canvasLink = screen.getByText('// CANVAS')
+      expect(canvasLink).toBeInTheDocument()
+      expect(canvasLink.closest('a')).toHaveAttribute('href', '/canvas')
+    })
+
+    it('places // CANVAS between // MEMORY and // SECURITY', () => {
+      const { container } = renderSidebar()
+      const labels = Array.from(
+        container.querySelectorAll('nav a'),
+      ).map((el) => el.textContent)
+
+      const memoryIdx = labels.indexOf('// MEMORY')
+      const canvasIdx = labels.indexOf('// CANVAS')
+      const securityIdx = labels.indexOf('// SECURITY')
+
+      expect(memoryIdx).toBeGreaterThanOrEqual(0)
+      expect(canvasIdx).toBeGreaterThan(memoryIdx)
+      expect(securityIdx).toBeGreaterThan(canvasIdx)
+    })
+  })
 })

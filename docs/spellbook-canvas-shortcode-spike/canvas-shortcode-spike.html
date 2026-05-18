@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Canvas shortcode spike</title>
+<script type="importmap">
+{ "imports": {
+    "react": "https://esm.sh/react@19",
+    "react-dom/client": "https://esm.sh/react-dom@19/client",
+    "react-markdown": "https://esm.sh/react-markdown@9",
+    "remark-gfm": "https://esm.sh/remark-gfm@4",
+    "rehype-raw": "https://esm.sh/rehype-raw@7"
+}}
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+
+function Chart({ caption, children }) {
+  const raw = React.Children.toArray(children).map(c => typeof c === 'string' ? c : '').join('')
+  return React.createElement('pre', {style:{border:'1px solid blue', padding:8}},
+    `CHART: caption="${caption||''}"\n` + raw)
+}
+function Tabs({ children }) {
+  return React.createElement('div', {style:{border:'1px solid green', padding:8}},
+    'TABS:', children)
+}
+function Tab({ title, children }) {
+  return React.createElement('div', {style:{marginLeft:16}},
+    React.createElement('strong', null, title), ': ', children)
+}
+
+const md = `
+# Spike
+
+A chart inside a tabs:
+
+<tabs>
+  <tab title="Alpha">
+    <chart caption="multiline spec">
+{"mark":"bar","encoding":{"x":{"field":"a"},"y":{"field":"b"}},"data":{"values":[{"a":1,"b":2},{"a":3,"b":4}]}}
+    </chart>
+  </tab>
+  <tab title="Beta">
+    just text
+  </tab>
+</tabs>
+
+A chart inside a markdown table cell:
+
+| name | viz |
+|------|-----|
+| foo  | <chart caption="inline">{"mark":"point"}</chart> |
+`
+
+const components = { chart: Chart, tabs: Tabs, tab: Tab }
+const App = () => React.createElement(ReactMarkdown,
+  { remarkPlugins:[remarkGfm], rehypePlugins:[rehypeRaw], components }, md)
+createRoot(document.getElementById('root')).render(React.createElement(App))
+</script>
+</body>
+</html>

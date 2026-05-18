@@ -100,7 +100,7 @@ def focus_client(seeded_engine, admin_app, mock_mcp_token):
             yield session
 
     admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     cookie = create_session_cookie("test-session")
     client.cookies.set("spellbook_admin_session", cookie)
     yield client
@@ -121,7 +121,7 @@ def empty_focus_client(async_engine, admin_app, mock_mcp_token):
             yield session
 
     admin_app.dependency_overrides[spellbook_db] = mock_spellbook_db
-    client = TestClient(admin_app)
+    client = TestClient(admin_app, headers={"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765"})
     cookie = create_session_cookie("test-session")
     client.cookies.set("spellbook_admin_session", cookie)
     yield client

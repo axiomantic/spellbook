@@ -61,6 +61,31 @@ Phase behavior depends on escape hatch:
 - **Impl plan escape hatch:** Skip entire Phase 2
 </CRITICAL>
 
+### 2.0 Primary Source Re-Anchor (mandatory)
+
+Before any 2.1 design synthesis dispatch, the operator MUST name the
+**primary source** for the feature: the canonical artifact the design
+must satisfy. Acceptable forms: URL, file path, JIRA/Linear ticket,
+Confluence page, RFC, or a written paragraph from the operator.
+
+If the operator says "no primary source — the prior research IS the
+source," that is valid, but the answer must be elicited explicitly via
+AskUserQuestion. Silence does not count, and a derivative design doc
+from a previous run NEVER counts as the primary source.
+
+Record the chosen primary source in `SESSION_CONTEXT.primary_source`.
+The 2.1 dispatch prompt MUST include the primary source verbatim (or
+the path + a one-line "re-fetch this before designing" instruction)
+so the design subagent re-anchors on it instead of drifting onto
+upstream derivatives.
+
+<FORBIDDEN>
+- Dispatching 2.1 without `SESSION_CONTEXT.primary_source` set
+- Treating an earlier-phase artifact (research doc, understanding doc,
+  prior design doc) as the primary source by default
+- Inferring the primary source from context instead of asking
+</FORBIDDEN>
+
 ### 2.1 Create Design Document
 
 <RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
@@ -80,6 +105,13 @@ Task:
     **Mode:** AUTONOMOUS - Proceed without asking questions
     **Protocol:** See patterns/autonomous-mode-protocol.md
     **Circuit breakers:** Only pause for security-critical or contradictory requirements
+
+    ## Primary Source
+
+    [Required: paste SESSION_CONTEXT.primary_source verbatim, or paste
+    the source path/URL with the instruction: "Re-fetch and re-read this
+    primary source BEFORE synthesizing the design. Do not anchor on any
+    earlier-phase derivative artifact."]
 
     ## Pre-Collected Discovery Context
 
@@ -198,6 +230,57 @@ Task:
 - Treating `[Required: paste complete SESSION_CONTEXT.design_context here before dispatching]` as optional
 </FORBIDDEN>
 
+### 2.5 Scope Coherence Check (mandatory before transition to Phase 3)
+
+After the design document is finalized (post-2.4 fix), dispatch a
+narrowly-scoped subagent whose ONLY inputs are:
+
+(a) The operator's original feature request as captured in Phase 0
+    (`SESSION_CONTEXT.original_request`)
+(b) The finalized design document's table of contents PLUS the first
+    paragraph of each top-level section
+
+The subagent MUST NOT receive: the rest of the design doc, prior
+research, devils-advocate output, or any other context. Its sole job
+is to answer ONE question:
+
+> "Could this design have been faithfully described in five bullets
+> that match the operator's original ask?"
+
+Acceptable answers: `Yes` / `No` / `Unsure`.
+
+If `No` or `Unsure`: HALT Phase 2. Surface the divergence to the
+operator (in autonomous mode: pause regardless — see "Autonomous Mode
+and Scope Discipline" in `~/.claude/CLAUDE.md`). The operator decides
+whether to (a) trim the design back to scope, (b) explicitly expand
+scope and re-record the original request, or (c) cancel.
+
+Dispatch template:
+
+```
+Task:
+  description: "Scope coherence check"
+  prompt: |
+    You are a scope auditor. You have TWO inputs and ONE job.
+
+    INPUT 1 (operator's original request):
+    [paste SESSION_CONTEXT.original_request verbatim]
+
+    INPUT 2 (design doc TOC + section openers):
+    [paste TOC + first paragraph of each section]
+
+    QUESTION: Could this design have been faithfully described in five
+    bullets that match the operator's original ask?
+
+    Answer with exactly one of: Yes / No / Unsure
+    Then in <=5 sentences, name the specific items in the design that
+    are NOT traceable to the original request. Do not propose fixes.
+```
+
+This gate exists because every local quality gate (research quality,
+dehallucination, fact-checking, design review) can pass while the
+aggregate design has drifted off the operator's ask.
+
 ---
 
 ## ═══════════════════════════════════════════════════════════════════
@@ -210,11 +293,13 @@ Before proceeding to Phase 3, verify Phase 2 is complete:
 ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 ```
 
+- [ ] Primary source recorded in `SESSION_CONTEXT.primary_source` (Phase 2.0)
 - [ ] Design-exploration subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
 - [ ] Design document created and saved
 - [ ] Design review subagent (reviewing-design-docs) DISPATCHED
 - [ ] Approval gate handled per autonomous_mode
 - [ ] All critical/important findings fixed (if any)
+- [ ] Phase 2.5 Scope Coherence Check returned `Yes` (or operator explicitly approved divergence)
 
 If ANY unchecked: Go back to Phase 2. Do NOT proceed.
 

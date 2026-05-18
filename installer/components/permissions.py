@@ -44,6 +44,13 @@ def derive_managed_deny(spellbook_dir: Path) -> List[str]:
     the flat (deduplicated) list of deny strings the installer feeds into
     :func:`install_permissions` via ``deny=...``.
 
+    Before projection, this function runs
+    :func:`spellbook.gates.git_push.validate_tiers_toml` to eagerly
+    surface schema errors in BOTH the ``[[tiers]]`` array and the
+    ``[protected]`` table at install time. Without the eager call, a
+    typo in ``[protected]`` would only surface on the operator's first
+    ``git push`` weeks after upgrade.
+
     Errors are intentionally narrow: missing ``tiers.toml`` returns ``[]``
     (the install proceeds with an empty derived deny set), but malformed
     TOML or schema violations propagate so the operator notices.
@@ -57,9 +64,12 @@ def derive_managed_deny(spellbook_dir: Path) -> List[str]:
     """
     # Local import to avoid pulling the gates runtime (and its bashlex
     # dependency for sibling modules) into the installer hot path.
+    from spellbook.gates.git_push import validate_tiers_toml
     from spellbook.gates.tiers import derive_l2_deny_list
 
     tiers_path = spellbook_dir / "spellbook" / "gates" / "tiers.toml"
+    if tiers_path.exists():
+        validate_tiers_toml(tiers_path)
     return derive_l2_deny_list(tiers_path)
 
 

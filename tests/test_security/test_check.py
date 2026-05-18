@@ -213,12 +213,27 @@ class TestCheckToolInputVerdict:
         assert result["safe"] is True
         assert result["verdict"] == "allow"
 
-    def test_pure_t2_is_ask(self):
-        """A pure T2 (TIER-ASK) match resolves to ``verdict == "ask"``."""
-        from spellbook.gates.check import check_tool_input
+    def test_pure_t2_is_ask(self, tmp_path):
+        """A pure T2 (TIER-ASK) match resolves to ``verdict == "ask"``.
 
-        # ``git push`` is seeded as T2 in tiers.toml; no other layer fires.
-        result = check_tool_input("Bash", {"command": "git push"})
+        Uses the new classify_git_push pre-pass: a push to a protected
+        branch (main) from a cwd whose HEAD is main → T2 ask. The
+        legacy catch-all 'git push' T2 row was removed in the same PR;
+        bare `git push` no longer asks unconditionally."""
+        from spellbook.gates.check import check_tool_input
+        from spellbook.gates.git_push import _reset_caches
+
+        _reset_caches()
+        git = tmp_path / ".git"
+        git.mkdir()
+        (git / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+        refs = git / "refs" / "heads"
+        refs.mkdir(parents=True)
+        (refs / "main").write_text("0" * 40 + "\n", encoding="utf-8")
+
+        result = check_tool_input(
+            "Bash", {"command": "git push origin main"}, cwd=str(tmp_path)
+        )
         assert result["safe"] is False  # T2 emits HIGH-severity finding
         assert result["verdict"] == "ask"
         rule_ids = [f["rule_id"] for f in result["findings"]]
@@ -234,19 +249,47 @@ class TestCheckToolInputVerdict:
         assert result["safe"] is False
         assert result["verdict"] == "deny"
 
-    def test_critical_bashlex_finding_is_deny(self):
+    def test_critical_bashlex_finding_is_deny(self, monkeypatch, tmp_path):
         """A CRITICAL non-tier finding (bashlex compound + tier match)
         resolves to ``verdict == "deny"`` even though TIER-ASK would
-        otherwise fire — deny wins over ask."""
-        from spellbook.gates.check import check_tool_input
+        otherwise fire — deny wins over ask.
 
-        # ``git push && echo done`` triggers BASH-PARSER-COMPOUND (CRITICAL)
-        # AND TIER-ASK (T2) — mixed findings must collapse to deny.
+        Compound deny is opt-in since 0.63.2; this test exercises the
+        deny-wins verdict logic against that opt-in path so the bashlex
+        layer can produce a CRITICAL alongside the T2 TIER-ASK.
+
+        After the catch-all 'git push' T2 row was removed (Task 7),
+        the T2 leg must fire via classify_git_push: build a real .git
+        with HEAD=main and push to 'origin main' so the pre-pass
+        returns T2.
+        """
+        from spellbook.gates.check import check_tool_input
+        from spellbook.gates.git_push import _reset_caches
+
+        _reset_caches()
+        monkeypatch.setenv("SPELLBOOK_BASH_DENY_COMPOUND", "1")
+
+        git = tmp_path / ".git"
+        git.mkdir()
+        (git / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+        refs = git / "refs" / "heads"
+        refs.mkdir(parents=True)
+        (refs / "main").write_text("0" * 40 + "\n", encoding="utf-8")
+
+        # ``git push origin main && echo done`` triggers
+        # BASH-PARSER-COMPOUND (CRITICAL) AND TIER-ASK (T2 via pre-pass)
+        # — mixed findings must collapse to deny.
         result = check_tool_input(
-            "Bash", {"command": "git push && echo done"}
+            "Bash",
+            {"command": "git push origin main && echo done"},
+            cwd=str(tmp_path),
         )
         rule_ids = [f["rule_id"] for f in result["findings"]]
         assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+        assert "TIER-ASK" in rule_ids, (
+            "T2 leg must fire via pre-pass; if missing, the invariant "
+            "'T2 + CRITICAL → deny-wins' is no longer being tested"
+        )
         assert result["verdict"] == "deny"
 
     def test_compute_verdict_mixed_ask_and_deny(self):
@@ -381,18 +424,21 @@ class TestCheckToolInputTierClassifier:
         rule_ids = [f["rule_id"] for f in result["findings"]]
         assert not any(rid.startswith("TIER-") for rid in rule_ids)
 
-    def test_tier_layer_runs_after_bashlex(self):
-        """The bashlex parser fires before the tier classifier, so a compound
-        command produces both a BASH-PARSER-COMPOUND finding AND any matching
-        TIER finding for the leading command."""
+    def test_tier_layer_runs_for_compound_leading_command(self):
+        """The L4 bashlex parser allows benign compound structure but recurses
+        into each segment; the L3 tier classifier still sees the leading
+        command and emits TIER-* findings for tiered operations like
+        ``git push --force origin main``."""
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input(
             "Bash", {"command": "git push --force origin main && echo done"}
         )
         rule_ids = [f["rule_id"] for f in result["findings"]]
-        # bashlex-layer finding present.
-        assert any(rid.startswith("BASH-PARSER-") for rid in rule_ids)
+        # Tier classifier finding present for the leading dangerous command.
+        assert any(rid.startswith("TIER-") for rid in rule_ids), (
+            f"expected TIER-* finding in {rule_ids!r}"
+        )
 
 
 

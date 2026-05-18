@@ -125,6 +125,12 @@ _ALLOWED_KEYS: frozenset[str] = frozenset(f.name for f in fields(TierRecord))
 # is brittle across Python versions.
 _REQUIRED_KEYS: frozenset[str] = frozenset({"tool", "pattern", "tier", "description"})
 
+#: Allow-listed top-level TOML keys. ``tiers`` is the [[tiers]] array of
+#: tables; ``protected`` is the [protected] section consumed by the
+#: protected-branch loader added in a follow-up commit (planned:
+#: ``spellbook.gates.git_push.load_protected_config``).
+_ALLOWED_TOP_LEVEL: frozenset[str] = frozenset({"tiers", "protected"})
+
 
 def _parse_record(raw: dict, source_idx: int, source: Path | None) -> TierRecord:
     """Validate a raw dict and construct a :class:`TierRecord`."""
@@ -211,6 +217,13 @@ def load_tiers(path: Path) -> list[TierRecord]:
     text = path.read_text(encoding="utf-8")
     data = tomllib.loads(text)
 
+    unknown_top = set(data.keys()) - _ALLOWED_TOP_LEVEL
+    if unknown_top:
+        raise ValueError(
+            f"{path}: unknown top-level keys {sorted(unknown_top)}; "
+            f"allowed keys are {sorted(_ALLOWED_TOP_LEVEL)}"
+        )
+
     rows = data.get("tiers", []) or []
     if not isinstance(rows, list):
         raise ValueError(
@@ -287,6 +300,7 @@ def classify_tool_call(
     tool_name: str,
     tool_input: dict,
     records: Iterable[TierRecord],
+    cwd: str | None = None,
 ) -> str:
     """Classify a single tool call against tier records.
 
@@ -295,6 +309,10 @@ def classify_tool_call(
         tool_input: Tool input dict. For Bash, the ``"command"`` key is
             inspected; for other tools, only ``tool_name`` is matched.
         records: Iterable of :class:`TierRecord`.
+        cwd: Optional working directory. When provided AND the call is a
+            Bash ``git push``, the :mod:`spellbook.gates.git_push`
+            pre-pass runs first; its result (if not ``None``) is folded
+            into the highest-tier-wins outcome alongside the record loop.
 
     Returns:
         The tier of the highest-tier matching record, or
@@ -303,6 +321,41 @@ def classify_tool_call(
     """
     best_rank = _TIER_RANK[T_UNCLASSIFIED]
     best_tier = T_UNCLASSIFIED
+
+    # Pre-pass: git push classifier (WI-fork). Runs only for Bash git push
+    # invocations; returns None for everything else so the record loop is
+    # the sole source of truth for non-push commands.
+    if tool_name == "Bash":
+        command = (tool_input or {}).get("command", "") or ""
+        # Token-exact match — `git push-fancy` and similar hypothetical
+        # subcommands must NOT trigger the protected-config load.
+        if command.lstrip().split(None, 2)[:2] == ["git", "push"]:
+            # Local import to avoid pulling the subprocess + fnmatch deps
+            # into install-time consumers that only need load_tiers /
+            # derive_l2_deny_list.
+            import os as _os
+            from spellbook.gates.git_push import (
+                classify_git_push,
+                load_protected_config,
+            )
+            # Function-local import to break the module-load cycle:
+            # check.py imports classify_tool_call from tiers.py at module
+            # top, so tiers.py can only reach into check.py at call time.
+            # Sharing _tiers_toml_path() ensures tests that override the
+            # helper for _cached_tiers() also override the git-push pre-pass.
+            from spellbook.gates.check import _tiers_toml_path
+            autonomous = _os.environ.get(
+                "SPELLBOOK_GIT_PUSH_AUTONOMOUS", ""
+            ).strip().lower() in {"1", "true", "yes"}
+            config = load_protected_config(_tiers_toml_path())
+            pre = classify_git_push(
+                command, cwd, config, autonomous=autonomous
+            )
+            if pre is not None:
+                rank = _TIER_RANK.get(pre, -1)
+                if rank > best_rank:
+                    best_rank = rank
+                    best_tier = pre
 
     for rec in records:
         if not _record_matches(rec, tool_name, tool_input):

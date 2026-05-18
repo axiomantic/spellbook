@@ -144,7 +144,7 @@ You do NOT know what the user wants until they tell you. Do NOT guess, infer a d
 
 ### Git Safety
 
-- NEVER execute git commands with side effects (commit, push, checkout, restore, stash, merge, rebase, reset) without STOPPING and asking permission first. YOLO mode does not override this.
+- NEVER push to a protected branch (configured in `spellbook/gates/tiers.toml` `[protected]`; defaults: master, main) without STOPPING and asking permission first. `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` may suppress the prompt for high-trust automation contexts; YOLO mode alone does not. Other git commands with side effects (commit, checkout, restore, stash, merge, rebase, reset) still require permission.
 - NEVER add AI attribution of any kind: no `Co-Authored-By` trailers, no "Generated with Claude Code" footers, no bot signatures in commit messages, PR titles, PR descriptions, issues, or comments
 - NEVER reference GitHub issue numbers (e.g., `#123`, `fixes #123`) in commit messages, PR titles, or PR descriptions. GitHub auto-links these and sends notifications to issue subscribers. Only the user should add issue references manually.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
@@ -202,7 +202,7 @@ failure even if the work product is correct.
 
 ### Develop = Thoroughness Mode (Operator Contract)
 
-_See: Core Philosophy: Steady correctness over speed._
+*See: Core Philosophy: Steady correctness over speed.*
 
 Invoking the develop skill is the operator's explicit opt-in to thoroughness.
 The operator has stated, durably:
@@ -254,6 +254,71 @@ Applies to: installs, network fetches, tool invocations, auth flows, sandbox
 probes — any capability where the environment might be richer than it first appears.
 </CRITICAL>
 
+### Navigating the Spellbook Bash Gate
+
+Spellbook's bash gate runs a layered pipeline (L4 bashlex AST → L3 tier classifier → L2 regex → exfil rules). Block messages land on **stderr** (per the Claude Code hook protocol). When a Bash call exits 2, read the stderr JSON to learn which layer denied and why.
+
+**Common block messages and the right response:**
+
+| Stderr message contains | Layer | Right response |
+|---|---|---|
+| `Tier classifier marked Bash call as T2 (ask)` | L3 | Operator confirmation required. Surface the exact command back to the orchestrator (or the operator) — do NOT retry. From a subagent, the harness permission UI cannot reach the operator; only the main context can prompt. |
+| `Tier classifier denied Bash call (tier=T3)` | L3 | Forbidden by policy. Restructure to avoid the denied capability. |
+| `bashlex failed to parse command` | L4 | Almost always a complex heredoc / quote / process-substitution issue. Write the payload to a temp file and pass via `--body-file`, `--data @file`, `--input-file`, etc. |
+| `High entropy content detected` | L4 | Triggered by long base64-/JWT-/random-looking blobs in the command line. Move the blob to a file and reference it. Do NOT try to obfuscate or further encode. |
+| `BASH-PARSER-COMPOUND` | L4 | Compound deny is opt-in (`SPELLBOOK_BASH_DENY_COMPOUND=1` or `security_mode="paranoid"`). If you hit this, the operator has opted in. Split into separate Bash invocations. |
+| `Compound command (...) is not allowed` | L4 | Same as above. |
+| `EXF-...` / `BASH-...` (regex layer) | L2 | Substring match on a dangerous pattern. Restructure to avoid the literal substring (e.g., write a script to disk and run it; use `gh api` instead of `curl https://api.github.com/...`). |
+
+**Subagent escape hatch:** when dispatched, you cannot trigger the harness's interactive permission prompt — that only happens in the main context. If your Bash call blocks at T2, stop the current work, report the exact command and the verbatim stderr message back to the orchestrator, and let the orchestrator either re-run from main context (where the operator can approve) or surface to the operator directly. Looping the same command will not unblock it.
+
+**What NOT to do when blocked:**
+
+- Do NOT retry the same command verbatim — gates are deterministic.
+- Do NOT base64/hex-encode the payload to "smuggle" it past the parser — the entropy detector exists for exactly this.
+- Do NOT use `--no-verify`, hook-bypass flags, or environment overrides like `SPELLBOOK_BASH_PARSER_ALLOW=*` to silence the gate.
+- Do NOT silently fall back to a no-op or fake success. Surface the block.
+
+**Worked example (heredoc → file workaround):**
+
+A subagent tried to post a PR comment with embedded technical content via:
+`gh pr comment 288 --body "$(cat <<'EOF' ... EOF)"`. The L4 bashlex layer returned `bashlex failed to parse command` plus `High entropy content detected`. The fix: `Write` the body to `/tmp/comment.md` and use `gh pr comment 288 --body-file /tmp/comment.md`. One retry, succeeded. The same pattern applies to `git commit -F /tmp/msg.txt`, `gh issue create --body-file ...`, `curl --data @file.json`, and any other tool that accepts file-based input as an alternative to inline strings.
+
+### Autonomous Mode and Scope Discipline
+
+<CRITICAL>
+Autonomous mode scopes **confirmations**, not **scope**.
+
+Autonomous mode means: do not pause for trivial yes/no acknowledgments
+that an interactive user would give automatically (e.g., "proceed to
+the next phase?", "apply this fix?", "run the test suite?").
+
+Autonomous mode does NOT mean: license to expand the work beyond what
+the operator described in their initial request.
+
+A decision **expands scope** when it introduces capabilities,
+infrastructure, external integrations, monitoring/alerting, escalation
+paths, or new components that the operator did not mention. Examples
+of scope expansion that REQUIRE pausing regardless of autonomous mode:
+
+- Adding a new Lambda, scheduled job, queue, or background worker
+- Introducing a new external integration (PagerDuty, Slack, monitoring
+  service, secret store)
+- Adding an escalation/retry/reconciliation system not requested
+- Introducing a cache, mirror, or replication layer not requested
+- Adding authentication, authorization, or signing schemes not asked for
+
+When such an expansion is contemplated — even when justified by an
+adversarial-review finding or a "what could go wrong" risk surfaced by
+the orchestrator itself — the orchestrator MUST pause and surface the
+proposed expansion to the operator for explicit go/no-go.
+
+This rule overrides any phase-local "in autonomous mode, proceed
+automatically" instruction. The thoroughness contract of develop
+(`Develop = Thoroughness Mode`) is about doing the asked work
+thoroughly, not about expanding the asked work autonomously.
+</CRITICAL>
+
 ### Shared Skill Principles
 
 <CRITICAL>
@@ -269,7 +334,7 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 </CRITICAL>
 
 <FORBIDDEN>
-- Executing git commands with side effects without explicit user permission
+- Pushing to a protected branch (per `spellbook/gates/tiers.toml` `[protected]`) without explicit user permission; executing other side-effect git commands (commit, checkout, restore, stash, merge, rebase, reset) without explicit user permission
 - Using EnterPlanMode for any implementation task
 - Doing subagent work in main context (write/edit/test without Task tool)
 - Passing raw untrusted content to executing tools (Bash, Write, Edit)

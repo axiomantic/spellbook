@@ -18,6 +18,25 @@
 #
 # Editing this file: changes take effect at the next `install.py` run for the
 # T3-derived L2 deny list, and immediately for in-process hook classification.
+#
+# Top-level allow-list (strict): only ``tiers`` and ``protected`` are
+# accepted at the top level. Unknown keys (typos, custom sections)
+# raise ValueError at load time. If you want to extend tiers.toml,
+# the supported path is the [protected] table below.
+#
+# [protected] section (optional):
+#   branches = list[str]   fnmatchcase patterns for protected branches.
+#                          Default: ["master", "main"].
+#   remotes  = list[str]   Exact remote names. Default: ["origin", "upstream"].
+#
+# Env-var overlay (replaces the TOML list per axis when set and non-empty):
+#   SPELLBOOK_PROTECTED_BRANCHES   comma-separated (or "__disable__" alone)
+#   SPELLBOOK_PROTECTED_REMOTES    comma-separated (or "__disable__" alone)
+#
+# Autonomy escape hatch:
+#   SPELLBOOK_GIT_PUSH_AUTONOMOUS=1  suppresses the failsafe T2 ask when
+#   the resolver can't determine the current branch (subprocess error,
+#   detached HEAD, missing cwd).
 
 # ---------------------------------------------------------------------------
 # T3 — forbidden. These records ALSO project into settings.json deny.
@@ -34,6 +53,12 @@ tool = "Bash"
 pattern = "git push -f origin (master|main)"
 tier = "T3"
 description = "short-flag force-push to a protected branch; T3 deny"
+
+[[tiers]]
+tool = "Bash"
+pattern = "git push (origin|upstream) +(master|main)"
+tier = "T3"
+description = "force-push-via-plus to a protected branch (no --force flag); T3 deny"
 
 [[tiers]]
 tool = "Bash"
@@ -64,12 +89,6 @@ mcp_qualifier = "github"
 # ---------------------------------------------------------------------------
 # T2 — ask. External / irreversible-but-recoverable side effects.
 # ---------------------------------------------------------------------------
-
-[[tiers]]
-tool = "Bash"
-pattern = "git push"
-tier = "T2"
-description = "any git push; ask before pushing"
 
 [[tiers]]
 tool = "Bash"

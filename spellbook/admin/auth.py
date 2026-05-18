@@ -30,22 +30,22 @@ def _get_signing_key() -> bytes:
 
 
 # In-memory stores (process-lifetime)
-_exchange_tokens: dict[str, float] = {}  # token -> expiry timestamp
+_handoff_tokens: dict[str, float] = {}  # token -> expiry timestamp
 _ws_tickets: dict[str, float] = {}       # ticket -> expiry timestamp
 
 
-def create_exchange_token() -> str:
-    """Create a one-time exchange token valid for 60 seconds."""
+def create_handoff_token() -> str:
+    """Create a one-time handoff token valid for 60 seconds."""
     token = secrets.token_urlsafe(32)
-    _exchange_tokens[token] = time.time() + 60
-    _cleanup_expired(_exchange_tokens)
+    _handoff_tokens[token] = time.time() + 60
+    _cleanup_expired(_handoff_tokens)
     return token
 
 
-def validate_exchange_token(token: str) -> bool:
-    """Validate and consume an exchange token (single use)."""
-    _cleanup_expired(_exchange_tokens)
-    expiry = _exchange_tokens.pop(token, None)
+def validate_handoff_token(token: str) -> bool:
+    """Validate and consume a handoff token (single use)."""
+    _cleanup_expired(_handoff_tokens)
+    expiry = _handoff_tokens.pop(token, None)
     return expiry is not None and time.time() < expiry
 
 

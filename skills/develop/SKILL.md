@@ -38,6 +38,16 @@ When operating in YOLO mode or when user selected "Fully autonomous":
 - Proceed without asking confirmation
 - Treat all review findings as mandatory fixes
 - Only stop for genuine blockers (missing files, 3+ test failures, contradictions)
+- **STOP for scope expansion regardless of autonomous mode.** If a
+  decision would introduce capabilities, infrastructure, or external
+  integrations the operator did not mention in the initial request,
+  pause and surface to the operator. See `~/.claude/CLAUDE.md`
+  "Autonomous Mode and Scope Discipline".
+- **STOP before parallel session fan-out.** Generation of chunk
+  prompts, `forge_project_init`, sub-orchestrator dispatch, and
+  spawning of parallel sessions are gated by `feature-implement`
+  Phase 3.4.7 (One-Pager Approval Gate). Autonomous mode does not
+  waive that gate.
 
 If you find yourself typing "Should I proceed?" — STOP. You already have permission.
 </CRITICAL>
@@ -232,6 +242,7 @@ is wrong by construction. Decompose before sending:
 - "all per-task gates", "combined gates", "batched gates"
 - "plus commit", "and commit", "implement and commit"
 - "end-to-end", "everything", "the whole flow", "wrap it up"
+- "TDD mode", "code review mode", "audit mode"  <-- BANNED: signals inline execution, not skill invocation
 - Any phrasing that combines two distinct rows of the dispatch table
   (e.g., "design + review", "plan + review", "TDD + code review")
 
@@ -467,7 +478,23 @@ Task:
     [Only the context the skill needs to do its job]
 ```
 
-**WRONG Pattern:**
+**WRONG Pattern (Option B - "or read SKILL.md"):**
+
+```
+prompt: |
+  Use the [skill-name] skill or read ~/.pi/agent/skills/[name]/SKILL.md.
+  <-- WRONG: Gives subagent an escape hatch. They will read and inline.
+```
+
+**WRONG Pattern (Option A - "mode"):**
+
+```
+prompt: |
+  Use [skill-name] mode to do X.
+  <-- WRONG: Makes skill invocation a flavor, not the actual tool.
+```
+
+**WRONG Pattern (Original):**
 
 ```
 Task (or subagent simulation):
@@ -477,7 +504,7 @@ Task (or subagent simulation):
 ```
 
 <CRITICAL>
-### Subagent Skill Invocation Verification
+### Subagent Skill Invocation Verification (MANDATORY)
 
 After dispatching ANY subagent that should invoke a skill:
 
@@ -489,7 +516,21 @@ After dispatching ANY subagent that should invoke a skill:
 
 A subagent that reports "the skill is not available in this environment" without showing an attempted Skill tool call is making an untested claim. Reject it. Skills are delivered via system-reminder, NOT via the deferred-tools list, and the catalog is injected lazily after the first tool call. A subagent must attempt the call before declaring it impossible.
 
+**Exemption:** This verification does NOT apply to "inline audit prompt" gates (4.4, 4.6.1) which have no skill to invoke. For those gates, verify the audit artifact instead of skill invocation.
+
 Anti-rationalization #9 (Self-Review Substitution) applies here.
+</CRITICAL>
+
+### Phase 4 Dispatch Discipline: Gate Non-Collapse Rule
+
+<CRITICAL>
+Each Phase 4 gate (4.3, 4.4, 4.5, 4.5.1) MUST be a **separate** subagent dispatch.
+
+**FORBIDDEN:** Combining multiple gates into a single subagent prompt — even for "small" tasks, even under time pressure, even in autonomous mode. This is Pattern 6 (Phase Collapse). A subagent dispatched to "invoke TDD, then audit, then review" will implement code and skip the skills.
+
+**Correct:** Dispatch one subagent for 4.3 (TDD skill). Wait for result. Verify skill invocation. Dispatch next subagent for 4.4 (inline audit). Wait. Verify. Dispatch next for 4.5 (code review). Wait. Verify. Dispatch next for 4.5.1 (fact-check).
+
+Each gate is a distinct quality dimension. Collapsing them silently drops dimensions. No exceptions.
 </CRITICAL>
 
 ### Phase 4 Dispatch Discipline

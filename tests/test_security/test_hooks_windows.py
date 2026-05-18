@@ -231,9 +231,9 @@ class TestCheckModuleBehavior:
         result = check_tool_input("Bash", {"command": "ls -la"})
         assert result == {
             "safe": True,
-            "verdict": "allow",
             "findings": [],
             "tool_name": "Bash",
+            "verdict": "allow",
         }
 
     def test_dangerous_bash_command_is_blocked(self):
@@ -317,9 +317,9 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": True,
-            "verdict": "allow",
             "findings": [],
             "tool_name": "spawn_claude_session",
+            "verdict": "allow",
         }
 
     def test_injection_prompt_is_blocked(self):
@@ -358,9 +358,9 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": True,
-            "verdict": "allow",
             "findings": [],
             "tool_name": "workflow_state_save",
+            "verdict": "allow",
         }
 
     def test_injected_workflow_state_is_blocked(self):
@@ -445,7 +445,7 @@ class TestCheckModuleCLI:
             "tool_input": {"command": "rm -rf /"},
         })
         assert proc.returncode == 2
-        error_data = json.loads(proc.stdout.strip())
+        error_data = json.loads(proc.stderr.strip())
         # Error message concatenates all finding messages (tier + regex
         # layers); assert structural shape rather than exact text so future
         # tier seed adjustments do not break this test.

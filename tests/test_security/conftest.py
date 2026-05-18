@@ -48,3 +48,33 @@ def tmp_command(tmp_path):
     cmd_dir.mkdir(parents=True)
     cmd_file = cmd_dir / "test-command.md"
     return _Utf8PathWrapper(cmd_file)
+
+
+# ---------------------------------------------------------------------------
+# git_push cache reset (per design §9.5 / Task 2 M-1)
+# ---------------------------------------------------------------------------
+#
+# The cache-reset fixture lives at directory scope (NOT module scope) so every
+# test under tests/test_security/ that touches spellbook.gates.git_push picks
+# it up automatically. This includes test_git_push_classifier.py (this
+# fixture's primary consumer) plus test_check_cwd.py (Task 6), test_check.py
+# (Task 8 updates), and test_hooks.py (Task 9 updates).
+
+
+@pytest.fixture(autouse=True)
+def _reset_git_push_caches():
+    """Reset spellbook.gates.git_push caches around every test.
+
+    The reset is best-effort: if spellbook.gates.git_push has not yet
+    been imported (or does not exist — e.g. during a partial mid-plan
+    checkout), the fixture is a no-op. Once Task 2 lands the module,
+    every subsequent test in this directory inherits the reset.
+    """
+    try:
+        from spellbook.gates.git_push import _reset_caches
+    except ImportError:
+        yield
+        return
+    _reset_caches()
+    yield
+    _reset_caches()
