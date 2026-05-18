@@ -712,6 +712,143 @@ def test_install_warns_when_local_bin_not_on_path(
 
 
 @pytest.mark.posix_only
+def test_install_accepts_tilde_prefix_path_entry(
+    fake_cco_fork_repo, monkeypatch, tmp_path, capsys
+):
+    """A PATH entry written as ``~/...`` (literal tilde) MUST be treated
+    as equivalent to its ``expanduser``'d form.
+
+    Regression guard for the PATH-membership normalization: the SUT
+    resolves each PATH entry via ``Path(raw).expanduser().resolve()``
+    before comparing against the resolved wrapper dir, so a tilde-prefix
+    entry that names the wrapper dir must NOT trip the
+    "not on PATH" WARNING.
+    """
+    install_root = tmp_path / "clone"
+
+    # Place the wrapper dir UNDER a fake HOME so the tilde-prefix entry
+    # is meaningful: ``~/wrapper-bin`` expands to ``<fake_home>/wrapper-bin``.
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    wrapper_dir = fake_home / "wrapper-bin"
+    wrapper_dir.mkdir()
+    wrapper_path = wrapper_dir / "spellbook-cco"
+
+    monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
+    monkeypatch.delenv("SPELLBOOK_INSTALLER_SKIP_FORK_PIN", raising=False)
+    # Literal tilde in PATH entry -- this is the variant under test.
+    monkeypatch.setenv(
+        "PATH", f"~/wrapper-bin{os.pathsep}{os.environ.get('PATH', '')}"
+    )
+
+    result = install_spellbook_cco(
+        install_root=install_root,
+        dry_run=False,
+        repo_url=fake_cco_fork_repo["url"],
+        pinned_sha=fake_cco_fork_repo["head_sha"],
+        wrapper_dir=wrapper_dir,
+        wrapper_path=wrapper_path,
+    )
+
+    assert wrapper_path.exists()
+    assert result["installed"] is True
+
+    captured = capsys.readouterr()
+    # The PATH-not-set WARNING must NOT fire: the tilde entry expanded
+    # to the wrapper dir.
+    assert _WARNING_PATH_NOT_SET not in captured.err
+
+
+@pytest.mark.posix_only
+def test_install_accepts_trailing_slash_path_entry(
+    fake_cco_fork_repo, monkeypatch, tmp_path, capsys
+):
+    """A PATH entry with a trailing slash MUST be treated as equivalent
+    to the no-trailing-slash form.
+
+    Regression guard for the PATH-membership normalization.
+    """
+    install_root = tmp_path / "clone"
+    wrapper_dir, wrapper_path = _empty_wrapper_dir(tmp_path)
+
+    monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
+    monkeypatch.delenv("SPELLBOOK_INSTALLER_SKIP_FORK_PIN", raising=False)
+    # Trailing-slash variant under test.
+    monkeypatch.setenv(
+        "PATH", f"{wrapper_dir}/{os.pathsep}{os.environ.get('PATH', '')}"
+    )
+
+    result = install_spellbook_cco(
+        install_root=install_root,
+        dry_run=False,
+        repo_url=fake_cco_fork_repo["url"],
+        pinned_sha=fake_cco_fork_repo["head_sha"],
+        wrapper_dir=wrapper_dir,
+        wrapper_path=wrapper_path,
+    )
+
+    assert wrapper_path.exists()
+    assert result["installed"] is True
+
+    captured = capsys.readouterr()
+    assert _WARNING_PATH_NOT_SET not in captured.err
+
+
+@pytest.mark.posix_only
+def test_install_skips_empty_path_entries(
+    fake_cco_fork_repo, monkeypatch, tmp_path, capsys
+):
+    """Empty entries in PATH (consecutive ``:`` on POSIX) MUST be
+    skipped silently without raising or producing a spurious WARNING.
+
+    Regression guard for the ``if not raw: continue`` short-circuit.
+    """
+    install_root = tmp_path / "clone"
+    wrapper_dir, wrapper_path = _empty_wrapper_dir(tmp_path)
+
+    monkeypatch.delenv("SPELLBOOK_USE_VANILLA_CCO", raising=False)
+    monkeypatch.delenv("SPELLBOOK_INSTALLER_SKIP_FORK_PIN", raising=False)
+    # Surround the wrapper dir with empty entries (leading, embedded,
+    # trailing) so the empty-entry handler is exercised in all positions.
+    sep = os.pathsep
+    monkeypatch.setenv(
+        "PATH",
+        f"{sep}{sep}{wrapper_dir}{sep}{sep}{os.environ.get('PATH', '')}{sep}",
+    )
+
+    result = install_spellbook_cco(
+        install_root=install_root,
+        dry_run=False,
+        repo_url=fake_cco_fork_repo["url"],
+        pinned_sha=fake_cco_fork_repo["head_sha"],
+        wrapper_dir=wrapper_dir,
+        wrapper_path=wrapper_path,
+    )
+
+    assert wrapper_path.exists()
+    assert result["installed"] is True
+
+    captured = capsys.readouterr()
+    # No spurious WARNING from empty-entry handling, and no exception.
+    assert _WARNING_PATH_NOT_SET not in captured.err
+
+
+# Note on the unresolvable-PATH-entry / logger.debug branch: triggering
+# ``OSError``/``RuntimeError`` from ``Path(raw).expanduser().resolve(
+# strict=False)`` on a real on-disk path is not portable -- ``strict=False``
+# is intentionally forgiving (broken symlinks, missing components, perm
+# errors on parents all return a non-canonicalized Path rather than raise).
+# A reliable trigger requires patching ``pathlib.Path.resolve``, which
+# this project's mocking discipline reserves for tripwire (see AGENTS.md
+# section "Testing with Tripwire") and tripwire cannot scope a Path-method
+# mock narrowly enough without breaking the SUT's other ``resolve()``
+# calls in the same code path. The branch is exercised by inspection
+# during code review instead; the tilde, trailing-slash, and empty-entry
+# tests above cover the call-site's other normalization branches.
+
+
+@pytest.mark.posix_only
 def test_use_vanilla_cco_env_routes_to_skipped(monkeypatch, tmp_path, capsys):
     """``SPELLBOOK_USE_VANILLA_CCO=1`` returns the rollback shape AND emits
     a stderr WARNING. Does NOT clone, does NOT touch the wrapper.

@@ -611,9 +611,14 @@ def install_spellbook_cco(
 
     # PATH check. Resolve each PATH entry so the membership test handles
     # ``~``, trailing slashes, and relative entries equivalently to the
-    # resolved wrapper dir. ``os.path.normcase`` normalizes case on
-    # case-insensitive filesystems (Windows; default macOS APFS/HFS+);
-    # on POSIX it is a no-op so Linux comparison remains exact.
+    # resolved wrapper dir. ``os.path.normcase`` lower-cases on Windows
+    # (handling its case-insensitive FS). On POSIX (including macOS) it
+    # is a no-op so Linux comparison remains exact; case-insensitivity
+    # on default macOS APFS is handled instead by ``Path.resolve()``,
+    # which returns the on-disk canonical casing for components that
+    # exist. The wrapper dir is created earlier in this function so
+    # ``resolve()`` always canonicalizes it; broken or missing PATH
+    # entries are skipped via the OSError/RuntimeError catch below.
     resolved_wrapper_dir_canonical = resolved_wrapper_dir.expanduser().resolve(strict=False)
     target_key = os.path.normcase(str(resolved_wrapper_dir_canonical))
     path_keys: set[str] = set()
