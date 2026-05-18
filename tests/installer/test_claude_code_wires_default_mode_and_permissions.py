@@ -222,9 +222,31 @@ def _drain_cco_install_exception_log() -> None:
     """Drain the optional ``logger.exception`` ERROR emitted by
     ``claude_code.py`` when ``install_spellbook_cco`` raises.
 
-    Wrapped in a helper so the optional/required(False) semantics live
-    in one place. Always called inside an enclosing
+    The ERROR log is only emitted on POSIX where ``install_spellbook_cco``
+    actually attempts a ``git clone`` of the elijahr/cco fork; on Windows
+    the function short-circuits with a shape-only noop
+    (``installer/components/spellbook_cco.py``: ``if os.name == "nt"``),
+    so no exception, no ERROR log, nothing to drain.
+
+    Wrapped in a helper so the optional drain semantics live in one
+    place. Always called inside an enclosing
     ``with tripwire.in_any_order():`` block.
+
+    The installed pytest-tripwire 0.21.0 ``LoggingPlugin.assert_log``
+    signature is ``(level, message, logger_name)`` -- no ``required=``
+    kwarg. We tolerate both shapes (kwarg-supported and not) and both
+    outcomes (log emitted on POSIX, log absent on Windows) by:
+
+    1. Trying the ``required=False`` form first (forward-compatible with
+       future tripwire builds that may add the kwarg).
+    2. Falling back to the positional form, catching the
+       ``InteractionMismatchError`` that fires when no matching ERROR
+       log is in the timeline (the Windows case).
+
+    The strict verifier still surfaces a genuine
+    ``UnassertedInteractionsError`` at teardown if an ERROR log WAS
+    emitted but not drained by this call, so swallowing the mismatch
+    here does not mask real test signal.
     """
     try:
         tripwire.log.assert_log(
@@ -233,17 +255,24 @@ def _drain_cco_install_exception_log() -> None:
             logger_name="installer.platforms.claude_code",
             required=False,
         )
+        return
     except TypeError:
-        # Some tripwire builds do not accept required=; fall back to
-        # an always-attempt-but-tolerate pattern by swallowing the
-        # mismatch error here. The strict verifier will surface a
-        # genuine UnassertedInteractionsError if the log was emitted
-        # but not drained by any other call.
+        # pytest-tripwire 0.21.0: assert_log does not accept required=.
+        # Fall through to the positional form with an explicit
+        # InteractionMismatchError catch.
+        pass
+
+    try:
         tripwire.log.assert_log(
             level="ERROR",
             message=AnyThing,
             logger_name="installer.platforms.claude_code",
         )
+    except tripwire.InteractionMismatchError:
+        # No matching ERROR log in the timeline (Windows case: cco
+        # install is a shape-only noop and never raises). The drain is
+        # genuinely optional here.
+        pass
 
 
 def _assert_install_and_uninstall_mocks(
