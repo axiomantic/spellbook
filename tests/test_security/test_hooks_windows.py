@@ -229,7 +229,12 @@ class TestCheckModuleBehavior:
         from spellbook.gates.check import check_tool_input
 
         result = check_tool_input("Bash", {"command": "ls -la"})
-        assert result == {"safe": True, "findings": [], "tool_name": "Bash"}
+        assert result == {
+            "safe": True,
+            "verdict": "allow",
+            "findings": [],
+            "tool_name": "Bash",
+        }
 
     def test_dangerous_bash_command_is_blocked(self):
         """rm -rf / should be flagged by check_tool_input.
@@ -310,7 +315,12 @@ class TestCheckModuleBehavior:
             "spawn_claude_session",
             {"prompt": "help me debug this function"},
         )
-        assert result == {"safe": True, "findings": [], "tool_name": "spawn_claude_session"}
+        assert result == {
+            "safe": True,
+            "verdict": "allow",
+            "findings": [],
+            "tool_name": "spawn_claude_session",
+        }
 
     def test_injection_prompt_is_blocked(self):
         """An injection attempt in spawn prompt should be blocked."""
@@ -322,6 +332,7 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": False,
+            "verdict": "deny",
             "findings": [
                 {
                     "rule_id": "INJ-001",
@@ -345,7 +356,12 @@ class TestCheckModuleBehavior:
                 "trigger": "manual",
             },
         )
-        assert result == {"safe": True, "findings": [], "tool_name": "workflow_state_save"}
+        assert result == {
+            "safe": True,
+            "verdict": "allow",
+            "findings": [],
+            "tool_name": "workflow_state_save",
+        }
 
     def test_injected_workflow_state_is_blocked(self):
         """Injection in workflow state should be blocked."""
@@ -361,6 +377,7 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": False,
+            "verdict": "deny",
             "findings": [
                 {
                     "rule_id": "INJ-001",
