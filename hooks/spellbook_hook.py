@@ -1544,8 +1544,16 @@ def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
     cache[transcript_path] = text_sha
     try:
         _atomic_write_json(_get_stop_harvest_cache_path(), cache)
-    except OSError:
-        pass
+    except OSError as exc:
+        # Cache write is best-effort -- losing it means the next Stop hook
+        # re-harvests the same content, which dedup catches downstream. We
+        # still log so disk-full / permission failures are observable
+        # rather than silently masked.
+        logger.warning(
+            "Failed to persist Stop-hook harvest cache to %s: %s",
+            _get_stop_harvest_cache_path(),
+            exc,
+        )
 
 
 def _merge_candidates(

@@ -881,8 +881,7 @@ class TestStopHookHarvest:
         """Empty or missing transcript_path -> no POSTs, no exception."""
         # Missing key entirely.
         with tripwire:
-            with tripwire:
-                spellbook_hook._handle_stop({"cwd": "/repo/proj"})
+            spellbook_hook._handle_stop({"cwd": "/repo/proj"})
         assert mock_http.calls == []
         # Explicit empty string.
         with tripwire:

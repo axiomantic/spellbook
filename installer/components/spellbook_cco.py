@@ -30,6 +30,7 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -432,7 +433,7 @@ def install_spellbook_cco(
     pinned_sha: str | None = None,
     wrapper_dir: Path | None = None,
     wrapper_path: Path | None = None,
-    verify_pin_fn: "Callable[[Path, str], tuple[bool, str]] | None" = None,
+    verify_pin_fn: Callable[[Path, str], tuple[bool, str]] | None = None,
 ) -> dict:
     """Install (or update to pin) the elijahr/cco fork and write the wrapper.
 
