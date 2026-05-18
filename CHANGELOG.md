@@ -356,7 +356,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   supplemental `SB-BASH-*` rules previously only consumed by the Gemini
   installer. Old filename is preserved as a migration alias for one
   release. SB-BASH-001..009 ship as additional defense-in-depth findings
-  on top of the existing BASH-*/ EXF-* regex set.
+  on top of the existing `BASH-*` / `EXF-*` regex set.
 - **PR dance command** (`commands/pr-dance.md`) now explicitly refuses
   to merge under any session-level autonomy directive ("yolo", "do the
   PR dance autonomously", "just land it", "go go go"). Autonomy scopes
