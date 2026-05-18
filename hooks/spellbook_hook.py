@@ -360,7 +360,7 @@ def _emit_ask_and_exit(findings: list[dict]) -> None:
     reason = "; ".join(
         f.get("message", "")
         for f in findings
-        if str(f.get("rule_id", "")).startswith("TIER-ASK")
+        if f.get("rule_id", "").startswith("TIER-ASK")
     )
     print(
         json.dumps(

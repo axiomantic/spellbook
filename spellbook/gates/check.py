@@ -246,9 +246,7 @@ def _compute_verdict(findings: list[dict], *, safe: bool) -> str:
     if safe:
         return "allow"
     non_low = [f for f in findings if f.get("severity") != "LOW"]
-    if non_low and all(
-        str(f.get("rule_id", "")).startswith("TIER-ASK") for f in non_low
-    ):
+    if all(f.get("rule_id", "").startswith("TIER-ASK") for f in non_low):
         return "ask"
     return "deny"
 
