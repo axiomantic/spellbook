@@ -205,7 +205,6 @@ async def api_memory_bridge_content(request: Request) -> JSONResponse:
     file_path = str(body.get("file_path", ""))
     filename = str(body.get("filename", ""))
     content = str(body["content"])
-    bool(body.get("is_primary", False))
     branch = str(body.get("branch", ""))[:200]
 
     db_path = str(get_db_path())

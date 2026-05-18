@@ -116,7 +116,6 @@ def _run_list(args: argparse.Namespace) -> None:
 
 def _run_export(args: argparse.Namespace) -> None:
     """Execute ``spellbook session export SESSION_ID``."""
-    getattr(args, "json", False)
     projects_dir = _get_projects_dir()
 
     # Search for the session file across all projects

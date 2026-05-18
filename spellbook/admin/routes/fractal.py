@@ -9,7 +9,6 @@ dependency.
 
 import asyncio
 import json
-import math
 from pathlib import Path
 from typing import Optional
 
@@ -70,7 +69,6 @@ async def list_graphs(
         count_query = count_query.where(f)
     count_result = await session.execute(count_query)
     total = count_result.scalar_one()
-    max(1, math.ceil(total / per_page))
     offset = (page - 1) * per_page
 
     # Data query with LEFT JOIN for node count
