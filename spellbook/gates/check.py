@@ -256,7 +256,13 @@ def _compute_verdict(findings: list[dict], *, safe: bool) -> str:
     if safe:
         return "allow"
     non_low = [f for f in findings if f.get("severity") != "LOW"]
-    if all(f.get("rule_id", "").startswith("TIER-ASK") for f in non_low):
+    # Defensive: the `if safe` branch above guarantees non_low is non-empty
+    # today (safe=False ⇒ at least one non-LOW finding), but `all([])`
+    # returns True, so an explicit non_low check protects against future
+    # refactors that move or weaken the safe guard. Keep this check.
+    if non_low and all(
+        f.get("rule_id", "").startswith("TIER-ASK") for f in non_low
+    ):
         return "ask"
     return "deny"
 
