@@ -332,6 +332,7 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": False,
+            "verdict": "deny",
             "findings": [
                 {
                     "rule_id": "INJ-001",
@@ -341,7 +342,6 @@ class TestCheckModuleBehavior:
                 }
             ],
             "tool_name": "spawn_claude_session",
-            "verdict": "deny",
         }
 
     def test_safe_workflow_state_is_allowed(self):
@@ -377,6 +377,7 @@ class TestCheckModuleBehavior:
         )
         assert result == {
             "safe": False,
+            "verdict": "deny",
             "findings": [
                 {
                     "rule_id": "INJ-001",
@@ -386,7 +387,6 @@ class TestCheckModuleBehavior:
                 }
             ],
             "tool_name": "workflow_state_save",
-            "verdict": "deny",
         }
 
 

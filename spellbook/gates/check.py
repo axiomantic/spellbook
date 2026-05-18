@@ -176,11 +176,11 @@ def check_tool_input(
     Returns:
         Dict with keys:
             safe: bool - True if no findings above LOW severity
-            verdict: str - "allow" | "ask" | "deny". "ask" iff every
-                non-LOW finding is a TIER-ASK; "deny" if any non-LOW
-                finding is not a TIER-ASK; "allow" if no non-LOW
-                findings. Callers that want the harness ``ask`` UX
-                (Claude Code's permission prompt) should branch on
+            verdict: str - "allow" | "ask" | "deny". "ask" if there are
+                non-LOW findings and every one is a TIER-ASK; "deny" if
+                any non-LOW finding is not a TIER-ASK; "allow" if no
+                non-LOW findings. Callers that want the harness ``ask``
+                UX (Claude Code's permission prompt) should branch on
                 this field; legacy callers can keep using ``safe``.
             findings: list[dict] - matched patterns
             tool_name: str - the tool name checked
@@ -256,6 +256,10 @@ def _compute_verdict(findings: list[dict], *, safe: bool) -> str:
     if safe:
         return "allow"
     non_low = [f for f in findings if f.get("severity") != "LOW"]
+    # Defensive: the `if safe` branch above guarantees non_low is non-empty
+    # today (safe=False ⇒ at least one non-LOW finding), but `all([])`
+    # returns True, so an explicit non_low check protects against future
+    # refactors that move or weaken the safe guard. Keep this check.
     if non_low and all(
         f.get("rule_id", "").startswith("TIER-ASK") for f in non_low
     ):
