@@ -176,11 +176,11 @@ def check_tool_input(
     Returns:
         Dict with keys:
             safe: bool - True if no findings above LOW severity
-            verdict: str - "allow" | "ask" | "deny". "ask" iff every
-                non-LOW finding is a TIER-ASK; "deny" if any non-LOW
-                finding is not a TIER-ASK; "allow" if no non-LOW
-                findings. Callers that want the harness ``ask`` UX
-                (Claude Code's permission prompt) should branch on
+            verdict: str - "allow" | "ask" | "deny". "ask" if there are
+                non-LOW findings and every one is a TIER-ASK; "deny" if
+                any non-LOW finding is not a TIER-ASK; "allow" if no
+                non-LOW findings. Callers that want the harness ``ask``
+                UX (Claude Code's permission prompt) should branch on
                 this field; legacy callers can keep using ``safe``.
             findings: list[dict] - matched patterns
             tool_name: str - the tool name checked
