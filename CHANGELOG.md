@@ -9,7 +9,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.66.0] - 2026-05-18
 
+### Changed
+
+- **Test idiom — `required(False)` + `.__call__` workaround
+  eliminated across 15+ test files.** The pattern defeated tripwire's
+  "every registered mock must fire" guarantee by allowing optional
+  registrations to be silently skipped. Initial cleanup in
+  `test_memory_auto_store`, `test_aliases`, `test_aliases_windows`,
+  and `test_memory_cmd` was extended to 11 additional files outside
+  the original review scope:
+  `tests/admin/test_auth.py`,
+  `tests/installer/test_hooks_atomic_write.py`,
+  `tests/test_security/test_git_push_classifier.py`,
+  `tests/test_spellbook_mcp/test_config_orm_migration.py`,
+  `tests/test_spellbook_mcp/test_memory_bootstrap.py`,
+  `tests/test_spellbook_mcp/test_memory_bridge_hook.py`,
+  `tests/test_spellbook_mcp/test_notify_core.py`,
+  `tests/test_spellbook_mcp/test_spawn_session.py`,
+  `tests/test_spellbook_mcp/test_watcher.py`,
+  `tests/test_workflow_state_tools.py`, and
+  `tests/unit/test_stint_mcp_registration.py`. Three idiom shifts
+  applied uniformly: `mock.__call__.X(...)` → `mock.X(...)` shortcut
+  API; defensive `required(False)` mocks on short-circuit paths →
+  bare `tripwire.mock(name)` strict guards (raise
+  `UnmockedInteractionError` on unexpected calls); over-provisioned
+  FIFO chains → exact-count chains so production drift fails loudly.
+  Result: zero remaining `required(False)` / `__call__` patterns
+  in `tests/`. Hand-rolled `SimpleNamespace` / `_CountingMock` /
+  `_MockBuilder` fakes were also replaced with tripwire-native
+  `mock.object` registrations per the styleguide.
+
+- **`installer/components/spellbook_cco.py`:** Removed redundant
+  `str(Path)` calls (`subprocess.run` accepts `Path` since 3.6),
+  added `encoding="utf-8"` to all `Path.write_text` /
+  `Path.read_text` calls, hardened the PATH membership check
+  against non-absolute and case-mismatched entries (resolve +
+  `os.path.normcase` per entry for correct Windows /
+  case-insensitive APFS comparison), and replaced silent
+  `except: pass` with a logged warning. The previously-silent
+  `continue` branch now logs at debug level. Tilde-prefix,
+  trailing-slash, and empty PATH entries are covered by new
+  regression tests.
+
+- **`installer/components/agents.py`:** Replaced silent
+  `except: pass` with a logged warning to aid debugging.
+
+### Removed
+
+- **`pytest-mock` dev dependency.** Per `.gemini/styleguide.md`,
+  `pytest-tripwire` is the only acceptable mocking framework in
+  this repo; the `mocker` fixture is forbidden. An audit found
+  zero `mocker` fixture usages across the codebase, so the
+  `pytest-mock>=3.15.1` entry in `[dependency-groups].dev` was a
+  phantom dependency. Removed from `pyproject.toml`. `uv.lock`
+  is regenerated locally (the lockfile is gitignored in this
+  repo, so no lockfile change appears in the diff).
+
 ### Fixed
+
+- **`permissionDecision: "ask"` for T2 findings.** The `PreToolUse`
+  hook previously collapsed T2 (TIER-ASK) findings onto the same
+  `sys.exit(2)` deny path as T3 (TIER-DENY), so commands like
+  `git push` and `gh pr merge` were silently hard-blocked instead
+  of surfacing Claude Code's yellow approval prompt. `check_tool_input`
+  now returns an explicit `verdict: "allow" | "ask" | "deny"`
+  alongside the existing `safe: bool` (non-breaking superset; the
+  7 existing `safe`-only callers are unchanged). `_gate_bash`,
+  `_gate_spawn`, and `_gate_state_sanitize` short-circuit on
+  `verdict == "ask"` to emit
+  `hookSpecificOutput.permissionDecision = "ask"` and exit 0, letting
+  the harness render its native permission prompt. Mixed
+  TIER-ASK + non-ask findings still resolve to deny (deny-wins
+  invariant preserved). 12 new tests in
+  `tests/test_security/test_check.py` and
+  `tests/test_security/test_hooks.py` cover pure-T2, pure-T3,
+  mixed, safe, and the deny-wins invariant.
+
+- **`check-docs-completeness` pre-commit hook.** The always-run
+  hook had been failing on every commit with 15 findings: three
+  skills (`agent2agent`, `canvas`, `permissions-from-transcripts`)
+  and three commands (`/a2a`, `/canvas`, `/crystallize-consolidate`)
+  had been added to `skills/` and `commands/` without their
+  downstream surfaces. This release generates the missing
+  `docs/skills/canvas.md`, `docs/commands/a2a.md`, and
+  `docs/commands/canvas.md` pages via `scripts/generate_docs.py`,
+  and adds README entries plus `mkdocs.yml` nav entries for all
+  six. `python3 scripts/check-readme-completeness.py` now exits 0
+  (was 15 findings).
 
 - **Windows CI:** Fixed 5 failing tests in
   `installer.components.managed_permissions_state` where the
@@ -18,24 +104,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tripwire.in_any_order()` blocks that cover the real call pattern
   across platforms.
 
-### Changed
+### Dependencies
 
-- **Test idiom:** Removed the `required(False)` + `.__call__`
-  tripwire workaround pattern from test_memory_auto_store,
-  test_aliases, test_aliases_windows, and test_memory_cmd.
-  Replaced with idiomatic register-call-assert flow per the
-  Repository Style Guide. The workaround defeated tripwire's
-  "every registered mock must fire" guarantee.
-
-- **installer/components/spellbook_cco.py:** Removed redundant
-  `str(Path)` calls (subprocess.run accepts Path since 3.6), added
-  `encoding="utf-8"` to all `Path.write_text` / `Path.read_text`
-  calls, hardened the PATH membership check against non-absolute
-  and case-mismatched entries, and replaced silent `except: pass`
-  with a logged warning.
-
-- **installer/components/agents.py:** Replaced silent
-  `except: pass` with a logged warning to aid debugging.
+- **Dependabot consolidation.** 21 of 22 open dependabot PRs were
+  consolidated into three commits to reduce CI churn.
+  - **Python (`pyproject.toml`):** `alembic` 1.13 → 1.18.4,
+    `fastmcp` 0.4.1 → 3.3.1 (major; daemon + dev groups),
+    `httpx` 0.25 → 0.28.1 (daemon + dev groups),
+    `pytest` 7 → 9 (major),
+    `pytest-asyncio` 0.21 → 1.3 (major; `asyncio_mode` already `"auto"`),
+    `pytest-cov` 4 → 7 (major),
+    `pyyaml` 6.0 → 6.0.3,
+    `mkdocs` 1.5 → 1.6.1. Full suite green
+    (5172 passed, 139 skipped).
+  - **OpenCode extensions:** `@opencode-ai/sdk` and
+    `@opencode-ai/plugin` 1.14.29 → 1.14.48 across
+    `extensions/opencode/context-curator` and
+    `extensions/opencode/spellbook-workflow-state`;
+    `@types/node` 25.6 → 25.7; `zod` 4.1.13 → 4.4.3.
+  - **Admin frontend (`spellbook/admin/frontend`) + `tests/unit`:**
+    `cytoscape` 3.33.2 → 3.33.3,
+    `react-router-dom` 6.26 → 7.15.1 (major; declarative
+    `BrowserRouter` / `Routes` / `Route` API verified
+    back-compatible), `eslint` 10.2.1 → 10.3.0,
+    `typescript-eslint` 8.57.2 → 8.59.2, and `vitest`
+    4.1.5 → 4.1.6. Frontend rebuilt; build hash updated.
+  - **Skipped:** `tailwindcss` 3 → 4 (left for a dedicated
+    migration PR — v4 requires the new `@tailwindcss/postcss`
+    plugin and CSS-based config; v3 `@tailwind` directives and
+    `tailwind.config.js` no longer work).
 
 ## [0.65.0] - 2026-05-17
 
