@@ -9,56 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.66.0] - 2026-05-18
 
-### Added
-
-- **Pi platform support.** The `pi-coding-agent` harness
-  (https://github.com/badlogic/pi) is now a first-class spellbook
-  install target alongside Claude Code, OpenCode, Codex, Gemini CLI,
-  and ForgeCode. The installer gains the `pi` platform end to end:
-  `SUPPORTED_PLATFORMS` entry, `PLATFORM_CONFIG` block (default
-  `~/.pi/agent`, `PI_CONFIG_DIR` env var, `--pi-config-dir` CLI flag),
-  `PiInstaller` factory wiring, CLI help, and post-install notes,
-  backed by a new `installer/platforms/pi.py`. Per-target install
-  covers the platform's `AGENTS.md` context file, Agent-Skills skills
-  directory, prompt templates, and `~/.pi/agent/mcp.json` (atomic
-  write via tempfile + `os.replace`). The Task extension is
-  intentionally not installed pending upstream support. The
-  `develop`, `dispatching-parallel-agents`,
-  `dispatching-sub-orchestrators`, and `test-driven-development`
-  skills gain Pi platform-adaptation guidance (tool-name mapping,
-  Pi subagent types, artifact-path conventions) plus related
-  orchestration-protocol updates.
-
-- **Narrowing-role subagents (security architecture Phase 5).** Nine
-  specialized agent definitions land in `agents/` and are installed
-  by default into `$CLAUDE_CONFIG_DIR/agents/`: `implementer`,
-  `web-researcher`, `git-committer`, `git-pusher`, `pr-creator`,
-  `pr-merger`, `jira-reader`, `jira-mutator`, and `test-runner`.
-  Each declares a *narrowing* `tools:` list — the effective tool
-  set is `(parent_tools ∩ frontmatter_tools)` — so a dispatched
-  subagent can never gain a capability the parent did not already
-  hold. A new symlink-based discovery installer
-  (`installer/components/agents.py`) bridges
-  `$SPELLBOOK_DIR/agents/*.md` into `$CLAUDE_CONFIG_DIR/agents/`
-  (idempotent `install_agents` / `uninstall_agents`,
-  user-authored target files preserved; uninstall removes only
-  spellbook-pointing symlinks, including broken ones). Schema
-  validation in `tests/test_security/test_agent_frontmatter.py`
-  enforces the canonical 5-section body contract
-  (Purpose / Tools / Output Schema / Guardrails / Constraints)
-  and SHA-256-snapshots the 7 pre-existing agents to catch
-  unintended modification. The `web-researcher` agent is
-  authored but its body explicitly flags it as requiring the
-  devcontainer work item (Phase 8) before production dispatch.
-
-- **`spellbook-cco` hardened sandbox fork (security architecture
-  Phase 7).** A fork of the cco sandbox launcher installs under
-  `~/.local/spellbook/bin/spellbook-cco` with a SHA-256-pinned
-  launcher (rejects mismatched binaries at startup), audit-log
-  path resolution under `~/.local/spellbook/audit/`, and a
-  PATH-aware wrapper directory so the installed launcher is
-  discoverable without manipulating user shell config.
-
 ### Fixed
 
 - **`permissionDecision: "ask"` for T2 findings.** The `PreToolUse`
@@ -149,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `pytest` 7 → 9 (major),
     `pytest-asyncio` 0.21 → 1.3 (major; `asyncio_mode` already `"auto"`),
     `pytest-cov` 4 → 7 (major),
-    `pytest-mock` 3.10 → 3.15.1, `pyyaml` 6.0 → 6.0.3,
+    `pyyaml` 6.0 → 6.0.3,
     `mkdocs` 1.5 → 1.6.1. Full suite green
     (5172 passed, 139 skipped).
   - **OpenCode extensions:** `@opencode-ai/sdk` and
@@ -168,6 +118,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     migration PR — v4 requires the new `@tailwindcss/postcss`
     plugin and CSS-based config; v3 `@tailwind` directives and
     `tailwind.config.js` no longer work).
+
+### Removed
+
+- **`pytest-mock` dev dependency.** Per `.gemini/styleguide.md`,
+  `pytest-tripwire` is the only acceptable mocking framework in
+  this repo; the `mocker` fixture is forbidden. An audit found
+  zero `mocker` fixture usages across the codebase, so the
+  `pytest-mock>=3.15.1` entry in `[dependency-groups].dev` was a
+  phantom dependency. Removed from `pyproject.toml`; `uv.lock`
+  regenerated.
 
 ## [0.65.0] - 2026-05-17
 
