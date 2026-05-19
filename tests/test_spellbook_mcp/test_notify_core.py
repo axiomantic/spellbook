@@ -66,8 +66,8 @@ class TestDetectPlatform:
         monkeypatch.setattr("sys.platform", "linux")
         mock_exists = tripwire.mock("spellbook.notifications.notify:os.path.exists")
         mock_exists.returns(False)
-        mock_which = tripwire.mock("spellbook.notifications.notify:shutil.which")
-        mock_which.__call__.required(False).returns("/usr/bin/notify-send")
+        # Strict mock: SSH-headless path returns before reaching shutil.which.
+        tripwire.mock("spellbook.notifications.notify:shutil.which")
 
         with tripwire:
             platform, reason = mod._detect_platform()
@@ -416,10 +416,8 @@ class TestResolveSetting:
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {"title": "Session Title"}})
-        mock_config = tripwire.mock(
-            "spellbook.notifications.notify:config_tools.config_get"
-        )
-        mock_config.__call__.required(False).returns("Config Title")
+        # Strict mock: session override short-circuits before config_get is reached.
+        tripwire.mock("spellbook.notifications.notify:config_tools.config_get")
 
         with tripwire:
             result = mod._resolve_setting("title")
@@ -538,10 +536,8 @@ class TestSendNotification:
             "spellbook.notifications.notify:config_tools._get_session_state"
         )
         mock_session.returns({"notify": {"enabled": False}})
-        mock_config = tripwire.mock(
-            "spellbook.notifications.notify:config_tools.config_get"
-        )
-        mock_config.__call__.required(False).returns(None)
+        # Strict mock: disabled short-circuit returns before config_get is reached.
+        tripwire.mock("spellbook.notifications.notify:config_tools.config_get")
 
         async with tripwire:
             result = await mod.send_notification(body="test")

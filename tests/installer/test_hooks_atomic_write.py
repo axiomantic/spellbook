@@ -68,24 +68,24 @@ def _register_flaky_replace() -> "tripwire._mock_plugin._BaseMock":
     mock_replace = tripwire.mock("spellbook.core.command_utils:os.replace")
     # First call: raise. Second call: real rename. FIFO order matches
     # atomic_replace's retry contract.
-    mock_replace.__call__.raises(
+    mock_replace.raises(
         PermissionError("simulated WinError 5: file in use")
     )
-    mock_replace.__call__.calls(lambda src, dst: real_os_replace(src, dst))
+    mock_replace.calls(lambda src, dst: real_os_replace(src, dst))
     return mock_replace
 
 
-def _register_windows_branch(call_budget: int):
+def _register_windows_branch(expected_calls: int):
     """Force ``atomic_replace`` to enter the Windows retry path.
 
-    ``platform.system()`` is queried inside ``atomic_replace`` and may also
-    be queried by other ``hooks`` code paths; we hand back ``"Windows"`` for
-    every call within the recorded budget. ``required(False)`` keeps the
-    teardown happy if some calls aren't consumed.
+    ``platform.system()`` is queried inside ``atomic_replace`` (and possibly
+    other ``hooks`` code paths). Chains exactly ``expected_calls`` FIFO
+    return values; if production code calls more or fewer times, tripwire
+    fails the test, which is the desired strictness.
     """
     mock_system = tripwire.mock("spellbook.core.command_utils:platform.system")
-    for _ in range(call_budget):
-        mock_system.__call__.required(False).returns("Windows")
+    for _ in range(expected_calls):
+        mock_system.returns("Windows")
     return mock_system
 
 
@@ -105,9 +105,8 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     _write_baseline(settings_path)
 
     # Force the Windows code path inside atomic_replace. install_hooks itself
-    # also calls platform.system() at hook-path-resolution time, so we need
-    # a healthy budget; non-required entries don't error if unused.
-    mock_system = _register_windows_branch(call_budget=8)
+    # also calls platform.system() at hook-path-resolution time; total is 5.
+    mock_system = _register_windows_branch(expected_calls=5)
 
     # Skip the real backoff sleep inside atomic_replace's retry loop. There
     # should be exactly one between the failed attempt and the successful
@@ -199,7 +198,7 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
         encoding="utf-8",
     )
 
-    mock_system = _register_windows_branch(call_budget=8)
+    mock_system = _register_windows_branch(expected_calls=1)
 
     mock_sleep = tripwire.mock("spellbook.core.command_utils:time.sleep")
     mock_sleep.calls(lambda _: None)

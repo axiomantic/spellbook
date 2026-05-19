@@ -28,7 +28,7 @@ def _setup_get_connection_mock(db_path, call_count):
     mock = tripwire.mock("spellbook.core.db:get_connection")
     conn = get_connection(db_path)
     for _ in range(call_count):
-        mock.__call__.required(False).returns(conn)
+        mock.returns(conn)
     return mock, conn
 
 
@@ -314,7 +314,7 @@ class TestWorkflowStateLoad:
         conn.commit()
 
         mock_gc = tripwire.mock("spellbook.core.db:get_connection")
-        mock_gc.__call__.required(False).returns(conn)
+        mock_gc.returns(conn)
 
         with tripwire:
             # Load with default max_age_hours (24)
@@ -348,7 +348,7 @@ class TestWorkflowStateLoad:
         conn.commit()
 
         mock_gc = tripwire.mock("spellbook.core.db:get_connection")
-        mock_gc.__call__.required(False).returns(conn)
+        mock_gc.returns(conn)
 
         with tripwire:
             # Load with 24 hour max age
@@ -380,7 +380,7 @@ class TestWorkflowStateLoad:
         conn.commit()
 
         mock_gc = tripwire.mock("spellbook.core.db:get_connection")
-        mock_gc.__call__.required(False).returns(conn)
+        mock_gc.returns(conn)
 
         with tripwire:
             result = workflow_state_load.fn(project_path=project_path, max_age_hours=24.0)
@@ -411,8 +411,8 @@ class TestWorkflowStateLoad:
         conn.commit()
 
         mock_gc = tripwire.mock("spellbook.core.db:get_connection")
-        mock_gc.__call__.required(False).returns(conn)
-        mock_gc.__call__.required(False).returns(conn)
+        mock_gc.returns(conn)
+        mock_gc.returns(conn)
 
         with tripwire:
             # With max_age=2 hours, should be stale

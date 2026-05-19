@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.0] - 2026-05-18
+
+### Fixed
+
+- **Windows CI:** Fixed 5 failing tests in
+  `installer.components.managed_permissions_state` where the
+  `_state_file_path` tripwire mock was called more times on Windows
+  than asserted. Replaced fixed-count assertions with idiomatic
+  `tripwire.in_any_order()` blocks that cover the real call pattern
+  across platforms.
+
+### Changed
+
+- **Test idiom:** Removed the `required(False)` + `.__call__`
+  tripwire workaround pattern from test_memory_auto_store,
+  test_aliases, test_aliases_windows, and test_memory_cmd.
+  Replaced with idiomatic register-call-assert flow per the
+  Repository Style Guide. The workaround defeated tripwire's
+  "every registered mock must fire" guarantee.
+
+- **installer/components/spellbook_cco.py:** Removed redundant
+  `str(Path)` calls (subprocess.run accepts Path since 3.6), added
+  `encoding="utf-8"` to all `Path.write_text` / `Path.read_text`
+  calls, hardened the PATH membership check against non-absolute
+  and case-mismatched entries, and replaced silent `except: pass`
+  with a logged warning.
+
+- **installer/components/agents.py:** Replaced silent
+  `except: pass` with a logged warning to aid debugging.
+
 ## [0.65.0] - 2026-05-17
 
 ### Changed

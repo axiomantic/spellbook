@@ -12,11 +12,12 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import tripwire
 from dirty_equals import AnyThing
+
+from spellbook.sdk.unified import ClaudeAgentClient
 
 
 # Add project root so we can import generate_diagrams as a module
@@ -62,47 +63,6 @@ def write_diagram_with_meta(item: generate_diagrams.SourceItem, source_hash: str
     meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
     content = f"{meta_line}\n# Diagram: {item.name}\n\n```mermaid\ngraph TD\n  A --> B\n```\n"
     item.diagram_path.write_text(content, encoding="utf-8")
-
-
-def _agent_client_returning(value: str) -> SimpleNamespace:
-    """Build an ad-hoc agent-client carrier whose ``run`` returns ``value``.
-
-    ``types.SimpleNamespace`` is a stdlib data carrier, not a hand-rolled
-    stub class. The SUT only invokes ``client.run(prompt)`` on the value
-    returned by ``get_agent_client(...)``, so a namespace with a single
-    ``run`` attribute is sufficient to satisfy the call shape without
-    introducing a class that exists "only to stand in for a real
-    dependency" (forbidden per AGENTS.md).
-
-    The async ``run`` closure is captured below; the test asserts SUT
-    behaviour via the result of ``classify_change`` / ``patch_diagram``,
-    so the call count itself is not asserted (the tripwire mock on
-    ``get_agent_client`` pins that we DID fetch the client).
-    """
-
-    async def _run(_prompt: str) -> str:
-        return value
-
-    return SimpleNamespace(run=_run)
-
-
-def _agent_client_raising(exc: BaseException) -> SimpleNamespace:
-    """Build an ad-hoc agent-client carrier whose ``run`` raises ``exc``."""
-
-    async def _run(_prompt: str) -> str:
-        raise exc
-
-    return SimpleNamespace(run=_run)
-
-
-def _agent_client_capturing(prompts: list[str], value: str) -> SimpleNamespace:
-    """Carrier whose ``run`` records each prompt and returns ``value``."""
-
-    async def _run(prompt: str) -> str:
-        prompts.append(prompt)
-        return value
-
-    return SimpleNamespace(run=_run)
 
 
 # ---------------------------------------------------------------------------
@@ -231,7 +191,12 @@ class TestClassifyChange:
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("STAMP")
+        async def _run(_prompt: str) -> str:
+            return "STAMP"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("- old\n+ new")
@@ -246,13 +211,19 @@ class TestClassifyChange:
         assert result == "STAMP"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_patch_when_sdk_says_patch(self, tmp_path: Path) -> None:
         """classify_change returns 'PATCH' when the agent returns 'PATCH'."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("PATCH\n")
+        async def _run(_prompt: str) -> str:
+            return "PATCH\n"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("- old step\n+ new step")
@@ -267,13 +238,19 @@ class TestClassifyChange:
         assert result == "PATCH"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_regenerate_when_sdk_says_regenerate(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent returns 'REGENERATE'."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("REGENERATE")
+        async def _run(_prompt: str) -> str:
+            return "REGENERATE"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("massive rewrite")
@@ -288,13 +265,19 @@ class TestClassifyChange:
         assert result == "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_sdk_error(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent raises an exception."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_raising(RuntimeError("sdk error"))
+        async def _run(_prompt: str) -> str:
+            raise RuntimeError("sdk error")
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("some diff")
@@ -309,13 +292,19 @@ class TestClassifyChange:
         assert result == "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_timeout(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent times out."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_raising(asyncio.TimeoutError())
+        async def _run(_prompt: str) -> str:
+            raise asyncio.TimeoutError()
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("some diff")
@@ -330,13 +319,19 @@ class TestClassifyChange:
         assert result == "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_falls_back_to_regenerate_on_unexpected_output(self, tmp_path: Path) -> None:
         """classify_change returns 'REGENERATE' when the agent returns gibberish."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("I think you should regenerate this")
+        async def _run(_prompt: str) -> str:
+            return "I think you should regenerate this"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns("some diff")
@@ -351,6 +346,7 @@ class TestClassifyChange:
         assert result == "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_falls_back_to_regenerate_when_no_diff_available(self, tmp_path: Path) -> None:
         """When get_source_diff returns empty, falls back to REGENERATE."""
@@ -376,10 +372,18 @@ class TestClassifyChange:
         the_diff = "- removed line\n+ added line"
         captured_prompts: list[str] = []
 
+        async def _run(prompt: str) -> str:
+            captured_prompts.append(prompt)
+            return "STAMP"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
+
         diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
         diff_mock.returns(the_diff)
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
-        client_mock.returns(_agent_client_capturing(captured_prompts, "STAMP"))
+        client_mock.returns(client)
 
         with tripwire:
             asyncio.run(
@@ -388,6 +392,7 @@ class TestClassifyChange:
 
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
         assert len(captured_prompts) == 1
         prompt = captured_prompts[0]
@@ -412,7 +417,13 @@ class TestPatchDiagram:
 
         diff = "- old step\n+ new step"
         patched_mermaid = "```mermaid\ngraph TD\n  A --> B\n  A --> C\n```"
-        client = _agent_client_returning(patched_mermaid)
+
+        async def _run(_prompt: str) -> str:
+            return patched_mermaid
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
         client_mock.returns(client)
@@ -424,13 +435,19 @@ class TestPatchDiagram:
 
         assert result == patched_mermaid
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_none_on_sdk_failure(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent raises, signaling fallback to regen."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_raising(RuntimeError("error"))
+        async def _run(_prompt: str) -> str:
+            raise RuntimeError("error")
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
         client_mock.returns(client)
@@ -444,13 +461,19 @@ class TestPatchDiagram:
 
         assert result is None
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_none_on_timeout(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent times out."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_raising(asyncio.TimeoutError())
+        async def _run(_prompt: str) -> str:
+            raise asyncio.TimeoutError()
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
         client_mock.returns(client)
@@ -464,13 +487,19 @@ class TestPatchDiagram:
 
         assert result is None
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_none_on_empty_output(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent returns empty output."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("")
+        async def _run(_prompt: str) -> str:
+            return ""
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
         client_mock.returns(client)
@@ -484,13 +513,19 @@ class TestPatchDiagram:
 
         assert result is None
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_none_on_cannot_patch(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the agent says CANNOT_PATCH."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
-        client = _agent_client_returning("CANNOT_PATCH")
+        async def _run(_prompt: str) -> str:
+            return "CANNOT_PATCH"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
 
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
         client_mock.returns(client)
@@ -504,6 +539,7 @@ class TestPatchDiagram:
 
         assert result is None
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
     def test_returns_none_when_diagram_missing(self, tmp_path: Path) -> None:
         """patch_diagram returns None when the diagram file doesn't exist."""
@@ -529,8 +565,16 @@ class TestPatchDiagram:
         patched_mermaid = "```mermaid\ngraph TD\n  A --> B\n```"
         captured_prompts: list[str] = []
 
+        async def _run(prompt: str) -> str:
+            captured_prompts.append(prompt)
+            return patched_mermaid
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
+
         client_mock = tripwire.mock("generate_diagrams:get_agent_client")
-        client_mock.returns(_agent_client_capturing(captured_prompts, patched_mermaid))
+        client_mock.returns(client)
 
         with tripwire:
             asyncio.run(
@@ -538,6 +582,7 @@ class TestPatchDiagram:
             )
 
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
         assert len(captured_prompts) == 1
         prompt_text = captured_prompts[0]
         assert existing_content in prompt_text

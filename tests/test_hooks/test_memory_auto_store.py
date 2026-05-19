@@ -18,8 +18,11 @@ Tripwire's FIFO queue enforces this strictly:
 * SUT calls > registered: ``UnmockedInteractionError`` on the extra call.
 * SUT calls < registered: ``UnusedMocksError`` at teardown.
 
-This restores the verification signal that the previous ``_make_counting``
-"pre-stack 50 ``required(False)`` entries" helper destroyed.
+Builders use tripwire's ``_BaseMock`` shortcut API directly
+(``mock.calls(fn)``, ``mock.assert_call(...)``) — no ``.__call__`` chains,
+no ``required(False)``. The autouse ``_auto_verify_builders`` fixture
+drains each builder's recorded interactions after the sandbox exits so
+tripwire's "every intercepted call must be asserted" contract is met.
 """
 
 from __future__ import annotations
@@ -107,14 +110,14 @@ class _MockBuilder:
     def expect(self, n: int = 1) -> "_MockBuilder":
         """Register exactly ``n`` strict side-effects using the default fn."""
         for _ in range(n):
-            self.mock.__call__.calls(self._default_fn)
+            self.mock.calls(self._default_fn)
         self._n_expected += n
         return self
 
     def expect_with(self, fn: Callable[..., Any], n: int = 1) -> "_MockBuilder":
         """Register exactly ``n`` strict side-effects using ``fn``."""
         for _ in range(n):
-            self.mock.__call__.calls(fn)
+            self.mock.calls(fn)
         self._n_expected += n
         return self
 
@@ -126,7 +129,7 @@ class _MockBuilder:
         """
         with tripwire.in_any_order():
             for _ in range(self._n_expected):
-                self.mock.__call__.assert_call(args=AnyThing, kwargs=AnyThing)
+                self.mock.assert_call(args=AnyThing, kwargs=AnyThing)
 
 
 @pytest.fixture
@@ -223,7 +226,7 @@ def mock_http():
         def expect(self, n: int) -> "Controller":
             """Register exactly ``n`` strict ``_http_post`` side-effects."""
             for _ in range(n):
-                self._tripwire_mock.__call__.calls(self._fake_http_post)
+                self._tripwire_mock.calls(self._fake_http_post)
             self._n_expected += n
             return self
 
@@ -231,7 +234,7 @@ def mock_http():
             """Wildcard-assert each recorded interaction (autouse-invoked)."""
             with tripwire.in_any_order():
                 for _ in range(self._n_expected):
-                    self._tripwire_mock.__call__.assert_call(
+                    self._tripwire_mock.assert_call(
                         args=AnyThing, kwargs=AnyThing,
                     )
 

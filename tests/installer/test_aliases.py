@@ -519,6 +519,101 @@ def _make_minimal_spellbook_dir(tmp_path):
     return spellbook
 
 
+# Empirical call counts for the multi-component install path inside the
+# tripwire sandbox (probed against the live ClaudeCodeInstaller.install /
+# .uninstall under skip_global_steps=False on POSIX). These constants and
+# the matching ``.calls(fn)`` registrations + ``assert_call`` loops below
+# must be updated together: tripwire raises ``UnmockedInteractionError``
+# if the SUT fires more calls than registered, and
+# ``UnassertedInteractionsError`` at teardown if a recorded interaction
+# is not asserted. Hence: no ``required(False)`` workaround needed.
+#
+# Per-call-site provenance (verified against the installer/ tree under
+# skip_global_steps=False on POSIX):
+#
+#   _INSTALL_HOME_CALLS=2     -> pathlib.Path.home() called by:
+#     - installer/components/aliases.py:30 (rc-file resolution inside
+#       install_aliases via _install_claude_code_aliases)
+#     - installer/platforms/claude_code.py:518 (default_dir = Path.home()
+#       / ".claude" during install config_dir resolution)
+#
+#   _INSTALL_CC_CLI_CALLS=1   -> installer.platforms.claude_code:
+#                                check_claude_cli_available called by:
+#     - installer/platforms/claude_code.py:600 (MCP HTTP registration
+#       branch during ClaudeCodeInstaller.install)
+#
+#   _INSTALL_MCP_CLI_CALLS=1  -> installer.components.mcp:
+#                                check_claude_cli_available called by:
+#     - one of installer/components/mcp.py:53, :114, :157 (the
+#       register_mcp_http_server path invoked during install — exact
+#       branch depends on dry_run/config_dir state; empirically exactly
+#       one of these fires per install cycle)
+#
+#   _UNINSTALL_CC_CLI_CALLS=1 -> installer.platforms.claude_code:
+#                                check_claude_cli_available called by:
+#     - installer/platforms/claude_code.py:847 (MCP unregister branch
+#       during ClaudeCodeInstaller.uninstall)
+#
+#   _UNINSTALL_DAEMON_CALLS=1 -> installer.platforms.claude_code:
+#                                uninstall_daemon called by:
+#     - installer/platforms/claude_code.py:835 (daemon teardown branch
+#       during ClaudeCodeInstaller.uninstall)
+#
+# If the production-code call graph drifts (e.g. an added Path.home() in
+# config.py becomes reachable, or the MCP gating moves), bump the matching
+# constant AND update this comment. A constant that no longer matches its
+# enumerated sites is a bug, not a refactor.
+_INSTALL_HOME_CALLS = 2
+_INSTALL_CC_CLI_CALLS = 1
+_INSTALL_MCP_CLI_CALLS = 1
+# uninstall calls cc_cli once (uninstall side) and daemon once.
+_UNINSTALL_CC_CLI_CALLS = 1
+_UNINSTALL_DAEMON_CALLS = 1
+
+
+def _register_aux_install_mocks(home_path):
+    """Register the incidental Path.home / check_claude_cli_available mocks.
+
+    These are called incidentally by the multi-component install path
+    (config_dir resolution + per-step CLI gating). The exact call counts
+    are empirical and pinned by the module-level constants above. Returns
+    (home_mock, cc_cli_mock, mcp_cli_mock); each must be drained via
+    ``_assert_aux_install_mocks`` after the sandbox closes.
+    """
+    home_mock = tripwire.mock("pathlib:Path.home")
+    for _ in range(_INSTALL_HOME_CALLS):
+        home_mock.returns(home_path)
+
+    cc_cli_mock = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
+    )
+    for _ in range(_INSTALL_CC_CLI_CALLS):
+        cc_cli_mock.returns(False)
+
+    mcp_cli_mock = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
+    )
+    for _ in range(_INSTALL_MCP_CLI_CALLS):
+        mcp_cli_mock.returns(False)
+
+    return home_mock, cc_cli_mock, mcp_cli_mock
+
+
+def _assert_aux_install_mocks(home_mock, cc_cli_mock, mcp_cli_mock):
+    """Drain the auxiliary install-path mocks via in_any_order.
+
+    Each registered ``.calls(fn)`` entry corresponds to one recorded
+    interaction; we assert exactly that many here.
+    """
+    with tripwire.in_any_order():
+        for _ in range(_INSTALL_HOME_CALLS):
+            home_mock.assert_call(args=(), kwargs={})
+        for _ in range(_INSTALL_CC_CLI_CALLS):
+            cc_cli_mock.assert_call(args=(), kwargs={})
+        for _ in range(_INSTALL_MCP_CLI_CALLS):
+            mcp_cli_mock.assert_call(args=(), kwargs={})
+
+
 @pytest.mark.posix_only
 def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypatch):
     """ClaudeCodeInstaller.install() actually calls _install_claude_code_aliases.
@@ -540,25 +635,7 @@ def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypat
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    # Path.home() / check_claude_cli_available are called incidentally
-    # by the multi-component install path. Register a generous budget;
-    # the unused slots are marked optional and the assertion block below
-    # drains the actual interactions in any order.
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
-    cli_mock_claude = tripwire.mock(
-        "installer.platforms.claude_code:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    home_mock, cli_mock_claude, cli_mock_mcp = _register_aux_install_mocks(tmp_path)
 
     dispatch_mock = tripwire.mock(
         "installer.platforms.claude_code:_install_claude_code_aliases"
@@ -574,21 +651,8 @@ def test_install_invokes_dispatch_and_records_aliases_result(tmp_path, monkeypat
     with tripwire:
         results = installer.install()
 
-    # The dispatch helper must be called exactly once with forwarded args.
-    # Drain the auxiliary mocks (Path.home, check_claude_cli_available)
-    # via in_any_order() -- the SUT calls these incidentally during the
-    # multi-component install path and the exact counts are an
-    # implementation detail not pinned by this behavioral test.
-    from dirty_equals import AnyThing
-
     dispatch_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": True})
-    with tripwire.in_any_order():
-        # Path.home is called twice during install (config_dir resolution
-        # plus an incidental call inside one of the install steps).
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+    _assert_aux_install_mocks(home_mock, cli_mock_claude, cli_mock_mcp)
 
     # Exactly one aliases InstallResult must be present in the returned list.
     alias_results = [r for r in results if r.component == "aliases"]
@@ -619,21 +683,7 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path):
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
-    cli_mock_claude = tripwire.mock(
-        "installer.platforms.claude_code:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    home_mock, cli_mock_claude, cli_mock_mcp = _register_aux_install_mocks(tmp_path)
 
     # Stub install_spellbook_cco so install() does NOT attempt a real fork
     # clone during this test. Returns a healthy noop dict so the chain
@@ -667,10 +717,12 @@ def test_install_does_not_abort_when_dispatch_raises(tmp_path):
         raised=AnyThing,
     )
     with tripwire.in_any_order():
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+        for _ in range(_INSTALL_HOME_CALLS):
+            home_mock.assert_call(args=(), kwargs={})
+        for _ in range(_INSTALL_CC_CLI_CALLS):
+            cli_mock_claude.assert_call(args=(), kwargs={})
+        for _ in range(_INSTALL_MCP_CLI_CALLS):
+            cli_mock_mcp.assert_call(args=(), kwargs={})
         # claude_code.py now logger.exception()'s the caught alias OSError
         # for operator observability (gemini cycle-6 finding). Drain the
         # LoggingPlugin entry so the strict verifier does not flag it.
@@ -750,21 +802,7 @@ def test_install_chains_install_spellbook_cco(tmp_path):
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
-    cli_mock_claude = tripwire.mock(
-        "installer.platforms.claude_code:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    home_mock, cli_mock_claude, cli_mock_mcp = _register_aux_install_mocks(tmp_path)
 
     cco_mock = tripwire.mock(
         "installer.platforms.claude_code:install_spellbook_cco"
@@ -797,11 +835,7 @@ def test_install_chains_install_spellbook_cco(tmp_path):
     # Asserted in sequence outside any in_any_order block.
     cco_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": True})
     dispatch_mock.assert_call(args=(spellbook_dir,), kwargs={"dry_run": True})
-    with tripwire.in_any_order():
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+    _assert_aux_install_mocks(home_mock, cli_mock_claude, cli_mock_mcp)
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly (component, platform, success, action, message). The
@@ -839,21 +873,7 @@ def test_install_chains_emits_warning_under_env_override(tmp_path, monkeypatch, 
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
-    cli_mock_claude = tripwire.mock(
-        "installer.platforms.claude_code:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    home_mock, cli_mock_claude, cli_mock_mcp = _register_aux_install_mocks(tmp_path)
 
     monkeypatch.setenv("SPELLBOOK_USE_VANILLA_CCO", "1")
 
@@ -867,11 +887,7 @@ def test_install_chains_emits_warning_under_env_override(tmp_path, monkeypatch, 
         results = installer.install()
 
     tripwire.subprocess.assert_which("cco", returns=None)
-    with tripwire.in_any_order():
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+    _assert_aux_install_mocks(home_mock, cli_mock_claude, cli_mock_mcp)
 
     captured = capsys.readouterr()
     # The canonical rollback WARNING fires twice on this codepath (once
@@ -935,21 +951,16 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
+    # Empirical: uninstall() invokes check_claude_cli_available exactly
+    # once (claude_code-side) and uninstall_daemon exactly once. It does
+    # NOT call Path.home or the mcp-side check_claude_cli_available on
+    # this code path. Register precisely what fires; tripwire's strict
+    # guard catches any regression that adds an unmocked incidental call.
     cli_mock_claude = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    for _ in range(_UNINSTALL_CC_CLI_CALLS):
+        cli_mock_claude.returns(False)
 
     uninstall_mock = tripwire.mock(
         "installer.platforms.claude_code:uninstall_spellbook_cco"
@@ -966,8 +977,11 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
     daemon_mock = tripwire.mock(
         "installer.platforms.claude_code:uninstall_daemon"
     )
-    for _ in range(5):
-        daemon_mock.__call__.required(False).returns((True, "ok"))
+    for _ in range(_UNINSTALL_DAEMON_CALLS):
+        # SUT calls uninstall_daemon(dry_run=False); the lambda ignored
+        # its arg and returned a constant, so .returns() is equivalent
+        # and idiomatic for a stateless return value.
+        daemon_mock.returns((True, "ok"))
 
     installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
     with tripwire:
@@ -976,11 +990,10 @@ def test_uninstall_chains_uninstall_spellbook_cco(tmp_path):
     # Exactly one call with dry_run forwarded.
     uninstall_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": False})
     with tripwire.in_any_order():
-        # Drain auxiliary mocks; the exact count is implementation detail.
-        # Each mock is registered with required(False); only those that
-        # actually fired need to be asserted here.
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        daemon_mock.assert_call(args=(), kwargs={"dry_run": False}, returned=AnyThing)
+        for _ in range(_UNINSTALL_CC_CLI_CALLS):
+            cli_mock_claude.assert_call(args=(), kwargs={})
+        for _ in range(_UNINSTALL_DAEMON_CALLS):
+            daemon_mock.assert_call(args=(), kwargs={"dry_run": False})
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly. ``ClaudeCodeInstaller.uninstall`` always sets
@@ -1018,21 +1031,7 @@ def test_install_chain_failure_when_fork_install_fails(tmp_path, capsys):
     config_dir = tmp_path / ".claude"
     config_dir.mkdir(parents=True)
 
-    home_mock = tripwire.mock("pathlib:Path.home")
-    for _ in range(20):
-        home_mock.__call__.required(False).returns(tmp_path)
-
-    cli_mock_claude = tripwire.mock(
-        "installer.platforms.claude_code:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_claude.__call__.required(False).returns(False)
-
-    cli_mock_mcp = tripwire.mock(
-        "installer.components.mcp:check_claude_cli_available"
-    )
-    for _ in range(20):
-        cli_mock_mcp.__call__.required(False).returns(False)
+    home_mock, cli_mock_claude, cli_mock_mcp = _register_aux_install_mocks(tmp_path)
 
     cco_mock = tripwire.mock(
         "installer.platforms.claude_code:install_spellbook_cco"
@@ -1054,11 +1053,7 @@ def test_install_chain_failure_when_fork_install_fails(tmp_path, capsys):
 
     cco_mock.assert_call(args=(), kwargs={"install_root": None, "dry_run": False})
     tripwire.subprocess.assert_which("spellbook-cco", returns=None)
-    with tripwire.in_any_order():
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        home_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_claude.assert_call(args=(), kwargs={}, returned=AnyThing)
-        cli_mock_mcp.assert_call(args=(), kwargs={}, returned=AnyThing)
+    _assert_aux_install_mocks(home_mock, cli_mock_claude, cli_mock_mcp)
 
     # The recorded InstallResult for spellbook_cco matches the canonical
     # shape exactly. The cco_failed stub returns

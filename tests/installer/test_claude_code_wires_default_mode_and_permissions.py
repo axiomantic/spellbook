@@ -6,18 +6,17 @@ import sys
 
 import pytest
 import tripwire
-from dirty_equals import AnyThing
 
 # install_hooks calls shutil.which("powershell") on Windows. Tripwire's
-# SubprocessPlugin always intercepts shutil.which; without a registered
-# mock it returns None and the SUT short-circuits before writing settings.
-# On non-Windows the SUT does not enter that branch, so the mock sits
-# unused (mock_which is required=False by default).
+# SubprocessPlugin always intercepts shutil.which; register a strict
+# return on Windows so the SUT can complete and assert exactly one call
+# afterwards. On non-Windows the SUT does not enter that branch.
 _FAKE_POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 
 
 def _register_powershell_which_mock() -> None:
-    tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
+    if sys.platform == "win32":
+        tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
 
 
 def _assert_powershell_which_if_windows(times: int = 1) -> None:
@@ -67,25 +66,54 @@ def spellbook_dir(tmp_path):
     return sb
 
 
+# ---------------------------------------------------------------------------
+# Empirical call counts inside the tripwire sandbox per install() / uninstall()
+# call against the live SUT under skip_global_steps=False. Each constant
+# pins the actual count tripwire's FIFO queue must service: registering N
+# strict ``.calls(fn)`` entries with no ``required(False)`` is the contract,
+# and the matching ``assert_call`` loops drain exactly N recorded
+# interactions. Tripwire raises:
+#   * ``UnmockedInteractionError`` if the SUT fires more calls than the N
+#     registered entries (no fallback queue).
+#   * ``UnusedMocksError`` at teardown if fewer than N calls fire.
+#   * ``UnassertedInteractionsError`` at teardown if recorded interactions
+#     are not asserted.
+# Hence: changing the SUT's call pattern must update these constants AND
+# the assert loops in lockstep. No ``required(False)`` workaround.
+# ---------------------------------------------------------------------------
+
+_STATE_PATH_CALLS_PER_INSTALL = 9
+_STATE_PATH_CALLS_PER_UNINSTALL = 6
+
+_HOME_CALLS_PER_INSTALL = 2
+_HOME_CALLS_PER_UNINSTALL = 0
+
+_CC_CLI_CALLS_PER_INSTALL = 1
+_MCP_CLI_CALLS_PER_INSTALL = 1
+
+_CC_CLI_CALLS_PER_UNINSTALL = 1
+_DAEMON_CALLS_PER_UNINSTALL = 1
+
+
 def _redirect_state_file(tmp_path, *, budget: int):
     """Redirect the managed-permissions state file to tmp_path so the test
     does not mutate the real one under ~/.local/spellbook.
 
-    Uses tripwire to mock the ``_state_file_path()`` function exposed by
-    ``managed_permissions_state``. This replaces the prior monkeypatch of
-    the ``_STATE_FILE_PATH`` constant; per repo style, monkeypatch is only
-    permitted for env vars, cwd, and sys.path. The SUT calls the function
-    multiple times per install/uninstall (read_state, the coord lock path
-    accessor, and atomic_write_json each pull the path); ``budget`` covers
-    the empirical call count for the test's sandbox shape. Returns the mock
-    handle so the caller can verify it after the sandbox closes.
+    Uses tripwire to mock ``_state_file_path()`` exposed by
+    ``managed_permissions_state``. Per repo style, ``monkeypatch`` is only
+    permitted for env vars, cwd, and sys.path; function replacement is
+    forbidden. The SUT calls the function multiple times per
+    install/uninstall — ``budget`` is the empirical exact count. Each
+    ``.calls(fn)`` registration is one FIFO entry consumed by exactly one
+    call; pairs 1:1 with the ``assert_call`` loop in
+    :func:`_assert_state_file_mock`.
     """
     state_path = tmp_path / "managed_permissions.json"
     mock_state_path = tripwire.mock(
         "installer.components.managed_permissions_state:_state_file_path"
     )
     for _ in range(budget):
-        mock_state_path.__call__.required(False).returns(state_path)
+        mock_state_path.returns(state_path)
     return mock_state_path
 
 
@@ -98,103 +126,75 @@ def _assert_state_file_mock(mock_state_path, *, budget: int) -> None:
     """
     with tripwire.in_any_order():
         for _ in range(budget):
-            mock_state_path.assert_call(
-                args=(), kwargs={}, returned=AnyThing
-            )
-
-
-# Empirical _state_file_path() call counts; probed against the live SUT.
-# Kept alongside the install/uninstall budgets above so a regression that
-# changes the number of state-file accesses fails loudly here.
-_STATE_PATH_CALLS_PER_INSTALL = 9
-_STATE_PATH_CALLS_PER_UNINSTALL = 6
-
-
-# Empirical call counts inside the tripwire sandbox per install() / uninstall()
-# call. These are measured against the actual SUT via a probe test (not
-# guessed); if the SUT changes such that more or fewer calls are made, these
-# constants and the matching assert loops below must be updated together.
-#
-# Probed sequence for install() (sequence numbers 0-N inside the sandbox):
-#   0,1,2: pathlib:Path.home() x 3
-#   3:     installer.components.mcp:check_claude_cli_available() (via
-#          unregister_mcp_server's internal CLI gate)
-#   4:     installer.platforms.claude_code:check_claude_cli_available()
-#
-# Probed sequence for uninstall() (delta after install):
-#   5:     installer.platforms.claude_code:uninstall_daemon(dry_run=False)
-#   6:     installer.platforms.claude_code:check_claude_cli_available()
-_HOME_CALLS_PER_INSTALL = 2
-_CC_CLI_CALLS_PER_INSTALL = 1
-_MCP_CLI_CALLS_PER_INSTALL = 1
-_HOME_CALLS_PER_UNINSTALL = 0
-_CC_CLI_CALLS_PER_UNINSTALL = 1
-_DAEMON_CALLS_PER_UNINSTALL = 1
+            mock_state_path.assert_call(args=(), kwargs={})
 
 
 def _register_install_mocks(home_dir):
-    """Register tripwire mocks for the install() call path.
+    """Register strict tripwire mocks for the install() call path.
 
     Both ``check_claude_cli_available`` import-site mocks are required:
     the ``from ..components.mcp import check_claude_cli_available`` in
     claude_code.py creates a separate binding from the original symbol
     in mcp.py; calls inside mcp use mcp's binding, calls inside
     claude_code use claude_code's. Two bindings, two mocks.
+
+    Each ``.calls(fn)`` registration is one FIFO entry; the assert loop
+    in :func:`_assert_install_mocks` drains exactly that many.
     """
     mock_home = tripwire.mock("pathlib:Path.home")
     for _ in range(_HOME_CALLS_PER_INSTALL):
-        mock_home.__call__.required(False).returns(home_dir)
+        mock_home.returns(home_dir)
 
     mock_cc_cli = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_CC_CLI_CALLS_PER_INSTALL):
-        mock_cc_cli.__call__.required(False).returns(False)
+        mock_cc_cli.returns(False)
 
     mock_mcp_cli = tripwire.mock(
         "installer.components.mcp:check_claude_cli_available"
     )
     for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-        mock_mcp_cli.__call__.required(False).returns(False)
+        mock_mcp_cli.returns(False)
 
     return mock_home, mock_cc_cli, mock_mcp_cli
 
 
 def _register_install_and_uninstall_mocks(home_dir):
-    """Register tripwire mocks for the combined install() + uninstall() call
-    paths in a single sandbox.
+    """Register strict tripwire mocks for the combined install() + uninstall()
+    call paths in a single sandbox.
 
     Tripwire allows each target to be mocked exactly once per sandbox, so
     install + uninstall tests must share registration. The budget is the
-    sum of install and uninstall calls.
-
-    Note: Path.home is NOT called from the uninstall path under the test's
-    config_dir setup, so no extra home mocks are needed beyond install.
-    The daemon mock intercepts ``uninstall_daemon`` so the test never
-    actually opens a socket to check the daemon (tripwire's DNS plugin
-    would otherwise fail on the unmocked socket call).
+    sum of install and uninstall calls. The daemon mock intercepts
+    ``uninstall_daemon`` so the test never actually opens a socket to
+    check the daemon (tripwire's DNS plugin would otherwise fail on the
+    unmocked socket call).
     """
     mock_home = tripwire.mock("pathlib:Path.home")
     for _ in range(_HOME_CALLS_PER_INSTALL + _HOME_CALLS_PER_UNINSTALL):
-        mock_home.__call__.required(False).returns(home_dir)
+        mock_home.returns(home_dir)
 
     mock_cc_cli = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
     )
     for _ in range(_CC_CLI_CALLS_PER_INSTALL + _CC_CLI_CALLS_PER_UNINSTALL):
-        mock_cc_cli.__call__.required(False).returns(False)
+        mock_cc_cli.returns(False)
 
     mock_mcp_cli = tripwire.mock(
         "installer.components.mcp:check_claude_cli_available"
     )
     for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-        mock_mcp_cli.__call__.required(False).returns(False)
+        mock_mcp_cli.returns(False)
 
     mock_daemon = tripwire.mock(
         "installer.platforms.claude_code:uninstall_daemon"
     )
     for _ in range(_DAEMON_CALLS_PER_UNINSTALL):
-        mock_daemon.__call__.required(False).returns((True, "ok"))
+        # SUT calls uninstall_daemon(dry_run=self.dry_run); the lambda
+        # ignored its arg and returned a constant, so .returns() is
+        # equivalent and idiomatic for a stateless return value.
+        mock_daemon.returns((True, "ok"))
 
     return mock_home, mock_cc_cli, mock_mcp_cli, mock_daemon
 
@@ -202,48 +202,51 @@ def _register_install_and_uninstall_mocks(home_dir):
 def _assert_install_mocks(mock_home, mock_cc_cli, mock_mcp_cli):
     with tripwire.in_any_order():
         for _ in range(_HOME_CALLS_PER_INSTALL):
-            mock_home.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_home.assert_call(args=(), kwargs={})
         for _ in range(_CC_CLI_CALLS_PER_INSTALL):
-            mock_cc_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_cc_cli.assert_call(args=(), kwargs={})
         for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-            mock_mcp_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_mcp_cli.assert_call(args=(), kwargs={})
         # The cco install step is unmocked in these tests; its subprocess
         # call goes to a real `git clone` against the elijahr/cco URL,
-        # which fails inside the tripwire sandbox. claude_code.py now
+        # which fails inside the tripwire sandbox. claude_code.py
         # logger.exception()'s the caught failure for operator
-        # observability (gemini cycle-6 finding), so the LoggingPlugin
-        # records an ERROR entry. Drain it -- required(False) so tests
-        # that DO mock install_spellbook_cco (no exception -> no log
-        # entry) still pass.
+        # observability (gemini cycle-6 finding); the LoggingPlugin
+        # records an ERROR entry which must be drained when present.
         _drain_cco_install_exception_log()
 
 
 def _drain_cco_install_exception_log() -> None:
-    """Drain the optional ``logger.exception`` ERROR emitted by
-    ``claude_code.py`` when ``install_spellbook_cco`` raises.
+    """Drain the ``logger.exception`` ERROR emitted by ``claude_code.py``
+    when ``install_spellbook_cco`` raises (sandbox blocks git clone).
 
-    Wrapped in a helper so the optional/required(False) semantics live
-    in one place. Always called inside an enclosing
-    ``with tripwire.in_any_order():`` block.
+    The assertion is wrapped in a tolerant ``try/except`` so tests that DO
+    mock ``install_spellbook_cco`` (and thus produce no exception → no
+    log entry) still pass. Tripwire's ``LoggingPlugin`` records logs but
+    only enforces them at teardown if recorded; absent entries do not
+    raise. Always called inside an enclosing ``in_any_order`` block.
     """
+    from dirty_equals import AnyThing
+    from tripwire._errors import InteractionMismatchError
+
     try:
         tripwire.log.assert_log(
             level="ERROR",
             message=AnyThing,
             logger_name="installer.platforms.claude_code",
-            required=False,
         )
-    except TypeError:
-        # Some tripwire builds do not accept required=; fall back to
-        # an always-attempt-but-tolerate pattern by swallowing the
-        # mismatch error here. The strict verifier will surface a
-        # genuine UnassertedInteractionsError if the log was emitted
-        # but not drained by any other call.
-        tripwire.log.assert_log(
-            level="ERROR",
-            message=AnyThing,
-            logger_name="installer.platforms.claude_code",
-        )
+    except InteractionMismatchError:
+        # Narrowed catch (was bare ``except Exception``): tripwire's
+        # ``LoggingPlugin.assert_log`` → ``Verifier.assert_interaction``
+        # raises ``InteractionMismatchError`` when no matching ERROR log
+        # was recorded (see tripwire/_verifier.py:209). That's the "no
+        # cco failure" path. Real test bugs (typo in ``logger_name``,
+        # wrong level, API breakage) surface as ``MissingAssertionFieldsError``,
+        # ``AllWildcardAssertionError``, ``AttributeError``, etc., and are
+        # no longer swallowed. The strict verifier still flags any
+        # recorded-but-unasserted ERROR via ``UnassertedInteractionsError``
+        # at teardown.
+        pass
 
 
 def _assert_install_and_uninstall_mocks(
@@ -253,17 +256,16 @@ def _assert_install_and_uninstall_mocks(
     in the same sandbox. Total expected counts = install + uninstall."""
     with tripwire.in_any_order():
         for _ in range(_HOME_CALLS_PER_INSTALL + _HOME_CALLS_PER_UNINSTALL):
-            mock_home.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_home.assert_call(args=(), kwargs={})
         for _ in range(_CC_CLI_CALLS_PER_INSTALL + _CC_CLI_CALLS_PER_UNINSTALL):
-            mock_cc_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_cc_cli.assert_call(args=(), kwargs={})
         for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
-            mock_mcp_cli.assert_call(args=(), kwargs={}, returned=AnyThing)
+            mock_mcp_cli.assert_call(args=(), kwargs={})
         for _ in range(_DAEMON_CALLS_PER_UNINSTALL):
-            mock_daemon.assert_call(
-                args=(), kwargs={"dry_run": False}, returned=AnyThing
-            )
-        # Same rationale as _assert_install_mocks: optional drain for
-        # the install_spellbook_cco failure logger.exception path.
+            mock_daemon.assert_call(args=(), kwargs={"dry_run": False})
+        # Same rationale as _assert_install_mocks: drain optional
+        # logger.exception ERROR from the install_spellbook_cco failure
+        # path when present.
         _drain_cco_install_exception_log()
 
 

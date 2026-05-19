@@ -230,8 +230,9 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     mock_check = tripwire.mock("spellbook.sessions.compaction:check_for_compaction")
     mock_check.returns(mock_event)
 
-    mock_extract = tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
-    mock_extract.__call__.required(False)
+    # Strict mock: this compaction was pre-marked as processed, so extract_soul
+    # must not be called. Tripwire will fail the test if it is.
+    tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
 
     # _analyze_skills also calls _get_current_session_file; return None to skip analysis
     mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")
@@ -267,8 +268,8 @@ def test_poll_sessions_no_compaction_event(tmp_path):
     mock_check = tripwire.mock("spellbook.sessions.compaction:check_for_compaction")
     mock_check.returns(None)
 
-    mock_extract = tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
-    mock_extract.__call__.required(False)
+    # Strict mock: no compaction detected, so extract_soul must not be called.
+    tripwire.mock("spellbook.sessions.soul_extractor:extract_soul")
 
     # _analyze_skills also calls _get_current_session_file; return None to skip analysis
     mock_get_file = tripwire.mock("spellbook.sessions.compaction:_get_current_session_file")

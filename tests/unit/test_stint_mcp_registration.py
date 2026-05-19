@@ -127,9 +127,9 @@ class TestStintPushBehavioralMode:
 
         mock_result = {"success": True, "depth": 1, "stack": []}
         mock_push = tripwire.mock("spellbook.coordination.stint:push_stint")
-        mock_push.__call__.returns(mock_result)
+        mock_push.returns(mock_result)
         mock_get_session_id = tripwire.mock("spellbook.mcp.tools.coordination:_get_session_id")
-        mock_get_session_id.__call__.returns("test-session-id")
+        mock_get_session_id.returns("test-session-id")
 
         with tripwire:
             result = fn(
@@ -141,8 +141,8 @@ class TestStintPushBehavioralMode:
                 metadata=None,
             )
 
-        mock_get_session_id.__call__.assert_call(args=(None,))
-        mock_push.__call__.assert_call(
+        mock_get_session_id.assert_call(args=(None,))
+        mock_push.assert_call(
             kwargs={
                 "project_path": "/tmp/test",
                 "name": "test-stint",

@@ -707,12 +707,10 @@ def test_disable_sentinel_branches_short_circuits(tmp_path):
     from spellbook.gates.git_push import classify_git_push
     from spellbook.gates.tiers import T_UNCLASSIFIED
 
-    # required(False): if the resolver IS called, the lambda fails the test.
-    # If it is NOT called (the property under test), the unconsumed
-    # configuration is benign rather than raising UnusedMocksError.
-    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch").__call__.required(False).calls(
-        lambda *a, **k: pytest.fail("resolver must not be called when branches axis is sentinel-disabled")
-    )
+    # Strict mock: any call to _resolve_current_branch raises
+    # UnmockedInteractionError and fails the test, proving the short-circuit
+    # at git_push.py:439-442 is intact.
+    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch")
 
     cfg = _cfg(branches=())  # sentinel-disabled axis
     _make_git_repo(tmp_path, branch="main")
@@ -733,12 +731,10 @@ def test_disable_sentinel_remotes_short_circuits(tmp_path):
     from spellbook.gates.git_push import classify_git_push
     from spellbook.gates.tiers import T_UNCLASSIFIED
 
-    # required(False): if the resolver IS called, the lambda fails the test.
-    # If it is NOT called (the property under test), the unconsumed
-    # configuration is benign rather than raising UnusedMocksError.
-    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch").__call__.required(False).calls(
-        lambda *a, **k: pytest.fail("resolver must not be called when remotes axis is sentinel-disabled")
-    )
+    # Strict mock: any call to _resolve_current_branch raises
+    # UnmockedInteractionError and fails the test, proving the short-circuit
+    # at git_push.py:439-442 is intact.
+    tripwire.mock("spellbook.gates.git_push:_resolve_current_branch")
 
     cfg = _cfg(remotes=())  # sentinel-disabled axis
     _make_git_repo(tmp_path, branch="main")
