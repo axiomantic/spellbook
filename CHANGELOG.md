@@ -9,6 +9,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.66.0] - 2026-05-18
 
+### Changed
+
+- **Test idiom — `required(False)` + `.__call__` workaround
+  eliminated across 15+ test files.** The pattern defeated tripwire's
+  "every registered mock must fire" guarantee by allowing optional
+  registrations to be silently skipped. Initial cleanup in
+  `test_memory_auto_store`, `test_aliases`, `test_aliases_windows`,
+  and `test_memory_cmd` was extended to 11 additional files outside
+  the original review scope:
+  `tests/admin/test_auth.py`,
+  `tests/installer/test_hooks_atomic_write.py`,
+  `tests/test_security/test_git_push_classifier.py`,
+  `tests/test_spellbook_mcp/test_config_orm_migration.py`,
+  `tests/test_spellbook_mcp/test_memory_bootstrap.py`,
+  `tests/test_spellbook_mcp/test_memory_bridge_hook.py`,
+  `tests/test_spellbook_mcp/test_notify_core.py`,
+  `tests/test_spellbook_mcp/test_spawn_session.py`,
+  `tests/test_spellbook_mcp/test_watcher.py`,
+  `tests/test_workflow_state_tools.py`, and
+  `tests/unit/test_stint_mcp_registration.py`. Three idiom shifts
+  applied uniformly: `mock.__call__.X(...)` → `mock.X(...)` shortcut
+  API; defensive `required(False)` mocks on short-circuit paths →
+  bare `tripwire.mock(name)` strict guards (raise
+  `UnmockedInteractionError` on unexpected calls); over-provisioned
+  FIFO chains → exact-count chains so production drift fails loudly.
+  Result: zero remaining `required(False)` / `__call__` patterns
+  in `tests/`. Hand-rolled `SimpleNamespace` / `_CountingMock` /
+  `_MockBuilder` fakes were also replaced with tripwire-native
+  `mock.object` registrations per the styleguide.
+
+- **`installer/components/spellbook_cco.py`:** Removed redundant
+  `str(Path)` calls (`subprocess.run` accepts `Path` since 3.6),
+  added `encoding="utf-8"` to all `Path.write_text` /
+  `Path.read_text` calls, hardened the PATH membership check
+  against non-absolute and case-mismatched entries (resolve +
+  `os.path.normcase` per entry for correct Windows /
+  case-insensitive APFS comparison), and replaced silent
+  `except: pass` with a logged warning. The previously-silent
+  `continue` branch now logs at debug level. Tilde-prefix,
+  trailing-slash, and empty PATH entries are covered by new
+  regression tests.
+
+- **`installer/components/agents.py`:** Replaced silent
+  `except: pass` with a logged warning to aid debugging.
+
+### Removed
+
+- **`pytest-mock` dev dependency.** Per `.gemini/styleguide.md`,
+  `pytest-tripwire` is the only acceptable mocking framework in
+  this repo; the `mocker` fixture is forbidden. An audit found
+  zero `mocker` fixture usages across the codebase, so the
+  `pytest-mock>=3.15.1` entry in `[dependency-groups].dev` was a
+  phantom dependency. Removed from `pyproject.toml`. `uv.lock`
+  is regenerated locally (the lockfile is gitignored in this
+  repo, so no lockfile change appears in the diff).
+
 ### Fixed
 
 - **`permissionDecision: "ask"` for T2 findings.** The `PreToolUse`
@@ -48,47 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tripwire.in_any_order()` blocks that cover the real call pattern
   across platforms.
 
-### Changed
-
-- **Test idiom — `required(False)` + `.__call__` workaround
-  eliminated across 15+ test files.** The pattern defeated tripwire's
-  "every registered mock must fire" guarantee by allowing optional
-  registrations to be silently skipped. Initial cleanup in
-  `test_memory_auto_store`, `test_aliases`, `test_aliases_windows`,
-  and `test_memory_cmd` was extended to 11 additional files outside
-  the original review scope:
-  `tests/admin/test_auth.py`,
-  `tests/installer/test_hooks_atomic_write.py`,
-  `tests/test_security/test_git_push_classifier.py`,
-  `tests/test_spellbook_mcp/test_config_orm_migration.py`,
-  `tests/test_spellbook_mcp/test_memory_bootstrap.py`,
-  `tests/test_spellbook_mcp/test_memory_bridge_hook.py`,
-  `tests/test_spellbook_mcp/test_notify_core.py`,
-  `tests/test_spellbook_mcp/test_spawn_session.py`,
-  `tests/test_spellbook_mcp/test_watcher.py`,
-  `tests/test_workflow_state_tools.py`, and
-  `tests/unit/test_stint_mcp_registration.py`. Three idiom shifts
-  applied uniformly: `mock.__call__.X(...)` → `mock.X(...)` shortcut
-  API; defensive `required(False)` mocks on short-circuit paths →
-  bare `tripwire.mock(name)` strict guards (raise
-  `UnmockedInteractionError` on unexpected calls); over-provisioned
-  FIFO chains → exact-count chains so production drift fails loudly.
-  Result: zero remaining `required(False)` / `__call__` patterns
-  in `tests/`. Hand-rolled `SimpleNamespace` / `_CountingMock` /
-  `_MockBuilder` fakes were also replaced with tripwire-native
-  `mock.object` registrations per the styleguide.
-
-- **`installer/components/spellbook_cco.py`:** PATH membership check
-  hardened against non-absolute and case-mismatched entries
-  (resolve + `os.path.normcase` per entry for correct
-  Windows / case-insensitive APFS comparison); the
-  previously-silent `continue` branch now logs at debug level.
-  Tilde-prefix, trailing-slash, and empty PATH entries are
-  covered by new regression tests.
-
-- **`installer/components/agents.py`:** Replaced silent
-  `except: pass` with a logged warning to aid debugging.
-
 ### Dependencies
 
 - **Dependabot consolidation.** 21 of 22 open dependabot PRs were
@@ -118,16 +133,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     migration PR — v4 requires the new `@tailwindcss/postcss`
     plugin and CSS-based config; v3 `@tailwind` directives and
     `tailwind.config.js` no longer work).
-
-### Removed
-
-- **`pytest-mock` dev dependency.** Per `.gemini/styleguide.md`,
-  `pytest-tripwire` is the only acceptable mocking framework in
-  this repo; the `mocker` fixture is forbidden. An audit found
-  zero `mocker` fixture usages across the codebase, so the
-  `pytest-mock>=3.15.1` entry in `[dependency-groups].dev` was a
-  phantom dependency. Removed from `pyproject.toml`; `uv.lock`
-  regenerated.
 
 ## [0.65.0] - 2026-05-17
 
