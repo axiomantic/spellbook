@@ -342,12 +342,27 @@ def test_unprojectable_record_warns_does_not_fail(tmp_path, caplog):
 # ---------------------------------------------------------------------------
 
 
-def test_claude_code_installer_uses_derived_deny(tmp_path):
+def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
     """End-to-end: ClaudeCodeInstaller.install() writes T3 deny patterns to
     settings.json by calling install_permissions with derive_managed_deny output.
 
     Uses a fixture spellbook_dir that contains a minimal tiers.toml.
     """
+    # Isolate HOME (and USERPROFILE for forward-compat with Q-O Windows
+    # alias install) so the alias-install step inside install() -- which
+    # writes the SPELLBOOK_ALIASES block to ``$HOME/.zshrc`` via
+    # Path.home() on POSIX -- does not touch the operator's real rc file.
+    # install() runs the alias step unconditionally even under
+    # skip_global_steps=True; on a machine that has spellbook-cco on PATH
+    # the test would otherwise rewrite ~/.zshrc with aliases pointing at
+    # the pytest tmp_path. This test is the only one in tests/installer/
+    # without a sys.platform == "win32" skip; the rest of the affected
+    # tests (in test_agents_symlink.py) skip Windows entirely, so
+    # USERPROFILE isolation is unnecessary there. Today install_aliases_windows
+    # is a noop stub, but isolating USERPROFILE here keeps the test safe
+    # if/when Q-O lands a real Windows alias path.
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     from installer.platforms.claude_code import ClaudeCodeInstaller
 
     # ``ClaudeCodeInstaller.install(skip_global_steps=True)`` calls

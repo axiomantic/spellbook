@@ -649,7 +649,16 @@ class TestClaudeCodeInstallerWiring:
     """
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_install_creates_agent_symlinks_in_config_dir(self, tmp_path):
+    def test_install_creates_agent_symlinks_in_config_dir(self, tmp_path, monkeypatch):
+        # Isolate HOME so the alias-install step (which writes the
+        # SPELLBOOK_ALIASES block to ``$HOME/.zshrc`` via Path.home()) does
+        # not touch the operator's real rc file. install() runs the alias
+        # step unconditionally even under skip_global_steps=True; without
+        # this isolation, on a developer machine that has spellbook-cco on
+        # PATH the test will rewrite ``~/.zshrc`` with aliases pointing at
+        # the pytest tmp_path, which pytest then deletes -- leaving the
+        # operator's shell broken on next login.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
@@ -677,7 +686,9 @@ class TestClaudeCodeInstallerWiring:
             assert target.read_text(encoding="utf-8") == f"body-{name}"
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_install_returns_install_result_for_agents_step(self, tmp_path):
+    def test_install_returns_install_result_for_agents_step(self, tmp_path, monkeypatch):
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.core import InstallResult
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -707,7 +718,12 @@ class TestClaudeCodeInstallerWiring:
         ]
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_install_dry_run_creates_no_files(self, tmp_path):
+    def test_install_dry_run_creates_no_files(self, tmp_path, monkeypatch):
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        # dry_run=True suppresses the rc-file write in the current
+        # implementation, but isolate HOME anyway so a future change that
+        # logs HOME or stats the rc file under dry_run cannot leak.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.core import InstallResult
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -744,8 +760,10 @@ class TestClaudeCodeInstallerWiring:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
     def test_uninstall_removes_agent_symlinks_only_spellbook_pointing(
-        self, tmp_path
+        self, tmp_path, monkeypatch
     ):
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
@@ -777,7 +795,9 @@ class TestClaudeCodeInstallerWiring:
         assert user_file.read_text(encoding="utf-8") == "user content"
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_install_idempotent_re_run_no_duplicates(self, tmp_path):
+    def test_install_idempotent_re_run_no_duplicates(self, tmp_path, monkeypatch):
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.core import InstallResult
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
@@ -822,7 +842,7 @@ class TestClaudeCodeInstallerWiring:
         assert before == after
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
-    def test_install_cleanup_purges_stale_agent_symlink(self, tmp_path):
+    def test_install_cleanup_purges_stale_agent_symlink(self, tmp_path, monkeypatch):
         """Install-time cleanup purges stale symlinks into THIS spellbook.
 
         When a source agent is renamed/removed, the prior symlink at
@@ -833,6 +853,8 @@ class TestClaudeCodeInstallerWiring:
         broken links are NOT in scope for this cleanup -- see
         ``test_install_cleanup_preserves_other_spellbook_broken_symlinks``.)
         """
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
@@ -868,7 +890,7 @@ class TestClaudeCodeInstallerWiring:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
     def test_install_cleanup_preserves_other_spellbook_broken_symlinks(
-        self, tmp_path
+        self, tmp_path, monkeypatch
     ):
         """Broken-symlink heuristic must not remove links into a *different*
         spellbook installation.
@@ -883,6 +905,8 @@ class TestClaudeCodeInstallerWiring:
         equality. A broken symlink whose path contains "spellbook" but
         points into a different installation must be preserved.
         """
+        # See test_install_creates_agent_symlinks_in_config_dir for rationale.
+        monkeypatch.setenv("HOME", str(tmp_path))
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = _scaffold_spellbook(tmp_path / "spellbook")
