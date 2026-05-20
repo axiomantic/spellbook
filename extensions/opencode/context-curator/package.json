@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.14.48",
-    "@types/node": "^25.7.0",
+    "@types/node": "^25.9.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
