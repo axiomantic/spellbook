@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from installer.compat import ServiceManager, mcp_service_config
 
 from .config import SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
+from .migrations import run_all_migrations
 from .platforms.base import PlatformInstaller
 from .ui import shorten_home
 from .version import check_upgrade_needed, read_version
@@ -291,6 +292,16 @@ class Installer:
 
         renderer.render_progress_start(total)
 
+        # Run one-shot legacy-state migrations before any component
+        # installation. These are idempotent and cheap on clean machines.
+        if not dry_run:
+            _on_step("Cleaning up legacy alias block")
+            try:
+                # run_all_migrations() logs each modified file at INFO.
+                run_all_migrations()
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("Legacy migration failed: %s", e)
+
         # Install MCP daemon once, before any platform installations.
         # All platforms connect to this shared daemon via HTTP.
         from .components.mcp import install_daemon
@@ -550,10 +561,15 @@ class Uninstaller:
                     )
                     session.results.append(fail_result)
 
-        # Remove shell aliases if installed
-        alias_result = self._uninstall_aliases(dry_run)
-        if alias_result:
-            session.results.append(alias_result)
+        # Run legacy-state migrations on uninstall too, so users who
+        # remove spellbook also get their rc files cleaned of the
+        # now-orphaned SPELLBOOK_ALIASES block.
+        if not dry_run:
+            try:
+                # run_all_migrations() logs each modified file at INFO.
+                run_all_migrations()
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("Legacy migration failed: %s", e)
 
         # Uninstall MCP server system service if installed
         mcp_result = self._uninstall_mcp_service(dry_run)
@@ -561,40 +577,6 @@ class Uninstaller:
             session.results.append(mcp_result)
 
         return session
-
-    def _uninstall_aliases(self, dry_run: bool = False) -> Optional[InstallResult]:
-        """Remove spellbook shell aliases from the user's rc file."""
-        try:
-            from installer.components.aliases import get_shell_rc_path, uninstall_aliases
-        except ImportError:
-            return None
-
-        rc_path = get_shell_rc_path()
-        if rc_path is None or not rc_path.exists():
-            return None
-
-        # Check if our demarcated block exists
-        content = rc_path.read_text(encoding="utf-8")
-        if "# SPELLBOOK_ALIASES:START" not in content:
-            return None
-
-        if dry_run:
-            return InstallResult(
-                component="aliases",
-                platform="system",
-                success=True,
-                action="removed",
-                message=f"Shell aliases: would remove from {rc_path}",
-            )
-
-        result = uninstall_aliases()
-        return InstallResult(
-            component="aliases",
-            platform="system",
-            success=result["removed"],
-            action="removed" if result["removed"] else "failed",
-            message=f"Shell aliases: {'removed from' if result['removed'] else 'failed to remove from'} {result.get('rc_path', rc_path)}",
-        )
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the MCP server system service if installed."""

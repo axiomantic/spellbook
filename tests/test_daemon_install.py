@@ -157,14 +157,22 @@ class TestInstallerRunDaemonCentralized:
         installer = Installer(spellbook_dir)
         installer.run(platforms=["claude_code"], dry_run=False, on_progress=on_progress)
 
-        # daemon_start comes first, then step (installing daemon), then result
-        assert events[0] == "daemon_start"
-        assert "step" in events[1:3]
-        assert "result" in events[1:3]
+        # One-shot legacy migrations may emit "step" events before daemon_start.
+        # daemon_start must be the first non-step event.
+        daemon_start_idx = next(i for i, e in enumerate(events) if e == "daemon_start")
+        assert all(e == "step" for e in events[:daemon_start_idx])
 
-        # platform_start comes after daemon result
+        # After daemon_start, the next events include "step" (installing daemon)
+        # and "result" (daemon install result) before any platform_start.
+        post_daemon = events[daemon_start_idx + 1:]
+        assert "step" in post_daemon[:2]
+        assert "result" in post_daemon[:2]
+
+        # platform_start comes after the daemon result
         assert "platform_start" in events
-        daemon_result_idx = next(i for i, e in enumerate(events) if e == "result")
+        daemon_result_idx = next(
+            i for i, e in enumerate(events) if e == "result" and i > daemon_start_idx
+        )
         platform_start_idx = next(i for i, e in enumerate(events) if e == "platform_start")
         assert platform_start_idx > daemon_result_idx
 

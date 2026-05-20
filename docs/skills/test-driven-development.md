@@ -403,6 +403,48 @@ The ESCAPE field must describe a SPECIFIC broken implementation, not a generic s
 - ESCAPE field describes something the test DOES catch (means you didn't think hard enough)
 - ESCAPE field is copy-pasted between tests (each test has unique escape paths)
 
+### Test Strength Verification (mechanical pre-commit grep)
+
+ESCAPE Analysis is the rigorous version. This is the cheap mechanical version
+that catches the most common green-mirage patterns at commit time. Run BEFORE
+any per-task commit:
+
+```bash
+# 1. Banned substring assertions on serialized output
+rg -n 'expect.*stringContaining.*JSON|expect.*stringContaining.*\{' <test_files>
+# Replace with: JSON.parse(...) + exact deep equality (toEqual)
+
+# 2. Tautological / dead assertions
+rg -n 'expect\(true\)\.toBe\(true\)|expect\(1\)\.toBe\(1\)|assert True$|assert 1$' <test_files>
+# Replace with: behavioral assertion that can actually fail
+
+# 3. Mock call without argument verification (catches "called X but with what?")
+rg -n 'toHaveBeenCalled\(\)$|assert_called\(\)$|called_once\(\)$' <test_files>
+# Strengthen with: toHaveBeenCalledWith(...) / assert_called_with(...) / called_once_with(...)
+
+# 4. Existence-only smoke tests (typeof === "function")
+rg -n 'typeof.*===.*function|isinstance.*function|callable\(' <test_files>
+# Replace with: actually call the thing and assert behavior
+
+# 5. Side-effect-free "happy path" tests for stateful operations
+#    (e.g., "forms a coalition" that asserts return value but never
+#    inspects the Redis hash that should have been written)
+#    — no greppable signature; require by checklist:
+#    For every test of a method that mutates external state, at least one
+#    assertion MUST inspect the post-state, not just the return value.
+```
+
+If any grep returns hits: strengthen the assertion BEFORE the next gate.
+A passing test with these patterns is a known green-mirage source
+(see `auditing-green-mirage` skill for the catalog).
+
+**Mock fidelity rule:** If your mock for an external system (Redis Lua,
+SQL, HTTP API) does not match the real system's contract, your test passes
+are lies. When integration infrastructure is available (Phase 4.0
+Environment Gate confirmed it), at least one integration test per module
+MUST exercise the real system. Mocks for `evalLua`, `set`, `xadd`, etc.
+are convenience aids, not coverage.
+
 ## Evidence Requirements
 
 | Claim | Required Evidence |

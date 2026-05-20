@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.67.0] - 2026-05-20
+
+### Removed
+
+- CCO sandbox wrapper (`scripts/spellbook-sandbox`, `installer/components/spellbook_cco.py`) and the shell-alias installer component (`installer/components/aliases.py`). The `SPELLBOOK_USE_VANILLA_CCO` feature flag was removed alongside.
+
+### Added
+
+- One-shot install/uninstall migration (`installer/migrations.py`) that strips the legacy `SPELLBOOK_ALIASES:START`/`END` block from users' `~/.zshrc`, `~/.bashrc`, and `~/.config/fish/config.fish`. Marker matching uses exact line-strip equality so unrelated comments that incidentally mention the marker string are preserved. RC reads and writes are pinned to `encoding="utf-8"`.
+- `adversarial-review` skill registered in `docs/`, `README.md`, and `mkdocs.yml`. Provides subagent-based verification of work against external feedback such as PR review comments and audit findings.
+
+### Changed
+
+- `skills/develop/SKILL.md`: added mandatory Artifact Verification Per Phase, Pre-Implementation Environment Gate (Phase 4.0), Worktree Pre-Check (Phase 4.1), and Session Handoff Protocol sections. Minor prose tweak (`exec()` → `exec`) to avoid an ESC-005 false positive in generated docs.
+
 ## [0.66.0] - 2026-05-18
 
 ### Changed
@@ -38,18 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `tests/`. Hand-rolled `SimpleNamespace` / `_CountingMock` /
   `_MockBuilder` fakes were also replaced with tripwire-native
   `mock.object` registrations per the styleguide.
-
-- **`installer/components/spellbook_cco.py`:** Removed redundant
-  `str(Path)` calls (`subprocess.run` accepts `Path` since 3.6),
-  added `encoding="utf-8"` to all `Path.write_text` /
-  `Path.read_text` calls, hardened the PATH membership check
-  against non-absolute and case-mismatched entries (resolve +
-  `os.path.normcase` per entry for correct Windows /
-  case-insensitive APFS comparison), and replaced silent
-  `except: pass` with a logged warning. The previously-silent
-  `continue` branch now logs at debug level. Tilde-prefix,
-  trailing-slash, and empty PATH entries are covered by new
-  regression tests.
 
 - **`installer/components/agents.py`:** Replaced silent
   `except: pass` with a logged warning to aid debugging.
@@ -723,54 +726,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Constraints`) and SHA-256-snapshot the existing 7 agents to catch
   unintended modification.
 
-- **`installer/components/spellbook_cco.py` component (security
-  architecture Phase 7).** New installer component clones the
-  `elijahr/cco` fork at audit-pinned SHA `d7044ef` to
-  `~/.local/spellbook/cco/` and writes the
-  `~/.local/bin/spellbook-cco` wrapper. Pin verification is enforced
-  by default; `SPELLBOOK_INSTALLER_SKIP_FORK_PIN=1` bypasses it with
-  a stderr `WARNING` line so accidental drift is loud.
-- **macOS L5 sandbox layer ships via the fork's hardened SBPL
-  profile.** The `spellbook-cco` wrapper applies the fork's profile,
-  which adds DYLD environment scrub, file-read denies for
-  user-writable dylib paths (preventing `DYLD_INSERT_LIBRARIES`-style
-  injection), scoped `process-exec` deny+re-allow, and
-  `mach-priv-task-port` deny. macOS now reaches feature parity with
-  the Linux sandbox path rather than no-opping.
-- **`SPELLBOOK_SANDBOX_SKIP_PIN=1` escape hatch.** Renamed from
-  `SPELLBOOK_SANDBOX_SKIP_CCO_PIN=1`; the old name is still accepted
-  for one release with a stderr `DEPRECATION` warning, then removed.
-
-### Changed
-
-- **`installer/platforms/claude_code.py` macOS path.** No longer
-  no-ops; chains `install_spellbook_cco` then `install_aliases` so
-  macOS users get the same hardened sandbox surface as Linux users.
-- **`installer/tui.py` and `install.py` detection.** The TUI / CLI
-  installer now probes for `spellbook-cco` on `PATH` instead of
-  vanilla `cco`, so re-runs of the installer correctly identify
-  prior spellbook-managed installs.
-- **`scripts/spellbook-sandbox` gating.** The sandbox launcher gates
-  on `spellbook-cco` (not vanilla `cco`) and verifies the audit-pinned
-  `d7044ef` SHA by parsing `spellbook-cco --version` output. A version
-  mismatch fails closed with a remediation hint.
-- **`docs/security.md` retitled.** Section is now "Sandboxing with
-  spellbook-cco (Linux + macOS)". Manual install instructions removed
-  in favor of `install.py`, which is now the single source of truth
-  for sandbox setup on both platforms.
-- **`README.md` cco onboarding rewritten.** Instructions reference
-  `spellbook-cco` rather than vanilla `cco`, and point at `install.py`
-  instead of the upstream `nikvdp/cco` repo for installation.
-
-### Rollback
-
-- **`SPELLBOOK_USE_VANILLA_CCO=1` falls back to vanilla
-  `nikvdp/cco`.** If the hardened fork breaks something on your
-  system, set this env var to revert to the upstream vanilla `cco`
-  binary. **This bypasses the hardened SBPL profile and DYLD scrub**,
-  so only use it long enough to recover, then unset the env var and
-  re-run `install.py` so the spellbook-managed sandbox is restored.
-
 ## [0.56.0] - 2026-04-30
 
 ### Added
@@ -1246,9 +1201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.51.0] - 2026-04-09
 
 ### Added
-- **cco sandbox launcher**: `scripts/spellbook-sandbox` wraps [nikvdp/cco](https://github.com/nikvdp/cco) so Claude Code / OpenCode / Codex can run under YOLO mode with automatic sandboxing. The source tree is mounted read-only; the config directory is mounted read-only since hook subprocesses route writes (error logs, messaging state) through the daemon's HTTP API.
-- **Sandboxing documentation**: New `## Sandboxing with cco (macOS)` section in `docs/security.md` covering quick-start, `--safe` mode, and threat model.
-- **Installer post-install hint**: `render_post_install_notes()` surfaces an optional hint when `cco` is detected on `PATH`, pointing to the launcher and docs.
+- (no user-visible changes)
 
 ## [0.50.0] - 2026-04-08
 

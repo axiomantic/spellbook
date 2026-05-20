@@ -239,6 +239,45 @@ After all 4 gates pass, commit. THEN proceed to the next task. Do NOT
 batch gates across tasks. Do NOT batch commits across tasks. Each task
 is a complete unit: gates pass -> commit -> next task.
 
+## Manager Inline Quality Gate (per sub-task, BEFORE commit)
+
+<CRITICAL>
+Between the 4 per-task gates and the per-task commit, run a mechanical
+quality check on the ACTUAL working tree. The 4 gates above can pass with
+implementations that compile in isolation but break the rest of the project,
+or with tests that pass against a stub. This inline check catches both.
+</CRITICAL>
+
+For each task, after gate 4 (fact-check) and before commit:
+
+```bash
+# 1. Whole-project type-check (NOT just the new file)
+<typecheck command>   # e.g., npx tsc --noEmit, mypy ., cargo check
+
+# 2. Run the new test file specifically
+<targeted test command>   # e.g., vitest run path/to/new.spec.ts
+
+# 3. Quick anti-pattern grep on the modified files
+rg -n 'as any|: any[, )=]|@ts-ignore|@ts-expect-error|expect\(true\)\.toBe\(true\)' <modified_files>
+
+# 4. (If integration infrastructure is available) run the relevant
+#    integration test, NOT just unit tests with mocks. Mock-only coverage
+#    of an external system (Redis Lua, SQL, HTTP) is a known green-mirage
+#    source. If integration infra is unavailable, log this in your summary
+#    so the CEO end-of-Phase-4 gates know to weight green-mirage audit higher.
+```
+
+Report per-task in your final summary as one of:
+
+- `Task N: PASS (typecheck clean, K/K tests, no anti-patterns)`
+- `Task N: PASS-WITH-NOTES (typecheck clean, K/K tests; integration deferred: <reason>)`
+- `Task N: FAIL (<single-sentence reason>)` — in which case you must fix
+  before commit, OR roll the task back and report the blocker to the CEO.
+
+Do NOT silently let "FAIL" become "PASS" by relaxing the test or stubbing
+the failing branch. That is Pattern 9 (Self-Review Substitution) at the
+Manager tier. If you cannot honestly report PASS, the CEO needs to know.
+
 ## Task-Tool Availability (REPORT THIS)
 
 Subagents dispatched as `general` / `general-purpose` should have the

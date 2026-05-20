@@ -3,19 +3,14 @@ Claude Code platform installer.
 """
 
 import logging
-import os
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List
-
-from spellbook.core.compat import Platform, get_platform
 
 from ..components.agents import (
     cleanup_stale_agent_symlinks,
     install_agents,
     uninstall_agents,
 )
-from ..components.aliases import install_aliases, install_aliases_windows
 from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
@@ -30,11 +25,6 @@ from ..components.mcp import (
     register_mcp_http_server,
     uninstall_daemon,
     unregister_mcp_server,
-)
-from ..components.spellbook_cco import (
-    emit_rollback_warning,
-    install_spellbook_cco,
-    uninstall_spellbook_cco,
 )
 from ..components.symlinks import (
     cleanup_spellbook_symlinks,
@@ -53,84 +43,6 @@ if TYPE_CHECKING:
     from ..core import InstallResult
 
 logger = logging.getLogger(__name__)
-
-
-def _install_claude_code_aliases(spellbook_dir: Path, dry_run: bool = False) -> dict:
-    """Dispatch alias install for Claude Code based on the current platform.
-
-    Routing:
-
-    * :attr:`Platform.LINUX` and :attr:`Platform.MACOS` -> share one
-      :func:`install_aliases` branch (POSIX rc-file shim pointing the
-      ``claude`` / ``opencode`` aliases at ``scripts/spellbook-sandbox``).
-      With WI-7 fork landing, L5 macOS ships via spellbook-cco's hardened
-      SBPL profile (DYLD scrub + file-read denies + scoped process-exec
-      deny + mach-priv-task-port deny). See ``scripts/spellbook-sandbox``
-      header and ``verifications/sec_9_3_result.md`` revision section for
-      the audit trail. macOS is no longer a noop.
-    * :attr:`Platform.WINDOWS` -> :func:`install_aliases_windows` (Q-O stub
-      from Task 3 of WI-7; returns a noop dict until the Windows path is
-      implemented).
-
-    Sandbox-binary gating:
-
-    * Default: gate on ``shutil.which("spellbook-cco")``. The wrapper is
-      installed once-globally by the spellbook installer.
-    * Rollback: when ``SPELLBOOK_USE_VANILLA_CCO=1`` is set in the
-      environment, gate on ``shutil.which("cco")`` (the legacy vanilla
-      binary) AND emit the canonical rollback WARNING to stderr so the
-      rollback codepath is visible in transcripts.
-
-    Any other platform value raises :class:`NotImplementedError` so future
-    additions to the :class:`Platform` enum surface as a hard failure
-    rather than a silent skip.
-
-    Returns the same dict shape as :func:`install_aliases`::
-
-        {
-            "installed": bool,
-            "rc_path": str | None,
-            "aliases": list[str],
-            "skipped_reason": str | None,
-        }
-    """
-    plat = get_platform()
-
-    use_vanilla = os.environ.get("SPELLBOOK_USE_VANILLA_CCO") == "1"
-    sandbox_binary = "cco" if use_vanilla else "spellbook-cco"
-
-    if plat in (Platform.LINUX, Platform.MACOS):
-        # Emit the rollback WARNING once per dispatch when the operator
-        # has explicitly opted into the vanilla path. The once-globally
-        # install block also emits this string from a different call
-        # site; both are intentional -- transcripts may show the dispatch
-        # entry without the install block (e.g. when install_spellbook_cco
-        # is short-circuited globally and the dispatcher runs separately
-        # via install.py's interactive offer).
-        if use_vanilla:
-            emit_rollback_warning()
-
-        if shutil.which(sandbox_binary) is None:
-            logger.info(
-                "Claude Code L5 sandbox alias install (dry_run=%s) "
-                "skipped: %s not on PATH. Re-run install.py to install "
-                "the spellbook-cco wrapper, or set "
-                "SPELLBOOK_USE_VANILLA_CCO=1 if rolling back.",
-                dry_run,
-                sandbox_binary,
-            )
-            return {
-                "installed": False,
-                "rc_path": None,
-                "aliases": [],
-                "skipped_reason": f"{sandbox_binary} not on PATH; re-run install.py",
-            }
-        return install_aliases(spellbook_dir, dry_run=dry_run)
-    if plat is Platform.WINDOWS:
-        return install_aliases_windows(spellbook_dir, dry_run=dry_run)
-    # Defensive fallback for any future Platform enum addition. Surfaces
-    # the missing handler explicitly instead of silently skipping.
-    raise NotImplementedError(f"No alias install handler for platform: {plat!r}")
 
 
 class ClaudeCodeInstaller(PlatformInstaller):
@@ -388,123 +300,6 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 message="agents: " + ", ".join(message_parts),
             )
         )
-
-        # WI-7 fork landing: install spellbook-cco once-globally before the
-        # per-dir alias dispatcher runs. The wrapper at
-        # ~/.local/bin/spellbook-cco is the canonical entry point for the
-        # audited elijahr/cco fork; the per-dir aliases gate on its
-        # presence via shutil.which() in _install_claude_code_aliases.
-        # When the once-globally install is skipped (rollback override) or
-        # fails (e.g. git clone failed), the wrapper is absent on PATH
-        # and the per-dir dispatcher returns a clean skipped_reason --
-        # this is the chain-dependency contract.
-        if not skip_global_steps:
-            self._step("Installing spellbook-cco wrapper")
-            if os.environ.get("SPELLBOOK_USE_VANILLA_CCO") == "1":
-                emit_rollback_warning()
-                cco_result = {
-                    "installed": False,
-                    "path": None,
-                    "install_root": None,
-                    "skipped_reason": (
-                        "SPELLBOOK_USE_VANILLA_CCO=1 active; routing aliases to legacy vanilla cco"
-                    ),
-                    "action": "skipped",
-                }
-            else:
-                # Wrap install_spellbook_cco in try/except so a single
-                # component failure (e.g. unexpected OSError during clone)
-                # records a failed InstallResult and lets the rest of
-                # install() proceed.
-                try:
-                    cco_result = install_spellbook_cco(install_root=None, dry_run=self.dry_run)
-                except Exception as e:  # noqa: BLE001 - wide net by design
-                    # logger.exception preserves traceback context so operators
-                    # debugging installer failures see the full chain, not just
-                    # the stringified message we surface in the InstallResult.
-                    logger.exception(
-                        "Unexpected error installing spellbook-cco: %s", e
-                    )
-                    cco_result = {
-                        "installed": False,
-                        "path": None,
-                        "install_root": None,
-                        "skipped_reason": f"unexpected error: {e}",
-                        "action": "failed",
-                    }
-
-            cco_installed = cco_result["installed"] or cco_result["action"] == "noop"
-            results.append(
-                InstallResult(
-                    component="spellbook_cco",
-                    platform=self.platform_id,
-                    success=cco_installed,
-                    action=cco_result["action"],
-                    message=(
-                        f"spellbook-cco: {cco_result['action']} "
-                        f"({cco_result.get('skipped_reason') or 'ok'})"
-                    ),
-                )
-            )
-
-        # Install platform-specific shell aliases (claude/opencode wrappers
-        # pointing at scripts/spellbook-sandbox). Dispatches by platform:
-        # LINUX/MACOS -> install_aliases (gates on spellbook-cco presence,
-        # or vanilla cco when SPELLBOOK_USE_VANILLA_CCO=1); WINDOWS ->
-        # install_aliases_windows (Q-O stub). The legacy interactive offer
-        # in install.py is a separate opt-in path; this is the
-        # platform-install-time path that runs unconditionally.
-        self._step("Installing aliases")
-        # Wrap the dispatch in try/except so a failure inside install_aliases
-        # (e.g. OSError from a non-writable rc file) records a failed
-        # InstallResult and lets the rest of install() proceed. Without
-        # this, the unhandled exception propagates to core.py:~407, which
-        # records ONE platform-level failed result and aborts the
-        # remaining components -- including the security-critical hooks
-        # install. Modeled after install.py:1122-1149.
-        try:
-            alias_result = _install_claude_code_aliases(self.spellbook_dir, dry_run=self.dry_run)
-        except Exception as e:
-            # logger.exception so operators get the full traceback in
-            # debug-level logs alongside the failed InstallResult.
-            logger.exception("Failed to install Claude Code aliases: %s", e)
-            results.append(
-                InstallResult(
-                    component="aliases",
-                    platform=self.platform_id,
-                    success=False,
-                    action="failed",
-                    message=f"aliases: {e}",
-                )
-            )
-        else:
-            # All installed=False outcomes (Sec 9.3 macOS, Q-O Windows,
-            # missing cco, unknown shell from install_aliases) are reported
-            # as success=True, action="skipped". The message string
-            # distinguishes the cause for operators reading install logs.
-            if alias_result["installed"]:
-                results.append(
-                    InstallResult(
-                        component="aliases",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message=(
-                            f"aliases: {', '.join(alias_result['aliases'])} "
-                            f"-> {alias_result['rc_path']}"
-                        ),
-                    )
-                )
-            else:
-                results.append(
-                    InstallResult(
-                        component="aliases",
-                        platform=self.platform_id,
-                        success=True,
-                        action="skipped",
-                        message=f"aliases: {alias_result['skipped_reason']}",
-                    )
-                )
 
         # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")
@@ -810,25 +605,6 @@ class ClaudeCodeInstaller(PlatformInstaller):
                                 message=f"{component_name}: failed to remove - {e}",
                             )
                         )
-
-        # WI-7 fork landing: tear down the spellbook-cco wrapper and its
-        # managed clone (global step). Idempotent: a clean machine returns
-        # action="noop"; operator-hand-rolled wrappers (no spellbook-cco
-        # tag) are preserved by uninstall_spellbook_cco.
-        if not skip_global_steps:
-            cco_uninstall = uninstall_spellbook_cco(install_root=None, dry_run=self.dry_run)
-            results.append(
-                InstallResult(
-                    component="spellbook_cco",
-                    platform=self.platform_id,
-                    success=True,
-                    action=cco_uninstall["action"],
-                    message=(
-                        f"spellbook-cco: {cco_uninstall['action']} "
-                        f"({cco_uninstall.get('skipped_reason') or 'ok'})"
-                    ),
-                )
-            )
 
         # Uninstall MCP daemon and unregister MCP servers (global steps)
         if not skip_global_steps:

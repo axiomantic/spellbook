@@ -197,6 +197,9 @@ Dispatch one agent per independent problem domain — only after the independenc
 3. **Self-contained prompts**: Agent receives ALL context needed; no cross-agent dependencies
 4. **Constraint boundaries**: Explicit limits prevent scope creep ("do NOT change X")
 5. **Merge verification required**: Agent work integrated only after conflict check + full test suite
+6. **Activity signaling**: Subagents with large scope (reading 5+ files OR prompt > 200 lines) MUST begin their response with `Starting: [task name]…` within ~30 seconds so the orchestrator sees activity and does not flag the run as stalled. Long silent setup is indistinguishable from a hung subagent.
+7. **Timeout tolerance**: Large-scope subagents (deep reads, large refactors, multi-file reviews) should be dispatched with extended timeout (120–180s) or as background runs. A subagent that hits the orchestrator's no-activity timer during a legitimate file-read phase has not failed; re-dispatch with narrower scope or background mode rather than declaring it broken.
+8. **Worktree pre-check**: Before any dispatch with `worktree: true` (or equivalent isolation flag), verify the project is a git repo with at least one commit on the target branch and a clean working tree. Worktrees cannot be created from empty branches; the operator-visible failure ("worktree isolation requires a git repository") is non-obvious and costs a full re-dispatch when it bites mid-fan-out.
 
 ## Inputs
 
