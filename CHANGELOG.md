@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - One-shot install/uninstall migration (`installer/migrations.py`) that strips the legacy `SPELLBOOK_ALIASES:START`/`END` block from users' `~/.zshrc`, `~/.bashrc`, and `~/.config/fish/config.fish`. Marker matching uses exact line-strip equality so unrelated comments that incidentally mention the marker string are preserved. RC reads and writes are pinned to `encoding="utf-8"`.
+- `adversarial-review` skill registered in `docs/`, `README.md`, and `mkdocs.yml`. Provides subagent-based verification of work against external feedback such as PR review comments and audit findings.
+
+### Changed
+
+- `skills/develop/SKILL.md`: added mandatory Artifact Verification Per Phase, Pre-Implementation Environment Gate (Phase 4.0), Worktree Pre-Check (Phase 4.1), and Session Handoff Protocol sections. Minor prose tweak (`exec()` → `exec`) to avoid an ESC-005 false positive in generated docs.
 
 ## [0.66.0] - 2026-05-18
 

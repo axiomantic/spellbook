@@ -297,12 +297,10 @@ class Installer:
         if not dry_run:
             _on_step("Cleaning up legacy alias block")
             try:
-                migrated_paths = run_all_migrations()
+                # run_all_migrations() logs each modified file at INFO.
+                run_all_migrations()
             except Exception as e:  # pragma: no cover - defensive
                 logger.warning("Legacy migration failed: %s", e)
-                migrated_paths = []
-            for _migrated in migrated_paths:
-                logger.info("Removed legacy SPELLBOOK_ALIASES block from %s", _migrated)
 
         # Install MCP daemon once, before any platform installations.
         # All platforms connect to this shared daemon via HTTP.
@@ -568,12 +566,10 @@ class Uninstaller:
         # now-orphaned SPELLBOOK_ALIASES block.
         if not dry_run:
             try:
-                migrated_paths = run_all_migrations()
+                # run_all_migrations() logs each modified file at INFO.
+                run_all_migrations()
             except Exception as e:  # pragma: no cover - defensive
                 logger.warning("Legacy migration failed: %s", e)
-                migrated_paths = []
-            for _migrated in migrated_paths:
-                logger.info("Removed legacy SPELLBOOK_ALIASES block from %s", _migrated)
 
         # Uninstall MCP server system service if installed
         mcp_result = self._uninstall_mcp_service(dry_run)

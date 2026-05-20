@@ -112,6 +112,52 @@ def test_line_mentioning_marker_substring_is_preserved(tmp_path: Path) -> None:
     assert "footer" in text
 
 
+def test_intentional_double_blank_lines_elsewhere_are_preserved(
+    tmp_path: Path,
+) -> None:
+    """Blank-line collapsing must only affect the marker-block boundary.
+
+    Intentional double-blank-line spacing between unrelated sections in
+    the user's rc file must survive verbatim. Only the blank line(s)
+    directly adjacent to the removed block on each side should be
+    consumed (at most one per side).
+    """
+    rc = tmp_path / ".zshrc"
+    original = (
+        "export FOO=bar\n"
+        "\n"
+        "\n"
+        "# Some other section\n"
+        "alias ls='ls -G'\n"
+        "\n"
+        "# SPELLBOOK_ALIASES:START\n"
+        "alias claude='spellbook-sandbox'\n"
+        "alias opencode='spellbook-sandbox opencode'\n"
+        "# SPELLBOOK_ALIASES:END\n"
+        "\n"
+        "export BAZ=qux\n"
+        "\n"
+        "\n"
+        "# Trailing section\n"
+    )
+    rc.write_text(original)
+
+    assert cleanup_legacy_alias_block(rc) is True
+
+    text = rc.read_text()
+    # Block contents are gone.
+    assert "SPELLBOOK_ALIASES" not in text
+    assert "spellbook-sandbox" not in text
+    # Pre-block intentional double-blank pair survives verbatim.
+    assert "export FOO=bar\n\n\n# Some other section\n" in text
+    # Post-block intentional double-blank pair survives verbatim.
+    assert "export BAZ=qux\n\n\n# Trailing section\n" in text
+    # The single boundary blank on each side of the block was consumed,
+    # so `alias ls=...` now sits directly adjacent to `export BAZ=qux`
+    # with no extra blank line between them where the block used to be.
+    assert "alias ls='ls -G'\nexport BAZ=qux\n" in text
+
+
 def test_run_all_migrations_uses_home_and_returns_modified(
     tmp_path: Path,
 ) -> None:

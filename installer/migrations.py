@@ -47,30 +47,40 @@ def cleanup_legacy_alias_block(rc_path: Path) -> bool:
     if _LEGACY_ALIAS_START not in original or _LEGACY_ALIAS_END not in original:
         return False
 
+    # Walk the file and build the output, removing each marker block plus
+    # at most one blank line directly adjacent to it on each side. Blank
+    # lines elsewhere in the user's rc file (including intentional
+    # double-blank-line spacing between unrelated sections) are preserved
+    # verbatim.
     lines = original.splitlines(keepends=True)
-    kept: list[str] = []
+    final: list[str] = []
     inside = False
+    just_closed = False
     for line in lines:
         stripped = line.strip()
         if stripped == _LEGACY_ALIAS_START:
+            # Drop one trailing blank line that was paired with the
+            # block on its leading side, if present.
+            if final and final[-1].strip() == "":
+                final.pop()
             inside = True
             continue
         if stripped == _LEGACY_ALIAS_END:
             inside = False
+            just_closed = True
             continue
-        if not inside:
-            kept.append(line)
+        if inside:
+            continue
+        # Outside the block. The first blank line immediately after the
+        # END marker is the trailing boundary blank -- drop it. Any
+        # subsequent blanks (intentional spacing) are preserved.
+        if just_closed and stripped == "":
+            just_closed = False
+            continue
+        just_closed = False
+        final.append(line)
 
-    # Collapse a run of blank lines left where the block used to be.
-    cleaned: list[str] = []
-    prev_blank = False
-    for line in kept:
-        is_blank = line.strip() == ""
-        if is_blank and prev_blank:
-            continue
-        cleaned.append(line)
-        prev_blank = is_blank
-    new_text = "".join(cleaned)
+    new_text = "".join(final)
 
     if new_text == original:
         return False
