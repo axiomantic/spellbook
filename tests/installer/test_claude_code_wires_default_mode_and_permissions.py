@@ -27,29 +27,6 @@ def _assert_powershell_which_if_windows(times: int = 1) -> None:
             )
 
 
-def _assert_spellbook_cco_which_if_posix(times: int = 1) -> None:
-    """Assert the WI-7 alias-dispatcher's ``shutil.which("spellbook-cco")``.
-
-    ``installer.platforms.claude_code._install_claude_code_aliases`` gates
-    the per-dir alias install on the presence of the ``spellbook-cco``
-    wrapper via ``shutil.which("spellbook-cco")`` (or ``which("cco")`` when
-    ``SPELLBOOK_USE_VANILLA_CCO=1`` is set). Tripwire's SubprocessPlugin
-    intercepts that call; without an explicit ``assert_which`` after the
-    sandbox closes, tripwire's strict verifier raises
-    ``UnassertedInteractionsError`` at teardown when the binary is absent
-    from PATH (the case in CI environments).
-
-    The dispatch only runs on POSIX (LINUX / MACOS); the Windows branch
-    routes to ``install_aliases_windows`` which does not call
-    ``shutil.which`` for the cco wrapper. Hence the platform gate.
-    """
-    if sys.platform != "win32":
-        for _ in range(times):
-            tripwire.subprocess.assert_which(
-                name="spellbook-cco", returns=None
-            )
-
-
 @pytest.fixture
 def home_dir(tmp_path):
     """Create a fake home directory under tmp_path. Returned for use as the
@@ -207,46 +184,6 @@ def _assert_install_mocks(mock_home, mock_cc_cli, mock_mcp_cli):
             mock_cc_cli.assert_call(args=(), kwargs={})
         for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
             mock_mcp_cli.assert_call(args=(), kwargs={})
-        # The cco install step is unmocked in these tests; its subprocess
-        # call goes to a real `git clone` against the elijahr/cco URL,
-        # which fails inside the tripwire sandbox. claude_code.py
-        # logger.exception()'s the caught failure for operator
-        # observability (gemini cycle-6 finding); the LoggingPlugin
-        # records an ERROR entry which must be drained when present.
-        _drain_cco_install_exception_log()
-
-
-def _drain_cco_install_exception_log() -> None:
-    """Drain the ``logger.exception`` ERROR emitted by ``claude_code.py``
-    when ``install_spellbook_cco`` raises (sandbox blocks git clone).
-
-    The assertion is wrapped in a tolerant ``try/except`` so tests that DO
-    mock ``install_spellbook_cco`` (and thus produce no exception → no
-    log entry) still pass. Tripwire's ``LoggingPlugin`` records logs but
-    only enforces them at teardown if recorded; absent entries do not
-    raise. Always called inside an enclosing ``in_any_order`` block.
-    """
-    from dirty_equals import AnyThing
-    from tripwire._errors import InteractionMismatchError
-
-    try:
-        tripwire.log.assert_log(
-            level="ERROR",
-            message=AnyThing,
-            logger_name="installer.platforms.claude_code",
-        )
-    except InteractionMismatchError:
-        # Narrowed catch (was bare ``except Exception``): tripwire's
-        # ``LoggingPlugin.assert_log`` → ``Verifier.assert_interaction``
-        # raises ``InteractionMismatchError`` when no matching ERROR log
-        # was recorded (see tripwire/_verifier.py:209). That's the "no
-        # cco failure" path. Real test bugs (typo in ``logger_name``,
-        # wrong level, API breakage) surface as ``MissingAssertionFieldsError``,
-        # ``AllWildcardAssertionError``, ``AttributeError``, etc., and are
-        # no longer swallowed. The strict verifier still flags any
-        # recorded-but-unasserted ERROR via ``UnassertedInteractionsError``
-        # at teardown.
-        pass
 
 
 def _assert_install_and_uninstall_mocks(
@@ -263,10 +200,6 @@ def _assert_install_and_uninstall_mocks(
             mock_mcp_cli.assert_call(args=(), kwargs={})
         for _ in range(_DAEMON_CALLS_PER_UNINSTALL):
             mock_daemon.assert_call(args=(), kwargs={"dry_run": False})
-        # Same rationale as _assert_install_mocks: drain optional
-        # logger.exception ERROR from the install_spellbook_cco failure
-        # path when present.
-        _drain_cco_install_exception_log()
 
 
 def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path):
@@ -291,7 +224,6 @@ def test_install_emits_default_mode_result(home_dir, spellbook_dir, tmp_path):
     _assert_install_mocks(*mocks)
     _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
-    _assert_spellbook_cco_which_if_posix()
 
     dm_results = [r for r in results if r.component == "default_mode"]
     assert len(dm_results) == 1
@@ -318,7 +250,6 @@ def test_install_emits_permissions_result(home_dir, spellbook_dir, tmp_path):
     _assert_install_mocks(*mocks)
     _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
-    _assert_spellbook_cco_which_if_posix()
 
     p_results = [r for r in results if r.component == "permissions"]
     assert len(p_results) == 1
@@ -347,7 +278,6 @@ def test_install_writes_acceptedits_default_mode(home_dir, spellbook_dir, tmp_pa
     _assert_install_mocks(*mocks)
     _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
-    _assert_spellbook_cco_which_if_posix()
 
     settings_path = config_dir / "settings.json"
     assert settings_path.exists()
@@ -383,9 +313,6 @@ def test_uninstall_emits_default_mode_and_permissions_results(
     # install_hooks calls shutil.which("powershell") once on Windows;
     # uninstall_hooks does not.
     _assert_powershell_which_if_windows()
-    # WI-7 alias dispatcher calls shutil.which("spellbook-cco") once during
-    # install on POSIX; the uninstall path does not call the dispatcher.
-    _assert_spellbook_cco_which_if_posix()
 
     dm_results = [r for r in results if r.component == "default_mode"]
     p_results = [r for r in results if r.component == "permissions"]
@@ -431,7 +358,6 @@ def test_uninstall_clears_managed_default_mode_from_settings(
     _assert_install_and_uninstall_mocks(*mocks)
     _assert_state_file_mock(state_mock, budget=state_budget)
     _assert_powershell_which_if_windows()
-    _assert_spellbook_cco_which_if_posix()
 
     written = _json.loads(settings_path.read_text(encoding="utf-8"))
     assert "defaultMode" not in written

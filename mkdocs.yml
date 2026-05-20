@@ -88,6 +88,7 @@ nav:
     - Code Review:
       - skills/code-review.md
       - skills/advanced-code-review.md
+      - skills/adversarial-review.md
       - skills/requesting-code-review.md
       - skills/distilling-prs.md
       - skills/reviewing-prs.md
@@ -137,6 +138,7 @@ nav:
     - Skills A-Z:
       - Overview: skills/index.md
       - skills/advanced-code-review.md
+      - skills/adversarial-review.md
       - skills/agent2agent.md
       - skills/analyzing-domains.md
       - skills/analyzing-skill-usage.md

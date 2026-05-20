@@ -1114,7 +1114,7 @@ Session: <session id or git branch>
 
 ## Blockers
 - Redis not available locally; integration tests skipped
-- Pi `exec()` API for spawn unverified (see spike/SPAWN_DECISION.md)
+- Pi `exec` API for spawn unverified (see spike/SPAWN_DECISION.md)
 
 ## Artifacts
 - design.md  — /absolute/path (1664 lines, sections 1–15)

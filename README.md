@@ -35,9 +35,6 @@
 
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
-- [Sandboxed Usage](#sandboxed-usage)
-  - [Rolling back to vanilla cco](#rolling-back-to-vanilla-cco)
-  - [Windows: alias install + sandbox path TBD](#windows-alias-install--sandbox-path-tbd)
 - [What Spellbook Does](#what-spellbook-does)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
@@ -107,41 +104,6 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 - Symlinks require **Developer Mode** enabled in Windows Settings (falls back to junctions or copies otherwise)
 - Service management uses **Windows Task Scheduler**
 - Install location: `%LOCALAPPDATA%\spellbook`
-
-## Sandboxed Usage
-
-Spellbook recommends running AI coding assistants inside a `cco` sandbox. `install.py` writes `~/.local/bin/spellbook-cco` automatically — a wrapper around the audit-pinned [elijahr/cco](https://github.com/elijahr/cco) hardened fork (SHA `d7044ef`). The `spellbook-sandbox` launcher invokes `spellbook-cco` with the right read-only allowances so spellbook's skills, hooks, and daemon auth work inside the sandbox while `$HOME` stays hidden. You do not need to install upstream `cco` yourself.
-
-The `spellbook-cco` wrapper is the only spellbook-supported entry point. Vanilla `cco` exists solely for the post-deploy rollback path described below.
-
-```bash
-# install.py already wrote ~/.local/bin/spellbook-cco; just launch:
-spellbook-sandbox                    # Claude Code (default)
-spellbook-sandbox opencode           # OpenCode CLI
-spellbook-sandbox opencode serve     # OpenCode server (for desktop/web app)
-spellbook-sandbox codex              # Codex
-```
-
-The spellbook installer can set up `claude` and `opencode` shell aliases that point to `spellbook-sandbox` automatically. See [docs/security.md](docs/security.md#sandboxing-with-spellbook-cco-linux--macos) for the full threat model, `--safe` mode details, and OpenCode desktop app integration.
-
-### Rolling back to vanilla cco
-
-If the hardened fork misbehaves on your machine, set `SPELLBOOK_USE_VANILLA_CCO=1` in your shell rc and re-run `install.py`. The installer skips the `spellbook-cco` wrapper, the alias installer gates on `which cco` instead, and `spellbook-sandbox` routes through vanilla [nikvdp/cco](https://github.com/nikvdp/cco) at its legacy pin. Unset the variable and re-run `install.py` to return to the supported path.
-
-### Windows: alias install + sandbox path TBD
-
-Windows native sandboxing and alias installation are deferred to a later work item (open question Q-O). They are not in scope for the current security architecture phase.
-
-Current behavior on Windows:
-
-- The installer's `install_aliases_windows()` is an intentional noop. It returns `skipped_reason="Windows alias install is deferred to a later work item (Q-O)"` and does not modify any PowerShell `$PROFILE`.
-- `spellbook-cco` is not written on Windows native; spellbook does not currently sandbox Claude Code (or any other harness) on Windows.
-- `cmd.exe` is a known limitation: `doskey` macros do not persist across cmd sessions without an `AutoRun` registry edit, so cmd users are explicitly not served by the alias installer.
-
-Windows users have two options until the Windows path lands:
-
-- Invoke `spellbook-sandbox` directly, only meaningful if `spellbook-cco` (or vanilla `cco` under `SPELLBOOK_USE_VANILLA_CCO=1`) is already on `PATH`.
-- Use **WSL2 + the Linux install path** for full sandboxing. This is the recommended option. Run `install.py` inside the WSL Linux distro and the installer will write `spellbook-cco` there automatically.
 
 ## What Spellbook Does
 
@@ -228,7 +190,7 @@ Reusable workflows for structured development:
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
+| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas] |
@@ -247,6 +209,7 @@ Reusable workflows for structured development:
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
 [advanced-code-review]: https://axiomantic.github.io/spellbook/latest/skills/advanced-code-review/
+[adversarial-review]: https://axiomantic.github.io/spellbook/latest/skills/adversarial-review/
 [auditing-green-mirage]: https://axiomantic.github.io/spellbook/latest/skills/auditing-green-mirage/
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
