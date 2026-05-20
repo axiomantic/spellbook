@@ -84,7 +84,7 @@ def cleanup_legacy_alias_block(rc_path: Path) -> bool:
 
     if new_text == original:
         return False
-    rc_path.write_text(new_text, encoding="utf-8")
+    rc_path.write_text(new_text, encoding="utf-8", newline="\n")
     return True
 
 
