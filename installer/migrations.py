@@ -39,7 +39,7 @@ def cleanup_legacy_alias_block(rc_path: Path) -> bool:
     if not rc_path.exists():
         return False
     try:
-        original = rc_path.read_text()
+        original = rc_path.read_text(encoding="utf-8")
     except OSError:
         logger.debug("cleanup_legacy_alias_block: unreadable %s", rc_path)
         return False
@@ -51,10 +51,11 @@ def cleanup_legacy_alias_block(rc_path: Path) -> bool:
     kept: list[str] = []
     inside = False
     for line in lines:
-        if _LEGACY_ALIAS_START in line:
+        stripped = line.strip()
+        if stripped == _LEGACY_ALIAS_START:
             inside = True
             continue
-        if _LEGACY_ALIAS_END in line:
+        if stripped == _LEGACY_ALIAS_END:
             inside = False
             continue
         if not inside:
@@ -73,7 +74,7 @@ def cleanup_legacy_alias_block(rc_path: Path) -> bool:
 
     if new_text == original:
         return False
-    rc_path.write_text(new_text)
+    rc_path.write_text(new_text, encoding="utf-8")
     return True
 
 

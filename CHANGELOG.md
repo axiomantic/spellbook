@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.1] - 2026-05-20
+
 ### Removed
 
 - CCO sandbox wrapper (`scripts/spellbook-sandbox`, `installer/components/spellbook_cco.py`) and the shell-alias installer component (`installer/components/aliases.py`). The `SPELLBOOK_USE_VANILLA_CCO` feature flag was removed alongside.
+
+### Added
+
+- One-shot install/uninstall migration (`installer/migrations.py`) that strips the legacy `SPELLBOOK_ALIASES:START`/`END` block from users' `~/.zshrc`, `~/.bashrc`, and `~/.config/fish/config.fish`. Marker matching uses exact line-strip equality so unrelated comments that incidentally mention the marker string are preserved. RC reads and writes are pinned to `encoding="utf-8"`.
 
 ## [0.66.0] - 2026-05-18
 

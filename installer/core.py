@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from installer.compat import ServiceManager, mcp_service_config
 
 from .config import SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
+from .migrations import run_all_migrations
 from .platforms.base import PlatformInstaller
 from .ui import shorten_home
 from .version import check_upgrade_needed, read_version
@@ -294,8 +295,6 @@ class Installer:
         # Run one-shot legacy-state migrations before any component
         # installation. These are idempotent and cheap on clean machines.
         if not dry_run:
-            from .migrations import run_all_migrations
-
             _on_step("Cleaning up legacy alias block")
             try:
                 migrated_paths = run_all_migrations()
@@ -568,8 +567,6 @@ class Uninstaller:
         # remove spellbook also get their rc files cleaned of the
         # now-orphaned SPELLBOOK_ALIASES block.
         if not dry_run:
-            from .migrations import run_all_migrations
-
             try:
                 migrated_paths = run_all_migrations()
             except Exception as e:  # pragma: no cover - defensive
