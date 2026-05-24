@@ -726,6 +726,43 @@ def _get_repairs() -> list[dict]:
     return []
 
 
+def _get_open_followup_count(project_path: Optional[str]) -> int:
+    """Return the count of open Follow-up-Task memories for the project.
+
+    Runs a ``memory_recall(tags="follow-up-task")`` scoped to the project
+    (C6/§7.4) and keeps only the ``count``. This is intentionally low-cost at
+    session start: the recall's ``memories`` payload (including bodies) is
+    discarded here, so no Follow-up Task bodies are surfaced into the
+    session_init output or the assistant's context.
+
+    Fail-open: any error (no project path, memory system unavailable, backend
+    exception) returns 0 so session_init never blocks on this surfacing.
+
+    Args:
+        project_path: Project path used to derive the memory namespace.
+
+    Returns:
+        Number of memories tagged ``follow-up-task`` for the project, or 0.
+    """
+    if not project_path:
+        return 0
+    try:
+        from spellbook.core.path_utils import encode_cwd
+        from spellbook.memory.tools import do_memory_recall
+
+        result = do_memory_recall(
+            query="",
+            namespace=encode_cwd(project_path),
+            tags=["follow-up-task"],
+            scope="project",
+            limit=1000,
+        )
+        count = result.get("count")
+        return count if isinstance(count, int) and count > 0 else 0
+    except Exception:
+        return 0  # Fail-open: never block session init
+
+
 def _regenerate_memory_md(project_path: Optional[str]) -> None:
     """Regenerate MEMORY.md for the project. Fail-open."""
     if not project_path:
@@ -905,6 +942,17 @@ def session_init(
     repairs = _get_repairs()
     if repairs:
         result["repairs"] = repairs
+
+    # Surface open Follow-up-Task count from prior develop work (C6/§7.4).
+    # Purely additive and low-cost: absent/zero adds nothing (backward
+    # compatible); a positive count adds the field plus a one-line note.
+    follow_up_tasks_open = _get_open_followup_count(project_path)
+    if follow_up_tasks_open > 0:
+        result["follow_up_tasks_open"] = follow_up_tasks_open
+        result["follow_up_tasks_note"] = (
+            f"{follow_up_tasks_open} open Follow-up Task(s) from prior develop "
+            "work — say 'show follow-ups' to review."
+        )
 
     return result
 
