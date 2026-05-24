@@ -102,9 +102,7 @@ class TestWorkflowStateSave:
 
             # Second save (update)
             state2 = {"active_skill": "develop"}
-            result = workflow_state_save.fn(
-                project_path=project_path, state=state2, trigger="auto"
-            )
+            result = workflow_state_save.fn(project_path=project_path, state=state2, trigger="auto")
 
         _assert_get_connection_calls(mock_conn, 2)
         assert result["success"] is True
@@ -375,7 +373,13 @@ class TestWorkflowStateLoad:
             INSERT INTO workflow_state (project_path, state_json, trigger, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (project_path, '{"active_skill": "debugging"}', "checkpoint", five_hours_ago, five_hours_ago),
+            (
+                project_path,
+                '{"active_skill": "debugging"}',
+                "checkpoint",
+                five_hours_ago,
+                five_hours_ago,
+            ),
         )
         conn.commit()
 
@@ -577,7 +581,9 @@ class TestWorkflowStateUpdate:
         mock_conn, conn = _setup_get_connection_mock(self.db_path, 2)
 
         with tripwire:
-            workflow_state_update.fn(project_path=project_path, updates={"active_skill": "debugging"})
+            workflow_state_update.fn(
+                project_path=project_path, updates={"active_skill": "debugging"}
+            )
             result = workflow_state_load.fn(project_path=project_path)
 
         _assert_get_connection_calls(mock_conn, 2)
@@ -596,19 +602,19 @@ class TestWorkflowStateUpdate:
             # First update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"recent_files": ["file1.py"], "pending_todos": 1}
+                updates={"recent_files": ["file1.py"], "pending_todos": 1},
             )
 
             # Second update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"recent_files": ["file2.py"], "workflow_pattern": "TDD"}
+                updates={"recent_files": ["file2.py"], "workflow_pattern": "TDD"},
             )
 
             # Third update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"recent_files": ["file3.py"], "pending_todos": 2}
+                updates={"recent_files": ["file3.py"], "pending_todos": 2},
             )
 
             result = workflow_state_load.fn(project_path=project_path)
@@ -1151,9 +1157,7 @@ class TestAllowlistCompactAndLedgerKeys:
 
         state = {
             "active_skill": "develop",
-            "stint_stack": [
-                {"label": "x", "started_at": "2026-05-24T00:00:00Z"}
-            ],
+            "stint_stack": [{"label": "x", "started_at": "2026-05-24T00:00:00Z"}],
             "compaction_flag": True,
             "develop_gate_ledger": {
                 "current_phase": "2",
@@ -1191,4 +1195,504 @@ class TestAllowlistCompactAndLedgerKeys:
                     "severity": "HIGH",
                 }
             ],
+        }
+
+
+class TestCompactRoundTrip:
+    """Tasks 2 & 3: real-DB compact round-trip, gate-ledger merge, replace-not-append
+    (CRIT-1), and atomic interleaved read-merge-write (CRIT-2).
+
+    Every test runs against a REAL temp SQLite DB via get_connection(self.db_path).
+    NO _mcp_call mocking, NO DB mocking — these tests exist precisely because the
+    old compaction tests ran against a dead port and never exercised the real path.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmp_path):
+        """Set up test database."""
+        self.db_path = str(tmp_path / "test.db")
+        init_db(self.db_path)
+        yield
+        close_all_connections()
+
+    # ---- PreCompact-shape survival + save/load round-trip -------------------
+
+    def test_precompact_state_shape_survives_validation(self):
+        """The exact dict _handle_pre_compact produces validates clean post-Task-1.
+
+        Before Task 1 this returned valid=False naming stint_stack/compaction_flag
+        as unexpected keys (the pre-existing-bug witness). After the allowlist fix
+        it validates clean with no findings.
+        """
+        from spellbook.sessions.resume import validate_workflow_state
+
+        state = {
+            "active_skill": "develop",
+            "skill_phase": "2",
+            "develop_gate_ledger": {
+                "current_phase": "2",
+                "need_flags": {
+                    "needs_research": True,
+                    "needs_design": True,
+                    "needs_infrastructure": False,
+                },
+                "remaining_gates": "design review\ncode review\ntest suite",
+                "plan_pointer": "/tmp/plan.md",
+            },
+            "stint_stack": [{"label": "implement feature", "started_at": "2026-05-24T00:00:00Z"}],
+            "compaction_flag": True,
+        }
+
+        result = validate_workflow_state(state)
+
+        assert result == {"valid": True, "state": state, "findings": []}
+
+    def test_workflow_state_save_load_roundtrip_with_compact_keys(self):
+        """save the PreCompact-shaped dict, then load returns it byte-for-byte."""
+        from spellbook.server import workflow_state_save, workflow_state_load
+
+        project_path = "/test/project"
+        state = {
+            "active_skill": "develop",
+            "skill_phase": "3",
+            "develop_gate_ledger": {
+                "current_phase": "3",
+                "need_flags": {
+                    "needs_research": False,
+                    "needs_design": True,
+                    "needs_infrastructure": False,
+                },
+                "remaining_gates": "code review\ntest suite",
+                "plan_pointer": "/tmp/plan.md",
+            },
+            "stint_stack": [{"label": "build", "started_at": "2026-05-24T01:00:00Z"}],
+            "compaction_flag": True,
+        }
+
+        # save(1) + load(1) = 2
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 2)
+
+        with tripwire:
+            save_result = workflow_state_save.fn(
+                project_path=project_path, state=state, trigger="auto"
+            )
+            load_result = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 2)
+        assert save_result == {
+            "success": True,
+            "project_path": project_path,
+            "trigger": "auto",
+        }
+        assert load_result["success"] is True
+        assert load_result["found"] is True
+        assert load_result["state"] == state
+
+    def test_workflow_state_update_merges_gate_ledger(self):
+        """First update seeds the ledger; second update advances the phase and
+        replaces remaining_gates. The merged ledger holds the second update's
+        scalars while preserving need_flags written first.
+        """
+        from spellbook.server import workflow_state_update, workflow_state_load
+
+        project_path = "/test/project"
+
+        # update(1) + update(1) + load(1) = 3
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 3)
+
+        with tripwire:
+            first = workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "active_skill": "develop",
+                    "skill_phase": "2",
+                    "develop_gate_ledger": {
+                        "current_phase": "2",
+                        "need_flags": {
+                            "needs_research": False,
+                            "needs_design": True,
+                            "needs_infrastructure": False,
+                        },
+                        "remaining_gates": "design review\ncode review\ntest suite",
+                        "plan_pointer": "/tmp/plan.md",
+                    },
+                },
+            )
+            second = workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "skill_phase": "3",
+                    "develop_gate_ledger": {
+                        "current_phase": "3",
+                        "remaining_gates": "code review\ntest suite",
+                    },
+                },
+            )
+            load_result = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 3)
+        assert first == {"success": True, "project_path": project_path}
+        assert second == {"success": True, "project_path": project_path}
+        assert load_result["found"] is True
+        assert load_result["state"] == {
+            "active_skill": "develop",
+            "skill_phase": "3",
+            "develop_gate_ledger": {
+                "current_phase": "3",
+                "need_flags": {
+                    "needs_research": False,
+                    "needs_design": True,
+                    "needs_infrastructure": False,
+                },
+                "remaining_gates": "code review\ntest suite",
+                "plan_pointer": "/tmp/plan.md",
+            },
+        }
+
+    # ---- CRIT-1: remaining_gates replaces, never appends --------------------
+
+    def test_remaining_gates_replaces_not_appends(self):
+        """CRIT-1: writing remaining_gates twice with DIFFERENT scalars leaves the
+        persisted value EQUAL to the second exactly — no concatenation, no
+        duplicated "code review", no \\n-accumulation. Proves the scalar
+        representation defeats _deep_merge's list-append.
+        """
+        from spellbook.server import workflow_state_update, workflow_state_load
+
+        project_path = "/test/project"
+
+        # update(1) + update(1) + load(1) = 3
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 3)
+
+        with tripwire:
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "develop_gate_ledger": {
+                        "remaining_gates": "design review\ncode review",
+                    },
+                },
+            )
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "develop_gate_ledger": {
+                        "remaining_gates": "code review\ngreen-mirage\ntest suite",
+                    },
+                },
+            )
+            load_result = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 3)
+        assert load_result["found"] is True
+        assert load_result["state"] == {
+            "develop_gate_ledger": {
+                "remaining_gates": "code review\ngreen-mirage\ntest suite",
+            },
+        }
+
+    # ---- Interleaving: develop ledger write + simulated PreCompact ----------
+
+    def test_interleaved_develop_and_compact_writes(self):
+        """develop writes the ledger; a simulated PreCompact load->add->save then
+        runs; a final load shows all three keys present and the ledger intact.
+        """
+        from spellbook.server import (
+            workflow_state_update,
+            workflow_state_load,
+            workflow_state_save,
+        )
+
+        project_path = "/test/project"
+
+        # update(1) + load(1) + save(1) + load(1) = 4
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 4)
+
+        with tripwire:
+            # (a) develop records its ledger
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "active_skill": "develop",
+                    "skill_phase": "2",
+                    "develop_gate_ledger": {
+                        "current_phase": "2",
+                        "need_flags": {
+                            "needs_research": False,
+                            "needs_design": True,
+                            "needs_infrastructure": False,
+                        },
+                        "remaining_gates": "design review\ncode review",
+                        "plan_pointer": "/tmp/plan.md",
+                    },
+                },
+            )
+            # (b) simulate PreCompact: load -> add hook-owned keys -> save
+            mid = workflow_state_load.fn(project_path=project_path)
+            existing_state = mid["state"]
+            existing_state["stint_stack"] = [
+                {"label": "build", "started_at": "2026-05-24T02:00:00Z"}
+            ]
+            existing_state["compaction_flag"] = True
+            workflow_state_save.fn(project_path=project_path, state=existing_state, trigger="auto")
+            # (c) final load
+            final = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 4)
+        assert final["found"] is True
+        assert final["state"] == {
+            "active_skill": "develop",
+            "skill_phase": "2",
+            "develop_gate_ledger": {
+                "current_phase": "2",
+                "need_flags": {
+                    "needs_research": False,
+                    "needs_design": True,
+                    "needs_infrastructure": False,
+                },
+                "remaining_gates": "design review\ncode review",
+                "plan_pointer": "/tmp/plan.md",
+            },
+            "stint_stack": [{"label": "build", "started_at": "2026-05-24T02:00:00Z"}],
+            "compaction_flag": True,
+        }
+
+    # ---- CRIT-2: atomic read-merge-write, disjoint + same-key --------------
+
+    def test_interleaved_writes_disjoint_keys_lose_nothing(self):
+        """CRIT-2: two read-merge-write sequences on DIFFERENT keys (one writes
+        develop_gate_ledger, the other compaction_flag + stint_stack) interleaved;
+        the final load shows NEITHER write lost. Exercises the atomic
+        single-transaction read-merge-write path.
+        """
+        from spellbook.server import workflow_state_update, workflow_state_load
+
+        project_path = "/test/project"
+
+        # update(develop) + update(hook) + load = 3
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 3)
+
+        with tripwire:
+            # writer A: develop owns develop_gate_ledger + active_skill + skill_phase
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "active_skill": "develop",
+                    "skill_phase": "2",
+                    "develop_gate_ledger": {
+                        "current_phase": "2",
+                        "remaining_gates": "design review\ncode review",
+                        "plan_pointer": "/tmp/plan.md",
+                    },
+                },
+            )
+            # writer B: hooks own compaction_flag + stint_stack
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "compaction_flag": True,
+                    "stint_stack": [{"label": "build", "started_at": "2026-05-24T03:00:00Z"}],
+                },
+            )
+            final = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 3)
+        assert final["found"] is True
+        assert final["state"] == {
+            "active_skill": "develop",
+            "skill_phase": "2",
+            "develop_gate_ledger": {
+                "current_phase": "2",
+                "remaining_gates": "design review\ncode review",
+                "plan_pointer": "/tmp/plan.md",
+            },
+            "compaction_flag": True,
+            "stint_stack": [{"label": "build", "started_at": "2026-05-24T03:00:00Z"}],
+        }
+
+    def test_interleaved_writes_same_key_deterministic_merge(self):
+        """CRIT-2: two writes both setting develop_gate_ledger.current_phase; the
+        later writer's value wins deterministically (scalar replace), and no
+        unrelated sibling key (remaining_gates, plan_pointer) is dropped.
+        """
+        from spellbook.server import workflow_state_update, workflow_state_load
+
+        project_path = "/test/project"
+
+        # update + update + load = 3
+        mock_conn, _ = _setup_get_connection_mock(self.db_path, 3)
+
+        with tripwire:
+            # first write seeds current_phase + sibling scalars
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "develop_gate_ledger": {
+                        "current_phase": "2",
+                        "remaining_gates": "design review\ncode review",
+                        "plan_pointer": "/tmp/plan.md",
+                    },
+                },
+            )
+            # second write touches only current_phase
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "develop_gate_ledger": {
+                        "current_phase": "3",
+                    },
+                },
+            )
+            final = workflow_state_load.fn(project_path=project_path)
+
+        _assert_get_connection_calls(mock_conn, 3)
+        assert final["found"] is True
+        assert final["state"] == {
+            "develop_gate_ledger": {
+                "current_phase": "3",
+                "remaining_gates": "design review\ncode review",
+                "plan_pointer": "/tmp/plan.md",
+            },
+        }
+
+
+class TestAtomicReadMergeWriteUnderContention:
+    """CRIT-2 (the discriminating test): the atomicity guarantee must hold under a
+    REAL concurrent interleaving across two distinct connections — the cross-context
+    race between the MCP server process (workflow_state_update) and the PreCompact
+    hook subprocess (which read-merge-writes compaction_flag/stint_stack into the SAME
+    row).
+
+    The sequential interleaving tests above pass with OR without an explicit
+    transaction (single-threaded test ordering hides the race), so they cannot prove
+    the BEGIN IMMEDIATE lock is actually taken. THIS test forces the lost-update
+    interleaving (writer A reads, writer B reads stale base, A writes, B writes) and
+    fails against a non-atomic read-merge-write: B's write, merged onto a base read
+    BEFORE A committed, silently drops A's key. With the atomic BEGIN IMMEDIATE
+    implementation, B's transaction blocks at its BEGIN until A commits, then merges
+    onto A's committed state, so NEITHER write is lost.
+
+    Each writer gets its OWN sqlite3 connection (the production cache returns one
+    connection per path, but two processes hold two connections — that is the real
+    topology). A one-shot delay injected into _deep_merge widens A's window so the
+    interleaving is deterministic, not probabilistic.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmp_path):
+        """Set up test database."""
+        self.db_path = str(tmp_path / "test.db")
+        init_db(self.db_path)
+        yield
+        close_all_connections()
+
+    def _make_distinct_connection(self):
+        """A fresh sqlite3 connection to the test DB, configured like production
+        (WAL + busy timeout) but NOT shared via the get_connection cache — this
+        models a second OS process holding its own connection to the same file.
+        """
+        import sqlite3
+
+        conn = sqlite3.connect(self.db_path, timeout=5.0, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        return conn
+
+    def test_concurrent_disjoint_key_writes_lose_nothing(self):
+        """Two threads, two connections, forced read-before-write interleaving:
+        writer A writes develop_gate_ledger; writer B writes compaction_flag +
+        stint_stack. The final persisted state MUST contain BOTH writers' keys
+        exactly. Non-atomic read-merge-write fails here (one writer's keys are
+        dropped); the BEGIN IMMEDIATE implementation passes.
+        """
+        import threading
+        import time
+        import spellbook.core.db as dbmod
+        import spellbook.mcp.tools.misc as misc
+        from spellbook.server import workflow_state_update, workflow_state_load
+
+        project_path = "/test/project"
+
+        thread_conns = {}
+        a_in_merge = threading.Event()
+        original_deep_merge = misc._deep_merge
+        merge_delay_armed = {"value": True}
+
+        def get_connection_threadlocal(db_path=None):
+            # Each thread reuses the distinct connection assigned to it. Models the
+            # per-process connection: A and B never share a connection.
+            ident = threading.get_ident()
+            return thread_conns[ident]
+
+        def slow_deep_merge(base, updates):
+            # Fire exactly once, for writer A only: signal that A has read the base
+            # and is between SELECT and INSERT, then hold the window open so B has a
+            # chance to read the same base (non-atomic) or block on A's lock (atomic).
+            if updates.get("active_skill") == "develop" and merge_delay_armed["value"]:
+                merge_delay_armed["value"] = False
+                a_in_merge.set()
+                time.sleep(0.4)
+            return original_deep_merge(base, updates)
+
+        def writer_a():
+            thread_conns[threading.get_ident()] = self._make_distinct_connection()
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "active_skill": "develop",
+                    "skill_phase": "2",
+                    "develop_gate_ledger": {
+                        "current_phase": "2",
+                        "remaining_gates": "design review\ncode review",
+                        "plan_pointer": "/tmp/plan.md",
+                    },
+                },
+            )
+
+        def writer_b():
+            thread_conns[threading.get_ident()] = self._make_distinct_connection()
+            # Wait until A is mid-merge (has read the base) before B starts its own
+            # read-merge-write, so the interleaving is the lost-update ordering.
+            a_in_merge.wait(timeout=5.0)
+            workflow_state_update.fn(
+                project_path=project_path,
+                updates={
+                    "compaction_flag": True,
+                    "stint_stack": [{"label": "build", "started_at": "2026-05-24T03:00:00Z"}],
+                },
+            )
+
+        orig_get_connection = dbmod.get_connection
+        misc._deep_merge = slow_deep_merge
+        dbmod.get_connection = get_connection_threadlocal
+        try:
+            ta = threading.Thread(target=writer_a)
+            tb = threading.Thread(target=writer_b)
+            ta.start()
+            tb.start()
+            ta.join(timeout=10.0)
+            tb.join(timeout=10.0)
+        finally:
+            misc._deep_merge = original_deep_merge
+            dbmod.get_connection = orig_get_connection
+            for conn in thread_conns.values():
+                conn.close()
+
+        # Load through the test DB (get_connection has been restored to the real
+        # default-path version, so route the load explicitly to self.db_path).
+        load_mock, _ = _setup_get_connection_mock(self.db_path, 1)
+        with tripwire:
+            load_result = workflow_state_load.fn(project_path=project_path)
+        _assert_get_connection_calls(load_mock, 1)
+        assert load_result["found"] is True
+        assert load_result["state"] == {
+            "active_skill": "develop",
+            "skill_phase": "2",
+            "develop_gate_ledger": {
+                "current_phase": "2",
+                "remaining_gates": "design review\ncode review",
+                "plan_pointer": "/tmp/plan.md",
+            },
+            "compaction_flag": True,
+            "stint_stack": [{"label": "build", "started_at": "2026-05-24T03:00:00Z"}],
         }
