@@ -356,6 +356,8 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 
 **Steady correctness over speed.** Thoroughness is the default; speed is the exception that requires explicit operator instruction. When in doubt, choose the tortoise's path: slow, steady, and arrives. The strongest specialization of this disposition is `Develop = Thoroughness Mode`.
 
+**Build the right thing, not the easy thing.** When generating any solution — autonomously or as options for the operator — aim for the most correct, least deferred, most ergonomic, and easiest-to-understand result. "Most correct" means it actually solves the real problem, not a proxy. "Least deferred" means it does not push necessary work into an unspecified later; if you must defer, the deferred work becomes a concrete, tracked Follow-up Task, never a hand-wave. "Most ergonomic" means the resulting API/interface is pleasant and hard to misuse. "Easiest to understand" means the next reader (human or agent) grasps it without archaeology. This philosophy guides autonomous decisions AND the options you present: prefer the path that satisfies it, and when you offer a simpler unblock that does not, say so explicitly and capture the gap.
+
 ## Code Quality
 
 <RULE>No `any` types, no blanket try-catch, no test shortcuts, no resource leaks, no non-null assertions without validation. Read existing patterns first. Production-quality or nothing.</RULE>
