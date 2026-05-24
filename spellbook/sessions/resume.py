@@ -640,6 +640,9 @@ _ALLOWED_STATE_KEYS = frozenset({
     "skill_constraints",
     "decisions_binding",
     "identity_role",
+    "stint_stack",          # written by _handle_pre_compact (hook), restored at SessionStart
+    "compaction_flag",      # written by _handle_pre_compact (hook)
+    "develop_gate_ledger",  # develop's phase/gate progress (see design C4 shape)
 })
 
 # Maximum total state size when serialized to JSON (1 MB).

@@ -1137,3 +1137,58 @@ class TestWorkflowStateIntegration:
         assert result_a["state"]["pending_todos"] == 1
         assert result_b["state"]["active_skill"] == "tdd"
         assert result_b["state"]["pending_todos"] == 2
+
+
+class TestAllowlistCompactAndLedgerKeys:
+    """Tests for Task 1: stint_stack, compaction_flag, develop_gate_ledger
+    added to _ALLOWED_STATE_KEYS so the compact machinery and develop's gate
+    ledger survive validate_workflow_state.
+    """
+
+    def test_allowlist_accepts_compact_and_ledger_keys(self):
+        """A state carrying all three new keys validates clean (no findings)."""
+        from spellbook.sessions.resume import validate_workflow_state
+
+        state = {
+            "active_skill": "develop",
+            "stint_stack": [
+                {"label": "x", "started_at": "2026-05-24T00:00:00Z"}
+            ],
+            "compaction_flag": True,
+            "develop_gate_ledger": {
+                "current_phase": "2",
+                "need_flags": {
+                    "needs_research": True,
+                    "needs_design": True,
+                    "needs_infrastructure": False,
+                },
+                "remaining_gates": "design review\ncode review",
+                "plan_pointer": "/tmp/p.md",
+            },
+        }
+
+        result = validate_workflow_state(state)
+
+        assert result == {"valid": True, "state": state, "findings": []}
+
+    def test_genuinely_unknown_key_still_rejected(self):
+        """Behavior preservation: a key outside the allowlist still fails with
+        the exact HIGH unexpected-keys finding (Task 1 acceptance criterion 2).
+        """
+        from spellbook.sessions.resume import validate_workflow_state
+
+        state = {"foo": 1}
+
+        result = validate_workflow_state(state)
+
+        assert result == {
+            "valid": False,
+            "state": None,
+            "findings": [
+                {
+                    "check": "schema",
+                    "message": "Unexpected keys in workflow state: ['foo']",
+                    "severity": "HIGH",
+                }
+            ],
+        }
