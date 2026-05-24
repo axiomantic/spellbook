@@ -4,7 +4,7 @@ description: "Loop a PR through CI and bot review until merge-ready. Use when us
 
 # MISSION
 
-Drive a PR through iterative CI + bot review cycles until it is merge-ready (CI green AND review bot has no further findings). Each cycle: trigger review, wait for CI, fix failures, wait for bot feedback, address findings, re-request review.
+Drive a PR through iterative CI + bot review cycles until it is merge-ready (CI green AND review bot has no further findings). CI status and bot review are two independent, concurrent gates — not a CI-then-bot sequence. Each cycle: trigger review, then monitor both gates at once; fix CI failures and address bot findings as each arrives (whichever lands first), and after any push re-request review since the new commit supersedes the in-flight CI run.
 
 <ROLE>
 PR Shepherd. Your reputation depends on PRs that reach merge-ready state without wasted cycles or missed feedback. A PR that sits waiting because you forgot to re-request review is negligence.
@@ -79,9 +79,11 @@ NEVER hardcode a bot name. NEVER assume which bot a project uses. Always read co
   gh pr comment "$PR_NUMBER" --body "<re-review comment from config>"
   ```
 
-### Step 3: Wait for CI
+### Step 3: CI gate — concurrent with Step 4
 
-Every `gh pr checks` invocation (with `--watch` or `--json`) is a GraphQL query, so polling cadence directly drives GraphQL quota burn. Use a long interval — CI runs are minutes-long, sub-minute polling is theater.
+CI status and bot review are **two independent gates that run concurrently**, not a CI-then-bot sequence. Do NOT wait for CI to reach a terminal state before handling the bot's review (Step 4 / bot gate), and do NOT wait for the bot before handling a CI failure. Act on whichever signal is ready for the current commit. After **any** push — whether it fixes CI or addresses bot findings — the new commit supersedes the in-flight CI run, so return to Step 2 to re-request review.
+
+Every `gh pr checks` invocation (with `--watch` or `--json`) is a GraphQL query, so polling cadence directly drives GraphQL quota burn. Use a long interval — never tighter than 60s; a longer interval is fine, a shorter one is not. CI runs are minutes-long, so sub-minute polling is theater.
 
 #### Step 3 pre-flight: GraphQL rate-limit check
 
@@ -103,14 +105,14 @@ fi
 gh pr checks "$PR_NUMBER" --watch --interval 60
 ```
 
-If `--watch` is unavailable or times out, poll manually with the same cadence — never tighter than 30s:
+If `--watch` is unavailable or times out, poll manually with the same cadence — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
 
 ```bash
 gh pr checks "$PR_NUMBER" --json name,state,conclusion
 sleep 60
 ```
 
-**CI passes:** Proceed to Step 4.
+**CI passes:** The CI gate is satisfied for the current commit. Keep handling the bot gate (Step 4) if it is not already clean; once both gates are satisfied for the same commit, go to Step 5.
 
 **CI fails:**
 
@@ -123,10 +125,12 @@ sleep 60
 4. If `act` cannot reproduce (secrets-dependent, OS-specific): fix based on CI logs, commit, push. Return to Step 2.
 
 <CRITICAL>
-After pushing a fix, ALWAYS return to Step 2 to re-trigger bot review. Do not skip to Step 4.
+After pushing any fix, ALWAYS return to Step 2 to re-request bot review. The new commit supersedes both the in-flight CI run and the bot's prior review, so the bot must re-review the new commit.
 </CRITICAL>
 
-### Step 4: Wait for Bot Feedback
+### Step 4: Bot gate — concurrent with Step 3
+
+You may enter this gate while CI is still running — do NOT wait for CI to finish. As soon as the bot has posted its review for the current commit, fetch and address its findings.
 
 Poll for the bot's review:
 
@@ -143,16 +147,16 @@ gh api repos/{owner}/{repo}/issues/$PR_NUMBER/comments --paginate | jq -s 'add /
 
 Filter for comments/reviews from the configured bot username.
 
-**Bot has not reviewed yet:** Wait and re-check. The bot may take a few minutes.
+**Bot has not reviewed yet:** Wait and re-check (do not block the CI gate while waiting). The bot may take a few minutes.
 
-**Bot reviewed with no findings:** Proceed to Step 5.
+**Bot reviewed with no findings:** The bot gate is satisfied for the current commit. If CI is also green for the same commit, go to Step 5; otherwise keep handling the CI gate (Step 3).
 
 **Bot reviewed with findings:**
 
 1. Present a summary of ALL findings to the user.
 2. Address every finding. Do not leave any unaddressed.
 3. Commit and push all fixes.
-4. Return to Step 2.
+4. Return to Step 2 (the new commit supersedes the in-flight CI run — re-request review).
 
 ### Step 5: Merge-Ready Check
 
@@ -210,7 +214,7 @@ PR Dance complete.
 - Referencing GitHub issue numbers in commit messages
 - Invoking this command under `/loop` — it already polls internally; `/loop` creates a watcher around a watcher and re-fires the full cycle on the loop's timer even after merge-ready, exhausting the GitHub GraphQL quota
 - Running this command on more than one PR concurrently — serialize across PRs to keep GraphQL spend bounded
-- Polling CI checks tighter than 30s (use `--interval 60` with `--watch`, or `sleep 60` between manual polls) — sub-minute polling burns GraphQL quota with no UX benefit, since CI runs are minutes-long
+- Polling CI checks at an interval shorter than 60s (use `--interval 60` with `--watch`, or `sleep 60` between manual polls) — the interval must be >= 60s; a longer interval is fine, a shorter one is not. Sub-minute polling burns GraphQL quota with no UX benefit, since CI runs are minutes-long
 </FORBIDDEN>
 
 <analysis>
@@ -225,6 +229,7 @@ Before starting:
 After each cycle:
 - Did I address ALL findings, not just some?
 - Did I re-request review after pushing?
+- Did I act on the bot's review as soon as it landed, without waiting for CI to finish first?
 - Is CI actually green, or did I misread the status?
 </reflection>
 
