@@ -817,17 +817,41 @@ def _build_recovery_directive(state: dict) -> str:
             if constraints:
                 parts.append(f"\n### Skill Constraints\n{constraints}")
 
-    # Binding decisions
-    binding_decisions = state.get("binding_decisions", [])
+    # Binding decisions. The state key is `decisions_binding` -- the key in
+    # _ALLOWED_STATE_KEYS and the one read back in spellbook/sessions/resume.py
+    # (the old `binding_decisions` read here was a dead key never present in
+    # saved state).
+    binding_decisions = state.get("decisions_binding", [])
     if binding_decisions:
         parts.append("\n### Binding Decisions")
         for decision in binding_decisions:
             parts.append(f"- {decision}")
 
-    # Next action
-    next_action = state.get("next_action", "")
-    if next_action:
-        parts.append(f"\n### Next Action\n{next_action}")
+    # Develop: remaining-gate ceremony re-assertion (design §4 C3, §4.6).
+    # Placed BEFORE Pending Todos so a resumed develop session sees the
+    # not-yet-done quality gates first and does not declare victory early.
+    # `remaining_gates` is a NEWLINE-JOINED SCALAR STRING (CRIT-1), never a
+    # stored list -- split locally for rendering. Absent ledger renders
+    # nothing (backward compatible with non-develop work).
+    ledger = state.get("develop_gate_ledger") or {}
+    remaining_raw = ledger.get("remaining_gates", "")
+    remaining = [g for g in remaining_raw.split("\n") if g.strip()]
+    current_phase = ledger.get("current_phase", "")
+    plan_pointer = ledger.get("plan_pointer", "")
+    if ledger:
+        parts.append("\n### Develop: Remaining Work (DO NOT declare done)")
+        if current_phase:
+            parts.append(f"Current phase: {current_phase}")
+        if remaining:
+            parts.append("Remaining quality gates — these MUST still run:")
+            for g in remaining:
+                parts.append(f"- [ ] {g}")
+        else:
+            parts.append(
+                "No gates recorded as remaining; re-verify against the plan before finishing."
+            )
+        if plan_pointer:
+            parts.append(f"Plan: {plan_pointer}")
 
     # Workflow pattern
     workflow_pattern = state.get("workflow_pattern", "")
