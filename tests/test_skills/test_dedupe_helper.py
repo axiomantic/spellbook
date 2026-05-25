@@ -229,3 +229,93 @@ def test_dedupe_imports_stdlib_only():
         "dedupe.py imported non-stdlib modules "
         f"(no new runtime deps allowed): {sorted(non_stdlib)}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 3: inline Jaccard signal + normalization (plan §"Task 3" Step 1).
+# The edge-case contract mirrors spellbook/forged/context_filtering.py
+# similarity() (lines 354-394) EXACTLY:
+#   - BOTH post-filter token sets empty  -> 1.0
+#   - EXACTLY ONE post-filter set empty  -> 0.0
+#   - else                               -> intersection / union
+# _tokens intentionally OMITS the len(w) > 2 short-word filter (that filter
+# lives in _extract_keywords, NOT in similarity()), so short words are RETAINED.
+# ---------------------------------------------------------------------------
+
+
+def test_jaccard_identical_is_one(dedupe):
+    assert dedupe.jaccard("the quick brown fox", "the quick brown fox") == 1.0
+
+
+def test_jaccard_disjoint_is_zero(dedupe):
+    # No shared non-stop-word tokens -> intersection empty -> 0.0.
+    assert dedupe.jaccard("alpha beta gamma", "delta epsilon zeta") == 0.0
+
+
+def test_jaccard_both_empty_is_one(dedupe):
+    assert dedupe.jaccard("", "") == 1.0
+
+
+def test_jaccard_one_empty_is_zero(dedupe):
+    assert dedupe.jaccard("something here", "") == 0.0
+    assert dedupe.jaccard("", "something here") == 0.0
+
+
+def test_jaccard_both_all_stop_words_is_one(dedupe):
+    # Both reduce to empty token sets AFTER stop-word filtering -> mirrors the
+    # similarity() post-filter both-empty branch -> 1.0 (not a pre-filter empty).
+    assert dedupe.jaccard("the and or", "of to in") == 1.0
+
+
+def test_jaccard_one_all_stop_words_is_zero(dedupe):
+    # One side reduces to empty after stop-word filtering, the other does not
+    # -> mirrors the similarity() post-filter exactly-one-empty branch -> 0.0.
+    assert dedupe.jaccard("the and or", "alpha beta gamma") == 0.0
+    assert dedupe.jaccard("alpha beta gamma", "the and or") == 0.0
+
+
+def test_jaccard_partial_overlap_exact_ratio(dedupe):
+    # tokens(a) = {alpha, beta, gamma, delta}; tokens(b) = {alpha, beta, gamma, omega}
+    # (no stop words present). intersection = {alpha, beta, gamma} = 3;
+    # union = {alpha, beta, gamma, delta, omega} = 5 -> 3/5 = 0.6.
+    score = dedupe.jaccard("alpha beta gamma delta", "alpha beta gamma omega")
+    assert score == 3 / 5
+
+
+def test_jaccard_stop_words_filtered(dedupe):
+    # "the cat" and "a cat" share only the non-stop-word token {cat}; the stop
+    # words "the"/"a" are filtered out, so both reduce to {cat} -> identical -> 1.0.
+    assert dedupe.jaccard("the cat", "a cat") == 1.0
+
+
+def test_jaccard_short_words_retained(dedupe):
+    # Short words (<=2 chars) are NOT stop words here and must be RETAINED by
+    # _tokens (the len(w) > 2 filter lives in _extract_keywords, not here).
+    # tokens(a) = {go, ox}; tokens(b) = {go, ax}. intersection = {go} = 1;
+    # union = {go, ox, ax} = 3 -> 1/3. If short words were dropped both sets
+    # would be empty and this would wrongly be 1.0.
+    assert dedupe.jaccard("go ox", "go ax") == 1 / 3
+
+
+def test_tokens_retains_short_words(dedupe):
+    # Direct check of _tokens: a 2-char non-stop word is kept verbatim.
+    assert dedupe._tokens("go ox now") == {"go", "ox", "now"}
+
+
+def test_tokens_drops_stop_words(dedupe):
+    # Stop words removed; remaining (including short ones) retained.
+    assert dedupe._tokens("the go and ox") == {"go", "ox"}
+
+
+def test_normalize_lowercases_and_collapses_ws(dedupe):
+    assert dedupe.normalize("  The   QUICK  fox  ") == "the quick fox"
+
+
+def test_normalize_strips_emphasis(dedupe):
+    assert dedupe.normalize("**bold** and _italic_ text") == "bold and italic text"
+    assert "*" not in dedupe.normalize("**bold** and _italic_ text")
+    assert "_" not in dedupe.normalize("**bold** and _italic_ text")
+
+
+def test_normalize_strips_backticks(dedupe):
+    assert dedupe.normalize("run `git push` now") == "run git push now"

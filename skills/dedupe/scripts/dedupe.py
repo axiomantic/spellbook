@@ -20,7 +20,7 @@ import difflib  # noqa: F401  -- used by later tasks (SequenceMatcher signal)
 import hashlib  # noqa: F401  -- used by later tasks (stable block_id hashing)
 import json
 import os
-import re  # noqa: F401  -- used by later tasks (segmentation / reference grammar)
+import re
 import sys
 import types
 from dataclasses import dataclass, field
@@ -55,6 +55,84 @@ DEFAULT_MAX_PAIRS = 200
 # K constant: adjacency window (in whitespace tokens) for bare backticked
 # reference detection during group expansion (design §3.1).
 ADJACENCY_TOKEN_WINDOW = 8
+
+# Stop-word set mirroring spellbook/forged/context_filtering.py STOP_WORDS.
+# Word-set Jaccard with stop-word filtering is the proven Signal-1 semantics
+# (design §3.5); this inlines the set rather than importing spellbook.* so the
+# script stays stdlib-only (constraint M5, regression-locked by Task 2).
+_STOP_WORDS: frozenset[str] = frozenset(
+    {
+        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+        "has", "have", "he", "in", "is", "it", "its", "of", "on", "or",
+        "that", "the", "to", "was", "were", "will", "with",
+    }
+)
+
+# Markdown emphasis / inline-code markers stripped during normalization so that
+# "**bold**" and "bold" tokenize identically (design §3.5).
+_EMPHASIS_RE = re.compile(r"[*_`]+")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+# ---------------------------------------------------------------------------
+# Signal 1: inline Jaccard + normalization (design §3.5)
+#
+# Mirrors spellbook/forged/context_filtering.py similarity() (lines 354-394)
+# WITHOUT importing it: word-set Jaccard over stop-word-filtered token sets.
+# The empty-set edge cases mirror similarity() EXACTLY:
+#   - BOTH post-filter token sets empty  -> 1.0
+#   - EXACTLY ONE post-filter set empty  -> 0.0
+#   - else                               -> intersection / union
+# _tokens intentionally OMITS the len(w) > 2 short-word filter (that filter
+# lives in similarity()'s sibling _extract_keywords, NOT in similarity()), so
+# short words such as "go"/"ox" are RETAINED.
+# ---------------------------------------------------------------------------
+
+
+def normalize(text: str) -> str:
+    """Normalize markdown text for similarity comparison.
+
+    Lowercases, strips markdown emphasis / inline-code markers (``*``, ``_``,
+    backtick runs), collapses whitespace runs to single spaces, and strips
+    leading/trailing whitespace. (Structural-boilerplate token dropping is
+    layered on in Task 5; this is the lexical-normalization core.)
+    """
+    lowered = text.lower()
+    no_emphasis = _EMPHASIS_RE.sub("", lowered)
+    collapsed = _WHITESPACE_RE.sub(" ", no_emphasis)
+    return collapsed.strip()
+
+
+def _tokens(text: str) -> set[str]:
+    """Tokenize ``normalize(text)`` into a stop-word-filtered set.
+
+    Splits on whitespace, drops ``_STOP_WORDS`` and empty tokens. Short words
+    (<= 2 chars) are deliberately RETAINED -- the ``len(w) > 2`` filter belongs
+    to ``_extract_keywords`` in the exemplar, NOT to ``similarity()``, which is
+    the function this mirrors.
+    """
+    return {w for w in normalize(text).split() if w and w not in _STOP_WORDS}
+
+
+def jaccard(a: str, b: str) -> float:
+    """Word-set Jaccard similarity over stop-word-filtered tokens.
+
+    Edge cases are behaviorally equivalent to ``similarity()``'s post-filter
+    edge cases, computed over the post-filter token sets: both empty -> 1.0;
+    exactly one empty -> 0.0; else the intersection-over-union ratio. (The
+    results coincide with ``similarity()``, though the structure differs:
+    ``similarity()`` adds a pre-filter empty-input guard, whereas this relies
+    only on these post-filter branches -- the three-branch form already
+    guarantees a non-empty union in the else branch, so no separate
+    divide-by-zero case is needed.)
+    """
+    ta = _tokens(a)
+    tb = _tokens(b)
+    if not ta and not tb:
+        return 1.0
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / len(ta | tb)
 
 
 # ---------------------------------------------------------------------------
