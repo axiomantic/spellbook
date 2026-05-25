@@ -8,195 +8,301 @@ Full-lifecycle feature implementation orchestrator that coordinates research, di
 
 ## Workflow Diagram
 
-Overview of the develop skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
+## Overview: `develop` Skill — Phase Routing
+
+High-level phase routing, escape hatch handling, and need-flag dispatch.
 
 ```mermaid
 flowchart TD
-    START([User Request]) --> P0_1
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
 
-    subgraph P0["Phase 0: Configuration Wizard"]
-        P0_1["0.1: Escape Hatch Detection"]
-        P0_2["0.2: Motivation (WHY)"]
-        P0_3["0.3: Feature Clarity (WHAT)"]
-        P0_4["0.4: Workflow Preferences"]
-        P0_5["0.5: Continuation Detection"]
-        P0_6["0.6: Refactoring Mode"]
-        P0_7{"0.7: Complexity Router"}
+    INVOKE(["/develop invoked"]) --> P0["Phase 0\nConfiguration Wizard"]
+    P0 --> EH{"Escape hatch?"}
 
-        P0_1 --> P0_2 --> P0_3 --> P0_4 --> P0_5 --> P0_6 --> P0_7
+    EH -->|"design doc · treat-as-ready"| SKIP_P2["Skip Phase 2"]
+    EH -->|"design doc · review-first"| AT_22["Phase 2 at step 2.2"]
+    EH -->|"impl plan · treat-as-ready"| SKIP_P23["Skip Phase 2 + Phase 3"]
+    EH -->|"impl plan · review-first"| AT_32["Phase 3 at step 3.2"]
+    EH -->|"no hatch"| FLAGS{"Need-flags set?"}
+
+    FLAGS -->|"all zero"| DIRECT["Direct / Lightweight Path"]
+    FLAGS -->|"needs_research"| P1["Phase 1: Research"]
+    FLAGS -->|"needs_design only"| P2["Phase 2: Design"]
+    FLAGS -->|"needs_infrastructure only"| P3["Phase 3: Impl Planning"]
+
+    P1 --> P15["Phase 1.5: Informed Discovery"]
+    P15 --> DA["1.6 · devil's-advocate subagent\nif needs_design OR needs_research"]
+    DA --> ND{"needs_design?"}
+    ND -->|"yes"| P2
+    ND -->|"no"| NI{"needs_infrastructure?"}
+    NI -->|"yes"| P3
+    NI -->|"no"| P4["Phase 4: Implementation"]
+
+    P2 --> P3
+    P3 --> P4
+    SKIP_P2 --> P3
+    AT_22 --> P2
+    SKIP_P23 --> P4
+    AT_32 --> P3
+
+    P4 --> DONE(["Branch Complete"])
+    DIRECT --> DONE
+
+    class DA subagent
+    class DONE terminal
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
     end
-
-    P0_7 -->|TRIVIAL| EXIT_TRIVIAL([Exit Skill])
-    P0_7 -->|SIMPLE| S1
-    P0_7 -->|STANDARD| ESC_CHECK{Escape Hatch?}
-    P0_7 -->|COMPLEX| ESC_CHECK
-
-    subgraph SP["Simple Path"]
-        S1["S1: Lightweight Research"]
-        S2["S2: Inline Plan ≤5 steps"]
-        S3_GATE{"User Confirms?"}
-        S3["S3: TDD + Code Review"]
-        S_UPGRADE{"Guardrail Hit?"}
-
-        S1 --> S_UPGRADE
-        S_UPGRADE -->|No| S2
-        S2 --> S3_GATE
-        S3_GATE -->|Yes| S3
-    end
-
-    S_UPGRADE -->|Yes| UPGRADE["Upgrade to Standard"]
-    UPGRADE --> ESC_CHECK
-    S3_GATE -->|No: Revise| S2
-    S3 --> P4_7
-
-    ESC_CHECK -->|No Escape Hatch| P1_1
-    ESC_CHECK -->|Design Doc: Review| P2_2
-    ESC_CHECK -->|Design Doc: Ready| P3_1
-    ESC_CHECK -->|Impl Plan: Review| P3_2
-    ESC_CHECK -->|Impl Plan: Ready| P4_1
-
-    subgraph P1["Phase 1: Research"]
-        P1_1["1.1: Research Strategy"]
-        P1_2["1.2: Execute Research"]:::subagent
-        P1_3["1.3: Ambiguity Extraction"]
-        P1_4{"1.4: GATE: Quality = 100%?"}
-
-        P1_1 --> P1_2 --> P1_3 --> P1_4
-    end
-
-    P1_4 -->|Pass| P1_5_0
-    P1_4 -->|Fail: Iterate| P1_1
-
-    subgraph P15["Phase 1.5: Informed Discovery"]
-        P1_5_0["1.5.0: Disambiguation"]
-        P1_5_1["1.5.1: Discovery Questions"]
-        P1_5_2["1.5.2: Discovery Wizard"]
-        P1_5_3["1.5.3: Build Glossary"]
-        P1_5_4["1.5.4: Synthesize Context"]
-        P1_5_5{"1.5.5: GATE: 11/11?"}
-        P1_5_6["1.5.6: Understanding Doc"]
-        P1_6["1.6: Devil's Advocate"]:::subagent
-
-        P1_5_0 --> P1_5_1 --> P1_5_2 --> P1_5_3 --> P1_5_4 --> P1_5_5
-        P1_5_5 -->|Pass| P1_5_6 --> P1_6
-        P1_5_5 -->|Fail: Iterate| P1_5_1
-    end
-
-    P1_6 --> P2_1
-
-    subgraph P2["Phase 2: Design"]
-        P2_1["2.1: Create Design"]:::subagent
-        P2_2["2.2: Review Design"]:::subagent
-        P2_3{"2.3: GATE: Approved?"}
-        P2_4["2.4: Fix Findings"]:::subagent
-
-        P2_1 --> P2_2 --> P2_3
-        P2_3 -->|Critical Issues| P2_4 --> P2_2
-    end
-
-    P2_3 -->|Approved| P3_1
-
-    subgraph P3["Phase 3: Implementation Planning"]
-        P3_1["3.1: Create Plan"]:::subagent
-        P3_2["3.2: Review Plan"]:::subagent
-        P3_3{"3.3: GATE: Approved?"}
-        P3_4["3.4: Fix Plan"]:::subagent
-        P3_45{"3.4.5: Execution Mode?"}
-        P3_5["3.5: Work Packets"]
-        P3_6["3.6: Session Handoff"]
-
-        P3_1 --> P3_2 --> P3_3
-        P3_3 -->|Critical Issues| P3_4 --> P3_2
-        P3_3 -->|Approved| P3_45
-        P3_45 -->|Swarmed| P3_5 --> P3_6
-    end
-
-    P3_45 -->|Delegated / Direct| P4_1
-    P3_6 --> EXIT_SWARM([Exit: Swarmed Handoff])
-
-    subgraph P4["Phase 4: Implementation"]
-        P4_1["4.1: Setup Worktree"]
-        P4_2["4.2: Execute Tasks"]
-        P4_25["4.2.5: Smart Merge"]
-
-        P4_1 --> P4_2 --> P4_25
-
-        subgraph TASK_LOOP["Per-Task Loop"]
-            P4_3["4.3: TDD"]:::subagent
-            P4_4["4.4: Completion Verify"]:::subagent
-            P4_5["4.5: Code Review"]:::subagent
-            P4_51["4.5.1: Fact-Check"]:::subagent
-
-            P4_3 --> P4_4 --> P4_5 --> P4_51
-        end
-
-        P4_25 --> TASK_LOOP
-
-        P4_61["4.6.1: Comprehensive Audit"]:::subagent
-        P4_62{"4.6.2: All Tests Pass?"}
-        P4_63["4.6.3: Green Mirage Audit"]:::subagent
-        P4_64["4.6.4: Fact-Check All"]:::subagent
-        P4_65["4.6.5: Pre-PR Fact-Check"]:::subagent
-        P4_7["4.7: Finish Branch"]:::subagent
-
-        TASK_LOOP --> P4_61 --> P4_62
-        P4_62 -->|Fail| DEBUG["Debug"]:::subagent
-        DEBUG --> P4_62
-        P4_62 -->|Pass| P4_63 --> P4_64 --> P4_65 --> P4_7
-    end
-
-    P4_7 --> DONE([Feature Complete])
-
-    classDef subagent fill:#4a9eff,stroke:#2563eb,color:#fff
-    classDef default fill:#f0f4f8,stroke:#64748b,color:#1e293b
-    classDef gate fill:#fbbf24,stroke:#d97706,color:#1e293b
-
-    class P0_7,P1_4,P1_5_5,P2_3,P3_3,P3_45,P4_62,S3_GATE,S_UPGRADE,ESC_CHECK gate
 ```
 
-## Legend
+---
 
-| Color | Meaning | Example Nodes |
-|-------|---------|---------------|
-| Blue (`#4a9eff`) | Subagent dispatch (invokes a spellbook skill) | 1.2: Execute Research, 1.6: Devil's Advocate, 2.1: Create Design, 4.3: TDD, 4.7: Finish Branch |
-| Yellow (`#fbbf24`) | Decision point or quality gate | 0.7: Complexity Router, 1.4: Research Quality, 2.3: Design Approved, 3.4.5: Execution Mode |
-| Light gray (`#f0f4f8`) | Standard workflow step | 0.1-0.6: Configuration steps, 1.5.0-1.5.6: Discovery steps |
-| Rounded rectangle | Terminal node (start/end) | User Request, Exit Skill, Feature Complete, Exit: Swarmed Handoff |
+## Phase 0: Configuration Wizard
 
-## Cross-Reference
+Steps 0.1–0.7: escape hatch detection, motivation/scope clarification, preferences storage, continuation detection, refactoring mode, and need-flag wizard.
 
-| Node | Source Location | Skill/Command Invoked |
-|------|----------------|-----------------------|
-| 0.1: Escape Hatch Detection | SKILL.md L405, `/feature-config` command | -- |
-| 0.7: Complexity Router | SKILL.md L411, `/feature-config` command | Mechanical heuristics (file_count, behavioral_change, test_impact, structural_change, integration_points) |
-| S1: Lightweight Research | SKILL.md L466 | explore subagent (Task tool), <=5 files |
-| S2: Inline Plan | SKILL.md L467 | <=5 numbered steps, user confirms |
-| S3: TDD + Code Review | SKILL.md L468 | `/feature-implement` (test-driven-development, requesting-code-review) |
-| 1.2: Execute Research | SKILL.md L420, `/feature-research` command | explore subagent (Task tool) |
-| 1.4: GATE: Quality = 100% | SKILL.md L422 | Research Quality Score threshold |
-| 1.5.5: GATE: 11/11 | SKILL.md L430, `/feature-discover` command | 11 validation functions for completeness |
-| 1.5.6: Understanding Doc | SKILL.md L431 | Artifact at `~/.local/spellbook/docs/<project>/understanding/` |
-| 1.6: Devil's Advocate | SKILL.md L432, `/feature-discover` command | `devils-advocate` skill |
-| 2.1: Create Design | SKILL.md L435, `/feature-design` command | `design-exploration` skill (SYNTHESIS MODE) |
-| 2.2: Review Design | SKILL.md L436, `/feature-design` command | `reviewing-design-docs` skill |
-| 2.4: Fix Findings | SKILL.md L438, `/feature-design` command | `executing-plans` skill |
-| 3.1: Create Plan | SKILL.md L441, `/feature-implement` command | `writing-plans` skill |
-| 3.2: Review Plan | SKILL.md L442, `/feature-implement` command | `reviewing-impl-plans` skill |
-| 3.4: Fix Plan | SKILL.md L444, `/feature-implement` command | `executing-plans` skill |
-| 3.4.5: Execution Mode | SKILL.md L445 | Tokens/tasks/tracks analysis -> swarmed, delegated, or direct |
-| 3.5: Work Packets | SKILL.md L446 | `/merge-work-packets` command (if swarmed) |
-| 3.6: Session Handoff | SKILL.md L447 | TERMINAL exit point for swarmed execution |
-| 4.1: Setup Worktree | SKILL.md L449 | `using-git-worktrees` skill (per preference) |
-| 4.3: TDD | SKILL.md L453, `/feature-implement` command | `test-driven-development` skill |
-| 4.4: Completion Verify | SKILL.md L454 | Subagent audit (traced verification) |
-| 4.5: Code Review | SKILL.md L455, `/feature-implement` command | `requesting-code-review` skill |
-| 4.5.1: Fact-Check | SKILL.md L457, `/feature-implement` command | `fact-checking` skill |
-| 4.6.1: Comprehensive Audit | SKILL.md L458 | Subagent audit |
-| 4.6.2: All Tests Pass | SKILL.md L459 | `systematic-debugging` skill (if failures) |
-| 4.6.3: Green Mirage Audit | SKILL.md L460 | `auditing-green-mirage` skill |
-| 4.6.4: Fact-Check All | SKILL.md L461 | `fact-checking` skill |
-| 4.6.5: Pre-PR Fact-Check | SKILL.md L462 | `fact-checking` skill |
-| 4.7: Finish Branch | SKILL.md L463 | `finishing-a-development-branch` skill |
+```mermaid
+flowchart TD
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
+
+    S(["Phase 0 Start"]) --> P01["0.1 · Escape Hatch Detection\nLook for existing design doc or impl plan"]
+    P01 --> EH{"Hatch found?"}
+    EH -->|"yes"| EH_R(["Route per escape hatch\n→ see Overview diagram"])
+    EH -->|"no"| P02["0.2 · Motivation Clarification\nAsk WHY the feature is needed"]
+    P02 --> P03["0.3 · Core Feature Clarification\nAsk WHAT the feature does"]
+    P03 --> P04["0.4 · Workflow Preferences\nStore SESSION_PREFERENCES\nautonomous mode · verbosity\nworktree prefs · review floor"]
+    P04 --> P05["0.5 · Continuation Detection\nLoad workflow_state — check for prior session"]
+    P05 --> CONT{"Prior session\ndetected?"}
+    CONT -->|"yes"| RESUME(["Resume from last checkpoint"])
+    CONT -->|"no"| P06["0.6 · Detect Refactoring Mode\nIs this a pure refactor?"]
+    P06 --> P07["0.7 · Need-Flag Wizard"]
+
+    P07 --> QR{"Q-RESEARCH\nExternal knowledge needed?"}
+    QR -->|"yes · needs_research=true"| QD{"Q-DESIGN\nArchitecture decisions needed?"}
+    QR -->|"no"| QD
+    QD -->|"yes · needs_design=true"| QI{"Q-INFRA\nNew infrastructure needed?"}
+    QD -->|"no"| QI
+    QI -->|"yes · needs_infrastructure=true\nalso sets needs_design=true"| QSZ{"Q-SIZE\nScope estimate"}
+    QI -->|"no"| QSZ
+    QSZ --> DONE(["Phase 0 Complete\nRoute to first active phase"])
+
+    class EH_R,RESUME,DONE terminal
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
+    end
+```
+
+---
+
+## Phases 1 + 1.5: Research and Informed Discovery
+
+Phase 1 (steps 1.1–1.4) and Phase 1.5 (steps 1.5.0–1.6). Both phases require `needs_research`. Contains two never-bypassable quality gates and two subagent-backed verification steps.
+
+```mermaid
+flowchart TD
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
+
+    S(["Phase 1 Start\n(needs_research = true)"]) --> P11["1.1 · Research Strategy Planning\nSelect scope, sources, and questions"]
+    P11 --> P12["1.2 · Execute Research\nexplore subagent"]
+    P12 --> G14["GATE 1.4 · Research Quality Score = 100%\n12 quality functions evaluated"]
+    G14 --> RQ{"Pass?"}
+    RQ -->|"no"| P12
+    RQ -->|"yes"| P15["Phase 1.5 · Informed Discovery\nMemory-primed context load"]
+
+    P15 --> P150["1.5.0 · Disambiguation Session\nResolve ambiguous terms from research"]
+    P150 --> P151["1.5.1 · Generate 7-Category Discovery Questions\nfunctional · non-functional · integration\nsecurity · performance · ops · UX"]
+    P151 --> P152["1.5.2 · Conduct Discovery Wizard\nInteractive Q&A with user"]
+    P152 --> P153["1.5.3 · Build Glossary\nCanonical terms and definitions"]
+    P153 --> P154["1.5.4 · Synthesize design_context\nComposite from research + discovery"]
+    P154 --> G155["GATE 1.5.5 · Completeness Score = 100%\n12 validation functions evaluated"]
+    G155 --> CQ{"Pass?"}
+    CQ -->|"no · insufficiently complete"| P152
+    CQ -->|"yes"| P156["1.5.6 · Create Understanding Document\nFormal artifact capturing design_context"]
+    P156 --> P157["1.5.7 · Dehallucination Gate\ndehallucination subagent"]
+    P157 --> DH{"Clean?"}
+    DH -->|"no · hallucinations found"| P154
+    DH -->|"yes"| P16["1.6 · Devil's Advocate\ndevils-advocate subagent"]
+    P16 --> DONE(["Phases 1 + 1.5 Complete\n→ Phase 2, 3, or 4"])
+
+    class P12,P157,P16 subagent
+    class G14,G155 gate
+    class DONE terminal
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
+    end
+```
+
+---
+
+## Phases 2 + 3: Design and Implementation Planning
+
+Phase 2 (needs_design) and Phase 3 (needs_design OR needs_infrastructure). Both include subagent-authored artifacts, review subagents, user-approval gates, and fix loops.
+
+```mermaid
+flowchart TD
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
+
+    P2S(["Phase 2 Start\n(needs_design = true)"]) --> P21["2.1 · Design Creation\ndesign-exploration subagent (SYNTHESIS MODE)"]
+    P21 --> P22["2.2 · Design Review\nreviewing-design-docs subagent"]
+    P22 --> G23["GATE 2.3 · User Design Approval"]
+    G23 --> UA{"Approved?"}
+    UA -->|"no"| P24["2.4 · Fix Design\nexecuting-plans subagent"]
+    P24 --> P22
+    UA -->|"yes"| P25["2.5 · Assumption Verification\nfact-checking subagent"]
+    P25 --> P2E(["Phase 2 Complete"])
+
+    P3S(["Phase 3 Start\n(needs_design OR needs_infrastructure)"]) --> P31["3.1 · Plan Creation\nwriting-plans subagent"]
+    P31 --> P32["3.2 · Plan Review\nreviewing-impl-plans subagent"]
+    P32 --> G33["GATE 3.3 · User Plan Approval\nper mode: autonomous vs interactive"]
+    G33 --> PA{"Approved?"}
+    PA -->|"no"| P34["3.4 · Fix Plan\nexecuting-plans subagent"]
+    P34 --> P32
+    PA -->|"yes"| P345["3.4.5 · Execution Mode Analysis\ndirect vs delegated"]
+    P345 --> P3E(["Phase 3 Complete\n→ Phase 4"])
+
+    P2E --> P3S
+
+    class P21,P22,P24,P25 subagent
+    class P31,P32,P34 subagent
+    class G23,G33 gate
+    class P2E,P3E terminal
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
+    end
+```
+
+---
+
+## Phase 4: Implementation
+
+Steps 4.0–4.7: environment gate, worktree setup, task batching, per-task loop (TDD → audit → review → fact-check), smart merge, and end-of-phase gates.
+
+```mermaid
+flowchart TD
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
+
+    P4S(["Phase 4 Start"]) --> P40["4.0 · Pre-impl Environment Gate\nVerify environment ready"]
+    P40 --> P41["4.1 · Setup Worktree(s)"]
+    P41 --> BATCH{"Task count?"}
+    BATCH -->|"< 8"| M1["direct or delegated\none dispatch per gate per task"]
+    BATCH -->|"8–12"| M2["delegated\nbatched per-domain dispatches"]
+    BATCH -->|"> 12 or ≥2 tracks"| M3["delegated (aggressive)\nbatched; ledger checkpoint +\nFollow-up Tasks if context exhausted"]
+    M1 --> LOOP["Next task"]
+    M2 --> LOOP
+    M3 --> LOOP
+
+    LOOP --> T43["4.3 · test-driven-development subagent"]
+    T43 --> T44["4.4 · Completion Audit\ninline audit prompt"]
+    T44 --> T45["4.5 · Code Review\nrequesting-code-review subagent"]
+    T45 --> T451["4.5.1 · Per-Task Fact-Check\nfact-checking subagent"]
+    T451 --> MORE{"More tasks?"}
+    MORE -->|"yes"| LOOP
+    MORE -->|"no"| MERGE["4.2.5 · Smart Merge\nif per_parallel_track mode"]
+
+    MERGE --> G461["4.6.1 · Comprehensive Audit\ninline audit prompt"]
+    G461 --> G462["4.6.2 · Run Test Suite"]
+    G462 --> TQ{"Tests pass?"}
+    TQ -->|"no"| TFIX["Fix failures"]
+    TFIX --> G462
+    TQ -->|"yes"| G463["4.6.3 · Green Mirage Check\nauditing-green-mirage subagent"]
+    G463 --> GQ{"Clean?"}
+    GQ -->|"no"| GFIX["Address findings"]
+    GFIX --> G462
+    GQ -->|"yes"| G464["4.6.4 · Comprehensive Fact-Check\nfact-checking subagent\nif needs_research OR needs_design"]
+    G464 --> G465["4.6.5 · Pre-PR Fact-Check\nfact-checking subagent"]
+    G465 --> P47["4.7 · Branch Finishing\nfinishing-a-development-branch subagent"]
+    P47 --> DONE(["Phase 4 Complete — Branch Ready"])
+
+    class T43,T45,T451 subagent
+    class G463,G464,G465,P47 subagent
+    class G461,G462,T44 gate
+    class DONE terminal
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
+    end
+```
+
+---
+
+## Direct / Lightweight Path
+
+Fast path when all need-flags are zero. Three guardrails re-route to the flagged path if thresholds are breached; otherwise proceeds under a lighter review floor.
+
+```mermaid
+flowchart TD
+    classDef subagent fill:#4a9eff,color:#fff,stroke:#2d7dd2
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc5555
+    classDef terminal fill:#51cf66,color:#fff,stroke:#3da854
+
+    DPS(["Direct Path Start\nall need-flags = zero"]) --> D1["D1 · Lightweight Research\nexplore subagent · ≤5 files · 1-paragraph summary"]
+    D1 --> GD1{"Output > 1 paragraph\nOR > 5 files read?"}
+    GD1 -->|"yes"| RF1["Set needs_research\nre-run flag wizard"]
+    RF1 --> REFLAG(["Return to flagged path"])
+    GD1 -->|"no"| D2["D2 · Inline Plan\n≤5 numbered steps · user confirms"]
+    D2 --> GD2{"Plan > 5 steps?"}
+    GD2 -->|"yes"| RF2["Set surfaced flag\nre-run flag wizard"]
+    RF2 --> REFLAG
+    GD2 -->|"no"| D3["D3 · Implementation\nunder lighter review floor"]
+    D3 --> GD3{"> 5 impl files\nOR > 3 test files?"}
+    GD3 -->|"yes"| RF3["Pause · re-flag"]
+    RF3 --> REFLAG
+    GD3 -->|"no"| EOGATE["End-of-phase gates\n4.6.1 comprehensive audit · 4.6.2 test suite\n4.6.3 green mirage · 4.7 branch finishing\n4.6.4 fact-check OMITTED (no research/design flags)"]
+    EOGATE --> DONE(["Direct Path Complete"])
+
+    class D1 subagent
+    class REFLAG,DONE terminal
+
+    subgraph REVIEWFLOOR["Lighter Review Floor (zero flags)"]
+        RFA["Per task: 4.3 TDD · 4.5 code review · 4.5.1 fact-check"]:::subagent
+        RFB["End-of-phase: 4.6.1 audit · 4.6.2 tests · 4.6.3 green mirage · 4.7 finish"]:::gate
+        RFC["4.6.4 comprehensive fact-check — OMITTED (no research/design flags)"]
+    end
+
+    subgraph LEGEND["Legend"]
+        LS["Subagent Dispatch"]:::subagent
+        LG["Quality Gate"]:::gate
+        LT(["Terminal"]):::terminal
+    end
+```
+
+---
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram | Steps Covered |
+|---|---|---|
+| Phase 0: Configuration Wizard | Phase 0 diagram | 0.1 escape hatch · 0.2 WHY · 0.3 WHAT · 0.4 SESSION_PREFERENCES · 0.5 continuation · 0.6 refactor mode · 0.7 flag wizard (Q-RESEARCH / Q-DESIGN / Q-INFRA / Q-SIZE) |
+| Phase 1: Research | Phases 1 + 1.5 diagram | 1.1 strategy · 1.2 explore subagent · GATE 1.4 research quality (100%) |
+| Phase 1.5: Informed Discovery | Phases 1 + 1.5 diagram | 1.5.0 disambiguation · 1.5.1 7-category questions · 1.5.2 discovery wizard · 1.5.3 glossary · 1.5.4 design_context synthesis · GATE 1.5.5 completeness (100%) · 1.5.6 understanding doc · 1.5.7 dehallucination subagent · 1.6 devil's-advocate subagent |
+| Phase 2: Design | Phases 2 + 3 diagram | 2.1 design-exploration (SYNTHESIS) · 2.2 reviewing-design-docs · GATE 2.3 user approval · 2.4 executing-plans (fix loop) · 2.5 fact-checking (assumption verification) |
+| Phase 3: Impl Planning | Phases 2 + 3 diagram | 3.1 writing-plans · 3.2 reviewing-impl-plans · GATE 3.3 user approval (per mode) · 3.4 executing-plans (fix loop) · 3.4.5 execution mode analysis |
+| Phase 4: Implementation | Phase 4 diagram | 4.0 env gate · 4.1 worktrees · task batching (<8 / 8–12 / >12) · per-task loop (4.3 TDD · 4.4 inline audit · 4.5 code review · 4.5.1 fact-check) · 4.2.5 smart merge · 4.6.1 comprehensive audit · 4.6.2 test suite · 4.6.3 green mirage · 4.6.4 comprehensive fact-check · 4.6.5 pre-PR fact-check · 4.7 finishing |
+| Direct / Lightweight Path | Direct Path diagram | D1 lightweight research (explore, ≤5 files) · D2 inline plan (≤5 steps) · D3 implementation (lighter review floor) · three guardrails that re-route to flagged path on threshold breach |
 
 ## Skill Content
 
@@ -238,11 +344,11 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   integrations the operator did not mention in the initial request,
   pause and surface to the operator. See `~/.claude/CLAUDE.md`
   "Autonomous Mode and Scope Discipline".
-- **STOP before parallel session fan-out.** Generation of chunk
-  prompts, `forge_project_init`, sub-orchestrator dispatch, and
-  spawning of parallel sessions are gated by `feature-implement`
-  Phase 3.4.7 (One-Pager Approval Gate). Autonomous mode does not
-  waive that gate.
+- **STOP before large delegated fan-out.** For a large delegated run,
+  the plan one-pager and worktree/parallelization choices are gated by
+  `feature-implement` Phase 3.4.7 (One-Pager Approval Gate). Autonomous
+  mode does not waive that gate. (develop is single-orchestrator only;
+  it does not spawn parallel sessions or auto-invoke `forge_project_init`.)
 - **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
   full autonomous mode, design and plan approval gates require explicit
   artifact verification before continuation. Before auto-proceeding:
@@ -434,7 +540,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 - [ ] Implementation plan exists
 - [ ] Plan review subagent (reviewing-impl-plans) was dispatched
-- [ ] Execution mode determined (work_items / sub_orchestrators / delegated / direct)
+- [ ] Execution mode determined (`delegated` / `direct`)
 
 ### During Phase 4 (for EACH task):
 
@@ -544,7 +650,7 @@ Operator phrasings that DO NOT authorize phase collapse (no exceptions):
 - "wrap up", "and pause", "finish X items", "let's wrap this", "close out"
 - "autonomous mode", "fully autonomous", "you decide"
 - "the architecture is settled", "forks pre-resolved", "pre-validated"
-- "STANDARD tier doesn't need all gates", "small change", "small extension"
+- "no flags doesn't need all gates", "small change", "small extension"
 - "save context", "save tokens", "context efficiency"
 
 If you find yourself reading any of the above as license to combine rows,
@@ -677,8 +783,8 @@ That IS the rationalization. Run the prerequisite check instead.
 The ONLY valid reasons to skip or shorten a phase:
 
 1. **Escape hatch**: Real artifact at a real path, detected in Phase 0
-2. **TRIVIAL tier**: Exits skill entirely (value-only change, zero behavioral impact, zero test impact)
-3. **SIMPLE tier**: Follows the Simple path (has its own reduced but rigorous phases)
+2. **Zero-flag fast path**: No need-flags set (no research, no design, no infrastructure). Runs the fast path — fewer phases, lighter review floor — but develop STAYS RESIDENT and the lighter floor (code review + green-mirage + conditional test run) still runs. This is NOT an exit and NOT zero review.
+3. **Flag not set for a flag-gated phase**: A phase whose need-flag is false does not run (e.g. Research/Discovery when `needs_research` is false; Design when `needs_design` is false). The flag → phase mapping is design §2.1 (single source of truth); do not skip a phase whose flag IS set.
 4. **Explicit user skip**: User said "skip this phase" with full awareness of what is being skipped
 
 Any other reason is a rationalization. No exceptions.
@@ -712,7 +818,7 @@ Before ANY phase transition:
 
 1. Run the prerequisite check for the NEXT phase
 2. Confirm the CURRENT phase's completion checklist is 100%
-3. State the complexity tier and confirm routing is correct
+3. State the resolved need-flags and confirm flag-based routing is correct (the NEXT phase runs only if its gating flag is set; see design §2.1)
 
 ### Anti-Skip Circuit Breaker
 
@@ -725,8 +831,8 @@ echo "Phase being skipped: [PHASE_NAME]"
 echo ""
 echo "Valid skip reasons (check ALL that apply):"
 echo "  [ ] Escape hatch artifact exists at specific path"
-echo "  [ ] Complexity tier is TRIVIAL (exiting skill)"
-echo "  [ ] Complexity tier is SIMPLE (following simple path)"
+echo "  [ ] Zero need-flags set (fast path: fewer phases, develop resident, lighter floor still runs)"
+echo "  [ ] This phase's gating need-flag is false (per design 2.1 flag->phase mapping)"
 echo "  [ ] User explicitly said 'skip this phase'"
 echo ""
 echo "If NONE checked: phase skip is a RATIONALIZATION."
@@ -736,31 +842,26 @@ echo "================================="
 
 If zero boxes are checked, the phase MUST be executed. There are no other valid reasons.
 
-### Memory-Informed Classification
+### Memory-Informed Flagging
 
-Before running complexity heuristics, call `memory_recall(query="complexity tier [domain_or_subsystem]")` to check if similar features in this area were previously classified. Use prior classifications as a calibration reference, not as a binding precedent.
+Before settling the need-flags, call `memory_recall(query="need flags [domain_or_subsystem]")` to check whether similar features in this area previously needed research, design, or infrastructure work. Use prior flagging as a calibration reference, not as a binding precedent.
 
-### Complexity Upgrade Protocol
+### Scope-Drift Protocol: Re-Flag and Continue
 
-If during execution the task reveals greater complexity than classified:
+If during execution the work reveals a need not captured by the Phase-0 flags (e.g. discovery surfaces an architectural decision, or a dependency/schema change emerges):
 
 1. **STOP** current work immediately
-2. **RE-RUN** heuristic evaluation with new information
-3. **PRESENT** updated classification to user
-4. **GET** confirmation before continuing
-5. **RESTART** from the appropriate phase if tier changed upward
+2. **SET** the corresponding need-flag (`needs_research`, `needs_design`, and/or `needs_infrastructure`) — remember `needs_infrastructure` implies `needs_design` (design §2.2)
+3. **RUN** the phases that flag now gates (per design §2.1), and recompute `remaining_gates` (see Ledger Writes below)
+4. **CONTINUE** from the current point — do NOT restart from Phase 0
+
+There is NO tier to upgrade and NO work-item decomposition. Setting a flag turns on the phases that flag gates; develop simply runs them and proceeds. Do NOT invoke `forge_project_init` from scope drift.
 
 **Detection Points:**
-- Phase 0.7: Initial classification (existing)
-- Phase 1.5: Scope Drift Check after discovery wizard (NEW)
-- Phase 1.5: ARH SCOPE_EXPANSION during wizard (NEW)
-- Phase 2: Design complexity exceeds tier (existing, clarified)
-
-**STANDARD -> COMPLEX upgrade in Phase 1.5:**
-When scope drift upgrades STANDARD to COMPLEX mid-discovery:
-- Run `forge_project_init` inline with single-feature project
-- Do NOT restart from Phase 0; continue discovery with COMPLEX constraints
-- Rewrite understanding document to reflect expanded scope
+- Phase 0: Initial flag elicitation (the wizard)
+- Phase 1.5: Scope-drift check after the discovery wizard
+- Phase 1.5: ARH SCOPE_EXPANSION during the wizard
+- Phase 2: Design surfaces an infrastructure/dependency need not flagged
 
 ---
 
@@ -903,32 +1004,31 @@ between subagents will eat your afternoon.
 ### Phase 4 Batching Threshold Protocol
 
 <CRITICAL>
-For implementations with >12 tasks OR >2 parallel tracks: per-task gates
-(4.3 → 4.4 → 4.5 → 4.5.1) MUST be executed by track managers, not by
-the CEO orchestrator.
+For implementations with many tasks, the orchestrator manages context by
+BATCHING per-task gate dispatches per domain — NOT by collapsing gates.
+develop is single-orchestrator only: there is no nested sub-orchestration
+and no separate-session decomposition.
 </CRITICAL>
 
 **Why:** 24 tasks × 4 gates = 96 dispatches. Each return accumulates in
-CEO context. By task 12 the CEO is reading more than orchestrating, and
-the end-of-Phase-4 audit (4.6.1) runs in a context already polluted with
-implementation detail.
+the orchestrator's context. By task 12 the orchestrator is reading more
+than orchestrating, and the end-of-Phase-4 audit (4.6.1) runs in a context
+already polluted with implementation detail. Batching per-domain dispatches
+keeps the orchestrator's context lean without dropping any gate.
 
 **How:**
 
-| Task count | Mode | Per-task gates run by |
+| Task count | Mode | Per-task gates |
 |---|---|---|
-| < 8 | direct / delegated | CEO (one dispatch per gate per task) |
-| 8–12 | delegated | CEO with batched per-domain dispatches |
-| > 12 OR ≥ 2 tracks | sub_orchestrators | Track managers (CEO sees only summaries) |
-| > 25 OR cross-session | work_items | Separate sessions |
+| < 8 | direct / delegated | one dispatch per gate per task |
+| 8–12 | delegated | batched per-domain dispatches (still one gate per task, grouped) |
+| > 12 OR ≥ 2 tracks | delegated (batched, aggressive) | batched per-domain dispatches; if the orchestrator's context cannot hold the whole run, checkpoint the `develop_gate_ledger` and write remaining tasks as Follow-up Tasks for a fresh session (design §14) |
 
-When sub_orchestrators is selected, see `dispatching-sub-orchestrators`
-skill for the Manager dispatch template, including the inline quality
-gate that each Manager runs after every sub-task.
-
-**Do NOT collapse per-task gates into one batched gate at CEO level.**
-That is not batching — that is gate elision (Pattern 8). Batching means
-routing to managers; elision means running fewer gates.
+**Do NOT collapse per-task gates into one batched gate.** That is not
+batching — that is gate elision (Pattern 8). Batching groups dispatches by
+domain while still running every gate for every task; elision runs fewer
+gates. When one session cannot hold a very large run, hand off via the
+ledger + Follow-up Tasks — never by skipping gates.
 
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:
@@ -969,6 +1069,11 @@ Before dispatching ANY subagent:
 
 ## Workflow Overview
 
+Phases run by NEED-FLAG, not by tier. The flag → phase mapping is design §2.1
+(SINGLE SOURCE OF TRUTH); the annotations below reference it, they do not
+restate it. Each flag-gated phase runs iff its flag is set; with zero flags,
+develop takes the Direct/Lightweight Path and STAYS RESIDENT (it never exits).
+
 ```
 Phase 0: Configuration Wizard
   ├─ 0.1: Escape hatch detection
@@ -977,21 +1082,19 @@ Phase 0: Configuration Wizard
   ├─ 0.4: Workflow preferences + store SESSION_PREFERENCES
   ├─ 0.5: Continuation detection
   ├─ 0.6: Detect refactoring mode
-  └─ 0.7: Complexity Router (mechanical heuristics -> tier classification)
-        └─ Memory-informed classification (recall prior complexity assessments)
+  └─ 0.7: Need-flag wizard (Q-RESEARCH / Q-DESIGN / Q-INFRA / Q-SIZE -> need_flags + size_estimate)
+        └─ Memory-informed flagging (recall prior need-flags for this area)
     ↓
-    ├─[TRIVIAL]──> EXIT SKILL (log: "Trivial change, no workflow needed")
-    ├─[SIMPLE]───> Simple Path (see below)
-    ├─[STANDARD]─> Full workflow (below)
-    └─[COMPLEX]──> Full workflow (below, multi-work-item decomposition)
+    ├─[zero flags]──> Direct/Lightweight Path (see below) — develop STAYS RESIDENT, lighter floor
+    └─[any flag]───> run the flag-gated phases below (per design §2.1) under the full review floor
     ↓
-Phase 1: Research (STANDARD/COMPLEX only)
+Phase 1: Research (if needs_research)
   ├─ 1.1: Research strategy planning
   ├─ 1.2: Execute research (subagent)
   ├─ 1.3: Ambiguity extraction
   └─ 1.4: GATE: Research Quality Score = 100%
     ↓
-Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
+Phase 1.5: Informed Discovery (if needs_research)
   ├─ Memory-primed discovery (recall prior design decisions + conventions)
   ├─ 1.5.0: Disambiguation session (resolve ambiguities)
   ├─ 1.5.1: Generate 7-category discovery questions
@@ -1001,26 +1104,23 @@ Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
   ├─ 1.5.5: GATE: Completeness Score = 100% (12 validation functions)
   ├─ 1.5.6: Create Understanding Document
   ├─ 1.5.7: Dehallucination Gate
-  └─ 1.6: Invoke devils-advocate skill
+  └─ 1.6: Invoke devils-advocate skill (if needs_design OR needs_research)
     ↓
-Phase 2: Design (STANDARD/COMPLEX only; skip if escape hatch)
+Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; skip if escape hatch)
   ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
   ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
   ├─ 2.4: Subagent invokes executing-plans to fix
   └─ 2.5: Assumption Verification
     ↓
-Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escape hatch)
+Phase 3: Implementation Planning (if needs_design OR needs_infrastructure; skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (sub_orchestrators for 15+ tasks/2+ tracks regardless of tier, work_items for very large or cross-session, delegated for single-session default)
-  ├─ 3.5: Generate work item prompts (if work_items)
-  └─ 3.6: Present work items to user (TERMINAL - if work_items, EXIT here)
+  └─ 3.4.5: Execution mode analysis (direct vs delegated, by parallelization preference + size_estimate)
     ↓
-Phase 4: Implementation (if delegated / direct / sub_orchestrators)
-  └─ If sub_orchestrators: 4.0 dispatches dispatching-sub-orchestrators (CEO/Manager loop), then resumes at 4.6.1 for end-of-Phase-4 gates
+Phase 4: Implementation (direct or delegated)
   ├─ 4.1: Setup worktree(s) per preference
   ├─ 4.2: Execute tasks (per worktree strategy)
   ├─ 4.2.5: Smart merge (if per_parallel_track worktrees)
@@ -1032,14 +1132,18 @@ Phase 4: Implementation (if delegated / direct / sub_orchestrators)
   ├─ 4.6.1: Comprehensive implementation audit (inline audit prompt)
   ├─ 4.6.2: Run test suite (invoke systematic-debugging if failures)
   ├─ 4.6.3: Subagent invokes audit-green-mirage
-  ├─ 4.6.4: Comprehensive fact-checking
+  ├─ 4.6.4: Comprehensive fact-checking (if needs_research OR needs_design)
   ├─ 4.6.5: Pre-PR fact-checking
-  └─ 4.7: Subagent invokes finishing-a-development-branch
+  └─ 4.7: Subagent invokes finishing-a-development-branch (surfaces deferred Follow-up Tasks)
 
-Simple Path (SIMPLE tier only):
-  ├─ S1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
-  ├─ S2: Inline Plan (<=5 numbered steps in conversation, user confirms)
-  └─ S3: Implementation (feature-implement with TDD + code review + green mirage, no fact-check)
+Direct/Lightweight Path (zero flags — develop STAYS RESIDENT, never exits):
+  ├─ D1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
+  ├─ D2: Inline Plan (<=5 numbered steps in conversation, user confirms)
+  └─ D3: Implementation under the LIGHTER review floor (design §3.2):
+          code review + green-mirage ALWAYS run; test run only if tests cover the
+          touched code; TDD-first waived for pure literal/config edits (§3.4,
+          Follow-up Task FUT-TDD-CRITERIA); fact-checking has no artifact to act on
+          so it does not run. NEVER zero review.
 ```
 
 ---
@@ -1063,7 +1167,7 @@ interface SessionPreferences {
     path: string;
     handling: "review_first" | "treat_as_ready";
   };
-  execution_mode?: "work_items" | "sub_orchestrators" | "delegated" | "direct";
+  execution_mode?: "delegated" | "direct";  // single-orchestrator only; chosen in Phase 3.4.5 by parallelization preference + size_estimate
   estimated_tokens?: number;
   feature_stats?: {
     num_tasks: number;
@@ -1071,14 +1175,12 @@ interface SessionPreferences {
     num_parallel_tracks: number;
   };
   refactoring_mode?: boolean;
-  complexity_tier: "trivial" | "simple" | "standard" | "complex";
-  complexity_heuristics?: {
-    file_count: number;
-    behavioral_change: boolean;
-    test_impact: number;       // count of test files affected
-    structural_change: boolean;
-    integration_points: number;
+  need_flags: {                       // C1 need-flag model (replaces the old complexity tier)
+    needs_research: boolean;          // unfamiliar code OR fuzzy requirements (inclusive-OR); gates Research (1) + Discovery (1.5)
+    needs_design: boolean;            // a real architectural decision exists; gates Design (2)
+    needs_infrastructure: boolean;    // new dependency/infra/schema; implies needs_design; heavier Phase-3 planning
   };
+  size_estimate: "small" | "medium" | "large";  // signal ONLY — tunes parallelization + token_enforcement; NEVER changes which gates run
 }
 
 interface SessionContext {
@@ -1184,6 +1286,44 @@ interface DesignContext {
 
 ---
 
+## Tiered Review Floor
+
+<CRITICAL>
+A change must never silently skip ALL review just because it carries no flags.
+The review floor is **always-on but TIERED** (design §3). The exact gate set is
+derived by `spellbook/sessions/develop_gates.py::derive_remaining_gates`; the
+tables below (design §3.2 floor, §3.3 flag-gated depth) are the SINGLE SOURCE OF
+TRUTH and are referenced here, not restated row-by-row.
+</CRITICAL>
+
+- **Full floor (any flagged path):** TDD-first (4.3) + code review (4.5) +
+  test-suite run (4.6.2) + green-mirage audit (4.6.3). On top of the floor sit
+  the **flag-gated depth** gates (design §3.3): research-quality, discovery
+  completeness, dehallucination (when `needs_research`); devil's advocate (when
+  `needs_design` OR `needs_research`); design review + assumption verification
+  (when `needs_design`); impl-plan review (when `needs_design` OR
+  `needs_infrastructure`); fact-checking (when `needs_research` OR `needs_design`).
+- **Lighter floor (zero-flag fast path):** code review + green-mirage ALWAYS run;
+  the test-suite run executes **only if tests already cover the touched code**
+  (otherwise recorded not-applicable, never silently dropped); **TDD-first is
+  WAIVED for pure literal/config edits** (§3.4 — version bumps, default flips,
+  docstring/comment/copy edits, branch-free config values). For any fast-path
+  change that DOES carry behavioral logic, TDD-first still applies. fact-checking
+  does NOT run on the fast path — a zero-flag change produces no research/design/
+  plan artifact for it to challenge.
+
+The fast path is lightweight in execution (fewer, faster gates) but **never zero
+review**; develop stays resident to enforce it (§2.5).
+
+**TDD-first waiver boundary (Follow-up Task FUT-TDD-CRITERIA):** the precise,
+mechanically-checkable boundary between "pure literal/config edit (TDD waivable)"
+and "carries behavioral logic (TDD required)" is a tracked, durable Follow-up Task
+(design §3.4 / §15), persisted via `memory_store` at ship time. Until it is
+resolved, the operating default is conservative: **if in doubt, do not waive
+TDD-first — write the test.**
+
+---
+
 ## Workflow Execution
 
 This skill orchestrates feature implementation through 5 sequential commands.
@@ -1191,13 +1331,16 @@ Each command handles a specific phase and stores state for the next.
 
 ### Command Sequence
 
-| Order | Command | Phase | Purpose | Tier |
-|-------|---------|-------|---------|------|
-| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences, **complexity classification** | ALL |
-| 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring | STANDARD, COMPLEX |
-| 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document | STANDARD, COMPLEX |
-| 4 | `/feature-design` | 2 | Design document creation and review | STANDARD, COMPLEX |
-| 5 | `/feature-implement` | 3-4 | Implementation planning and execution | ALL (Simple skips Phase 3) |
+Runs-when predicates reference the need-flag → phase mapping in design §2.1
+(SINGLE SOURCE OF TRUTH); they do not restate it.
+
+| Order | Command | Phase | Purpose | Runs when |
+|-------|---------|-------|---------|-----------|
+| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences, **need-flag wizard** | always |
+| 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring | `needs_research` |
+| 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document | `needs_research` |
+| 4 | `/feature-design` | 2 | Design document creation and review | `needs_design` (implied by `needs_infrastructure`) |
+| 5 | `/feature-implement` | 3-4 | Implementation planning and execution | always (zero-flag fast path uses an inline plan, skips Phase 3 planning) |
 
 ### Execution Protocol
 
@@ -1212,46 +1355,38 @@ Do NOT skip commands unless escape hatches allow it.
 4. **Design:** Run `/feature-design` after discovery complete (unless escape hatch)
 5. **Implement:** Run `/feature-implement` after design complete (unless escape hatch)
 
-### Tier-Based Routing
+### Flag-Based Routing
 
-After `/feature-config` completes (including Phase 0.7):
+After `/feature-config` completes (including the Phase 0.7 need-flag wizard). The
+flag → phase mapping is design §2.1 (SINGLE SOURCE OF TRUTH); the routing below
+references it, it does not restate the rows.
 
-**TRIVIAL tier:**
-- Exit the skill entirely
-- Log: "Task classified as TRIVIAL. No workflow needed. Proceed with direct implementation."
+**Zero flags (fast path):**
+- develop STAYS RESIDENT — it does NOT exit (there is no auto-exit anymore; file-count triviality detection is gone).
+- Skip `/feature-research`, `/feature-discover`, `/feature-design`, and Phase-3 planning-as-a-phase.
+- Run lightweight research inline (explore subagent, <=5 files, 1-paragraph summary).
+- Create an inline plan (<=5 numbered steps in conversation); get user confirmation.
+- Run `/feature-implement` under the LIGHTER review floor (design §3.2): code review + green-mirage ALWAYS; test run only if tests cover the touched code; TDD-first waived for pure literal/config edits (§3.4); fact-checking does not run (no artifact to act on). NEVER zero review.
 
-**SIMPLE tier:**
-- Skip `/feature-research`, `/feature-discover`, `/feature-design`
-- Run lightweight research inline (explore subagent, <=5 files, 1-paragraph summary)
-- Create inline plan (<=5 numbered steps in conversation)
-- Get user confirmation on plan
-- Run `/feature-implement` (skips Phase 3, enters at Phase 4)
-- TDD and code review subagents still required
-- Fact-checking SKIPPED
-- Green mirage audit REQUIRED (assertion quality enforcement applies to all tiers)
+**Any flag set:**
+- Run the phases that flag gates (per design §2.1) under the FULL review floor (design §3.2: TDD-first + code review + green-mirage + test suite) plus the flag-gated depth gates (design §3.3).
+- `needs_research` → Research (Phase 1) + Discovery (Phase 1.5).
+- `needs_design` (implied by `needs_infrastructure`) → Design (Phase 2).
+- `needs_infrastructure` → Design + heavier Phase-3 planning emphasis (call out migration/rollout/dependency-pinning).
 
-**STANDARD tier:** Run all commands in order.
+**Execution mode (single-orchestrator only):** `execution_mode` is `direct` or `delegated` ONLY — chosen in Phase 3.4.5 from the parallelization preference and `size_estimate`. There is no nested sub-orchestration or separate-session decomposition: one orchestrator carries the whole feature. For features too large for one session, checkpoint the `develop_gate_ledger` and write the remaining work as Follow-up Tasks for a fresh session to resume (see design §14, and the Follow-up Tasks mechanics below). The forge subsystem (`forge_*` tools) is a separate concern develop does NOT auto-invoke.
 
-**COMPLEX tier:** Run all commands in order.
-
-**Note on tier vs execution mode.** The complexity tier (TRIVIAL / SIMPLE / STANDARD / COMPLEX) gates which *phases* run — SIMPLE skips gathering-requirements, design, and devils-advocate; STANDARD and COMPLEX run the full workflow. The execution_mode (direct / delegated / sub_orchestrators / work_items) is decided separately in Phase 3.4.5 from task count, track count, and explicit user intent. These two axes are orthogonal: a STANDARD feature with 20 tasks across 3 tracks routes to sub_orchestrators just like a COMPLEX one would.
-
-Execution mode analysis in Phase 3.4.5 determines decomposition strategy (applies to STANDARD and COMPLEX alike):
-- **Features with 15+ tasks across 2+ tracks (regardless of tier)**: `sub_orchestrators` mode. The CEO orchestrator dispatches Manager subagents (sub-orchestrators), one per file-ownership cluster. Managers run per-task gates in their own context and return compact summaries; CEO runs end-of-Phase-4 gates after all Managers complete. Prevents CEO context bloat from per-gate dispatching at scale. See `dispatching-sub-orchestrators` skill.
-- **Very large features (25+ tasks) or user-requested cross-session split**: `work_items` mode. Generates prompt files for separate-session execution.
-- **Smaller features (under 15 tasks or single track)**: `delegated` mode.
-
-### Simple Path Guardrails
+### Fast-Path Guardrails
 
 | Guardrail | Limit | Exceeded Action |
 |-----------|-------|-----------------|
-| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
-| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
-| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
-| Implementation files | 5 | Pause, re-classify, restart if upgraded |
-| Test files | 3 | Pause, re-classify, restart if upgraded |
+| Research files read | 5 | Set `needs_research`, re-flag and continue at Phase 1 |
+| Research output | 1 paragraph | Set `needs_research`, re-flag and continue at Phase 1 |
+| Plan steps | 5 | Set the surfaced flag, re-flag and continue at the gated phase |
+| Implementation files | 5 | Pause, re-flag (set the surfaced need), continue |
+| Test files | 3 | Pause, re-flag (set the surfaced need), continue |
 
-If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
+If ANY guardrail is hit, trigger the Scope-Drift Protocol: Re-Flag and Continue (above). No tier upgrade, no work-item decomposition.
 
 ### Escape Hatch Routing
 
@@ -1269,12 +1404,90 @@ Commands share state via these session variables:
 - `SESSION_PREFERENCES` - User workflow preferences (from Phase 0)
 - `SESSION_CONTEXT` - Research findings, design context (built across phases)
 
+### Ledger Writes (workflow_state — accountability + compaction recovery)
+
+<CRITICAL>
+develop records its own phase/gate progress in `workflow_state` so the work
+survives context compaction and a resumed session can re-assert the remaining
+gates instead of declaring "done" prematurely. This is design §5 (C4).
+
+**MERGE-ONLY, NEVER overwrite.** develop writes via `workflow_state_update`
+(deep-merge) and MUST NEVER use `workflow_state_save` (overwrite). The hooks
+(`_handle_pre_compact`) write `compaction_flag` and `stint_stack` into the SAME
+workflow_state row; a `save` from develop would clobber them, and vice versa.
+`_deep_merge` preserves sibling keys, so disjoint-key writes never lose a field
+(design §5.2/§5.5). A `save` here is a Risk §13 regression — do not do it.
+</CRITICAL>
+
+**The ledger shape (`develop_gate_ledger`, design §5.3):**
+
+```typescript
+develop_gate_ledger: {
+  current_phase: string;        // "0" | "1" | "1.5" | "2" | "3" | "4" | "fast-path"
+  need_flags: { needs_research: boolean; needs_design: boolean; needs_infrastructure: boolean };
+  remaining_gates: string;      // NEWLINE-JOINED SCALAR (NOT a list), e.g.
+                                // "design review\ncode review\ngreen-mirage\ntest suite"
+  plan_pointer: string;         // absolute path to impl plan / design doc / understanding doc
+}
+```
+
+`remaining_gates` is a **newline-joined scalar string**, never a list. `_deep_merge`
+APPENDS lists but REPLACES scalars; a list would accumulate an append-forever
+checklist that never shrinks as gates complete. develop writes the authoritative
+FULL scalar on each transition; the merge replaces it wholesale (CRIT-1, design §5.5).
+`current_phase` uses the literal `"fast-path"` for the zero-flag path (NOT
+`"direct"`, NOT an auto-exit sentinel — develop stays resident).
+
+**Deriving `remaining_gates`:** develop computes the scalar with the pure helper
+`spellbook/sessions/develop_gates.py`:
+
+```
+derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates=()) -> str
+```
+
+It encodes the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
+waiver on the fast path (§3.4), and phase ordering (§2.1) — those tables are the
+single source of truth; this helper is their single executable form. `tests_exist`
+is computed by **develop itself** from its touched-file analysis (do existing tests
+cover the files about to be edited?) and passed in; the helper is pure (no DB, no
+I/O) and trusts the boolean. On the fast path with no covering tests the helper
+emits the explicit sentinel line `"test suite (n/a — no tests cover touched code)"`
+inside the scalar so "not applicable" is never silently dropped. As each gate
+completes, re-derive with that gate in `completed_gates` (pruning = REPLACE the
+scalar with it removed).
+
+**Transition points where develop writes (design §5.4):**
+
+1. **At develop ENTRY (before the Phase-0 wizard):** write ONLY
+   `workflow_state_update({"active_skill": "develop", "skill_phase": "0"})`.
+   This marks ownership + phase. It does **NOT** write `develop_gate_ledger` yet.
+   This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
+   writing the ledger at entry would make the nudge unfireable; not gating the
+   nudge on "past Phase 0" would make it false-fire on every wizard prompt.
+2. **At Phase 0 completion (flags resolved):** write the ledger for the FIRST time —
+   `workflow_state_update({"develop_gate_ledger": {need_flags, current_phase: <next>, remaining_gates: <derived scalar>, plan_pointer: ""}, "active_skill": "develop", "skill_phase": <next>})`.
+   Advance `skill_phase` past `"0"`.
+3. **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
+   completion:**
+   `workflow_state_update({"develop_gate_ledger": {current_phase: "<phase>", need_flags, remaining_gates: <re-derived scalar>, plan_pointer: <path>}, "active_skill": "develop", "skill_phase": "<phase>"})`.
+   Re-derive `remaining_gates` as the full scalar with completed gates pruned —
+   REPLACE the whole value, never append (CRIT-1).
+4. **At fast-path entry (zero flags):** `current_phase="fast-path"`,
+   `remaining_gates` = the lighter-floor scalar from `derive_remaining_gates`
+   (`"code review\ngreen-mirage"` plus `"test suite"` when `tests_exist`, else the
+   n/a sentinel; TDD-first omitted per the §3.4 waiver). develop STAYS RESIDENT.
+
+Each write is a single MCP call from the main orchestrator context. The
+`current_phase`/`skill_phase` you write must agree with the human handoff (above).
+
 ### Session Handoff Protocol
 
 <CRITICAL>
 Long develop sessions hit context limits. The skill assumes one session
-completes all phases; reality is that COMPLEX features often span sessions.
+completes all phases; reality is that large features often span sessions.
 Without a standard handoff, the next session re-discovers state and drifts.
+The `develop_gate_ledger` written to workflow_state (see Ledger Writes below)
+is the machine-readable counterpart to this human handoff; both must agree.
 </CRITICAL>
 
 **When to write a handoff:** before context compaction, when the operator
@@ -1294,8 +1507,8 @@ Session: <session id or git branch>
 ## Resume At
 - Phase: 4.5 (per-task code review)
 - Sub-step: Wave 2, group "coordination"
-- Tier: STANDARD
-- Execution mode: sub_orchestrators
+- Need-flags: needs_research=true, needs_design=true, needs_infrastructure=false (size_estimate=large)
+- Execution mode: delegated
 
 ## Completed
 - Phases 0–3.4 (full audit trail in <design_doc> and <impl_plan>)
@@ -1334,14 +1547,88 @@ Phase 4.5 code-review subagent for coordination group:
   output: review/code-review-coordination.md
 ```
 
-**On resume:** the next session MUST read the handoff before any other action,
-then verify the git HEAD and test status still match. If the working tree
-diverged from the handoff, treat as new session and re-classify complexity.
+**On resume:** the next session MUST read the handoff (and the `develop_gate_ledger`
+in workflow_state) before any other action, then verify the git HEAD and test
+status still match. If the working tree diverged from the handoff, treat as a new
+session and re-elicit the need-flags.
 
 ### STOP AND VERIFY Markers
 
 Each command ends with a STOP AND VERIFY section. These are checkpoints.
 Do NOT proceed to the next command until ALL items are checked.
+
+---
+
+## Blockers: Option Generation and the Philosophy
+
+<CRITICAL>
+At a **genuine blocker** — a real fork where progress is gated on a decision —
+develop applies the Core Philosophy ("Build the right thing, not the easy thing")
+to BOTH the options it presents and the option it picks autonomously (design §8.2,
+C7).
+</CRITICAL>
+
+1. **Generate the real options** — usually MORE than two. Do not force a binary.
+2. **Annotate each option** against the philosophy as exactly one of:
+   - **`[ALIGNED]`** — this IS the most-correct / least-deferred / ergonomic /
+     understandable path; or
+   - **`[DEVIATES → Follow-up]`** — a simpler unblock that does NOT fully satisfy
+     the philosophy. For any `[DEVIATES]` option that might be chosen, the deferred
+     work is captured as a concrete Follow-up Task (see below) **before** proceeding.
+3. **Present** via AskUserQuestion with the annotations visible, recommending the
+   `[ALIGNED]` option.
+4. **Autonomous mode:** generate + annotate the same way, then pick the `[ALIGNED]`
+   option. If forced to a `[DEVIATES]` option (an aligned option is genuinely
+   infeasible right now), write the Follow-up Task FIRST, then proceed. The
+   philosophy drives the autonomous pick, not just the presentation.
+
+### Single-Viable-Option Exemption (anti-self-granting guard, N-5)
+
+When there is genuinely **one correct path** (no real fork), do NOT manufacture
+options to satisfy the ritual. State the single path and proceed. BUT because this
+exemption is self-invoked, it is not free to claim:
+
+> Whenever develop takes the single-viable-option path, it MUST state, in **one
+> explicit line, WHY only one option is viable** — what concretely rules the
+> alternatives out (e.g. "the other approach requires a capability the runtime
+> does not expose"). An exemption claimed WITHOUT that one-line justification is
+> invalid; develop falls back to generating real options.
+
+This keeps the exemption from becoming a blanket escape from the option ritual
+(design §8.3).
+
+## Follow-up Tasks (durable deferrals)
+
+Every deferral is a **concrete, tracked Follow-up Task** — never a hand-wave
+(Core Philosophy: least-deferred; design §7, C6).
+
+- **Persistence (source of truth):** each deferred blocker writes ONE `memory_store`
+  entry: type `project`, kind `decision`, tags `follow-up-task, develop-deferred`.
+  Memory is per-project and survives branch deletion (a deleted branch takes its
+  impl-plan `.md` with it, so the plan cannot be the source of truth). Body template
+  (design §7.2):
+
+  ```markdown
+  ## Follow-up: <short title>
+  **Deferred from:** <feature/branch name>, blocker at <phase/decision point>
+  **Why deferred:** <the simpler-unblock chosen instead of the philosophy-aligned path>
+  **The philosophy-aligned work:** <what "most correct" would have done>
+  **Actionable next step:** <what a fresh session should do to pick this up>
+  ```
+
+- **In-flight visibility:** develop ALSO appends the same content to the plan's
+  Follow-up Tasks section (working copy; memory remains the source of truth).
+- **Post-PR surfacing:** at Phase 4.7 (finishing-a-development-branch), after the PR
+  URL is reported, query `memory_recall(tags="follow-up-task")` for the project and,
+  if any are open, offer to (a) work them now, (b) emit a standalone prompt to paste
+  into a fresh session, or (c) leave them for later (design §7.3).
+- **Session-start surfacing:** `session_init` reports the open Follow-up-Tasks count
+  so deferrals do not rot between sessions (design §7.4; already wired in
+  `core/config.py`).
+
+The ONE deferral this rework itself introduces is **FUT-TDD-CRITERIA** (the precise
+fast-path TDD-first waiver boundary, design §3.4 / §15), persisted via the same
+`memory_store` path at ship time.
 
 ---
 

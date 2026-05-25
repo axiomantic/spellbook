@@ -346,103 +346,80 @@ if (request.match(/refactor|reorganize|extract|migrate|split|consolidate/i)) {
 
 Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in `/feature-implement`.
 
-### 0.7 Task Complexity Classification
+### 0.7 Need-Flag Classification
 
 <CRITICAL>
-The complexity tier is DERIVED from mechanical heuristics, not proposed by the executor.
-Run the checks, show results, let the matrix determine the tier.
-The user confirms or overrides. The executor CANNOT override.
-
-Anti-rationalization: If you feel the urge to classify simpler than heuristics indicate, that is Scope Minimization. Trust the numbers.
+Classify the work by what it NEEDS, not by file counts. Ask the four questions below
+via AskUserQuestion (one concept per question, self-contained — each states WHY and
+defines its terms inline). The answers set three boolean need-flags plus a size estimate.
+The flags directly gate which develop phases run. There is no tier, no mechanical heuristic,
+and no auto-exit.
 </CRITICAL>
 
-#### Step 1: Run Mechanical Heuristics
+#### Step 1: Define the flags (at point of use)
 
-```bash
-echo "=== FILE COUNT ESTIMATE ==="
-grep -rl "<relevant-pattern>" <project-root>/src --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null | wc -l
+- **needs_research** — the work touches code, systems, or libraries you don't already understand, OR the requirements themselves are still fuzzy (what it should do, for whom, in which cases). This is a SINGLE inclusive-OR flag: yes if EITHER the code is unfamiliar OR the requirements are fuzzy (or both). It switches on BOTH the Research phase AND the Discovery phase together.
+- **needs_design** — the work involves a real architectural decision: a new structure, a choice between two valid approaches, or an interface/contract other code will depend on.
+- **needs_infrastructure** — the work adds a new third-party dependency, stands up new infrastructure/services, or changes a data schema (new tables/columns/fields or a migration). Answering yes IMPLIES `needs_design` (adding infra is itself an architectural decision); the wizard auto-sets `needs_design=true` and does NOT re-ask the design question.
+- **size_estimate** — `small` / `medium` / `large`. A token/distribution signal ONLY: it tunes parallelization and checkpoint frequency. It NEVER affects rigor or which gates run.
 
-echo "=== TEST IMPACT ==="
-grep -rl "<affected-module-or-file>" <project-root>/tests <project-root>/**/__tests__ <project-root>/**/*.test.* <project-root>/**/*.spec.* 2>/dev/null | wc -l
+#### Step 2: Ask the four questions (via AskUserQuestion)
 
-echo "=== INTEGRATION POINTS ==="
-grep -rl "import.*<affected-module>" <project-root>/src 2>/dev/null | wc -l
-```
-
-For HEURISTIC 2 (Behavioral Change) and HEURISTIC 4 (Structural Change), analyze the user's request:
-
-- **Behavioral Change**: New endpoints, UI changes, user flow changes, new user-visible features, or changed API responses? YES/NO.
-- **Structural Change**: New files, modules, interfaces, data schema changes, or migrations? YES/NO.
-
-#### Step 2: Derive Tier from Matrix
-
-| Tier | File Count | Behavioral Change | Test Impact | Structural Change | Integration Points |
-|------|-----------|-------------------|-------------|-------------------|--------------------|
-| **TRIVIAL** | 1-2 | None | 0 test files | None (values only) | 0 |
-| **SIMPLE** | 1-5 | Minor or none | < 3 test files | None or minimal | 0-2 |
-| **STANDARD** | 3-15 | Yes | 3+ test files | Some new files/interfaces | 2-5 |
-| **COMPLEX** | 10+ | Significant | New test suites needed | New modules/schemas | 5+ |
-
-**Tie-breaking:** Classify UP when heuristics span tiers. When in doubt between Trivial and Simple, choose Simple.
-
-**TRIVIAL boundary (narrow and falsifiable):**
-- Changes ONLY literal values (strings, numbers, booleans, URLs)
-- Does NOT change structure (no new keys, no removed keys, no type changes)
-- Zero behavioral impact (no user-visible change, no API change)
-- Zero test changes (no test files reference the changed values)
-- If ANY condition above is not met, the task is NOT Trivial
-
-**Pure rename ceiling — cap at STANDARD:**
-A pure rename is mechanical: rename a symbol (function/variable/class/type) or file, then update all references and imports. No behavior change, no signature change, no structural redesign. Test changes are limited to updating the renamed reference.
-
-- A pure rename is **at most STANDARD**, even when the file count would otherwise indicate COMPLEX (e.g. a symbol used across 50 files).
-- A pure rename of a symbol confined to a small set of files (≤5) is SIMPLE.
-- If the rename is paired with a signature change, behavior change, or structural redesign, this ceiling does NOT apply — classify normally.
-
-Reason: rename refactors are cheap and fast regardless of fan-out. File count overstates effort because each touch is a near-identical mechanical edit, easily verified by typecheck/test.
-
-#### Step 3: Present and Confirm
+Ask each as a separate, self-contained question. Phrasing (verbatim):
 
 ```markdown
-## Complexity Classification
+### Q-RESEARCH — "Do we need to investigate before building?"
+Answer yes if any part of this work touches code, systems, or libraries you don't already understand,
+OR if the requirements themselves are still fuzzy (what exactly should it do, for whom, in which
+cases). Answering yes turns on the Research and Discovery phases, where I explore the codebase and we
+nail down requirements before any design. Answer no only if you already understand both the code and
+exactly what is wanted.
+Suggested: `Yes — investigate first` / `No — I understand the code and the requirements`
 
-### Heuristic Results
+### Q-DESIGN — "Is there a real design decision to make?"
+Answer yes if this work involves an architectural choice: a new structure, picking between two valid
+approaches, or defining an interface/contract other code will depend on. Answering yes turns on the
+Design phase (a written design doc, reviewed before coding). Answer no for changes whose shape is
+obvious — there is only one sensible way to do it.
+Suggested: `Yes — a design decision exists` / `No — the shape is obvious`
 
-| Heuristic | Result | Signal |
-|-----------|--------|--------|
-| File count | ~[N] files | [command output summary] |
-| Behavioral change | [Yes/No] | [reason] |
-| Test impact | [N] test files | [command output summary] |
-| Structural change | [Yes/No] | [reason] |
-| Integration points | [N] | [command output summary] |
+### Q-INFRA — "Does this add new dependencies, infrastructure, or schema changes?"
+Answer yes if the work pulls in a new third-party dependency, stands up new infrastructure/services,
+or changes a data schema (new tables/columns/fields or a migration). Answering yes turns on the
+Design phase (if not already on) and makes the implementation plan call out migration, rollout, and
+dependency-pinning steps explicitly. Answer no if you're only changing existing code paths.
+Suggested: `Yes — new deps/infra/schema` / `No — existing code only`
 
-### Derived Tier: **[TIER]**
-
-Rationale: [1-2 sentence explanation from heuristic results]
-
-**Confirm or override?** (Say "confirm" or specify a different tier with reason)
+### Q-SIZE — "Roughly how big is this?" (signal only — does not change rigor)
+Pick the rough scale. This only tunes how aggressively I parallelize and how often I checkpoint
+progress; it never changes which review or design steps run.
+Suggested: `Small` / `Medium` / `Large`
 ```
 
-Store confirmed tier in `SESSION_PREFERENCES.complexity_tier`.
+**Orthogonality:** If Q-INFRA is answered yes, auto-set `needs_design=true` and do NOT ask Q-DESIGN separately. `needs_research` is independent of the other two (you can need design without prior research and vice versa). `size_estimate` is orthogonal to all flags and never gates a phase.
 
-#### Step 4: Route by Tier
+#### Step 3: Route by Flags
 
-| Tier | Next Action |
-|------|-------------|
-| **TRIVIAL** | Exit skill. Log: "Task classified as TRIVIAL. Exiting develop. Proceed with direct change." |
-| **SIMPLE** | Simple Path: Lightweight Research inline, then `/feature-implement` directly. |
-| **STANDARD** | Proceed to `/feature-research` (Phase 1). |
-| **COMPLEX** | Proceed to `/feature-research` (Phase 1). |
+Resolve the three booleans, then route:
 
-**Lightweight Research (SIMPLE path):** Inline research without Phase 1 subagent dispatch. Grep for relevant files, read key modules, confirm scope, then write a brief inline plan before jumping to `/feature-implement`.
+- **Zero flags** (`needs_research=no`, `needs_design=no`, `needs_infrastructure=no`) → **fast path**. Skip the Research, Discovery, Design, and Planning-as-a-phase steps; write a short inline plan (≤5 numbered steps) for the operator to confirm, then implement under the lighter review floor. develop STAYS RESIDENT — it never exits and never asks permission to stay. Announce (verbatim, do not ask):
+
+  > "This looks like a small, well-understood change with no research, design, or infrastructure work. I'll take the **fast path**: skip the research/discovery/design/planning phases, write a short inline plan for you to confirm, then implement it with the lighter review floor (code review + green-mirage, plus a test run if tests already cover the touched code). I stay in develop the whole time so review isn't skipped."
+
+  Then log: `"Fast path: zero-flag change. Fewer phases, lighter floor, develop resident."` and proceed.
+
+- **Any flag set** → run the phases gated by the flags (see the need-flag → phase mapping in the design doc §2.1) under the full review floor (see the review-floor policy in the design doc §3.2). More flags ⇒ more phases.
+
+The need-flag → phase mapping (§2.1) and the need-flag → depth-gate mapping (§3.3) are the single source of truth; this command references them and does not restate their rows.
+
+Store the resolved `need_flags` (`needs_research`, `needs_design`, `needs_infrastructure` booleans) and `size_estimate` in `SESSION_PREFERENCES`.
 
 <FORBIDDEN>
 - Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
 - Running wizard questions before checking 0.5 continuation signals
 - Trusting session summary without artifact verification
-- Classifying complexity tier without running the bash heuristics
-- Overriding tier classification without user confirmation
-- Treating any single unmet Trivial condition as ignorable
+- Proceeding without answering all four need-flag questions (Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE; Q-DESIGN auto-resolved when Q-INFRA is yes)
+- Auto-exiting develop on a zero-flag change (the fast path keeps develop resident)
 - Skipping motivation clarification when request intent is ambiguous
 - Asking wizard questions again when resuming (only re-ask the 4 preference questions)
 </FORBIDDEN>
@@ -461,16 +438,15 @@ Before proceeding, verify:
 - [ ] Dialectic mode and level selected (if dialectic != none)
 - [ ] Token enforcement level selected
 - [ ] Refactoring mode detected if applicable
-- [ ] Complexity tier classified via mechanical heuristics and confirmed by user
-- [ ] Tier routing determined
+- [ ] All four need-flag questions answered; `need_flags` + `size_estimate` stored in SESSION_PREFERENCES
+- [ ] Flag routing determined (fast path vs. flag-gated phases)
 
 If ANY unchecked: Complete Phase 0. Do NOT proceed.
 
-**Next (by tier):**
-- TRIVIAL: Exit skill
-- SIMPLE: Lightweight Research (inline, then `/feature-implement`)
-- STANDARD/COMPLEX: Run `/feature-research` to begin Phase 1
+**Next (by flags):**
+- Zero flags: fast path — short inline plan, then implement under the lighter review floor (develop resident)
+- Any flag set: run the flag-gated phases under the full review floor — start with `/feature-research` when `needs_research`, else jump to the first gated phase (`/feature-design` for `needs_design`/`needs_infrastructure`)
 
 <FINAL_EMPHASIS>
-Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or a miscalculated complexity tier will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
+Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or misclassified need-flags will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
 </FINAL_EMPHASIS>

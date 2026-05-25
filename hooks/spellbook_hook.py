@@ -817,17 +817,41 @@ def _build_recovery_directive(state: dict) -> str:
             if constraints:
                 parts.append(f"\n### Skill Constraints\n{constraints}")
 
-    # Binding decisions
-    binding_decisions = state.get("binding_decisions", [])
+    # Binding decisions. The state key is `decisions_binding` -- the key in
+    # _ALLOWED_STATE_KEYS and the one read back in spellbook/sessions/resume.py
+    # (the old `binding_decisions` read here was a dead key never present in
+    # saved state).
+    binding_decisions = state.get("decisions_binding", [])
     if binding_decisions:
         parts.append("\n### Binding Decisions")
         for decision in binding_decisions:
             parts.append(f"- {decision}")
 
-    # Next action
-    next_action = state.get("next_action", "")
-    if next_action:
-        parts.append(f"\n### Next Action\n{next_action}")
+    # Develop: remaining-gate ceremony re-assertion (design §4 C3, §4.6).
+    # Placed BEFORE Pending Todos so a resumed develop session sees the
+    # not-yet-done quality gates first and does not declare victory early.
+    # `remaining_gates` is a NEWLINE-JOINED SCALAR STRING (CRIT-1), never a
+    # stored list -- split locally for rendering. Absent ledger renders
+    # nothing (backward compatible with non-develop work).
+    ledger = state.get("develop_gate_ledger") or {}
+    remaining_raw = ledger.get("remaining_gates") or ""
+    remaining = [g for g in remaining_raw.split("\n") if g.strip()]
+    current_phase = ledger.get("current_phase", "")
+    plan_pointer = ledger.get("plan_pointer", "")
+    if ledger:
+        parts.append("\n### Develop: Remaining Work (DO NOT declare done)")
+        if current_phase:
+            parts.append(f"Current phase: {current_phase}")
+        if remaining:
+            parts.append("Remaining quality gates — these MUST still run:")
+            for g in remaining:
+                parts.append(f"- [ ] {g}")
+        else:
+            parts.append(
+                "No gates recorded as remaining; re-verify against the plan before finishing."
+            )
+        if plan_pointer:
+            parts.append(f"Plan: {plan_pointer}")
 
     # Workflow pattern
     workflow_pattern = state.get("workflow_pattern", "")
@@ -2269,6 +2293,117 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
     )
 
 
+# ---------------------------------------------------------------------------
+# Develop accountability nudge (design §6 / impl Tasks 6-8)
+#
+# Fires on UserPromptSubmit when the develop skill is marked active but has
+# moved past its Phase-0 wizard without recording any phase/gate progress in
+# workflow_state — the accountability failure where unrecorded progress would
+# be lost on the next compaction. Debounced once per session via a marker FILE
+# (NOT an in-process flag — hooks are per-event subprocesses, so no in-memory
+# state survives between events). The marker is cleaned up on SessionStart
+# (there is NO SessionEnd handler in this hook; the dispatch only handles
+# PreToolUse/PostToolUse/UserPromptSubmit/Stop/PreCompact/SessionStart).
+# ---------------------------------------------------------------------------
+
+_NUDGE_MARKER_MAX_AGE_SECONDS = 86400  # prune *.nudged markers older than a day
+
+_DEVELOP_NUDGE_MESSAGE = (
+    "[develop accountability] The develop skill is marked active for this project but no develop\n"
+    "phase/progress has been recorded in workflow_state. If you are mid-develop, record your current\n"
+    'phase and remaining gates now via workflow_state_update({"develop_gate_ledger": {...}}). If develop\n'
+    "is no longer active here, clear it. Unrecorded progress will be lost on the next context compaction."
+)
+
+
+def _develop_nudge_marker_dir() -> Path:
+    """Directory holding per-session develop-nudge marker files.
+
+    Honors ``$SPELLBOOK_CONFIG_DIR`` (set in tests and most installs) and falls
+    back to ``~/.local/spellbook`` (the default config dir) per design §6.2.
+    """
+    base = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+    return Path(base) / "runtime" / "develop-nudge"
+
+
+def _develop_nudge_marker_path(session_id: str) -> Path:
+    """Marker file path for a given session (``<session_id>.nudged``)."""
+    return _develop_nudge_marker_dir() / f"{session_id}.nudged"
+
+
+def _prune_stale_nudge_markers() -> None:
+    """Remove ``*.nudged`` markers older than a day so the dir does not grow.
+
+    Fail-open: missing dir or stat/unlink errors on individual files are
+    ignored. Never raises.
+    """
+    marker_dir = _develop_nudge_marker_dir()
+    if not marker_dir.is_dir():
+        return
+    cutoff = time.time() - _NUDGE_MARKER_MAX_AGE_SECONDS
+    for marker in marker_dir.glob("*.nudged"):
+        try:
+            if marker.stat().st_mtime < cutoff:
+                marker.unlink(missing_ok=True)
+        except OSError:
+            continue
+
+
+def _develop_accountability_nudge(data: dict) -> str | None:
+    """Return the develop accountability nudge text, or None if it should not fire.
+
+    Predicate (design §6.1, ALL required, duration-blind):
+      1. ``active_skill == "develop"`` in workflow_state, AND
+      2. develop is past Phase 0 — ``skill_phase`` is set and not ``"0"``, AND
+      3. ``develop_gate_ledger`` is absent/empty.
+
+    Debounced once per session via the ``<session_id>.nudged`` marker file:
+    on predicate-true, if the marker is absent the nudge is emitted and the
+    marker is touched; if present, stays silent. An empty/missing ``session_id``
+    cannot be debounced safely, so the nudge is skipped.
+    """
+    session_id = data.get("session_id", "") or ""
+    # Validate before using as a filename: prevents path traversal / odd
+    # filenames if the payload carries a malformed session_id. Reuses the same
+    # constraint applied to session_ids elsewhere in this hook.
+    if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    # Already-nudged short-circuit, checked BEFORE the workflow_state_load DB
+    # read. Once a session has been nudged the marker exists for the rest of
+    # the session, so every subsequent qualifying prompt would otherwise pay
+    # for a workflow_state_load only to early-return here. Checking the marker
+    # first skips that per-prompt DB read. `marker` is computed once and reused
+    # for the marker.touch() on the not-yet-nudged path below.
+    marker = _develop_nudge_marker_path(session_id)
+    if marker.exists():
+        return None  # already nudged this session
+
+    ws = _mcp_call("workflow_state_load", {"project_path": data.get("cwd") or ""})
+    if not ws or not ws.get("found"):
+        return None
+    state = ws.get("state") or {}
+
+    # Condition 1: develop is the active skill.
+    if state.get("active_skill") != "develop":
+        return None
+    # Condition 2: past the Phase-0 wizard (skill_phase set and not "0").
+    skill_phase = state.get("skill_phase", "")
+    if not skill_phase or skill_phase == "0":
+        return None
+    # Condition 3: no ledger progress recorded yet.
+    if state.get("develop_gate_ledger"):
+        return None
+
+    # Stale-marker pruning is NOT done here: pruning per qualifying prompt is
+    # pure waste. Global pruning happens once per SessionStart in
+    # _handle_session_start; markers are tiny with a 24h TTL, so that is enough.
+    # (The already-nudged short-circuit happened earlier, before the DB read.)
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.touch()
+    return _DEVELOP_NUDGE_MESSAGE
+
+
 def _handle_user_prompt_submit(data: dict) -> list[str]:
     """UserPromptSubmit handler: auto-inject memory context for prompts."""
     outputs: list[str] = []
@@ -2298,6 +2433,16 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
             outputs.append(orphan_hint)
     except Exception as e:
         _log_hook_error("agent2agent_check_orphaned_chain", "UserPromptSubmit", e)
+
+    # Develop accountability nudge (design §6): surface a one-shot reminder
+    # when develop is active past Phase 0 with no recorded ledger progress.
+    # Fail-open: a nudge failure must never break the prompt.
+    try:
+        nudge = _develop_accountability_nudge(data)
+        if nudge:
+            outputs.append(nudge)
+    except Exception as e:
+        _log_hook_error("develop_accountability_nudge", "UserPromptSubmit", e)
 
     # Pattern-based self-capture (Gap 4). Non-blocking, fail-open.
     try:
@@ -2383,6 +2528,20 @@ def _handle_session_start(data: dict) -> dict | None:
         present.
     """
     source = data.get("source", "")
+
+    # Develop-nudge marker cleanup runs unconditionally on every SessionStart,
+    # BEFORE the source-based early return, so the current session's marker is
+    # cleared (allowing a later prompt in this same session to nudge again) and
+    # stale markers are pruned. Cleanup lives here, not on SessionEnd, because
+    # this hook has NO SessionEnd handler (dispatch only covers PreToolUse/
+    # PostToolUse/UserPromptSubmit/Stop/PreCompact/SessionStart). Fail-open.
+    try:
+        session_id = data.get("session_id", "") or ""
+        if session_id and _A2A_SESSION_ID_RE.match(session_id):
+            _develop_nudge_marker_path(session_id).unlink(missing_ok=True)
+        _prune_stale_nudge_markers()
+    except Exception as e:
+        _log_hook_error("develop_nudge_marker_cleanup", "SessionStart", e)
 
     # Backstop runs unconditionally — orphan detection is independent of
     # source. Fail-open: any unexpected exception is logged and the rest

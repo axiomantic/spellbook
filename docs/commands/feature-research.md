@@ -2,136 +2,101 @@
 
 ## Workflow Diagram
 
-# Feature Research (Phase 1) - Flow Diagram
-
-Phase 1 of develop: prerequisite verification, parallel subagent dispatch for codebase research and tooling discovery, ambiguity extraction, quality scoring with a 100% threshold gate, and completion checklist.
-
 ```mermaid
 flowchart TD
-    subgraph Legend [Legend]
-        direction LR
-        L1[Process]
-        L2{{Decision}}
-        L3([Terminal])
-        L4[Subagent Dispatch]:::subagent
-        L5[Quality Gate]:::gate
-        L6([Success Terminal]):::success
+    START(["/feature-research invoked"]):::terminal
+
+    PRE["Prerequisite Verification\n(bash check block)"]:::process
+
+    C1{"needs_research\n== true?"}:::decision
+    C2{"Phase 0\ncomplete?"}:::decision
+    C3{"impl_plan\nescape hatch\nactive?"}:::decision
+
+    STOP_NEEDS(["STOP: needs_research is false\nReturn to Phase 0"]):::fail
+    STOP_P0(["STOP: Phase 0 incomplete\nReturn to Phase 0"]):::fail
+    STOP_ESCAPE(["STOP: Escape hatch active\nSkip to Phase 3+"]):::fail
+
+    S11["1.1 Research Strategy Planning\nAnalyze feature request\nGenerate codebase questions\nIdentify knowledge gaps"]:::process
+
+    DISPATCH["1.2 Subagent Dispatch\nResearch Agent – Codebase Patterns"]:::subagent
+
+    SF{"Subagent\nsucceeded?"}:::decision
+    RETRY["Retry once\n(same instructions)"]:::process
+    SF2{"Second attempt\nsucceeded?"}:::decision
+    UNKNOWN["Mark all findings UNKNOWN\nNote failure reason\nReturn to user (do not block)"]:::process
+
+    S13["1.3 Ambiguity Extraction\nExtract MEDIUM/LOW/UNKNOWN items\nExtract flagged ambiguities\nCategorize: Technical/Scope/Integration/Terminology\nPrioritize by impact"]:::process
+
+    S14["1.4 Research Quality Score\nCoverage Score\nAmbiguity Resolution Score\nEvidence Quality Score\nUnknown Detection Score\nOverall = min of all four"]:::process
+
+    QG{"Score\n= 100%?"}:::gate
+
+    OPT{"User\nchoice"}:::decision
+    OPT_A["A: Continue anyway\n(bypass, accept risk)"]:::process
+    OPT_B["B: Iterate: add questions\nre-dispatch subagent"]:::process
+    OPT_C["C: Reduce scope\nremove low-confidence items"]:::process
+
+    CHECKLIST["Phase 1 Completion Checklist\n✓ Subagent dispatched\n✓ Score 100% (or bypassed)\n✓ Ambiguities categorized\n✓ Findings stored in\n  SESSION_CONTEXT.research_findings"]:::process
+
+    DONE(["Phase 1 Complete\nProceed to /feature-discover"]):::terminal
+
+    START --> PRE
+    PRE --> C1
+    C1 -->|"false"| STOP_NEEDS
+    C1 -->|"true"| C2
+    C2 -->|"incomplete"| STOP_P0
+    C2 -->|"complete"| C3
+    C3 -->|"active"| STOP_ESCAPE
+    C3 -->|"not active"| S11
+
+    S11 --> DISPATCH
+    DISPATCH --> SF
+    SF -->|"yes"| S13
+    SF -->|"no"| RETRY
+    RETRY --> SF2
+    SF2 -->|"yes"| S13
+    SF2 -->|"no"| UNKNOWN
+    UNKNOWN --> S13
+
+    S13 --> S14
+    S14 --> QG
+    QG -->|"100%"| CHECKLIST
+    QG -->|"< 100%"| OPT
+    OPT --> OPT_A
+    OPT --> OPT_B
+    OPT --> OPT_C
+    OPT_A --> CHECKLIST
+    OPT_B --> S11
+    OPT_C --> S14
+
+    CHECKLIST --> DONE
+
+    subgraph LEGEND["Legend"]
+        L1["Process"]:::process
+        L2["Subagent Dispatch"]:::subagent
+        L3["Quality Gate"]:::gate
+        L4(["Terminal"]):::terminal
+        L5{"Decision"}:::decision
+        L6(["Failure / Stop"]):::fail
     end
 
-    START([Phase 1 Invoked]) --> PREREQ
-
-    %% ── Prerequisite Verification ──────────────────────────────
-    subgraph PREREQ_GROUP [Prerequisite Verification]
-        PREREQ{{complexity_tier<br>in STANDARD or COMPLEX?}}
-        PREREQ -- No --> HALT_TIER([STOP: Wrong tier.<br>TRIVIAL/SIMPLE do not<br>run this phase.])
-        PREREQ -- Yes --> CHK_P0{{Phase 0<br>100% complete?}}
-        CHK_P0 -- No --> HALT_P0([STOP: Return to Phase 0])
-        CHK_P0 -- Yes --> CHK_ESC{{No impl_plan<br>escape hatch active?}}
-        CHK_ESC -- No --> HALT_ESC([STOP: Escape hatch active,<br>skip to Phase 3+])
-    end
-
-    CHK_ESC -- Yes --> STRAT
-
-    %% ── 1.1 Research Strategy Planning ─────────────────────────
-    subgraph STRAT_GROUP [1.1 Research Strategy Planning]
-        STRAT[Analyze feature request<br>for technical domains]
-        STRAT --> GEN_Q[Generate codebase questions:<br>similar features, patterns,<br>integration points, edge cases]
-        GEN_Q --> ID_GAPS[Identify knowledge gaps]
-    end
-
-    ID_GAPS --> DISPATCH_BOTH
-
-    %% ── 1.2 + 1.2b Parallel Subagent Dispatch ─────────────────
-    subgraph DISPATCH_BOTH [Parallel Subagent Dispatch]
-        direction LR
-        SA_RESEARCH[1.2 Research Subagent:<br>Systematic search, read files,<br>extract patterns, flag ambiguities,<br>mark confidence per finding<br>HIGH / MEDIUM / LOW / UNKNOWN]:::subagent
-        SA_TOOLING[1.2b Tooling Scout Subagent:<br>Invoke tooling-discovery skill,<br>detect domain tools,<br>surface trust warnings]:::subagent
-    end
-
-    %% ── Error Handling for 1.2 ─────────────────────────────────
-    SA_RESEARCH --> SA_OK{{Research subagent<br>succeeded?}}
-    SA_OK -- Yes --> MERGE
-    SA_OK -- No --> RETRY[Retry once with<br>same instructions]:::subagent
-    RETRY --> RETRY_OK{{Retry succeeded?}}
-    RETRY_OK -- Yes --> MERGE
-    RETRY_OK -- No --> FALLBACK[Return all findings<br>as UNKNOWN, note failure.<br>Do NOT block.]
-
-    SA_TOOLING --> MERGE
-    FALLBACK --> MERGE
-
-    MERGE[Merge codebase findings<br>+ tooling discovery results]
-
-    %% ── 1.3 Ambiguity Extraction ──────────────────────────────
-    MERGE --> AMBIG_EXTRACT
-
-    subgraph AMBIG_GROUP [1.3 Ambiguity Extraction]
-        AMBIG_EXTRACT[Extract all MEDIUM / LOW /<br>UNKNOWN confidence items<br>and flagged ambiguities]
-        AMBIG_EXTRACT --> CATEGORIZE[Categorize by type:<br>Technical, Scope,<br>Integration, Terminology]
-        CATEGORIZE --> PRIORITIZE[Prioritize by<br>design impact:<br>HIGH / MEDIUM / LOW]
-    end
-
-    PRIORITIZE --> SCORE
-
-    %% ── 1.4 Research Quality Score ────────────────────────────
-    subgraph SCORE_GROUP [1.4 Research Quality Score]
-        SCORE[Compute four score components]:::gate
-        SCORE --> S1[Coverage:<br>HIGH findings / total questions]
-        SCORE --> S2[Ambiguity Resolution:<br>categorized / total ambiguities]
-        SCORE --> S3[Evidence Quality:<br>findings with refs / answerable]
-        SCORE --> S4[Unknown Detection:<br>flagged unknowns / LOW+UNKNOWN]
-        S1 --> OVERALL[Overall = min of all four]:::gate
-        S2 --> OVERALL
-        S3 --> OVERALL
-        S4 --> OVERALL
-    end
-
-    OVERALL --> GATE
-
-    %% ── Gate Decision ─────────────────────────────────────────
-    GATE{{Score = 100%?}}:::gate
-    GATE -- Yes --> CHECKLIST
-    GATE -- No --> USER_CHOICE
-
-    USER_CHOICE{{User chooses}}
-    USER_CHOICE -- "A) Continue anyway<br>(bypass gate, accept risk)" --> CHECKLIST
-    USER_CHOICE -- "B) Iterate: add more<br>questions, re-dispatch" --> STRAT
-    USER_CHOICE -- "C) Skip ambiguous areas<br>(reduce scope)" --> CHECKLIST
-
-    %% ── Phase Complete Checklist ──────────────────────────────
-    CHECKLIST[Phase 1 Complete Checklist:<br>1. Research subagent dispatched<br>2. Score 100% or user bypass<br>3. Ambiguities categorized<br>4. Findings stored in SESSION_CONTEXT]:::gate
-
-    CHECKLIST --> COMPLETE_OK{{All items<br>checked?}}
-    COMPLETE_OK -- No --> INCOMPLETE([STOP: Complete<br>remaining Phase 1 items])
-    COMPLETE_OK -- Yes --> DONE([Phase 1 Complete:<br>Proceed to /feature-discover<br>- Phase 1.5 -]):::success
-
-    %% ── Styles ────────────────────────────────────────────────
-    classDef subagent fill:#4a9eff,stroke:#2d7cd6,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#d94f4f,color:#fff
-    classDef success fill:#51cf66,stroke:#3aad4e,color:#fff
+    classDef process fill:#2d2d2d,stroke:#888,color:#e8e8ea
+    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
+    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
+    classDef terminal fill:#1a3a1a,stroke:#51cf66,color:#51cf66
+    classDef decision fill:#2d2d2d,stroke:#aaa,color:#e8e8ea
+    classDef fail fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
 ```
 
-## Cross-References
+**Overview:** `/feature-research` is Phase 1 of the develop skill. It runs only when `needs_research` is true, dispatches a codebase-exploration subagent, extracts and categorizes ambiguities from the findings, computes a four-component quality score, and requires 100% (or explicit user bypass) before handing off to `/feature-discover`.
 
-| Diagram Node | Source Section | Lines |
-|---|---|---|
-| Prerequisite Verification (3 checks) | Prerequisite Verification | 11-40 |
-| 1.1 Research Strategy Planning | 1.1 Research Strategy Planning | 53-77 |
-| 1.2 Research Subagent | 1.2 Execute Research (Subagent) | 79-127 |
-| Error Handling / Retry / Fallback | Error Handling | 128-132 |
-| 1.2b Tooling Scout Subagent | 1.2b Parallel Tooling Discovery | 134-153 |
-| 1.3 Ambiguity Extraction | 1.3 Ambiguity Extraction | 155-181 |
-| 1.4 Quality Score (4 components) | 1.4 Research Quality Score | 183-237 |
-| Gate Decision (A/B/C) | Gate Behavior | 239-257 |
-| Phase 1 Complete Checklist | Phase 1 Complete | 269-278 |
-| Proceed to /feature-discover | Next | 280 |
-
-## External References
-
-| Reference | Type | Description |
-|---|---|---|
-| `/feature-discover` | Command | Phase 1.5 of develop; invoked after this phase completes |
-| `tooling-discovery` | Skill | Invoked by the 1.2b Tooling Scout subagent |
-| `develop` | Skill | Parent skill; this command is Phase 1 |
+**Quality Gate components** (all must be 100%; overall = minimum):
+| Component | Formula |
+|---|---|
+| Coverage | HIGH-confidence answers ÷ total questions |
+| Ambiguity Resolution | Categorized ambiguities ÷ total ambiguities |
+| Evidence Quality | Findings with file refs ÷ answerable findings |
+| Unknown Detection | Flagged unknowns ÷ LOW/UNKNOWN findings |
 
 ## Command Content
 
@@ -154,10 +119,15 @@ Before ANY Phase 1 work begins, run this verification:
 
 echo "=== Phase 1 Prerequisites ==="
 
-# CHECK 1: Complexity tier must be STANDARD or COMPLEX
-echo "Required: complexity_tier in (standard, complex)"
-echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
-# TRIVIAL exits the skill; SIMPLE uses lightweight inline research — neither runs this phase.
+# CHECK 1: This phase runs only when the needs_research flag is set.
+# needs_research = "the work touches code/systems we don't yet understand,
+# OR the requirements themselves are still fuzzy." It is the single operator
+# flag (chosen in Phase 0) that switches on BOTH Research (Phase 1) and
+# Discovery (Phase 1.5). See SESSION_PREFERENCES.need_flags.
+echo "Required: need_flags.needs_research == true"
+echo "Current needs_research: [SESSION_PREFERENCES.need_flags.needs_research]"
+# If needs_research is false, this phase does not run — develop skips
+# Research and Discovery and proceeds with the phases its other flags select.
 
 # CHECK 2: Phase 0 must be complete
 echo "Required: Phase 0 checklist 100% complete"
@@ -170,7 +140,7 @@ echo "Verify: SESSION_PREFERENCES.escape_hatch.type != 'impl_plan'"
 
 **If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
 
-**Anti-rationalization:** Tempted to skip because "you already know the tier" or "Phase 0 was obviously complete"? That is Pattern 2 (Expertise Override). Run the check. It takes 5 seconds.
+**Anti-rationalization:** Tempted to skip because "you already know `needs_research` is set" or "Phase 0 was obviously complete"? That is Pattern 2 (Expertise Override). Run the check. It takes 5 seconds.
 </CRITICAL>
 
 ## Invariant Principles
@@ -372,7 +342,7 @@ IF SCORE = 100%:
 <FORBIDDEN>
 - Doing research work in main context instead of dispatching a subagent
 - Proceeding when any prerequisite check fails
-- Running this phase when complexity_tier is TRIVIAL or SIMPLE
+- Running this phase when `needs_research` is false (the flag, not a phase, gates this work)
 - Proceeding past the quality gate without a 100% score or explicit user bypass
 - Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
 </FORBIDDEN>

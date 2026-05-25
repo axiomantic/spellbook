@@ -43,6 +43,68 @@ Canvas lifecycle:
 
 The agent owns the writes; the browser is read-only in MVP.
 
+## Invariant Principles
+
+1. **The agent owns writes; the browser is read-only.** In the MVP there is
+   no path for the browser to write back. `<choice>` and `<approve>` render as
+   disabled "Reserved for v2" previews. If you need the operator to decide,
+   ask in the terminal turn — never wait on a canvas click that cannot come.
+2. **Writes are full-body, last-write-wins.** `canvas_write` atomically
+   replaces all of `pages/index.md`; there are no incremental patches. Each
+   call MUST carry the complete intended page, because the previous content is
+   discarded. Sending a partial body silently erases the rest of the page.
+3. **Never pass external content to `canvas_write`.** `rehype-raw` is in the
+   render path by design (the shortcode grammar depends on it), so raw
+   `<script>` in the markdown WILL execute under the admin's authenticated
+   origin. Web fetches, external transcripts, unvetted MCP output, and pasted
+   third-party strings must be summarized/paraphrased in your own words and
+   stripped of literal markup before they reach a canvas. Mitigation is agent
+   discipline, not sanitization.
+4. **A canvas is ephemeral working memory, not a persisted artifact.** It is
+   scoped to the current session and is not the place for docs that must
+   survive compaction or be checked in — those go to `~/.local/spellbook/docs/`
+   via the artifact conventions.
+5. **`canvas_open` is idempotent; `canvas_close` is a soft state.** Opening an
+   existing name returns its metadata rather than recreating it, so re-opening
+   is safe. Closing marks `meta.json` closed (writes then return
+   `{"code": "closed"}`) but never deletes files.
+
+<analysis>
+Before rendering anything to a canvas, settle three questions:
+
+- **Is a canvas the right surface at all?** Canvas earns its cost only when
+  the output is visual or benefits from a browser tab the operator keeps open
+  (diagrams, charts, multi-section plans, side-by-side options, rolling
+  status). For a short answer or a document that must persist, the terminal or
+  `~/.local/spellbook/docs/` is correct — do not reach for a canvas reflexively.
+- **What is the provenance of every byte in the payload?** Trace each section
+  of the markdown back to its source. Anything originating outside this agent
+  (WebFetch, external transcript, pasted text, upstream MCP output) is
+  untrusted and cannot go in verbatim — it must be paraphrased and de-marked-up
+  first, because rehype-raw executes raw HTML under the admin origin.
+- **Does the rendering need anything the grammar forbids?** Block shortcodes
+  in table cells, browser write-back, SSR/OG unfurls, and nesting beyond the
+  documented matrix are out of scope. If the desired layout needs one of
+  these, redesign within the grammar rather than emitting markup that renders
+  broken.
+</analysis>
+
+<reflection>
+Before declaring a canvas turn complete, self-check:
+
+- Did I send the **complete** page body, or did a last-write-wins call
+  silently truncate the canvas to a partial?
+- Did any external-provenance content reach `canvas_write` un-paraphrased? If
+  so, that is a same-origin script-execution risk, not a cosmetic issue — fix
+  it.
+- Did I surface the canvas URL to the operator so they can actually open the
+  tab, or did I write into the void?
+- For an operator decision, did I ask in the terminal rather than rendering a
+  disabled `<choice>`/`<approve>` the browser cannot submit?
+- Did I conflate ephemeral canvas state with a durable artifact that should
+  have been written to `~/.local/spellbook/docs/` instead?
+</reflection>
+
 ## When to Use
 
 - **Diagrams.** Mermaid flowcharts, sequence diagrams, ER diagrams that

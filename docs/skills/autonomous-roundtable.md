@@ -177,7 +177,7 @@ graph TD
 This skill is deprecated. Its functionality has been absorbed into the `develop` skill.
 
 **Migration:**
-- Project decomposition: Use develop with COMPLEX tier (automatic work item decomposition)
+- Project decomposition: develop no longer auto-decomposes into separate work items; use develop's single-orchestrator delegated execution and, for very large efforts, the Follow-up Tasks list to checkpoint and hand off to a fresh session
 - Roundtable validation: Set `dialectic_mode: "roundtable"` in Phase 0.4 preferences
 - Token enforcement: Set `token_enforcement: "gate_level"` or `"every_step"` in Phase 0.4
 - Reflexion on ITERATE: Still invoked automatically by develop when roundtable returns ITERATE
