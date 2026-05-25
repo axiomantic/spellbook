@@ -56,9 +56,9 @@ def test_ws_receives_events(admin_app, mock_mcp_token):
         loop.run_until_complete(
             event_bus.publish(
                 Event(
-                    subsystem=Subsystem.MEMORY,
+                    subsystem=Subsystem.CONFIG,
                     event_type="created",
-                    data={"id": "mem-1"},
+                    data={"id": "cfg-1"},
                 )
             )
         )
@@ -67,9 +67,9 @@ def test_ws_receives_events(admin_app, mock_mcp_token):
         # Read the event from WebSocket
         data = ws.receive_json()
         assert data["type"] == "event"
-        assert data["subsystem"] == "memory"
+        assert data["subsystem"] == "config"
         assert data["event"] == "created"
-        assert data["data"]["id"] == "mem-1"
+        assert data["data"]["id"] == "cfg-1"
         assert "timestamp" in data
 
 

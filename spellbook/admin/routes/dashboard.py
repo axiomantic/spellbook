@@ -16,7 +16,7 @@ from spellbook.db import (
     get_spellbook_session,
 )
 from spellbook.db.fractal_models import FractalGraph
-from spellbook.db.spellbook_models import Experiment, Memory
+from spellbook.db.spellbook_models import Experiment
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -54,20 +54,12 @@ def _count_session_files() -> int:
     return count
 
 
-async def _query_spellbook_counts() -> tuple[int, int, list]:
-    """Query spellbook.db for dashboard counts and recent activity.
+async def _query_spellbook_counts() -> int:
+    """Query spellbook.db for dashboard counts.
 
-    Returns (memories_count, experiments_count, recent_memories).
+    Returns the count of running/paused experiments.
     """
     async with get_spellbook_session() as session:
-        # Count active memories
-        result = await session.execute(
-            select(func.count()).select_from(Memory).where(
-                Memory.status == "active"
-            )
-        )
-        memories_count = result.scalar_one()
-
         # Count running/paused experiments
         result = await session.execute(
             select(func.count()).select_from(Experiment).where(
@@ -76,19 +68,7 @@ async def _query_spellbook_counts() -> tuple[int, int, list]:
         )
         experiments_count = result.scalar_one()
 
-        # Recent memories
-        result = await session.execute(
-            select(Memory)
-            .order_by(Memory.created_at.desc())
-            .limit(20)
-        )
-        recent_memories = list(result.scalars().all())
-
-    return (
-        memories_count,
-        experiments_count,
-        recent_memories,
-    )
+    return experiments_count
 
 
 async def _query_fractal_counts() -> int:
@@ -119,29 +99,14 @@ async def get_dashboard_data() -> dict:
 
     # Unpack spellbook results (or defaults on error)
     if isinstance(spellbook_result, Exception):
-        memories_count = 0
         experiments_count = 0
-        recent_memories: list = []
     else:
-        (
-            memories_count,
-            experiments_count,
-            recent_memories,
-        ) = spellbook_result
+        experiments_count = spellbook_result
 
-    # Transform ORM objects to activity dicts
-    activity = sorted(
-        [
-            {
-                "type": "memory_created",
-                "timestamp": mem.created_at,
-                "summary": mem.content[:80],
-            }
-            for mem in recent_memories
-        ],
-        key=lambda x: x.get("timestamp", ""),
-        reverse=True,
-    )[:20]
+    # Recent-activity feed: the only activity source was memory creation,
+    # which has been removed. Left as an empty list so the dashboard
+    # contract (recent_activity) is preserved.
+    activity: list[dict] = []
 
     db_size = _get_db_size()
 
@@ -162,7 +127,6 @@ async def get_dashboard_data() -> dict:
         },
         "counts": {
             "active_sessions": safe_int(session_count),
-            "total_memories": memories_count,
             "open_experiments": experiments_count,
             "fractal_graphs": safe_int(graphs_result),
         },

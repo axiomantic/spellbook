@@ -23,7 +23,7 @@ class ListResponse(BaseModel, Generic[T]):
     """Standard list response envelope for all admin list endpoints.
 
     This is the unified response shape that replaces per-endpoint
-    response types (MemoryListResponse, etc.)
+    response types (e.g. SessionListResponse).
     """
 
     items: list[T]
@@ -45,7 +45,6 @@ class HealthStatus(BaseModel):
 
 class DashboardCounts(BaseModel):
     active_sessions: int
-    total_memories: int
     open_experiments: int
     fractal_graphs: int
 
@@ -60,36 +59,6 @@ class DashboardResponse(BaseModel):
     health: HealthStatus
     counts: DashboardCounts
     recent_activity: list[ActivityItem]
-
-
-# --- Memory ---
-class MemoryItem(BaseModel):
-    id: str
-    content: str
-    memory_type: Optional[str]
-    namespace: str
-    branch: str
-    importance: float
-    created_at: str
-    accessed_at: Optional[str]
-    status: str
-    meta: dict[str, Any]
-    citation_count: int = 0
-
-
-class MemoryListResponse(PaginatedResponse):
-    memories: list[MemoryItem]
-
-
-class MemoryUpdateRequest(BaseModel):
-    content: Optional[str] = Field(None, min_length=1, max_length=50000)
-    importance: Optional[float] = Field(None, ge=0.0, le=10.0)
-    meta: Optional[dict[str, Any]] = None  # JSON serialized must be < 64KB
-
-
-class ConsolidateRequest(BaseModel):
-    namespace: str
-    max_events: int = Field(default=50, ge=1, le=500)
 
 
 # --- Sessions ---
@@ -170,27 +139,6 @@ class CytoscapeResponse(BaseModel):
     stats: FractalGraphStats
 
 
-# --- Citations ---
-class CitationItem(BaseModel):
-    id: int
-    memory_id: str
-    file_path: str
-    line_range: Optional[str] = None
-    content_snippet: Optional[str] = None
-
-
-# --- Namespace/Stats ---
-class NamespaceListResponse(BaseModel):
-    namespaces: list[str]
-
-
-class MemoryStatsResponse(BaseModel):
-    total: int
-    by_type: dict[str, int]
-    by_status: dict[str, int]
-    by_namespace: dict[str, int]
-
-
 # --- Fractal Convergence/Contradictions ---
 class ConvergenceCluster(BaseModel):
     nodes: list[dict[str, Any]]  # Each: {node_id: str, text: str, depth: int}
@@ -214,12 +162,6 @@ class ContradictionResponse(BaseModel):
     count: int
 
 
-# --- Consolidation ---
-class ConsolidateResponse(BaseModel):
-    memories_created: int
-    events_consolidated: int
-
-
 # --- Errors ---
 class ErrorDetail(BaseModel):
     code: str
@@ -234,13 +176,10 @@ class ErrorResponse(BaseModel):
 # Error codes:
 # | Code                       | HTTP | Description                                |
 # |----------------------------|------|--------------------------------------------|
-# | MEMORY_NOT_FOUND           | 404  | Memory ID does not exist                   |
-# | INVALID_FTS_QUERY          | 400  | FTS5 search query syntax error             |
 # | CONFIG_KEY_UNKNOWN         | 404  | Config key not recognized                  |
 # | AUTH_EXPIRED               | 401  | Session cookie or token has expired        |
 # | AUTH_INVALID               | 401  | Invalid credentials or signature           |
 # | GRAPH_NOT_FOUND            | 404  | Fractal graph ID does not exist            |
-# | CONSOLIDATION_IN_PROGRESS  | 409  | Consolidation already running              |
 
 # --- WebSocket ---
 class WSEvent(BaseModel):

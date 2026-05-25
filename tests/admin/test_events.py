@@ -12,7 +12,7 @@ from spellbook.admin.events import Event, EventBus, Subsystem, event_bus
 async def test_publish_reaches_subscriber():
     bus = EventBus()
     queue = await bus.subscribe("test-sub")
-    event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={"id": "1"})
+    event = Event(subsystem=Subsystem.SESSION, event_type="created", data={"id": "1"})
     await bus.publish(event)
     received = queue.get_nowait()
     assert received.event_type == "created"
@@ -24,7 +24,7 @@ async def test_publish_reaches_multiple_subscribers():
     bus = EventBus()
     q1 = await bus.subscribe("sub-1")
     q2 = await bus.subscribe("sub-2")
-    event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={})
+    event = Event(subsystem=Subsystem.SESSION, event_type="created", data={})
     await bus.publish(event)
     assert not q1.empty()
     assert not q2.empty()
@@ -37,7 +37,7 @@ async def test_unsubscribe_stops_delivery():
     bus = EventBus()
     queue = await bus.subscribe("test-sub")
     await bus.unsubscribe("test-sub")
-    event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={})
+    event = Event(subsystem=Subsystem.SESSION, event_type="created", data={})
     await bus.publish(event)
     assert queue.empty()
 
@@ -53,7 +53,7 @@ async def test_bounded_queue_drops_oldest():
         queue = bus._subscribers["test-sub"]
     for i in range(3):
         await bus.publish(
-            Event(subsystem=Subsystem.MEMORY, event_type=f"event-{i}", data={})
+            Event(subsystem=Subsystem.SESSION, event_type=f"event-{i}", data={})
         )
     # Queue should have events 1 and 2 (event 0 dropped)
     e1 = queue.get_nowait()
@@ -66,7 +66,7 @@ async def test_bounded_queue_drops_oldest():
 @pytest.mark.asyncio
 async def test_empty_bus_publish_is_noop():
     bus = EventBus()
-    event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={})
+    event = Event(subsystem=Subsystem.SESSION, event_type="created", data={})
     await bus.publish(event)  # Should not raise
 
 
@@ -86,7 +86,7 @@ async def test_subscriber_count():
 async def test_event_has_timestamp():
     bus = EventBus()
     queue = await bus.subscribe("test-sub")
-    event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={})
+    event = Event(subsystem=Subsystem.SESSION, event_type="created", data={})
     await bus.publish(event)
     received = queue.get_nowait()
     assert received.timestamp  # Should be auto-set
@@ -98,7 +98,7 @@ async def test_event_preserves_namespace_and_session_id():
     bus = EventBus()
     queue = await bus.subscribe("test-sub")
     event = Event(
-        subsystem=Subsystem.MEMORY,
+        subsystem=Subsystem.SESSION,
         event_type="created",
         data={},
         namespace="test-project",
@@ -113,7 +113,6 @@ async def test_event_preserves_namespace_and_session_id():
 @pytest.mark.asyncio
 async def test_subsystem_values():
     """Verify all subsystem enum values are strings."""
-    assert Subsystem.MEMORY.value == "memory"
     assert Subsystem.SESSION.value == "session"
     assert Subsystem.CONFIG.value == "config"
     assert Subsystem.FRACTAL.value == "fractal"
@@ -179,6 +178,6 @@ async def test_duplicate_subscribe_replaces_queue():
     assert bus.subscriber_count == 1
     # Publishing should go to q2 (the replacement)
     await bus.publish(
-        Event(subsystem=Subsystem.MEMORY, event_type="test", data={})
+        Event(subsystem=Subsystem.SESSION, event_type="test", data={})
     )
     assert not q2.empty()

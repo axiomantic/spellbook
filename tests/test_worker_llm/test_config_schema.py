@@ -1,4 +1,4 @@
-"""Tests for the 14 worker_llm entries in the admin config schema.
+"""Tests for the core worker_llm entries in the admin config schema.
 
 Also verifies that ``spellbook/core/config.py::CONFIG_DEFAULTS`` carries the
 same values so ``config_get`` returns the documented defaults when a key is
@@ -20,12 +20,8 @@ WORKER_KEYS = {
     "worker_llm_timeout_s",
     "worker_llm_max_tokens",
     "worker_llm_tool_safety_timeout_s",
-    "worker_llm_transcript_harvest_mode",
     "worker_llm_allow_prompt_overrides",
-    "worker_llm_read_claude_memory",
-    "worker_llm_feature_transcript_harvest",
     "worker_llm_feature_roundtable",
-    "worker_llm_feature_memory_rerank",
     "worker_llm_feature_tool_safety",
     "worker_llm_safety_cache_ttl_s",
 }
@@ -35,16 +31,16 @@ def _entry(key: str) -> dict:
     return next(e for e in CONFIG_SCHEMA if e["key"] == key)
 
 
-def test_all_fourteen_worker_keys_in_admin_schema():
+def test_all_core_worker_keys_in_admin_schema():
     assert WORKER_KEYS.issubset(KNOWN_KEYS)
 
 
-def test_fourteen_entries_added():
+def test_core_worker_entries_added():
     # Observability keys share the ``worker_llm_`` prefix but land under the
     # disjoint ``worker_llm_observability_`` namespace. The queue / warm-probe
     # keys (``worker_llm_queue_*``, ``worker_llm_tool_safety_cold_threshold_s``)
     # are a separate, newer cluster. Exclude both so this assertion stays
-    # scoped to the original 14-key core worker_llm set.
+    # scoped to the core worker_llm set (the memory-system keys were removed).
     schema_worker_keys = {
         e["key"]
         for e in CONFIG_SCHEMA
@@ -53,14 +49,13 @@ def test_fourteen_entries_added():
         and e["key"] not in QUEUE_KEYS
     }
     assert schema_worker_keys == WORKER_KEYS
-    assert len(schema_worker_keys) == 14
+    assert len(schema_worker_keys) == 10
 
 
 def test_string_defaults():
     assert _entry("worker_llm_base_url")["default"] == ""
     assert _entry("worker_llm_model")["default"] == ""
     assert _entry("worker_llm_api_key")["default"] == ""
-    assert _entry("worker_llm_transcript_harvest_mode")["default"] == "replace"
 
 
 def test_numeric_defaults():
@@ -68,10 +63,6 @@ def test_numeric_defaults():
     assert _entry("worker_llm_max_tokens")["default"] == 1024
     assert _entry("worker_llm_tool_safety_timeout_s")["default"] == 1.5
     assert _entry("worker_llm_safety_cache_ttl_s")["default"] == 300
-
-
-def test_read_claude_memory_defaults_false():
-    assert _entry("worker_llm_read_claude_memory")["default"] is False
 
 
 def test_allow_prompt_overrides_defaults_true():
@@ -82,9 +73,7 @@ def test_all_feature_flags_default_false():
     feature_keys = [k for k in WORKER_KEYS if k.startswith("worker_llm_feature_")]
     assert sorted(feature_keys) == sorted(
         [
-            "worker_llm_feature_transcript_harvest",
             "worker_llm_feature_roundtable",
-            "worker_llm_feature_memory_rerank",
             "worker_llm_feature_tool_safety",
         ]
     )
