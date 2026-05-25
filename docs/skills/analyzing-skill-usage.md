@@ -125,20 +125,29 @@ flowchart TD
 
 ```python
 from spellbook.sessions.parser import load_jsonl, list_sessions_with_samples
-from spellbook.extractors.message_utils import get_tool_calls, get_content, get_role
+from spellbook.sessions.skill_analyzer import (
+    extract_skill_invocations,  # high-level: boundaries + scoring in one pass
+    aggregate_metrics,          # high-level: per-skill metric rollup
+)
 ```
+
+The protocol below describes what `skill_analyzer` does internally. For a
+ready-made implementation, call `extract_skill_invocations()` then
+`aggregate_metrics()` directly; the steps that follow document the same logic
+for cases where you need custom scoring.
 
 Sessions at: `~/.claude/projects/<project-encoded>/*.jsonl`
 
 ### 2. Detect Skill Invocation Boundaries
 
-**Start Event**: Tool call where `name == "Skill"`
+**Start Event**: Tool call where `name == "Skill"`. `extract_skill_invocations`
+handles boundary detection for you, returning `SkillInvocation` objects with
+`skill`, `version`, `start_idx`, `end_idx`, and `timestamp` already populated:
 ```python
-for msg in messages:
-    for call in get_tool_calls(msg):
-        if call.get("name") == "Skill":
-            skill_name = call["input"]["skill"]
-            # Record: skill, timestamp, message index
+invocations = extract_skill_invocations(messages, session_path)
+for inv in invocations:
+    skill_name = inv.skill            # base skill name (version stripped)
+    start = inv.start_idx             # message index where the Skill call fired
 ```
 
 **End Event** (first match): another Skill tool call (superseded), session end, or compact boundary (`type == "system"`, `subtype == "compact_boundary"`)
