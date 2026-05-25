@@ -64,24 +64,3 @@ class TestEmitBlockAndExitEscaping:
         # One opening wrapper, one closing wrapper, no siblings.
         assert err.count('<worker-llm-tool-safety verdict="BLOCK">') == 1
         assert err.count("</worker-llm-tool-safety>") == 1
-
-
-class TestWorkerErrorBlockEscaping:
-    """``_worker_error_block`` must escape the exception message."""
-
-    def test_exception_message_is_escaped(self):
-        exc = RuntimeError(INJECTION)
-        out = spellbook_hook._worker_error_block("transcript_harvest", exc)
-        assert INJECTION not in out
-        assert "&lt;/worker-llm-tool-safety&gt;" in out
-        assert "&lt;other-tag&gt;" in out
-        # One opening wrapper, one closing wrapper.
-        assert out.count("<worker-llm-error>") == 1
-        assert out.count("</worker-llm-error>") == 1
-
-    def test_ampersand_in_message_is_escaped(self):
-        out = spellbook_hook._worker_error_block(
-            "memory_rerank", RuntimeError("a & b & c")
-        )
-        assert "&amp;" in out
-        assert " & " not in out

@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 # Advanced settings prompted only when the user opts in to the second tier.
-# (key, prompt_prefix, type) where type is "number", "bool", or "harvest_mode".
+# (key, prompt_prefix, type) where type is "number" or "bool".
 _ADVANCED_KEYS: list[tuple[str, str, str]] = [
     ("worker_llm_timeout_s", "Per-call timeout (seconds)", "number"),
     ("worker_llm_max_tokens", "Max completion tokens per request", "number"),
@@ -40,11 +40,6 @@ _ADVANCED_KEYS: list[tuple[str, str, str]] = [
         "worker_llm_tool_safety_timeout_s",
         "PreToolUse safety-sniff timeout (seconds)",
         "number",
-    ),
-    (
-        "worker_llm_transcript_harvest_mode",
-        "Stop-hook harvest mode (replace/merge/skip)",
-        "harvest_mode",
     ),
     (
         "worker_llm_allow_prompt_overrides",
@@ -99,17 +94,6 @@ def _prompt_bool(prompt: str, current: bool) -> bool:
     if not raw:
         return current
     return raw in ("y", "yes")
-
-
-def _prompt_harvest_mode(prompt: str, current: str) -> str:
-    """Prompt for a transcript_harvest_mode enum value."""
-    while True:
-        raw = input(f"{prompt} [{current}]: ").strip().lower()
-        if not raw:
-            return current
-        if raw in ("replace", "merge", "skip"):
-            return raw
-        print("  Must be one of: replace, merge, skip.")
 
 
 def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
@@ -243,29 +227,19 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
     # 4) Optional API key (blank allowed for local endpoints).
     chosen_key = input("API key (blank for local endpoints): ").strip()
 
-    # 5) Four feature flags -- always ask for all four; write the explicit
-    # value (including False) so the keys are persisted and there is no
-    # ambiguity between "user said no" and "key absent".
+    # 5) Feature flags -- always ask; write the explicit value (including
+    # False) so the keys are persisted and there is no ambiguity between
+    # "user said no" and "key absent".
     features: dict[str, bool] = {}
     feature_prompts = [
-        (
-            "transcript_harvest",
-            "Enable worker-LLM semantic Stop-hook memory harvest? "
-            "(REPLACE mode by default; worker supersedes regex harvester) [y/N]: ",
-        ),
         (
             "tool_safety",
             "Enable worker-LLM PreToolUse safety sniff (OK/WARN/BLOCK)? "
             "(Fails OPEN on 1.5s timeout; BLOCK verdicts bypassable within 30s) [y/N]: ",
         ),
         (
-            "memory_rerank",
-            "Enable worker-LLM reranking of memory_recall candidates? "
-            "(Adds one worker call per memory_recall invocation) [y/N]: ",
-        ),
-        (
             "read_claude_memory",
-            "Also include Claude Code's MEMORY.md files in memory_recall? "
+            "Also include Claude Code's MEMORY.md files in worker context? "
             "(Independent of worker LLM; safe to enable without an endpoint) [y/N]: ",
         ),
     ]
@@ -287,15 +261,7 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
         if chosen_key:
             config_set("worker_llm_api_key", chosen_key)
         config_set(
-            "worker_llm_feature_transcript_harvest",
-            bool(features["transcript_harvest"]),
-        )
-        config_set(
             "worker_llm_feature_tool_safety", bool(features["tool_safety"])
-        )
-        config_set(
-            "worker_llm_feature_memory_rerank",
-            bool(features["memory_rerank"]),
         )
         config_set(
             "worker_llm_read_claude_memory",
@@ -354,7 +320,7 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
 
 
 def _run_advanced_prompts(reconfigure: bool) -> None:
-    """Walk through the 7 advanced worker-LLM keys.
+    """Walk through the advanced worker-LLM keys.
 
     Each key is skipped when it already has an explicit value unless
     ``reconfigure`` is True. The current default (or explicit value) is
@@ -382,8 +348,6 @@ def _run_advanced_prompts(reconfigure: bool) -> None:
                 value: Any = _prompt_number(prompt_label, current)
             elif kind == "bool":
                 value = _prompt_bool(prompt_label, bool(current))
-            elif kind == "harvest_mode":
-                value = _prompt_harvest_mode(prompt_label, str(current))
             else:
                 continue
         except (EOFError, KeyboardInterrupt):
@@ -412,8 +376,6 @@ spellbook loads it instead of the built-in default.
 
 Drop a file named `<task>.md` into this directory to override that task:
 
-- `transcript_harvest.md` - Stop-hook memory extraction from assistant output.
-- `memory_rerank.md`      - Reranks `memory_recall` candidates by relevance.
 - `roundtable_voice.md`   - Drives tarot-mode roundtable archetype voices.
 - `tool_safety.md`        - PreToolUse OK/WARN/BLOCK safety sniff.
 

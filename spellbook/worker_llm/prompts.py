@@ -25,7 +25,7 @@ DEFAULT_PROMPT_DIR = Path(__file__).parent / "default_prompts"
 OVERRIDE_PROMPT_DIR = Path.home() / ".local" / "spellbook" / "worker_prompts"
 
 _KNOWN_TASKS = frozenset(
-    {"transcript_harvest", "memory_rerank", "roundtable_voice", "tool_safety"}
+    {"roundtable_voice", "tool_safety"}
 )
 
 

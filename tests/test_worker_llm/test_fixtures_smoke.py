@@ -13,12 +13,9 @@ def test_worker_llm_config_returns_deterministic_snapshot(worker_llm_config):
     assert worker_llm_config["worker_llm_timeout_s"] == 2.0
     assert worker_llm_config["worker_llm_max_tokens"] == 64
     assert worker_llm_config["worker_llm_tool_safety_timeout_s"] == 0.5
-    assert worker_llm_config["worker_llm_transcript_harvest_mode"] == "replace"
     assert worker_llm_config["worker_llm_allow_prompt_overrides"] is True
     assert worker_llm_config["worker_llm_read_claude_memory"] is False
-    assert worker_llm_config["worker_llm_feature_transcript_harvest"] is True
     assert worker_llm_config["worker_llm_feature_roundtable"] is True
-    assert worker_llm_config["worker_llm_feature_memory_rerank"] is True
     assert worker_llm_config["worker_llm_feature_tool_safety"] is True
     assert worker_llm_config["worker_llm_safety_cache_ttl_s"] == 300
 

@@ -269,8 +269,8 @@ def publish_hook_integration(
     signal operators actually want.
 
     Args:
-        task: ``"transcript_harvest"`` | ``"tool_safety"`` | ...
-        mode: Mode string for transcript_harvest; ``""`` for flag-toggle tasks.
+        task: ``"tool_safety"`` | ...
+        mode: Optional mode string; ``""`` for flag-toggle tasks.
         candidate_count: Number of artifacts produced (candidates posted /
             verdict count / rerank items). ``-1`` when not applicable.
         duration_ms: Wall-clock duration of the full hook integration step.

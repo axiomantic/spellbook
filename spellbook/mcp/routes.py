@@ -463,7 +463,7 @@ async def api_worker_llm_enqueue(request: Request) -> JSONResponse:
 
     Accepts JSON body:
         {
-          "task_name": str,  # required; e.g. "transcript_harvest"
+          "task_name": str,  # required; e.g. "tool_safety"
           "prompt": str,     # required; user_prompt for the worker call
           "context": dict    # optional; opaque context forwarded to the
                              # consumer callback via WorkerTask.context
@@ -515,9 +515,9 @@ async def api_worker_llm_enqueue(request: Request) -> JSONResponse:
         )
 
     # Dispatch to a task-aware consumer callback when one is registered.
-    # Today we register ``transcript_harvest``; other tasks enqueue with
-    # ``callback=None`` and rely on ``client.call``'s event emission for
-    # observability.
+    # No task currently registers a consumer-side callback; tasks enqueue
+    # with ``callback=None`` and rely on ``client.call``'s event emission
+    # for observability.
     callback = _resolve_task_callback(task_name)
 
     try:
@@ -537,14 +537,11 @@ async def api_worker_llm_enqueue(request: Request) -> JSONResponse:
 def _resolve_task_callback(task_name: str):
     """Return the consumer-side callback for ``task_name`` or ``None``.
 
-    Lazy-imports the task module so the MCP server doesn't pull in every
-    task handler at registration time.
+    No task currently registers a consumer-side callback, so this always
+    returns ``None``. The indirection is retained so a future task that
+    needs a custom consumer can lazy-import its handler here without
+    pulling every task module in at registration time.
     """
-    if task_name == "transcript_harvest":
-        from spellbook.worker_llm.tasks.transcript_harvest import (
-            async_consumer_callback as _cb,
-        )
-        return _cb
     return None
 
 

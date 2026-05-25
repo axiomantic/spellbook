@@ -66,7 +66,7 @@ def record_call(
     """Insert a ``WorkerLLMCall`` row. Best-effort; all exceptions swallowed.
 
     Args:
-        task: Observability tag (e.g. ``"transcript_harvest"``, ``"tool_safety"``).
+        task: Observability tag (e.g. ``"tool_safety"``).
         model: Model id sent to the worker.
         latency_ms: Wall-clock duration of the call in milliseconds.
         status: ``"success"`` | ``"error"`` | ``"timeout"`` | ``"fail_open"``.
@@ -308,7 +308,7 @@ def _run_purge_once() -> None:
 
     Why fresh session per batch? Holding one session across the whole
     sweep serializes every other SQLite writer (``record_call``,
-    transcript_harvest, tool_safety, roundtable) for seconds. Per-batch
+    tool_safety, roundtable) for seconds. Per-batch
     commit releases the writer lock between batches.
     """
     retention_hours = int(config_get("worker_llm_observability_retention_hours"))

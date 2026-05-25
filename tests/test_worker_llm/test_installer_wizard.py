@@ -229,13 +229,11 @@ class TestWizardWithProbeHits:
         # 2. Pick endpoint (index 1 in 1-based menu) -> 1
         # 3. Pick model -> 1
         # 4. API key (blank) -> ""
-        # 5. Enable transcript_harvest? -> y
-        # 6. Enable tool_safety? -> n
-        # 7. Enable memory_rerank? -> n
-        # 8. Enable read_claude_memory? -> n
-        # 9. Advanced settings? -> n
-        # 10. Run doctor now? -> n
-        scripted_input(["y", "1", "1", "", "y", "n", "n", "n", "n", "n"])
+        # 5. Enable tool_safety? -> y
+        # 6. Enable read_claude_memory? -> n
+        # 7. Advanced settings? -> n
+        # 8. Run doctor now? -> n
+        scripted_input(["y", "1", "1", "", "y", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
@@ -246,17 +244,16 @@ class TestWizardWithProbeHits:
         keys_written = {k for (k, _v) in captured_config}
         assert "worker_llm_base_url" in keys_written
         assert "worker_llm_model" in keys_written
-        assert "worker_llm_feature_transcript_harvest" in keys_written
+        assert "worker_llm_feature_tool_safety" in keys_written
 
         # Base URL and model must match the selection.
         by_key = dict(captured_config)
         assert by_key["worker_llm_base_url"] == "http://localhost:11434/v1"
         assert by_key["worker_llm_model"] == "qwen2.5-coder:7b"
-        assert by_key["worker_llm_feature_transcript_harvest"] is True
+        assert by_key["worker_llm_feature_tool_safety"] is True
         # Declined features are still explicitly set to False so there is no
         # ambiguity between "user said no" and "user was never asked".
-        assert by_key["worker_llm_feature_tool_safety"] is False
-        assert by_key["worker_llm_feature_memory_rerank"] is False
+        assert by_key["worker_llm_read_claude_memory"] is False
 
         # Now verify doctor would be green against that config.
         from spellbook.core import config as _core_cfg
@@ -313,17 +310,15 @@ class TestWizardNoProbeHits:
         # 2. Manual URL prompt -> http://remote.host:9999/v1
         # 3. Model prompt -> mistral:latest
         # 4. API key -> secret-key
-        # 5..8. All features -> n
-        # 9. Advanced settings? -> n
-        # 10. Run doctor now? -> n
+        # 5..6. All features -> n
+        # 7. Advanced settings? -> n
+        # 8. Run doctor now? -> n
         scripted_input(
             [
                 "y",
                 "http://remote.host:9999/v1",
                 "mistral:latest",
                 "secret-key",
-                "n",
-                "n",
                 "n",
                 "n",
                 "n",
@@ -341,9 +336,8 @@ class TestWizardNoProbeHits:
         assert by_key["worker_llm_model"] == "mistral:latest"
         assert by_key["worker_llm_api_key"] == "secret-key"
         # All features default off.
-        assert by_key["worker_llm_feature_transcript_harvest"] is False
         assert by_key["worker_llm_feature_tool_safety"] is False
-        assert by_key["worker_llm_feature_memory_rerank"] is False
+        assert by_key["worker_llm_read_claude_memory"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -448,8 +442,8 @@ class TestPromptOverrideBreadcrumb:
         )
         allow_overrides(True)
         # 1. Enable? y   2. Pick endpoint 1   3. Pick model 1   4. key blank
-        # 5-8. Features all n   9. Advanced n   10. Doctor n
-        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n", "n"])
+        # 5-6. Features all n   7. Advanced n   8. Doctor n
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
@@ -461,10 +455,8 @@ class TestPromptOverrideBreadcrumb:
             f"expected {readme} to be created after successful wizard"
         )
         body = readme.read_text(encoding="utf-8")
-        # Spot-check the contract: all four task names + override convention.
+        # Spot-check the contract: all task names + override convention.
         for task in (
-            "transcript_harvest",
-            "memory_rerank",
             "roundtable_voice",
             "tool_safety",
         ):
@@ -501,7 +493,7 @@ class TestPromptOverrideBreadcrumb:
         sentinel = "# my custom README - do not touch\n"
         readme.write_text(sentinel, encoding="utf-8")
 
-        scripted_input(["y", "1", "1", "", "n", "n", "n", "n", "n", "n"])
+        scripted_input(["y", "1", "1", "", "n", "n", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
