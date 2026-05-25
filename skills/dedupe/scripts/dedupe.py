@@ -944,6 +944,270 @@ def resolve_corpus(corpus_arg: str | None) -> list[Path]:
 
 
 # ---------------------------------------------------------------------------
+# Group expansion: empirical dependency grammar, seed resolution, transitive
+# dependents (design §3.1). The index maps artifact NAME -> resolved file path;
+# seed entries are resolved as PATHs (end in .md OR exist as a corpus file) or
+# NAMEs (via the index); expansion follows the four reference shapes bounded by
+# --max-depth with a visited-set cycle guard. Unresolved reference-shaped
+# strings are surfaced, never dropped (C1).
+# ---------------------------------------------------------------------------
+
+
+def build_corpus_index(corpus_files: list[Path]) -> dict[str, str]:
+    """Map artifact NAME -> resolved file path over the resolved corpus.
+
+    Operates on the file list returned by ``resolve_corpus`` (the ``--corpus``
+    contract), NOT a raw glob. The ``name`` is derived per file:
+    - ``skills/<name>/SKILL.md`` -> ``<name>`` (the parent directory name);
+    - ``commands/<name>.md`` -> ``<name>`` (the filename stem under a
+      ``commands`` directory);
+    - any other resolved ``*.md`` (flat fixture files, ``shared-references``)
+      -> the filename stem.
+    This makes the index work for both the real nested layout and the flat
+    unit-test fixture dirs. Later files win on a name collision (stable because
+    ``corpus_files`` is sorted).
+    """
+    index: dict[str, str] = {}
+    for path in corpus_files:
+        resolved = str(path.resolve())
+        parent = path.parent.name
+        if path.name == "SKILL.md" and parent:
+            name = parent
+        elif parent == "commands":
+            name = path.stem
+        else:
+            name = path.stem
+        index[name] = resolved
+    return index
+
+
+def resolve_seed_entry(
+    entry: str,
+    *,
+    corpus_files: list[Path],
+    corpus_index: dict[str, str],
+) -> tuple[str | None, str | None]:
+    """Resolve a single seed entry to ``(path_or_None, name_or_None)``.
+
+    Seed-resolution contract (design §3.1, CRITICAL 2):
+    - A seed entry is a **PATH** when it ends in ``.md`` OR exists as a file
+      under a corpus root (matched against ``corpus_files`` by resolved path or
+      basename). Path-seeds return ``(resolved_path, None)`` and the caller adds
+      them to ``expanded_group`` DIRECTLY, bypassing name resolution.
+    - Otherwise the entry is a **NAME** resolved via ``corpus_index``: returns
+      ``(None, name)`` when the name resolves, else ``(None, None)`` so the
+      caller can raise a clear empty/not-found error (design §8).
+    """
+    resolved_by_path = {str(p.resolve()): str(p.resolve()) for p in corpus_files}
+    by_basename = {p.name: str(p.resolve()) for p in corpus_files}
+
+    is_pathlike = entry.endswith(".md")
+    candidate = Path(entry)
+    if not is_pathlike:
+        # exists-as-file: either the literal path is a real file, or the entry
+        # matches a corpus file's resolved path / basename.
+        if candidate.is_file() or entry in resolved_by_path or entry in by_basename:
+            is_pathlike = True
+
+    if is_pathlike:
+        # Resolve the path-seed against the corpus: prefer an exact resolved-path
+        # match, then a basename match, then the literal resolved path.
+        if entry in resolved_by_path:
+            return resolved_by_path[entry], None
+        if entry in by_basename:
+            return by_basename[entry], None
+        if candidate.is_file():
+            return str(candidate.resolve()), None
+        # ends in .md but not in the corpus -> still a path, resolve literally.
+        return str(candidate.resolve()), None
+
+    # NAME path: resolve through the index.
+    if entry in corpus_index:
+        return None, entry
+    return None, None
+
+
+# Reference-extraction regexes (design §3.1, the four empirical shapes).
+#
+# Shapes 1 and 3 capture the backtick delimiters as explicit groups so the
+# extractor can tell a backticked artifact name (e.g. ``invoked by `develop```)
+# apart from a bare prose word (``invoked by the system``). The optional
+# ``(?:the\s+)?`` article (I2) lets the real target be captured in phrasings
+# like ``invoked by the develop skill``.
+_DESC_INVOKED_RE = re.compile(
+    r"\b(?:invoked\s+by|invokes)\s+(?:the\s+)?(`?)([a-z0-9][a-z0-9._-]*)(`?)",
+    re.IGNORECASE,
+)
+_LINK_SKILL_RE = re.compile(r"\(([^)]*?skills/([a-z0-9._-]+)/SKILL\.md)\)", re.IGNORECASE)
+_LINK_COMMAND_RE = re.compile(r"\(([^)]*?commands/([a-z0-9._-]+)\.md)\)", re.IGNORECASE)
+_LOAD_SKILL_RE = re.compile(
+    r"\bLoad\s+(?:the\s+)?(`?)([a-z0-9][a-z0-9._-]*)(`?)\s+skill\b",
+    re.IGNORECASE,
+)
+# A backticked token capture, used for the bare-name adjacency shape.
+_BACKTICK_TOKEN_RE = re.compile(r"`([a-z0-9][a-z0-9._-]*)`")
+_SENTENCE_SPLIT_RE = re.compile(r"[.!?\n]")
+
+# Common English stopwords that prose phrasings ("invoked by the system",
+# "invokes a callback") would otherwise leak into unresolved_references. Belt
+# and suspenders alongside the artifact-name-shape guard in ``_is_artifact_name``.
+_REFERENCE_STOPWORDS = frozenset(
+    {"the", "a", "an", "this", "it", "that", "these", "those", "your", "our"}
+)
+
+
+def _is_artifact_name(name: str, *, backticked: bool) -> bool:
+    """Return True only for tokens that plausibly name a corpus artifact.
+
+    A capture qualifies when it is backticked in the source OR is a hyphenated
+    kebab token (contains a ``-``). A bare single English word that is neither
+    backticked nor hyphenated is rejected so prose stopwords ("the", "system",
+    "configuration") never reach ``unresolved_references`` (C1 integrity).
+    Stopwords are additionally denied even when backticked.
+    """
+    if name.lower() in _REFERENCE_STOPWORDS:
+        return False
+    return backticked or "-" in name
+
+
+def _extract_references(
+    text: str, corpus_index: dict[str, str]
+) -> tuple[set[str], set[str]]:
+    """Parse one file's text against the empirical dependency grammar.
+
+    Returns ``(resolved_names, unresolved_strings)``:
+    - ``resolved_names``: reference targets that resolve to a corpus artifact
+      (followed during expansion);
+    - ``unresolved_strings``: reference-shaped strings that match structurally
+      but resolve to nothing (C1: surfaced, never dropped).
+    """
+    resolved: set[str] = set()
+    unresolved: set[str] = set()
+
+    def record(name: str) -> None:
+        if name in corpus_index:
+            resolved.add(name)
+        else:
+            unresolved.add(name)
+
+    # Shape 1: description conventions (invoked by / invokes <name>). Only a
+    # backticked or hyphenated artifact name is recorded; bare prose words
+    # ("invoked by the system", "invokes a callback") are skipped (I1/I2).
+    for m in _DESC_INVOKED_RE.finditer(text):
+        backticked = bool(m.group(1) and m.group(3))
+        if _is_artifact_name(m.group(2), backticked=backticked):
+            record(m.group(2))
+    # Shape 2: markdown links to skills/<name>/SKILL.md and commands/<name>.md.
+    for m in _LINK_SKILL_RE.finditer(text):
+        record(m.group(2))
+    for m in _LINK_COMMAND_RE.finditer(text):
+        record(m.group(2))
+    # Shape 3: Load <name> skill / Load the <name> skill imperatives. Same
+    # artifact-name-shape guard as Shape 1 ("Load configuration skill" -> skip).
+    for m in _LOAD_SKILL_RE.finditer(text):
+        backticked = bool(m.group(1) and m.group(3))
+        if _is_artifact_name(m.group(2), backticked=backticked):
+            record(m.group(2))
+    # Shape 4: bare backticked `name` adjacent to the word "skill"/"command".
+    # Adjacency = same sentence OR within ADJACENCY_TOKEN_WINDOW whitespace
+    # tokens, whichever boundary is hit first. A backticked token that is
+    # reference-shaped (adjacent to skill/command) but does not resolve is
+    # surfaced as unresolved (C1); a resolving one is followed.
+    for sentence in _SENTENCE_SPLIT_RE.split(text):
+        tokens = sentence.split()
+        # Index of each whitespace token; find skill/command anchor positions.
+        anchor_positions = [
+            i for i, tok in enumerate(tokens)
+            if tok.lower().strip(".,;:") in ("skill", "skills", "command", "commands")
+        ]
+        if not anchor_positions:
+            continue
+        for i, tok in enumerate(tokens):
+            bt = _BACKTICK_TOKEN_RE.search(tok)
+            if not bt:
+                continue
+            name = bt.group(1)
+            # Same sentence is already guaranteed (we split on sentence
+            # boundaries); additionally honor the K-token window as the tighter
+            # of the two adjacency boundaries.
+            within_window = any(
+                abs(i - pos) <= ADJACENCY_TOKEN_WINDOW for pos in anchor_positions
+            )
+            if within_window:
+                record(name)
+
+    return resolved, unresolved
+
+
+def expand_group(
+    seed: list[str],
+    *,
+    corpus_files: list[Path],
+    corpus_index: dict[str, str],
+    max_depth: int = DEFAULT_MAX_DEPTH,
+) -> tuple[list[str], list[str]]:
+    """Expand seeds to the transitive dependents via the empirical grammar.
+
+    Each seed entry is resolved via ``resolve_seed_entry``: path-seeds enter
+    ``expanded_group`` directly (bypassing name resolution), name-seeds resolve
+    through ``corpus_index``. From the resolved seeds, a breadth-first traversal
+    with a visited-set (cycle guard) follows the four reference shapes, bounded
+    by ``max_depth`` and the corpus. Returns ``(expanded_group_paths,
+    unresolved_references)`` -- both sorted/de-duplicated. A seed that resolves
+    to neither a path nor a known name raises ``ValueError`` (design §8).
+
+    Note: references INSIDE an out-of-corpus path-seed are intentionally not
+    traversed -- only files that are part of the corpus are read and followed.
+    """
+    path_by_resolved = {str(p.resolve()) for p in corpus_files}
+
+    expanded: set[str] = set()
+    unresolved: set[str] = set()
+    # frontier holds (path, depth). Paths only; names are mapped to paths first.
+    frontier: list[tuple[str, int]] = []
+
+    for entry in seed:
+        path, name = resolve_seed_entry(
+            entry, corpus_files=corpus_files, corpus_index=corpus_index
+        )
+        if path is not None:
+            expanded.add(path)
+            frontier.append((path, 0))
+        elif name is not None:
+            resolved_path = corpus_index[name]
+            expanded.add(resolved_path)
+            frontier.append((resolved_path, 0))
+        else:
+            raise ValueError(f"seed not found (no matching path or name): {entry!r}")
+
+    visited: set[str] = set()
+    while frontier:
+        path, depth = frontier.pop(0)
+        if path in visited:
+            continue
+        visited.add(path)
+        if depth >= max_depth:
+            continue
+        # Only traverse references inside files that are part of the corpus.
+        if path not in path_by_resolved:
+            continue
+        try:
+            text = Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        resolved_names, unresolved_strings = _extract_references(text, corpus_index)
+        unresolved.update(unresolved_strings)
+        for ref_name in resolved_names:
+            ref_path = corpus_index[ref_name]
+            if ref_path not in expanded:
+                expanded.add(ref_path)
+            if ref_path not in visited:
+                frontier.append((ref_path, depth + 1))
+
+    return sorted(expanded), sorted(unresolved)
+
+
+# ---------------------------------------------------------------------------
 # Subcommand handlers (Task 1: stubs emitting a valid JSON shell; filled in
 # by later tasks)
 # ---------------------------------------------------------------------------
@@ -955,7 +1219,28 @@ def _emit_shell() -> int:
 
 
 def cmd_expand_group(args: argparse.Namespace) -> int:
-    return _emit_shell()
+    corpus_files = resolve_corpus(args.corpus)
+    corpus_index = build_corpus_index(corpus_files)
+    try:
+        expanded_group, unresolved_references = expand_group(
+            args.seed,
+            corpus_files=corpus_files,
+            corpus_index=corpus_index,
+            max_depth=args.max_depth,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    payload = {
+        "version": SCHEMA_VERSION,
+        "seed": list(args.seed),
+        "corpus": [str(p) for p in corpus_files],
+        "expanded_group": expanded_group,
+        "unresolved_references": unresolved_references,
+        "group_size": len(expanded_group),
+    }
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
 
 
 def cmd_detect(args: argparse.Namespace) -> int:

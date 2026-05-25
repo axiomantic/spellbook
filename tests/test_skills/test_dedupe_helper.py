@@ -61,8 +61,11 @@ def test_unknown_subcommand_is_error(dedupe):
 
 
 # ---------------------------------------------------------------------------
-# Task 1: the four subcommands are registered and dispatchable, each emitting
-# a valid JSON shell ({"version": SCHEMA_VERSION}) and returning 0 (stubs).
+# Task 1: the subcommands are registered and dispatchable. The still-stubbed
+# subcommands each emit a valid JSON shell ({"version": SCHEMA_VERSION}) and
+# return 0. NOTE: ``expand-group`` is no longer a stub as of Task 8 -- its real
+# behavior is covered by the Task 8 ``test_expand_group_*`` tests below, so it
+# is intentionally absent from this stub parametrization.
 # ---------------------------------------------------------------------------
 
 
@@ -73,15 +76,15 @@ def test_schema_version_constant(dedupe):
 @pytest.mark.parametrize(
     "argv",
     [
-        ("expand-group", "--seed", "alpha"),
         ("detect", "--seed", "alpha"),
         ("external-callers",),
         ("verify",),
     ],
-    ids=["expand-group", "detect", "external-callers", "verify"],
+    ids=["detect", "external-callers", "verify"],
 )
 def test_subcommand_registered_and_emits_version_shell(dedupe, argv):
-    """Each subcommand parses and dispatches to a stub that emits {"version": "1"}."""
+    """Each still-stubbed subcommand parses and dispatches to a stub that emits
+    {"version": "1"}. ``expand-group`` is implemented (Task 8) and excluded."""
     rc, stdout, _ = _run(dedupe, *argv)
     assert rc == 0
     assert json.loads(stdout) == {"version": "1"}
@@ -1202,3 +1205,238 @@ def test_inline_mandatory_clause3_span_boundary_inclusive(dedupe):
     assert dedupe.is_inline_mandatory(block, all_lines={21: "git push"}) is False
     # Danger line at start_line - 1 (just outside the span) -> NOT tainted.
     assert dedupe.is_inline_mandatory(block, all_lines={9: "git push"}) is False
+
+
+# ---------------------------------------------------------------------------
+# Task 8: group expansion (empirical dependency grammar), seed resolution
+# (names vs paths -- CRITICAL 2), and unresolved-reference reporting (C1).
+# ---------------------------------------------------------------------------
+
+
+def test_build_corpus_index_maps_names_to_paths(dedupe):
+    """build_corpus_index keys the resolved corpus by artifact NAME:
+    skills/<name>/SKILL.md -> <name>, commands/<name>.md -> <name>, and any
+    other resolved *.md (flat fixtures, shared-references) -> filename stem.
+    Assert the COMPLETE name->path mapping, not membership."""
+    root = FIXTURE_DIR / "group"
+    corpus_files = dedupe.resolve_corpus(str(root))
+    index = dedupe.build_corpus_index(corpus_files)
+    expected = {
+        "seed": str((root / "skills" / "seed" / "SKILL.md").resolve()),
+        "orchestrator": str(
+            (root / "skills" / "orchestrator" / "SKILL.md").resolve()
+        ),
+        "helper": str((root / "skills" / "helper" / "SKILL.md").resolve()),
+        "analyzer": str((root / "skills" / "analyzer" / "SKILL.md").resolve()),
+    }
+    assert index == expected
+
+
+def test_build_corpus_index_command_and_stem_names(dedupe, tmp_path):
+    """commands/<name>.md keys on <name>; a flat *.md keys on its stem."""
+    (tmp_path / "commands").mkdir()
+    cmd = tmp_path / "commands" / "do-thing.md"
+    cmd.write_text("# do-thing\n\nA command.\n", encoding="utf-8")
+    flat = tmp_path / "loose_ref.md"
+    flat.write_text("# loose\n\nA flat reference file.\n", encoding="utf-8")
+    corpus_files = dedupe.resolve_corpus(str(tmp_path))
+    index = dedupe.build_corpus_index(corpus_files)
+    assert index == {
+        "do-thing": str(cmd.resolve()),
+        "loose_ref": str(flat.resolve()),
+    }
+
+
+def test_resolve_seed_entry_dot_md_is_path(dedupe):
+    """A seed ending in `.md` is a PATH: resolved against corpus_files and
+    returned as (path, None), bypassing name resolution (CRITICAL 2)."""
+    root = FIXTURE_DIR  # flat core corpus: file_a.md at root
+    corpus_files = dedupe.resolve_corpus(str(root))
+    index = dedupe.build_corpus_index(corpus_files)
+    path, name = dedupe.resolve_seed_entry(
+        "file_a.md", corpus_files=corpus_files, corpus_index=index
+    )
+    assert path == str((root / "file_a.md").resolve())
+    assert name is None
+
+
+def test_resolve_seed_entry_existing_file_is_path(dedupe):
+    """A seed that has no `.md` suffix but IS an existing corpus file is a PATH
+    (CRITICAL 2: exists-as-file OR ends-in-.md => path)."""
+    root = FIXTURE_DIR
+    corpus_files = dedupe.resolve_corpus(str(root))
+    index = dedupe.build_corpus_index(corpus_files)
+    full = str((root / "file_a.md").resolve())
+    path, name = dedupe.resolve_seed_entry(
+        full, corpus_files=corpus_files, corpus_index=index
+    )
+    assert path == full
+    assert name is None
+
+
+def test_resolve_seed_entry_bare_name_via_index(dedupe):
+    """A bare name (no `.md`, not an existing file) resolves through the index and
+    is returned as (None, name)."""
+    root = FIXTURE_DIR / "group"
+    corpus_files = dedupe.resolve_corpus(str(root))
+    index = dedupe.build_corpus_index(corpus_files)
+    path, name = dedupe.resolve_seed_entry(
+        "helper", corpus_files=corpus_files, corpus_index=index
+    )
+    assert path is None
+    assert name == "helper"
+
+
+def test_resolve_seed_entry_unknown_name_returns_none_none(dedupe):
+    """A bare name that does not resolve in the index returns (None, None) so the
+    caller can raise a clear empty/not-found seed error (design §8)."""
+    root = FIXTURE_DIR / "group"
+    corpus_files = dedupe.resolve_corpus(str(root))
+    index = dedupe.build_corpus_index(corpus_files)
+    path, name = dedupe.resolve_seed_entry(
+        "nonexistent-skill", corpus_files=corpus_files, corpus_index=index
+    )
+    assert path is None
+    assert name is None
+
+
+def test_expand_group_resolves_four_shapes(dedupe):
+    """All four reference shapes (description `invoked by`, markdown link, `Load
+    the X skill`, bare backticked-name adjacency) reach their targets."""
+    root = FIXTURE_DIR / "group"
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "seed",
+        "--corpus", str(root), "--max-depth", "3",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    names = " ".join(data["expanded_group"])
+    assert "helper" in names
+    assert "analyzer" in names
+    assert "orchestrator" in names
+
+
+def test_expand_group_reports_unresolved(dedupe):
+    """C1: a reference-shaped typo (`sharpening-promts` adjacent to "skill") that
+    resolves to nothing is surfaced in unresolved_references, never dropped."""
+    root = FIXTURE_DIR / "group"
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "seed", "--corpus", str(root)
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert any("sharpening-promts" in u for u in data["unresolved_references"])
+
+
+def test_expand_group_reports_group_size(dedupe):
+    """group_size equals the count of expanded_group paths (design §3.1)."""
+    root = FIXTURE_DIR / "group"
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "seed", "--corpus", str(root)
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["group_size"] == len(data["expanded_group"])
+
+
+def test_expand_group_emits_full_schema(dedupe):
+    """expand-group emits exactly the §3.8 keys; the seed file itself is part of
+    expanded_group and the four targets are all present (complete-output check)."""
+    root = FIXTURE_DIR / "group"
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "seed", "--corpus", str(root),
+        "--max-depth", "3",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert set(data.keys()) == {
+        "version", "seed", "corpus", "expanded_group",
+        "unresolved_references", "group_size",
+    }
+    assert data["version"] == "1"
+    assert data["seed"] == ["seed"]
+    skill_path = lambda n: str(  # noqa: E731 - terse local for readability
+        (root / "skills" / n / "SKILL.md").resolve()
+    )
+    assert set(data["expanded_group"]) == {
+        skill_path("seed"), skill_path("orchestrator"),
+        skill_path("helper"), skill_path("analyzer"),
+    }
+    assert data["unresolved_references"] == ["sharpening-promts"]
+    assert data["group_size"] == 4
+
+
+def test_expand_group_path_seed_lands_in_group(dedupe):
+    """CRITICAL 2 regression: a bare `.md` filename seed is treated as a PATH and
+    lands in expanded_group DIRECTLY, bypassing name resolution. This is the mode
+    the flat-file fixtures in Tasks 9/10 rely on (`--seed file_a.md`)."""
+    root = FIXTURE_DIR  # flat core corpus: file_a.md at root
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "file_a.md", "--corpus", str(root)
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert any(p.endswith("file_a.md") for p in data["expanded_group"]), \
+        "path-seed must resolve to the fixture file and enter expanded_group"
+
+
+def test_expand_group_unknown_seed_is_error(dedupe):
+    """An empty/not-found bare-name seed is a clear error: non-zero exit and a
+    stderr message (design §8). It must NOT silently emit an empty group."""
+    root = FIXTURE_DIR / "group"
+    rc, stdout, stderr = _run(
+        dedupe, "expand-group", "--seed", "no-such-skill", "--corpus", str(root)
+    )
+    assert rc != 0
+    assert "no-such-skill" in stderr
+    assert stdout == ""
+
+
+# ---------------------------------------------------------------------------
+# I1/I2 regression: dependency-grammar capture must not leak prose stopwords
+# into unresolved_references, and the optional article must not eat the real
+# target. These guard the C1 unresolved-report integrity.
+# ---------------------------------------------------------------------------
+
+
+def test_extract_references_skips_prose_stopwords(dedupe):
+    """I1: bare prose after `invoked by`/`invokes`/`Load ... skill` (no backtick,
+    no hyphen) is NOT recorded -- neither resolved nor unresolved. Guards the
+    C1 report from prose pollution ("the", "a", "system", "configuration")."""
+    text = (
+        "This skill is invoked by the system at startup.\n"
+        "It invokes a callback when finished.\n"
+        "Load configuration skill from disk, then Load data skill.\n"
+    )
+    resolved, unresolved = dedupe._extract_references(text, {})
+    leaked = resolved | unresolved
+    for token in ("the", "a", "an", "system", "configuration", "data"):
+        assert token not in leaked, f"prose stopword/word leaked: {token!r}"
+    assert leaked == set(), f"no reference should be recorded, got {leaked}"
+
+
+def test_extract_references_optional_article_captures_real_target(dedupe):
+    """I2: `invoked by the <name>` must capture <name>, not `the`. With a
+    backticked target the real name is recorded; resolved when in corpus, else a
+    single clean unresolved entry (never `the`)."""
+    text = "This is invoked by the `develop` skill during planning."
+    # Out of corpus: surfaces as a clean single unresolved entry, not `the`.
+    resolved, unresolved = dedupe._extract_references(text, {})
+    assert "the" not in (resolved | unresolved)
+    assert unresolved == {"develop"}
+    assert resolved == set()
+    # In corpus: resolved, never unresolved.
+    resolved2, unresolved2 = dedupe._extract_references(
+        text, {"develop": "/some/path.md"}
+    )
+    assert resolved2 == {"develop"}
+    assert unresolved2 == set()
+
+
+def test_extract_references_hyphenated_bare_name_is_recorded(dedupe):
+    """A hyphenated kebab name needs no backticks to qualify as artifact-shaped:
+    the `sharpening-promts` typo is still surfaced as a clean unresolved entry."""
+    text = "When done, Load sharpening-promts skill to polish the output."
+    resolved, unresolved = dedupe._extract_references(text, {})
+    assert resolved == set()
+    assert unresolved == {"sharpening-promts"}
