@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/dedupe` instruction-deduplication skill (`skills/dedupe/`). A four-phase command family (`dedupe-setup`, `dedupe-analyze`, `dedupe-report`, `dedupe-apply`) backed by a pure-stdlib, detection-only engine (`skills/dedupe/scripts/dedupe.py`). The script never calls an LLM and never mutates sources; it performs group expansion (five reference-grammar shapes including backticked `.md` paths), multi-granularity markdown segmentation, two-signal similarity (inline Jaccard gather + `difflib.SequenceMatcher` confirm + drift delta), union-find clustering, an INLINE-MANDATORY safety predicate plus dangerous-action denylist, an external-caller scan, a cost ceiling, and an apply-journal `verify` subcommand. Classification is LLM-orchestrated by the skill via the Task tool; apply is approval-gated, journaled, and reversible (replace-with-reference, never delete). Canonical references live under `skills/dedupe/references/` (`verdict-taxonomy`, `counterfactual-prompt`).
+
 ## [0.67.0] - 2026-05-20
 
 ### Removed
