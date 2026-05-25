@@ -29,19 +29,33 @@ SCRIPT_PATH = REPO_ROOT / "scripts" / "generate_diagrams.py"
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 
+# Private sys.modules name for the under-test copy of generate_diagrams. Loading
+# under this unique name (instead of the bare ``generate_diagrams``) avoids
+# clobbering the shared ``sys.modules["generate_diagrams"]`` entry that
+# tests/unit/test_diagram_update.py imports and tripwire-mocks by spec string
+# ("generate_diagrams:_get_repo_root"). Overwriting the shared entry here would
+# give that sibling test a different module object, so its mock patch would land
+# on the wrong identity and the real _get_repo_root would run.
+_UNDER_TEST_MODULE_NAME = "generate_diagrams_under_test"
+
+
 def _load_module():
-    """Load generate_diagrams from its file path.
+    """Load generate_diagrams from its file path under a unique private name.
 
     The module lives in scripts/ (not a package) and imports sibling
-    ``diagram_config`` by bare name, so scripts/ must be on sys.path.
+    ``diagram_config`` by bare name, so scripts/ must be on sys.path. It is
+    registered in ``sys.modules`` under ``_UNDER_TEST_MODULE_NAME`` rather than
+    the bare ``generate_diagrams`` so the shared entry is never disturbed.
     """
     if str(SCRIPTS_DIR) not in sys.path:
         sys.path.insert(0, str(SCRIPTS_DIR))
-    spec = importlib.util.spec_from_file_location("generate_diagrams", SCRIPT_PATH)
+    spec = importlib.util.spec_from_file_location(_UNDER_TEST_MODULE_NAME, SCRIPT_PATH)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load module from {SCRIPT_PATH}")
     module = importlib.util.module_from_spec(spec)
-    sys.modules["generate_diagrams"] = module
+    # Register under the unique private name so exec_module can resolve any
+    # self-referential imports without overwriting sys.modules["generate_diagrams"].
+    sys.modules[_UNDER_TEST_MODULE_NAME] = module
     spec.loader.exec_module(module)
     return module
 

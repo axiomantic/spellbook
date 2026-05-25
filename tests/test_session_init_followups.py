@@ -140,7 +140,7 @@ class TestGetOpenFollowupCountFailOpen:
         boom = RuntimeError("memory backend down")
         mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
         mock_resolve.calls(lambda path: path)
-        mock_recall = tripwire.mock("spellbook.core.config:do_memory_recall")
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
         mock_recall.raises(boom)
 
         with tripwire:
@@ -169,7 +169,7 @@ class TestGetOpenFollowupCountFailOpen:
 
         mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
         mock_resolve.calls(lambda path: path)
-        mock_recall = tripwire.mock("spellbook.core.config:do_memory_recall")
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
         mock_recall.returns({"error": "memory system unavailable", "status": "unavailable"})
 
         with tripwire:
@@ -193,7 +193,7 @@ class TestGetOpenFollowupCountFailOpen:
 
         mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
         mock_resolve.calls(lambda path: path)
-        mock_recall = tripwire.mock("spellbook.core.config:do_memory_recall")
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
         mock_recall.returns({"memories": [], "count": 3, "query": "", "namespace": "x"})
 
         with tripwire:

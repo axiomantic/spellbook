@@ -245,6 +245,21 @@ def workflow_state_update(
         conn = get_connection()
         cursor = conn.cursor()
 
+        # Validate the raw incoming updates BEFORE opening any write transaction.
+        # Rejected/malicious input (e.g. a boot_prompt RCE payload) must never
+        # acquire the write lock or otherwise touch the row: the cheapest, safest
+        # response to invalid input is to refuse it without starting a transaction.
+        # This is a pure, side-effect-free check on the request body, so it does
+        # not depend on the persisted base state and can run first.
+        pre_validation = validate_workflow_state(updates)
+        if not pre_validation["valid"]:
+            return {
+                "success": False,
+                "project_path": project_path,
+                "error": "Updates failed validation",
+                "findings": [f.get("message", "unknown") for f in pre_validation["findings"]],
+            }
+
         # CRIT-2: read-merge-write must be atomic so a concurrent writer (e.g. the
         # PreCompact hook running in a separate process, writing compaction_flag /
         # stint_stack into the SAME row) cannot interleave between our SELECT and
@@ -284,17 +299,6 @@ def workflow_state_update(
                 base_state = {}
             else:
                 base_state = json.loads(row[0])
-
-            # Validate incoming updates before merging
-            pre_validation = validate_workflow_state(updates)
-            if not pre_validation["valid"]:
-                conn.rollback()
-                return {
-                    "success": False,
-                    "project_path": project_path,
-                    "error": "Updates failed validation",
-                    "findings": [f.get("message", "unknown") for f in pre_validation["findings"]],
-                }
 
             # Deep merge updates into existing state
             merged_state = _deep_merge(base_state, updates)

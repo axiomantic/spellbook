@@ -16,7 +16,6 @@ from typing import Any, Optional
 
 from spellbook.core.compat import CrossPlatformLock, LockHeldError, get_config_dir
 from spellbook.core.path_utils import encode_cwd
-from spellbook.memory.tools import do_memory_recall
 
 logger = logging.getLogger(__name__)
 
@@ -764,6 +763,10 @@ def _get_open_followup_count(project_path: Optional[str]) -> int:
     """
     if not project_path:
         return 0
+    # function-level: spellbook.core may not import the domain layer
+    # (spellbook.memory.tools) at module scope — see scripts/check_layer_violations.py
+    from spellbook.memory.tools import do_memory_recall
+
     try:
         result = do_memory_recall(
             query="",
