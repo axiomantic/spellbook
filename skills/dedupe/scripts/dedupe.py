@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
-import hashlib  # noqa: F401  -- used by later tasks (stable block_id hashing)
+import hashlib
 import json
 import os
 import re
@@ -253,6 +253,323 @@ def score_pair(
         is_drift_candidate=j >= jaccard_threshold and s < 1.0,
         contains_safety_marker=False,
     )
+
+
+# ---------------------------------------------------------------------------
+# Segmentation: markdown body only, multi-granularity (design §3.3, §3.4, §3.7)
+#
+# segment() splits a markdown file's BODY (YAML frontmatter excluded) into Blocks
+# at four granularities -- "heading-section", "paragraph", "list-item",
+# "fenced-whole" -- each carrying absolute 1-based line numbers, normalized text,
+# a parent_key linking it to its enclosing heading-section, and a stable
+# block_id.
+#
+# BOILERPLATE CONTRACT (design §3.4, IMPORTANT 4): structural boilerplate is
+# excluded HERE, at segmentation time. This is the SOLE boilerplate guard in the
+# whole pipeline -- score_pair() does NOT re-check, because every block reaching
+# pairing has already passed this filter. Below-floor blocks (normalized_text
+# shorter than min_block_chars) are excluded here too, with the single exception
+# of fenced-whole blocks, which are kept regardless of size.
+# ---------------------------------------------------------------------------
+
+# Fence openers/closers: ``` or ~~~ runs (design §3.3 "fenced-whole"). A fence is
+# matched whole and never sub-segmented.
+_FENCE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})")
+# ATX heading: 1-6 leading '#', a space, then the heading text (design §3.3).
+_HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
+# A top-level (non-indented) list item: -, *, +, or ordered "1." markers.
+_LIST_ITEM_RE = re.compile(r"^(\s*)([-*+]|\d+[.)])\s+\S")
+# Horizontal rules: ---, ***, ___ (3+), optionally space-separated.
+_HRULE_RE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
+# A <ROLE>-style scaffolding stub line (open or close tag on its own line).
+_ROLE_STUB_RE = re.compile(r"^\s*</?[A-Z][A-Z_]*>\s*$")
+
+
+def split_file(text: str) -> tuple[str, str]:
+    """Split ``text`` into ``(frontmatter, body)`` (design §3.3).
+
+    A leading YAML frontmatter block fenced by ``---`` on its own first line and
+    a matching ``---`` line is excluded from detection; ``frontmatter`` is the
+    fenced block (including both fences), ``body`` is everything after. When no
+    leading frontmatter is present, ``frontmatter`` is empty and ``body`` is the
+    whole text. The body keeps trailing content verbatim so absolute line numbers
+    are recoverable by the caller.
+    """
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return "", text
+    for idx in range(1, len(lines)):
+        if lines[idx].strip() == "---":
+            frontmatter = "".join(lines[: idx + 1])
+            body = "".join(lines[idx + 1:])
+            return frontmatter, body
+    # Unterminated frontmatter fence: treat the whole file as body (no exclusion).
+    return "", text
+
+
+def _is_structural_boilerplate(line: str) -> bool:
+    """True if ``line`` is structural scaffolding excluded from candidacy.
+
+    Members (design §3.4): horizontal rules (``---``/``***``/``___``), bare ATX
+    headings with no body text, and ``<ROLE>``-style tag stubs. Matched on the
+    stripped line so leading/trailing whitespace does not defeat the check.
+
+    NOTE: frontmatter-shaped ``key: value`` lines are deliberately NOT
+    boilerplate. :func:`split_file` already strips the YAML frontmatter before
+    segmentation, so the body should not contain genuine frontmatter keys.
+    Treating ``key:`` lines as boilerplate silently dropped genuine instruction
+    prose -- ``Important:``/``Note:``/``Rule:``/``WARNING:``/``Step:``/``TODO:``
+    and, critically, ``INLINE-MANDATORY:`` lines all match that shape and are
+    exactly the high-value safety content this tool exists to preserve.
+    """
+    stripped = line.strip()
+    if not stripped:
+        return True
+    if _HRULE_RE.match(stripped):
+        return True
+    if _ROLE_STUB_RE.match(stripped):
+        return True
+    # An ATX heading LINE is structural scaffolding on its own (a label, not body
+    # prose). A heading-SECTION block survives only when its span carries
+    # non-boilerplate body lines too: the segment() filter drops a block whose
+    # EVERY line is boilerplate, so a bare "## X" with no body is excluded while
+    # "# Top Heading" + prose is kept.
+    if _HEADING_RE.match(stripped):
+        return True
+    return False
+
+
+def _block_id(file: str, start_line: int, end_line: int, granularity: str) -> str:
+    """Stable 16-hex-char block id over ``(file, start_line, end_line, granularity)``
+    (design §3.7). Deterministic across runs; unique per distinct block region."""
+    key = f"{file}\x00{start_line}\x00{end_line}\x00{granularity}"
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+
+
+def _make_block(
+    file: str,
+    granularity: str,
+    start_line: int,
+    end_line: int,
+    raw_text: str,
+    parent_key: str | None,
+) -> Block:
+    return Block(
+        file=file,
+        granularity=granularity,
+        start_line=start_line,
+        end_line=end_line,
+        raw_text=raw_text,
+        normalized_text=normalize(raw_text),
+        parent_key=parent_key,
+        block_id=_block_id(file, start_line, end_line, granularity),
+    )
+
+
+def segment(
+    file: str,
+    text: str,
+    *,
+    min_block_chars: int = DEFAULT_MIN_BLOCK_CHARS,
+) -> list[Block]:
+    """Segment a markdown file's body into multi-granularity Blocks (design §3.3).
+
+    Frontmatter is excluded via :func:`split_file`. The body is scanned line by
+    line with absolute 1-based line numbers (relative to the whole file including
+    frontmatter, so journal ranges are correct). Emits, in source order:
+
+    - **fenced-whole**: a complete ```` ``` ```` / ``~~~`` run as one indivisible
+      block; fenced regions are masked so nothing inside is sub-segmented.
+    - **heading-section**: an ATX heading; ``parent_key`` is ``None`` for the
+      heading-section itself, and descendant paragraph/list-item blocks point at
+      the enclosing heading-section's ``block_id``.
+    - **paragraph**: a blank-line-delimited prose run.
+    - **list-item**: a single top-level list item (with nested continuation).
+
+    Filtering (the SOLE boilerplate guard, design §3.4): blocks whose
+    ``normalized_text`` is shorter than ``min_block_chars`` are dropped EXCEPT
+    fenced-whole (kept regardless of size); blocks that are structural
+    boilerplate are dropped.
+
+    Scope limits (known, intentional): only ATX headings (``#``..``######``)
+    are recognized as headings; setext underlines (``===``/``---`` beneath a
+    title) are NOT treated as headings. GFM tables are not modeled specially --
+    a contiguous table is segmented as an ordinary paragraph run. Supporting
+    setext headings or structured tables is out of scope for this helper.
+    """
+    frontmatter, body = split_file(text)
+    offset = frontmatter.count("\n") if frontmatter else 0
+    body_lines = body.splitlines()
+
+    # Mask fenced regions first so heading/paragraph/list scanning skips them.
+    is_fence: list[bool] = [False] * len(body_lines)
+    fence_spans: list[tuple[int, int]] = []  # (start_idx, end_idx) inclusive, 0-based
+    i = 0
+    while i < len(body_lines):
+        m = _FENCE_RE.match(body_lines[i])
+        if m:
+            marker = m.group(2)
+            fence_char = marker[0]
+            start = i
+            is_fence[i] = True
+            i += 1
+            while i < len(body_lines):
+                is_fence[i] = True
+                close = body_lines[i].strip()
+                if close and set(close) == {fence_char} and len(close) >= len(marker):
+                    i += 1
+                    break
+                i += 1
+            fence_spans.append((start, i - 1))
+        else:
+            i += 1
+
+    blocks: list[Block] = []
+
+    # fenced-whole blocks.
+    for start, end in fence_spans:
+        raw = "\n".join(body_lines[start:end + 1])
+        blocks.append(
+            _make_block(
+                file, "fenced-whole",
+                offset + start + 1, offset + end + 1,
+                raw, None,
+            )
+        )
+
+    # heading-section blocks + heading membership map (line_idx -> parent block_id).
+    heading_lines: list[tuple[int, int]] = []  # (idx, level)
+    for idx, line in enumerate(body_lines):
+        if is_fence[idx]:
+            continue
+        m = _HEADING_RE.match(line)
+        if m and m.group(2).strip():
+            heading_lines.append((idx, len(m.group(1))))
+
+    # Heading-section extent: from the heading to the line before the next heading
+    # of equal-or-higher level (design §3.3). The membership map records the
+    # heading-section block's OWN block_id so descendants' parent_key matches it.
+    heading_block_id_by_line: dict[int, str] = {}
+    for hpos, (idx, level) in enumerate(heading_lines):
+        end_idx = len(body_lines) - 1
+        for nxt_idx, nxt_level in heading_lines[hpos + 1:]:
+            if nxt_level <= level:
+                end_idx = nxt_idx - 1
+                break
+        raw = "\n".join(body_lines[idx:end_idx + 1])
+        section = _make_block(
+            file, "heading-section",
+            offset + idx + 1, offset + end_idx + 1,
+            raw, None,
+        )
+        blocks.append(section)
+        for body_idx in range(idx, end_idx + 1):
+            heading_block_id_by_line[body_idx] = section.block_id
+
+    def _parent_for(idx: int) -> str | None:
+        return heading_block_id_by_line.get(idx)
+
+    # paragraph + list-item blocks (skip fences and heading lines).
+    j = 0
+    n = len(body_lines)
+    while j < n:
+        if is_fence[j]:
+            j += 1
+            continue
+        line = body_lines[j]
+        if not line.strip():
+            j += 1
+            continue
+        heading_match = _HEADING_RE.match(line)
+        if heading_match and heading_match.group(2).strip():
+            j += 1
+            continue
+        if _LIST_ITEM_RE.match(line):
+            start = j
+            j += 1
+            # Consume nested continuation: indented or blank-then-indented lines
+            # that belong to this top-level item, stopping at the next top-level
+            # marker, a heading, a fence, or a blank line followed by non-indent.
+            while j < n and not is_fence[j]:
+                nxt = body_lines[j]
+                if not nxt.strip():
+                    break
+                if _LIST_ITEM_RE.match(nxt) and not nxt.startswith((" ", "\t")):
+                    break
+                if _HEADING_RE.match(nxt):
+                    break
+                if not nxt.startswith((" ", "\t")):
+                    break
+                j += 1
+            raw = "\n".join(body_lines[start:j])
+            blocks.append(
+                _make_block(file, "list-item", offset + start + 1, offset + j,
+                            raw, _parent_for(start))
+            )
+            continue
+        # paragraph: a blank-line-delimited prose run that is not a list/heading.
+        start = j
+        j += 1
+        while j < n and not is_fence[j]:
+            nxt = body_lines[j]
+            if not nxt.strip():
+                break
+            if _HEADING_RE.match(nxt) or _LIST_ITEM_RE.match(nxt):
+                break
+            j += 1
+        raw = "\n".join(body_lines[start:j])
+        blocks.append(
+            _make_block(file, "paragraph", offset + start + 1, offset + j,
+                        raw, _parent_for(start))
+        )
+
+    # Filter: SOLE boilerplate guard + below-floor (fenced-whole exempt from floor).
+    kept: list[Block] = []
+    for block in blocks:
+        if block.granularity == "fenced-whole":
+            kept.append(block)
+            continue
+        if all(_is_structural_boilerplate(ln) for ln in block.raw_text.splitlines()):
+            continue
+        if len(block.normalized_text) < min_block_chars:
+            continue
+        kept.append(block)
+
+    kept.sort(key=lambda b: (b.start_line, b.end_line, b.granularity))
+    return kept
+
+
+def child_in_parent_suppression(pairs: list[Pair]) -> list[Pair]:
+    """Drop child-granularity pairs fully contained in a matched parent pair
+    (design §3.4): keep the largest coherent match.
+
+    A child pair is suppressed when BOTH its endpoints fall within the line range
+    of some other (parent) pair's corresponding endpoints in the same files. The
+    parent (wider) pair is retained. (Exercised in Task 6 where pairs exist.)
+    """
+    def contains(outer: Block, inner: Block) -> bool:
+        return (
+            outer.file == inner.file
+            and outer.start_line <= inner.start_line
+            and outer.end_line >= inner.end_line
+            and (outer.start_line, outer.end_line) != (inner.start_line, inner.end_line)
+        )
+
+    survivors: list[Pair] = []
+    for pair in pairs:
+        suppressed = False
+        for other in pairs:
+            if other is pair:
+                continue
+            if contains(other.a, pair.a) and contains(other.b, pair.b):
+                suppressed = True
+                break
+            if contains(other.a, pair.b) and contains(other.b, pair.a):
+                suppressed = True
+                break
+        if not suppressed:
+            survivors.append(pair)
+    return survivors
 
 
 # ---------------------------------------------------------------------------

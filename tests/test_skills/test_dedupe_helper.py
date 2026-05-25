@@ -477,3 +477,243 @@ def test_score_pair_no_boilerplate_check(dedupe):
     assert pair is not None
     assert pair.seqmatch_ratio == 1.0
     assert pair.is_drift_candidate is False
+
+
+# ---------------------------------------------------------------------------
+# Task 5: multi-granularity markdown segmentation + noise control
+# (plan §"Task 5" Step 2, design §3.3, §3.4, §3.7).
+#
+# segment() splits a markdown file's BODY (frontmatter excluded) into Blocks at
+# four granularities -- "heading-section", "paragraph", "list-item",
+# "fenced-whole" -- with absolute 1-based start_line/end_line, normalized_text,
+# parent_key linkage to the enclosing heading-section, and a stable block_id.
+#
+# CRITICAL boilerplate contract (design §3.4): structural boilerplate (bare
+# headings with no body, horizontal rules, frontmatter-key lines, <ROLE> stubs)
+# is excluded AT SEGMENTATION TIME. This is the SOLE boilerplate guard in the
+# whole pipeline -- score_pair (Task 4) does NOT re-check. Below-floor blocks
+# (normalized_text shorter than min_block_chars) are excluded too, EXCEPT
+# fenced-whole, which is kept regardless of size.
+#
+# Fixture line map (tests/test_skills/fixtures/dedupe/seg_sample.md), 1-based:
+#    1: ---                  (frontmatter open)
+#    2: name: seg-sample
+#    3: description: "..."
+#    4: ---                  (frontmatter close)
+#    5: (blank)
+#    6: # Top Heading
+#    7: (blank)
+#    8: prose paragraph (>80 normalized chars)
+#    9: (blank)
+#   10: ## Sub
+#   11: (blank)
+#   12: - item one ... (>80 normalized chars)
+#   13: (blank)
+#   14: ```bash              (fence open)
+#   15: git status
+#   16: git status
+#   17: ```                  (fence close)
+#   18: (blank)
+#   19: ---                  (horizontal rule, boilerplate)
+#   20: (blank)
+#   21: ## X                 (bare heading, boilerplate)
+# ---------------------------------------------------------------------------
+
+
+def _seg_sample_text() -> str:
+    return (FIXTURE_DIR / "seg_sample.md").read_text(encoding="utf-8")
+
+
+def test_segment_excludes_frontmatter(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    assert all("description:" not in b.raw_text for b in blocks)
+    assert all("name: seg-sample" not in b.raw_text for b in blocks)
+
+
+def test_segment_four_granularities_present(dedupe):
+    grans = {b.granularity for b in dedupe.segment("seg_sample.md", _seg_sample_text())}
+    assert {"heading-section", "paragraph", "list-item", "fenced-whole"} <= grans
+
+
+def test_segment_fence_matched_whole(dedupe):
+    fences = [
+        b
+        for b in dedupe.segment("seg_sample.md", _seg_sample_text())
+        if b.granularity == "fenced-whole"
+    ]
+    assert len(fences) == 1
+    fence = fences[0]
+    # The two ``` markers are both inside the single fenced-whole block: the
+    # fence is matched whole and NEVER sub-segmented into the duplicate
+    # "git status" one-liners it contains.
+    assert fence.raw_text.count("```") == 2
+    assert fence.start_line == 14
+    assert fence.end_line == 17
+    # The fence body is NEVER sub-segmented into paragraph/list-item one-liners.
+    # (A heading-section legitimately CONTAINS its fence in its span -- that is by
+    # design; only paragraph/list-item granularities must not carve up the fence.)
+    sub_blocks = [
+        b
+        for b in dedupe.segment("seg_sample.md", _seg_sample_text())
+        if b.granularity in ("paragraph", "list-item")
+    ]
+    assert all("git status" not in b.raw_text for b in sub_blocks)
+
+
+def test_segment_min_block_floor(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text(), min_block_chars=80)
+    # Every emitted block clears the 80-char floor EXCEPT fenced-whole, which is
+    # kept regardless of size (design §3.4).
+    assert all(
+        len(b.normalized_text) >= 80 or b.granularity == "fenced-whole"
+        for b in blocks
+    )
+    # The short fence body (two `git status` lines, well under 80 chars) survives
+    # precisely because of the fenced-whole exception.
+    assert any(b.granularity == "fenced-whole" for b in blocks)
+
+
+def test_segment_denies_boilerplate(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    # The horizontal rule (line 19) and the bare one-word heading "## X"
+    # (line 21) are structural boilerplate and must NOT appear as blocks.
+    assert all(b.raw_text.strip() not in ("---", "## X", "X") for b in blocks)
+    assert not any(b.start_line == 19 for b in blocks)  # horizontal rule line
+    assert not any(b.start_line == 21 for b in blocks)  # bare heading "## X"
+
+
+def test_segment_block_ids_unique(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    ids = [b.block_id for b in blocks]
+    assert len(ids) == len(set(ids)), "block_id must be unique per block"
+
+
+def test_segment_block_id_stable(dedupe):
+    a = dedupe.segment("seg_sample.md", _seg_sample_text())
+    b = dedupe.segment("seg_sample.md", _seg_sample_text())
+    assert [x.block_id for x in a] == [y.block_id for y in b]
+
+
+def test_segment_paragraph_block_lines_and_parent(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    paras = [b for b in blocks if b.granularity == "paragraph"]
+    assert len(paras) == 1
+    para = paras[0]
+    # The prose paragraph occupies exactly line 8 (1-based, absolute).
+    assert para.start_line == 8
+    assert para.end_line == 8
+    # Its enclosing heading-section is "# Top Heading" (line 6).
+    headings = {b.start_line: b.block_id for b in blocks
+                if b.granularity == "heading-section"}
+    assert para.parent_key == headings[6]
+
+
+def test_segment_list_item_block_lines_and_parent(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    items = [b for b in blocks if b.granularity == "list-item"]
+    assert len(items) == 1
+    item = items[0]
+    # The list item occupies exactly line 12 (1-based, absolute).
+    assert item.start_line == 12
+    assert item.end_line == 12
+    # Its enclosing heading-section is "## Sub" (line 10).
+    headings = {b.start_line: b.block_id for b in blocks
+                if b.granularity == "heading-section"}
+    assert item.parent_key == headings[10]
+
+
+def test_segment_heading_section_block(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    headings = {b.start_line: b for b in blocks if b.granularity == "heading-section"}
+    # "# Top Heading" (line 6) and "## Sub" (line 10) each have body content that
+    # clears the floor, so both survive as heading-section blocks. The bare
+    # "## X" (line 21) is boilerplate and excluded.
+    assert set(headings) == {6, 10}
+    # The top heading-section is its own parent root (parent_key None).
+    assert headings[6].parent_key is None
+
+
+def test_segment_normalized_text_populated(dedupe):
+    blocks = dedupe.segment("seg_sample.md", _seg_sample_text())
+    para = next(b for b in blocks if b.granularity == "paragraph")
+    assert para.normalized_text == dedupe.normalize(para.raw_text)
+    assert para.normalized_text == para.normalized_text.strip().lower()
+
+
+def test_segment_boilerplate_is_sole_guard_predicate(dedupe):
+    # The denylist predicate is exposed for the SOLE-guard contract: a bare ATX
+    # heading and a horizontal rule are boilerplate; ordinary prose is not.
+    assert dedupe._is_structural_boilerplate("## X")
+    assert dedupe._is_structural_boilerplate("---")
+    assert dedupe._is_structural_boilerplate("***")
+    assert dedupe._is_structural_boilerplate("___")
+    assert not dedupe._is_structural_boilerplate(
+        "This is a real prose paragraph with several content words in it."
+    )
+
+
+def test_is_structural_boilerplate_keeps_key_prefixed_instruction_lines(dedupe):
+    # REGRESSION (review defect): frontmatter-shaped "key: value" / "Prefix:"
+    # lines are NOT boilerplate. split_file already strips the YAML frontmatter
+    # before segmentation, so the body should not carry genuine frontmatter
+    # keys; treating these lines as boilerplate silently dropped exactly the
+    # high-value instruction prose this tool exists to preserve.
+    assert not dedupe._is_structural_boilerplate(
+        "Important: never push to a protected branch without explicit permission first."
+    )
+    assert not dedupe._is_structural_boilerplate("INLINE-MANDATORY: do X")
+    assert not dedupe._is_structural_boilerplate("Note: this matters")
+    assert not dedupe._is_structural_boilerplate("Rule: one test at a time")
+    assert not dedupe._is_structural_boilerplate("WARNING: destructive operation")
+    assert not dedupe._is_structural_boilerplate("Step: run the migration")
+    assert not dedupe._is_structural_boilerplate("TODO: wire this up")
+    assert not dedupe._is_structural_boilerplate("name: seg-sample")
+    # Genuine structural boilerplate is still excluded (no coverage weakened).
+    assert dedupe._is_structural_boilerplate("---")
+    assert dedupe._is_structural_boilerplate("## X")
+
+
+def test_segment_keeps_single_line_instruction_paragraph(dedupe):
+    # A single-line paragraph whose only line is an "Important:"-prefixed
+    # instruction (> min_block_chars) must SURVIVE segmentation -- previously it
+    # was dropped wholesale because its sole line matched the key regex.
+    text = (
+        "# Heading\n\n"
+        "INLINE-MANDATORY: never push to a protected branch without explicit "
+        "operator permission, even in autonomous mode here.\n"
+    )
+    blocks = dedupe.segment("inline.md", text)
+    survivor = [
+        b for b in blocks
+        if b.granularity == "paragraph" and "INLINE-MANDATORY" in b.raw_text
+    ]
+    assert len(survivor) == 1
+
+
+def test_segment_keeps_heading_section_with_single_key_value_body(dedupe):
+    # A heading-section whose body is a single long "key: value" line must
+    # SURVIVE -- previously heading boilerplate + key-line boilerplate meant
+    # EVERY line was boilerplate and the whole section was dropped.
+    text = (
+        "## Config\n\n"
+        "Important: this single key value line is well past the eighty character "
+        "normalized floor so it survives on its own merits.\n"
+    )
+    blocks = dedupe.segment("kv.md", text)
+    assert any(
+        "Important:" in b.raw_text and b.granularity in ("heading-section", "paragraph")
+        for b in blocks
+    )
+
+
+def test_segment_still_excludes_genuine_boilerplate(dedupe):
+    # Confirm the fix did not weaken genuine boilerplate coverage: a horizontal
+    # rule and a bare "## X" heading are still excluded from emitted blocks.
+    text = (
+        "Real prose paragraph with plenty of content words to clear the eighty "
+        "character normalized floor comfortably here.\n\n"
+        "---\n\n"
+        "## X\n"
+    )
+    blocks = dedupe.segment("bp.md", text)
+    assert all(b.raw_text.strip() not in ("---", "## X", "X") for b in blocks)
